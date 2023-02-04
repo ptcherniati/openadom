@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.exceptions.application;
 
 public class NoSuchApplicationException extends RuntimeException {
 

@@ -6,12 +6,9 @@ import fr.inra.oresing.model.internationalization.Internationalization;
 import java.util.Locale;
 import java.util.Map;
 
-public enum OperationType {
-    admin("admin", true,false,false, Map.of("fr","Délégation", "en","Delegation")),
-    depot("depot", true,false,false, Map.of("fr","Dépôt", "en","Deposit")),
-    delete("delete", true,false,false, Map.of("fr","Suppression", "en","Deletion")),
-    publication("publication", true,false,false, Map.of("fr","Publication", "en","Publication")),
-    extraction("extraction", true,true,true, Map.of("fr","Extraction", "en","Extraction"));
+public enum OperationReferenceType {
+    admin("admin", true,Map.of("fr","Délégation", "en","Delegation")),
+    manage("extraction", true,Map.of("fr","Gestion", "en","Management"));
 
     public Configuration.AuthorizationColumnsDescription getAuthorizationColumnsDescription() {
         return authorizationColumnsDescription;
@@ -19,7 +16,7 @@ public enum OperationType {
 
     private final Configuration.AuthorizationColumnsDescription authorizationColumnsDescription;
 
-    OperationType(String title, boolean display, boolean withPeriods, boolean withDataGroups, Map<String, String> internationalizationName) {
+    OperationReferenceType(String title, boolean display, Map<String, String> internationalizationName) {
         final Configuration.AuthorizationColumnsDescription authorizationColumnsDescription = new Configuration.AuthorizationColumnsDescription();
         authorizationColumnsDescription.setDisplay(display);
         authorizationColumnsDescription.setTitle(title);
@@ -27,8 +24,6 @@ public enum OperationType {
         internationalizationName.entrySet().stream()
                 .forEach(entry->internationalization.put(Locale.forLanguageTag(entry.getKey()), entry.getValue()));
         authorizationColumnsDescription.setInternationalizationName(internationalization);
-        authorizationColumnsDescription.setWithPeriods(withPeriods);
-        authorizationColumnsDescription.setWithDataGroups(withDataGroups);
         this.authorizationColumnsDescription = authorizationColumnsDescription;
     }
 }

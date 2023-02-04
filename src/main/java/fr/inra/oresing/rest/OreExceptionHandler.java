@@ -4,9 +4,13 @@ import com.google.common.base.Throwables;
 import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.persistence.AuthenticationFailure;
-import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.*;
+import fr.inra.oresing.rest.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.rest.exceptions.authentication.DisconnectedException;
+import fr.inra.oresing.rest.exceptions.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
+import fr.inra.oresing.rest.exceptions.data.BadBinaryFileDatasetQuery;
+import fr.inra.oresing.rest.exceptions.data.BadDownloadDatasetQuery;
 import lombok.extern.slf4j.Slf4j;
 import org.postgresql.util.PSQLException;
 import org.springframework.http.HttpStatus;
@@ -17,8 +21,6 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
-
-import java.util.List;
 
 import java.util.List;
 

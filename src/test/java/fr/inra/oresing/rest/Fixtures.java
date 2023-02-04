@@ -8,6 +8,7 @@ import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.model.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;

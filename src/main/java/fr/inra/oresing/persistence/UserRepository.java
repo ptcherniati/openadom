@@ -41,7 +41,8 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> {
         String query = "SELECT '" + getEntityClass().getName() + "' as \"@class\",  to_jsonb(t) as json FROM " + getTable().getSqlIdentifier() + " t WHERE login = :login";
 
         Optional<OreSiUser> result = getNamedParameterJdbcTemplate().query(query,
-                new MapSqlParameterSource("login", login), getJsonRowMapper()).stream().collect(MoreCollectors.toOptional());
+                new MapSqlParameterSource("login", login), getJsonRowMapper()).stream()
+                .collect(MoreCollectors.toOptional());
         return result;
     }
 

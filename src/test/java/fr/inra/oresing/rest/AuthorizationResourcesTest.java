@@ -314,7 +314,7 @@ public class AuthorizationResourcesTest {
             log.debug(StringUtils.abbreviate(response, 50));
         }
         {
-            final MockHttpServletRequestBuilder authorizations = get("/api/v1/acbb/authorization/biomasse_production_teneur/" + authId)
+            final MockHttpServletRequestBuilder authorizations = get("/api/v1/applications/acbb/authorization/biomasse_production_teneur/" + authId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie);
             mockMvc.perform(authorizations)

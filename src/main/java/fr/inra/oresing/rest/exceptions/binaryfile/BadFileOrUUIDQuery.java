@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.exceptions.binaryfile;
 
 import fr.inra.oresing.OreSiTechnicalException;
 

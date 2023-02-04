@@ -18,7 +18,8 @@
       </div>
     </div>
     <div class="Panel-buttons">
-      <b-button type="is-dark" icon-left="key" @click="consultAuthorization">{{
+      <b-button type="is-dark" icon-left="key" @click="consultAuthorization"
+                :disabled="dataType && !dataType.isAdmin">{{
         $t("dataTypesManagement.consult-authorization")
       }}</b-button>
     </div>

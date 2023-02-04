@@ -1,0 +1,21 @@
+package fr.inra.oresing.model;
+
+import fr.inra.oresing.persistence.OperationReferenceType;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+
+@Getter
+@Setter
+@ToString(callSuper = true)
+public class OreSiReferenceAuthorization extends OreSiEntity {
+    private String name;
+    private Set<UUID> oreSiUsers;
+    private UUID application;
+    private Map<OperationReferenceType, List<String>> references;
+}

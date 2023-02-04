@@ -37,6 +37,10 @@ public class SqlSchemaForApplication implements SqlSchema {
         return new SqlTable(this, "oreSiAuthorization");
     }
 
+    public SqlTable authorizationReference() {
+        return new SqlTable(this, "OreSiAuthorizationReference");
+    }
+
     public SqlTable forTableName(String tableName) {
         return new SqlTable(this, tableName);
     }
