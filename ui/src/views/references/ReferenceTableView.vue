@@ -9,6 +9,12 @@
     <h1 class="title main-title">
       {{ $t("titles.references-data", { refName: application.localRefName }) }}
     </h1>
+    <div class="column is-offset-one-third is-one-third">
+      <TagsCollapse
+          v-if="tagsColumn && Object.keys(tagsColumn).length > 1"
+          :tags="tagsColumn"
+      />
+    </div>
 
     <div v-if="reference && columns">
       <b-table
@@ -43,7 +49,7 @@
           />
         </template>
         <b-table-column
-          v-for="column in columns"
+          v-for="column in columnsToBeShown"
           :key="column.id"
           :field="column.id"
           :label="column.title"
@@ -117,9 +123,10 @@ import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
+import TagsCollapse from "@/components/common/TagsCollapse.vue";
 
 @Component({
-  components: { PageView, SubMenu },
+  components: { PageView, SubMenu, TagsCollapse },
 })
 export default class ReferenceTableView extends Vue {
   @Prop() applicationName;
@@ -145,6 +152,7 @@ export default class ReferenceTableView extends Vue {
   columns = [];
   referenceValues = [];
   tableValues = [];
+  tagsColumn = [];
 
   // show modal and cards
   isCardModalActive = false;
@@ -152,6 +160,49 @@ export default class ReferenceTableView extends Vue {
   modalTblObj = [];
   referencesDynamic;
   display = "__display_" + window.localStorage.lang;
+
+  buildTags() {
+    let tags = {};
+    for (let column in this.reference.columns) {
+      let currentTags = this.reference.columns[column].tags;
+      if (!currentTags) {
+        continue;
+      }
+      for (const tagName of currentTags) {
+        if (tagName !== "__hidden__") {
+          if (tags[tagName]) {
+            continue;
+          }
+          tags[tagName] = {};
+          tags[tagName].selected = true;
+          tags[tagName].localName = this.internationalisationService.getLocaleforPath(
+              this.application,
+              "internationalizedTags." + tagName,
+              tagName
+          );
+        }
+      }
+      this.reference.columns[column].localtags = this.reference.columns[column].tags.map((tag) => tags[tag]?.localName || tag);
+    }
+    this.tagsColumn = tags;
+  }
+
+  get columnsToBeShown() {
+    console.log(this.columns)
+    if (!this.tagsColumn) {
+      return this.columns;
+    }
+    let selectedTags = Object.keys(this.tagsColumn).filter((t) => this.tagsColumn[t].selected);
+    if (!Object.keys(this.tagsColumn).length) {
+      return this.columns;
+    }
+    return this.columns.filter((column) => {
+      return column.tags.some((t) => {
+        console.log(t)
+        return selectedTags.includes(t);
+      });
+    });
+  }
 
   async changePage(value) {
     this.params.offset = (value - 1) * this.params.limit;
@@ -244,6 +295,7 @@ export default class ReferenceTableView extends Vue {
   async created() {
     await this.init();
     await this.setInitialVariables();
+    this.buildTags();
   }
 
   async init() {
@@ -305,7 +357,7 @@ export default class ReferenceTableView extends Vue {
 
     if (this.reference && this.reference.columns) {
       this.columns = [
-        { id: "#", title: "#id", key: false, linkedTo: null },
+        { id: "#", title: "#id", key: false, linkedTo: null, tags: ["no-tag"], localtags: [ "no-tag" ] },
         ...Object.values(this.reference.columns).sort((c1, c2) => {
           if (c1.title < c2.title) {
             return -1;
