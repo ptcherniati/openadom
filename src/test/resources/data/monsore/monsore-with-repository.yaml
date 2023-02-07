@@ -5,7 +5,7 @@ application:
     fr: SOERE mon SOERE avec dépôt
     en: SOERE my SOERE with repository
   name: MONSORE
-  version: 6
+  version: 7
 
 tags:
   context:
@@ -17,6 +17,9 @@ tags:
   test:
     fr: test
     en: test
+  unit:
+    fr: unité
+    en: unit
 compositeReferences:
   sites:
     components:
@@ -51,7 +54,7 @@ references:
       colonne_homonyme_entre_referentiels: null
     computedColumns:
       myComputedColumn:
-        tags: [test]
+        tags: [__hidden__]
         computation:
           expression: >
             return "my value";
