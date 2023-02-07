@@ -370,7 +370,7 @@
               <th
                 v-for="variable in columnsVariableToBeShown"
                 :key="variable.id"
-                :colspan="Object.values(variable.components).length"
+                :colspan="colspan(variable)"
                 :variable="variable.id"
                 style="border-left: 1px solid rgba(0,0,0,0.2); border-right: 1px solid rgba(0,0,0,0.2);"
               >
@@ -541,6 +541,24 @@ export default class DataTypeTableView extends Vue {
   referenceLineCheckers = [];
   displayDataTypes = false;
   tagsColumn = [];
+
+  colspan(variable) {
+    let count = 0;
+    let colspan;
+    for (let component in variable.components) {
+      for (const tagName of variable.components[component].tags) {
+        if (tagName === "__hidden__") {
+          count ++;
+        }
+      }
+      if (count === 0) {
+        colspan = Object.values(variable.components).length;
+      } else {
+        colspan = Object.values(variable.components).length - count;
+      }
+    }
+    return colspan;
+  }
 
   buildTags() {
     let tags = {};
