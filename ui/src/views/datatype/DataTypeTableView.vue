@@ -239,6 +239,13 @@
     </div>
     <div v-if="showFilter" class="notification" role="search">
       <h2>{{ $t("applications.filter") }}</h2>
+      <div class="column">
+        <TagsCollapse
+            v-if="tagsColumn && Object.keys(tagsColumn).length > 1"
+            :tags="tagsColumn"
+        />
+      </div>
+
       <div class="columns is-multiline">
         <div
           class="column is-2-widescreen is-6-desktop is-12-tablet"
@@ -359,21 +366,24 @@
           </caption>
           <thead style="text-transform: capitalize; text-align: center">
             <tr class="DataSetTableView-variable-row">
+              <!-- TODO : centrer le nom de la colonne -->
               <th
-                v-for="variable in variables"
+                v-for="variable in columnsVariableToBeShown"
                 :key="variable.id"
                 :colspan="Object.values(variable.components).length"
                 :variable="variable.id"
+                style="border-left: 1px solid rgba(0,0,0,0.2); border-right: 1px solid rgba(0,0,0,0.2);"
               >
                 {{ variable.label }}
               </th>
             </tr>
             <tr>
               <th
-                v-for="(comp, index) in variableComponents"
+                v-for="(comp, index) in columnsVariableComponentsToBeShown"
                 :key="`${comp.label}-${index}`"
                 :component="comp.component"
                 :variable="comp.variable"
+                style="border-left: 1px solid rgba(0,0,0,0.2); border-right: 1px solid rgba(0,0,0,0.2);"
               >
                 {{ comp.label }}
                 <!--b-icon :icon="getSortIcon(comp.variable, comp.component)"></b-icon-->
@@ -383,8 +393,8 @@
           <tbody>
             <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
               <td
-                style="text-align: center; vertical-align: middle"
-                v-for="(component, index) in variableComponents"
+                style="text-align: center; vertical-align: middle; border-left: 1px solid rgba(0,0,0,0.2); border-right: 1px solid rgba(0,0,0,0.2);"
+                v-for="(component, index) in columnsVariableComponentsToBeShown"
                 :key="`row_${rowIndex}-${index}`"
                 :component="component.component"
                 :variable="component.variable"
@@ -482,9 +492,10 @@ import { IntervalValues } from "@/model/application/IntervalValues";
 import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
 import draggable from "vuedraggable";
 import { InternationalisationService } from "@/services/InternationalisationService";
+import TagsCollapse from "@/components/common/TagsCollapse.vue";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleInterval, draggable },
+  components: { PageView, SubMenu, CollapsibleInterval, draggable, TagsCollapse },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -529,6 +540,88 @@ export default class DataTypeTableView extends Vue {
   variableSearch = [];
   referenceLineCheckers = [];
   displayDataTypes = false;
+  tagsColumn = [];
+
+  buildTags() {
+    let tags = {};
+    for( let i = 0; i < this.variables.length; i++) {
+      let currentTags = this.variables[i].tags;
+      if (!currentTags) {
+        continue;
+      }
+      for (const tagName of currentTags) {
+        if (tagName !== "__hidden__") {
+          if (tags[tagName]) {
+            continue;
+          }
+          tags[tagName] = {};
+          tags[tagName].selected = true;
+          tags[tagName].localName = this.internationalisationService.getLocaleforPath(
+              this.application,
+              "internationalizedTags." + tagName,
+              tagName
+          );
+        }
+      }
+      if (this.variables[i].tags !== "__hidden__") {
+        this.variables[i].localtags = this.variables[i].tags.map((tag) => tags[tag]?.localName || tag);
+        for (let variableComponent in this.variableComponents) {
+          if (this.variableComponents[variableComponent].variable === this.variables[i].label) {
+            let currentTags = this.variableComponents[variableComponent].tags;
+            if (!currentTags) {
+              continue;
+            }
+            for (const tagName of currentTags) {
+              if (tagName !== "__hidden__") {
+                if (tags[tagName]) {
+                  continue;
+                }
+                tags[tagName] = {};
+                tags[tagName].selected = true;
+                tags[tagName].localName = this.internationalisationService.getLocaleforPath(
+                    this.application,
+                    "internationalizedTags." + tagName,
+                    tagName
+                );
+              }
+            }
+          }
+          this.variableComponents[variableComponent].localtags = this.variableComponents[variableComponent].tags.map((tag) => tags[tag]?.localName || tag);
+        }
+      }
+    }
+    this.tagsColumn = tags;
+  }
+
+  get columnsVariableToBeShown() {
+    if (!this.tagsColumn) {
+      return this.variables;
+    }
+    let selectedTags = Object.keys(this.tagsColumn).filter((t) => this.tagsColumn[t].selected);
+    if (!Object.keys(this.tagsColumn).length) {
+      return this.variables;
+    }
+    return this.variables.filter((column) => {
+      return column.tags.some((t) => {
+        return selectedTags.includes(t);
+      });
+    });
+  }
+
+  get columnsVariableComponentsToBeShown() {
+    if (!this.tagsColumn) {
+      return this.variableComponents;
+    }
+    let selectedTags = Object.keys(this.tagsColumn).filter((t) => this.tagsColumn[t].selected);
+    if (!Object.keys(this.tagsColumn).length) {
+      return this.variableComponents;
+    }
+    return this.variableComponents.filter((column) => {
+      return column.tags.some((t) => {
+        return selectedTags.includes(t);
+      });
+    });
+  }
 
   async created() {
     await this.init();
@@ -545,6 +638,7 @@ export default class DataTypeTableView extends Vue {
         () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
     ];
+    this.buildTags();
   }
 
   async reInit() {
@@ -560,6 +654,7 @@ export default class DataTypeTableView extends Vue {
     });
     window.location.reload();
     this.initDatatype();
+    //this.buildTags();
   }
 
   async init() {

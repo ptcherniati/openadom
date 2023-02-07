@@ -188,7 +188,6 @@ export default class ReferenceTableView extends Vue {
   }
 
   get columnsToBeShown() {
-    console.log(this.columns)
     if (!this.tagsColumn) {
       return this.columns;
     }
@@ -198,7 +197,6 @@ export default class ReferenceTableView extends Vue {
     }
     return this.columns.filter((column) => {
       return column.tags.some((t) => {
-        console.log(t)
         return selectedTags.includes(t);
       });
     });

@@ -16,7 +16,7 @@
           {{ $t("tags.tag") }}
         </p>
         <a class="card-header-icon">
-          <b-icon :icon="props.open ? 'chevron-down' : 'chevron-up'"> </b-icon>
+          <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"> </b-icon>
         </a>
       </div>
     </template>
