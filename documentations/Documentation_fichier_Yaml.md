@@ -241,7 +241,7 @@ Certains éditeurs de texte permettent d'écrire un yaml avec colorisation et mi
 
 ### <a id="references" />Description référentiels
 On décrit les référentiels dans la partie *references*, on y liste les noms des colonnes souhaitées (dans [*columns*](#columns), [*computedColumns*](#computedColumns) ou [*dynamicColumns*](#dynamicColumns)) ; en précisant la liste de colonnes qui forment la clef naturelle (dans [*keyColumn*](#keuColumns)).
-On pourra aussi préciser des règles de validations sur une ou plusieurs colonnes dans la section [*validations *](#referencesValidation):
+On pourra aussi préciser des règles de validations sur une ou plusieurs colonnes dans la section [*validations*](#referencesValidation) :
 
 - une [__columns__](#columns) est une colonne du fichier
 - une [__computedColumns__](#computedColumns) est une colonne qui n'est pas présente dans le fichier et dont la valeur est une constante ou le résultat d'un calcul.
@@ -332,9 +332,9 @@ La valeur par défaut est :
 
 Une colonne calculée est une colonne qui n'est pas présente dans le fichier. Ses valeurs sont issues du résultat d'un calcul.
 ``` yaml
- references:
+references:
   computedColumns:
-   date_iso:
+    date_iso:
     defaultValue: > 
     #une valeur par défaut qui est une expression groovy (
     #une chaîne entre cotes  "ceci est une valeur par défaut", 
@@ -347,7 +347,7 @@ Une colonne calculée est une colonne qui n'est pas présente dans le fichier. S
     checker:
      name: Date
      params:
-      pattern:yyyy-MM-ddTHH:mm:ss
+        pattern: yyyy-MM-ddTHH:mm:ss
 
 ```
 
@@ -794,7 +794,7 @@ On décrit un format pour stocker les données sous la forme
 ``` yaml
     data:
       date:
-        computedComponent: #section pour les composantes calculées
+        computedComponents: #section pour les composantes calculées
           datetime:
             computation :
             #calcul d'une valeur par défaut date+time avec une expression groovy
@@ -857,8 +857,6 @@ dataTypes:
           standardDeviation: sd # la composante contenant l'écart type
           gap: '1 WEEK' # pour des valeur discrète la duréé
                         # a à partir de laquelle on admet une discontinuité
-      
-  
 
 ```
 
@@ -1297,6 +1295,98 @@ Le fichier leman_grandlacs_01-01-1980_01-01-1981.csv sera déposé sur l'autoriz
           projet: grandlacs
 
 et le timescope ['1980-01-01,1981-01-01).
+
+
+### <a id="tags" /> Etiquettes
+__tags__: Création d'un regroupements sous une étiquette permettant de filtré l'affichages des listes des [__references__](#referentiels) et des [__datatypes__](#datatypes). 
+Mais aussi les [__colonnes__](#columns), les [__colonnes calculées__](#computedColumns), les [__colones dynamiques__](#dynamicColumns) d'une [__reference__](#referentiels) et les *variables*, les *components* et les *computedComponents* d'un [__datatype__](#datatypes).
+
+L'étiquette ```__hidden__``` est une étiquette qui n'a pas besoin d'êtres mise dans la liste de création. Nous l'utiliserons pour les données que l'on veux enregistrer en base mais que l'on ne veux pas rendre accessible à l'utilisateur.
+
+``` yaml
+tags:
+  localization:
+    fr: Localisation
+    en: Localization
+  context:
+    fr: Contexte
+    en: Context
+  date:
+    fr: Date
+    en: Date
+  data:
+    fr: Données
+    en: Data
+```
+
+Pour lié une ou plusieurs étiquettes avec une *référence* ou une *colonne* il suffit d'ajouter une section *tag* sous le nom de la *référence*, *type de de donnée*, *variable*/*component* ou *colonne* à lier.
+
+Exemple d'utilisation des étiquettes (__tags__) pour [__references__](#referentiels) :
+
+```yaml
+references:
+  agroécosystème:
+    tags: [data, context]
+    keyColumns: [nom]
+    columns:
+      nom:
+  sites:
+    #donnée de référence avec une clef sur une colonne
+    keyColumns: [nom du site]
+    columns:
+      Agroécosystème:
+      nom du site:
+  parcelles:
+    tags: [context]
+    #donnée de référence avec une clef sur deux colonnes
+    keyColumns: [site,nom de la parcelle]
+    columns:
+      site:
+        tags: [localization]
+      nom de la parcelle:
+        tags: [localization]
+    computedColumns:
+      myComputedColumn:
+        tags: [ __hidden__ ] #on met le tag '__hidden__' car on ne souhaite pas que cette information soit visible pour l'utilisateur
+        computation:
+          expression: >
+            return datum[site] + "." + datum[nom de la parcelle];
+```
+
+Exemple d'utilisation des étiquettes (__tags__) pour [__datatypes__](#datatypes) :
+```yaml
+dataTypes:
+  mon_datatype:
+    data:
+      date:
+        tags: [Date]
+        computedComponents: #section pour les composantes calculées
+          datetime:
+            tags: [ __hidden__ ] #on met le tag '__hidden__' car on ne souhaite pas que cette information soit visible pour l'utilisateur
+            computation :
+              #calcul d'une valeur par défaut date+time avec une expression groovy
+              expression: return datum.date.day + " " + datum.date.time
+            checker: #ajout d'un checker date dd/MM/yyyy HH:mm:ss
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm:ss
+        components: # les composantes non calculées
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
+```
+
+> ![](warning.png) Le tag n'est pas obligatoire. Si vous n'en mettez pas un tag par défaut ("no-tag" : sans étiquette) se mettra. Ce qui permettra de les filtré au même titre que ceux avec une étiquette créé par vous.
+
+> ![](warning.png) Le nom du tag est libre. Cependant, pour ceux réutilisés ailleurs dans l'application, il est préférable de n'utiliser que des minuscules et underscores sous peine de générer des erreurs dans les requête sql ou la création des vues.
+
 
 ## Internationalisation du fichier yaml:
 Il est possible de faire un fichier international en ajoutant plusieurs parties Internationalisation en précisant la langue.
