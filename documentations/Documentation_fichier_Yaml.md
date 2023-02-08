@@ -1301,8 +1301,6 @@ et le timescope ['1980-01-01,1981-01-01).
 __tags__: Création d'un regroupements sous une étiquette permettant de filtré l'affichages des listes des [__references__](#referentiels) et des [__datatypes__](#datatypes). 
 Mais aussi les [__colonnes__](#columns), les [__colonnes calculées__](#computedColumns), les [__colones dynamiques__](#dynamicColumns) d'une [__reference__](#referentiels) et les *variables*, les *components* et les *computedComponents* d'un [__datatype__](#datatypes).
 
-L'étiquette ```__hidden__``` est une étiquette qui n'a pas besoin d'êtres mise dans la liste de création. Nous l'utiliserons pour les données que l'on veux enregistrer en base mais que l'on ne veux pas rendre accessible à l'utilisateur.
-
 ``` yaml
 tags:
   localization:
@@ -1319,7 +1317,9 @@ tags:
     en: Data
 ```
 
-Pour lié une ou plusieurs étiquettes avec une *référence* ou une *colonne* il suffit d'ajouter une section *tag* sous le nom de la *référence*, *type de de donnée*, *variable*/*component* ou *colonne* à lier.
+L'étiquette ```__hidden__``` est une étiquette qui n'a pas besoin d'êtres mise dans la liste de création. Nous l'utiliserons pour les données que l'on veux enregistrer en base mais que l'on ne veux pas rendre accessible à l'utilisateur.
+
+Pour lier une ou plusieurs étiquettes avec une *référence* ou une *colonne* il suffit d'ajouter une section *tag* sous le nom de la *référence*, *type de de donnée*, *variable*/*component* ou *colonne* à lier.
 
 Exemple d'utilisation des étiquettes (__tags__) pour [__references__](#referentiels) :
 

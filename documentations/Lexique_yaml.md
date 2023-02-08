@@ -38,6 +38,22 @@ __application :__ dans cette partie nous décrirons l'application.
 
 - __internationalizationName__" : L'affichage du  nom (__name__) en fonction de la langue : (cf.[internationalisationName](#internationalisationname))
   ```
+  ```
+  
+## Les étiquettes (_tags_)
+__tags__: Création d'un regroupements sous une étiquette permettant de filtré l'affichages des listes des [__references__](#les-rfrentiels-_references_) et des [__datatypes__](#les-types-de-donnes-_datatypes_).
+Mais aussi les [colonnes](#les-colonnes-du-fichier), les [colonnes calculées](#les-colonnes-calculées), les [colones dynamiques](#les-colonnes-dynamiques) d'une [__reference__](#les-rfrentiels-_references_) et les [data](#data), les [components](#components) et les [computedComponents](#computedcomponents) d'un [__datatype__](#les-types-de-donnes-_datatypes_).
+
+L'étiquette ```__hidden__``` est une étiquette qui n'a pas besoin d'êtres mise dans la liste de création. Nous l'utiliserons pour les données que l'on veux enregistrer en base mais que l'on ne veux pas rendre accessible à l'utilisateur.
+
+``` yaml
+tags:
+  # le nom du tag
+  localization: 
+    # la traduction du tag
+    fr: Localisation
+    en: Localization
+```
 
 ## Les référentiels (_references_)
 __references :__ Un ensemble d'informations permettant de préciser le contexte de la mesure ou de l'observation. 
@@ -57,6 +73,7 @@ En déportant ces informations dans des fichiers __references__, on évite la r�
   ```
   
 - __keyColumns :__ Un tableau des noms des colonnes faisant partie de la clef primaire.
+- __tags__ : Un tableau des noms des étiquettes (déclaré dans la partie cf. [Les étiquettes](#les-tiquettes-_tags_))souhaité sur la référence pour filtrer l'affichage de la liste des références
 - __columns :__ (cf.  [Les colonnes du fichier](#les-colonnes-du-fichier))
 - __computedColumns :__ (cf. [Les colonnes calculées](#les-colonnes-calculées))
 - __dynamicColumns :__ (cf. [Les colonnes dynamiques](#les-colonnes-dynamiques))
@@ -70,9 +87,12 @@ En déportant ces informations dans des fichiers __references__, on évite la r�
 
   - __presenceConstraint__ : (cf.[presenceConstraint](#presence-constraint))
 
+  - __tags__ : Un tableau des noms des étiquettes (déclaré dans la partie cf. [Les étiquettes](#les-tiquettes-_tags_))souhaité sur la colonne pour filtré l'affichage du tableau
+
 
 ### Les colonnes calculées
 __computedColumns :__ Une _computedColumns_ est une colonne qui n'est pas présente dans le fichier et dont la valeur est une constante ou le résultat d'un calcul.
+  - __tags__ : Un tableau des noms des étiquettes (déclaré dans la partie cf. [Les étiquettes](#les-tiquettes-_tags_))souhaité sur la colonne calculée pour filtrer l'affichage du tableau
   - __checker__ permet de valider une colonne ou préciser son format (cf [checker](#checker))
   - __computation:__ section de calcul de la donnée 
   - __presenceConstraint__ : (cf.[presenceConstraint](#presence-constraint))~~
@@ -82,6 +102,7 @@ __dynamicColumns :__ Une _dynamicColumns_ est un ensemble de colonnes dont le n
   
   Par exemple s'il existe un référentiel "propriétés" avec les valeurs (couleur, catégorie, obligatoire), on pourrait avoir dans un autre référentiel (en utilisant le préfixe "pts_") pts_couleur, pts_catégorie et pts_obligatoire, en les déclarant comme _dynamicColumns_.
 
+- __tags__ : Un tableau des noms des étiquettes (déclaré dans la partie cf. [Les étiquettes](#les-tiquettes-_tags_))souhaité sur la colonne dynamique pour filtrer l'affichage du tableau
 - __headerPrefix :__ on définit la chaine de caractères servant à identifier les colonnes dynamique se trouvant dans le fichier
 - __internationalizationName :__ (cf.[internationalisationName](#internationalisationname))
 - __presenceConstraint__ :(cf.[presenceConstraint](#presence-constraint))
@@ -89,7 +110,7 @@ __dynamicColumns :__ Une _dynamicColumns_ est un ensemble de colonnes dont le n
 - __referenceColumnToLookForHeader :__ nom de la colonne listant les noms de colonnes dynamiques attendues
 
 ## Définition de référentiels hiérarchiques
-__compositeReferences :__ Une référence composite est créée en indiquant un lien parent-enfant entre un ou plusieurs référentiels ou une récursion sur un référentiel. Cela permet de générer une clef hiérarchique qui sera utilisée pour afficher hiérarchiquement ces référentiels (par exemple pour les [authorizations](#authorizations) ou pour le dépôt sur un [repository](#repository)).
+__compositeReferences :__ Une référence composite est créée en indiquant un lien parent-enfant entre un ou plusieurs référentiels ou une récursion sur un référentiel. Cela permet de générer une clef hiérarchique qui sera utilisée pour afficher hiérarchiquement ces référentiels (par exemple pour les [authorizations](#authorization) ou pour le dépôt sur un [repository](#repository)).
 
 - __internationalizationName :__ (cf.[internationalisationName](#internationalisationname))
   - __internationalizationName :__ (cf.[internationalisationName](#internationalisationname))
@@ -99,28 +120,29 @@ __compositeReferences :__ Une référence composite est créée en indiquant un
 
   - __parentKeyColumn :__ nom de la colonne parent se trouvant dans le référentiel enfant.
 
-## Les types de données
+## Les types de données (_dataTypes_)
 __dataTypes :__
 
 - __internationalizationName :__ (cf.[internationalisationName](#internationalisationname))
-
+- __tags__ : Un tableau des noms des étiquettes (déclaré dans la partie cf. [Les étiquettes](#les-tiquettes-_tags_))souhaité sur le types de donnée pour filtrer l'affichage de la liste des dataTypes.
 - __data :__ description de l'organisation de l'enregistrement des données dans la base de données sous la forme de composantes de variables.
-  On utilise comme identifiant le nom de la variable.
-- 
-- __data :__ description de l'organisation de l'enregistrement des données dans la base de données. (cf. [data](data))
-- __format :__ description du format du fichier (cf. [format](format))
+  On utilise comme identifiant le nom de la variable. (cf. [data](#data))
+- __format :__ description du format du fichier (cf. [format](#format))
 - __uniqueness :__ C'est là qu'on définit une contrainte d'unicité, en listant la liste des _variable components_ qui composent la clef. Si un fichier possède des lignes en doublon avec lui-même il sera rejeté.
 - __validations__: Cette section permet de rajouter des validations sur les données. On donnera un nom à chacune des validations en l'utilisant comme clef. 
-  - __checker__: (cf. [checker](checker))
-  - __internationalizationName__ (cf. [internationalizationName](internationalizationname))
-- __authorization :__ Cette section permet de définir les informations sur lesquelles on posera les droits. Elle est aussi utilisée pour le dépôt sur un [repository](#repository) (cf. [authorization](authorization))
-- __repository :__ Permet la gestion du dépôt des fichiers par période et contexte en se basant sur les informations de la section  ([authorization](authorizations))
+  - __checker__: (cf. [checker](#checker))
+  - __internationalizationName__ (cf. [internationalizationName](#internationalisationname))
+- __authorization :__ Cette section permet de définir les informations sur lesquelles on posera les droits. Elle est aussi utilisée pour le dépôt sur un [repository](#repository) (cf. [authorization](#authorization))
+- __repository :__ Permet la gestion du dépôt des fichiers par période et contexte en se basant sur les informations de la section  ([authorization](#authorization))
 
 ### data
   Les données du fichier sont enregistrées dans des [components](#components) et sont liées soit à des informations des colonnes, soit à des informations de l'en-tête. On peut aussi générer des données calculées ([computedComponents](#computedcomponents))
 
+- __tags__ : Un tableau des noms des étiquettes (déclaré dans la partie cf. [Les étiquettes](#les-tiquettes-_tags_))souhaité sur le data pour filtrer l'affichage de le tableau du dataType.
 - __components :__ On utilise comme clef le nom de la composante
+  - __tags__ : Un tableau des noms des étiquettes (déclaré dans la partie cf. [Les étiquettes](#les-tiquettes-_tags_))souhaité sur le components pour filtrer l'affichage de le tableau du dataType.
 - __computedComponents :__  On utilise comme clef le nom de la composante calculée
+  - __tags__ : Un tableau des noms des étiquettes (déclaré dans la partie cf. [Les étiquettes](#les-tiquettes-_tags_))souhaité sur le computedComponents pour filtrer l'affichage de le tableau du dataType.
 - __chartDescription__: permet de définir les données utilisées pour générer des graphes
   - __value__: nom de la composante portant la valeur
   - __unit__: nom de la composante portant l'unité
