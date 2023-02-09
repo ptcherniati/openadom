@@ -300,7 +300,11 @@ public class OreSiResources {
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<List<String>>> listReferences(@PathVariable("nameOrId") String nameOrId, @PathVariable("refType") String refType, @PathVariable("column") String column) {
         Application application = service.getApplication(nameOrId);
-        List<List<String>> list = repo.getRepository(application).referenceValue().findReferenceValue(refType, column);
+        List<List<String>> list = List.of();
+        if( !application.getConfiguration().getReferences().get(refType)
+                .getTags().stream().anyMatch(tag->Configuration.HIDDEN_TAG.equals(tag))) {
+             list = repo.getRepository(application).referenceValue().findReferenceValue(refType, column);
+        }
         return ResponseEntity.ok(list);
     }
 

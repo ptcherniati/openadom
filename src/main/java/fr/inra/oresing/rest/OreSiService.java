@@ -1307,6 +1307,10 @@ public class OreSiService {
     }
 
     public List<ReferenceValue> findReference(String nameOrId, String refType, MultiValueMap<String, String> params) {
+       if( getApplication(nameOrId).getConfiguration().getReferences().get(refType)
+                .getTags().stream().anyMatch(tag->Configuration.HIDDEN_TAG.equals(tag))){
+           return List.of();
+       }
         return referenceService.findReference(nameOrId, refType, params);
     }
 

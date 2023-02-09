@@ -602,7 +602,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.references.types_de_donnees_par_themes_de_sites_et_projet.tags", Matchers.hasItem("context")))
                     .andExpect(jsonPath("$.references.especes.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.references.especes.columns.esp_nom.tags", Matchers.hasItem("test")))
-                    .andExpect(jsonPath("$.references['type de fichiers'].tags", Matchers.hasItem("no-tag")))
+                    .andExpect(jsonPath("$.references['type de fichiers'].tags", Matchers.hasItem("__hidden__")))
                     .andExpect(jsonPath("$.references.variables.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.references.unites.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.references.valeurs_qualitatives.tags", Matchers.hasItem("data")))
@@ -630,6 +630,9 @@ public class OreSiResourcesTest {
                 JsonPath.parse(response).read("$.id");
             }
         }
+        final ResultActions typeDeFichiers = mockMvc.perform(get("/api/v1//applications/monsore/references/{refType}", "type de fichiers")
+                        .cookie(authCookie))
+                    .andExpect(jsonPath("$.referenceValues", Matchers.hasSize(0)));
         CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
         String withRigthsUserId = withRightsUserResult.getUserId().toString();
         Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")

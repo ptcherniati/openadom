@@ -153,6 +153,7 @@ references:
       description_fr: null
       description_en: null
   type de fichiers:
+    tags: ["__hidden__"]
     keyColumns:
       - nom_key
     internationalizationName:
