@@ -6,12 +6,13 @@ import lombok.ToString;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Getter
 @Setter
 @ToString(callSuper = true)
 public class Application extends OreSiEntity {
-    public final Application filterFields(List<ApplicationInformation> filters){
+    public final Application filterFieldsAndHidden(List<ApplicationInformation> filters){
         final Application returnApp = new Application();
         returnApp.setComment(this.getComment());
         returnApp.setVersion(this.getVersion());
@@ -26,7 +27,11 @@ public class Application extends OreSiEntity {
             returnApp.setDataType(this.getDataType());
         }
         if (filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.REFERENCETYPE)) {
-            returnApp.setReferenceType(this.getReferenceType());
+            final List<String> references = this.getReferenceType()
+                    .stream()
+                    .filter(referenceName->getConfiguration().getReferences().get(referenceName).getTags().stream().noneMatch(tag -> Configuration.HIDDEN_TAG.equals(tag)))
+                    .collect(Collectors.toList());
+            returnApp.setReferenceType(references);
         }
         return returnApp;
     }

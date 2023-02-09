@@ -591,7 +591,14 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
             JsonPath.parse(response).read("$.id");
-            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore", "ALL,REFERENCETYPE")
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications")
+                    .cookie(authCookie)
+                    .param("filter","ALL"))
+                    //with no tag __hidden__
+                    .andExpect(jsonPath("$[0].referenceType", Matchers.hasItem("sites")))
+                    // if have tag __hidden__
+                    .andExpect(jsonPath("$[0].referenceType", Matchers.not(Matchers.hasItem("type de fichiers"))));
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore")
                     .cookie(authCookie)
                     .param("filter","ALL"))
                     .andExpect(status().is2xxSuccessful())

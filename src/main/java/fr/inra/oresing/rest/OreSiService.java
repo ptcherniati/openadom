@@ -1292,7 +1292,7 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         List<Application> result = repo.application().findAll();
         return result.stream()
-                .map(application -> application.filterFields(filters))
+                .map(application -> application.filterFieldsAndHidden(filters))
                 .collect(Collectors.toList());
     }
 
