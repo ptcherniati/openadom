@@ -1074,8 +1074,9 @@ public class OreSiResourcesTest {
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(readerCookies)
-            ).andReturn().getResponse().getContentAsString();
-            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("progressive"));
+            )
+                    .andExpect(jsonPath("$[0].name",IsEqual.equalTo("progressive")))
+                    .andReturn().getResponse().getContentAsString();
         }
 
         {
@@ -1117,11 +1118,10 @@ public class OreSiResourcesTest {
                     "}\n" +
                     "}";
 
-            // L'utilisateur sans droit ne peut voir les applications
             String response = mockMvc.perform(get("/api/v1/applications")
                             .cookie(readerCookies)
                     )
-                    .andExpect(jsonPath("$[*].name", Matchers.hasSize(0)))
+                    .andExpect(jsonPath("$[0].name",IsEqual.equalTo("progressive")))
                     .andReturn().getResponse().getContentAsString();
 
 

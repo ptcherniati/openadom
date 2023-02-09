@@ -21,9 +21,9 @@ public class ApplicationResult {
     InternationalizationMap internationalization;
     Map<String, Reference> references;
     AuthorizationsForUserResult authorizationReferencesRights;
+    List<ReferenceSynthesis> referenceSynthesis;
     Map<String, DataType> dataTypes;
     Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights;
-    List<ReferenceSynthesis> referenceSynthesis;
     Configuration configuration;
 
     @Value

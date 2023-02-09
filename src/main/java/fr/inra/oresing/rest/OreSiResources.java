@@ -114,7 +114,7 @@ public class OreSiResources {
 
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<ApplicationResult> getApplication(@PathVariable("nameOrId") String nameOrId, @RequestParam(required = false, defaultValue = "") String[] filter) {
-        Application application = service.getApplication(nameOrId);
+        Application application = service.getApplicationOrApplicationAccordingToRights(nameOrId);
         List<ApplicationInformation> filters = Arrays.stream(filter)
                 .map(s -> ApplicationInformation.valueOf(s))
                 .collect(Collectors.toList());
@@ -195,7 +195,7 @@ public class OreSiResources {
         final AuthorizationsForUserResult authorizationReferencesRights = withReferenceType ? service.getAuthorizationsReferencesRights(nameOrId, request.getRequestUserId().toString(), references.keySet()) : new AuthorizationsForUserResult(new HashMap<>(), nameOrId, false, null);
         final Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights = withDatatypes ? service.getAuthorizationsDatatypesRights(nameOrId, dataTypes.keySet()) : new HashMap<>();
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, dataTypes, authorizationsDatatypesRights, referenceSynthesis, configuration);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, authorizationsDatatypesRights, configuration);
         return ResponseEntity.ok(applicationResult);
     }
 

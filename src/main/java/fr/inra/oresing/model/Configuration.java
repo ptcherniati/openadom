@@ -74,7 +74,7 @@ public class Configuration {
         for (Map.Entry<String, ReferenceDescription> reference : references.entrySet()) {
             addDependencyNodesForReference(nodes, reference);
         }
-        for (CompositeReferenceDescription compositeReferences : compositeReferences .values()) {
+        for (CompositeReferenceDescription compositeReferences : compositeReferences.values()) {
             addDependencyNodesForCompositeReference(nodes, compositeReferences);
         }
         LinkedHashMap<String, ReferenceDescription> sortedReferences = new LinkedHashMap<>();
@@ -90,9 +90,9 @@ public class Configuration {
         compositeReference.getComponents().stream()
                 .map(CompositeReferenceComponentDescription::getReference)
                 .filter(Objects::nonNull)
-                .forEach(reference->{
+                .forEach(reference -> {
                     DependencyNode dependencyNode = nodes.computeIfAbsent(reference, k -> new DependencyNode(reference));
-                    if(!parentNodes.isEmpty()) {
+                    if (!parentNodes.isEmpty()) {
                         dependencyNode.addDependance(parentNodes.getLast());
                     }
                     parentNodes.add(dependencyNode);
@@ -147,11 +147,37 @@ public class Configuration {
                     .stream().filter(n -> !n.dependsOn.contains(node))
                     .forEach(dependencyNode -> addRecursively(dependencyNode, sortedReferences, references));
         }
-        if(references.get(node.value)!=null) {
+        if (references.get(node.value) != null) {
             sortedReferences.put(node.value, references.get(node.value));
         }
 
 
+    }
+
+    public Configuration configurationAccordingToRights() {
+        Configuration configurationforNotAuthorized = new Configuration();
+        configurationforNotAuthorized.setInternationalization(this.getInternationalization());
+        configurationforNotAuthorized.setApplication(this.getApplication());
+        configurationforNotAuthorized.setTags(this.getTags());
+        configurationforNotAuthorized.setReferences((this.referenceAccordingToRights()));
+        configurationforNotAuthorized.setDataTypes(this.datatypeAccordingToRights());
+        return configurationforNotAuthorized;
+    }
+
+    public LinkedHashMap<String, Configuration.DataTypeDescription> datatypeAccordingToRights() {
+        return getDataTypes().entrySet().stream().map(entry -> {
+            final Configuration.DataTypeDescription datatypeDescriptionccordingToRights = new Configuration.DataTypeDescription();
+            datatypeDescriptionccordingToRights.setTags(Optional.ofNullable(entry.getValue()).map(Configuration.DataTypeDescription::getTags).orElse(null));
+            return entry;
+        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+    }
+
+    public LinkedHashMap<String, Configuration.ReferenceDescription> referenceAccordingToRights() {
+        return getReferences().entrySet().stream().map(entry -> {
+            final Configuration.ReferenceDescription referenceDescriptionccordingToRights = new Configuration.ReferenceDescription();
+            referenceDescriptionccordingToRights.setTags(Optional.ofNullable(entry.getValue()).map(Configuration.ReferenceDescription::getTags).orElse(null));
+            return entry;
+        }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 
     public enum MigrationStrategy {
@@ -238,7 +264,7 @@ public class Configuration {
     @Setter
     public static abstract class ReferenceColumnDescription {
 
-        @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues ="MANDATORY,OPTIONAL,ABSENT")
+        @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues = "MANDATORY,OPTIONAL,ABSENT")
         private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
@@ -328,7 +354,7 @@ public class Configuration {
     @ToString
     public static class RepositoryDescription {
 
-        String filePattern= "";
+        String filePattern = "";
         Map<String, Integer> authorizationScope = new HashMap<>();
         TokenDateDescription startDate;
         TokenDateDescription endDate;
@@ -450,7 +476,7 @@ public class Configuration {
 
         @ApiModelProperty(notes = "The description for columns in authorization panel", required = false)
         private Map<String, AuthorizationColumnsDescription> columnsDescription = Arrays.stream(OperationType.values())
-                .collect(Collectors.toMap(OperationType::toString,OperationType::getAuthorizationColumnsDescription));
+                .collect(Collectors.toMap(OperationType::toString, OperationType::getAuthorizationColumnsDescription));
 
         public InternationalizationAuthorisationMap getInternationalization() {
             final InternationalizationAuthorisationMap internationalizationAuthorisationMap = new InternationalizationAuthorisationMap();
@@ -586,8 +612,8 @@ public class Configuration {
         @ApiModelProperty(notes = "The variable/component to bind to. The content of the cell from the CSV will be pushed in this variable/component", required = true)
         private VariableComponentKey boundTo;
 
-        @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues ="MANDATORY,OPTIONAL,ABSENT")
-        private ColumnPresenceConstraint presenceConstraint  = ColumnPresenceConstraint.MANDATORY;
+        @ApiModelProperty(notes = "If the column is mandatory or not", required = true, example = "MANDATORY", allowableValues = "MANDATORY,OPTIONAL,ABSENT")
+        private ColumnPresenceConstraint presenceConstraint = ColumnPresenceConstraint.MANDATORY;
     }
 
     @Getter
@@ -875,7 +901,7 @@ public class Configuration {
         }
 
         void addDependance(DependencyNode dependencyNode) {
-            if(dependencyNode==null){
+            if (dependencyNode == null) {
                 return;
             }
             dependencyNode.isLeaf = false;

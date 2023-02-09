@@ -126,8 +126,8 @@ public class AuthorizationResourcesTest {
         {
             String response = mockMvc.perform(get("/api/v1/applications")
                     .cookie(authReaderCookie)
-            ).andReturn().getResponse().getContentAsString();
-            Assert.assertFalse("On ne devrait pas voir l'application car les droits n'ont pas encore été accordés", response.contains("acbb"));
+            ).andExpect(jsonPath("$[0].name", IsEqual.equalTo("acbb")))
+                    .andReturn().getResponse().getContentAsString();
         }
 
         {

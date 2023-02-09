@@ -37,4 +37,12 @@ public class Application extends OreSiEntity {
     private List<String> dataType;
     private Configuration configuration;
     private UUID configFile; // lien vers un BinaryFile
+
+
+    public Application applicationAccordingToRights() {
+        final Configuration configuration = this.getConfiguration();
+        Configuration configurationforNotAuthorized = configuration.configurationAccordingToRights();
+        this.setConfiguration((configurationforNotAuthorized));
+        return this;
+    }
 }

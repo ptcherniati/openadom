@@ -19,6 +19,7 @@ import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
@@ -1304,15 +1305,31 @@ public class OreSiService {
 
     public List<Application> getApplications(List<ApplicationInformation> filters) {
         authenticationService.setRoleForClient();
-        List<Application> result = repo.application().findAll();
-        return result.stream()
-                .map(application -> application.filterFields(filters))
+        List<Application> applicationForUser = repo.application().findAll();
+        authenticationService.setRoleAdmin();
+        List<Application> applicationForAdmin = repo.application().findAll();
+        return applicationForAdmin.stream()
+                .map(application -> applicationForUser.stream()
+                        .filter(app->app.getId().equals(application.getId()))
+                        .findAny()
+                        .orElse(application.applicationAccordingToRights()))
                 .collect(Collectors.toList());
     }
 
     public Application getApplication(String nameOrId) {
         authenticationService.setRoleForClient();
         return repo.application().findApplication(nameOrId);
+    }
+
+    public Application getApplicationOrApplicationAccordingToRights(String nameOrId) {
+        authenticationService.setRoleForClient();
+        try {
+            return repo.application().findApplication(nameOrId);
+        } catch (NoSuchApplicationException e) {
+            authenticationService.setRoleAdmin();
+            return repo.application().findApplication(nameOrId).applicationAccordingToRights();
+
+        }
     }
 
     public AuthorizationsForUserResult getAuthorizationsReferencesRights(String nameOrId, String userID, Set<String> references) {
