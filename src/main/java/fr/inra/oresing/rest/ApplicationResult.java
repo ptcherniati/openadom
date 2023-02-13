@@ -24,7 +24,14 @@ public class ApplicationResult {
     List<ReferenceSynthesis> referenceSynthesis;
     Map<String, DataType> dataTypes;
     Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights;
+    ApplicationResult.RightsRequest rightsRequest;
     Configuration configuration;
+
+    @Value
+    public static class RightsRequest {
+        List<String> fields;
+    }
+
 
     @Value
     public static class Reference {

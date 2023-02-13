@@ -17,6 +17,56 @@ tags:
   test:
     fr: test
     en: test
+rightsRequest:
+  description:
+    fr: Vous pouvez demander des droits à l'application monsore en remplissant ce formulaire
+    en: You can request rights to the monsore application by filling out this form
+  format:
+    organization:
+      internationalizationName:
+        fr: Nom de l'organisme de recherche
+        en: Name of research organization
+      checker:
+        name: RegularExpression
+        params:
+          pattern: ".*"
+          required: true
+    project:
+      internationalizationName:
+        fr: Description du projet de recherche
+        en: Description of the research project
+      checker:
+        name: RegularExpression
+        params:
+          pattern: ".*"
+          required: false
+    startDate:
+      internationalizationName:
+        fr: Date de début du projet
+        en: Project start date
+      checker:
+        name: Date
+        params:
+          pattern: "dd/MM/yyyy"
+    endDate:
+      internationalizationName:
+        fr: Date de fin du projet
+        en: Project end date
+      checker:
+        name: Date
+        params:
+          pattern: "dd/MM/yyyy"
+    projectManagers:
+      internationalizationName:
+        fr: Responsables du projet
+        en: Project managers
+      checker:
+        name: RegularExpression
+        params:
+          pattern: ".*"
+          required: false
+          multiplicity: MANY
+
 compositeReferences:
   sites:
     components:

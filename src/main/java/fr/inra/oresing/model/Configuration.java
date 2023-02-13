@@ -42,6 +42,8 @@ public class Configuration {
             "Labels can be used in the document to identify groups and enable filters or groupings.", required = false)
     public Map<String, Internationalization> tags = new HashMap<>();
 
+    RightRequestDescription rightsRequest;
+
     @ApiModelProperty(notes = "A list of references indexed by name. A reference is used to describe other references or data..", required = true)
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
 
@@ -59,7 +61,37 @@ public class Configuration {
         internationalizationMap.setDataTypes(Optional.ofNullable(dataTypes).map(DataTypeDescription::getInternationalization).orElse(null));
         internationalizationMap.setReferences(Optional.ofNullable(references).map(ReferenceDescription::getInternationalization).orElse(null));
         internationalizationMap.setInternationalizedTags(tags);
+        internationalizationMap.setRightsRequest(Optional.ofNullable(rightsRequest).map(RightRequestDescription::getInternationalization).orElse(null));
+
         return internationalizationMap;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class RightRequestDescription {
+        Internationalization description;
+        @ApiModelProperty(notes = "An additional file is a file that is dropped onto an application providing additional information described in the configuration.\n" +
+                "The deposited files are then associated with \"data\" objects by choosing the authorizationScopes and an interval of dates.", required = false)
+        private Map<String, FieldFormat> format = new HashMap();
+
+        public static InternationalizationRightRequestMap getInternationalization(RightRequestDescription requestDescription) {
+            final InternationalizationRightRequestMap internationalizationRightRequestMap = new InternationalizationRightRequestMap();
+            Map<String, Internationalization> internationalizedFormat =
+                    Maps.transformValues(requestDescription.getFormat(), InternationalizationImpl::getInternationalizationName);
+            internationalizationRightRequestMap.setFormat(internationalizedFormat);
+            internationalizationRightRequestMap.setDescription(requestDescription.getDescription());
+            return internationalizationRightRequestMap;
+        }
+    }
+
+
+    @Getter
+    @Setter
+    @ToString
+    public static class FieldFormat extends InternationalizationImpl {
+        @ApiModelProperty(notes = "The description of an information field. \nIf not provided the field is considered as a text field.", required = false)
+        private CheckerDescription checker;
     }
 
     public Optional<CompositeReferenceDescription> getCompositeReferencesUsing(String reference) {

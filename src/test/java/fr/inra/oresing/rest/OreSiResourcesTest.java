@@ -610,7 +610,9 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.references.unites.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.references.valeurs_qualitatives.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.references.variables_et_unites_par_types_de_donnees.tags", Matchers.hasItem("data")))
-                    .andExpect(jsonPath("$.internationalization.internationalizedTags.context.fr", Is.is("contexte")));
+                    .andExpect(jsonPath("$.internationalization.internationalizedTags.context.fr", Is.is("contexte")))
+                    .andExpect(jsonPath("$.rightsRequest.fields", Matchers.hasItem("endDate")))
+                    .andExpect(jsonPath("$.configuration.rightsRequest.format.organization", Matchers.not(Matchers.empty())));
         }
         CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
 
@@ -1072,9 +1074,9 @@ public class OreSiResourcesTest {
 
         {
             String response = mockMvc.perform(get("/api/v1/applications")
-                    .cookie(readerCookies)
-            )
-                    .andExpect(jsonPath("$[0].name",IsEqual.equalTo("progressive")))
+                            .cookie(readerCookies)
+                    )
+                    .andExpect(jsonPath("$[0].name", IsEqual.equalTo("progressive")))
                     .andReturn().getResponse().getContentAsString();
         }
 
@@ -1120,7 +1122,7 @@ public class OreSiResourcesTest {
             String response = mockMvc.perform(get("/api/v1/applications")
                             .cookie(readerCookies)
                     )
-                    .andExpect(jsonPath("$[0].name",IsEqual.equalTo("progressive")))
+                    .andExpect(jsonPath("$[0].name", IsEqual.equalTo("progressive")))
                     .andReturn().getResponse().getContentAsString();
 
 

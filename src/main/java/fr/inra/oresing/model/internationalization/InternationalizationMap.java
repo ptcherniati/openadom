@@ -21,9 +21,13 @@ public class InternationalizationMap {
     @Nullable
     @ApiModelProperty(notes = "The internationalization description from section dataTypes", required = false)
     Map<String, InternationalizationDataTypeMap> dataTypes;
-   @Nullable
+    @Nullable
     @ApiModelProperty(notes = "The internationalization for tags.\n" +
             "Labels can be used in the document to identify groups and enable filters or groupings.", required = false)
     Map<String, Internationalization> internationalizedTags;
+
+    @Nullable
+    @ApiModelProperty(notes = "The internationalization description from section rightsRequest", required = false)
+    InternationalizationRightRequestMap rightsRequest;
 
 }

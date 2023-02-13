@@ -121,8 +121,13 @@ public class OreSiResources {
         boolean withDatatypes = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.DATATYPE);
         boolean withReferenceType = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.REFERENCETYPE);
         boolean withConfiguration = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.CONFIGURATION);
+        boolean withRightsRequest = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.RIGHTSREQUEST);
         final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = withReferenceType ? service.getReferenceSynthesis(application) : List.of();
         TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
+         ApplicationResult.RightsRequest rightrequest = null;
+        if (withRightsRequest) {
+            rightrequest = new ApplicationResult.RightsRequest(new LinkedList(application.getConfiguration().getRightsRequest().getFormat().keySet()));
+        }
         if (withReferenceType) {
             application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
                 ImmutableList<String> referenceTypes = compositeReferenceDescription.getComponents().stream()
@@ -195,7 +200,7 @@ public class OreSiResources {
         final AuthorizationsForUserResult authorizationReferencesRights = withReferenceType ? service.getAuthorizationsReferencesRights(nameOrId, request.getRequestUserId().toString(), references.keySet()) : new AuthorizationsForUserResult(new HashMap<>(), nameOrId, false, null);
         final Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights = withDatatypes ? service.getAuthorizationsDatatypesRights(nameOrId, dataTypes.keySet()) : new HashMap<>();
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, authorizationsDatatypesRights, configuration);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, authorizationsDatatypesRights, rightrequest, configuration);
         return ResponseEntity.ok(applicationResult);
     }
 
