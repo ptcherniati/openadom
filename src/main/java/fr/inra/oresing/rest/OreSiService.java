@@ -352,7 +352,7 @@ public class OreSiService {
             throw new NotApplicationCreatorRightsException(applicationName, currentUser.getAuthorizations());
         } else if (!isSuperAdmin) {
             currentUser.getAuthorizations().stream()
-                    .filter(s -> isSuperAdmin || applicationName.matches(s))
+                    .filter(s -> applicationName.matches(s))
                     .findAny()
                     .orElseThrow(() -> new NotApplicationCreatorRightsException(applicationName));
         }
@@ -1381,7 +1381,6 @@ public class OreSiService {
 
     private Map.Entry<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDatatypesRights(String nameOrId, String datatype, String userId) {
         final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(nameOrId, datatype, userId);
-        final Map<AuthorizationsForUserResult.Roles, Boolean> roles = new HashMap<>(AuthorizationsForUserResult.DEFAULT_ROLES);
         Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new HashMap<>();
         final Set<OperationType> rolesSetted = authorizationsForUser.getAuthorizationResults().keySet();
         final boolean isAdmin = authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.admin);

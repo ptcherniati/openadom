@@ -1007,7 +1007,6 @@ public class ApplicationConfigurationService {
             String validationRuleDescriptionEntryKey = validationRuleDescriptionEntry.getKey();
             Configuration.LineValidationRuleWithColumnsDescription lineValidationRuleDescription = validationRuleDescriptionEntry.getValue();
             if (lineValidationRuleDescription.getColumns() == null) {
-                System.out.println(lineValidationRuleDescription.getColumns());
                 lineValidationRuleDescriptionValidationContext.missingParamColumnReferenceForChecker(validationRuleDescriptionEntryKey);
             } else
                 verifyLineValidationRuleDescription(lineValidationRuleDescriptionValidationContext, validationRuleDescriptionEntryKey, lineValidationRuleDescription);

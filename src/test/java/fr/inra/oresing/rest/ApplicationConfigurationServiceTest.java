@@ -27,10 +27,7 @@ import org.springframework.test.context.support.DirtiesContextTestExecutionListe
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RunWith(SpringRunner.class)
@@ -114,7 +111,7 @@ public class ApplicationConfigurationServiceTest {
 
     private void parseConfigurationFromResource(String resource) {
         try (InputStream in = getClass().getResourceAsStream(resource)) {
-            byte[] bytes = in.readAllBytes();
+            byte[] bytes = Objects.requireNonNull(in).readAllBytes();
             ConfigurationParsingResult configurationParsingResult = service.parseConfigurationBytes(bytes);
             log.debug("résultat de la validation de " + resource + " = " + configurationParsingResult);
             Assert.assertTrue(resource + " doit être reconnu comme un fichier valide", configurationParsingResult.isValid());
@@ -159,7 +156,7 @@ public class ApplicationConfigurationServiceTest {
 
         final Set<String> unknownUsedAsVariableComponentUniqueness = (Set<String>) missingVariableComponentForChecker.getMessageParams().get("unknownUsedAsVariableComponentUniqueness");
         Assert.assertEquals(true, unknownUsedAsVariableComponentUniqueness != null);
-        Assert.assertEquals(true, unknownUsedAsVariableComponentUniqueness.contains("date_jour"));
+        Assert.assertEquals(true, Objects.requireNonNull(unknownUsedAsVariableComponentUniqueness).contains("date_jour"));
     }
 
     @Test

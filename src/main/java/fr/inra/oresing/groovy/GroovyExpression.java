@@ -83,7 +83,7 @@ public class GroovyExpression implements Expression<Object> {
     public Object evaluate(Map<String, Object> context) {
         try {
             Bindings bindings = new SimpleBindings();
-            context.forEach(bindings::put);
+            bindings.putAll(context);
             Object evaluation = script.eval(bindings);
             return evaluation;
         } catch (ScriptException e) {

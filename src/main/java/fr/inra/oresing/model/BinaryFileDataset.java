@@ -31,7 +31,7 @@ public class BinaryFileDataset {
                 .collect(Collectors.joining(",", "[", "]"));
         return String.format("%s -> [%s, %s]",
                 authorizationsString, Strings.isNullOrEmpty(from) ?"":OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(from)),
-                authorizationsString, Strings.isNullOrEmpty(to)?"":OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(to))
+                Strings.isNullOrEmpty(to)?"":OreSiService.DATE_FORMATTER_DDMMYYYY.format(OreSiService.DATE_TIME_FORMATTER.parse(to))
         );
     }
 }

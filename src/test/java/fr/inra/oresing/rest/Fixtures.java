@@ -181,7 +181,7 @@ public class Fixtures {
     public String getConditionsPrelevementRepositoryId(String site) {
         return String.format("{\n" +
                 "      \"requiredAuthorizations\":{\n" +
-                "         \"localization_site\":\"leman\"\n" +
+                "         \"localization_site\":\"%s\"\n" +
                 "      },\n" +
                 "      \"from\":\"2020-01-01 00:00:00\",\n" +
                 "      \"to\":\"2020-31-12 00:00:00\"\n" +
@@ -193,7 +193,7 @@ public class Fixtures {
     }
 
     public String getConditionsPrelevementRepositoryResourceName(String site) {
-        return String.format("/data/recursivite/suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", site);
+        return String.format("/data/recursivite/suivi_des_lacs_%s_conditions_prelevements_01-01-2020_31-12-2020.csv", site);
     }
 
     public Map<String, String> getProgressiveYaml() {

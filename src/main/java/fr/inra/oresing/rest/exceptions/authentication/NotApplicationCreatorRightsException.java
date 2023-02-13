@@ -21,7 +21,6 @@ public class NotApplicationCreatorRightsException extends OreSiTechnicalExceptio
 
     public NotApplicationCreatorRightsException(Throwable cause) {
         super(NO_RIGHT_FOR_APPLICATION_CREATION, cause);
-        this.applicationName = applicationName;
         this.applicationRestrictions = List.of();
     }
 }

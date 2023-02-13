@@ -403,7 +403,7 @@ public class AuthorizationService {
                 .map(map -> map.get("offset"))
                 .map(l -> l.isEmpty() ? "0" : l.get(0))
                 .map(os -> Long.parseLong(os))
-                .orElse(0l);
+                .orElse(0L);
         long limit = Optional.ofNullable(params)
                 .map(map -> map.get("limit"))
                 .map(l -> l.isEmpty()  ?Long.MAX_VALUE :Long.parseLong( l.get(0)))
@@ -607,7 +607,6 @@ public class AuthorizationService {
             canAddApplicationCreatorRole = true;
         } else if (authenticationService.hasRole(OreSiRole.applicationCreator())) {
             final OreSiUser user = userRepository.findByLogin(oreSiUserRoleApplicationCreator.getUserId()).orElseGet(() -> userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.getUserId())));
-            ;
             if (user.getAuthorizations().stream()
                     .anyMatch(p -> Pattern.compile(p)
                             .matcher(oreSiUserRoleApplicationCreator.getApplicationPattern())

@@ -17,8 +17,7 @@ public class MultiYaml {
         ZipInputStream zis = new ZipInputStream(file.getInputStream());
         ZipEntry zipEntry = zis.getNextEntry();
         YAMLMapper mapper = new YAMLMapper();
-        Map<String, Object> configuration = new HashMap<>();
-        configuration.putAll(Map.of("version",0));
+        Map<String, Object> configuration = new HashMap<>(Map.of("version", 0));
         while (zipEntry != null) {
             if (!zipEntry.isDirectory()) {
                 final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();

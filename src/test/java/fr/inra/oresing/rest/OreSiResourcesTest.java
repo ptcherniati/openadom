@@ -677,7 +677,6 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.applicationName", Is.is("monsore")))
                 .andReturn()
                 .getResponse().getContentAsString();
-        ;
 
         try (InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {
             MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);

@@ -47,10 +47,8 @@ public class AuthorizationPublicationHelper {
                     return false;
                 }
             }
-            return true;
-        } else {
-            return true;
         }
+        return true;
     }
 
     public AuthorizationPublicationHelper(OreSiRepository.RepositoryForApplication repositoryForApplication, AuthorizationService authorizationService, OreSiService oreSiService) {
@@ -72,7 +70,6 @@ public class AuthorizationPublicationHelper {
         this.isApplicationCreator = currentUserRolesOptional.map(CurrentUserRoles::getMemberOf).map(roles -> roles.stream().anyMatch(role -> OreSiRole.applicationCreator().getAsSqlRole().equals(role))).orElse(false);
         this.authorizationsForUser = authorizationService.getAuthorizationsForUser(application.getName(), dataType, currentUserRolesOptional.map(CurrentUserRoles::getCurrentUser).orElse(""));
         this.authorizationsForPublic = authorizationService.getAuthorizationsForUser(application.getName(), dataType, "_public_");
-        ;
         final Optional<BinaryFileDataset> binaryFileDataset = Optional.ofNullable(params).map(par -> par.getBinaryfiledataset() != null ? params.getBinaryfiledataset() : BinaryFileDataset.EMPTY_INSTANCE());
         this.isRepository = isRepository(application, dataType);
         return this;
@@ -177,21 +174,17 @@ public class AuthorizationPublicationHelper {
             return false;
         }
         if (auth.getFromDay() != null) {
-            if (auth.getFromDay() != null) {
-                if (!authorization1.getTimeScope().getRange().hasLowerBound()) {
-                    return false;
-                } else if (authorization1.getTimeScope().getRange().lowerEndpoint().compareTo(auth.getFromDay().atStartOfDay()) < 0) {
-                    return false;
-                }
+            if (!authorization1.getTimeScope().getRange().hasLowerBound()) {
+                return false;
+            } else if (authorization1.getTimeScope().getRange().lowerEndpoint().compareTo(auth.getFromDay().atStartOfDay()) < 0) {
+                return false;
             }
         }
         if (auth.getToDay() != null) {
-            if (auth.getToDay() != null) {
-                if (!authorization1.getTimeScope().getRange().hasUpperBound()) {
-                    return false;
-                } else if (authorization1.getTimeScope().getRange().upperEndpoint().compareTo(auth.getToDay().atStartOfDay()) >= 0) {
-                    return false;
-                }
+            if (!authorization1.getTimeScope().getRange().hasUpperBound()) {
+                return false;
+            } else if (authorization1.getTimeScope().getRange().upperEndpoint().compareTo(auth.getToDay().atStartOfDay()) >= 0) {
+                return false;
             }
         }
         return auth.getRequiredAuthorizations().entrySet().stream()
