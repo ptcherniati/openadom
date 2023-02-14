@@ -28,6 +28,6 @@ public class InternationalizationMap {
 
     @Nullable
     @ApiModelProperty(notes = "The internationalization description from section rightsRequest", required = false)
-    InternationalizationRightRequestMap rightsRequest;
+    InternationalizationRightsRequestMap rightsRequest;
 
 }

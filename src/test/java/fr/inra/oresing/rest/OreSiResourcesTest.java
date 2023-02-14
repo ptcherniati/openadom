@@ -9,6 +9,7 @@ import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.model.OreSiUser;
+import fr.inra.oresing.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OperationType;
@@ -623,6 +624,71 @@ public class OreSiResourcesTest {
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         final String typeDeSites = fixtures.getMonsoreReferentielFiles().get("type_de_sites");
+        /**
+         * on test la demande de droits pour un utilisateur lambda
+         */
+        {
+            String rightsRequest = "{\n" +
+                    "  \"id\": \"\",\n" +
+                    "  \"fields\": {\n" +
+                    "    \"organization\": \"INRAE\",\n" +
+                    "    \"project\": \"openAdom\",\n" +
+                    "    \"startDate\": \"10/10/1010\",\n" +
+                    "    \"startDate\": \"10/11/1010\",\n" +
+                    "    \"projectManagers\": \"toto,titi\"\n" +
+                    "  },\n" +
+                    "  \"rightsRequest\": [{\n" +
+                    "   \"usersId\": null,\n" +
+                    "   \"applicationNameOrId\":\"monsore\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une authorization sur monsore\",\n" +
+                    "   \"dataType\":\"pem\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"projet\":\"projet_manche\",\n" +
+                    "            \"localization\":\"plateforme.nivelle.nivelle__p1\"\n" +
+                    "         },\n" +
+                    "         \"dataGroups\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[1984,1,1],\n" +
+                    "            \"toDay\":[1984,1,6]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "}\n" +
+                    "}]\n" +
+                    "}";
+
+            String response = mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(rightsRequest)
+                            .cookie(authCookie)))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            response = mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(rightsRequest)
+                            .cookie(lambdaCookie)))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+            final RightsRequestInfos rightsRequestInfos = new RightsRequestInfos();
+            rightsRequestInfos.setOffset(0L);
+            rightsRequestInfos.setLimit(1L);
+            rightsRequestInfos.setFieldFilters(Set.of(new RightsRequestInfos.FieldFilters("organization", "INRAE", null,null,null,null)));
+            String json  = new ObjectMapper().writeValueAsString(rightsRequestInfos);
+
+            response = mockMvc.perform((get("/api/v1/applications/monsore/rightsRequest")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(json)
+                            .cookie(lambdaCookie)))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+        }
 
         String response = null;
         try (InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {

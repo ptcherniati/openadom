@@ -24,4 +24,15 @@ OreSiRole extends WithSqlIdentifier {
     default String getSqlIdentifier() {
         return "\"" + getAsSqlRole() + "\"";
     }
+
+    public default String toSqlCreaterole() {
+        return "CREATE ROLE " + getSqlIdentifier();
+    }
+
+    default public String addUserInRoleSql(OreSiRoleWeCanGrantOtherRolesTo roleToModify, boolean withAdminOption) {
+        String withAdminOptionClause = withAdminOption ? " WITH ADMIN OPTION" : "";
+        return "GRANT " + getSqlIdentifier() + ""
+                + " TO " + roleToModify.getSqlIdentifier() + ""
+                + withAdminOptionClause;
+    }
 }

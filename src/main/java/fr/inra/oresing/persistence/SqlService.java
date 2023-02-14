@@ -3,7 +3,6 @@ package fr.inra.oresing.persistence;
 import fr.inra.oresing.model.PolicyDescription;
 import fr.inra.oresing.persistence.roles.*;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -13,7 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -48,7 +46,7 @@ public class SqlService {
     }
 
     public void setTableOwner(SqlTable table, OreSiRole owner) {
-        execute("ALTER TABLE " + table.getSqlIdentifier() + " OWNER TO " + owner.getSqlIdentifier());
+        execute(table.setTableOwnerSql(owner));
     }
 
     public void enableRowLevelSecurity(SqlTable table) {
@@ -75,33 +73,14 @@ public class SqlService {
 
     public void createPolicy(SqlPolicy sqlPolicy) {
         dropPolicy(sqlPolicy);
-        String using = "", withCheck = "";
-        if (!Strings.isNullOrEmpty(sqlPolicy.getUsingExpression())) {
-            using = String.format(" USING (%s)", sqlPolicy.getUsingExpression());
-        }
-        if (!Strings.isNullOrEmpty(sqlPolicy.getWithCheckExpression())) {
-            withCheck = String.format(" WITH CHECK (%s)", sqlPolicy.getWithCheckExpression());
-        }
-        String createPolicySql = String.format(
-                "CREATE POLICY %s ON %s AS %s FOR %s TO %s %s %s",
-                sqlPolicy.getSqlIdentifier(),
-                sqlPolicy.getTable().getSqlIdentifier(),
-                sqlPolicy.getPermissiveOrRestrictive().name(),
-                sqlPolicy.getStatements().stream().map(SqlPolicy.Statement::name).collect(Collectors.joining(",")),
-                sqlPolicy.getRole().getSqlIdentifier(),
-                using,
-                withCheck
-        );
+        createPolicy(sqlPolicy.policyToCreateSql());
+    }
+    public void createPolicy(String createPolicySql) {
         execute(createPolicySql);
     }
 
     public void dropPolicy(SqlPolicy sqlPolicy) {
-        String createPolicySql = String.format(
-                "DROP POLICY IF EXISTS %s ON %s",
-                sqlPolicy.getSqlIdentifier(),
-                sqlPolicy.getTable().getSqlIdentifier()
-        );
-        execute(createPolicySql);
+        execute(sqlPolicy.policyToDropSql());
     }
 
     public void createRole(OreSiRoleManagedByApplication roleManagedByApplication) {
@@ -130,10 +109,7 @@ public class SqlService {
     }
 
     private void addUserInRole(OreSiRoleWeCanGrantOtherRolesTo roleToModify, OreSiRoleToBeGranted roleToAdd, boolean withAdminOption) {
-        String withAdminOptionClause = withAdminOption ? " WITH ADMIN OPTION" : "";
-        String sql = "GRANT " + roleToAdd.getSqlIdentifier() + ""
-                + " TO " + roleToModify.getSqlIdentifier() + ""
-                + withAdminOptionClause;
+        String sql = roleToAdd.addUserInRoleSql(roleToModify, withAdminOption);
         execute(sql);
     }
 
@@ -161,4 +137,5 @@ public class SqlService {
     private void execute(String sql) {
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }
+
 }

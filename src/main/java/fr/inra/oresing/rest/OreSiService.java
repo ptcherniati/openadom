@@ -13,11 +13,12 @@ import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
+import fr.inra.oresing.model.rightsrequest.RightsRequest;
+import fr.inra.oresing.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
-import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
-import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
@@ -37,8 +38,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
 import org.flywaydb.core.Flyway;
-import org.flywaydb.core.api.Location;
-import org.flywaydb.core.api.configuration.ClassicConfiguration;
+import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.BadSqlGrammarException;
@@ -112,6 +112,12 @@ public class OreSiService {
     @Autowired
     private ReferenceService referenceService;
 
+    @Autowired
+    private RightsRequestService rightsRequestService;
+
+    @Autowired
+    private BeanFactory beanFactory;
+
     /**
      * @deprecated utiliser directement {@link Ltree#escapeToLabel(String)}
      */
@@ -155,83 +161,17 @@ public class OreSiService {
         return userRepository.findById(request.getRequestClient().getId());
     }
 
-    public Application initApplication(Application app) {
+    public Application initApplication(Application application) {
+        final MigrateService migrateService = beanFactory.getBean(MigrateService.class);
+        migrateService.setApplication(application);
         authenticationService.resetRole();
-        SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(app);
-        org.flywaydb.core.api.configuration.ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
-        flywayConfiguration.setDataSource(dataSource);
-        flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
-        flywayConfiguration.setLocations(new Location("classpath:migration/application"));
-        flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
-        flywayConfiguration.getPlaceholders().put("requiredAuthorizations", sqlSchemaForApplication.requiredAuthorizationsAttributes(app));
-        flywayConfiguration.getPlaceholders().put("requiredAuthorizationscomparing", sqlSchemaForApplication.requiredAuthorizationsAttributesComparing(app));
-        Flyway flyway = new Flyway(flywayConfiguration);
-        flyway.migrate();
-
-        OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(app);
-        OreSiRightOnApplicationRole readerOnApplicationRole = OreSiRightOnApplicationRole.readerOn(app);
-        OreSiRightOnApplicationRole writerOnApplicationRole = OreSiRightOnApplicationRole.writerOn(app);
-
-        db.createRole(adminOnApplicationRole);
-        db.createRole(readerOnApplicationRole);
-        db.createRole(writerOnApplicationRole);
-        db.addUserInRole(writerOnApplicationRole, readerOnApplicationRole);
-
-        //add  policies to adminOnApplicationRole for application
-        db.createPolicy(new SqlPolicy(
-                String.join("_", adminOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.ALL.name()),
-                SqlSchema.main().application(),
-                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                List.of(SqlPolicy.Statement.ALL),
-                adminOnApplicationRole,
-                "name = '" + app.getName() + "'",
-                null
-        ));
-
-        db.createPolicy(new SqlPolicy(
-                String.join("_", readerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.SELECT.name()),
-                SqlSchema.main().application(),
-                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                List.of(SqlPolicy.Statement.SELECT),
-                readerOnApplicationRole,
-                "name = '" + app.getName() + "'",
-                null
-        ));
-
-
-        db.createPolicy(new SqlPolicy(
-                String.join("_", writerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.INSERT.name()),
-                SqlSchema.main().application(),
-                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                List.of(SqlPolicy.Statement.INSERT),
-                writerOnApplicationRole,
-                null,
-                "name = '" + app.getName() + "'"
-        ));
-
-        db.createPolicy(new SqlPolicy(
-                String.join("_", readerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.SELECT.name()),
-                SqlSchema.forApplication(app).referenceValue(),
-                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
-                List.of(SqlPolicy.Statement.SELECT),
-                readerOnApplicationRole,
-                "application = '" + app.getId().toString() + "'::uuid",
-                null
-        ));
-
-        db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
-        db.grantUsage(sqlSchemaForApplication, readerOnApplicationRole);
-
-        db.setTableOwner(sqlSchemaForApplication.data(), adminOnApplicationRole);
-        db.setTableOwner(sqlSchemaForApplication.referenceValue(), adminOnApplicationRole);
-        db.setTableOwner(sqlSchemaForApplication.binaryFile(), adminOnApplicationRole);
-
-        OreSiUserRole creator = authenticationService.getUserRole(request.getRequestUserId());
-        db.addUserInRole(creator, adminOnApplicationRole);
-
+        migrateService.runFlywayUpdate();
+        /*flyway.migrate();
+        migrateService.completeMigration();*/
         authenticationService.setRoleForClient();
-        repo.application().store(app);
-        return app;
+        repo.application().store(application);
+        return application;
+
     }
 
     public UUID changeApplicationConfiguration(String nameOrId, MultipartFile configurationFile, String comment) throws IOException, BadApplicationConfigurationException {
@@ -1310,7 +1250,7 @@ public class OreSiService {
         List<Application> applicationForAdmin = repo.application().findAll();
         return applicationForAdmin.stream()
                 .map(application -> applicationForUser.stream()
-                        .filter(app->app.getId().equals(application.getId()))
+                        .filter(app -> app.getId().equals(application.getId()))
                         .findAny()
                         .orElse(application.applicationAccordingToRights()))
                 .collect(Collectors.toList());
@@ -1575,6 +1515,45 @@ public class OreSiService {
     public Map<Ltree, List<ReferenceValue>> getReferenceDisplaysById(Application application, Set<String> listOfDataIds) {
         return repo.getRepository(application).referenceValue().getReferenceDisplaysById(listOfDataIds);
     }
+
+    public GetRightsRequestResult findRightsRequest(String nameOrId, RightsRequestInfos rightsRequestInfos) {
+        final Application application = getApplicationOrApplicationAccordingToRights(nameOrId);
+        Configuration.RightsRequestDescription description = application.getConfiguration().getRightsRequest();
+        final List<RightsRequest> rightsRequests = rightsRequestService.findRightsRequests(application, rightsRequestInfos);
+        return new GetRightsRequestResult(rightsRequests, description);
+
+
+    }
+
+    public UUID createOrUpdate(CreateRightsRequestRequest createRightsRequestRequest, String nameOrId) {
+        authenticationService.setRoleForClient();
+        Application application = getApplicationOrApplicationAccordingToRights(nameOrId);
+
+        final RightsRequest rightsRequest = Optional.of(createRightsRequestRequest)
+                .map(CreateRightsRequestRequest::getId)
+                .map(id -> repo.getRepository(application).rightsRequestRepository().findById(id))
+                .orElseGet(RightsRequest::new);
+        rightsRequest.setRightsRequestForm(createRightsRequestRequest.getFields());
+        rightsRequest.setApplication(application.getId());
+        rightsRequest.setComment("un commentaire");
+        rightsRequest.setId(rightsRequest.getId() == null ? UUID.randomUUID() : rightsRequest.getId());
+        final List<OreSiAuthorization> authorizations = createRightsRequestRequest.getRightsRequest().stream()
+                .map(authorization -> {
+                    final OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
+                    oreSiAuthorization.setId(rightsRequest.getId());
+                    oreSiAuthorization.setApplication(application.getId());
+                    oreSiAuthorization.setDataType(authorization.getDataType());
+                    oreSiAuthorization.setAuthorizations(authorization.getAuthorizations());
+                    return oreSiAuthorization;
+                })
+                .collect(Collectors.toList());
+        rightsRequest.setRightsRequest(authorizations);
+        rightsRequest.setUser(rightsRequest.getUser() == null ? request.getRequestUserId() : rightsRequest.getUser());
+        authenticationService.setRoleForClient();
+        final UUID store = repo.getRepository(application).rightsRequestRepository().store(rightsRequest);
+        return store;
+    }
+
 
     @Value
     private static class ComputedValuesContext {

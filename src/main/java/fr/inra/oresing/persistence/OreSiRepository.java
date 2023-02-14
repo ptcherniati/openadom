@@ -31,6 +31,11 @@ public class OreSiRepository {
         return getRepository(application);
     }
 
+    public RepositoryForApplication getRepositoryAccordingRights(String applicationNameOrId) {
+        Application application = application().findApplication(applicationNameOrId);
+        return getRepository(application);
+    }
+
     public class RepositoryForApplication {
 
         private final Application application;
@@ -61,6 +66,10 @@ public class OreSiRepository {
 
         public DataSynthesisRepository synthesisRepository() {
             return beanFactory.getBean(DataSynthesisRepository.class, application);
+        }
+
+        public RightsRequestRepository rightsRequestRepository() {
+            return beanFactory.getBean(RightsRequestRepository.class, application);
         }
     }
 }

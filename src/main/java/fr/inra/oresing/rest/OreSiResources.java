@@ -9,6 +9,7 @@ import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.checker.ReferenceLineCheckerDisplay;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
+import fr.inra.oresing.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -16,6 +17,8 @@ import fr.inra.oresing.rest.exceptions.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.exceptions.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.rest.exceptions.data.BadDownloadDatasetQuery;
+import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
+import io.swagger.annotations.ApiOperation;
 import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -124,9 +127,15 @@ public class OreSiResources {
         boolean withRightsRequest = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.RIGHTSREQUEST);
         final List<ApplicationResult.ReferenceSynthesis> referenceSynthesis = withReferenceType ? service.getReferenceSynthesis(application) : List.of();
         TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
-         ApplicationResult.RightsRequest rightrequest = null;
+        ApplicationResult.RightsRequest rightsRequest = null;
         if (withRightsRequest) {
-            rightrequest = new ApplicationResult.RightsRequest(new LinkedList(application.getConfiguration().getRightsRequest().getFormat().keySet()));
+            final Set<String> strings = Optional.of(application)
+                    .map(Application::getConfiguration)
+                    .map(Configuration::getRightsRequest)
+                    .map(Configuration.RightsRequestDescription::getFormat)
+                    .map(Map::keySet)
+                    .orElseGet(HashSet::new);
+            rightsRequest = new ApplicationResult.RightsRequest(new LinkedList(strings));
         }
         if (withReferenceType) {
             application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {
@@ -200,7 +209,7 @@ public class OreSiResources {
         final AuthorizationsForUserResult authorizationReferencesRights = withReferenceType ? service.getAuthorizationsReferencesRights(nameOrId, request.getRequestUserId().toString(), references.keySet()) : new AuthorizationsForUserResult(new HashMap<>(), nameOrId, false, null);
         final Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights = withDatatypes ? service.getAuthorizationsDatatypesRights(nameOrId, dataTypes.keySet()) : new HashMap<>();
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, authorizationsDatatypesRights, rightrequest, configuration);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, authorizationsDatatypesRights, rightsRequest, configuration);
         return ResponseEntity.ok(applicationResult);
     }
 
@@ -220,6 +229,42 @@ public class OreSiResources {
         String uri = UriUtils.encodePath(String.format("/applications/%s/configuration/%s", nameOrId, result), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("id", result.toString()));
     }
+
+
+    /**
+     * Liste toutes les valeurs possibles pour un type de referenciel
+     *
+     * @param nameOrId l'id ou le nom de l'application
+     * @return un tableau de chaine
+     */
+    @GetMapping(value = "/applications/{nameOrId}/rightsRequest", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ApiOperation(value = "Get a rightsRequest with their description using search params")
+    public ResponseEntity<GetRightsRequestResult> listRightsRequest(
+            @PathVariable("nameOrId") String nameOrId,
+            @RequestBody(required = false) RightsRequestInfos rightsRequestInfos) {
+        GetRightsRequestResult list = service.findRightsRequest(nameOrId, rightsRequestInfos);
+        return ResponseEntity.ok(list);
+    }
+
+    @PostMapping(value = "/applications/{nameOrId}/rightsRequest", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createRightsRequest(@PathVariable("nameOrId") String nameOrId,
+                                                 @RequestBody CreateRightsRequestRequest createRightsRequestRequest) throws IOException {
+        //CreateRightsRequestRequest createRightsRequestRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseRightsRequestOrUUIDQuery(params);
+        UUID fileUUID = service.createOrUpdate(createRightsRequestRequest, nameOrId);
+        return ResponseEntity.ok(fileUUID);
+
+
+    }
+
+    private CreateRightsRequestRequest deserialiseRightsRequestOrUUIDQuery(String params) {
+        try {
+            CreateRightsRequestRequest createRightsRequestRequest = params != null && params != "undefined" ? new ObjectMapper().readValue(params, CreateRightsRequestRequest.class) : null;
+            return createRightsRequestRequest;
+        } catch (IOException e) {
+            throw new BadRightsRequestOrUUIDQuery(e.getMessage());
+        }
+    }
+
 
 //    @PutMapping(value = "/applications/{nameOrId}/users/{role}/{userId}")
 //    public ResponseEntity addUserForApplication(@PathVariable("nameOrId") String nameOrId,

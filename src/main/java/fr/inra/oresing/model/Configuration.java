@@ -42,7 +42,7 @@ public class Configuration {
             "Labels can be used in the document to identify groups and enable filters or groupings.", required = false)
     public Map<String, Internationalization> tags = new HashMap<>();
 
-    RightRequestDescription rightsRequest;
+    RightsRequestDescription rightsRequest;
 
     @ApiModelProperty(notes = "A list of references indexed by name. A reference is used to describe other references or data..", required = true)
     private LinkedHashMap<String, ReferenceDescription> references = new LinkedHashMap<>();
@@ -61,7 +61,7 @@ public class Configuration {
         internationalizationMap.setDataTypes(Optional.ofNullable(dataTypes).map(DataTypeDescription::getInternationalization).orElse(null));
         internationalizationMap.setReferences(Optional.ofNullable(references).map(ReferenceDescription::getInternationalization).orElse(null));
         internationalizationMap.setInternationalizedTags(tags);
-        internationalizationMap.setRightsRequest(Optional.ofNullable(rightsRequest).map(RightRequestDescription::getInternationalization).orElse(null));
+        internationalizationMap.setRightsRequest(Optional.ofNullable(rightsRequest).map(RightsRequestDescription::getInternationalization).orElse(null));
 
         return internationalizationMap;
     }
@@ -69,19 +69,18 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
-    public static class RightRequestDescription {
+    public static class RightsRequestDescription {
         Internationalization description;
-        @ApiModelProperty(notes = "An additional file is a file that is dropped onto an application providing additional information described in the configuration.\n" +
-                "The deposited files are then associated with \"data\" objects by choosing the authorizationScopes and an interval of dates.", required = false)
+        @ApiModelProperty(notes = "An Rights request is to request rights onto an application providing additional information described in the configuration", required = false)
         private Map<String, FieldFormat> format = new HashMap();
 
-        public static InternationalizationRightRequestMap getInternationalization(RightRequestDescription requestDescription) {
-            final InternationalizationRightRequestMap internationalizationRightRequestMap = new InternationalizationRightRequestMap();
+        public static InternationalizationRightsRequestMap getInternationalization(RightsRequestDescription requestDescription) {
+            final InternationalizationRightsRequestMap internationalizationRightsRequestMap = new InternationalizationRightsRequestMap();
             Map<String, Internationalization> internationalizedFormat =
                     Maps.transformValues(requestDescription.getFormat(), InternationalizationImpl::getInternationalizationName);
-            internationalizationRightRequestMap.setFormat(internationalizedFormat);
-            internationalizationRightRequestMap.setDescription(requestDescription.getDescription());
-            return internationalizationRightRequestMap;
+            internationalizationRightsRequestMap.setFormat(internationalizedFormat);
+            internationalizationRightsRequestMap.setDescription(requestDescription.getDescription());
+            return internationalizationRightsRequestMap;
         }
     }
 
@@ -193,6 +192,7 @@ public class Configuration {
         configurationforNotAuthorized.setTags(this.getTags());
         configurationforNotAuthorized.setReferences((this.referenceAccordingToRights()));
         configurationforNotAuthorized.setDataTypes(this.datatypeAccordingToRights());
+        configurationforNotAuthorized.setRightsRequest(this.getRightsRequest());
         return configurationforNotAuthorized;
     }
 

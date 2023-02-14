@@ -6,11 +6,13 @@ import org.assertj.core.util.Strings;
 
 import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Value
 public class SqlSchemaForApplication implements SqlSchema {
+    public static final UUID PUBLIC_UUID = UUID.fromString("9032ffe5-bfc1-453d-814e-287cd678484a");
 
     Application application;
 
@@ -31,7 +33,9 @@ public class SqlSchemaForApplication implements SqlSchema {
         return new SqlTable(this, "binaryFile");
     }
 
-    public SqlTable synthesis() {  return new SqlTable(this, "OreSiSynthesis");  }
+    public SqlTable synthesis() {
+        return new SqlTable(this, "OreSiSynthesis");
+    }
 
     public SqlTable authorization() {
         return new SqlTable(this, "oreSiAuthorization");
@@ -39,6 +43,10 @@ public class SqlSchemaForApplication implements SqlSchema {
 
     public SqlTable authorizationReference() {
         return new SqlTable(this, "OreSiAuthorizationReference");
+    }
+
+    public SqlTable rightsRequest() {
+        return new SqlTable(this, "RightsRequest");
     }
 
     public SqlTable forTableName(String tableName) {
@@ -64,9 +72,9 @@ public class SqlSchemaForApplication implements SqlSchema {
                                         .map(a -> a.getAuthorizationScopes())
                                         .map(as -> as.keySet().stream())
                                         .map(s -> s.collect(Collectors.toSet()))
-                                                .orElse(null);
+                                        .orElse(null);
                             })
-                            .filter(c->c!=null)
+                            .filter(c -> c != null)
                             .flatMap(Set::stream)
                             .distinct();
                 })
@@ -80,6 +88,6 @@ public class SqlSchemaForApplication implements SqlSchema {
                         attribute
                 ))
                 .collect(Collectors.joining("\n AND "));
-        return requiredAuthorizationsAttributesComparing + (Strings.isNullOrEmpty(requiredAuthorizationsAttributesComparing)?"":" AND\n ");
+        return requiredAuthorizationsAttributesComparing + (Strings.isNullOrEmpty(requiredAuthorizationsAttributesComparing) ? "" : " AND\n ");
     }
 }

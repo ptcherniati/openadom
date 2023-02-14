@@ -7,7 +7,7 @@ import java.util.Map;
 
 @Getter
 @Setter
-public class InternationalizationRightRequestMap {
+public class InternationalizationRightsRequestMap {
     Internationalization internationalizationName;
     Internationalization description;
     InternationalizationDisplay internationalizationDisplay;

@@ -1,15 +1,14 @@
 package fr.inra.oresing;
 
+import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.OreSiHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.context.event.EventListener;
+import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -32,6 +31,8 @@ public class OreSiNg implements WebMvcConfigurer {
 
     @Autowired
     private OreSiHandler oreSiHandler;
+    @Autowired
+    private MigrateService migrate;
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
@@ -78,6 +79,9 @@ public class OreSiNg implements WebMvcConfigurer {
             .licenseUrl("https://www.gnu.org/licenses/lgpl.html")
             .build();
     }
+    @EventListener(ApplicationReadyEvent.class)
+    public void migrateFlywayDataBases() {
+        migrate.migrateAll();
+    }
 
 }
-
