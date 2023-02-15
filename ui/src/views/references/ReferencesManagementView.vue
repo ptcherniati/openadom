@@ -289,7 +289,14 @@ export default class ReferencesManagementView extends Vue {
   }
 
   findReferenceByLabel(label) {
-    var ref = this.referencesToBeShown.find((ref) => ref.label === label);
+    var ref = this.findReferenceByLabelOnElement(this.referencesToBeShown, label);
+    return ref;
+  }
+
+  findReferenceByLabelOnElement(element, label) {
+    if (!element) return false;
+    var ref = element.map((ref) => ref.label === label?ref:this.findReferenceByLabelOnElement(ref.children, label))
+        .find(t=>t);
     return ref;
   }
 }
