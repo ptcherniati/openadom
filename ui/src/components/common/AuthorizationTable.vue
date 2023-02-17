@@ -80,7 +80,7 @@
                       :disabled="canShowWarning(index, indexColumn)"
                       @click.native="
                       canShowWarning(index, indexColumn)
-                        ? (index) => i
+                        ? (index) => index
                         : selectCheckbox($event, index, indexColumn)
                     "
                   />

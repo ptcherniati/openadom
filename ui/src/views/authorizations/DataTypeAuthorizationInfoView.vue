@@ -72,20 +72,20 @@
           </b-field>
         </ValidationProvider>
       </div>
-      <AuthorizationTable
-        v-if="dataGroups && authReferences && columnsVisible && authReferences[0]"
-        :auth-reference="authReferences[0]"
+      <AuthorizationTableForDatatype
+        v-if="dataGroups && authReferences && columnsVisible "
+        :auth-references="authReferences"
         :authorization-scopes="authorizationScopes"
         :columns-visible="columnsVisible"
         :data-groups="dataGroups"
-        :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
         :authorization="authorization"
-        :isApplicationAdmin="isApplicationAdmin"
+        :isApplicationAdmin="new RegExp(isApplicationAdmin).test(dataTypeId)"
         :publicAuthorizations="publicAuthorizations"
         :ownAuthorizations="ownAuthorizations"
         :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
         :current-authorization-scope="{}"
         :is-root="true"
+        :datatype="{id:dataTypeId, name: (application.localDatatypeName || dataTypeId)}"
         class="rows"
         @modifyAuthorization="modifyAuthorization($event)"
         @registerCurrentAuthorization="registerCurrentAuthorization($event)"
@@ -93,17 +93,17 @@
         <div class="row">
           <div class="columns">
             <b-field
-              v-for="(column, indexColumn) of columnsVisible"
-              :key="indexColumn"
-              :field="indexColumn"
-              :label="getColumnTitle(column)"
-              class="column"
-              :style="!column.display ? 'display : contents' : ''"
+                v-for="(column, indexColumn) of columnsVisible"
+                :key="indexColumn"
+                :field="indexColumn"
+                :label="getColumnTitle(column)"
+                :style="!column.display ? 'display : contents' : ''"
+                class="column"
             ></b-field>
           </div>
         </div>
-        <b-loading :is-full-page="null" v-model="isLoading"></b-loading>
-      </AuthorizationTable>
+      </AuthorizationTableForDatatype>
+
 
       <div class="buttons">
         <b-button
@@ -138,12 +138,14 @@ import { ApplicationResult } from "@/model/ApplicationResult";
 import { LOCAL_STORAGE_LANG } from "@/services/Fetcher";
 import { ReferenceService } from "@/services/rest/ReferenceService";
 import AuthorizationTable from "@/components/common/AuthorizationTable";
+import AuthorizationTableForDatatype from "@/components/common/AuthorizationTableForDatatype.vue";
 import { Authorization } from "@/model/authorization/Authorization";
 import { Authorizations } from "@/model/authorization/Authorizations";
 
 @Component({
   components: {
     AuthorizationTable,
+    AuthorizationTableForDatatype,
     PageView,
     SubMenu,
     CollapsibleTree,
