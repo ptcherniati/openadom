@@ -68,8 +68,9 @@ public class AuthorizationPublicationHelper {
         });
         this.currentUserRolesOptional = Optional.ofNullable(userRepository.getRolesForCurrentUser());
         this.isApplicationCreator = currentUserRolesOptional.map(CurrentUserRoles::getMemberOf).map(roles -> roles.stream().anyMatch(role -> OreSiRole.applicationCreator().getAsSqlRole().equals(role))).orElse(false);
-        this.authorizationsForUser = authorizationService.getAuthorizationsForUser(application.getName(), dataType, currentUserRolesOptional.map(CurrentUserRoles::getCurrentUser).orElse(""));
-        this.authorizationsForPublic = authorizationService.getAuthorizationsForUser(application.getName(), dataType, "_public_");
+        this.authorizationsForUser = authorizationService
+                .getAuthorizationsForUser(application.getName(), currentUserRolesOptional.map(CurrentUserRoles::getCurrentUser).orElse(""));
+        this.authorizationsForPublic = authorizationService.getAuthorizationsForUser(application.getName(), "_public_");
         final Optional<BinaryFileDataset> binaryFileDataset = Optional.ofNullable(params).map(par -> par.getBinaryfiledataset() != null ? params.getBinaryfiledataset() : BinaryFileDataset.EMPTY_INSTANCE());
         this.isRepository = isRepository(application, dataType);
         return this;
@@ -80,12 +81,12 @@ public class AuthorizationPublicationHelper {
     }
 
 
-    private boolean canDoOperation(OperationType operationType, String errorMessage) {
+    private boolean canDoOperation(OperationType operationType, String dataType, String errorMessage) {
         final SiOreIllegalArgumentException siOreIllegalArgumentException = new SiOreIllegalArgumentException(errorMessage, Map.of("dataType", dataType, "application", application.getName()));
         if (!isRepository && OperationType.depot.equals(operationType)) {
             operationType = OperationType.publication;
         }
-        final boolean hasRightForOperationType = hasRightForOperationType(operationType);
+        final boolean hasRightForOperationType = hasRightForOperationType(operationType, dataType);
         if (this.isRepository) {
             if (hasRightForOperationType) {
                 return true;
@@ -95,50 +96,70 @@ public class AuthorizationPublicationHelper {
         OperationType finalOperationType = operationType;
         if (
                 isApplicationCreator
-                        || (hasRightForOperationType && Optional.ofNullable(authorizationsForUser).map(AuthorizationsResult::getAuthorizationResults).map(authorizationResult -> authorizationResult.get(finalOperationType)).map(parsedAuhorizations -> parsedAuhorizations.stream().anyMatch(parsedAuhorization -> {
-                    final Map<String, String> requiredAuthorizationsInDatabase = parsedAuhorization.getRequiredAuthorizations();
-                    if (requiredAuthorizationsInDatabase.isEmpty()) {
-                        return false;
-                    } else {
-                        return requiredAuthorizationMatchForFile(requiredAuthorizationsInDatabase);
-                    }
-                })).orElse(false))
-                        || (hasRightForOperationType && Optional.ofNullable(authorizationsForPublic).map(AuthorizationsResult::getAuthorizationResults).map(authorizationResult -> authorizationResult.get(finalOperationType)).map(parsedAuhorizations -> parsedAuhorizations.stream().anyMatch(parsedAuhorization -> {
-                    final Map<String, String> requiredAuthorizationsInDatabase = parsedAuhorization.getRequiredAuthorizations();
-                    if (requiredAuthorizationsInDatabase.isEmpty()) {
-                        return false;
-                    } else {
-                        return requiredAuthorizationMatchForFile(requiredAuthorizationsInDatabase);
-                    }
-                })).orElse(false))
+                        || (hasRightForOperationType &&
+                        Optional.ofNullable(authorizationsForUser)
+                                .map(AuthorizationsResult::getAuthorizationResults)
+                                .map(authorizationResult -> authorizationResult.get(dataType))
+                                .map(authorizationResult -> authorizationResult.get(finalOperationType))
+                                .map(parsedAuhorizations -> parsedAuhorizations.stream().anyMatch(parsedAuhorization -> {
+                                    final Map<String, String> requiredAuthorizationsInDatabase = parsedAuhorization.getRequiredAuthorizations();
+                                    if (requiredAuthorizationsInDatabase.isEmpty()) {
+                                        return false;
+                                    } else {
+                                        return requiredAuthorizationMatchForFile(requiredAuthorizationsInDatabase);
+                                    }
+                                })).orElse(false))
+                        || (hasRightForOperationType &&
+                        Optional.ofNullable(authorizationsForPublic)
+                                .map(AuthorizationsResult::getAuthorizationResults)
+                                .map(authorizationResult -> authorizationResult.get(dataType))
+                                .map(authorizationResult -> authorizationResult.get(finalOperationType))
+                                .map(parsedAuhorizations -> parsedAuhorizations.stream().anyMatch(parsedAuhorization -> {
+                                    final Map<String, String> requiredAuthorizationsInDatabase = parsedAuhorization.getRequiredAuthorizations();
+                                    if (requiredAuthorizationsInDatabase.isEmpty()) {
+                                        return false;
+                                    } else {
+                                        return requiredAuthorizationMatchForFile(requiredAuthorizationsInDatabase);
+                                    }
+                                })).orElse(false))
         ) {
             return true;
         }
         throw siOreIllegalArgumentException;
     }
 
-    public boolean hasRightForDeposit() {
+    public boolean hasRightForDeposit(String datatype) {
         if (canDeposit == null) {
-            this.canDeposit = canDoOperation(OperationType.depot, "noRightsForDeposit");
+            this.canDeposit = canDoOperation(OperationType.depot, dataType, "noRightsForDeposit");
         }
         return canDeposit;
     }
 
-    public boolean hasRightForPublishOrUnPublish() {
+    public boolean hasRightForPublishOrUnPublish(String datatype) {
         if (canPublishOrUnPublish == null) {
-            this.canPublishOrUnPublish = canDoOperation(OperationType.publication, "noRightForPublish");
+            this.canPublishOrUnPublish = canDoOperation(OperationType.publication, dataType, "noRightForPublish");
         }
         return canPublishOrUnPublish;
     }
 
-    private boolean hasRightForOperationType(OperationType operationType) {
+    private boolean hasRightForOperationType(OperationType operationType, String datatype) {
         return isApplicationCreator
-                || Optional.ofNullable(authorizationsForUser).map(AuthorizationsResult::getAuthorizationResults).map(authorizationResult -> authorizationResult.get(operationType)).map(list -> !list.isEmpty()).orElse(false)
-                || Optional.ofNullable(authorizationsForPublic).map(AuthorizationsResult::getAuthorizationResults).map(authorizationResult -> authorizationResult.get(operationType)).map(list -> !list.isEmpty()).orElse(false);
+                || Optional.ofNullable(authorizationsForUser)
+                .map(AuthorizationsResult::getAuthorizationResults)
+                .map(authorizationResultBydatatype -> authorizationResultBydatatype.get(datatype))
+                .map(authorizationResult -> authorizationResult.get(operationType))
+                .map(list -> !list.isEmpty())
+                .orElse(false)
+                || Optional.ofNullable(authorizationsForPublic)
+                .map(AuthorizationsResult::getAuthorizationResults)
+                .map(authorizationResultBydatatype -> authorizationResultBydatatype.get(datatype))
+                .map(authorizationResult -> authorizationResult.get(operationType))
+                .map(list -> !list.isEmpty())
+                .orElse(false);
     }
 
-    public BinaryFile loadOrCreateFile(MultipartFile file, FileOrUUID params, Application app) {
-        assert hasRightForDeposit();
+    public BinaryFile loadOrCreateFile(MultipartFile file, FileOrUUID params, Application app, String dataType) {
+        assert hasRightForDeposit(dataType);
         BinaryFile storedFile = Optional.ofNullable(params).map(param -> param.getFileid()).map(uuid -> repo.binaryFile().tryFindByIdWithData(uuid).orElse(null)).orElseGet(() -> {
             UUID fileId = null;
             try {
@@ -160,9 +181,17 @@ public class AuthorizationPublicationHelper {
     }
 
     public boolean hasRightForPublishOrUnPublish(Authorization authorization1) {
-        return isApplicationCreator
-                || Optional.ofNullable(authorizationsForUser).map(AuthorizationsResult::getAuthorizationResults).map(auth -> auth.get(OperationType.publication)).map(auths -> hasRight(authorization1, auths)).orElse(false)
-                || Optional.ofNullable(authorizationsForPublic).map(AuthorizationsResult::getAuthorizationResults).map(auth -> auth.get(OperationType.publication)).map(auths -> hasRight(authorization1, auths)).orElse(false);
+        return isApplicationCreator ||
+                Optional.ofNullable(authorizationsForUser)
+                        .map(AuthorizationsResult::getAuthorizationResults)
+                        .map(auth -> auth.values().stream()
+                                .anyMatch(value -> hasRight(authorization1, value.get(OperationType.publication))))
+                        .orElse(false) ||
+                Optional.ofNullable(authorizationsForPublic)
+                        .map(AuthorizationsResult::getAuthorizationResults)
+                        .map(auth -> auth.values().stream()
+                                .anyMatch(value -> hasRight(authorization1, value.get(OperationType.publication))))
+                        .orElse(false);
     }
 
     private Boolean hasRight(Authorization authorization1, List<AuthorizationParsed> auths) {

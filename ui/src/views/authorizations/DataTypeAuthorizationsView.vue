@@ -288,7 +288,7 @@ export default class DataTypeAuthorizationsView extends Vue {
         }),
         () => {
           this.$router.push(
-            `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations`
+            `/applications/${this.applicationName}/authorizations`
           );
         },
         () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
@@ -303,14 +303,9 @@ export default class DataTypeAuthorizationsView extends Vue {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
           .localName,
-        localDatatypeName: this.internationalisationService.localeDataTypeIdName(
-          this.application,
-          this.application.dataTypes[this.dataTypeId]
-        ),
       };
       let authorizations = await this.authorizationService.getDataAuthorizations(
-        this.applicationName,
-        this.dataTypeId
+        this.applicationName
       );
       this.authorizations = authorizations.authorizationResults.filter(
         (auth) =>
@@ -338,13 +333,13 @@ export default class DataTypeAuthorizationsView extends Vue {
 
   addAuthorization() {
     this.$router.push(
-      `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/new`
+      `/applications/${this.applicationName}/authorizations/new`
     );
   }
 
   modifyAuthorization(id) {
     this.$router.push(
-      `/applications/${this.applicationName}/dataTypes/${this.dataTypeId}/authorizations/${id}`
+      `/applications/${this.applicationName}/authorizations/${id}`
     );
   }
 
@@ -352,7 +347,6 @@ export default class DataTypeAuthorizationsView extends Vue {
     try {
       await this.authorizationService.revokeAuthorization(
         this.applicationName,
-        this.dataTypeId,
         id
       );
       this.alertService.toastSuccess(this.$t("alert.revoke-authorization"));

@@ -37,7 +37,6 @@ import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
-import org.flywaydb.core.Flyway;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -380,13 +379,13 @@ public class OreSiService {
         final AuthorizationPublicationHelper authorizationPublicationHelper = new AuthorizationPublicationHelper(repo.getRepository(app.getId()), authorizationService, this);
         authorizationPublicationHelper.init(app, userRepository, dataType, params);
 
-        BinaryFile storedFile = authorizationPublicationHelper.loadOrCreateFile(file, params, app);
+        BinaryFile storedFile = authorizationPublicationHelper.loadOrCreateFile(file, params, app, dataType);
         if (authorizationPublicationHelper.isRepository()) {
             if (params != null && !params.topublish) {
                 if (storedFile.getParams() != null && storedFile.getParams().published) {
                     storedFile.getParams().published = false;
                     filesToStore.add(storedFile);
-                    assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
+                    assert authorizationPublicationHelper.hasRightForPublishOrUnPublish(dataType);
                     unPublishVersions(app, filesToStore, dataType);
                 }
                 return storedFile.getId();
@@ -394,7 +393,7 @@ public class OreSiService {
                 BinaryFile publishedVersion = getPublishedVersion(params, app);
                 if (publishedVersion != null && publishedVersion.getParams().published) {
                     filesToStore.add(publishedVersion);
-                    assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
+                    assert authorizationPublicationHelper.hasRightForPublishOrUnPublish(dataType);
                     unPublishVersions(app, filesToStore, dataType);
                 }
             }
@@ -407,9 +406,9 @@ public class OreSiService {
                 .map(CurrentUserRoles::getMemberOf)
                 .map(roles -> roles.stream().anyMatch(role -> OreSiRole.applicationCreator().getAsSqlRole().equals(role)))
                 .orElse(false);
-        final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(app.getName(), dataType, getCurrentUser().getLogin());
+        final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(app.getName(), getCurrentUser().getLogin());
 
-        assert authorizationPublicationHelper.hasRightForPublishOrUnPublish();
+        assert authorizationPublicationHelper.hasRightForPublishOrUnPublish(dataType);
         publishVersion(dataType, authorizationPublicationHelper, errors, app, storedFile, dataTypeDescription, formatDescription, params == null ? null : params.binaryfiledataset);
         InvalidDatasetContentException.checkErrorsIsEmpty(errors);
         relationalService.onDataUpdate(app.getName());
@@ -1320,9 +1319,9 @@ public class OreSiService {
     }
 
     private Map.Entry<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDatatypesRights(String nameOrId, String datatype, String userId) {
-        final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(nameOrId, datatype, userId);
+        final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(nameOrId, userId);
         Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new HashMap<>();
-        final Set<OperationType> rolesSetted = authorizationsForUser.getAuthorizationResults().keySet();
+        final Set<OperationType> rolesSetted = authorizationsForUser.getAuthorizationResults().getOrDefault(datatype, new HashMap<>()).keySet();
         final boolean isAdmin = authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.admin);
         roleForDatatype.put(AuthorizationsForUserResult.Roles.ADMIN, isAdmin);
         roleForDatatype.put(AuthorizationsForUserResult.Roles.UPLOAD, isAdmin || rolesSetted.contains(OperationType.depot) || rolesSetted.contains(OperationType.publication));
@@ -1542,7 +1541,6 @@ public class OreSiService {
                     final OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
                     oreSiAuthorization.setId(rightsRequest.getId());
                     oreSiAuthorization.setApplication(application.getId());
-                    oreSiAuthorization.setDataType(authorization.getDataType());
                     oreSiAuthorization.setAuthorizations(authorization.getAuthorizations());
                     return oreSiAuthorization;
                 })

@@ -138,7 +138,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String response = mockMvc.perform(get("/api/v1/applications/acbb/dataType/biomasse_production_teneur/grantable")
+            String response = mockMvc.perform(get("/api/v1/applications/acbb/grantable")
                     .cookie(authCookie)
             ).andReturn().getResponse().getContentAsString();
             Assert.assertTrue(response.contains("lusignan"));
@@ -151,8 +151,8 @@ public class AuthorizationResourcesTest {
                     "   \"applicationNameOrId\":\"acbb\",\n" +
                     "   \"id\": null,\n" +
                     "   \"name\": \"une authorization sur acbb\",\n" +
-                    "   \"dataType\":\"biomasse_production_teneur\",\n" +
                     "   \"authorizations\":{\n" +
+                    "   \"biomasse_production_teneur\":{\n" +
                     "   \"admin\":[\n" +
                     "      {\n" +
                     "         \"requiredAuthorizations\":{\n" +
@@ -160,10 +160,11 @@ public class AuthorizationResourcesTest {
                     "         }\n" +
                     "      }\n" +
                     "   ]\n" +
-                    "}\n" +
+                    "  }\n" +
+                    " }\n" +
                     "}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -178,8 +179,8 @@ public class AuthorizationResourcesTest {
                     "   \"applicationNameOrId\":\"acbb\",\n" +
                     "   \"id\": null,\n" +
                     "   \"name\": \"une authorization sur acbb\",\n" +
-                    "   \"dataType\":\"biomasse_production_teneur\",\n" +
                     "   \"authorizations\":{\n" +
+                    "   \"biomasse_production_teneur\":{\n" +
                     "   \"admin\":[\n" +
                     "      {\n" +
                     "         \"requiredAuthorizations\":{\n" +
@@ -187,10 +188,11 @@ public class AuthorizationResourcesTest {
                     "         }\n" +
                     "      }\n" +
                     "   ]\n" +
-                    "}\n" +
+                    "  }\n" +
+                    " }\n" +
                     "}";
 
-            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+            create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -210,6 +212,7 @@ public class AuthorizationResourcesTest {
                     "   \"name\": \"une authorization sur acbb\",\n" +
                     "   \"dataType\":\"biomasse_production_teneur\",\n" +
                     "   \"authorizations\":{\n" +
+                    "   \"biomasse_production_teneur\":{\n" +
                     "   \"extraction\":[\n" +
                     "      {\n" +
                     "         \"requiredAuthorizations\":{\n" +
@@ -232,10 +235,11 @@ public class AuthorizationResourcesTest {
                     "         }\n" +
                     "      }\n" +
                     "   ]\n" +
-                    "}\n" +
+                    "  }\n" +
+                    " }\n" +
                     "}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -261,6 +265,7 @@ public class AuthorizationResourcesTest {
                     "   \"name\": \"une autre authorization sur acbb\",\n" +
                     "   \"dataType\":\"biomasse_production_teneur\",\n" +
                     "   \"authorizations\":{\n" +
+                    "   \"biomasse_production_teneur\":{\n" +
                     "   \"extraction\":[\n" +
                     "      {\n" +
                     "         \"requiredAuthorizations\":{\n" +
@@ -283,9 +288,10 @@ public class AuthorizationResourcesTest {
                     "         }\n" +
                     "      }\n" +
                     "   ]\n" +
-                    "}\n" +
+                    "  }\n" +
+                    " }\n" +
                     "}";
-            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+            create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -294,7 +300,7 @@ public class AuthorizationResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
             // on peut aussi rajouter une authorization avec withAdminRigthsUserId
-            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+            create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(withAdminRigthsCookie)
                     .content(json);
@@ -303,7 +309,7 @@ public class AuthorizationResourcesTest {
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
             // on ne peut aussi rajouter une authorization avec withBadAdminRigthsUserId theix vs laqueuille
-            create = post("/api/v1/applications/acbb/dataType/biomasse_production_teneur/authorization")
+            create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(withBadAdminRigthsCookie)
                     .content(json);
@@ -314,14 +320,13 @@ public class AuthorizationResourcesTest {
             log.debug(StringUtils.abbreviate(response, 50));
         }
         {
-            final MockHttpServletRequestBuilder authorizations = get("/api/v1/applications/acbb/authorization/biomasse_production_teneur/" + authId)
+            final MockHttpServletRequestBuilder authorizations = get("/api/v1/applications/acbb/authorization/user/" + authId)
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie);
             mockMvc.perform(authorizations)
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.applicationName", equalTo("acbb")))
-                    .andExpect(jsonPath("$.dataType",  equalTo("biomasse_production_teneur")))
-                    .andExpect(jsonPath("$.authorizationResults.extraction[0].requiredAuthorizations.localization",  equalTo("theix.theix__2")))
+                    .andExpect(jsonPath("$.authorizationResults.biomasse_production_teneur.extraction[0].requiredAuthorizations.localization",  equalTo("theix.theix__2")))
                     .andReturn().getResponse().getContentAsString();
 
         }
@@ -367,8 +372,8 @@ public class AuthorizationResourcesTest {
                     "   \"applicationNameOrId\":\"hautefrequence\",\n" +
                     "   \"id\": null,\n" +
                     "   \"name\": \"une authorization sur haute fréquence\",\n" +
-                    "   \"dataType\":\"hautefrequence\",\n" +
                     "   \"authorizations\":{\n" +
+                    "   \"hautefrequence\":{\n" +
                     "   \"extraction\":[\n" +
                     "      {\n" +
                     "         \"requiredAuthorizations\":{\n" +
@@ -392,10 +397,11 @@ public class AuthorizationResourcesTest {
                     "         }\n" +
                     "      }\n" +
                     "   ]\n" +
-                    "}\n" +
+                    "  }\n" +
+                    " }\n" +
                     "}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -408,7 +414,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
+            String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
                             .cookie(authCookie))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
@@ -436,7 +442,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/dataType/hautefrequence/authorization/" + authorizationId)
+            String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
                             .cookie(authCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())

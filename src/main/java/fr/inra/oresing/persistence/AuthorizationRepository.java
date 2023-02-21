@@ -27,8 +27,8 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
     @Override
     protected String getUpsertQuery() {
         return "INSERT INTO " + getTable().getSqlIdentifier() +
-                "(id, name, oreSiUsers, application, dataType, authorizations) \n" +
-                "SELECT id, name, oreSiUsers, application, dataType, authorizations \n" +
+                "(id, name, oreSiUsers, application,  authorizations) \n" +
+                "SELECT id, name, oreSiUsers, application,  authorizations \n" +
                 "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) \n" +
                 "ON CONFLICT (id) \n" +
                 "DO UPDATE \n" +
@@ -42,10 +42,30 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
     }
 
     public List<OreSiAuthorization> findByDataType(String dataType) {
-        return findByPropertyEquals("datatype", dataType);
+        String query  = String.join("\n",
+                "select '"+OreSiAuthorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
+                "from " + getTable().getSqlIdentifier()+ " t",
+                "where t.application = :applicationId",
+                " and t.authorizations ?? :dataType"
+        );
+        MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("dataType",dataType);
+        return getNamedParameterJdbcTemplate().query(query, sqlParams, getJsonRowMapper());
     }
 
-    public List<OreSiAuthorization> findAuthorizations(UUID userId, Application application, String dataType) {
+    public List<OreSiAuthorization> findAuthorizationsByUserId(UUID userId) {
+        String query  = String.join("\n",
+                "select '"+OreSiAuthorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
+                "from " + getTable().getSqlIdentifier()+ " t",
+                "where t.application = :applicationId",
+               " and array[ :userId::entityref] <@ t.oresiusers"
+        );
+         MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("userId", userId.toString());
+        return getNamedParameterJdbcTemplate().query(query, sqlParams, getJsonRowMapper());
+    }
+
+    public List<OreSiAuthorization> findAuthorizationsByUserIdAndDatatype(UUID userId, String dataType) {
         String query  = String.join("\n",
                 "select '"+OreSiAuthorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
                 "from " + getTable().getSqlIdentifier()+ " t",

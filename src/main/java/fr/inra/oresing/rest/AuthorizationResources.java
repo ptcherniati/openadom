@@ -47,55 +47,58 @@ public class AuthorizationResources {
         return authenticationService.getAuthorizations();
     }
 
-    @PostMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> addAuthorization(@PathVariable(name = "nameOrId") String nameOrId, @PathVariable(name = "dataType") String dataType, @RequestBody CreateAuthorizationRequest authorization) {
+    @PostMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, String>> addAuthorization(
+            @PathVariable(name = "nameOrId") String nameOrId,
+            @RequestBody CreateAuthorizationRequest authorization) {
         final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         final Application application = repo.application().findApplication(nameOrId);
         final boolean isApplicationCreator = rolesForCurrentUser.getMemberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-        List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplicationAndDataType(application, dataType);
+        List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplication(application);
         if (!isApplicationCreator && !authorizationsForCurrentUser.stream().anyMatch(
-                a -> !a.getAuthorizations().get(OperationType.admin).isEmpty()
+                a -> !a.getAuthorizations().values().stream().anyMatch(auth -> auth.get(OperationType.admin).isEmpty())
         )) {
-            throw new NotApplicationCanSetRightsException(application.getName(), dataType);
+            throw new NotApplicationCanSetRightsException(application.getName());
         }
         Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
-        OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, dataType, authorization, authorizationsForCurrentUser, isApplicationCreator);
+        OreSiAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, authorization, authorizationsForCurrentUser, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
         if (authorization.getUuid() == null) {
             final OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
         }
         final DatatypeUpdateRoleForManagement datatypeUpdateRoleForManagement = new DatatypeUpdateRoleForManagement(previousUsers, oreSiAuthorization, authorizationsForCurrentUser, isApplicationCreator);
         authorizationService.updateRoleForManagement(previousUsers, oreSiAuthorization);
-        String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/dataType/" + authorization.getDataType() + "/authorization/" + authId.toString(), Charset.defaultCharset());
+        String uri = UriUtils.encodePath("/applications/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
     }
 
-    @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetAuthorizationResult> getAuthorization(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType, @PathVariable("authorizationId") UUID authorizationId) {
-        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
-        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, dataType, authorizationId), authorizationsForUser);
+    @GetMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetAuthorizationResult> getAuthorizationById(
+            @PathVariable("nameOrId") String applicationNameOrId,
+            @PathVariable("authorizationId") UUID authorizationId) {
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
+        GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(new AuthorizationRequest(applicationNameOrId, authorizationId), authorizationsForUser);
         return ResponseEntity.ok(getAuthorizationResult);
     }
 
-    @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetAuthorizationResults> getAuthorizations(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
-        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
-        ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId, dataType, authorizationsForUser);
+    @GetMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetAuthorizationResults> getAuthorizations(@PathVariable("nameOrId") String applicationNameOrId) {
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
+        ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId, authorizationsForUser);
         final GetAuthorizationResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationResults(getAuthorizationResults, authorizationsForUser);
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
-    @GetMapping(value = "/applications/{applicationNameOrId}/authorization/{dataType}/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "dataType") String dataType, @PathVariable(name = "userLoginOrId") String userLoginOrId) {
-        return authorizationService.getAuthorizationsForUser(applicationNameOrId, dataType, userLoginOrId);
+    @GetMapping(value = "/applications/{applicationNameOrId}/authorization/user/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "userLoginOrId") String userLoginOrId) {
+        return authorizationService.getAuthorizationsForUser(applicationNameOrId, userLoginOrId);
     }
 
-    @DeleteMapping(value = "/applications/{nameOrId}/dataType/{dataType}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UUID> revokeAuthorization(
             @PathVariable("nameOrId") String applicationNameOrId,
-            @PathVariable("dataType") String dataType,
             @PathVariable("authorizationId") UUID authorizationId) {
-        final UUID revokeId = authorizationService.revoke(applicationNameOrId, new AuthorizationRequest(applicationNameOrId, dataType, authorizationId));
+        final UUID revokeId = authorizationService.revoke(applicationNameOrId, new AuthorizationRequest(applicationNameOrId, authorizationId));
         return ResponseEntity.ok(revokeId);
     }
 
@@ -111,7 +114,7 @@ public class AuthorizationResources {
             throw new NotApplicationCanManageReferenceRightsException(application.getName());
         }
         Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
-        OreSiReferenceAuthorization oreSiAuthorization = authorizationService.addAuthorization(application, authorization, referencesAuthorizationsForCurrentUser, isApplicationCreator);
+        OreSiReferenceAuthorization oreSiAuthorization = authorizationService.addReferenceAuthorizations(application, authorization, referencesAuthorizationsForCurrentUser, isApplicationCreator);
         UUID authId = oreSiAuthorization.getId();
         if (authorization.getUuid() == null) {
             final OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
@@ -130,16 +133,16 @@ public class AuthorizationResources {
         ImmutableSet<GetAuthorizationReferencesResult> getAuthorizationResults = authorizationService.getReferencesAuthorizations(applicationNameOrId, authorizationsForUser, params);
         Set<GetGrantableResult.User> users = authorizationService.getGrantableUsers()
                 .stream()
-                .filter(user ->!"_public_".equals(user.getLabel()))
+                .filter(user -> !"_public_".equals(user.getLabel()))
                 .collect(Collectors.toSet());
 
-        final GetAuthorizationReferencesResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationReferencesResults(getAuthorizationResults, authorizationsForUser,users);
+        final GetAuthorizationReferencesResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationReferencesResults(getAuthorizationResults, authorizationsForUser, users);
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
     @GetMapping(value = "/applications/{applicationNameOrId}/references/authorization/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthorizationsReferencesResult getReferencesAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") String applicationNameOrId, @PathVariable(name = "userLoginOrId", required = false) String userLoginOrId) {
-        userLoginOrId = userLoginOrId==null || "null".equals(userLoginOrId)?request.getRequestUserId().toString():userLoginOrId;
+        userLoginOrId = userLoginOrId == null || "null".equals(userLoginOrId) ? request.getRequestUserId().toString() : userLoginOrId;
         return authorizationService.getReferencesAuthorizationsForUser(applicationNameOrId, userLoginOrId);
     }
 
@@ -176,10 +179,10 @@ public class AuthorizationResources {
         return ResponseEntity.ok(user);
     }
 
-    @GetMapping(value = "/applications/{nameOrId}/dataType/{dataType}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") String applicationNameOrId, @PathVariable("dataType") String dataType) {
-        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, dataType, request.getRequestUserId().toString());
-        GetGrantableResult getGrantableResult = authorizationService.getGrantable(applicationNameOrId, dataType, authorizationsForUser);
+    @GetMapping(value = "/applications/{nameOrId}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") String applicationNameOrId) {
+        final AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
+        GetGrantableResult getGrantableResult = authorizationService.getGrantable(applicationNameOrId, authorizationsForUser);
         return ResponseEntity.ok(getGrantableResult);
     }
 }

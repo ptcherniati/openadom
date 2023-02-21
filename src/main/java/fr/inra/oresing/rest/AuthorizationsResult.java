@@ -8,10 +8,9 @@ import java.util.Map;
 
 @Value
 public class AuthorizationsResult {
-    Map<OperationType,List<AuthorizationParsed>> authorizationResults;
+    Map<String, Map<OperationType,List<AuthorizationParsed>>> authorizationResults;
     String applicationName;
-    String dataType;
-    Map<OperationType, Map<String, List<AuthorizationParsed>>> authorizationByPath;
+    Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> authorizationByPath;
     Boolean isAdministrator;
 
 }

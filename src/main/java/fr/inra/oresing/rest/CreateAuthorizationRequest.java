@@ -19,7 +19,5 @@ public class CreateAuthorizationRequest {
 
     String applicationNameOrId;
 
-    String dataType;
-
-    Map<OperationType, List<Authorization>> authorizations;
+    Map<String, Map<OperationType, List<Authorization>>> authorizations;
 }

@@ -9,18 +9,15 @@ import java.util.List;
 public class NotApplicationCanSetRightsException extends OreSiTechnicalException {
     public final static String NO_RIGHT_FOR_SET_RIGHTS_APPLICATION = "NO_RIGHT_FOR_SET_RIGHTS_APPLICATION";
     String applicationName;
-    String dataType;
     List<Authorization> authorizationsRestrictions;
-    public NotApplicationCanSetRightsException(String applicationName, String dataType) {
+    public NotApplicationCanSetRightsException(String applicationName) {
         super(NO_RIGHT_FOR_SET_RIGHTS_APPLICATION);
         this.applicationName = applicationName;
-        this.dataType = dataType;
         this.authorizationsRestrictions = List.of();
     }
-    public NotApplicationCanSetRightsException(String applicationName, String dataType, List<Authorization> authorizationsRestrictions) {
+    public NotApplicationCanSetRightsException(String applicationName, List<Authorization> authorizationsRestrictions) {
         super(NO_RIGHT_FOR_SET_RIGHTS_APPLICATION);
         this.applicationName = applicationName;
-        this.dataType = dataType;
         this.authorizationsRestrictions = authorizationsRestrictions;
     }
 }

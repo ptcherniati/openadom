@@ -32,15 +32,22 @@
 
           <b-field v-else-if="column.display && indexColumn === 'admin'" :field="indexColumn" class="column">
             <b-tooltip
-                :label="$t('dataTypeAuthorizations.all-autorisation')"
+                :label="canShowWarning(indexColumn)?$t('validation.noRightsForThisOPeration'):$t('dataTypeAuthorizations.all-autorisation')"
                 type="is-warning"
             >
               <b-icon
+                  :disabled="canShowWarning(indexColumn)"
                   :icon="STATES[getState(indexColumn)]"
+                  :type="
+                      hasPublicStates(indexColumn) ||
+                      canShowWarning( indexColumn)
+                        ? 'is-light'
+                        : 'is-warning'
+                    "
                   class="clickable"
                   pack="far"
                   size="is-medium"
-                  type="is-warning"
+                  @click.native="canShowWarning(indexColumn) && selectCheckboxAll( indexColumn)"
               />
             </b-tooltip>
           </b-field>
@@ -48,15 +55,23 @@
 
           <b-field v-else-if="column.display" :field="indexColumn" class="column">
             <b-tooltip
+                :active="canShowWarning(indexColumn)"
+                :label="$t('validation.noRightsForThisOPeration')"
                 type="is-warning"
             >
               <b-icon
+                  :disabled="canShowWarning(indexColumn)"
                   :icon="STATES[getState(indexColumn)]"
-                  :type=" 'is-primary'"
+                  :type="
+                      hasPublicStates(indexColumn) ||
+                      canShowWarning( indexColumn)
+                        ? 'is-light'
+                        : 'is-primary'
+                    "
                   class="clickable"
                   pack="far"
                   size="is-medium"
-                  @click.native="selectCheckboxAll( indexColumn)"
+                  @click.native="!canShowWarning(indexColumn) && selectCheckboxAll( indexColumn)"
               />
             </b-tooltip>
           </b-field>
@@ -80,8 +95,8 @@
             :publicAuthorizations="publicAuthorizations"
             :remaining-option="authReferences.slice && authReferences.slice(1, authReferences.length)"
             class="rows"
-            @modifyAuthorization="$emit('modifyAuthorization', $event)"
-            @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
+            @modifyAuthorization="$emit('modifyAuthorization', {...$event, datatype:datatype.id})"
+            @registerCurrentAuthorization="$emit('registerCurrentAuthorization', {...$event, datatype:datatype.id})"
         >
           <b-loading v-model="isLoading" :is-full-page="null"></b-loading>
         </AuthorizationTable>
@@ -144,15 +159,32 @@ export default {
       return -1
 
     },
+    hasPublicStates(indexColumn) {
+      if (this.publicAuthorizations[indexColumn])
+        return (this.publicAuthorizations[indexColumn] || [])
+            .some(path => Object.keys(this.authReferences?.[0] || {}).some(authPath => authPath.startsWith(path)))
+    },
+    canShowWarning(indexColumn) {
+      return (
+          this.isApplicationAdmin ||
+          this.hasPublicStates('admin') ||  indexColumn
+          /*(this.ownAuthorizations.find((oa) => this.getPath(index).startsWith(oa)) &&
+              this.isAuthorizedColumnForPath(index, column))*/
+      )
+          ? false
+          : true;
+
+    },
     selectCheckboxAll(indexColumn) {
       let state = this.getState(indexColumn);
       let auths = this.authReferences[0];
       for (const index in auths) {
-        if (this.haveRightsOn(index, indexColumn)){
+        if (this.haveRightsOn(index, indexColumn)) {
           let requiredAuthorizations = {}
           requiredAuthorizations[auths[index].authorizationScope] = index;
           let authorizations = new Authorization([], requiredAuthorizations)
           let eventToEmit = {
+            datatype: this.datatype.id,
             event: null,
             index,
             indexColumn,

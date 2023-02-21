@@ -62,6 +62,7 @@
           :application-name="applicationName"
           :close-cb="(newVal) => (openPanel = newVal)"
           :data-type="chosenDataType"
+          :can-manage-rights="canManageRights"
           :left-align="false"
           :open="openPanel"
           :tags="tags"
@@ -133,6 +134,7 @@ export default class DataTypesManagementView extends Vue {
   synthesis = {};
   synthesisMinMax = {};
   tags = {};
+  canManageRights = false;
 
   get dataTypesToBeShown() {
     if (!this.tags) {
@@ -250,6 +252,7 @@ export default class DataTypesManagementView extends Vue {
             }
           }
       );
+      this.canManageRights = this.dataTypes.some(dty=>dty.isAdmin)
       this.buildTags();
       await this.initSynthesis();
     } catch (error) {

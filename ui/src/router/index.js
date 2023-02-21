@@ -86,12 +86,12 @@ const routes = [
     props: true,
   },
   {
-    path: "/applications/:applicationName/dataTypes/:dataTypeId/authorizations",
+    path: "/applications/:applicationName/authorizations",
     component: DataTypeAuthorizationsView,
     props: true,
   },
   {
-    path: "/applications/:applicationName/dataTypes/:dataTypeId/authorizations/:authorizationId",
+    path: "/applications/:applicationName/authorizations/:authorizationId",
     component: DataTypeAuthorizationInfoView,
     props: true,
   },

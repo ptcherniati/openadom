@@ -7,16 +7,16 @@ export class AuthorizationService extends Fetcher {
         super();
     }
 
-    async getAuthorizations(applicationName, dataTypeId, authorizationId) {
+    async getAuthorizations(applicationName, authorizationId) {
         return applicationName
             ? this.get(
-                `applications/${applicationName}/dataType/${dataTypeId}/authorization/${authorizationId}`
+                `applications/${applicationName}/authorization/${authorizationId}`
             )
             : this.get("authorization");
     }
 
-    async getDataAuthorizations(applicationName, dataTypeId) {
-        return this.get(`applications/${applicationName}/dataType/${dataTypeId}/authorization`);
+    async getDataAuthorizations(applicationName) {
+        return this.get(`applications/${applicationName}/authorization`);
     }
 
     async getReferencesAuthorizations(applicationName, params) {
@@ -31,13 +31,13 @@ export class AuthorizationService extends Fetcher {
         return this.delete(`applications/${applicationName}/references/authorization/${id}`);
     }
 
-    async getAuthorizationGrantableInfos(applicationName, dataTypeId) {
-        return this.get(`applications/${applicationName}/dataType/${dataTypeId}/grantable`);
+    async getAuthorizationGrantableInfos(applicationName) {
+        return this.get(`applications/${applicationName}/grantable`);
     }
 
-    async createAuthorization(applicationName, dataTypeId, authorizationModel) {
+    async createAuthorization(applicationName, authorizationModel) {
         return this.post(
-            `applications/${applicationName}/dataType/${dataTypeId}/authorization`,
+            `applications/${applicationName}/authorization`,
             authorizationModel,
             false
         );
@@ -59,9 +59,9 @@ export class AuthorizationService extends Fetcher {
         return this.delete(`authorization/${roleName}`, {applicationPattern, userIdOrLogin});
     }
 
-    async revokeAuthorization(applicationName, dataTypeId, authorizationId) {
+    async revokeAuthorization(applicationName, authorizationId) {
         return this.delete(
-            `applications/${applicationName}/dataType/${dataTypeId}/authorization/${authorizationId}`
+            `applications/${applicationName}/authorization/${authorizationId}`
         );
     }
 }

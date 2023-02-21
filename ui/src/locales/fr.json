@@ -35,7 +35,7 @@
         "application-creation": "Créer une application",
         "data-types-page": "Type de données de {applicationName}",
         "data-types-repository": "Gestion des jeux de données de {applicationName}",
-        "data-type-authorizations": "Autorisations de {dataType}",
+        "data-type-authorizations": "Autorisations sur les jeux de données",
         "references-authorizations": "Autorisations des référentiels",
         "data-type-new-authorization": "Nouvelle autorisation pour {dataType}",
         "authorizations-management": "Gestion des autorisations sur les applications"
@@ -301,7 +301,7 @@
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Ajouter une autorisation",
-        "sub-menu-data-type-authorizations": "Autorisations de {dataType}",
+        "sub-menu-data-type-authorizations": "Autorisations des types de données",
         "sub-menu-new-authorization": "Nouvelle autorisation",
         "users": "Nom des utilisateurs",
         "closeUser": "Fermer la sélection multiple",

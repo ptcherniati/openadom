@@ -12,8 +12,8 @@
                 v-for="(column, indexColumn) of columnsVisible"
                 :key="indexColumn"
                 :class="{ hover: upHere && scope.isLeaf }"
-                class="column"
                 :style="!column.display ? 'display : contents':''"
+                class="column"
             >
               <a
                   v-if="
@@ -47,8 +47,8 @@
               </p>
               <b-field v-else-if="column.display && indexColumn === 'admin'" :field="indexColumn" class="column">
                 <b-tooltip
-                    type="is-warning"
                     :label="$t('dataTypeAuthorizations.all-autorisation')"
+                    type="is-warning"
                 >
                   <b-icon
                       :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
@@ -62,22 +62,22 @@
               </b-field>
               <b-field v-else-if="column.display" :field="indexColumn" class="column">
                 <b-tooltip
-                    type="is-warning"
                     :active="canShowWarning(index, indexColumn)"
                     :label="$t('validation.noRightsForThisOPeration')"
+                    type="is-warning"
                 >
                   <b-icon
+                      :disabled="canShowWarning(index, indexColumn)"
                       :icon="STATES[states[indexColumn][getPath(index)].localState] || STATES[0]"
-                      class="clickable"
-                      pack="far"
-                      size="is-medium"
                       :type="
                       states[indexColumn][getPath(index)].hasPublicStates ||
                       canShowWarning(index, indexColumn)
                         ? 'is-light'
                         : 'is-primary'
                     "
-                      :disabled="canShowWarning(index, indexColumn)"
+                      class="clickable"
+                      pack="far"
+                      size="is-medium"
                       @click.native="
                       canShowWarning(index, indexColumn)
                         ? (index) => index
@@ -89,19 +89,19 @@
                     v-if="states[indexColumn][getPath(index)].fromAuthorization"
                     :column="column"
                     :data-groups="dataGroups"
-                    :state="states[indexColumn][getPath(index)]"
+                    :disabled="canShowWarning(index, indexColumn)"
                     :index="index"
                     :index-column="indexColumn"
-                    :disabled="canShowWarning(index, indexColumn)"
+                    :state="states[indexColumn][getPath(index)]"
                     @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
                 />
                 <b-tooltip
-                    position="is-right"
-                    multilined
                     v-if="
                     states[indexColumn][getPath(index)].state === 0 ||
                     states[indexColumn][getPath(index)].state === -1
                   "
+                    multilined
+                    position="is-right"
                 >
                   <b-button
                       v-if="(column.withDataGroups && dataGroups.length > 1) || column.withPeriods"
@@ -153,21 +153,21 @@
             <AuthorizationTable
                 v-if="authReference"
                 :auth-reference="getNextAuthreference(scope)"
-                :publicAuthorizations="publicAuthorizations"
-                :ownAuthorizations="ownAuthorizations"
-                :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
                 :authorization="authorization"
+                :authorization-scopes="authorizationScopes"
                 :columns-visible="columnsVisible"
+                :current-authorization-scope="getCurrentAuthorizationScope(scope)"
                 :data-groups="dataGroups"
                 :isApplicationAdmin="isApplicationAdmin"
+                :ownAuthorizations="ownAuthorizations"
+                :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath"
                 :path="getPath(index)"
+                :publicAuthorizations="publicAuthorizations"
                 :remaining-option="getRemainingOption(scope)"
                 :required-authorizations="{}"
-                :authorization-scopes="authorizationScopes"
-                :current-authorization-scope="getCurrentAuthorizationScope(scope)"
-                @setIndetermined="eventSetIndetermined($event, index)"
                 @modifyAuthorization="$emit('modifyAuthorization', $event)"
                 @registerCurrentAuthorization="$emit('registerCurrentAuthorization', $event)"
+                @setIndetermined="eventSetIndetermined($event, index)"
             />
           </ul>
         </div>
@@ -258,9 +258,9 @@ export default class AuthorizationTable extends Vue {
   }
 
   canShowWarning(index, column) {
-    return this.isApplicationAdmin ||
-    (this.ownAuthorizations.find((oa) => this.getPath(index).startsWith(oa)) &&
-        this.isAuthorizedColumnForPath(index, column))
+    return (this.isApplicationAdmin ||
+        (this.ownAuthorizations.find((oa) => this.getPath(index).startsWith(oa)) &&
+            this.isAuthorizedColumnForPath(index, column)))
         ? false
         : true;
   }
@@ -322,7 +322,7 @@ export default class AuthorizationTable extends Vue {
     let thisStateElement = this.states[indexColumn][this.getPath(index)];
     this.selectCheckbox(event, index, indexColumn, authorizations);
     for (let nameColumn in this.columnsVisible) {
-      if(nameColumn !== "admin") {
+      if (nameColumn !== "label" && nameColumn !== "admin") {
         if (this.states[nameColumn]) {
           let stateElement = this.states[nameColumn][this.getPath(index)];
           if (thisStateElement.state === stateElement.state) {

@@ -22,7 +22,7 @@
         "application-creation":"Application creation",
         "data-types-page":"{applicationName} data types",
         "data-types-repository": "Management of data sets {applicationName}",
-        "data-type-authorizations":"{dataType} authorizations",
+        "data-type-authorizations":"Authorizations on data types.",
         "references-authorizations": "References authorizations",
         "data-type-new-authorization":"New authorization for {dataType}",
         "authorizations-management": "Authorizations management of applications"
@@ -301,7 +301,7 @@
     },
     "dataTypeAuthorizations": {
         "add-auhtorization": "Add an authorization",
-        "sub-menu-data-type-authorizations": "{dataType} authorizations",
+        "sub-menu-data-type-authorizations": "Authorizations for data types",
         "sub-menu-new-authorization": "new authorization",
         "users": "User's names",
         "closeUser": "Close",

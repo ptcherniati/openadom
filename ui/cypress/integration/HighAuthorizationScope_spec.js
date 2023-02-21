@@ -51,8 +51,8 @@ describe('test high authorization application', () => {
         cy.contains('poussin')
         cy.get(':nth-child(1) > [data-label="Administration"] > .b-checkbox > .check').first().click(   )
         cy.get(':nth-child(1) > [data-label="Applications"] > .taginput > .taginput-container > .autocomplete > .control > .input').type('other').type('{enter}')
-        cy.intercept('PUT','http://localhost:8081/api/v1//authorization/superadmin', user).as('superadmin')
-        cy.intercept('PUT','http://localhost:8081/api/v1//authorization/applicationCreator',user).as('applicationCreator')
+        cy.intercept('PUT','http://localhost:8081/api/v1/authorization/superadmin', user).as('superadmin')
+        cy.intercept('PUT','http://localhost:8081/api/v1/authorization/applicationCreator',user).as('applicationCreator')
         cy.get('.button > :nth-child(2)').click()
         cy.wait('@superadmin').then(test1)
         cy.wait('@applicationCreator').then(test2)
@@ -88,8 +88,8 @@ describe('test high authorization application', () => {
         cy.get(':nth-child(2) > [data-label="Administration"] > .b-checkbox > .check').first().click()
         cy.get('[title="titi"] > .delete').click()
 
-        cy.intercept('DELETE','http://localhost:8081/api/v1//authorization/superadmin', user).as('superadmin2')
-        cy.intercept('DELETE','http://localhost:8081/api/v1//authorization/applicationCreator',user).as('applicationCreator2')
+        cy.intercept('DELETE','http://localhost:8081/api/v1/authorization/superadmin', user).as('superadmin2')
+        cy.intercept('DELETE','http://localhost:8081/api/v1/authorization/applicationCreator',user).as('applicationCreator2')
 
         cy.get('.button > :nth-child(2)').click()
         cy.wait('@superadmin2').then(test3)

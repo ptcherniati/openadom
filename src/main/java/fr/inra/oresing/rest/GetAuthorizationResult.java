@@ -16,8 +16,7 @@ public class GetAuthorizationResult {
     String name;
     Set<OreSiUser> users;
     UUID application;
-    String dataType;
-    Map<OperationType, List<AuthorizationParsed>> authorizations;
-    List< Map<OperationType, List<Authorization>>> publicAuthorizations;
+    Map<String, Map<OperationType, List<AuthorizationParsed>>> authorizations;
+    Map<String, Map<OperationType, List<Authorization>>> publicAuthorizations;
     AuthorizationsResult authorizationsForUser;
 }

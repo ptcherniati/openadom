@@ -32,11 +32,13 @@ public class UpdateRolesOnManagement {
         this.newUsers = modifiedAuthorization.getOreSiUsers();
         this.modifiedAuthorization = modifiedAuthorization;
         this.application = repository.application().findApplication(modifiedAuthorization.getApplication());
-        this.hasRepository = Optional.of(application.getConfiguration())
-                .map(Configuration::getDataTypes)
-                .map(map -> map.get(modifiedAuthorization.getDataType()))
-                .map(Configuration.DataTypeDescription::getRepository)
-                .isPresent();
+        this.hasRepository =
+                modifiedAuthorization.getAuthorizations().keySet()
+                        .stream().anyMatch(datatype -> Optional.of(application.getConfiguration())
+                                .map(Configuration::getDataTypes)
+                                .map(map -> map.get(datatype))
+                                .map(Configuration.DataTypeDescription::getRepository)
+                                .isPresent());
         this.authorizationRepository = repository.getRepository(application).authorization();
 
     }
@@ -45,25 +47,27 @@ public class UpdateRolesOnManagement {
         OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, modifiedAuthorization.getId());
         addOrRemoveAuthorizationForUsers(previousUsers, newUsers, oreSiRightOnApplicationRole);
         dropPolicies(oreSiRightOnApplicationRole);
-        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.publication)) {
-            toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
-                    .forEach(db::createPolicy);
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.publication, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
-                    .forEach(db::createPolicy);
-        }
-        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.delete)) {
-            toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.delete, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.SELECT, SqlPolicy.Statement.DELETE)).stream()
-                    .forEach(db::createPolicy);
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.delete, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.DELETE)).stream()
-                    .forEach(db::createPolicy);
-        }
-        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.depot)) {
-            toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.depot, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
-                    .forEach(db::createPolicy);
-        }
-        if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.extraction)) {
-            toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.extraction, List.of(SqlPolicy.Statement.SELECT)).stream()
-                    .forEach(db::createPolicy);
+        for (String datatype : modifiedAuthorization.getAuthorizations().keySet()) {
+            if (modifiedAuthorization.getAuthorizations().getOrDefault(datatype, new HashMap<>()).containsKey(OperationType.publication)) {
+                toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, datatype, OperationType.publication, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
+                        .forEach(db::createPolicy);
+                toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, datatype, OperationType.publication, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
+                        .forEach(db::createPolicy);
+            }
+            if (modifiedAuthorization.getAuthorizations().getOrDefault(datatype, new HashMap<>()).containsKey(OperationType.delete)) {
+                toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, datatype, OperationType.delete, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.SELECT, SqlPolicy.Statement.DELETE)).stream()
+                        .forEach(db::createPolicy);
+                toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, datatype, OperationType.delete, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.DELETE)).stream()
+                        .forEach(db::createPolicy);
+            }
+            if (modifiedAuthorization.getAuthorizations().getOrDefault(datatype, new HashMap<>()).containsKey(OperationType.depot)) {
+                toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, datatype, OperationType.depot, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.INSERT, SqlPolicy.Statement.UPDATE)).stream()
+                        .forEach(db::createPolicy);
+            }
+            if (modifiedAuthorization.getAuthorizations().getOrDefault(datatype, new HashMap<>()).containsKey(OperationType.extraction)) {
+                toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, datatype, OperationType.extraction, List.of(SqlPolicy.Statement.SELECT)).stream()
+                        .forEach(db::createPolicy);
+            }
         }
     }
 
@@ -95,16 +99,14 @@ public class UpdateRolesOnManagement {
     }
 
 
-    private List<SqlPolicy> toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, List<SqlPolicy.Statement> statements) {
+    private List<SqlPolicy> toDatatypePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, String datatype, OperationType operation, List<SqlPolicy.Statement> statements) {
         Set<String> usingExpressionElements = new LinkedHashSet<>();
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-
-        String dataType = authorization.getDataType();
         SqlPolicy sqlPolicy = null;
         usingExpressionElements.add("application = '" + authorization.getApplication() + "'::uuid");
-        usingExpressionElements.add("dataType = '" + dataType + "'");
-        String expression = createExpression(authorization, usingExpressionElements, application, sqlSchemaForApplication, operation);
+        String expression = createExpressionForDatatypePolicy(authorization, datatype, usingExpressionElements, application, sqlSchemaForApplication, operation);
         String usingExpression = null, checkExpression = null;
+
 
         return statements.stream()
                 .map(statement -> new SqlPolicy(
@@ -120,12 +122,12 @@ public class UpdateRolesOnManagement {
     }
 
 
-    private List<SqlPolicy> toBinaryFilePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, OperationType operation, List<SqlPolicy.Statement> statements) {
+    private List<SqlPolicy> toBinaryFilePolicy(OreSiAuthorization authorization, OreSiRightOnApplicationRole oreSiRightOnApplicationRole, String datatype, OperationType operation, List<SqlPolicy.Statement> statements) {
         Set<String> usingExpressionElements = new LinkedHashSet<>();
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
         SqlPolicy sqlPolicy = null;
         usingExpressionElements.add("application = '" + authorization.getApplication() + "'::uuid");
-        String expression = hasRepository ? createBinaryExpression(authorization, usingExpressionElements, application, sqlSchemaForApplication, operation) : "true";
+        String expression = hasRepository ? createExpressionForBinaryFilePolicy(authorization, datatype, usingExpressionElements, application, sqlSchemaForApplication, operation) : "true";
 
         return statements.stream()
                 .map(statement -> new SqlPolicy(
@@ -140,11 +142,12 @@ public class UpdateRolesOnManagement {
                 .collect(Collectors.toList());
     }
 
-    private String createBinaryExpression(OreSiAuthorization authorization, Set<String> usingExpressionElements, Application application, SqlSchemaForApplication sqlSchemaForApplication, OperationType operation) {
-        if (authorization.getAuthorizations().containsKey(operation) &&
-                !authorization.getAuthorizations().get(operation).isEmpty()) {
-            usingExpressionElements.add("\"authorization\" @> " +
-                    authorization.getAuthorizations().get(operation).stream()
+    private String createExpressionForBinaryFilePolicy(OreSiAuthorization authorization, String datatype, Set<String> usingExpressionElements, Application application, SqlSchemaForApplication sqlSchemaForApplication, OperationType operation) {
+        if (authorization.getAuthorizations().values().stream().anyMatch(v -> v.containsKey(operation) &&
+                !v.get(operation).isEmpty())) {
+            usingExpressionElements.add("\"datatype\"='" + datatype + "' and " +
+                    "\"authorization\" @> " +
+                    authorization.getAuthorizations().getOrDefault(datatype, new HashMap<>()).get(operation).stream()
                             .map(auth -> auth.toSQL(application.getConfiguration().getRequiredAuthorizationsAttributes()))
                             .filter(auth -> auth != null)
                             .map(sql -> String.format(sql, sqlSchemaForApplication.getName()))
@@ -160,11 +163,12 @@ public class UpdateRolesOnManagement {
         return usingExpression;
     }
 
-    private String createExpression(OreSiAuthorization authorization, Set<String> usingExpressionElements, Application application, SqlSchemaForApplication sqlSchemaForApplication, OperationType operation) {
-        if (authorization.getAuthorizations().containsKey(operation) &&
-                !authorization.getAuthorizations().get(operation).isEmpty()) {
-            usingExpressionElements.add("\"authorization\" @> " +
-                    authorization.getAuthorizations().get(operation).stream()
+    private String createExpressionForDatatypePolicy(OreSiAuthorization authorization, String datatype, Set<String> usingExpressionElements, Application application, SqlSchemaForApplication sqlSchemaForApplication, OperationType operation) {
+        if (authorization.getAuthorizations().getOrDefault(datatype, new HashMap<>()).containsKey(operation) &&
+                !authorization.getAuthorizations().getOrDefault(datatype, new HashMap<>()).get(operation).isEmpty()) {
+            usingExpressionElements.add("\"datatype\"='" + datatype + "' and " +
+                    "\"authorization\" @> " +
+                    authorization.getAuthorizations().getOrDefault(datatype, new HashMap<>()).get(operation).stream()
                             .map(auth -> auth.toSQL(application.getConfiguration().getRequiredAuthorizationsAttributes()))
                             .filter(auth -> auth != null)
                             .map(sql -> String.format(sql, sqlSchemaForApplication.getName()))

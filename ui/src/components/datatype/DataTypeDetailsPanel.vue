@@ -19,7 +19,7 @@
     </div>
     <div class="Panel-buttons">
       <b-button type="is-dark" icon-left="key" @click="consultAuthorization"
-                :disabled="dataType && !dataType.isAdmin">{{
+                :disabled="!canManageRights">{{
         $t("dataTypesManagement.consult-authorization")
       }}</b-button>
     </div>
@@ -37,13 +37,14 @@ export default class DataTypeDetailsPanel extends Vue {
   @Prop({ default: false }) leftAlign;
   @Prop({ default: false }) open;
   @Prop() dataType;
+  @Prop() canManageRights;
   @Prop() closeCb;
   @Prop() applicationName;
   @Prop() tags;
 
   consultAuthorization() {
     this.$router.push(
-      `/applications/${this.applicationName}/dataTypes/${this.dataType.id}/authorizations`
+      `/applications/${this.applicationName}/authorizations`
     );
   }
 }

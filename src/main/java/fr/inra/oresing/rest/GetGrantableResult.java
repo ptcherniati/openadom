@@ -1,20 +1,21 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.model.Authorization;
 import fr.inra.oresing.model.internationalization.Internationalization;
+import fr.inra.oresing.persistence.OperationType;
 import lombok.Value;
 
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Value
 public class GetGrantableResult {
 
     Set<User> users;
-    Set<DataGroup> dataGroups;
-    Set<AuthorizationScope> authorizationScopes;
-    Map<String, ColumnDescription> columnsDescription;
+    Map<String, Set<DataGroup>> dataGroups;
+    Map<String, Set<AuthorizationScope>> authorizationScopes;
+    Map<String, SortedMap<String, ColumnDescription>> columnsDescription;
     AuthorizationsResult authorizationsForUser;
+    Map<String, Map<OperationType, List<Authorization>>> publicAuthorizations;
 
     @Value
     public static class User {
