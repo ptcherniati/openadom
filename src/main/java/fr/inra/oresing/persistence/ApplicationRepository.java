@@ -33,6 +33,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
     }
 
     public Application findApplication(String nameOrId) {
+
         return tryFindApplication(nameOrId).orElseThrow(() -> new NoSuchApplicationException(nameOrId));
     }
 

@@ -37,6 +37,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -1175,11 +1176,17 @@ public class OreSiService {
     public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
         DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
         List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
-        Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
+        Configuration.FormatDescription format = new Configuration.FormatDescription();
+        if (!downloadDatasetQueryCopy.getApplication()
                 .getConfiguration()
                 .getDataTypes()
-                .get(dataType)
-                .getFormat();
+                .get(dataType).getTags().stream().anyMatch(tag->Configuration.HIDDEN_TAG.equals(tag))) {
+            format = downloadDatasetQueryCopy.getApplication()
+                    .getConfiguration()
+                    .getDataTypes()
+                    .get(dataType)
+                    .getFormat();
+        }
         ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf(getExportColumns(format).entrySet().stream()
                 .collect(Collectors.toMap(
                         e -> e.getKey(),
@@ -1284,6 +1291,10 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
+        if(app.getConfiguration().getDataTypes().get(dataType)
+                .getTags().stream().anyMatch(tag->Configuration.HIDDEN_TAG.equals(tag))){
+           return List.of();
+        }
         List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery);
         return data;
     }
@@ -1297,8 +1308,19 @@ public class OreSiService {
     }
 
     public Application getApplication(String nameOrId) {
+        // TODO filtre tag hidden boucle sur les references et les datatypes
         authenticationService.setRoleForClient();
+        // Application result = repo.application().findApplication(nameOrId);
         return repo.application().findApplication(nameOrId);
+    }
+
+    public List<List<String>> getReferenceColumn(Application application, String refType, String column) {
+        List<List<String>> list = List.of();
+        if( !application.getConfiguration().getReferences().get(refType)
+                .getTags().stream().anyMatch(tag->Configuration.HIDDEN_TAG.equals(tag))) {
+            list = repo.getRepository(application).referenceValue().findReferenceValue(refType, column);
+        }
+        return list;
     }
 
     public Optional<Application> tryFindApplication(String nameOrId) {
@@ -1315,7 +1337,11 @@ public class OreSiService {
     }
 
     public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
-        return referenceService.getReferenceValuesCsv(applicationNameOrId, referenceType, params);
+       if( getApplication(applicationNameOrId).getConfiguration().getReferences().get(referenceType)
+                .getTags().stream().anyMatch(tag->Configuration.HIDDEN_TAG.equals(tag))){
+           return "";
+       }
+       return referenceService.getReferenceValuesCsv(applicationNameOrId, referenceType, params);
     }
 
     public Optional<BinaryFile> getFile(String name, UUID id) {
@@ -1463,14 +1489,22 @@ public class OreSiService {
 
     public Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType) {
         Application application = getApplication(nameOrId);
-        return repo.getRepository(application).synthesisRepository().selectSynthesisDatatype(application.getId(), dataType).stream()
-                .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+       if( !application.getConfiguration().getDataTypes().get(dataType)
+                .getTags().stream().anyMatch(tag->Configuration.HIDDEN_TAG.equals(tag))){
+           return repo.getRepository(application).synthesisRepository().selectSynthesisDatatype(application.getId(), dataType).stream()
+                   .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+       }
+        return null;
     }
 
     public Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType, String variable) {
         Application application = getApplication(nameOrId);
-        return repo.getRepository(application).synthesisRepository().selectSynthesisDatatypeAndVariable(application.getId(), dataType, variable).stream()
-                .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+       if( !application.getConfiguration().getDataTypes().get(dataType).getData().get(variable)
+                .getTags().stream().anyMatch(tag->Configuration.HIDDEN_TAG.equals(tag))){
+           return repo.getRepository(application).synthesisRepository().selectSynthesisDatatypeAndVariable(application.getId(), dataType, variable).stream()
+                   .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
+       }
+       return null;
     }
 
     public List<ApplicationResult.ReferenceSynthesis> getReferenceSynthesis(Application application) {

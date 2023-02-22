@@ -4,8 +4,8 @@ application:
   internationalizationName:
     fr: SOERE mon SOERE avec dépôt
     en: SOERE my SOERE with repository
-  name: MONSORE
-  version: 7
+  name: MONSORES
+  version: 1
 
 tags:
   context:
@@ -436,6 +436,7 @@ dataTypes:
                 refType: sites
         computedComponents:
           site_bassin:
+            tags: [__hidden__]
             computation:
               expression: >
                 return references.get("sites")
@@ -614,3 +615,34 @@ dataTypes:
         component: value
       - variable: espece
         component: value
+  test:
+    tags: [__hidden__]
+    internationalizationName:
+      fr: Test
+      en: Test
+    data:
+      projet:
+        tags: [test]
+        components:
+          value:
+            tags: [test]
+            checker:
+              name: Reference
+              params:
+                refType: projet
+    format:
+      headerLine: 4
+      firstRowLine: 5
+      columns:
+        - header: projet
+          boundTo:
+            variable: projet
+            component: value
+    authorization:
+      authorizationScopes:
+        projet:
+          internationalizationName:
+            fr: Projet
+            en: Project
+          variable: projet
+          component: value

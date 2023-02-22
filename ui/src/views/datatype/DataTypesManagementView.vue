@@ -149,7 +149,9 @@ export default class DataTypesManagementView extends Vue {
     if (!this.tags) {
       return this.dataTypes;
     }
-    let selectedTags = Object.keys(this.tags).filter((t) => this.tags[t].selected);
+    let selectedTags = Object.keys(this.tags).filter((t) =>
+      this.tags[t].selected
+    );
     if (!Object.keys(this.tags).length) {
       return this.dataTypes;
     }
@@ -167,16 +169,18 @@ export default class DataTypesManagementView extends Vue {
         continue;
       }
       for (const tagName of currentTags) {
-        if (tags[tagName]) {
-          continue;
+        if (tagName !==  ) {
+          if (tags[tagName]) {
+            continue;
+          }
+          tags[tagName] = {};
+          tags[tagName].selected = true;
+          tags[tagName].localName = this.internationalisationService.getLocaleforPath(
+              this.application,
+              "internationalizedTags." + tagName,
+              tagName
+          );
         }
-        tags[tagName] = {};
-        tags[tagName].selected = true;
-        tags[tagName].localName = this.internationalisationService.getLocaleforPath(
-            this.application,
-            "internationalizedTags." + tagName,
-            tagName
-        );
       }
       dataType.localtags = dataType.tags.map((tag) => tags[tag]?.localName || tag);
     }

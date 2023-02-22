@@ -72,6 +72,30 @@ public class DownloadDatasetQuery {
 
     }
 
+    public List<String> getHiddenVariables() {
+        return application.getConfiguration().getDataTypes().get(getDataType()).getData().entrySet().stream()
+                .filter(entry -> entry.getValue().isHidden())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toList());
+    }
+
+    public List<VariableComponentKey> getHiddenComponents() {
+        return application.getConfiguration().getDataTypes().get(getDataType()).getData().entrySet().stream()
+                .map(entryVariable -> {
+                    String variableName = entryVariable.getKey();
+                    LinkedHashMap<String, Configuration.VariableComponentDescription> components = new LinkedHashMap<>();
+                    components.putAll(entryVariable.getValue().getComponents());
+                    components.putAll(entryVariable.getValue().getComputedComponents());
+                    return components.entrySet().stream()
+                            .filter(entry -> entry.getValue()!=null && entry.getValue().isHidden())
+                            .map(Map.Entry::getKey)
+                            .map(componentName -> new VariableComponentKey(variableName, componentName))
+                            .collect(Collectors.toList());
+                })
+                .flatMap(List::stream)
+                .collect(Collectors.toList());
+    }
+
     public static final DownloadDatasetQuery buildDownloadDatasetQuery(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, Application application) {
         return downloadDatasetQuery == null ?
                 new DownloadDatasetQuery(
@@ -101,14 +125,14 @@ public class DownloadDatasetQuery {
                 .orElseGet(() -> {
 
                             final Configuration.AuthorizationDescription authorization = getApplication().getConfiguration().getDataTypes().get(getDataType()).getAuthorization();
-                            if(authorization!=null && authorization.getTimeScope()!=null) {
+                            if (authorization != null && authorization.getTimeScope() != null) {
                                 variableComponentKeySet.add(
                                         new VariableComponentOrderBy(
                                                 authorization.getTimeScope(),
                                                 Order.ASC)
                                 );
                             }
-                            if(authorization!=null) {
+                            if (authorization != null) {
                                 authorization.getAuthorizationScopes().values()
                                         .stream()
                                         .map(Configuration.AuthorizationScopeDescription::getVariableComponentKey)
@@ -208,16 +232,21 @@ public class DownloadDatasetQuery {
                 .filter(filter -> !Strings.isNullOrEmpty(filter))
                 .collect(Collectors.joining(" AND "));
     }
+    private String buildDeleteJsonPathSql(List<String> pathes){
+        return pathes.stream().collect(Collectors.joining(",", "#- '{", "}'"));
+    }
 
     public String buildQuery(String toMergeDataGroupsQuery) {
+        String filterHiddenVariable = filterHiddenVariables();
+        String filterHiddenComponents= filterHiddenComponents();
         String query = "WITH my_data AS (\n" + toMergeDataGroupsQuery + "\n)" +
                 "\n SELECT '" + DataRow.class.getName() + "' AS \"@class\",  " +
                 "\njsonb_build_object(" +
                 "\n\t'rowNumber', row_number() over (), " +
                 "\n\t'totalRows', count(*) over (), " +
                 "\n\t'rowId', rowId, " +
-                "\n\t'values', dataValues, " +
-                "\n\t'refsLinkedTo', refsLinkedTo" +
+                "\n\t'values', dataValues "+filterHiddenVariable+" "+filterHiddenComponents+", " +
+                "\n\t'refsLinkedTo', refsLinkedTo "+filterHiddenVariable+" "+filterHiddenComponents+" " +
                 "\n) AS json"
                 + " \nFROM my_data ";
         query = filterBy(query);
@@ -229,6 +258,20 @@ public class DownloadDatasetQuery {
             query = String.format("%s \nFETCH FIRST %d ROW ONLY", query, limit);
         }
         return query;
+    }
+
+    private String filterHiddenVariables() {
+        return getHiddenVariables().stream()
+                .map(List::of)
+                .map(this::buildDeleteJsonPathSql)
+                .collect(Collectors.joining(" "));
+    }
+
+    private String filterHiddenComponents() {
+        return getHiddenComponents().stream()
+                .map(vc -> List.of(vc.getVariable(), vc.getComponent()))
+                .map(this::buildDeleteJsonPathSql)
+                .collect(Collectors.joining(" "));
     }
 
     public enum Order {

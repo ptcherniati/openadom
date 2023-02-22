@@ -618,6 +618,9 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.dataTypes.pem.variables.projet.tags", Matchers.hasItem("test")))
                     .andExpect(jsonPath("$.dataTypes.pem.variables.espece.tags", Matchers.hasItem("no-tag")))
                     .andExpect(jsonPath("$.dataTypes.pem.variables.projet.components.value.tags", Matchers.hasItem("test")))
+
+                    .andExpect(jsonPath("$.dataTypes.pem.variables.site.components.site_bassin.tags", Matchers.hasItem("__hidden__")))
+                    .andExpect(jsonPath("$.dataTypes.test.tags", Matchers.hasItem("__hidden__")))
                     .andExpect(jsonPath("$.internationalization.internationalizedTags.context.fr", Is.is("contexte")));
         }
 
@@ -637,9 +640,14 @@ public class OreSiResourcesTest {
                 JsonPath.parse(response).read("$.id");
             }
         }
-        final ResultActions typeDeFichiers = mockMvc.perform(get("/api/v1//applications/monsore/references/{refType}", "type de fichiers")
+        final ResultActions typeDeFichiers = mockMvc.perform(get("/api/v1/applications/monsore/references/{refType}", "type de fichiers")
                         .cookie(authCookie))
                     .andExpect(jsonPath("$.referenceValues", Matchers.hasSize(0)));
+
+        final ResultActions dataTest = mockMvc.perform(get("/api/v1/applications/monsore/data/{dataType}", "test")
+                        .cookie(authCookie))
+                    .andExpect(jsonPath("$.variables", Matchers.hasSize(0)));
+
         CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
         String withRigthsUserId = withRightsUserResult.getUserId().toString();
         Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")

@@ -109,14 +109,19 @@ export default class ReferencesManagementView extends Vue {
     if (!this.tags) {
       return this.references;
     }
-    let selectedTags = Object.keys(this.tags).filter((t) => this.tags[t].selected);
+    let selectedTags = Object.keys(this.tags).filter((t) => {
+      return this.tags[t].selected
+    });
     if (!Object.keys(this.tags).length) {
       return this.references;
     }
     return this.references.filter((reference) => {
       return reference.tags.some((t) => {
-        return selectedTags.includes(t);
-      });
+        if (t !== "__hidden__") {
+          return selectedTags.includes(t);
+        }
+      }
+      );
     });
   }
   buildTags() {
@@ -127,16 +132,18 @@ export default class ReferencesManagementView extends Vue {
         continue;
       }
       for (const tagName of currentTags) {
-        if (tags[tagName]) {
-          continue;
+        if (tagName !== "__hidden__") {
+          if (tags[tagName]) {
+            continue;
+          }
+          tags[tagName] = {};
+          tags[tagName].selected = true;
+          tags[tagName].localName = this.internationalisationService.getLocaleforPath(
+              this.application,
+              "internationalizedTags." + tagName,
+              tagName
+          );
         }
-        tags[tagName] = {};
-        tags[tagName].selected = true;
-        tags[tagName].localName = this.internationalisationService.getLocaleforPath(
-            this.application,
-            "internationalizedTags." + tagName,
-            tagName
-        );
       }
       reference.localtags = reference.tags.map((tag) => tags[tag]?.localName || tag);
     }

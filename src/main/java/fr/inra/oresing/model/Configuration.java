@@ -647,6 +647,10 @@ public class Configuration {
         public boolean hasComponent(String component) {
             return doGetAllComponents().contains(component);
         }
+
+        public boolean isHidden() {
+            return getTags().contains(HIDDEN_TAG);
+        }
     }
 
     @Getter
@@ -709,6 +713,10 @@ public class Configuration {
 
         @ApiModelProperty(notes = "Some tags for the variable component description", required = false, example = "variable")
         private List<String> tags = new LinkedList<>();
+
+        public boolean isHidden() {
+            return getTags().contains(HIDDEN_TAG);
+        }
         //private Set<String> tags = Set.of("no-tag");
     }
 
