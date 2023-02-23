@@ -71,6 +71,7 @@ import { AlertService } from "@/services/AlertService";
 import { Button } from "@/model/Button";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { ErrorsService } from "@/services/ErrorsService";
+import { TagService } from "@/services/TagService";
 
 @Component({
   components: { CollapsibleTree, TagsCollapse, ReferencesDetailsPanel, PageView, SubMenu },
@@ -83,6 +84,7 @@ export default class ReferencesManagementView extends Vue {
   internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
+  tagService = TagService.INSTANCE;
 
   references = [];
   currentPage = 1;
@@ -106,23 +108,7 @@ export default class ReferencesManagementView extends Vue {
   tags = {};
 
   get referencesToBeShown() {
-    if (!this.tags) {
-      return this.references;
-    }
-    let selectedTags = Object.keys(this.tags).filter((t) => {
-      return this.tags[t].selected
-    });
-    if (!Object.keys(this.tags).length) {
-      return this.references;
-    }
-    return this.references.filter((reference) => {
-      return reference.tags.some((t) => {
-        if (t !== "__hidden__") {
-          return selectedTags.includes(t);
-        }
-      }
-      );
-    });
+    return this.tagService.toBeShown(this.tags, this.references);
   }
   buildTags() {
     let tags = {};
@@ -131,20 +117,7 @@ export default class ReferencesManagementView extends Vue {
       if (!currentTags) {
         continue;
       }
-      for (const tagName of currentTags) {
-        if (tagName !== "__hidden__") {
-          if (tags[tagName]) {
-            continue;
-          }
-          tags[tagName] = {};
-          tags[tagName].selected = true;
-          tags[tagName].localName = this.internationalisationService.getLocaleforPath(
-              this.application,
-              "internationalizedTags." + tagName,
-              tagName
-          );
-        }
-      }
+      this.tagService.currentTags(tags, currentTags, this.application, this.internationalisationService);
       reference.localtags = reference.tags.map((tag) => tags[tag]?.localName || tag);
     }
     this.tags = tags;

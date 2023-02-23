@@ -94,6 +94,7 @@ import { DataService } from "@/services/rest/DataService";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
 import { ErrorsService } from "@/services/ErrorsService";
 import { InternationalisationService } from "@/services/InternationalisationService";
+import { TagService } from "@/services/TagService";
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
 import DetailModalCard from "@/components/charts/DetailModalCard";
@@ -117,9 +118,11 @@ export default class DataTypesManagementView extends Vue {
   applicationService = ApplicationService.INSTANCE;
   synthesisService = SynthesisService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
+  tagService = TagService.INSTANCE;
   alertService = AlertService.INSTANCE;
   dataService = DataService.INSTANCE;
   errorsService = ErrorsService.INSTANCE;
+  hidden_tag = TagService.HIDDEN_TAG;
   application = new ApplicationResult();
   isLoading = false;
   subMenuPaths = [];
@@ -146,21 +149,9 @@ export default class DataTypesManagementView extends Vue {
   tags = {};
 
   get dataTypesToBeShown() {
-    if (!this.tags) {
-      return this.dataTypes;
-    }
-    let selectedTags = Object.keys(this.tags).filter((t) =>
-      this.tags[t].selected
-    );
-    if (!Object.keys(this.tags).length) {
-      return this.dataTypes;
-    }
-    return this.dataTypes.filter((dataType) => {
-      return dataType.tags.some((t) => {
-        return selectedTags.includes(t);
-      });
-    });
+    return this.tagService.toBeShown(this.tags, this.dataTypes);
   }
+
   buildTags() {
     let tags = {};
     for (const dataType of this.dataTypes) {
@@ -168,20 +159,7 @@ export default class DataTypesManagementView extends Vue {
       if (!currentTags) {
         continue;
       }
-      for (const tagName of currentTags) {
-        if (tagName !==  ) {
-          if (tags[tagName]) {
-            continue;
-          }
-          tags[tagName] = {};
-          tags[tagName].selected = true;
-          tags[tagName].localName = this.internationalisationService.getLocaleforPath(
-              this.application,
-              "internationalizedTags." + tagName,
-              tagName
-          );
-        }
-      }
+      this.tagService.currentTags(tags, currentTags, this.application, this.internationalisationService);
       dataType.localtags = dataType.tags.map((tag) => tags[tag]?.localName || tag);
     }
     this.tags = tags;
@@ -231,68 +209,70 @@ export default class DataTypesManagementView extends Vue {
   async initSynthesis() {
     this.isLoading = true;
     for (const datatype in this.application.dataTypes) {
-      let minmaxByDatatypes = [];
-      let synthesis = await this.synthesisService.getSynthesis(this.applicationName, datatype);
-      for (const variable in synthesis) {
-        let resultByAggregation = {
-          variable,
-          ranges: [],
-          minmax: [],
-        };
-        let rangesForVariable = synthesis[variable];
-        let minmaxByVariable = [];
-        for (const aggregationIndex in rangesForVariable) {
-          let aggregation = rangesForVariable[aggregationIndex].aggregation;
-          let unit = rangesForVariable[aggregationIndex].unit;
-          let ranges = rangesForVariable[aggregationIndex].ranges;
-          let minmax = ranges.reduce((acc, range) => {
-            resultByAggregation.ranges = [...resultByAggregation.ranges, range.range];
-            let min = acc[0];
-            let max = acc[0];
-            min = min ? (min <= range.range[0] ? min : range.range[0]) : range.range[0];
-            max = max ? (max >= range.range[1] ? max : range.range[1]) : range.range[1];
-            return [min, max];
-          }, []);
-          minmaxByVariable[0] = minmaxByVariable[0]
-            ? minmaxByVariable[0] < minmax[0]
-              ? minmaxByVariable[0]
-              : minmax[0]
-            : minmax[0];
-          minmaxByVariable[1] = minmaxByVariable[1]
-            ? minmaxByVariable[1] < minmax[1]
-              ? minmaxByVariable[1]
-              : minmax[1]
-            : minmax[1];
-
-          resultByAggregation[aggregation] = {
+      if (!this.application.dataTypes[datatype].tags.includes(this.hidden_tag)) {
+        let minmaxByDatatypes = [];
+        let synthesis = await this.synthesisService.getSynthesis(this.applicationName, datatype);
+        for (const variable in synthesis) {
+          let resultByAggregation = {
             variable,
-            aggregation,
-            unit,
-            ranges,
-            minmax,
+            ranges: [],
+            minmax: [],
           };
+          let rangesForVariable = synthesis[variable];
+          let minmaxByVariable = [];
+          for (const aggregationIndex in rangesForVariable) {
+            let aggregation = rangesForVariable[aggregationIndex].aggregation;
+            let unit = rangesForVariable[aggregationIndex].unit;
+            let ranges = rangesForVariable[aggregationIndex].ranges;
+            let minmax = ranges.reduce((acc, range) => {
+              resultByAggregation.ranges = [...resultByAggregation.ranges, range.range];
+              let min = acc[0];
+              let max = acc[0];
+              min = min ? (min <= range.range[0] ? min : range.range[0]) : range.range[0];
+              max = max ? (max >= range.range[1] ? max : range.range[1]) : range.range[1];
+              return [min, max];
+            }, []);
+            minmaxByVariable[0] = minmaxByVariable[0]
+                ? minmaxByVariable[0] < minmax[0]
+                    ? minmaxByVariable[0]
+                    : minmax[0]
+                : minmax[0];
+            minmaxByVariable[1] = minmaxByVariable[1]
+                ? minmaxByVariable[1] < minmax[1]
+                    ? minmaxByVariable[1]
+                    : minmax[1]
+                : minmax[1];
+
+            resultByAggregation[aggregation] = {
+              variable,
+              aggregation,
+              unit,
+              ranges,
+              minmax,
+            };
+          }
+          resultByAggregation.minmax = minmaxByVariable;
+          minmaxByDatatypes[0] = minmaxByDatatypes[0]
+              ? minmaxByDatatypes[0] < minmaxByVariable[0]
+                  ? minmaxByDatatypes[0]
+                  : minmaxByVariable[0]
+              : minmaxByVariable[0];
+          minmaxByDatatypes[1] = minmaxByDatatypes[1]
+              ? minmaxByDatatypes[1] < minmaxByVariable[1]
+                  ? minmaxByDatatypes[1]
+                  : minmaxByVariable[1]
+              : minmaxByVariable[1];
+          this.synthesis[datatype] = this.synthesis[datatype] || {};
+          this.synthesis[datatype].minmax = minmaxByDatatypes;
+          this.synthesis[datatype].ranges = this.synthesis[datatype].ranges || [];
+          this.synthesis[datatype].ranges = [
+            ...this.synthesis[datatype].ranges,
+            ...resultByAggregation.ranges,
+          ];
+          this.synthesis[datatype][variable] = resultByAggregation;
         }
-        resultByAggregation.minmax = minmaxByVariable;
-        minmaxByDatatypes[0] = minmaxByDatatypes[0]
-          ? minmaxByDatatypes[0] < minmaxByVariable[0]
-            ? minmaxByDatatypes[0]
-            : minmaxByVariable[0]
-          : minmaxByVariable[0];
-        minmaxByDatatypes[1] = minmaxByDatatypes[1]
-          ? minmaxByDatatypes[1] < minmaxByVariable[1]
-            ? minmaxByDatatypes[1]
-            : minmaxByVariable[1]
-          : minmaxByVariable[1];
-        this.synthesis[datatype] = this.synthesis[datatype] || {};
-        this.synthesis[datatype].minmax = minmaxByDatatypes;
-        this.synthesis[datatype].ranges = this.synthesis[datatype].ranges || [];
-        this.synthesis[datatype].ranges = [
-          ...this.synthesis[datatype].ranges,
-          ...resultByAggregation.ranges,
-        ];
-        this.synthesis[datatype][variable] = resultByAggregation;
+        if (minmaxByDatatypes.length) this.synthesisMinMax[datatype] = minmaxByDatatypes;
       }
-      if (minmaxByDatatypes.length) this.synthesisMinMax[datatype] = minmaxByDatatypes;
     }
     this.synthesis = { ...this.synthesis };
     this.synthesisMinMax = { ...this.synthesisMinMax };

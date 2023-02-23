@@ -124,6 +124,7 @@ import PageView from "../common/PageView.vue";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
 import TagsCollapse from "@/components/common/TagsCollapse.vue";
+import { TagService } from "@/services/TagService";
 
 @Component({
   components: { PageView, SubMenu, TagsCollapse },
@@ -136,6 +137,7 @@ export default class ReferenceTableView extends Vue {
   applicationService = ApplicationService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
   referenceService = ReferenceService.INSTANCE;
+  tagService = TagService.INSTANCE;
   params = new DownloadDatasetQuery({
     application: null,
     applicationNameOrId: this.applicationName,
@@ -168,38 +170,14 @@ export default class ReferenceTableView extends Vue {
       if (!currentTags) {
         continue;
       }
-      for (const tagName of currentTags) {
-        if (tagName !== "__hidden__") {
-          if (tags[tagName]) {
-            continue;
-          }
-          tags[tagName] = {};
-          tags[tagName].selected = true;
-          tags[tagName].localName = this.internationalisationService.getLocaleforPath(
-              this.application,
-              "internationalizedTags." + tagName,
-              tagName
-          );
-        }
-      }
+      this.tagService.currentTags(tags, currentTags, this.application, this.internationalisationService);
       this.reference.columns[column].localtags = this.reference.columns[column].tags.map((tag) => tags[tag]?.localName || tag);
     }
     this.tagsColumn = tags;
   }
 
   get columnsToBeShown() {
-    if (!this.tagsColumn) {
-      return this.columns;
-    }
-    let selectedTags = Object.keys(this.tagsColumn).filter((t) => this.tagsColumn[t].selected);
-    if (!Object.keys(this.tagsColumn).length) {
-      return this.columns;
-    }
-    return this.columns.filter((column) => {
-      return column.tags.some((t) => {
-        return selectedTags.includes(t);
-      });
-    });
+    return this.tagService.toBeShown(this.tagsColumn, this.columns);
   }
 
   async changePage(value) {

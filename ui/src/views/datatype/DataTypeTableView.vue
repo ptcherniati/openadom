@@ -493,6 +493,7 @@ import { VariableComponentOrderBy } from "@/model/application/VariableComponentO
 import draggable from "vuedraggable";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import TagsCollapse from "@/components/common/TagsCollapse.vue";
+import { TagService } from "@/services/TagService";
 
 @Component({
   components: { PageView, SubMenu, CollapsibleInterval, draggable, TagsCollapse },
@@ -507,6 +508,8 @@ export default class DataTypeTableView extends Vue {
   referenceService = ReferenceService.INSTANCE;
   alertService = AlertService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
+  tagService = TagService.INSTANCE;
+  hidden_tag = TagService.HIDDEN_TAG;
   arrow;
   application = new ApplicationResult();
   subMenuPaths = [];
@@ -547,7 +550,7 @@ export default class DataTypeTableView extends Vue {
     let colspan;
     for (let component in variable.components) {
       for (const tagName of variable.components[component].tags) {
-        if (tagName === "__hidden__") {
+        if (tagName === this.hidden_tag) {
           count ++;
         }
       }
@@ -567,21 +570,8 @@ export default class DataTypeTableView extends Vue {
       if (!currentTags) {
         continue;
       }
-      for (const tagName of currentTags) {
-        if (tagName !== "__hidden__") {
-          if (tags[tagName]) {
-            continue;
-          }
-          tags[tagName] = {};
-          tags[tagName].selected = true;
-          tags[tagName].localName = this.internationalisationService.getLocaleforPath(
-              this.application,
-              "internationalizedTags." + tagName,
-              tagName
-          );
-        }
-      }
-      if (this.variables[i].tags !== "__hidden__") {
+      this.tagService.currentTags(tags, currentTags, this.application, this.internationalisationService);
+      if (this.variables[i].tags !== this.hidden_tag) {
         this.variables[i].localtags = this.variables[i].tags.map((tag) => tags[tag]?.localName || tag);
         for (let variableComponent in this.variableComponents) {
           if (this.variableComponents[variableComponent].variable === this.variables[i].label) {
@@ -589,20 +579,7 @@ export default class DataTypeTableView extends Vue {
             if (!currentTags) {
               continue;
             }
-            for (const tagName of currentTags) {
-              if (tagName !== "__hidden__") {
-                if (tags[tagName]) {
-                  continue;
-                }
-                tags[tagName] = {};
-                tags[tagName].selected = true;
-                tags[tagName].localName = this.internationalisationService.getLocaleforPath(
-                    this.application,
-                    "internationalizedTags." + tagName,
-                    tagName
-                );
-              }
-            }
+            this.tagService.currentTags(tags, currentTags, this.application, this.internationalisationService);
           }
           this.variableComponents[variableComponent].localtags = this.variableComponents[variableComponent].tags.map((tag) => tags[tag]?.localName || tag);
         }
@@ -612,33 +589,11 @@ export default class DataTypeTableView extends Vue {
   }
 
   get columnsVariableToBeShown() {
-    if (!this.tagsColumn) {
-      return this.variables;
-    }
-    let selectedTags = Object.keys(this.tagsColumn).filter((t) => this.tagsColumn[t].selected);
-    if (!Object.keys(this.tagsColumn).length) {
-      return this.variables;
-    }
-    return this.variables.filter((column) => {
-      return column.tags.some((t) => {
-        return selectedTags.includes(t);
-      });
-    });
+    return this.tagService.toBeShown(this.tagsColumn, this.variables);
   }
 
   get columnsVariableComponentsToBeShown() {
-    if (!this.tagsColumn) {
-      return this.variableComponents;
-    }
-    let selectedTags = Object.keys(this.tagsColumn).filter((t) => this.tagsColumn[t].selected);
-    if (!Object.keys(this.tagsColumn).length) {
-      return this.variableComponents;
-    }
-    return this.variableComponents.filter((column) => {
-      return column.tags.some((t) => {
-        return selectedTags.includes(t);
-      });
-    });
+    return this.tagService.toBeShown(this.tagsColumn, this.variableComponents);
   }
 
   async created() {
