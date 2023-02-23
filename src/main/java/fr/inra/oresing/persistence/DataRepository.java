@@ -51,9 +51,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     public int removeByFileId(UUID fileId) {
         String query = "DELETE FROM " + getTable().getSqlIdentifier() +
-                "\n  WHERE binaryfile = :binaryFile";
-        final int binaryFile = getNamedParameterJdbcTemplate().update(query, ImmutableMap.of("binaryFile", fileId));
-        return binaryFile;
+                "\n  WHERE binaryfile::text in( :binaryFile)";
+        final ImmutableMap<String, List<String>> params = ImmutableMap.of("binaryFile", List.of(fileId.toString()));
+        final int unPublishdLines = getNamedParameterJdbcTemplate().update(query, params);
+        flush();
+        return unPublishdLines;
     }
 
     public String getSqlToMergeData(DownloadDatasetQuery downloadDatasetQuery) {

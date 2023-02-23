@@ -52,6 +52,8 @@ public class UpdateRolesOnManagement {
                     .forEach(db::createPolicy);
         }
         if (modifiedAuthorization.getAuthorizations().containsKey(OperationType.delete)) {
+            toDatatypePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.delete, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.SELECT, SqlPolicy.Statement.DELETE)).stream()
+                    .forEach(db::createPolicy);
             toBinaryFilePolicy(modifiedAuthorization, oreSiRightOnApplicationRole, OperationType.delete, List.of(SqlPolicy.Statement.SELECT, SqlPolicy.Statement.DELETE)).stream()
                     .forEach(db::createPolicy);
         }
@@ -111,7 +113,7 @@ public class UpdateRolesOnManagement {
                         SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                         Collections.singletonList(statement),
                         oreSiRightOnApplicationRole,
-                        statement.equals(SqlPolicy.Statement.ALL) || statement.equals(SqlPolicy.Statement.UPDATE) || statement.equals(SqlPolicy.Statement.SELECT) ? expression : null,
+                        statement.equals(SqlPolicy.Statement.ALL) || statement.equals(SqlPolicy.Statement.UPDATE) || statement.equals(SqlPolicy.Statement.SELECT) || statement.equals(SqlPolicy.Statement.DELETE) ? expression : null,
                         statement.equals(SqlPolicy.Statement.ALL) || statement.equals(SqlPolicy.Statement.INSERT) || statement.equals(SqlPolicy.Statement.UPDATE) ? expression : null
                 ))
                 .collect(Collectors.toList());

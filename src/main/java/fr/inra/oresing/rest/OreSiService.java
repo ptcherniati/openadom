@@ -19,6 +19,8 @@ import fr.inra.oresing.persistence.roles.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.persistence.roles.OreSiUserRole;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
+import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
@@ -37,6 +39,7 @@ import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
@@ -174,6 +177,7 @@ public class OreSiService {
         db.createRole(writerOnApplicationRole);
         db.addUserInRole(writerOnApplicationRole, readerOnApplicationRole);
 
+        //add  policies to adminOnApplicationRole for application
         db.createPolicy(new SqlPolicy(
                 String.join("_", adminOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.ALL.name()),
                 SqlSchema.main().application(),
@@ -203,6 +207,16 @@ public class OreSiService {
                 writerOnApplicationRole,
                 null,
                 "name = '" + app.getName() + "'"
+        ));
+
+        db.createPolicy(new SqlPolicy(
+                String.join("_", readerOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.SELECT.name()),
+                SqlSchema.forApplication(app).referenceValue(),
+                SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                List.of(SqlPolicy.Statement.SELECT),
+                readerOnApplicationRole,
+                "application = '" + app.getId().toString() + "'::uuid",
+                null
         ));
 
         db.setSchemaOwner(sqlSchemaForApplication, adminOnApplicationRole);
@@ -1314,6 +1328,71 @@ public class OreSiService {
         return repo.application().findApplication(nameOrId);
     }
 
+    public AuthorizationsForUserResult getAuthorizationsReferencesRights(String nameOrId, String userID, Set<String> references) {
+        final AuthorizationsReferencesResult referencesAuthorizationsForUser = authorizationService.getReferencesAuthorizationsForUser(nameOrId, userID);
+        Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizations = new HashMap<>();
+        final Map<AuthorizationsForUserResult.Roles, Boolean> roles = AuthorizationsForUserResult.DEFAULT_REFERENCE_ROLES;
+        references.stream().forEach(ref -> {
+            final HashMap<AuthorizationsForUserResult.Roles, Boolean> r = new HashMap<>(roles);
+            if (referencesAuthorizationsForUser.getIsAdministrator()) {
+                r.put(AuthorizationsForUserResult.Roles.ADMIN, true);
+            }
+            authorizations.put(
+                    ref,
+                    r);
+        });
+        referencesAuthorizationsForUser.getAuthorizationResults().entrySet().stream()
+                .forEach(entry -> {
+                    final List<String> referencesList = entry.getValue();
+                    switch (entry.getKey()) {
+                        case manage:
+                            referencesList.stream().forEach(ref -> {
+                                final Map<AuthorizationsForUserResult.Roles, Boolean> roleForRef = authorizations.get(ref);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.UPLOAD, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DOWNLOAD, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DELETE, true);
+                                authorizations.put(ref, roleForRef);
+                            });
+                            break;
+                        case admin:
+                            referencesList.stream().forEach(ref -> {
+                                final Map<AuthorizationsForUserResult.Roles, Boolean> roleForRef = authorizations.get(ref);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.UPLOAD, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DOWNLOAD, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.DELETE, true);
+                                roleForRef.put(AuthorizationsForUserResult.Roles.ADMIN, true);
+                                authorizations.put(ref, roleForRef);
+                            });
+                            break;
+                    }
+                });
+        return new AuthorizationsForUserResult(authorizations, nameOrId, referencesAuthorizationsForUser.getIsAdministrator(), userID);
+    }
+
+    public Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDatatypesRights(String nameOrId, Set<String> datatypes) {
+        return datatypes.stream()
+                .map(dty -> getAuthorizationsDatatypesRights(nameOrId, dty, request.getRequestUserId().toString()))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+    }
+
+    private Map.Entry<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDatatypesRights(String nameOrId, String datatype, String userId) {
+        final AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUser(nameOrId, datatype, userId);
+        final Map<AuthorizationsForUserResult.Roles, Boolean> roles = new HashMap<>(AuthorizationsForUserResult.DEFAULT_ROLES);
+        Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new HashMap<>();
+        final Set<OperationType> rolesSetted = authorizationsForUser.getAuthorizationResults().keySet();
+        final boolean isAdmin = authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.admin);
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.ADMIN, isAdmin);
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.UPLOAD, isAdmin || rolesSetted.contains(OperationType.depot) || rolesSetted.contains(OperationType.publication));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.DELETE, authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.delete));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.DOWNLOAD, authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.extraction) || rolesSetted.contains(OperationType.publication));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.READ, authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.extraction) || rolesSetted.contains(OperationType.publication));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.PUBLICATION, authorizationsForUser.getIsAdministrator() || rolesSetted.contains(OperationType.publication));
+        roleForDatatype.put(AuthorizationsForUserResult.Roles.ANY, authorizationsForUser.getIsAdministrator() || !rolesSetted.isEmpty());
+        new AuthorizationsForUserResult(Map.of(datatype, roleForDatatype), nameOrId, authorizationsForUser.getIsAdministrator(), userId);
+
+        return new AbstractMap.SimpleEntry<String, Map<AuthorizationsForUserResult.Roles, Boolean>>(datatype, roleForDatatype);
+    }
+
     public List<List<String>> getReferenceColumn(Application application, String refType, String column) {
         List<List<String>> list = List.of();
         if( !application.getConfiguration().getReferences().get(refType)
@@ -1370,9 +1449,13 @@ public class OreSiService {
                             .map(BinaryFileDataset::getDatatype)
                             .orElse(null)
             );
+            try {
+                boolean deleted = repo.getRepository(name).binaryFile().delete(id);
+            } catch (DataIntegrityViolationException dive) {
+                throw new NotApplicationCanDeleteRightsException(app.getName(), binaryFile.getParams().getBinaryFiledataset().getDatatype());
+            }
         }
-        boolean deleted = repo.getRepository(name).binaryFile().delete(id);
-        return deleted;
+        return repo.getRepository(name).binaryFile().delete(id);
     }
 
     public ConfigurationParsingResult validateConfiguration(MultipartFile file) throws IOException {

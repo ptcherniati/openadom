@@ -1,10 +1,10 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-      :root="application.localName || application.title"
-      :paths="subMenuPaths"
-      role="navigation"
-      :aria-label="$t('menu.aria-sub-menu')"
+        :aria-label="$t('menu.aria-sub-menu')"
+        :paths="subMenuPaths"
+        :root="application.localName || application.title"
+        role="navigation"
     />
     <h1 class="title main-title">
       {{
@@ -16,63 +16,63 @@
 
     <div class="column is-offset-one-third is-one-third">
       <TagsCollapse
-        v-if="tags && Object.keys(tags).length > 1"
-        :tags="tags"
+          v-if="tags && Object.keys(tags).length > 1"
+          :tags="tags"
       />
     </div>
-    <AvailablityChart v-if="false" />
+    <AvailablityChart v-if="false"/>
     <div v-if="errorsMessages.length" style="margin: 10px">
       <div v-for="msg in errorsMessages" :key="msg">
         <b-message
-          :title="$t('message.data-type-config-error')"
-          type="is-danger"
-          has-icon
-          :aria-close-label="$t('message.close')"
-          class="mt-4 DataTypesManagementView-message"
+            :aria-close-label="$t('message.close')"
+            :title="$t('message.data-type-config-error')"
+            class="mt-4 DataTypesManagementView-message"
+            has-icon
+            type="is-danger"
         >
-          <span v-html="msg" />
+          <span v-html="msg"/>
         </b-message>
       </div>
     </div>
     <div>
       <CollapsibleTree
-        class="liste"
-        v-for="(data, i) in dataTypesToBeShown"
-        :id="i + 1"
-        :key="data.id"
-        :option="{
+          v-for="(data, i) in dataTypesToBeShown"
+          :id="i + 1"
+          :key="data.id"
+          :buttons="buttons(data)"
+          :is-loading="isLoading"
+          :level="0"
+          :on-click-label-cb="(event, label) => openDataTypeCb(event, label)"
+          :on-click-label-synthesis-detail-cb="
+          (event, option) => openDataTypeDetailSynthesisCb(event, option)
+        "
+          :on-upload-cb="data.repository ? null : (label, file) => uploadDataTypeCsv(label, file)"
+          :option="{
           ...data,
           synthesis: synthesis[data.id],
           synthesisMinMax: synthesisMinMax[data.id],
           withSynthesis: true,
           withTooltip: true,
         }"
-        :is-loading="isLoading"
-        :level="0"
-        :on-click-label-cb="(event, label) => openDataTypeCb(event, label)"
-        :on-click-label-synthesis-detail-cb="
-          (event, option) => openDataTypeDetailSynthesisCb(event, option)
-        "
-        :on-upload-cb="data.repository ? null : (label, file) => uploadDataTypeCsv(label, file)"
-        :repository="data.repository"
-        :repository-redirect="(label) => showRepository(label)"
-        :buttons="buttons"
+          :repository="data.repository"
+          :repository-redirect="(label) => showRepository(label)"
+          class="liste"
       />
       <DataTypeDetailsPanel
-        :left-align="false"
-        :open="openPanel"
-        :data-type="chosenDataType"
-        :close-cb="(newVal) => (openPanel = newVal)"
-        :application-name="applicationName"
-        :tags="tags"
-      />
-      <b-modal class="modalByAgrégation" v-model="openSynthesisDetailPanel" width="100rem">
-        <DetailModalCard
-          :open="true"
-          :options="currentOptions"
-          :data-type="chosenDataType"
-          :close-cb="(newVal) => (openSynthesisDetailPanel = newVal)"
           :application-name="applicationName"
+          :close-cb="(newVal) => (openPanel = newVal)"
+          :data-type="chosenDataType"
+          :left-align="false"
+          :open="openPanel"
+          :tags="tags"
+      />
+      <b-modal v-model="openSynthesisDetailPanel" class="modalByAgrégation" width="100rem">
+        <DetailModalCard
+            :application-name="applicationName"
+            :close-cb="(newVal) => (openSynthesisDetailPanel = newVal)"
+            :data-type="chosenDataType"
+            :open="true"
+            :options="currentOptions"
         >
         </DetailModalCard>
       </b-modal>
@@ -81,11 +81,11 @@
 </template>
 
 <script>
-import { Component, Prop, Vue } from "vue-property-decorator";
+import {Component, Prop, Vue} from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { SynthesisService } from "@/services/rest/SynthesisService";
-import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {SynthesisService} from "@/services/rest/SynthesisService";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import { ApplicationResult } from "@/model/ApplicationResult";
 import { Button } from "@/model/Button";
@@ -98,7 +98,7 @@ import { TagService } from "@/services/TagService";
 import DataTypeDetailsPanel from "@/components/datatype/DataTypeDetailsPanel.vue";
 import AvailablityChart from "@/components/charts/AvailiblityChart.vue";
 import DetailModalCard from "@/components/charts/DetailModalCard";
-import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
+import {DownloadDatasetQuery} from "@/model/application/DownloadDatasetQuery";
 import TagsCollapse from "@/components/common/TagsCollapse.vue";
 
 @Component({
@@ -126,17 +126,6 @@ export default class DataTypesManagementView extends Vue {
   application = new ApplicationResult();
   isLoading = false;
   subMenuPaths = [];
-  buttons = [
-    new Button(
-      this.$t("referencesManagement.consult"),
-      "eye",
-      (label) => this.consultDataType(label),
-      "is-dark"
-    ),
-    new Button(this.$t("referencesManagement.download"), "download", (label) =>
-      this.downloadDataType(label)
-    ),
-  ];
   dataTypes = [];
   errorsMessages = [];
   errorsList = [];
@@ -152,6 +141,25 @@ export default class DataTypesManagementView extends Vue {
     return this.tagService.toBeShown(this.tags, this.dataTypes);
   }
 
+  buttons(dty) {
+    return [
+      new Button(
+          this.$t("referencesManagement.consult"),
+          "eye",
+          (label) => this.consultDataType(label),
+          "is-dark",
+          null,
+          !dty.canRead
+      ),
+      new Button(this.$t("referencesManagement.download"),
+          "download", (label) => this.downloadDataType(label),
+          null,
+          null,
+          !dty.canDownload
+      ),
+    ]
+  };
+
   buildTags() {
     let tags = {};
     for (const dataType of this.dataTypes) {
@@ -164,6 +172,7 @@ export default class DataTypesManagementView extends Vue {
     }
     this.tags = tags;
   }
+
   toggle(tag) {
     let tags = this.tags;
     tags[tag].selected = !tags[tag].selected;
@@ -173,9 +182,10 @@ export default class DataTypesManagementView extends Vue {
   created() {
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("dataTypesManagement.data-types").toLowerCase(),
-        () => {},
-        () => this.$router.push("/applications")
+          this.$t("dataTypesManagement.data-types").toLowerCase(),
+          () => {
+          },
+          () => this.$router.push("/applications")
       ),
     ];
 
@@ -192,13 +202,34 @@ export default class DataTypesManagementView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-          .localName,
+            .localName,
       };
       if (!this.application?.id) {
         return;
       }
       this.dataTypes = Object.values(
-        this.internationalisationService.localeDatatypeName(this.application)
+          this.internationalisationService.localeDatatypeName(this.application)
+      ).map(dty => {
+            let authorizationsDatatypesRights = this.application.authorizationsDatatypesRights[dty.label];
+            let isAdmin = authorizationsDatatypesRights.ADMIN;
+            let canUpload = isAdmin || authorizationsDatatypesRights.UPLOAD;
+            let canRead = isAdmin || authorizationsDatatypesRights.UPLOAD;
+            let canDownload = isAdmin || authorizationsDatatypesRights.DOWNLOAD;
+            let canDelete = isAdmin || authorizationsDatatypesRights.DELETE;
+            let canPublish = isAdmin || authorizationsDatatypesRights.PUBLICATION;
+            let any = isAdmin || authorizationsDatatypesRights.ANY;
+            //let canManage = this.ownAuthorizations.isAdministrator || (this.ownAuthorizations.authorizationResults.manage || []).includes(ref.label)
+            return {
+              ...dty,
+              isAdmin: isAdmin,
+              canUpload: canUpload,
+              canRead: canRead,
+              canDownload: canDownload,
+              canDelete: canDelete,
+              canPublish: canPublish,
+              any: any
+            }
+          }
       );
       this.buildTags();
       await this.initSynthesis();
@@ -206,6 +237,7 @@ export default class DataTypesManagementView extends Vue {
       this.alertService.toastServerError();
     }
   }
+
   async initSynthesis() {
     this.isLoading = true;
     for (const datatype in this.application.dataTypes) {
@@ -274,8 +306,8 @@ export default class DataTypesManagementView extends Vue {
         if (minmaxByDatatypes.length) this.synthesisMinMax[datatype] = minmaxByDatatypes;
       }
     }
-    this.synthesis = { ...this.synthesis };
-    this.synthesisMinMax = { ...this.synthesisMinMax };
+    this.synthesis = {...this.synthesis};
+    this.synthesisMinMax = {...this.synthesisMinMax};
     this.isLoading = false;
   }
 
@@ -287,17 +319,17 @@ export default class DataTypesManagementView extends Vue {
   openDataTypeCb(event, label) {
     event.stopPropagation();
     this.openPanel =
-      this.chosenDataType && this.chosenDataType.label === label ? !this.openPanel : true;
+        this.chosenDataType && this.chosenDataType.label === label ? !this.openPanel : true;
     this.chosenDataType = this.dataTypes.find((dt) => dt.label === label);
   }
 
   openDataTypeDetailSynthesisCb(event, option) {
     event.stopPropagation();
-    this.currentOptions = { ...option };
+    this.currentOptions = {...option};
     this.openSynthesisDetailPanel =
-      this.chosenDataType && this.chosenDataType.label === option.label
-        ? !this.openSynthesisDetailPanel
-        : true;
+        this.chosenDataType && this.chosenDataType.label === option.label
+            ? !this.openSynthesisDetailPanel
+            : true;
     this.chosenDataType = this.dataTypes.find((dt) => dt.label === option.label);
   }
 
@@ -343,6 +375,7 @@ export default class DataTypesManagementView extends Vue {
       this.alertService.toastServerError(error);
     }
   }
+
   showRepository(label) {
     const dataType = this.dataTypes.find((dt) => dt.label === label);
     this.$router.push(`/applications/${this.applicationName}/dataTypesRepository/${dataType.id}`);
@@ -357,6 +390,7 @@ export default class DataTypesManagementView extends Vue {
     overflow-wrap: break-word;
   }
 }
+
 .liste {
   margin-bottom: 10px;
   border: 1px solid white;

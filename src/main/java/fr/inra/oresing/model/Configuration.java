@@ -501,6 +501,17 @@ public class Configuration {
     @Getter
     @Setter
     @ToString
+    public static class AuthorizationRferencesColumnsDescription extends InternationalizationImpl {
+
+        @ApiModelProperty(notes = "This column is or not visible in the authorization panel", required = false)
+        private boolean display = true;
+        @ApiModelProperty(notes = "This column name or the id for internationalization", required = false)
+        private String title = "";
+    }
+
+    @Getter
+    @Setter
+    @ToString
     public static class AuthorizationScopeDescription extends InternationalizationImpl {
 
         @ApiModelProperty(notes = "This autorization scope is defined by a variable/component, this is the variable name", required = true, example = "localization")
