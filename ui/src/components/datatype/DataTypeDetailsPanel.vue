@@ -7,9 +7,14 @@
   >
     <div class="columns">
       <caption>
-        {{ $t('tags.tag') }} {{ $t('ponctuation.colon')}}
+        {{
+          $t("tags.tag")
+        }}
+        {{
+          $t("ponctuation.colon")
+        }}
       </caption>
-      <div v-for="(tag) in dataType.tags" :key="tag" style="margin: 5px">
+      <div v-for="tag in dataType.tags" :key="tag" style="margin: 5px">
         <b-tag class="is-primary" v-if="tags[tag].localName !== 'no-tag'">
           <span>
             {{ tags[tag].localName }}
@@ -18,10 +23,13 @@
       </div>
     </div>
     <div class="Panel-buttons">
-      <b-button type="is-dark" icon-left="key" @click="consultAuthorization"
-                :disabled="dataType && !dataType.isAdmin">{{
-        $t("dataTypesManagement.consult-authorization")
-      }}</b-button>
+      <b-button
+        type="is-dark"
+        icon-left="key"
+        @click="consultAuthorization"
+        :disabled="dataType && !dataType.isAdmin"
+        >{{ $t("dataTypesManagement.consult-authorization") }}</b-button
+      >
     </div>
   </SidePanel>
 </template>

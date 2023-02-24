@@ -279,14 +279,14 @@
                     ></CollapsibleInterval>
                   </b-field>
                   <b-input
-                      class="is-primary"
-                      v-model="search[component.variable + '_' + component.component]"
-                      icon="search"
-                      :placeholder="$t('dataTypeAuthorizations.search')"
-                      type="search"
-                      autocomplete="off"
-                      @blur="addVariableSearch(component)"
-                      size="is-small"
+                    class="is-primary"
+                    v-model="search[component.variable + '_' + component.component]"
+                    icon="search"
+                    :placeholder="$t('dataTypeAuthorizations.search')"
+                    type="search"
+                    autocomplete="off"
+                    @blur="addVariableSearch(component)"
+                    size="is-small"
                   ></b-input>
                 </b-field>
               </div>
@@ -300,7 +300,8 @@
           passive-type="is-dark"
           type="is-primary"
           :true-value="$t('dataTypesManagement.accepted')"
-          :false-value="$t('dataTypesManagement.refuse')">
+          :false-value="$t('dataTypesManagement.refuse')"
+        >
           {{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}
         </b-switch>
       </b-field>
@@ -563,7 +564,10 @@ export default class DataTypeTableView extends Vue {
   }
 
   async init() {
-    this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE']);
+    this.application = await this.applicationService.getApplication(this.applicationName, [
+      "CONFIGURATION",
+      "DATATYPE",
+    ]);
     this.application = {
       ...this.application,
       localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -842,7 +846,7 @@ export default class DataTypeTableView extends Vue {
   }
 
   clearSearch() {
-    for (let j = 0; j<document.getElementsByClassName("input").length; j++) {
+    for (let j = 0; j < document.getElementsByClassName("input").length; j++) {
       document.getElementsByClassName("input")[j].value = "";
     }
     for (var i = 0; i < this.variableSearch.length; i++) {

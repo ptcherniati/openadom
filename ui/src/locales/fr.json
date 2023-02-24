@@ -250,7 +250,9 @@
         "download": "Télécharger",
         "delete": "Supprimer",
         "references": "Référentiels",
-        "data": "Données"
+        "data": "Données",
+        "admin": "Administration",
+        "management": "Gestion"
     },
     "dataTypesManagement": {
         "no_authorization": "Il n'y a pas de gestion des autorisations pour {localName}",

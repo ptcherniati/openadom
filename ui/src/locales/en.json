@@ -250,7 +250,9 @@
         "download":"Download",
         "delete":"Delete",
         "references":"References",
-        "data":"Data"
+        "data":"Data",
+        "admin": "Administration",
+        "management": "Management"
     },
     "dataTypesManagement": {
         "no_authorization": "No authorization management for {localName}",

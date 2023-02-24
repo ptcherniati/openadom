@@ -298,7 +298,10 @@ export default class DataTypeAuthorizationsView extends Vue {
 
   async init() {
     try {
-      this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE']);
+      this.application = await this.applicationService.getApplication(this.applicationName, [
+        "CONFIGURATION",
+        "DATATYPE",
+      ]);
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -319,8 +322,7 @@ export default class DataTypeAuthorizationsView extends Vue {
       );
       let authorizationForUser = authorizations.authorizationsForUser;
       this.canManageRights =
-        authorizationForUser.isAdministrator ||
-        authorizationForUser.authorizationResults.admin;
+        authorizationForUser.isAdministrator || authorizationForUser.authorizationResults.admin;
       if (this.authorizations && this.authorizations.length !== 0) {
         this.scopes = Object.keys(this.authorizations[0].authorizations);
       }

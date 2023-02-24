@@ -44,11 +44,8 @@
               @typing="getFilteredTags"
             >
             </b-taginput>
-            <b-tooltip :label="$t('dataTypeAuthorizations.closeUser')"
-                       position="is-bottom">
-              <b-button v-model="openOnFocus"
-                        icon-left="times-circle">
-              </b-button>
+            <b-tooltip :label="$t('dataTypeAuthorizations.closeUser')" position="is-bottom">
+              <b-button v-model="openOnFocus" icon-left="times-circle"> </b-button>
             </b-tooltip>
           </b-field>
         </ValidationProvider>
@@ -179,8 +176,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   isApplicationAdmin = false;
   isLoading;
 
-  openOnFocus=true
-
+  openOnFocus = true;
 
   periods = {
     FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
