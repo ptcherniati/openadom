@@ -47,7 +47,7 @@
                   class="clickable"
                   pack="far"
                   size="is-medium"
-                  @click.native="canShowWarning(indexColumn) && selectCheckboxAll( indexColumn)"
+                  @click.native="!canShowWarning(indexColumn) && selectCheckboxAll( indexColumn)"
               />
             </b-tooltip>
           </b-field>
