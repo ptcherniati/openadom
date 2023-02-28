@@ -37,7 +37,8 @@
         "data-types-repository": "Gestion des jeux de données de {applicationName}",
         "data-type-authorizations": "Autorisations sur les jeux de données",
         "references-authorizations": "Autorisations des référentiels",
-        "data-type-new-authorization": "Nouvelle autorisation pour {dataType}",
+        "data-type-new-authorization": "Nouvelle autorisation",
+        "data-type-request-authorization": "Demande d' autorisations",
         "authorizations-management": "Gestion des autorisations sur les applications"
     },
     "tags": {
@@ -73,7 +74,7 @@
         "registered-user": "Compte utilisateur créé",
         "revoke-authorization": "Autorisation révoquée",
         "create-authorization": "Autorisation créée",
-        "dataTypeFiltreEmpty" : "Pas de données correspondant à vos critères"
+        "dataTypeFiltreEmpty": "Pas de données correspondant à vos critères"
     },
     "message": {
         "app-config-error": "Erreur dans le fichier yaml",
@@ -114,8 +115,8 @@
         "trierRecent": "Date récente",
         "filter": "Filtrer",
         "change": "Modifier l'application",
-        "version" : "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>",
-        "help_config" : "PDF d'aide à la configuration",
+        "version": "La version actuelle de l'application <b class=\"has-text-primary\">{applicationName}</b> est la version <b class=\"has-text-primary\">{version}.</b>",
+        "help_config": "PDF d'aide à la configuration",
         "app_version": "Version actuelle de l'application :"
     },
     "errors": {
@@ -236,14 +237,14 @@
         "unrecognizedProperty": "Erreur à la ligne <code>{lineNumber}</code> (colonne <code>{columnNumber}</code>) : <code>{unknownPropertyName}</code>, n’est pas une propriété reconnue. Les propriétés reconnues sont:  <code>{knownProperties}</code>",
         "unsupportedVersion": "Les fichiers YAML de version <code>{actualVersion}</code> ne sont pas gérés, la version attendue est : <code>{expectedVersion}</code>",
         "variableInMultipleDataGroup": "La variable <code>{variable}</code> du dataType <code>{dataType}</code> est déclarée dans plusieurs groupes de données, elle ne doit être présente que dans un seul groupe",
-        "noCapturingGroupForDatatypeRepository":"Dans la section repository du datatype <code>{dataType}</code> l' expression de recherche ne contient aucun groupe de capture." ,
+        "noCapturingGroupForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l' expression de recherche ne contient aucun groupe de capture.",
         "invalidPatternForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l' expression de recherche est invalide.",
         "invalidCapturingGroupForDatatypeRepositoryAuthorizationScope": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> est <code>{scopeToken}</code>; il doit être compris entre 0 et {countGroups}.",
         "invalidCapturingGroupForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> n'existe pas. Valeurs possibles <code>{registerScopes}</code>.",
         "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de début <code>{token}</code> être compris entre 0 et {countGroups}.",
         "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de fin <code>{token}</code> être compris entre 0 et {countGroups}.",
         "exception": "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. "
-        },
+    },
     "referencesManagement": {
         "actions": "Actions",
         "consult": "Consulter",
@@ -272,7 +273,7 @@
         "refuse": "Refusé",
         "tooltip_show_secondary_menu": "Ouvrir le menu secondaire"
     },
-    "dataTypesRepository":  {
+    "dataTypesRepository": {
         "card-title-upload-file": "Déposer une version pour ce jeux de données",
         "start-date": "Date de début",
         "end-date": "Date de fin",
@@ -286,7 +287,7 @@
         "table-file-data-version": "N° version",
         "table-file-data-id": "ID",
         "table-file-data-size": "Taille du fichier",
-        "table-file-data-size-unit" : "ko",
+        "table-file-data-size-unit": "ko",
         "table-file-data-create": "Dernier dépôt",
         "table-file-data-create-by": "Dernier dépositaire",
         "table-file-data-publish": "Date de publication",
@@ -303,6 +304,7 @@
         "add-auhtorization": "Ajouter une autorisation",
         "sub-menu-data-type-authorizations": "Autorisations des types de données",
         "sub-menu-new-authorization": "Nouvelle autorisation",
+        "sub-menu-request-authorization": "Demande d' autorisations",
         "users": "Nom des utilisateurs",
         "closeUser": "Fermer la sélection multiple",
         "name": "Nom de l'autorisation",
@@ -322,6 +324,7 @@
         "from": "de",
         "create": "Créer l'autorisation",
         "modify": "Modifier l'autorisation",
+        "request": "Demander des autorisations",
         "user": "Utilisateur",
         "data-group": "Groupe de données",
         "data-type": "Type de données",
@@ -341,9 +344,9 @@
         "localization": "Localisation",
         "showMore": "Voir plus...",
         "search": "Recherche...",
-        "save" : "Enregister modification",
+        "save": "Enregister modification",
         "add-application-name": "Ajouter une application",
-        "all-autorisation" : "Coche toutes les cases des droits sur la ligne "
+        "all-autorisation": "Coche toutes les cases des droits sur la ligne "
     },
     "referencesAuthorizations": {
         "add-auhtorization": "Ajouter une autorisation",
@@ -366,23 +369,30 @@
         "warnning-chil-not-null": "Des limitations sont en cours sur des enfants, elles seront remplacées.",
         "search": "Recherche...",
         "showMore": "Voir plus...",
-        "save" : "Enregister modification",
+        "save": "Enregister modification",
         "add-application-name": "Ajouter une application",
-        "all-autorisation" : "Coche toutes les cases des droits sur la ligne "
+        "all-autorisation": "Coche toutes les cases des droits sur la ligne "
     },
     "ponctuation": {
-        "semicolon" : ";",
-        "comma" : ",",
+        "semicolon": ";",
+        "comma": ",",
         "period": ".",
-        "colon" : ":",
-        "hyphen" : "-",
-        "plus" : "+",
-        "less" :"<",
-        "greater" : ">",
+        "colon": ":",
+        "hyphen": "-",
+        "plus": "+",
+        "less": "<",
+        "greater": ">",
         "arrow-right": "->",
         "arrow-left": "<-",
         "slash": "/",
         "regEx": "Option expression régilière (.*) :",
         "star": "*"
+    },
+    "rules": {
+        "required": "Le champ ne doit pas être vide",
+        "regexp": "Le champ doit correspondre à l'expression régulière {pattern}",
+        "integer": "Le champ doit correspondre à une valeur entière",
+        "float": "Le champ doit correspondre à une valeur flottante",
+        "date": "Une date est attendue au format {pattern}"
     }
 }

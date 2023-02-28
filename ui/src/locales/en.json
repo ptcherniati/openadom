@@ -24,7 +24,8 @@
         "data-types-repository": "Management of data sets {applicationName}",
         "data-type-authorizations":"Authorizations on data types.",
         "references-authorizations": "References authorizations",
-        "data-type-new-authorization":"New authorization for {dataType}",
+        "data-type-new-authorization":"New authorization",
+        "data-type-request-authorization":"Request authorizations",
         "authorizations-management": "Authorizations management of applications"
     },
     "login":{
@@ -303,6 +304,7 @@
         "add-auhtorization": "Add an authorization",
         "sub-menu-data-type-authorizations": "Authorizations for data types",
         "sub-menu-new-authorization": "new authorization",
+        "sub-menu-request-authorization": "Request autorisations",
         "users": "User's names",
         "closeUser": "Close",
         "name": "Authorization's name",
@@ -322,6 +324,7 @@
         "from": "from",
         "create": "Create authorization",
         "modify": "Modify authorization",
+        "request": "Request authorizations",
         "user": "User",
         "data-group": "Data group",
         "data-type": "Data type",
@@ -389,5 +392,12 @@
         "slash": "/",
         "regEx": "Regular expression option (.*) :",
         "star": "*"
+    },
+    "rules": {
+        "required": "Le champ ne doit pas être vide",
+        "regexp": "Le champ doit correspondre à l'expression régulière {pattern}",
+        "integer": "Le champ doit correspondre à une valeur entière",
+        "float": "Le champ doit correspondre à une valeur flottante",
+        "date": "Une date est attendue au format {pattern}"
     }
 }

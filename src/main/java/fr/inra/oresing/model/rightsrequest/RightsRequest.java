@@ -24,5 +24,5 @@ public class RightsRequest extends OreSiEntity {
 
     String comment;
     Map<String, String> rightsRequestForm;
-    List<OreSiAuthorization> rightsRequest;
+    OreSiAuthorization rightsRequest;
 }

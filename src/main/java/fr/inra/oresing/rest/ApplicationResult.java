@@ -29,7 +29,7 @@ public class ApplicationResult {
 
     @Value
     public static class RightsRequest {
-        List<String> fields;
+        Configuration.RightsRequestDescription description;
     }
 
 

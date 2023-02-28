@@ -1341,7 +1341,8 @@ public class OreSiService {
     }
 
     public List<ReferenceValue> findReference(String nameOrId, String refType, MultiValueMap<String, String> params) {
-        return referenceService.findReference(nameOrId, refType, params);
+        final Application applicationOrApplicationAccordingToRights = getApplicationOrApplicationAccordingToRights(nameOrId);
+        return referenceService.findReferenceAccordingToRights(applicationOrApplicationAccordingToRights, refType, params);
     }
 
     public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
@@ -1536,7 +1537,8 @@ public class OreSiService {
         rightsRequest.setApplication(application.getId());
         rightsRequest.setComment("un commentaire");
         rightsRequest.setId(rightsRequest.getId() == null ? UUID.randomUUID() : rightsRequest.getId());
-        final List<OreSiAuthorization> authorizations = createRightsRequestRequest.getRightsRequest().stream()
+        final OreSiAuthorization authorizations = Optional.ofNullable(createRightsRequestRequest)
+                .map(CreateRightsRequestRequest::getRightsRequest)
                 .map(authorization -> {
                     final OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
                     oreSiAuthorization.setId(rightsRequest.getId());
@@ -1544,9 +1546,10 @@ public class OreSiService {
                     oreSiAuthorization.setAuthorizations(authorization.getAuthorizations());
                     return oreSiAuthorization;
                 })
-                .collect(Collectors.toList());
+                .orElse(null);
         rightsRequest.setRightsRequest(authorizations);
         rightsRequest.setUser(rightsRequest.getUser() == null ? request.getRequestUserId() : rightsRequest.getUser());
+        rightsRequest.getRightsRequest().setOreSiUsers(Set.of(rightsRequest.getUser()));
         authenticationService.setRoleForClient();
         final UUID store = repo.getRepository(application).rightsRequestRepository().store(rightsRequest);
         return store;

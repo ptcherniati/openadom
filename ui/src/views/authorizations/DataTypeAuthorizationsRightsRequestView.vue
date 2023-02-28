@@ -1,0 +1,636 @@
+<template>
+  <PageView class="with-submenu">
+    <SubMenu
+        :aria-label="$t('menu.aria-sub-menu')"
+        :paths="subMenuPaths"
+        :root="application.localName || application.title"
+        role="navigation"
+    />
+
+    <h1 class="title main-title">
+      <span v-if="authorizationId === 'new'">{{
+          $t("titles.data-type-request-authorization")
+        }}</span>
+    </h1>
+    <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
+      <FieldsForm
+          v-if="application.rightsRequest && application.rightsRequest.description "
+          :application="application"
+          :description="description"
+          :fields="fields"
+          :format="format"
+          :ref-values="references"
+          pathForKey="rightsRequest.format"
+          @update:fields="updateFields"
+      >
+
+      </FieldsForm>
+      <div v-for="(datatypeInfos, datatype) in datatypes" :key="datatype">
+        <div v-if="dataGroups[datatype] && authReferences[datatype] && columnsVisible[datatype] ">
+          <AuthorizationTableForDatatype
+              :auth-references="authReferences[datatype]"
+              :authorization="authorization.authorizations[datatype]"
+              :authorization-scopes="authorizationScopes[datatype]"
+              :columns-visible="columnsVisible[datatype]"
+              :current-authorization-scope="{}"
+              :data-groups="dataGroups[datatype]"
+              :datatype="{id:datatype, name: (datatypeInfos.name)}"
+              :is-root="true"
+              :isApplicationAdmin="new RegExp(isApplicationAdmin[datatype]).test(datatype)"
+              :ownAuthorizations="ownAuthorizations[datatype]"
+              :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath[datatype]"
+              :publicAuthorizations="publicAuthorizations[datatype] || []"
+              class="rows"
+              @modifyAuthorization="modifyAuthorization($event, datatype)"
+              @registerCurrentAuthorization="registerCurrentAuthorization($event,datatype)"
+          >
+            <div class="row">
+              <div class="columns">
+                <b-field
+                    v-for="(column, indexColumn) of columnsVisible[datatype]"
+                    :key="indexColumn"
+                    :field="indexColumn"
+                    :label="getColumnTitle(column)"
+                    :style="!column.display ? 'display : contents' : ''"
+                    class="column"
+                ></b-field>
+              </div>
+            </div>
+          </AuthorizationTableForDatatype>
+        </div>
+      </div>
+
+
+      <div class="buttons">
+        <b-button
+            icon-left="plus"
+            style="margin-bottom: 10px"
+            type="is-dark"
+            @click="handleSubmit(createAuthorization)"
+        >
+          {{
+            $t("dataTypeAuthorizations.request")
+          }}
+        </b-button>
+      </div>
+    </ValidationObserver>
+  </PageView>
+</template>
+
+<script>
+import {ValidationObserver} from "vee-validate";
+
+
+import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
+import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
+import {AlertService} from "@/services/AlertService";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {AuthorizationService} from "@/services/rest/AuthorizationService";
+import {UserPreferencesService} from "@/services/UserPreferencesService";
+import {RequestRightsService} from "@/services/rest/RequestRightsService";
+import {Component, Prop, Vue, Watch} from "vue-property-decorator";
+import PageView from "../common/PageView.vue";
+import {InternationalisationService} from "@/services/InternationalisationService";
+import {ApplicationResult} from "@/model/ApplicationResult";
+import {ReferenceService} from "@/services/rest/ReferenceService";
+import AuthorizationTable from "@/components/common/AuthorizationTable";
+import AuthorizationTableForDatatype from "@/components/common/AuthorizationTableForDatatype.vue";
+import {Authorization} from "@/model/authorization/Authorization";
+import {Authorizations} from "@/model/authorization/Authorizations";
+import FieldsForm from "@/components/common/provider/FieldsForm.vue";
+
+@Component({
+  components: {
+    AuthorizationTable,
+    AuthorizationTableForDatatype,
+    PageView,
+    SubMenu,
+    CollapsibleTree,
+    ValidationObserver,
+    FieldsForm,
+    InternationalisationService,
+  },
+})
+export default class DataTypeAuthorizationsRightsRequestView extends Vue {
+  @Prop() applicationName;
+  @Prop({default: "new"}) authorizationId;
+  __DEFAULT__ = "__DEFAULT__";
+  referenceService = ReferenceService.INSTANCE;
+  references = {};
+  authorizationService = AuthorizationService.INSTANCE;
+  alertService = AlertService.INSTANCE;
+  applicationService = ApplicationService.INSTANCE;
+  userPreferencesService = UserPreferencesService.INSTANCE;
+  internationalisationService = InternationalisationService.INSTANCE;
+  requestRightsService = RequestRightsService.INSTANCE;
+  authorization = {};
+  publicAuthorizations = {};
+  ownAuthorizations = [];
+  ownAuthorizationsColumnsByPath = {};
+  authorizations = [];
+  users = [];
+  name = null;
+  dataGroups = {};
+  authorizationScopes = {};
+  application = new ApplicationResult();
+  selectedUsers = [];
+  isApplicationAdmin = false;
+  isLoading;
+  datatypes = []
+
+  fields = {};
+  valid = false;
+  periods = {
+    FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
+    TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
+    FROM_DATE_TO_DATE: this.$t("dataTypeAuthorizations.from-date-to-date"),
+    ALWAYS: this.$t("dataTypeAuthorizations.always"),
+  };
+  COLUMNS_VISIBLE = {
+    label: {
+      title: "Label",
+      display: true,
+      internationalizationName: {fr: "Domaine", en: "Domain"},
+    },
+  };
+  columnsVisible = {};
+  period = this.periods.FROM_DATE_TO_DATE;
+  startDate = null;
+  endDate = null;
+  configuration = {};
+  authReferences = {};
+  subMenuPaths = [];
+  repository = null;
+  filteredTags = [];
+  format = {};
+  description = "";
+
+  @Watch("authReferences")
+  onExternalOpenStateChanged(newVal) {
+    this.authReferences = newVal;
+  }
+
+  getColumnTitle(column) {
+    if (column.display) {
+      return (
+          (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) ||
+          column.title
+      );
+    }
+  }
+
+  modifyAuthorization(event) {
+    let datatype = event.datatype;
+    var authorization = this.authorization.authorizations[datatype];
+    var authorizations = authorization.authorizations[event.indexColumn] || [];
+    for (const authorizationKeytoAdd in event.authorizations.toAdd) {
+      authorizations.push(event.authorizations.toAdd[authorizationKeytoAdd]);
+    }
+    for (const authorizationKeytoDelete in event.authorizations.toDelete) {
+      var toDeleteElement = event.authorizations.toDelete[authorizationKeytoDelete];
+      authorizations = authorizations.filter((auth) => {
+        return !new Authorization(auth).equals(
+            toDeleteElement,
+            this.authorizationScopes[datatype].map((scope) => scope.id)
+        );
+      });
+    }
+    authorization.authorizations[event.indexColumn] = authorizations;
+    this.$set(this.authorization.authorizations, datatype, new Authorizations(
+        authorization,
+        this.authorizationScopes[datatype].map((as) => as.id)
+    ));
+  }
+
+  registerCurrentAuthorization(event) {
+    let datatype = event.datatype;
+    var authorization = this.authorization.authorizations[event.datatype];
+    var authorizations = authorization.authorizations[event.indexColumn] || [];
+    var authorizationToReplace = event.authorizations;
+    authorizationToReplace.fromDay = authorizationToReplace.from && [
+      authorizationToReplace.from.getFullYear(),
+      authorizationToReplace.from.getMonth() + 1,
+      authorizationToReplace.from.getDate(),
+    ];
+    authorizationToReplace.toDay = authorizationToReplace.to && [
+      authorizationToReplace.to.getFullYear(),
+      authorizationToReplace.to.getMonth() + 1,
+      authorizationToReplace.to.getDate(),
+    ];
+    authorizations = authorizations.map((auth) => {
+      if (
+          !new Authorization(auth).equals(
+              authorizationToReplace,
+              this.authorizationScopes[datatype].map((scope) => scope.id)
+          )
+      ) {
+        return auth;
+      } else {
+        return authorizationToReplace;
+      }
+    });
+    authorization.authorizations[event.indexColumn] = authorizations;
+    this.$set(this.authorization.authorizations, event.datatype, new Authorizations(
+        authorization,
+        this.authorizationScopes.map((as) => as.id)
+    ));
+  }
+
+  async created() {
+    this.init();
+    this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
+    this.subMenuPaths = [
+      new SubMenuPath(
+          this.$t("dataTypesManagement.data-types").toLowerCase(),
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+          () => this.$router.push("/applications")
+      ),
+      new SubMenuPath(
+          this.$t(`dataTypeAuthorizations.sub-menu-data-type-authorizations`),
+          () => {
+            this.$router.push(
+                `/applications/${this.applicationName}/authorizations`
+            );
+          },
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+      ),
+      new SubMenuPath(
+          this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
+          () => {
+          },
+          () => {
+            this.$router.push(
+                `/applications/${this.applicationName}/authorizations`
+            );
+          }
+      ),
+    ];
+    this.isLoading = false;
+  }
+
+  mounted() {
+  }
+
+  showDetail(parent) {
+    for (const child in parent) {
+      if (parent[child].children.length !== 0) {
+        parent[child] = {...parent[child], showDetailIcon: true};
+      }
+      parent[child] = {...parent[child], showDetailIcon: false};
+    }
+  }
+
+  async init() {
+    this.isLoading = true;
+    try {
+      this.application = await this.applicationService.getApplication(this.applicationName, [
+        "CONFIGURATION",
+        "DATATYPE",
+        "RIGHTSREQUEST",
+      ]);
+      this.datatypes = Object.keys(this.application.configuration.dataTypes)
+          .reduce((acc, datatype) => {
+            acc[datatype] = {
+              name: this.internationalisationService.localeDataTypeIdName(
+                  this.application,
+                  this.application.dataTypes[datatype]
+              ) || datatype
+            }
+            return acc
+          }, {});
+      this.format = this.application?.rightsRequest?.description?.format || {}
+      this.description = this.application?.rightsRequest?.description?.description[this.userPreferencesService.getUserPrefLocale()] || {}
+      this.fields = Object.keys(this.format)
+          .reduce((acc, field) => {
+            acc[field] = []
+            return acc;
+          }, {});
+      this.configuration = Object.keys(this.datatypes)
+          .reduce((acc, datatype) => {
+            acc[datatype] = this.application.configuration.dataTypes[datatype]
+            return acc
+          }, {})
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+            .localName,
+      };
+      this.authorizations = Object.keys(this.datatypes)
+          .reduce((acc, datatype) => {
+            acc[datatype] = this.configuration[datatype]?.authorization?.authorizationScopes || []
+            return acc
+          }, {});
+      this.repository = Object.keys(this.datatypes)
+          .reduce((acc, datatype) => {
+            acc[datatype] = this.application.dataTypes[datatype].repository
+            return acc
+          }, {})
+      const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
+          this.applicationName
+      );
+      let authorizationsForUser;
+      ({
+        authorizationScopes: this.authorizationScopes,
+        dataGroups: this.dataGroups,
+        users: this.users,
+        authorizationsForUser: authorizationsForUser,
+        publicAuthorizations: this.publicAuthorizations,
+      } = grantableInfos);
+      let authorizationsForUserByPath = authorizationsForUser.authorizationByPath;
+      let ownAuthorizationsForUser = authorizationsForUser.authorizationResults;
+      this.isApplicationAdmin = authorizationsForUser.isAdministrator
+      this.ownAuthorizations = {}
+      this.ownAuthorizationsColumnsByPath = {}
+      for (const datatype in this.datatypes) {
+        if (!this.isApplicationAdmin) {
+          let ownAuthorizationsforDatatype = [];
+          for (const scope in ownAuthorizationsForUser[datatype]) {
+            let scopeAuthorizations = ownAuthorizationsForUser[datatype][scope];
+            scopeAuthorizations
+                .map(auth => new Authorization(auth))
+                .map(auth => auth.getPath(this.authorizationScopes[datatype].map((a) => a.id)))
+                .filter(path => ownAuthorizationsforDatatype.indexOf(path) === -1)
+                .filter(path => !ownAuthorizationsforDatatype.find((pa) => path.startsWith(pa)))
+                .forEach(path => ownAuthorizationsforDatatype.push(path))
+            this.$set(this.ownAuthorizations, datatype, ownAuthorizationsforDatatype)
+          }
+        }
+        for (const path of (this.ownAuthorizations[datatype] || [])) {
+          for (const scopeId in authorizationsForUserByPath[datatype]) {
+            if (authorizationsForUserByPath[datatype][scopeId]) {
+              for (const pathKey in authorizationsForUserByPath[datatype][scopeId]) {
+                if (pathKey.startsWith(path) || path.startsWith(pathKey)) {
+                  let autorizedPath = pathKey.startsWith(path) ? path : pathKey;
+                  let ownAuthorizationsColumnsByPathForDatatype = {}
+                  ownAuthorizationsColumnsByPathForDatatype[autorizedPath] =
+                      ownAuthorizationsColumnsByPathForDatatype[autorizedPath] || [];
+                  ownAuthorizationsColumnsByPathForDatatype[autorizedPath].push(scopeId);
+                  this.$set(this.ownAuthorizationsColumnsByPath, datatype, ownAuthorizationsColumnsByPathForDatatype)
+                }
+              }
+            }
+          }
+        }
+        let columnsVisibleForDatatype = {...(this.COLUMNS_VISIBLE || {}), ...grantableInfos.columnsDescription[datatype]};
+        if (!this.repositury) {
+          columnsVisibleForDatatype.publication = {...columnsVisibleForDatatype.publication, display: false};
+        }
+        columnsVisibleForDatatype = {
+          label: columnsVisibleForDatatype['label'],
+          extraction: {...columnsVisibleForDatatype['extraction'], withDataGroups: false, withPeriods: false}
+        }
+        this.$set(this.columnsVisible, datatype, columnsVisibleForDatatype)
+      }
+      this.extractPublicAuthorizations();
+      if (this.authorizationId != "new") { //TODO
+        var authorizations = await this.authorizationService.getAuthorizations(
+            this.applicationName,
+            this.authorizationId
+        );
+        let initialValue = new Authorizations({
+          authorizations: {},
+          applicationNameOrId: this.applicationName,
+          users: authorizations.users,
+          name: authorizations.name,
+          uuid: authorizations.uuid
+        }, []);
+        this.authorization = Object.keys(authorizations.authorizations)
+            .reduce((auth, datatype) => {
+              auth.authorizations[datatype] = new Authorizations(
+                  {authorizations: authorizations.authorizations[datatype]},
+                  (this.authorizationScopes[datatype] || []).map((as) => as.id)
+              );
+              return auth
+            }, initialValue);
+      } else {
+        let initialValue = new Authorizations({
+          authorizations: {},
+          applicationNameOrId: this.applicationName,
+          users: [],
+          name: "",
+          uuid: null
+        }, []);
+        this.authorization = Object.keys(this.datatypes)
+            .reduce((acc, datatype) => {
+              acc.authorizations[datatype] = new Authorizations(
+                  {dataType: datatype, applicationNameOrId: this.applicationName},
+                  (this.authorizationScopes[datatype] || []).map((as) => as.id)
+              );
+              return acc
+            }, initialValue);
+
+      }
+      let currentAuthorizationUsers = this.authorization.users || [];
+      this.selectedUsers = this.users
+          .filter((user) => {
+            return currentAuthorizationUsers.find((u) => {
+              return u.id == user.id;
+            });
+          });
+      this.selectedUsers.sort();
+      for (const datatype in grantableInfos.authorizationScopes) {
+        let info = grantableInfos.authorizationScopes[datatype]
+        info.reverse()
+        let ret = {};
+        for (let auth in info) {
+          let authorizationScope = info[auth];
+          let vc = this.authorizations[datatype][authorizationScope?.label];
+          var reference =
+              this.configuration[datatype].data[vc.variable].components[vc.component].checker.params.refType;
+          let ref = await this.getOrLoadReferences(reference);
+          ret[auth] = {references: ref, authorizationScope: authorizationScope.label};
+        }
+        let refs = Authorizations.getRefForRet(ret)
+        var remainingAuthorizations = await Authorizations.remainingAuthorizations(ret, this.getOrLoadReferences);
+        this.$set(this.authReferences, datatype, remainingAuthorizations);
+
+        for (const refsKey in refs) {
+          await this.getOrLoadReferences(refs[refsKey]);
+        }
+      }
+
+    } catch (error) {
+      this.alertService.toastServerError(error);
+    }
+  }
+
+  extractPublicAuthorizations() {
+    let publicAuthorizationToReturn = {};
+    for (const datatype in this.publicAuthorizations) {
+      let auths = this.publicAuthorizations[datatype];
+      for (const scope in auths) {
+        publicAuthorizationToReturn[scope] = [];
+        let scopeAuthorizations = auths[scope];
+        for (const scopeAuthorizationsKey in scopeAuthorizations) {
+          let scopeAuthorization = new Authorization(
+              scopeAuthorizations[scopeAuthorizationsKey]
+          );
+          let path = scopeAuthorization.getPath2(this.authorizationScopes[datatype].map((a) => a.id));
+          if (publicAuthorizationToReturn[scope].indexOf(path) === -1) {
+            if (!publicAuthorizationToReturn[scope]
+                .find(
+                    (pa) => path.startsWith(pa)
+                )
+            ) {
+              publicAuthorizationToReturn[scope] = publicAuthorizationToReturn[scope]
+                  .filter(
+                      (pa) => !pa.startsWith(path)
+                  );
+              publicAuthorizationToReturn[scope].push(path);
+            }
+          }
+        }
+      }
+      this.$set(this.publicAuthorizations, datatype, publicAuthorizationToReturn)
+    }
+  }
+
+  getFilteredTags(text) {
+    this.filteredTags = this.users.filter((option) => {
+      return option.label.toString().toLowerCase().indexOf(text.toLowerCase()) >= 0;
+    });
+  }
+
+  async getOrLoadReferences(reference) {
+    if (this.references[reference]) {
+      return this.references[reference];
+    }
+    let ref = await this.referenceService.getReferenceValues(this.applicationName, reference);
+    this.references[reference] = ref;
+    // eslint-disable-next-line no-self-assign
+    this.references = this.references;
+    return ref;
+  }
+
+  updateFields(event) {
+    this.fields = event.fields;
+    this.valid = event.valid
+  }
+
+  @Watch("period")
+  onPeriodChanged() {
+    this.endDate = null;
+    this.startDate = null;
+  }
+
+  async createAuthorization() {
+    if (!this.valid) {
+      return
+    }
+    try {
+      let authorizationToSend = {
+        uuid: this.authorization.uuid,
+        name: this.authorization.name,
+        applicationNameOrId: this.applicationName,
+        authorizations: {}
+      };
+      authorizationToSend.usersId = this.selectedUsers.map(user => user.id);
+      for (const datatype in this.authorization.authorizations) {
+        let authorizationForDatatype = this.authorization.authorizations[datatype].authorizations
+        for (const scope in authorizationForDatatype) {
+          authorizationForDatatype[scope] = authorizationForDatatype[scope].map(
+              (auth) => {
+                var returnedAuth = new Authorization(auth);
+                returnedAuth.intervalDates = {
+                  fromDay: returnedAuth.fromDay,
+                  toDay: returnedAuth.toDay,
+                };
+                returnedAuth.dataGroups = returnedAuth.dataGroups.map((dg) => dg.id || dg);
+                return returnedAuth;
+              }
+          );
+          authorizationToSend.authorizations[datatype] = authorizationForDatatype
+        }
+      }
+      await this.requestRightsService.createRequestRights(
+          this.applicationName,
+          {
+            id: (this.authorizationId == 'new' ? null : this.authorizationId),
+            fields: this.fields,
+            rightsRequest: authorizationToSend
+          }
+      );
+      this.alertService.toastSuccess(this.$t("alert.create-authorization"));
+      this.$router.push(
+          `/applications/${this.applicationName}/authorizations`
+      );
+    } catch (error) {
+      this.alertService.toastServerError(error);
+    }
+  }
+
+  extractAuthorizations(authorizationTree) {
+    var authorizationArray = [];
+    if (!authorizationTree || Object.keys(authorizationTree).length === 0) {
+      return authorizationArray;
+    }
+    for (const key in authorizationTree) {
+      var treeOrAuthorization = authorizationTree[key];
+      authorizationArray = [
+        ...authorizationArray,
+        ...(treeOrAuthorization instanceof Authorization
+            ? [treeOrAuthorization.parse()]
+            : this.extractAuthorizations(treeOrAuthorization)),
+      ];
+    }
+    return authorizationArray;
+  }
+
+}
+</script>
+
+<style lang="scss">
+.DataTypeAuthorizationInfoView-periods-container {
+  .field-body .field.has-addons {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.DataTypeAuthorizationInfoView-radio-field {
+  height: 40px;
+
+  &.b-radio {
+    .control-label {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
+  }
+}
+
+.DataTypeAuthorizationInfoView-radio-label {
+  width: 200px;
+}
+
+.collapse-content .card-content .content .CollapsibleTree-header .CollapsibleTree-buttons {
+  visibility: hidden;
+  display: none;
+}
+
+.leaf label {
+  font-weight: lighter;
+  font-style: italic;
+  color: #2c3e50;
+}
+
+.folder label {
+  font-weight: bolder;
+  color: $dark;
+}
+
+.rows .card-content .row.label .columns .column {
+  padding: 0 0 0 10px;
+  border-bottom: 2px solid;
+  border-color: $dark;
+  margin-bottom: 12px;
+}
+
+ul li.card-content {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+a {
+  color: $dark;
+}
+</style>

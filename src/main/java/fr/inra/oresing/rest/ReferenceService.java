@@ -338,6 +338,11 @@ public class ReferenceService {
         List<ReferenceValue> list = repo.getRepository(nameOrId).referenceValue().findAllByReferenceType(refType, params);
         return list;
     }
+    List<ReferenceValue> findReferenceAccordingToRights(Application application, String refType, MultiValueMap<String, String> params) {
+        authenticationService.setRoleForClient();
+        List<ReferenceValue> list = repo.getRepository(application).referenceValue().findAllByReferenceType(refType, params);
+        return list;
+    }
 
     String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
         Application application = getApplication(applicationNameOrId);

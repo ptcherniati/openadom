@@ -190,7 +190,19 @@ export default {
             indexColumn,
             authorizations: (state ? {toDelete: [authorizations]} : {toAdd: [authorizations]})
           }
-          this.$emit("modifyAuthorization", eventToEmit);
+          if (indexColumn=='admin'){
+            Object.keys(this.columnsVisible||[])
+                .filter(label=>label!='label')
+                .map(label=> {
+                  return {
+                    ...eventToEmit,
+                    indexColumn: label
+                  }
+                })
+                .forEach(event => this.$emit("modifyAuthorization", event))
+          }else {
+            this.$emit("modifyAuthorization", eventToEmit);
+          }
         }
       }
     },

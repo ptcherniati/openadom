@@ -626,7 +626,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.references.valeurs_qualitatives.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.references.variables_et_unites_par_types_de_donnees.tags", Matchers.hasItem("data")))
                     .andExpect(jsonPath("$.internationalization.internationalizedTags.context.fr", Is.is("contexte")))
-                    .andExpect(jsonPath("$.rightsRequest.fields", Matchers.hasItem("endDate")))
+                    .andExpect(jsonPath("$.rightsRequest.description.format.endDate", Matchers.not(Matchers.empty())))
                     .andExpect(jsonPath("$.configuration.rightsRequest.format.organization", Matchers.not(Matchers.empty())));
         }
         CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
@@ -651,14 +651,14 @@ public class OreSiResourcesTest {
                     "    \"startDate\": \"10/11/1010\",\n" +
                     "    \"projectManagers\": \"toto,titi\"\n" +
                     "  },\n" +
-                    "  \"rightsRequest\": [{\n" +
+                    "  \"rightsRequest\": {\n" +
                     "   \"usersId\": null,\n" +
                     "   \"applicationNameOrId\":\"monsore\",\n" +
                     "   \"id\": null,\n" +
                     "   \"name\": \"une authorization sur monsore\",\n" +
                     "   \"dataType\":\"pem\",\n" +
                     "   \"authorizations\":{\n" +
-                    "   \"datatype\":{\n" +
+                    "   \"pem\":{\n" +
                     "        \"extraction\":[\n" +
                     "              {\n" +
                     "              \"requiredAuthorizations\":{\n" +
@@ -676,7 +676,7 @@ public class OreSiResourcesTest {
                     "         ]\n" +
                     "   }" +
                     "}\n" +
-                    "}]\n" +
+                    "}\n" +
                     "}";
 
             String response = mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest")

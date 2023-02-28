@@ -77,8 +77,8 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
                 "comment,\n" +
                 "rightsRequestForm,\n" +
                 "rightsRequest,\n" +
-                "setted\n" +
-                "FROM json_populate_recordset(NULL::monsore.RightsRequest, \n" +
+                "COALESCE(setted,false)\n" +
+                "FROM json_populate_recordset(NULL::"+getTable().getSqlIdentifier()+", \n" +
                 ":json::json) \n" +
                 "ON CONFLICT (id)\n" +
                 "DO UPDATE\n" +

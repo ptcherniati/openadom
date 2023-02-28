@@ -41,9 +41,10 @@ public class RightsRequestService {
     }
 
     /**
-     * @param nameOrId l'id de l'application
-     * @param params   les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
-     * @return la liste qui satisfont aux criteres
+     *
+     * @param application
+     * @param rightsRequestInfos
+     * @return
      */
     //TODO use params
     List<RightsRequest> findRightsRequests(Application application, RightsRequestInfos rightsRequestInfos) {

@@ -129,13 +129,11 @@ public class OreSiResources {
         TreeMultimap<String, String> childrenPerReferences = TreeMultimap.create();
         ApplicationResult.RightsRequest rightsRequest = null;
         if (withRightsRequest) {
-            final Set<String> strings = Optional.of(application)
+            final Configuration.RightsRequestDescription rightsRequestDescription = Optional.of(application)
                     .map(Application::getConfiguration)
                     .map(Configuration::getRightsRequest)
-                    .map(Configuration.RightsRequestDescription::getFormat)
-                    .map(Map::keySet)
-                    .orElseGet(HashSet::new);
-            rightsRequest = new ApplicationResult.RightsRequest(new LinkedList(strings));
+                    .orElseGet(null);
+            rightsRequest = new ApplicationResult.RightsRequest(rightsRequestDescription);
         }
         if (withReferenceType) {
             application.getConfiguration().getCompositeReferences().values().forEach(compositeReferenceDescription -> {

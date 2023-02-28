@@ -7,7 +7,7 @@ create table RightsRequest
     application     EntityRef REFERENCES Application (id),
     comment         TEXT NOT NULL,
     rightsRequestForm       jsonb,
-    rightsRequest ${applicationSchema}.OreSiAuthorization[],
+    rightsRequest ${applicationSchema}.OreSiAuthorization,
     setted boolean
 
 );
