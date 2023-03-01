@@ -2589,6 +2589,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -2640,44 +2678,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -3439,7 +3439,7 @@
         "datum" : "localization",
         "refType" : "site",
         "component" : "site",
-        "references" : [ "projets", "typeSites", "sites", "platform_type", "plateformes", "units", "proprietes_taxon", "taxon" ]
+        "references" : [ "projets", "platform_type", "typeSites", "sites", "plateformes", "units", "proprietes_taxon", "taxon" ]
       },
       "error" : true,
       "success" : false
@@ -3450,7 +3450,7 @@
         "variable" : "localization",
         "component" : "site",
         "refType" : "site",
-        "knownPatterns" : [ "projets", "platform_type", "typeSites", "sites", "plateformes", "units", "proprietes_taxon", "taxon" ]
+        "knownPatterns" : [ "projets", "typeSites", "sites", "platform_type", "plateformes", "units", "proprietes_taxon", "taxon" ]
       },
       "error" : true,
       "success" : false
@@ -4891,6 +4891,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -4942,44 +4980,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -5757,7 +5757,7 @@
         "dataType" : "site",
         "datum" : "localization",
         "component" : "site",
-        "references" : [ "projets", "platform_type", "typeSites", "sites", "plateformes", "units", "proprietes_taxon", "taxon" ]
+        "references" : [ "projets", "typeSites", "sites", "platform_type", "plateformes", "units", "proprietes_taxon", "taxon" ]
       },
       "error" : true,
       "success" : false
@@ -6063,6 +6063,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -6114,44 +6152,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -7206,44 +7206,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -7295,6 +7257,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -9494,6 +9494,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -9545,44 +9583,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -11784,44 +11784,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -11873,6 +11835,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -17558,6 +17558,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -17609,44 +17647,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -20709,7 +20709,7 @@
         "dataType" : "site",
         "datum" : "localization",
         "component" : "typeSite",
-        "references" : [ "projets", "platform_type", "typeSites", "sites", "plateformes", "units", "proprietes_taxon", "taxon" ]
+        "references" : [ "projets", "typeSites", "sites", "platform_type", "plateformes", "units", "proprietes_taxon", "taxon" ]
       },
       "error" : true,
       "success" : false
@@ -25589,6 +25589,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -25640,44 +25678,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -26733,6 +26733,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -26784,44 +26822,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -27886,6 +27886,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -27937,44 +27975,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -31322,6 +31322,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "sites" : {
           "internationalizationName" : {
             "fr" : "Site",
@@ -31354,44 +31392,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -33633,6 +33633,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -33684,44 +33722,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -35937,6 +35937,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -35988,44 +36026,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -39068,7 +39068,7 @@
         "datum" : "localization",
         "refType" : "typeSite",
         "component" : "typeSite",
-        "references" : [ "projets", "typeSites", "sites", "platform_type", "plateformes", "units", "proprietes_taxon", "taxon" ]
+        "references" : [ "projets", "platform_type", "typeSites", "sites", "plateformes", "units", "proprietes_taxon", "taxon" ]
       },
       "error" : true,
       "success" : false
@@ -39364,44 +39364,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -39453,6 +39415,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -40508,6 +40508,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -40559,44 +40597,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -41679,44 +41679,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -41768,6 +41730,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -42812,6 +42812,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "sites" : {
           "internationalizationName" : {
             "fr" : "Site",
@@ -42844,44 +42882,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -45100,6 +45100,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -45151,44 +45189,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -49710,44 +49710,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -49799,6 +49761,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -52013,44 +52013,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -52102,6 +52064,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -53158,44 +53158,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -53247,6 +53209,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -54314,6 +54314,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -54365,44 +54403,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -55459,44 +55459,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -55548,6 +55510,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -56586,44 +56586,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -56675,6 +56637,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -61160,44 +61160,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -61276,6 +61238,44 @@
               "columns" : [ "nom du type de site" ]
             }
           },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
@@ -62328,6 +62328,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -62379,44 +62417,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -63491,6 +63491,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -63542,44 +63580,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -64339,7 +64339,7 @@
       "messageParams" : {
         "referenceToValidate" : "plateformes",
         "column" : "nom du site",
-        "knownReferences" : [ "projets", "typeSites", "sites", "platform_type", "plateformes", "units", "proprietes_taxon", "taxon" ]
+        "knownReferences" : [ "projets", "platform_type", "typeSites", "sites", "plateformes", "units", "proprietes_taxon", "taxon" ]
       },
       "error" : true,
       "success" : false
@@ -65503,7 +65503,7 @@
         "datum" : "localization",
         "refType" : "sitee",
         "component" : "site",
-        "references" : [ "projets", "typeSites", "sites", "platform_type", "plateformes", "units", "proprietes_taxon", "taxon" ]
+        "references" : [ "projets", "platform_type", "typeSites", "sites", "plateformes", "units", "proprietes_taxon", "taxon" ]
       },
       "error" : true,
       "success" : false
@@ -65514,7 +65514,7 @@
         "variable" : "localization",
         "component" : "site",
         "refType" : "sitee",
-        "knownPatterns" : [ "projets", "platform_type", "typeSites", "sites", "plateformes", "units", "proprietes_taxon", "taxon" ]
+        "knownPatterns" : [ "projets", "typeSites", "sites", "platform_type", "plateformes", "units", "proprietes_taxon", "taxon" ]
       },
       "error" : true,
       "success" : false
@@ -65810,6 +65810,44 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -65861,44 +65899,6 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -66955,44 +66955,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -67044,6 +67006,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },
@@ -68114,44 +68114,6 @@
           "allowUnexpectedColumns" : false,
           "tags" : [ ]
         },
-        "platform_type" : {
-          "internationalizationName" : {
-            "fr" : "Types de plateforme",
-            "en" : "Plateform types"
-          },
-          "internationalizedColumns" : {
-            "nom du type de plateforme_key" : {
-              "fr" : "nom du type de plateforme_fr",
-              "en" : "nom du type de plateforme_en"
-            },
-            "description_fr" : {
-              "fr" : "description_fr",
-              "en" : "description_en"
-            }
-          },
-          "internationalizationDisplay" : {
-            "pattern" : {
-              "fr" : "{nom du type de plateforme_key}",
-              "en" : "{nom du type de plateforme_key}"
-            }
-          },
-          "separator" : ";",
-          "keyColumns" : [ "nom du type de plateforme_key" ],
-          "columns" : {
-            "nom du type de plateforme_key" : null,
-            "nom du type de plateforme_fr" : null,
-            "nom du type de plateforme_en" : null,
-            "description_fr" : null,
-            "description_en" : null,
-            "code sandre" : null,
-            "code sandre du contexte" : null
-          },
-          "computedColumns" : { },
-          "dynamicColumns" : { },
-          "validations" : { },
-          "allowUnexpectedColumns" : false,
-          "tags" : [ ]
-        },
         "typeSites" : {
           "internationalizationName" : null,
           "internationalizedColumns" : null,
@@ -68203,6 +68165,44 @@
             "description du site_en" : null,
             "code sandre du Plan d'eau" : null,
             "code sandre de la Masse d'eau plan d'eau" : null
+          },
+          "computedColumns" : { },
+          "dynamicColumns" : { },
+          "validations" : { },
+          "allowUnexpectedColumns" : false,
+          "tags" : [ ]
+        },
+        "platform_type" : {
+          "internationalizationName" : {
+            "fr" : "Types de plateforme",
+            "en" : "Plateform types"
+          },
+          "internationalizedColumns" : {
+            "nom du type de plateforme_key" : {
+              "fr" : "nom du type de plateforme_fr",
+              "en" : "nom du type de plateforme_en"
+            },
+            "description_fr" : {
+              "fr" : "description_fr",
+              "en" : "description_en"
+            }
+          },
+          "internationalizationDisplay" : {
+            "pattern" : {
+              "fr" : "{nom du type de plateforme_key}",
+              "en" : "{nom du type de plateforme_key}"
+            }
+          },
+          "separator" : ";",
+          "keyColumns" : [ "nom du type de plateforme_key" ],
+          "columns" : {
+            "nom du type de plateforme_key" : null,
+            "nom du type de plateforme_fr" : null,
+            "nom du type de plateforme_en" : null,
+            "description_fr" : null,
+            "description_en" : null,
+            "code sandre" : null,
+            "code sandre du contexte" : null
           },
           "computedColumns" : { },
           "dynamicColumns" : { },

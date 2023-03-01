@@ -132,7 +132,7 @@ public class OreSiResources {
             final Configuration.RightsRequestDescription rightsRequestDescription = Optional.of(application)
                     .map(Application::getConfiguration)
                     .map(Configuration::getRightsRequest)
-                    .orElseGet(null);
+                    .orElse(null);
             rightsRequest = new ApplicationResult.RightsRequest(rightsRequestDescription);
         }
         if (withReferenceType) {
