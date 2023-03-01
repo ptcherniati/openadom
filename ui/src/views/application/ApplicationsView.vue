@@ -186,6 +186,14 @@
                           > {{ $t("referencesManagement.download") }}
                           </b-button>
                         </div>
+                        <div class="card-footer-item">
+                          <b-button
+                              icon-left="download"
+                              type="is-primary"
+                              @click="requestRights(application)"
+                          > {{ $t("dataTypeAuthorizations.request") }}
+                          </b-button>
+                        </div>
                       </div>
                     </div>
                   </b-modal>
@@ -314,6 +322,11 @@ export default class ApplicationsView extends Vue {
 
   async downloadYamlApplication(application) {
     await this.fileService.download(application.name, application.configFile);
+    return false;
+  }
+
+  async requestRights(application) {
+    this.$router.push(`/applications/${application.name}/authorizationsRequest);
     return false;
   }
 
