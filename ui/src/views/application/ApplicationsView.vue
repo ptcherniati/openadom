@@ -326,7 +326,7 @@ export default class ApplicationsView extends Vue {
   }
 
   async requestRights(application) {
-    this.$router.push(`/applications/${application.name}/authorizationsRequest);
+    this.$router.push(`/applications/${application.name}/authorizationsRequest`);
     return false;
   }
 
