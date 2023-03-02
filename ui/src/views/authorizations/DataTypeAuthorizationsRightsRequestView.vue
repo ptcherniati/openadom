@@ -69,7 +69,7 @@
             @click="handleSubmit(createAuthorization)"
         >
           {{
-            $t("dataTypeAuthorizations.request")
+          $t("dataTypeAuthorizations.request")
           }}
         </b-button>
       </div>
@@ -342,18 +342,18 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
       this.ownAuthorizations = {}
       this.ownAuthorizationsColumnsByPath = {}
       for (const datatype in this.datatypes) {
-        if (!this.isApplicationAdmin) {
-          let ownAuthorizationsforDatatype = [];
-          for (const scope in ownAuthorizationsForUser[datatype]) {
-            let scopeAuthorizations = ownAuthorizationsForUser[datatype][scope];
-            scopeAuthorizations
-                .map(auth => new Authorization(auth))
-                .map(auth => auth.getPath(this.authorizationScopes[datatype].map((a) => a.id)))
-                .filter(path => ownAuthorizationsforDatatype.indexOf(path) === -1)
-                .filter(path => !ownAuthorizationsforDatatype.find((pa) => path.startsWith(pa)))
-                .forEach(path => ownAuthorizationsforDatatype.push(path))
-            this.$set(this.ownAuthorizations, datatype, ownAuthorizationsforDatatype)
-          }
+        let ownAuthorizationsforDatatype = [];
+        for (const scope in ownAuthorizationsForUser[datatype]) {
+          let scopeAuthorizations = ownAuthorizationsForUser[datatype][scope];
+          scopeAuthorizations
+              .map(auth => new Authorization(auth))
+              .filter(auth => {
+                const path = auth.getPath(this.authorizationScopes[datatype].map((a) => a.id));
+                return ownAuthorizationsforDatatype.indexOf(path) === -1 &&
+                    !ownAuthorizationsforDatatype.find((pa) => path.startsWith(pa));
+              })
+              .forEach(auth => ownAuthorizationsforDatatype.push(auth))
+          this.$set(this.ownAuthorizations, datatype, ownAuthorizationsforDatatype)
         }
         for (const path of (this.ownAuthorizations[datatype] || [])) {
           for (const scopeId in authorizationsForUserByPath[datatype]) {

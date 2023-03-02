@@ -14,6 +14,13 @@ export class Authorizations {
     }
 
     static internationalizationService = InternationalisationService.INSTANCE;
+    static COLUMNS_VISIBLE = {
+        label: {
+            title: "Label",
+            display: true,
+            internationalizationName: {fr: "Domaine", en: "Domain"},
+        },
+    };
 
     #scopesId = [];
     scopes = {};
@@ -120,8 +127,9 @@ export class Authorizations {
             }
         }
     }
-    static  getRefForRet(ret){
-        return  Object.values(ret)
+
+    static getRefForRet(ret) {
+        return Object.values(ret)
             .reduce(
                 (acc, k) => [
                     ...acc,
@@ -250,5 +258,123 @@ export class Authorizations {
             }
         }
         return returnValues;
+    }
+
+    static parseGrantableInfos(grantableInfos, datatypes, isRepository) {
+        let parsing = {
+            authorizationScopes: {},
+            dataGroups: {},
+            users: {},
+            publicAuthorizations: {},
+            isApplicationAdmin: false,
+            ownAuthorizations: {},
+            ownAuthorizationsColumnsByPath: {},
+            columnsVisible: {},
+        }
+        let authorizationsForUser;
+        ({
+            authorizationScopes: parsing.authorizationScopes,
+            dataGroups: parsing.dataGroups,
+            users: parsing.users,
+            authorizationsForUser: authorizationsForUser,
+            publicAuthorizations: parsing.publicAuthorizations,
+        } = grantableInfos);
+        parsing.isApplicationAdmin = authorizationsForUser.isAdministrator
+        let authorizationsForUserByPath = authorizationsForUser.authorizationByPath;
+        let ownAuthorizationsForUser = authorizationsForUser.authorizationResults;
+        for (const datatype in datatypes) {
+            let ownAuthorizationsforDatatype = [];
+            for (const scope in ownAuthorizationsForUser[datatype]) {
+                let scopeAuthorizations = ownAuthorizationsForUser[datatype][scope];
+                scopeAuthorizations
+                    .map(auth => new Authorization(auth))
+                    .filter(auth => {
+                        const path = auth.getPath(parsing.authorizationScopes[datatype].map((a) => a.id));
+                        return ownAuthorizationsforDatatype.indexOf(path) === -1 &&
+                            !ownAuthorizationsforDatatype.find((pa) => path.startsWith(pa));
+                    })
+                    .map(auth=>auth.path)
+                    .forEach(auth => ownAuthorizationsforDatatype.push(auth))
+                parsing.ownAuthorizations[datatype] = ownAuthorizationsforDatatype;
+            }
+            let ownAuthorizationsColumnsByPathForDatatype = {}
+            for (const path of (parsing.ownAuthorizations[datatype] || [])) {
+                for (const scopeId in authorizationsForUserByPath[datatype]) {
+                    if (authorizationsForUserByPath[datatype][scopeId]) {
+                        for (const pathKey in authorizationsForUserByPath[datatype][scopeId]) {
+                            if (pathKey.startsWith(path) || path.startsWith(pathKey)) {
+                                let autorizedPath = pathKey.startsWith(path) ? path : pathKey;
+                                ownAuthorizationsColumnsByPathForDatatype[autorizedPath] =
+                                    ownAuthorizationsColumnsByPathForDatatype[autorizedPath] || [];
+                                ownAuthorizationsColumnsByPathForDatatype[autorizedPath].push(scopeId);
+                            }
+                        }
+                    }
+                }
+            }
+            parsing.ownAuthorizationsColumnsByPath[datatype] = ownAuthorizationsColumnsByPathForDatatype;
+            let columnsVisibleForDatatype = {...(this.COLUMNS_VISIBLE || {}), ...grantableInfos.columnsDescription[datatype]};
+            if (!isRepository) {
+                columnsVisibleForDatatype.publication = {...columnsVisibleForDatatype.publication, display: false};
+            }
+            parsing.columnsVisible[datatype] = columnsVisibleForDatatype
+        }
+        this.extractPublicAuthorizations(parsing.publicAuthorizations, parsing.authorizationScopes)
+        return parsing;
+    }
+    static extractPublicAuthorizations(publicAuthorizations, authorizationScopes) {
+    let publicAuthorizationToReturn = {};
+    for (const datatype in publicAuthorizations) {
+      let auths = publicAuthorizations[datatype];
+      for (const scope in auths) {
+        publicAuthorizationToReturn[scope] = [];
+        let scopeAuthorizations = auths[scope];
+        for (const scopeAuthorizationsKey in scopeAuthorizations) {
+          let scopeAuthorization = new Authorization(
+              scopeAuthorizations[scopeAuthorizationsKey]
+          );
+          let path = scopeAuthorization.getPath2(authorizationScopes[datatype].map((a) => a.id));
+          if (publicAuthorizationToReturn[scope].indexOf(path) === -1) {
+            if (!publicAuthorizationToReturn[scope]
+                .find(
+                    (pa) => path.startsWith(pa)
+                )
+            ) {
+              publicAuthorizationToReturn[scope] = publicAuthorizationToReturn[scope]
+                  .filter(
+                      (pa) => !pa.startsWith(path)
+                  );
+              publicAuthorizationToReturn[scope].push(path);
+            }
+          }
+        }
+      }
+      publicAuthorizations[datatype]= publicAuthorizationToReturn;
+    }
+    return publicAuthorizations;
+  }
+  static async initAuthReferences(configuration, authorizations, authorizationScopes, getOrLoadReferences){
+        let authReferences = {}
+        for (const datatype in authorizationScopes) {
+            let info = authorizationScopes[datatype]
+            info.reverse()
+            let ret = {};
+            for (let auth in info) {
+                let authorizationScope = info[auth];
+                let vc = authorizations[datatype][authorizationScope?.label];
+                var reference =
+                    configuration[datatype].data[vc.variable].components[vc.component].checker.params.refType;
+                let ref = await getOrLoadReferences(reference);
+                ret[auth] = {references: ref, authorizationScope: authorizationScope.label};
+            }
+            let refs = Authorizations.getRefForRet(ret)
+            var remainingAuthorizations = await Authorizations.remainingAuthorizations(ret, getOrLoadReferences);
+            authReferences[datatype] = remainingAuthorizations;
+
+            for (const refsKey in refs) {
+                await getOrLoadReferences(refs[refsKey]);
+            }
+        }
+        return authReferences;
     }
 }

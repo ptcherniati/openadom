@@ -127,7 +127,7 @@ export default {
     isRoot: Boolean,
     ownAuthorizations: Array,
     ownAuthorizationsColumnsByPath: Object,
-    publicAuthorizations: Array,
+    publicAuthorizations: Object,
     datatype: Object
   },
   data: () => {
@@ -159,71 +159,65 @@ export default {
       return -1
 
     },
+    canShowLine(scopedpath) {
+      return this.isApplicationAdmin ||
+          this.isAuthorizedColumnForPath(scopedpath, 'admin')
+    },
+
     hasPublicStates(indexColumn) {
       if (this.publicAuthorizations[indexColumn])
         return (this.publicAuthorizations[indexColumn] || [])
             .some(path => Object.keys(this.authReferences?.[0] || {}).some(authPath => authPath.startsWith(path)))
     },
     canShowWarning(indexColumn) {
-      return (
-          this.isApplicationAdmin ||
-          this.hasPublicStates('admin') ||  indexColumn
-          /*(this.ownAuthorizations.find((oa) => this.getPath(index).startsWith(oa)) &&
-              this.isAuthorizedColumnForPath(index, column))*/
-      )
-          ? false
-          : true;
+      return (this.isApplicationAdmin ||
+          this.hasPublicStates('admin') ||
+          Object.keys(this.authReferences[0])
+              .some(scopedpath => {
+                    return (this.ownAuthorizationsColumnsByPath[scopedpath] || []).includes(indexColumn)
+                  }
+              )) ? false : true;
 
     },
-    selectCheckboxAll(indexColumn) {
-      let state = this.getState(indexColumn);
-      let auths = this.authReferences[0];
-      for (const index in auths) {
-        if (this.haveRightsOn(index, indexColumn)) {
-          let requiredAuthorizations = {}
-          requiredAuthorizations[auths[index].authorizationScope] = index;
-          let authorizations = new Authorization([], requiredAuthorizations)
-          let eventToEmit = {
-            datatype: this.datatype.id,
-            event: null,
-            index,
-            indexColumn,
-            authorizations: (state ? {toDelete: [authorizations]} : {toAdd: [authorizations]})
-          }
-          if (indexColumn=='admin'){
-            Object.keys(this.columnsVisible||[])
-                .filter(label=>label!='label')
-                .map(label=> {
-                  return {
-                    ...eventToEmit,
-                    indexColumn: label
-                  }
-                })
-                .forEach(event => this.$emit("modifyAuthorization", event))
-          }else {
-            this.$emit("modifyAuthorization", eventToEmit);
-          }
-        }
-      }
-    },
-    haveRightsOn(index, column) {
-      if (this.isApplicationAdmin) return true;
-      return ((this.ownAuthorizations.find((oa) => index.startsWith(oa)) &&
-          this.isAuthorizedColumnForPath(index, column))
-          ? false
-          : true);
-    },
-    isAuthorizedColumnForPath(index, column) {
-      for (const path in this.ownAuthorizationsColumnsByPath) {
-        if (
-            this.getPath(index).startsWith(path) &&
-            this.ownAuthorizationsColumnsByPath[path].indexOf(column) >= 0
-        ) {
-          return true;
-        }
-      }
-      return false;
+    isAuthorizedColumnForPath(scope, column) {
+      this.ownAuthorizationsColumnsByPath[scope] && this.ownAuthorizationsColumnsByPath[scope].includes(column);
     }
+  }
+  ,
+  selectCheckboxAll(indexColumn) {
+    let state = this.getState(indexColumn);
+    let auths = this.authReferences[0];
+    for (const index in auths) {
+      if (this.haveRightsOn(index, indexColumn)) {
+        let requiredAuthorizations = {}
+        requiredAuthorizations[auths[index].authorizationScope] = index;
+        let authorizations = new Authorization([], requiredAuthorizations)
+        let eventToEmit = {
+          datatype: this.datatype.id,
+          event: null,
+          index,
+          indexColumn,
+          authorizations: (state ? {toDelete: [authorizations]} : {toAdd: [authorizations]})
+        }
+        if (indexColumn == 'admin') {
+          Object.keys(this.columnsVisible || [])
+              .filter(label => label != 'label')
+              .map(label => {
+                return {
+                  ...eventToEmit,
+                  indexColumn: label
+                }
+              })
+              .forEach(event => this.$emit("modifyAuthorization", event))
+        } else {
+          this.$emit("modifyAuthorization", eventToEmit);
+        }
+      }
+    }
+  }
+  ,
+  haveRightsOn(scope, column) {
+    this.isApplicationAdmin || (this.ownAuthorizationsColumnsByPath[scope] && this.ownAuthorizationsColumnsByPath[scope].includes(column));
   }
 }
 </script>

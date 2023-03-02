@@ -81,7 +81,7 @@
               :data-groups="dataGroups[datatype]"
               :datatype="{id:datatype, name: (datatypeInfos.name)}"
               :is-root="true"
-              :isApplicationAdmin="new RegExp(isApplicationAdmin[datatype]).test(datatype)"
+              :isApplicationAdmin="isApplicationAdmin"
               :ownAuthorizations="ownAuthorizations[datatype]"
               :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath[datatype]"
               :publicAuthorizations="publicAuthorizations[datatype] || []"
@@ -357,57 +357,17 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
           this.applicationName
       );
-      let authorizationsForUser;
       ({
         authorizationScopes: this.authorizationScopes,
         dataGroups: this.dataGroups,
         users: this.users,
-        authorizationsForUser: authorizationsForUser,
         publicAuthorizations: this.publicAuthorizations,
-      } = grantableInfos);
-      let authorizationsForUserByPath = authorizationsForUser.authorizationByPath;
-      let ownAuthorizationsForUser = authorizationsForUser.authorizationResults;
-      console.log(authorizationsForUserByPath, ownAuthorizationsForUser)
-      this.isApplicationAdmin = authorizationsForUser.isAdministrator
-      this.ownAuthorizations = {}
-      this.ownAuthorizationsColumnsByPath = {}
-      for (const datatype in this.datatypes) {
-        if (!this.isApplicationAdmin) {
-          let ownAuthorizationsforDatatype = [];
-          for (const scope in ownAuthorizationsForUser[datatype]) {
-            let scopeAuthorizations = ownAuthorizationsForUser[datatype][scope];
-            scopeAuthorizations
-                .map(auth => new Authorization(auth))
-                .map(auth => auth.getPath(this.authorizationScopes[datatype].map((a) => a.id)))
-                .filter(path => ownAuthorizationsforDatatype.indexOf(path) === -1)
-                .filter(path => !ownAuthorizationsforDatatype.find((pa) => path.startsWith(pa)))
-                .forEach(path => ownAuthorizationsforDatatype.push(path))
-            this.$set(this.ownAuthorizations, datatype, ownAuthorizationsforDatatype)
-          }
-        }
-        for (const path of (this.ownAuthorizations[datatype] || [])) {
-          for (const scopeId in authorizationsForUserByPath[datatype]) {
-            if (authorizationsForUserByPath[datatype][scopeId]) {
-              for (const pathKey in authorizationsForUserByPath[datatype][scopeId]) {
-                if (pathKey.startsWith(path) || path.startsWith(pathKey)) {
-                  let autorizedPath = pathKey.startsWith(path) ? path : pathKey;
-                  let ownAuthorizationsColumnsByPathForDatatype = {}
-                  ownAuthorizationsColumnsByPathForDatatype[autorizedPath] =
-                      ownAuthorizationsColumnsByPathForDatatype[autorizedPath] || [];
-                  ownAuthorizationsColumnsByPathForDatatype[autorizedPath].push(scopeId);
-                  this.$set(this.ownAuthorizationsColumnsByPath, datatype, ownAuthorizationsColumnsByPathForDatatype)
-                }
-              }
-            }
-          }
-        }
-        let columnsVisibleForDatatype = {...(this.COLUMNS_VISIBLE || {}), ...grantableInfos.columnsDescription[datatype]};
-        if (!this.repositury) {
-          columnsVisibleForDatatype.publication = {...columnsVisibleForDatatype.publication, display: false};
-        }
-        this.$set(this.columnsVisible, datatype, columnsVisibleForDatatype)
-      }
-      this.extractPublicAuthorizations();
+        isApplicationAdmin: this.isApplicationAdmin,
+        ownAuthorizations: this.ownAuthorizations,
+        ownAuthorizationsColumnsByPath: this.ownAuthorizationsColumnsByPath,
+        columnsVisible: this.columnsVisible
+      } = Authorizations.parseGrantableInfos(grantableInfos,this.datatypes,this.repository));
+
       if (this.authorizationId != "new") { //TODO
         var authorizations = await this.authorizationService.getAuthorizations(
             this.applicationName,
@@ -454,60 +414,10 @@ export default class DataTypeAuthorizationInfoView extends Vue {
             });
           });
       this.selectedUsers.sort();
-      for (const datatype in grantableInfos.authorizationScopes) {
-        let info = grantableInfos.authorizationScopes[datatype]
-        info.reverse()
-        let ret = {};
-        for (let auth in info) {
-          let authorizationScope = info[auth];
-          let vc = this.authorizations[datatype][authorizationScope?.label];
-          var reference =
-              this.configuration[datatype].data[vc.variable].components[vc.component].checker.params.refType;
-          let ref = await this.getOrLoadReferences(reference);
-          ret[auth] = {references: ref, authorizationScope: authorizationScope.label};
-        }
-        let refs = Authorizations.getRefForRet(ret)
-        var remainingAuthorizations = await Authorizations.remainingAuthorizations(ret, this.getOrLoadReferences);
-          this.$set(this.authReferences, datatype, remainingAuthorizations);
-
-        for (const refsKey in refs) {
-          await this.getOrLoadReferences(refs[refsKey]);
-        }
-      }
+      this.authReferences = await Authorizations.initAuthReferences(this.configuration, this.authorizations, this.authorizationScopes, this.getOrLoadReferences)
 
     } catch (error) {
       this.alertService.toastServerError(error);
-    }
-  }
-
-  extractPublicAuthorizations() {
-    let publicAuthorizationToReturn = {};
-    for (const datatype in this.publicAuthorizations) {
-      let auths = this.publicAuthorizations[datatype];
-      for (const scope in auths) {
-        publicAuthorizationToReturn[scope] = [];
-        let scopeAuthorizations = auths[scope];
-        for (const scopeAuthorizationsKey in scopeAuthorizations) {
-          let scopeAuthorization = new Authorization(
-              scopeAuthorizations[scopeAuthorizationsKey]
-          );
-          let path = scopeAuthorization.getPath2(this.authorizationScopes[datatype].map((a) => a.id));
-          if (publicAuthorizationToReturn[scope].indexOf(path) === -1) {
-            if (!publicAuthorizationToReturn[scope]
-                .find(
-                    (pa) => path.startsWith(pa)
-                )
-            ) {
-              publicAuthorizationToReturn[scope] = publicAuthorizationToReturn[scope]
-                  .filter(
-                      (pa) => !pa.startsWith(path)
-                  );
-              publicAuthorizationToReturn[scope].push(path);
-            }
-          }
-        }
-      }
-      this.$set(this.publicAuthorizations, datatype, publicAuthorizationToReturn)
     }
   }
 
