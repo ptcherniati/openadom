@@ -10,7 +10,10 @@
         "dataType_monsore_url": "/applications/monsore/dataTypes",
         "repository_foret_url": "/applications/foret/dataTypesRepository/swc_j",
         "zone_etude_url": "applications/foret/references/zones_etudes.js",
-        "ola_references_url": "/applications/ola/references"
+        "ola_references_url": "/applications/ola/references",
+        "ola_dataTypes_url": "/applications/ola/dataTypes",
+        "ola_dataTypes_authorizations_url": "/applications/ola/authorizations",
+        "ola_dataTypes_new_authorizations_url": "/applications/ola/authorizations/new"
     },
     "videoUploadOnPasses": false,
     "video": true,
