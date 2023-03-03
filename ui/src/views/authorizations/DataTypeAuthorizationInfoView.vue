@@ -380,7 +380,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
           name: authorizations.name,
           uuid: authorizations.uuid
         }, []);
-        this.authorization = Object.keys(authorizations.authorizations)
+        this.authorization = Object.keys(this.datatypes)
             .reduce((auth, datatype) => {
               auth.authorizations[datatype] = new Authorizations(
                   {authorizations: authorizations.authorizations[datatype]},
