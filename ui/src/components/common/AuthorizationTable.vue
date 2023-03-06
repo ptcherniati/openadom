@@ -249,27 +249,31 @@ export default class AuthorizationTable extends Vue {
   }
 
   canShowLine(index) {
+    const pathForIndex = this.getPath(index);
     return this.isApplicationAdmin ||
     this.ownAuthorizations.find(
-        (oa) => this.getPath(index).startsWith(oa) || oa.startsWith(this.getPath(index))
+        (oa) =>( pathForIndex.startsWith(oa) || oa.startsWith(pathForIndex))
+        && (this.ownAuthorizationsColumnsByPath[oa] || []).includes('admin')
     )
         ? true
         : false;
   }
 
   canShowWarning(index, column) {
+    const pathForIndex = this.getPath(index);
     return (this.isApplicationAdmin ||
-        (this.ownAuthorizations.find((oa) => this.getPath(index).startsWith(oa)) &&
-            this.isAuthorizedColumnForPath(index, column)))
+        (this.ownAuthorizations.find((oa) => pathForIndex.startsWith(oa)) &&
+            this.isAuthorizedColumnForPath(pathForIndex, column)))
         ? false
         : true;
   }
 
-  isAuthorizedColumnForPath(index, column) {
+  isAuthorizedColumnForPath(pathForIndex, column) {
     for (const path in this.ownAuthorizationsColumnsByPath) {
       if (
-          this.getPath(index).startsWith(path) &&
-          this.ownAuthorizationsColumnsByPath[path].indexOf(column) >= 0
+          pathForIndex.startsWith(path) &&
+          this.ownAuthorizationsColumnsByPath[path].includes(column) &&
+          this.ownAuthorizationsColumnsByPath[path].includes('admin')
       ) {
         return true;
       }

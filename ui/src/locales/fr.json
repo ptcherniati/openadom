@@ -301,6 +301,7 @@
         "tooltip-jeux de données": "Sélectionnez un jeu de données pour connaître la liste des fichiers versionnés correspondants (révisions)."
     },
     "dataTypeAuthorizations": {
+        "publicAuthorization": "Autorisation Publique",
         "add-auhtorization": "Ajouter une autorisation",
         "sub-menu-data-type-authorizations": "Autorisations des types de données",
         "sub-menu-new-authorization": "Nouvelle autorisation",

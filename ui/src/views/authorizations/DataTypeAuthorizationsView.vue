@@ -310,15 +310,13 @@ export default class DataTypeAuthorizationsView extends Vue {
       this.authorizations = authorizations.authorizationResults.filter(
         (auth) =>
           auth.authorizationsForUser.isAdministrator ||
-          auth.authorizationsForUser.authorizationResults.admin
+            Object.keys(auth.authorizations).some(datatype=>auth.authorizationsForUser.authorizationResults[datatype]
+                && auth.authorizationsForUser.authorizationResults[datatype].admin )
       );
       let authorizationForUser = authorizations.authorizationsForUser;
       this.canManageRights =
         authorizationForUser.isAdministrator ||
-        authorizationForUser.authorizationResults.admin;
-      if (this.authorizations && this.authorizations.length !== 0) {
-        this.scopes = Object.keys(this.authorizations[0].authorizations);
-      }
+          Object.values(authorizationForUser.authorizationResults || []).some(a=>a.admin);
     } catch (error) {
       this.alertService.toastServerError;
       this.authorizationByUser = this.authorizations.reduce((acc, auth) => {

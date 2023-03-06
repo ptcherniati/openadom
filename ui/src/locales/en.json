@@ -301,6 +301,7 @@
         "tooltip-jeux de données": "Select a dataset to see the list of corresponding versioned files (revisions)."
     },
     "dataTypeAuthorizations": {
+        "publicAuthorization": "Autorisation Publique",
         "add-auhtorization": "Add an authorization",
         "sub-menu-data-type-authorizations": "Authorizations for data types",
         "sub-menu-new-authorization": "new authorization",

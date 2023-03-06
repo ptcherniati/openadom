@@ -416,7 +416,7 @@ public class AuthorizationService {
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         final List<OreSiAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         return authorizationRepository.findAll().stream()
-                .map(oreSiAuthorization -> toGetAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
+                .map(oreSiAuthorization -> toGetAuthorizationResult(application.getConfiguration(), oreSiAuthorization, publicAuthorizations, authorizationsForUser))
                 .collect(ImmutableSet.toImmutableSet());
     }
 
@@ -463,12 +463,12 @@ public class AuthorizationService {
         UUID authorizationId = authorizationRequest.getAuthorizationId();
         final List<OreSiAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
-        return toGetAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser);
+        return toGetAuthorizationResult(application.getConfiguration(), oreSiAuthorization, publicAuthorizations, authorizationsForUser);
     }
 
-    private GetAuthorizationResult toGetAuthorizationResult(OreSiAuthorization oreSiAuthorization, List<OreSiAuthorization> publicAuthorizations, AuthorizationsResult authorizationsForUser) {
+    private GetAuthorizationResult toGetAuthorizationResult(Configuration configuration, OreSiAuthorization oreSiAuthorization, List<OreSiAuthorization> publicAuthorizations, AuthorizationsResult authorizationsForUser) {
         List<OreSiUser> all = userRepository.findAll();
-        final Map<String, Map<OperationType, List<Authorization>>> collectPublicAuthorizations = collectPublicAuthorizations(publicAuthorizations);
+        final Map<String, Map<OperationType, List<Authorization>>> collectPublicAuthorizations = collectPublicAuthorizations(configuration, publicAuthorizations);
         return new GetAuthorizationResult(
                 oreSiAuthorization.getId(),
                 oreSiAuthorization.getName(),
@@ -480,19 +480,23 @@ public class AuthorizationService {
         );
     }
 
-    private static Map<String, Map<OperationType, List<Authorization>>> collectPublicAuthorizations(List<OreSiAuthorization> publicAuthorizations) {
+    private static Map<String, Map<OperationType, List<Authorization>>> collectPublicAuthorizations(Configuration configuration, List<OreSiAuthorization> publicAuthorizations) {
         final Map<String, Map<OperationType, List<Authorization>>> collectPublicAuthorizations = new HashMap<>();
         for (OreSiAuthorization publicAuthorization : publicAuthorizations) {
             for (Map.Entry<String, Map<OperationType, List<Authorization>>> entry : publicAuthorization.getAuthorizations().entrySet()) {
                 String datatype = entry.getKey();
+                final Map<String, Configuration.AuthorizationColumnsDescription> columnsDescription = configuration.getDataTypes().get(datatype).getAuthorization().getColumnsDescription();
                 final Map<OperationType, List<Authorization>> operationTypeListMap = collectPublicAuthorizations
                         .computeIfAbsent(datatype, k -> new HashMap<>());
                 publicAuthorizations.stream()
                         .map(pa -> pa.getAuthorizations().get(datatype))
                         .forEach(map -> map.entrySet().forEach(operationTypeListEntry ->
-                                operationTypeListMap
+                                Optional.ofNullable(columnsDescription)
+                                        .map(columnDescription->columnDescription.get(operationTypeListEntry.getKey().name()))
+                                        .filter(Configuration.AuthorizationColumnsDescription::isForPublic)
+                                        .ifPresent(cd->operationTypeListMap
                                         .computeIfAbsent(operationTypeListEntry.getKey(), k -> new LinkedList<>())
-                                        .addAll(operationTypeListEntry.getValue())));
+                                        .addAll(operationTypeListEntry.getValue()))));
             }
         }
         return collectPublicAuthorizations;
@@ -557,7 +561,7 @@ public class AuthorizationService {
         Configuration configuration = application.getConfiguration();
         ImmutableSortedSet<GetGrantableResult.User> users = getGrantableUsers();
         AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
-        final Map<String, Map<OperationType, List<Authorization>>> publicAuthorizations = collectPublicAuthorizations(authorizationRepository.findPublicAuthorizations());
+        final Map<String, Map<OperationType, List<Authorization>>> publicAuthorizations = collectPublicAuthorizations(configuration, authorizationRepository.findPublicAuthorizations());
         Preconditions.checkArgument(application.getDataType().stream()
                 .allMatch(dataType -> configuration.getDataTypes().containsKey(dataType)));
         final Map<String, Set<GetGrantableResult.DataGroup>> dataGroups = application.getDataType().stream()
@@ -586,7 +590,15 @@ public class AuthorizationService {
                 .orElseGet(HashMap::new)
                 .entrySet()
                 .stream()
-                .collect(Collectors.toMap(columDescription -> columDescription.getKey(), columDescription -> new GetGrantableResult.ColumnDescription(columDescription.getValue().isDisplay(), columDescription.getValue().getTitle(), columDescription.getValue().isWithPeriods(), columDescription.getValue().isWithDataGroups(), columDescription.getValue().getInternationalizationName()))));
+                .collect(Collectors.toMap(columDescription -> columDescription.getKey(),
+                        columDescription -> new GetGrantableResult.ColumnDescription(
+                                columDescription.getValue().isDisplay(),
+                                columDescription.getValue().getTitle(),
+                                columDescription.getValue().isWithPeriods(),
+                                columDescription.getValue().isWithDataGroups(),
+                                columDescription.getValue().isForPublic(),
+                                columDescription.getValue().getInternationalizationName()
+                        ))));
 
     }
 
