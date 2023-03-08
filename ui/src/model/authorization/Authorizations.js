@@ -18,6 +18,7 @@ export class Authorizations {
         label: {
             title: "Label",
             display: true,
+            forPublic: true,
             internationalizationName: {fr: "Domaine", en: "Domain"},
         },
     };
@@ -154,7 +155,9 @@ export class Authorizations {
             let partition = await Authorizations.partitionReferencesValues(
                 getOrLoadReferences,
                 ret[key]?.references?.referenceValues,
-                ret[key]?.authorizationScope
+                ret[key]?.authorizationScope,
+                null,
+                null
             );
             remainingAuthorizations[key] = partition;
         }
@@ -186,14 +189,33 @@ export class Authorizations {
         currentPath,
         currentCompleteLocalName
     ) {
-        let returnValues = {};
-        for (const referenceValue of referencesValues) {
-            var previousKeySplit = currentPath ? currentPath.split(".") : [];
-            var keys = referenceValue.hierarchicalKey.split(".");
-            var references = referenceValue.hierarchicalReference.split(".");
-            if (previousKeySplit.length == keys.length) {
+        let
+            returnValues = {};
+
+        for (
+
+            const
+                referenceValue
+            of
+            referencesValues
+            ) {
+            var
+                previousKeySplit = currentPath ? currentPath.split(".") : [];
+            var
+                keys = referenceValue.hierarchicalKey.split(".");
+            var
+                references = referenceValue.hierarchicalReference.split(".");
+
+            if (previousKeySplit
+
+                    .length
+                ==
+                keys
+                    .length
+            ) {
                 continue;
             }
+
             for (let i = 0; i < previousKeySplit.length; i++) {
                 keys.shift();
                 references.shift();
@@ -248,7 +270,7 @@ export class Authorizations {
                     auth.referenceValues,
                     authorizationScope,
                     auth.currentPath,
-                    auth.completeLocalName
+                    auth.completeLocalName,
                 );
                 returnValues[returnValuesKey] = {
                     ...auth,
@@ -264,12 +286,14 @@ export class Authorizations {
         let parsing = {
             authorizationScopes: {},
             dataGroups: {},
-            users: {},
+            users: [],
+            publicUser: [],
             publicAuthorizations: {},
             isApplicationAdmin: false,
             ownAuthorizations: {},
             ownAuthorizationsColumnsByPath: {},
             columnsVisible: {},
+            columnsVisibleForPublic: {},
         }
         let authorizationsForUser;
         ({
@@ -279,6 +303,7 @@ export class Authorizations {
             authorizationsForUser: authorizationsForUser,
             publicAuthorizations: parsing.publicAuthorizations,
         } = grantableInfos);
+        parsing.publicUser = parsing.users.shift()
         parsing.isApplicationAdmin = authorizationsForUser.isAdministrator
         let authorizationsForUserByPath = authorizationsForUser.authorizationByPath;
         let ownAuthorizationsForUser = authorizationsForUser.authorizationResults;
@@ -293,7 +318,7 @@ export class Authorizations {
                         return ownAuthorizationsforDatatype.indexOf(path) === -1 &&
                             !ownAuthorizationsforDatatype.find((pa) => path.startsWith(pa));
                     })
-                    .map(auth=>auth.path)
+                    .map(auth => auth.path)
                     .forEach(auth => ownAuthorizationsforDatatype.push(auth))
                 parsing.ownAuthorizations[datatype] = ownAuthorizationsforDatatype;
             }
@@ -318,42 +343,53 @@ export class Authorizations {
                 columnsVisibleForDatatype.publication = {...columnsVisibleForDatatype.publication, display: false};
             }
             parsing.columnsVisible[datatype] = columnsVisibleForDatatype
+            columnsVisibleForDatatype = {}
+            for (const scope in parsing.columnsVisible[datatype]) {
+                let columnsVisibleFordatatypeAndScope = parsing.columnsVisible[datatype][scope]
+                if (columnsVisibleFordatatypeAndScope.forPublic) {
+                    columnsVisibleForDatatype[scope] = columnsVisibleFordatatypeAndScope;
+                }
+            }
+            parsing.columnsVisibleForPublic[datatype] = columnsVisibleForDatatype;
         }
         this.extractPublicAuthorizations(parsing.publicAuthorizations, parsing.authorizationScopes)
         return parsing;
     }
+
     static extractPublicAuthorizations(publicAuthorizations, authorizationScopes) {
-    let publicAuthorizationToReturn = {};
-    for (const datatype in publicAuthorizations) {
-      let auths = publicAuthorizations[datatype];
-      for (const scope in auths) {
-        publicAuthorizationToReturn[scope] = [];
-        let scopeAuthorizations = auths[scope];
-        for (const scopeAuthorizationsKey in scopeAuthorizations) {
-          let scopeAuthorization = new Authorization(
-              scopeAuthorizations[scopeAuthorizationsKey]
-          );
-          let path = scopeAuthorization.getPath2(authorizationScopes[datatype].map((a) => a.id));
-          if (publicAuthorizationToReturn[scope].indexOf(path) === -1) {
-            if (!publicAuthorizationToReturn[scope]
-                .find(
-                    (pa) => path.startsWith(pa)
-                )
-            ) {
-              publicAuthorizationToReturn[scope] = publicAuthorizationToReturn[scope]
-                  .filter(
-                      (pa) => !pa.startsWith(path)
-                  );
-              publicAuthorizationToReturn[scope].push(path);
+        let publicAuthorizationToReturn = {};
+        for (const datatype in publicAuthorizations) {
+            let auths = publicAuthorizations[datatype];
+            for (const scope in auths) {
+                publicAuthorizationToReturn[scope] = [];
+                let scopeAuthorizations = auths[scope];
+                for (const scopeAuthorizationsKey in scopeAuthorizations) {
+                    let scopeAuthorization = new Authorization(
+                        scopeAuthorizations[scopeAuthorizationsKey]
+                    );
+                    let path = scopeAuthorization.getPath2(authorizationScopes[datatype].map((a) => a.id));
+                    if (publicAuthorizationToReturn[scope].indexOf(path) === -1) {
+                        if (!publicAuthorizationToReturn[scope]
+                            .find(
+                                (pa) => path.startsWith(pa)
+                            )
+                        ) {
+                            publicAuthorizationToReturn[scope] = publicAuthorizationToReturn[scope]
+                                .filter(
+                                    (pa) => !pa.startsWith(path)
+                                );
+                            publicAuthorizationToReturn[scope].push(path);
+                        }
+                    }
+                }
             }
-          }
+            publicAuthorizations[datatype] = publicAuthorizationToReturn;
         }
-      }
-      publicAuthorizations[datatype]= publicAuthorizationToReturn;
+        return publicAuthorizations;
     }
-    return publicAuthorizations;
-  }
-  static async initAuthReferences(configuration, authorizations, authorizationScopes, getOrLoadReferences){
+
+    static
+    async initAuthReferences(configuration, authorizations, authorizationScopes, getOrLoadReferences) {
         let authReferences = {}
         for (const datatype in authorizationScopes) {
             let info = authorizationScopes[datatype]

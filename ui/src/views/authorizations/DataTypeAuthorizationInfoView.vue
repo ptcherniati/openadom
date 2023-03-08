@@ -14,7 +14,9 @@
     </h1>
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
       <div class="columns">
+        <b-checkbox v-model="isPublicAuthorizations">{{ $t('dataTypeAuthorizations.publicAuthorization') }}</b-checkbox>
         <ValidationProvider
+            v-if="!isPublicAuthorizations"
             v-slot="{ errors, valid }"
             class="column is-half"
             name="users"
@@ -22,6 +24,7 @@
             vid="users"
         >
           <b-field
+              v-if="!isApplicationAdmin"
               :label="$t('dataTypeAuthorizations.users')"
               :message="errors[0]"
               :type="{
@@ -33,11 +36,11 @@
             <b-taginput
                 v-model="selectedUsers"
                 :data="users.filter(user=>!selectedUsers.includes(user))"
-                field="label"
                 :open-on-focus="openOnFocus"
                 :placeholder="$t('dataTypeAuthorizations.users-placeholder')"
                 autocomplete
                 expanded
+                field="label"
                 type="is-dark"
                 @typing="getFilteredTags"
             >
@@ -71,12 +74,13 @@
         </ValidationProvider>
       </div>
       <div v-for="(datatypeInfos, datatype) in datatypes" :key="datatype">
-        <div v-if="dataGroups[datatype] && authReferences[datatype] && columnsVisible[datatype] ">
+        <div
+            v-if="isAuthorized(datatype) && dataGroups[datatype] && authReferences[datatype] && columnsVisible[datatype] ">
           <AuthorizationTableForDatatype
               :auth-references="authReferences[datatype]"
               :authorization="authorization.authorizations[datatype]"
               :authorization-scopes="authorizationScopes[datatype]"
-              :columns-visible="columnsVisible[datatype]"
+              :columns-visible="isPublicAuthorizations?columnsVisibleForPublic[datatype]:columnsVisible[datatype]"
               :current-authorization-scope="{}"
               :data-groups="dataGroups[datatype]"
               :datatype="{id:datatype, name: (datatypeInfos.name)}"
@@ -92,7 +96,7 @@
             <div class="row">
               <div class="columns">
                 <b-field
-                    v-for="(column, indexColumn) of columnsVisible[datatype]"
+                    v-for="(column, indexColumn) of isPublicAuthorizations?columnsVisibleForPublic[datatype]:columnsVisible[datatype]"
                     :key="indexColumn"
                     :field="indexColumn"
                     :label="getColumnTitle(column)"
@@ -170,6 +174,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   ownAuthorizationsColumnsByPath = {};
   authorizations = [];
   users = [];
+  publicUsers = [];
   name = null;
   dataGroups = {};
   authorizationScopes = {};
@@ -193,6 +198,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     },
   };
   columnsVisible = {};
+  columnsVisibleForPublic = {};
   period = this.periods.FROM_DATE_TO_DATE;
   startDate = null;
   endDate = null;
@@ -201,6 +207,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   subMenuPaths = [];
   repository = null;
   filteredTags = [];
+  isPublicAuthorizations = false
 
   @Watch("authReferences")
   onExternalOpenStateChanged(newVal) {
@@ -360,13 +367,15 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       ({
         authorizationScopes: this.authorizationScopes,
         dataGroups: this.dataGroups,
+        publicUser: this.publicUser,
         users: this.users,
         publicAuthorizations: this.publicAuthorizations,
         isApplicationAdmin: this.isApplicationAdmin,
         ownAuthorizations: this.ownAuthorizations,
         ownAuthorizationsColumnsByPath: this.ownAuthorizationsColumnsByPath,
-        columnsVisible: this.columnsVisible
-      } = Authorizations.parseGrantableInfos(grantableInfos,this.datatypes,this.repository));
+        columnsVisible: this.columnsVisible,
+        columnsVisibleForPublic: this.columnsVisibleForPublic
+      } = Authorizations.parseGrantableInfos(grantableInfos, this.datatypes, this.repository));
 
       if (this.authorizationId != "new") { //TODO
         var authorizations = await this.authorizationService.getAuthorizations(
@@ -388,6 +397,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
               );
               return auth
             }, initialValue);
+        this.isPublicAuthorizations = authorizations.users[0] && authorizations.users[0].login == "_public_"
       } else {
         let initialValue = new Authorizations({
           authorizations: {},
@@ -452,7 +462,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         applicationNameOrId: this.applicationName,
         authorizations: {}
       };
-      authorizationToSend.usersId = this.selectedUsers.map(user=>user.id);
+      authorizationToSend.usersId = (this.isPublicAuthorizations ? this.publicAuthorizations : this.selectedUsers).map(user => user.id);
       for (const datatype in this.authorization.authorizations) {
         let authorizationForDatatype = this.authorization.authorizations[datatype].authorizations
         for (const scope in authorizationForDatatype) {
@@ -483,9 +493,14 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     }
   }
 
+  isAuthorized(datatype) {
+    const ownAuthorizationsColumnsByPathElementForDatatype = this.ownAuthorizationsColumnsByPath[datatype];
+    return this.isApplicationAdmin || Object.values(ownAuthorizationsColumnsByPathElementForDatatype || []).some(scopes => scopes.includes('admin'))
+  }
+
   extractAuthorizations(authorizationTree) {
     var authorizationArray = [];
-    if (!authorizationTree || Object.keys(authorizationTree).length === 0) {
+    if (!authorizationTree || Object.keys(authorizationTree || []).length === 0) {
       return authorizationArray;
     }
     for (const key in authorizationTree) {

@@ -548,6 +548,7 @@ public class Configuration {
         private String title = "";
         private boolean withPeriods = false;
         private boolean withDataGroups = false;
+        private boolean forPublic = false;
     }
 
     @Getter

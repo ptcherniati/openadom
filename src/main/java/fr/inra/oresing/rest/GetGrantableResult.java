@@ -35,6 +35,7 @@ public class GetGrantableResult {
         String title;
         boolean withPeriods;
         boolean withDataGroups;
+        boolean forPublic;
         Internationalization internationalizationName;
     }
 
