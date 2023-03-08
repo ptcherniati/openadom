@@ -5,7 +5,7 @@ describe('test create application', () => {
         cy.setLocale('fr');
     });
 
-    it('Test creation authorization POUSSIN', () => {
+    it('Test creation authorization admin', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
         const olaDataType = 'applications/ore/ola/ola.json'
@@ -4424,5 +4424,390 @@ describe('test create application', () => {
 
         cy.visit(Cypress.env('ola_dataTypes_authorizations_url'))
     })
-    /*it('Test creation authorization ECHO', () => { })*/
+
+    it('Test creation authorization regularUser', () => {
+        cy.login("regularUser", ['applications/ore/ore_application_description.json'])
+        cy.wait(['@postUserResponse', '@getApplicationResponse'])
+        const olaDataType = 'applications/ore/ola/ola.json'
+
+        cy.fixture(olaDataType).then(olaContent => {
+            cy.intercept(
+                'GET',
+                'http://localhost:8081/api/v1/applications/ola?filter=CONFIGURATION&filter=DATATYPE', {
+                    statusCode: 200,
+                    body: olaContent
+                }).as('pageDataAuthorization')
+        })
+        cy.intercept(
+            'GET',
+            'http://localhost:8081/api/v1/applications/ola/authorization', {
+                statusCode: 200,
+                body: {
+                    "authorizationResults": [
+                        {
+                            "uuid": "596397ad-0359-43d1-b8c7-fe9eae95bf26",
+                            "name": "test chlrophylle",
+                            "users": [
+                                {
+                                    "id": "a5486b95-21f7-4f02-8942-adbd707fcf1b",
+                                    "creationDate": 1677508654866,
+                                    "updateDate": 1677508654866,
+                                    "login": "echo",
+                                    "password": "$2a$12$sz6MzU0jQe16yN7xthzYCuUEUThqEHTRzJBXphaqkBergJDpYnQhq",
+                                    "authorizations": []
+                                }
+                            ],
+                            "application": "36776c27-acf3-4981-a977-7c3c37be0183",
+                            "authorizations": {
+                                "phytoplancton": {
+                                    "extraction": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "lac_d_altitude"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "depot": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "delete": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "riviere"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ]
+                                },
+                                "chlorophylle": {
+                                    "extraction": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "depot": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "admin": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "delete": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "publication": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ]
+                                },
+                                "zooplancton": {
+                                    "extraction": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        },
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "lac_d_altitude"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        },
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "riviere"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "depot": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        },
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "lac_d_altitude"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        },
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "riviere"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "admin": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        },
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "lac_d_altitude"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        },
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "riviere"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "delete": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        },
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "lac_d_altitude"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        },
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "riviere"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ]
+                                }
+                            },
+                            "publicAuthorizations": {
+                                "physico-chimie": {
+                                    "extraction": [
+                                        {
+                                            "timeScope": {
+                                                "range": {
+                                                    "empty": false
+                                                }
+                                            },
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": {
+                                                    "sql": "grand_lac"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "depot": [
+                                        {
+                                            "timeScope": {
+                                                "range": {
+                                                    "empty": false
+                                                }
+                                            },
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": {
+                                                    "sql": "grand_lac"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "authorizationsForUser": {
+                                "authorizationResults": {},
+                                "applicationName": "ola",
+                                "authorizationByPath": {},
+                                "isAdministrator": true
+                            }
+                        },
+                        {
+                            "uuid": "479ea4d8-d116-4bbf-8365-c8b7c8552b29",
+                            "name": "depot extra phisico",
+                            "users": [
+                                {
+                                    "id": "9032ffe5-bfc1-453d-814e-287cd678484a",
+                                    "creationDate": 1677497830455,
+                                    "updateDate": 1677497830455,
+                                    "login": "_public_",
+                                    "password": "",
+                                    "authorizations": [
+                                        ".*"
+                                    ]
+                                }
+                            ],
+                            "application": "36776c27-acf3-4981-a977-7c3c37be0183",
+                            "authorizations": {
+                                "physico-chimie": {
+                                    "extraction": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ],
+                                    "depot": [
+                                        {
+                                            "path": "not setting",
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": "grand_lac"
+                                            },
+                                            "fromDay": null,
+                                            "toDay": null
+                                        }
+                                    ]
+                                }
+                            },
+                            "publicAuthorizations": {
+                                "physico-chimie": {
+                                    "extraction": [
+                                        {
+                                            "timeScope": {
+                                                "range": {
+                                                    "empty": false
+                                                }
+                                            },
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": {
+                                                    "sql": "grand_lac"
+                                                }
+                                            }
+                                        }
+                                    ],
+                                    "depot": [
+                                        {
+                                            "timeScope": {
+                                                "range": {
+                                                    "empty": false
+                                                }
+                                            },
+                                            "dataGroups": [],
+                                            "requiredAuthorizations": {
+                                                "site": {
+                                                    "sql": "grand_lac"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "authorizationsForUser": {
+                                "authorizationResults": {},
+                                "applicationName": "ola",
+                                "authorizationByPath": {},
+                                "isAdministrator": true
+                            }
+                        }
+                    ],
+                    "authorizationsForUser": {
+                        "authorizationResults": {},
+                        "applicationName": "ola",
+                        "authorizationByPath": {},
+                        "isAdministrator": true
+                    }
+                }
+            }).as('pageDataAuthorization')
+
+        cy.visit(Cypress.env('ola_dataTypes_authorizations_url'))
+        cy.get('.column > .button').contains("Ajouter une autorisation")
+
+        cy.get(':nth-child(1) > [data-label="Actions"] > .is-warning > .icon').click()
+        
+    })
 })
