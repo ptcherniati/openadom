@@ -13,7 +13,8 @@
         "ola_references_url": "/applications/ola/references",
         "ola_dataTypes_url": "/applications/ola/dataTypes",
         "ola_dataTypes_authorizations_url": "/applications/ola/authorizations",
-        "ola_dataTypes_new_authorizations_url": "/applications/ola/authorizations/new"
+        "ola_dataTypes_new_authorizations_url": "/applications/ola/authorizations/new",
+        "ola_dataTypes_update_authorizations_url": "/applications/ola/authorizations/c858e98b-a60e-4ee8-ae20-1f6814a7e77f"
     },
     "videoUploadOnPasses": false,
     "video": true,
