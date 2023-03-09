@@ -287,9 +287,7 @@ export default class DataTypeAuthorizationsView extends Vue {
           dataType: this.dataTypeId,
         }),
         () => {
-          this.$router.push(
-            `/applications/${this.applicationName}/authorizations`
-          );
+          this.$router.push(`/applications/${this.applicationName}/authorizations`);
         },
         () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
@@ -298,7 +296,10 @@ export default class DataTypeAuthorizationsView extends Vue {
 
   async init() {
     try {
-      this.application = await this.applicationService.getApplication(this.applicationName, ['CONFIGURATION','DATATYPE']);
+      this.application = await this.applicationService.getApplication(this.applicationName, [
+        "CONFIGURATION",
+        "DATATYPE",
+      ]);
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
@@ -310,13 +311,16 @@ export default class DataTypeAuthorizationsView extends Vue {
       this.authorizations = authorizations.authorizationResults.filter(
         (auth) =>
           auth.authorizationsForUser.isAdministrator ||
-            Object.keys(auth.authorizations).some(datatype=>auth.authorizationsForUser.authorizationResults[datatype]
-                && auth.authorizationsForUser.authorizationResults[datatype].admin )
+          Object.keys(auth.authorizations).some(
+            (datatype) =>
+              auth.authorizationsForUser.authorizationResults[datatype] &&
+              auth.authorizationsForUser.authorizationResults[datatype].admin
+          )
       );
       let authorizationForUser = authorizations.authorizationsForUser;
       this.canManageRights =
         authorizationForUser.isAdministrator ||
-          Object.values(authorizationForUser.authorizationResults || []).some(a=>a.admin);
+        Object.values(authorizationForUser.authorizationResults || []).some((a) => a.admin);
     } catch (error) {
       this.alertService.toastServerError;
       this.authorizationByUser = this.authorizations.reduce((acc, auth) => {
@@ -330,23 +334,16 @@ export default class DataTypeAuthorizationsView extends Vue {
   }
 
   addAuthorization() {
-    this.$router.push(
-      `/applications/${this.applicationName}/authorizations/new`
-    );
+    this.$router.push(`/applications/${this.applicationName}/authorizations/new`);
   }
 
   modifyAuthorization(id) {
-    this.$router.push(
-      `/applications/${this.applicationName}/authorizations/${id}`
-    );
+    this.$router.push(`/applications/${this.applicationName}/authorizations/${id}`);
   }
 
   async revoke(id) {
     try {
-      await this.authorizationService.revokeAuthorization(
-        this.applicationName,
-        id
-      );
+      await this.authorizationService.revokeAuthorization(this.applicationName, id);
       this.alertService.toastSuccess(this.$t("alert.revoke-authorization"));
       this.authorizations.splice(
         this.authorizations.findIndex((a) => a.id === id),

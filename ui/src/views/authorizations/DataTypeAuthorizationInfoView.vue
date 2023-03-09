@@ -19,8 +19,23 @@
             type='is-dark'>
           {{ $t('dataTypeAuthorizations.publicAuthorization') }}
         </b-switch>
+        <b-field
+            v-if="!isApplicationAdmin && !authorizationAdminUser"
+            class="column"
+            :label="$t('dataTypeAuthorizations.users')"
+        >
+          <b-tag
+              v-for="userSelect in selectedUsers"
+              :key="userSelect"
+              size="is-medium"
+              v-model="selectedUsers"
+              field="label"
+              type="is-dark"
+          > {{ userSelect.label }}
+          </b-tag>
+        </b-field>
         <ValidationProvider
-            v-if="!isPublicAuthorizations"
+            v-if="!isPublicAuthorizations && (isApplicationAdmin || authorizationAdminUser)"
             v-slot="{ errors, valid }"
             class="column is-half"
             name="users"
@@ -28,7 +43,6 @@
             vid="users"
         >
           <b-field
-              v-if="isApplicationAdmin"
               :label="$t('dataTypeAuthorizations.users')"
               :message="errors[0]"
               :type="{
@@ -59,7 +73,7 @@
         </ValidationProvider>
         <ValidationProvider
             v-slot="{ errors, valid }"
-            class="column is-half"
+            class="column is-5"
             name="users"
             rules="required"
             vid="users"
@@ -212,6 +226,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   repository = null;
   filteredTags = [];
   isPublicAuthorizations = false;
+  authorizationAdminUser = false;
 
   @Watch("authReferences")
   onExternalOpenStateChanged(newVal) {
@@ -457,6 +472,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     this.endDate = null;
     this.startDate = null;
   }
+
   async createAuthorization() {
     try {
       let authorizationToSend = {
@@ -498,6 +514,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
 
   isAuthorized(datatype) {
     const ownAuthorizationsColumnsByPathElementForDatatype = this.ownAuthorizationsColumnsByPath[datatype];
+    if (Object.values(this.ownAuthorizationsColumnsByPath[datatype] || []).some(scopes => scopes.includes('admin'))) this.authorizationAdminUser = true;
     return this.isApplicationAdmin || Object.values(ownAuthorizationsColumnsByPathElementForDatatype || []).some(scopes => scopes.includes('admin'))
   }
 

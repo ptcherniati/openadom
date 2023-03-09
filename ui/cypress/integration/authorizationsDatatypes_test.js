@@ -5,7 +5,7 @@ describe('test create application', () => {
         cy.setLocale('fr');
     });
 
-    /*it('Test creation authorization admin', () => {
+    it('Test creation authorization admin', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
         const olaDataType = 'applications/ore/ola/ola.json'
@@ -4424,7 +4424,13 @@ describe('test create application', () => {
             }).as('pageCreateDataAuthorization')
 
         cy.visit(Cypress.env('ola_dataTypes_authorizations_url'))
-    })*/
+        cy.intercept(
+            'DELETE',
+            'http://localhost:8081/api/v1/logout', {
+                statusCode: 200,
+            }).as('logout')
+        cy.visit(Cypress.env('login_url'))
+    })
 
     it('Test creation authorization regularUser', () => {
         cy.login("regularUser", ['applications/ore/ore_application_description.json'])
