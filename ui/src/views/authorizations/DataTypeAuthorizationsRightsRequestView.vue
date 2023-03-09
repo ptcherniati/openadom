@@ -339,7 +339,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         columnsVisible: this.columnsVisible
       } = Authorizations.parseGrantableInfos(grantableInfos, this.datatypes, this.repository));
 
-      if (this.authorizationId != "new") {
+      if (this.authorizationId !== "new") {
         var authorizations = await this.authorizationService.getAuthorizations(
             this.applicationName,
             this.authorizationId
