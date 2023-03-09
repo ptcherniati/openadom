@@ -38,7 +38,7 @@
             v-model="currentPage"
             :current-page.sync="currentPage"
             :per-page="perPage"
-            :total="authorizations.length"
+            :total="authorizationLength"
             role="navigation"
             :aria-label="$t('menu.aria-pagination')"
             :aria-current-label="$t('menu.aria-curent-page')"
@@ -156,19 +156,20 @@
                         class="listAuthorization"
                       >
                         <div>
+                          <h4>{{ idx }}</h4>
                           <p>
                             <span>
                               {{ $t("dataTypeAuthorizations.localization") }}
                               {{ $t("ponctuation.colon") }}
                               <i v-for="localization in localizations" v-bind:key="localization"
-                                >{{ configuration.requiredAuthorizations[localization] }}
+                                >{{ configuration[0].requiredAuthorizations[localization] }}
                                 {{ $t("ponctuation.comma") }}</i
                               >
                               {{ $t("ponctuation.semicolon") }}
                             </span>
                           </p>
                           <p>
-                            <span v-if="configuration.dataGroups.length === 0">
+                            <span v-if="configuration[0].dataGroups.length === 0">
                               {{ $t("dataTypeAuthorizations.data-group") }}
                               {{ $t("ponctuation.colon") }}
                               <i>{{ $t("dataTypeAuthorizations.all-variable") }}</i>
@@ -269,6 +270,7 @@ export default class DataTypeAuthorizationsView extends Vue {
     FROM_DATE_TO_DATE: this.$t("dataTypeAuthorizations.from-date-to-date"),
     ALWAYS: this.$t("dataTypeAuthorizations.always"),
   };
+  authorizationLength = 0;
 
   async changePage(page) {
     this.offset = (page - 1) * this.perPage;
@@ -317,6 +319,7 @@ export default class DataTypeAuthorizationsView extends Vue {
               auth.authorizationsForUser.authorizationResults[datatype].admin
           )
       );
+      this.authorizationLength = this.authorizations.length;
       let authorizationForUser = authorizations.authorizationsForUser;
       this.canManageRights =
         authorizationForUser.isAdministrator ||
@@ -379,8 +382,10 @@ export default class DataTypeAuthorizationsView extends Vue {
   }
 
   showModalRole(name, authorization, configuration) {
-    for (let i = 0; i < configuration.length; i++) {
-      this.localizations = Object.keys(configuration[i].requiredAuthorizations);
+    for(const authorization in configuration) {
+      for (let i = 0; i < configuration[authorization].length; i++) {
+        this.localizations = Object.keys(configuration[authorization][i].requiredAuthorizations);
+      }
     }
     this.isSelectedName = name;
     this.isSelectedAuthorization = authorization;
