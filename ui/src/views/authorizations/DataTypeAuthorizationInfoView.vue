@@ -14,7 +14,11 @@
     </h1>
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
       <div class="columns">
-        <b-checkbox v-model="isPublicAuthorizations">{{ $t('dataTypeAuthorizations.publicAuthorization') }}</b-checkbox>
+        <b-switch
+            v-model="isPublicAuthorizations"
+            type='is-dark'>
+          {{ $t('dataTypeAuthorizations.publicAuthorization') }}
+        </b-switch>
         <ValidationProvider
             v-if="!isPublicAuthorizations"
             v-slot="{ errors, valid }"
@@ -24,7 +28,7 @@
             vid="users"
         >
           <b-field
-              v-if="!isApplicationAdmin"
+              v-if="isApplicationAdmin"
               :label="$t('dataTypeAuthorizations.users')"
               :message="errors[0]"
               :type="{
@@ -88,7 +92,7 @@
               :isApplicationAdmin="isApplicationAdmin"
               :ownAuthorizations="ownAuthorizations[datatype]"
               :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath[datatype]"
-              :publicAuthorizations="publicAuthorizations[datatype] || []"
+              :publicAuthorizations="publicAuthorizations[datatype] || {}"
               class="rows"
               @modifyAuthorization="modifyAuthorization($event, datatype)"
               @registerCurrentAuthorization="registerCurrentAuthorization($event,datatype)"
@@ -207,7 +211,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
   subMenuPaths = [];
   repository = null;
   filteredTags = [];
-  isPublicAuthorizations = false
+  isPublicAuthorizations = false;
 
   @Watch("authReferences")
   onExternalOpenStateChanged(newVal) {
@@ -377,7 +381,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         columnsVisibleForPublic: this.columnsVisibleForPublic
       } = Authorizations.parseGrantableInfos(grantableInfos, this.datatypes, this.repository));
 
-      if (this.authorizationId != "new") { //TODO
+      if (this.authorizationId !== "new") { //TODO
         var authorizations = await this.authorizationService.getAuthorizations(
             this.applicationName,
             this.authorizationId
@@ -397,7 +401,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
               );
               return auth
             }, initialValue);
-        this.isPublicAuthorizations = authorizations.users[0] && authorizations.users[0].login == "_public_"
+        this.isPublicAuthorizations = authorizations.users[0] && authorizations.users[0].login === "_public_"
       } else {
         let initialValue = new Authorizations({
           authorizations: {},
@@ -420,7 +424,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
       this.selectedUsers = this.users
           .filter((user) => {
             return currentAuthorizationUsers.find((u) => {
-              return u.id == user.id;
+              return u.id === user.id;
             });
           });
       this.selectedUsers.sort();
@@ -453,7 +457,6 @@ export default class DataTypeAuthorizationInfoView extends Vue {
     this.endDate = null;
     this.startDate = null;
   }
-
   async createAuthorization() {
     try {
       let authorizationToSend = {

@@ -155,7 +155,7 @@ export default {
     getState(indexColumn) {
       let nb = this.authorization?.authorizations?.[indexColumn]?.length;
       if (!nb) return 0;
-      if (nb == Object.keys(this.authReferences[0])
+      if (nb === Object.keys(this.authReferences[0])
           .filter(path => this.isApplicationAdmin || (this.ownAuthorizationsColumnsByPath[path] || []).includes('admin'))
           .length) return 1;
       return -1
@@ -190,7 +190,7 @@ export default {
       for (const index in auths) {
         if (this.haveRightsOn(index, indexColumn)) {
           let requiredAuthorizations = {}
-          requiredAuthorizations[this.authReferences[0][index].authorizationScope] = index;
+          requiredAuthorizations[this.authReferences[0][auths[index]].authorizationScope] = auths[index];
           let authorizations = new Authorization([], requiredAuthorizations)
           let eventToEmit = {
             datatype: this.datatype.id,
@@ -199,9 +199,9 @@ export default {
             indexColumn,
             authorizations: (state ? {toDelete: [authorizations]} : {toAdd: [authorizations]})
           }
-          if (indexColumn == 'admin') {
+          if (indexColumn === 'admin') {
             Object.keys(this.columnsVisible || [])
-                .filter(label => label != 'label')
+                .filter(label => label !== 'label')
                 .map(label => {
                   return {
                     ...eventToEmit,
