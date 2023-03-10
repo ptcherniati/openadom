@@ -44,6 +44,16 @@ a {
 .control.has-icons-left .icon {
   top: -5px;
 }
+.b-checkbox.checkbox.button {
+  display: inline-flex;
+  padding: 0;
+}
+.button.is-light.is-focused:not(:active), .button.is-light.is-focused {
+  box-shadow: none;
+}
+.button .icon:first-child:not(:last-child) {
+  margin: 0;
+}
 
 .inputAuth .control.has-icons-left .icon.is-left{
   font-size: $size-icon-small;

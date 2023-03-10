@@ -251,6 +251,8 @@
         "download": "Télécharger",
         "delete": "Supprimer",
         "references": "Référentiels",
+        "admin" : "Administration",
+        "gestion": "Gestion",
         "data": "Données"
     },
     "dataTypesManagement": {

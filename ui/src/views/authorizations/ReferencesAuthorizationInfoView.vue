@@ -10,7 +10,7 @@
     <h1 class="title main-title">
       <span>{{
         $t(
-          authorizationId == "new"
+          authorizationId === "new"
             ? `referencesAuthorizations.sub-menu-new-authorization`
             : "referencesAuthorizations.sub-menu-modify-authorization",
           { authorizationId }
@@ -72,25 +72,39 @@
           </b-field>
         </ValidationProvider>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th>référentiel</th>
-            <th>Administration</th>
-            <th>Gestion</th>
-          </tr>
-        </thead>
-        <tbody></tbody>
-        <tr v-for="(ref, index) in references" :key="index">
-          <td>{{ ref.refNameLocal }}</td>
-          <td>
-            <b-checkbox v-model="ref.isAdmin" />
-          </td>
-          <td>
-            <b-checkbox v-model="ref.isManage" />
-          </td>
-        </tr>
-      </table>
+      <b-table
+          :data="arrayReferences">
+        <b-table-column :label="$t('referencesManagement.references')" v-slot="props">
+          {{ props.row.refNameLocal }}
+        </b-table-column>
+        <b-table-column :label="$t('referencesManagement.admin')" v-slot="props">
+          <b-checkbox-button
+              type="is-light"
+              v-model="props.row.isAdmin"
+          >
+            <b-icon
+                :icon="props.row.isAdmin ? 'square-check' : 'square'"
+                type="is-primary"
+                class="clickable"
+                pack="far"
+                size="is-medium"
+            />
+          </b-checkbox-button>
+        </b-table-column>
+        <b-table-column :label="$t('referencesManagement.gestion')" v-slot="props">
+          <b-checkbox-button
+              v-model="props.row.isManage"
+          >
+            <b-icon
+                :icon="props.row.isManage ? 'square-check' : 'square'"
+                type="is-primary"
+                class="clickable"
+                pack="far"
+                size="is-medium"
+            />
+          </b-checkbox-button>
+        </b-table-column>
+      </b-table>
 
       <div class="buttons">
         <b-button
@@ -140,8 +154,7 @@ export default class ReferencesAuthorizationInfoView extends Vue {
 
   __DEFAULT__ = "__DEFAULT__";
   referenceService = ReferenceService.INSTANCE;
-  references = {};
-  openOnFocus = false;
+  openOnFocus = true;
   authorizationService = AuthorizationService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
   alertService = AlertService.INSTANCE;
@@ -160,12 +173,11 @@ export default class ReferencesAuthorizationInfoView extends Vue {
   selectedlabels = [];
   userLabels = [];
   isLoading;
-
-  openOnFocus = true;
   authReferences = {};
   subMenuPaths = [];
   selectedUsers = [];
   filteredTags = [];
+  arrayReferences = [];
 
   getColumnTitle(column) {
     if (column.display) {
@@ -194,7 +206,7 @@ export default class ReferencesAuthorizationInfoView extends Vue {
       ),
       new SubMenuPath(
         this.$t(
-          this.authorizationId == "new"
+          this.authorizationId === "new"
             ? `referencesAuthorizations.sub-menu-new-authorization`
             : "referencesAuthorizations.sub-menu-modify-authorization",
           { authorizationId: this.authorizationId }
@@ -229,7 +241,7 @@ export default class ReferencesAuthorizationInfoView extends Vue {
       let params = {
         userId: null,
       };
-      if ("new" != this.authorizationId) {
+      if ("new" !== this.authorizationId) {
         params = { ...params, authorizationId: this.authorizationId };
       } else {
         params = { ...params, limit: 0 };
@@ -246,7 +258,7 @@ export default class ReferencesAuthorizationInfoView extends Vue {
       let configuration = Object.values(
         this.internationalisationService.treeReferenceName(this.application)
       );
-      let references = {};
+      let arrayReferences = [];
       for (const configurationCode in configuration) {
         if (
           authorizationForUser.isAdministrator ||
@@ -264,14 +276,14 @@ export default class ReferencesAuthorizationInfoView extends Vue {
             (this.authorization?.authorizations?.manage || []).includes(
               configuration[configurationCode].label
             );
-          references[configurationCode] = {
+          arrayReferences[configurationCode] = {
             ...configuration[configurationCode],
             isAdmin,
             isManage,
           };
         }
       }
-      this.references = references;
+      this.arrayReferences = arrayReferences;
 
       this.application = {
         ...this.application,
@@ -285,7 +297,7 @@ export default class ReferencesAuthorizationInfoView extends Vue {
       this.selectedUsers = this.users
         .filter((user) => {
           return currentAuthorizationUsers.find((u) => {
-            return u.id == user.id;
+            return u.id === user.id;
           });
         })
         .map((user) => user.id);
@@ -323,11 +335,11 @@ export default class ReferencesAuthorizationInfoView extends Vue {
     try {
       let users = this.selectedlabels
         .reduce((acc, label) => {
-          acc.push(this.users.find((u) => u.label == label));
+          acc.push(this.users.find((u) => u.label === label));
           return acc;
         }, [])
         .map((u) => u.id);
-      let references = Object.values(this.references).reduce((acc, ref) => {
+      let references = Object.values(this.arrayReferences).reduce((acc, ref) => {
         if (ref.isAdmin) {
           let isAdmin = acc.admin || [];
           isAdmin.push(ref.label);
@@ -340,11 +352,10 @@ export default class ReferencesAuthorizationInfoView extends Vue {
         }
         return acc;
       }, {});
-      //let references = this.
       let authorization = {
         usersId: users,
         applicationNameOrId: this.applicationName,
-        uuid: "new" == this.authorizationId ? null : this.authorizationId,
+        uuid: "new" === this.authorizationId ? null : this.authorizationId,
         name: this.name,
         references: references,
       };
@@ -410,5 +421,11 @@ ul li.card-content {
 
 a {
   color: $dark;
+}
+
+.b-checkbox.checkbox.button, .b-checkbox.checkbox.button:hover, .b-checkbox.checkbox.button:active, .b-checkbox.checkbox.button:focus {
+  border-color: transparent;
+  background-color: transparent;
+  box-shadow: none;
 }
 </style>

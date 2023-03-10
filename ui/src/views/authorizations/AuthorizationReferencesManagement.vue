@@ -20,7 +20,6 @@
         </div>
       </div>
       <b-table
-          v-if="authorizations.length"
           :data="authorizations"
           :is-focusable="true"
           :is-hoverable="true"
@@ -144,7 +143,6 @@
           </b-button>
         </b-table-column>
       </b-table>
-      <b-field v-else :label="$t('referencesAuthorizations.no-data')" class="has-text-warning-light"/>
     </div>
   </PageView>
 </template>
