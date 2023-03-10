@@ -1,13 +1,14 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.model.Configuration;
-import fr.inra.oresing.model.rightsrequest.RightsRequest;
 import lombok.Value;
 
 import java.util.List;
+import java.util.SortedSet;
 
 @Value
 public class GetRightsRequestResult {
-    List<RightsRequest> rightsRequests;
+    SortedSet<GetGrantableResult.User> users;
+    List<RightsRequestResult> rightsRequests;
     Configuration.RightsRequestDescription description;
 }

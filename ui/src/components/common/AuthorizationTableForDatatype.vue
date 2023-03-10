@@ -187,7 +187,7 @@ export default {
       let state = this.getState(indexColumn);
       let auths =  Object.keys(this.authReferences[0])
           .filter(path => this.isApplicationAdmin || (this.ownAuthorizationsColumnsByPath[path] || []).includes('admin'));
-      for (const index in auths) {
+      for (const index of auths) {
         if (this.haveRightsOn(index, indexColumn)) {
           let requiredAuthorizations = {}
           requiredAuthorizations[this.authReferences[0][index].authorizationScope] = index;

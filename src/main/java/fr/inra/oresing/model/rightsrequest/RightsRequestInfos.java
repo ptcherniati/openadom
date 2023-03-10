@@ -5,8 +5,12 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import net.minidev.json.annotate.JsonIgnore;
 
-import java.util.*;
+import java.util.LinkedHashSet;
+import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -24,6 +28,8 @@ public class RightsRequestInfos {
     Long limit; // default "ALL"
     @ApiModelProperty(notes = "A list of fielter  on fields  ", required = false)
     Set<FieldFilters> fieldFilters = new LinkedHashSet<>();
+    @ApiModelProperty(notes = "Show all(default let null), setted (true) or unsetted (false) requests ",allowableValues = "null, true, false", required = false, value = "null")
+    Boolean setted = null;
 
     public enum Order {
         ASC, DESC
@@ -61,11 +67,14 @@ public class RightsRequestInfos {
             return filter != null ? filter : null;
         }
 
+        @JsonIgnore
         public Boolean isNumeric() {
             return "numeric".equals(type);
         }
 
-        public Boolean isdDate() {
+
+        @JsonIgnore
+        public Boolean isDate() {
             return "date".equals(type);
         }
     }

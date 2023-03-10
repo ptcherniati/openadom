@@ -17,6 +17,7 @@ import fr.inra.oresing.rest.exceptions.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.exceptions.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.rest.exceptions.data.BadDownloadDatasetQuery;
+import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
 import io.swagger.annotations.ApiOperation;
 import org.assertj.core.util.Strings;
@@ -207,7 +208,8 @@ public class OreSiResources {
         final AuthorizationsForUserResult authorizationReferencesRights = withReferenceType ? service.getAuthorizationsReferencesRights(nameOrId, request.getRequestUserId().toString(), references.keySet()) : new AuthorizationsForUserResult(new HashMap<>(), nameOrId, false, null);
         final Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights = withDatatypes ? service.getAuthorizationsDatatypesRights(nameOrId, dataTypes.keySet()) : new HashMap<>();
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, authorizationsDatatypesRights, rightsRequest, configuration);
+        Boolean isAdministrator = service.isAdmnistrator(application);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, authorizationsDatatypesRights, rightsRequest, configuration, isAdministrator);
         return ResponseEntity.ok(applicationResult);
     }
 
@@ -239,7 +241,8 @@ public class OreSiResources {
     @ApiOperation(value = "Get a rightsRequest with their description using search params")
     public ResponseEntity<GetRightsRequestResult> listRightsRequest(
             @PathVariable("nameOrId") String nameOrId,
-            @RequestBody(required = false) RightsRequestInfos rightsRequestInfos) {
+            @RequestParam(value = "params", required = false) String params) {
+        RightsRequestInfos rightsRequestInfos = deserialiseRightsRequestQuery(params);
         GetRightsRequestResult list = service.findRightsRequest(nameOrId, rightsRequestInfos);
         return ResponseEntity.ok(list);
     }
@@ -260,6 +263,15 @@ public class OreSiResources {
             return createRightsRequestRequest;
         } catch (IOException e) {
             throw new BadRightsRequestOrUUIDQuery(e.getMessage());
+        }
+    }
+
+    private RightsRequestInfos deserialiseRightsRequestQuery(String params) {
+        try {
+            RightsRequestInfos createRightsRequestInfos = params != null && params != "undefined" ? new ObjectMapper().readValue(params, RightsRequestInfos.class) : null;
+            return createRightsRequestInfos;
+        } catch (IOException e) {
+            throw new BadRightsRequestInfosQuery(e.getMessage());
         }
     }
 

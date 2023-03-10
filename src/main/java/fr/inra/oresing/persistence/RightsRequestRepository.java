@@ -51,7 +51,7 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
         String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json \n" +
                 "FROM (select *  \n" +
                 "from %s ";
-        if (whereClause != null) {
+        if (whereClause != null && !"()".equals(whereClause)) {
             sql += " WHERE " + whereClause;
         }
         sql += ") t";

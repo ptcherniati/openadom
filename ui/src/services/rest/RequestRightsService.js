@@ -7,16 +7,12 @@ export class RequestRightsService extends Fetcher {
     super();
   }
 
-  async getReferenceValues(applicationName, referenceId, params) {
+  async getRightsRequests(applicationName, params) {
     if (params) {
-      return this.get(`applications/${applicationName}/references/${referenceId}`, params);
+      return this.get(`applications/${applicationName}/rightsRequest`, {params: JSON.stringify(params)},false);
     } else {
-      return this.get(`applications/${applicationName}/references/${referenceId}`);
+      return this.get(`applications/${applicationName}/rightsRequest`);
     }
-  }
-
-  async getReferenceCsv(applicationName, referenceId) {
-    return this.get(`applications/${applicationName}/references/${referenceId}/csv`, {}, true);
   }
 
   async createRequestRights(applicationName, requestRights) {

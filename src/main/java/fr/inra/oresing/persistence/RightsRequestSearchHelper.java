@@ -58,7 +58,7 @@ public class RightsRequestSearchHelper {
                 .ifPresent(rightsRequestInfos -> where.add(whereForRightsRequest(rightsRequestInfos)));
 
         return CollectionUtils.isEmpty(where) ? "" : where.stream()
-                .filter(Objects::nonNull)
+                .filter(w->w!=null && !Strings.isNullOrEmpty(w))
                 .collect(Collectors.joining(" or ", "(", ")"));
     }
 
@@ -153,6 +153,6 @@ public class RightsRequestSearchHelper {
     }
 
     public String buildWhereRequest() {
-        return filterBy();
+        return rightsRequestInfos==null?null:filterBy();
     }
 }

@@ -10,8 +10,8 @@
                 class="card-header createApplication"
                 role="button"
                 style="margin-bottom: 50px"
-                @click="createApplication"
                 tabindex="0"
+                @click="createApplication"
             >
               <a class="card-header-icon createApplication">
                 <b-icon icon="plus"></b-icon>
@@ -32,10 +32,10 @@
                 <b-field class="columns">
                   <b-checkbox
                       v-model="checkboxDate"
-                      false-value="false"
-                      true-value="true"
-                      field="name"
                       class="column"
+                      false-value="false"
+                      field="name"
+                      true-value="true"
                       @input="recalculate"
                   >{{ $t("applications.trierRecent") }}
                   </b-checkbox
@@ -47,10 +47,10 @@
                   <b-checkbox
                       id="checkboxTrieA_z"
                       v-model="checkboxTrieA_z"
-                      false-value="false"
-                      true-value="true"
-                      field="name"
                       class="column"
+                      false-value="false"
+                      field="name"
+                      true-value="true"
                       @input="recalculate"
                   >{{ $t("applications.trierA_z") }}
                   </b-checkbox
@@ -58,10 +58,10 @@
                   <b-checkbox
                       id="checkboxTrieZ_a"
                       v-model="checkboxTrieZ_a"
-                      false-value="false"
-                      true-value="true"
-                      field="name"
                       class="column"
+                      false-value="false"
+                      field="name"
+                      true-value="true"
                       @input="recalculate"
                   >{{ $t("applications.trierZ_a") }}
                   </b-checkbox
@@ -94,7 +94,7 @@
         </section>
       </div>
       <div class="column is-9-widescreen is-12-desktop">
-        <caption class="columns" v-if="loading">
+        <caption v-if="loading" class="columns">
           <div class="column loader-wrapper">
             <div class="loader is-loading"></div>
           </div>
@@ -169,7 +169,7 @@
                           >{{ $t("applications.dataset") }}
                           </b-button>
                         </div>
-                        <div class="card-footer-item" v-if="canCreateApplication">
+                        <div v-if="canCreateApplication" class="card-footer-item">
                           <b-button
                               icon-left="pen-square"
                               type="is-warning"
@@ -178,7 +178,9 @@
                             Modifier l'application
                           </b-button>
                         </div>
-                        <div class="card-footer-item" v-if="canCreateApplication">
+                      </div>
+                      <div class="card-footer">
+                        <div v-if="canCreateApplication" class="card-footer-item">
                           <b-button
                               icon-left="download"
                               type="is-primary"
@@ -186,9 +188,17 @@
                           > {{ $t("referencesManagement.download") }}
                           </b-button>
                         </div>
-                        <div class="card-footer-item">
+                        <div v-if="!canCreateApplication" class="card-footer-item">
                           <b-button
-                              icon-left="download"
+                              icon-left="users-cog"
+                              type="is-primary"
+                              @click="showRequestRights(application)"
+                          > {{ $t("dataTypeAuthorizations.showRequests") }}
+                          </b-button>
+                        </div>
+                        <div v-else class="card-footer-item">
+                          <b-button
+                              icon-left="users-cog"
                               type="is-primary"
                               @click="requestRights(application)"
                           > {{ $t("dataTypeAuthorizations.request") }}
@@ -232,18 +242,18 @@
         <hr/>
         <b-pagination
             v-if="perPage <= applications.length"
+            :aria-current-label="$t('menu.aria-curent-page')"
+            :aria-label="$t('menu.aria-pagination')"
+            :aria-next-label="$t('menu.aria-next-page')"
+            :aria-previous-label="$t('menu.aria-previous-page')"
             :current.sync="current"
             :per-page="perPage"
             :range-after="2"
             :range-before="2"
             :rounded="true"
-            role="navigation"
-            :aria-label="$t('menu.aria-pagination')"
-            :aria-current-label="$t('menu.aria-curent-page')"
-            :aria-next-label="$t('menu.aria-next-page')"
-            :aria-previous-label="$t('menu.aria-previous-page')"
-            order="is-centered"
             :total="applications.length"
+            order="is-centered"
+            role="navigation"
         >
         </b-pagination>
       </div>
@@ -330,6 +340,11 @@ export default class ApplicationsView extends Vue {
     return false;
   }
 
+  async showRequestRights(application) {
+    this.$router.push(`/applications/${application.name}/authorizationsRequest/new`);
+    return false;
+  }
+
   async created() {
     await this.init();
   }
@@ -337,7 +352,7 @@ export default class ApplicationsView extends Vue {
   async init() {
     this.applications = await this.applicationService.getApplications(['DATATYPE', 'REFERENCETYPE']);
     this.selectedApplications = this.applications;
-    if(this.selectedApplications.length === 0) {
+    if (this.selectedApplications.length === 0) {
       this.loading = true
     }
     if (this.checkboxDate === "true")
@@ -439,6 +454,7 @@ export default class ApplicationsView extends Vue {
 .loader-wrapper {
   margin: 50px;
   justify-content: center;
+
   .loader {
     height: 100px;
     width: 100px;

@@ -15,6 +15,7 @@ import DataTypeAuthorizationsView from "@/views/authorizations/DataTypeAuthoriza
 import DataTypeAuthorizationInfoView from "@/views/authorizations/DataTypeAuthorizationInfoView.vue";
 import AuthorizationManagementView from "@/views/authorizations/AuthorizationManagementView.vue";
 import DataTypeAuthorizationsRightsRequestView from "@/views/authorizations/DataTypeAuthorizationsRightsRequestView.vue";
+import RequestAuthorizationManagementView from "@/views/authorizations/RequestAuthorizationManagementView.vue";
 import AuthorizationManagementForApplicationCreatorView from "@/views/authorizations/AuthorizationManagementForApplicationCreatorView.vue";
 
 Vue.use(VueRouter);
@@ -97,8 +98,13 @@ const routes = [
     props: true,
   },
   {
-    path: "/applications/:applicationName/authorizationsRequest",
+    path: "/applications/:applicationName/authorizationsRequest/:authorizationId",
     component: DataTypeAuthorizationsRightsRequestView,
+    props: true,
+  },
+  {
+    path: "/applications/:applicationName/authorizationsRequest",
+    component: RequestAuthorizationManagementView,
     props: true,
   },
   {

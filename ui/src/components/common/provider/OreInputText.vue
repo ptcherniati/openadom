@@ -1,37 +1,37 @@
 <template>
 
   <ValidationProvider
-      class="column is-12"
-      :rules="rules"
-      :name="vid"
       v-slot="{ errors, valid }"
+      :name="vid"
+      :rules="rules"
       :vid="vid"
+      class="column is-12"
 
   >
     <b-field
-        class="file is-primary column is-12"
+        :label="label"
+        :message="errors"
         :type="{
                               'is-danger': errors && errors.length > 0,
                               'is-success': valid,
                             }"
-        :message="errors"
-        :label="label">
+        class="file is-primary column is-12">
       <template v-slot:label>
         <span v-if="required" class="required">*</span>
         <label>{{ label }}</label>
       </template>
-      <b-taginput type="textarea"
-                  v-if="multiplicity=='MANY'"
+      <b-taginput v-if="multiplicity=='MANY'"
+                  v-model="val"
                   required
+                  type="textarea"
                   @blur="updateValue"
-                  @input="updateValue"
-                  v-model="val"/>
-      <b-input type="textarea"
-               v-else
+                  @input="updateValue"/>
+      <b-input v-else
+               v-model="val"
                required
+               type="textarea"
                @blur="updateValue"
-               @input="updateValue"
-               v-model="val"/>
+               @input="updateValue"/>
 
     </b-field>
   </ValidationProvider>
@@ -43,7 +43,7 @@ import {ref, watch} from "vue";
 
 export default {
   setup(props) {
-    const val=ref("");
+    const val = ref("");
     watch(() => props.value, () => {
       val.value = ref(props.value)
     });
@@ -89,14 +89,14 @@ export default {
         return value
             .map(v => this.regexp(v))
             .filter(v => v == false)
-            .length==0
+            .length == 0
       }
     },
     validateRequired(value) {
       if (typeof value == 'string') {
         return !!value
       } else {
-        return value.length>0
+        return value.length > 0
       }
     }
   },
@@ -144,5 +144,5 @@ export default {
   color: red;
   padding-right: 5px;
   font-size: 150%;
- }
+}
 </style>

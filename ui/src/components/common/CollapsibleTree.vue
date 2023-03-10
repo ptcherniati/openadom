@@ -12,55 +12,69 @@
         <div :style="`transform:translate(${level * 50}px);`"
              class="CollapsibleTree-header-infos column is-narrow"
         >
-          <div
-              :class="onClickLabelCb ? 'link' : ''"
-              tabindex="0"
-              @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
-              @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
-          >
-            <b-tooltip :label="$t('dataTypesManagement.tooltip_show_secondary_menu')"
-                       type="is-primary is-light">
-              <b-button
-                  class="is-small"
-                  outlined
-                  style="margin: 10px;"
-                  tabindex="0"
-                  type="is-primary"
-              >
-                <b-icon icon="ellipsis-h"></b-icon>
-              </b-button>
-            </b-tooltip>
-          </div>
-          <FontAwesomeIcon
-              v-if="option.children && option.children.length !== 0"
-              :icon="displayChildren ? 'caret-down' : 'caret-right'"
-              class="clickable mr-3"
-              tabindex="0"
-          />
-          <p> {{ option.localName || option.label }} </p>
-          <span v-if="refFile" class="file-name">
+          <slot name="secondaryMenu" v-bind:onClickLabelCb="onClickLabelCb" v-bind:option="option">
+            <div
+                :class="onClickLabelCb ? 'link' : ''"
+                tabindex="0"
+                @click="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+                @keypress.enter="(event) => onClickLabelCb && onClickLabelCb(event, option.label)"
+            >
+              <b-tooltip :label="$t('dataTypesManagement.tooltip_show_secondary_menu')"
+                         type="is-primary is-light">
+                <b-button
+                    class="is-small"
+                    outlined
+                    style="margin: 10px;"
+                    tabindex="0"
+                    type="is-primary"
+                >
+                  <b-icon icon="ellipsis-h"></b-icon>
+                </b-button>
+              </b-tooltip>
+            </div>
+          </slot>
+          <slot name="openSubMenu" v-bind:displayChildren="displayChildren">
+            <FontAwesomeIcon
+                v-if="option.children && option.children.length !== 0"
+                :icon="displayChildren ? 'caret-down' : 'caret-right'"
+                class="clickable mr-3"
+                tabindex="0"
+            />
+          </slot>
+          <slot name="label" v-bind:option="option">
+            <p> {{ option.localName || option.label }} </p>
+          </slot>
+          <slot name="refFile" v-bind:refFile="refFile">
+            <span v-if="refFile" class="file-name">
             {{ refFile.name }}
           </span>
-          <div v-if="option.localtags" class="column">
+          </slot>
+          <slot name="tags" v-bind:option="option">
+            <div v-if="option.localtags" class="column">
             <span v-for="tag in option.localtags" :key="tag" style="margin-left: 5px">
               <b-tag v-if="tag !== 'no-tag'" class="is-primary is-light">
                 {{ tag }}
               </b-tag>
             </span>
-          </div>
+            </div>
+          </slot>
         </div>
-        <div :class="
+        <slot name="synthesisDetail"
+              v-bind:lineCount="lineCount"
+              v-bind:onClickLabelSynthesisDetailCb="onClickLabelSynthesisDetailCb"
+              v-bind:option="option">
+          <div :class="
             option.synthesisMinMax && onClickLabelSynthesisDetailCb
               ? 'tile synthesis-details link column is-four-fifths'
               : 'tile synthesis-details column is-full'
           "
-             @click="
+               @click="
             (event) =>
               option.synthesisMinMax &&
               onClickLabelSynthesisDetailCb &&
               onClickLabelSynthesisDetailCb(event, option)
           "
-        >
+          >
           <span v-if="option.synthesisMinMax" class="synthesis-infos has-text-info-dark column is-full">
             <b-field v-show="false">
               {{
@@ -81,75 +95,93 @@
                 class="tile availiblity-chart"
             />
           </span>
-          <span v-else-if="lineCount > 0" class="file-name">
+            <span v-else-if="lineCount > 0" class="file-name">
             {{ $tc("validation.count-line", lineCount) }}
           </span>
-          <span v-else class="nodata has-text-danger" style="margin-left: 50px">
+            <span v-else class="nodata has-text-danger" style="margin-left: 50px">
             {{ $t("validation.data-empty") }}
           </span>
-        </div>
+          </div>
+        </slot>
       </div>
       <div class="CollapsibleTree-buttons column  is-narrow">
-        <div v-if="onUploadCb" :class="'file button is-small'+(option.canUpload?' is-info':'is-light')"
-             :disabled="!option.canUpload">
-          <b-upload
-              v-model="refFile"
-              :disabled="!option.canUpload"
-              accept=".csv"
-              class="file-label ml-1"
-              style="padding: 0px"
-              @input="() => onUploadCb(option.label, refFile) && showChildren()"
-          >
-            <span class="file-cta"
-              :disabled="!option.canUpload">
+        <slot
+            name="upload"
+            v-bind:onUploadCb="onUploadCb"
+            v-bind:option="option"
+            v-bind:refFile="refFile"
+            v-bind:repositoryRedirect="repositoryRedirect">
+          <div v-if="onUploadCb" :class="'file button is-small'+(option.canUpload?' is-info':'is-light')"
+               :disabled="!option.canUpload">
+            <b-upload
+                v-model="refFile"
+                :disabled="!option.canUpload"
+                accept=".csv"
+                class="file-label ml-1"
+                style="padding: 0px"
+                @input="() => onUploadCb(option.label, refFile) && showChildren()"
+            >
+            <span :disabled="!option.canUpload"
+                  class="file-cta">
               <b-icon icon="upload"></b-icon>
             </span>
-          </b-upload>
-        </div>
-        <div v-else>
-          <b-button
-              :type="(option.canUpload || option.canPublish || option.canDelete)?'is-info':'is-light'"
-              :disabled="!(option.canUpload || option.canPublish || option.canDelete)"
-              class="ml-1"
-              size="is-small"
-              @click="repositoryRedirect(option.label)"
-          >
-            <span class="file-cta" style="border-color: transparent; background-color: transparent"
-              :disabled="!(option.canUpload || option.canPublish || option.canDelete)">
+            </b-upload>
+          </div>
+          <div v-else>
+            <b-button
+                :disabled="!(option.canUpload || option.canPublish || option.canDelete)"
+                :type="(option.canUpload || option.canPublish || option.canDelete)?'is-info':'is-light'"
+                class="ml-1"
+                size="is-small"
+                @click="repositoryRedirect(option.label)"
+            >
+            <span :disabled="!(option.canUpload || option.canPublish || option.canDelete)" class="file-cta"
+                  style="border-color: transparent; background-color: transparent">
               <b-icon class="file-icon" icon="archive" style="color: white"></b-icon>
             </span>
-          </b-button>
-        </div>
-        <div v-for="button in buttons" :key="button.id">
-          <b-button
-              :disabled="button.disabled"
-              :icon-left="button.iconName"
-              :type="button.type"
-              class="ml-1"
-              size="is-small"
-              @click="button.clickCb(option.label)"
-          >
-            {{ button.label }}
-          </b-button
-          >
-        </div>
+            </b-button>
+          </div>
+        </slot>
+        <slot
+            name="buttons"
+            v-bind:buttons="buttons"
+            v-bind:option="option">
+          <div v-for="button in buttons" :key="button.id">
+            <b-button
+                :disabled="button.disabled"
+                :icon-left="button.iconName"
+                :type="button.type"
+                class="ml-1"
+                size="is-small"
+                @click="button.clickCb(option.label)"
+            >
+              {{ button.label }}
+            </b-button
+            >
+          </div>
+        </slot>
       </div>
     </div>
-    <CollapsibleTree
-        v-for="child in option.children"
-        :key="child.id"
-        :application-title="applicationTitle"
-        :buttons="buttons"
-        :class="displayChildren ? '' : 'hide'"
-        :level="level + 1"
-        :line-count="child.lineCountChild"
-        :on-click-label-cb="onClickLabelCb"
-        :on-upload-cb="onUploadCb"
-        :option="child"
-        :radio-name="radioName"
-        :with-radios="withRadios"
-        @optionChecked="onInnerOptionChecked"
-    />
+    <slot
+        v-bind:displayChildren="displayChildren"
+        v-bind:option="option"
+    >
+      <CollapsibleTree
+          v-for="child in option.children"
+          :key="child.id"
+          :application-title="applicationTitle"
+          :buttons="buttons"
+          :class="displayChildren ? '' : 'hide'"
+          :level="level + 1"
+          :line-count="child.lineCountChild"
+          :on-click-label-cb="onClickLabelCb"
+          :on-upload-cb="onUploadCb"
+          :option="child"
+          :radio-name="radioName"
+          :with-radios="withRadios"
+          @optionChecked="onInnerOptionChecked"
+      />
+    </slot>
   </div>
 </template>
 
