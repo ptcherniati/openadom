@@ -48,7 +48,7 @@ export class Authorizations {
         this.scopes = {};
         for (const scope in authorizations) {
             const scopeId = this.#scopesId;
-            let scopes = authorizations[scope].reduce((acc, auth) => {
+            let scopes =( authorizations[scope] || []).reduce((acc, auth) => {
                 auth = new Authorization(auth);
                 acc[scope] = acc[scope] || {};
                 acc[scope][auth.getPath(scopeId)] = auth;
@@ -131,11 +131,11 @@ export class Authorizations {
     }
 
     static getRefForRet(ret) {
-        return Object.values(ret)
+        return (Object.values(ret) || [])
             .reduce(
                 (acc, k) => [
                     ...acc,
-                    ...k.references.referenceValues.reduce(
+                    ...(k.references.referenceValues || []).reduce(
                         (a, b) => [...a, ...b.hierarchicalReference.split(".")],
                         acc
                     ),

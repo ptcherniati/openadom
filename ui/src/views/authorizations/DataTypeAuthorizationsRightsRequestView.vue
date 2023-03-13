@@ -313,7 +313,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         "DATATYPE",
         "RIGHTSREQUEST",
       ]);
-      this.datatypes = Object.keys(this.application.configuration.dataTypes)
+      this.datatypes = (Object.keys(this.application.configuration.dataTypes) || [])
           .reduce((acc, datatype) => {
             acc[datatype] = {
               name: this.internationalisationService.localeDataTypeIdName(
@@ -325,12 +325,12 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
           }, {});
       this.format = this.application?.rightsRequest?.description?.format || {}
       this.description = this.application?.rightsRequest?.description?.description[this.userPreferencesService.getUserPrefLocale()] || this.$t('dataTypeAuthorizations.field_form_description')
-      this.fields = Object.keys(this.format)
+      this.fields = (Object.keys(this.format) || [])
           .reduce((acc, field) => {
             acc[field] = ""
             return acc;
           }, {});
-      this.configuration = Object.keys(this.datatypes)
+      this.configuration = (Object.keys(this.datatypes) || [])
           .reduce((acc, datatype) => {
             acc[datatype] = this.application.configuration.dataTypes[datatype]
             return acc
@@ -340,12 +340,12 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         localName: this.internationalisationService.mergeInternationalization(this.application)
             .localName,
       };
-      this.authorizations = Object.keys(this.datatypes)
+      this.authorizations = (Object.keys(this.datatypes) || [])
           .reduce((acc, datatype) => {
             acc[datatype] = this.configuration[datatype]?.authorization?.authorizationScopes || []
             return acc
           }, {});
-      this.repository = Object.keys(this.datatypes)
+      this.repository = (Object.keys(this.datatypes) || [])
           .reduce((acc, datatype) => {
             acc[datatype] = this.application.dataTypes[datatype].repository
             return acc
@@ -379,7 +379,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
             );
         let rightsRequest = request.rightsRequests[0]
         this.comment = rightsRequest.comment;
-        this.fields = Object.keys(this.format)
+        this.fields = (Object.keys(this.format) || [])
             .reduce((acc, field) => {
               acc[field] = rightsRequest.rightsRequestForm[field]
               return acc;
@@ -392,7 +392,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
           name: authorizations.name,
           uuid: authorizations.uuid
         }, []);
-        this.authorization = Object.keys(this.datatypes)
+        this.authorization =( Object.keys(this.datatypes) || [])
             .reduce((auth, datatype) => {
               auth.authorizations[datatype] = new Authorizations(
                   {authorizations: authorizations[datatype]},
@@ -412,7 +412,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
           name: "",
           uuid: null
         }, []);
-        this.authorization = Object.keys(this.datatypes)
+        this.authorization = (Object.keys(this.datatypes) || [])
             .reduce((acc, datatype) => {
               acc.authorizations[datatype] = new Authorizations(
                   {dataType: datatype, applicationNameOrId: this.applicationName},
@@ -423,7 +423,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         this.canManage= true;
       }
       let currentAuthorizationUsers = this.authorization.users || [];
-      this.selectedUsers = this.users
+      this.selectedUsers = (this.users || [])
           .filter((user) => {
             return currentAuthorizationUsers.find((u) => {
               return u.id == user.id;
