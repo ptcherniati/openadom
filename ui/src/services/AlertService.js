@@ -32,7 +32,7 @@ export class AlertService {
   }
 
   toastError(message, error) {
-    if (error.content) {
+    if (error && error.content) {
       error.content.then((t) => {
         ToastProgrammatic.open({
           message: i18n.t("exceptionMessage." + t.message, t.params),
@@ -52,7 +52,7 @@ export class AlertService {
   }
 
   toastServerError(error) {
-    if (error.content != null) {
+    if (error && error.content != null) {
       error.content.then((value) => this.toastError(value.message, error));
     } else {
       this.toastError(i18n.t("alert.server-error"), error);
