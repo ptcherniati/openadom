@@ -549,6 +549,7 @@ public class Configuration {
         private boolean withPeriods = false;
         private boolean withDataGroups = false;
         private boolean forPublic = false;
+        private boolean forRequest = false;
     }
 
     @Getter

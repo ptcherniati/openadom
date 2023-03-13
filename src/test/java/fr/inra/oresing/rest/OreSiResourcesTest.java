@@ -9,7 +9,6 @@ import fr.inra.oresing.OreSiTechnicalException;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.model.OreSiUser;
-import fr.inra.oresing.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OperationType;
@@ -692,15 +691,28 @@ public class OreSiResourcesTest {
                             .cookie(lambdaCookie)))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-            final RightsRequestInfos rightsRequestInfos = new RightsRequestInfos();
-            rightsRequestInfos.setOffset(0L);
-            rightsRequestInfos.setLimit(1L);
-            rightsRequestInfos.setFieldFilters(Set.of(new RightsRequestInfos.FieldFilters("organization", "INRAE", null, null, null, null)));
-            String json = new ObjectMapper().writeValueAsString(rightsRequestInfos);
+
+             String json = "{\n" +
+                     "  \"uuids\": [],\n" +
+                     "  \"authorizations\": [],\n" +
+                     "  \"locale\": \"fr_FR\",\n" +
+                     "  \"offset\": 0,\n" +
+                     "  \"limit\": 1,\n" +
+                     "  \"fieldFilters\": [\n" +
+                     "    {\n" +
+                     "      \"field\": \"organization\",\n" +
+                     "      \"filter\": \"INRAE\",\n" +
+                     "      \"type\": null,\n" +
+                     "      \"format\": null,\n" +
+                     "      \"intervalValues\": null,\n" +
+                     "      \"isRegExp\": null\n" +
+                     "    }\n" +
+                     "  ]\n" +
+                     "}";
 
             response = mockMvc.perform((get("/api/v1/applications/monsore/rightsRequest")
                             .contentType(MediaType.APPLICATION_JSON)
-                            .content(json)
+                            .param("params", json)
                             .cookie(lambdaCookie)))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();

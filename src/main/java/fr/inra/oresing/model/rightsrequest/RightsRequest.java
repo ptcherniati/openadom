@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -25,4 +24,6 @@ public class RightsRequest extends OreSiEntity {
     String comment;
     Map<String, String> rightsRequestForm;
     OreSiAuthorization rightsRequest;
+
+    boolean setted = false;
 }

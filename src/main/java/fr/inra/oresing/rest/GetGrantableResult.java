@@ -36,6 +36,7 @@ public class GetGrantableResult {
         boolean withPeriods;
         boolean withDataGroups;
         boolean forPublic;
+        boolean forRequest;
         Internationalization internationalizationName;
     }
 

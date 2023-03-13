@@ -1520,9 +1520,24 @@ public class OreSiService {
         final Application application = getApplicationOrApplicationAccordingToRights(nameOrId);
         Configuration.RightsRequestDescription description = application.getConfiguration().getRightsRequest();
         final List<RightsRequest> rightsRequests = rightsRequestService.findRightsRequests(application, rightsRequestInfos);
-        return new GetRightsRequestResult(rightsRequests, description);
+        final List<RightsRequestResult> rightsRequestResult = rightsRequests.stream()
+                .map(rightsRequest -> getRightsRequestResult(rightsRequest, application))
+                .collect(Collectors.toList());
+        final ImmutableSortedSet<GetGrantableResult.User> grantableUsers = authorizationService.getGrantableUsers();
+        return new GetRightsRequestResult(grantableUsers, rightsRequestResult, description);
 
 
+    }
+
+    private RightsRequestResult getRightsRequestResult(RightsRequest rightsRequest, Application application) {
+        List<String> attributes = Optional.ofNullable(application.getConfiguration())
+                .map(Configuration::getRequiredAuthorizationsAttributes)
+                .map(rca -> rca.stream().collect(Collectors.toList()))
+                .orElseGet(List::of);
+        final Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> authorizationByDatatypeAndPath = new HashMap<>();
+        final Map<String, Map<OperationType, List<AuthorizationParsed>>> authorizationsparsed = new HashMap<>();
+        authorizationService.authorizationsToParsedAuthorizations(List.of(rightsRequest.getRightsRequest()), authorizationsparsed, authorizationByDatatypeAndPath, attributes);
+        return new RightsRequestResult(rightsRequest, authorizationsparsed, authorizationByDatatypeAndPath);
     }
 
     public UUID createOrUpdate(CreateRightsRequestRequest createRightsRequestRequest, String nameOrId) {
@@ -1535,7 +1550,8 @@ public class OreSiService {
                 .orElseGet(RightsRequest::new);
         rightsRequest.setRightsRequestForm(createRightsRequestRequest.getFields());
         rightsRequest.setApplication(application.getId());
-        rightsRequest.setComment("un commentaire");
+        rightsRequest.setComment(createRightsRequestRequest.getComment());
+        rightsRequest.setSetted(createRightsRequestRequest.isSetted());
         rightsRequest.setId(rightsRequest.getId() == null ? UUID.randomUUID() : rightsRequest.getId());
         final OreSiAuthorization authorizations = Optional.ofNullable(createRightsRequestRequest)
                 .map(CreateRightsRequestRequest::getRightsRequest)
@@ -1553,6 +1569,11 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         final UUID store = repo.getRepository(application).rightsRequestRepository().store(rightsRequest);
         return store;
+    }
+
+    public Boolean isAdmnistrator(Application application) {
+        final UUID requestUserId = request.getRequestUserId();
+        return authorizationService.isAdministratorForUser(application, requestUserId);
     }
 
 

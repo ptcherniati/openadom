@@ -10,4 +10,6 @@ public class CreateRightsRequestRequest {
     UUID id;
     Map<String, String> fields;
     CreateAuthorizationRequest rightsRequest;
+    boolean setted;
+    String comment;
 }

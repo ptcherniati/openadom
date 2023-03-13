@@ -27,6 +27,8 @@ public class ApplicationResult {
     ApplicationResult.RightsRequest rightsRequest;
     Configuration configuration;
 
+    Boolean isAdministrator;
+
     @Value
     public static class RightsRequest {
         Configuration.RightsRequestDescription description;

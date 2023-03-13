@@ -597,6 +597,7 @@ public class AuthorizationService {
                                 columDescription.getValue().isWithPeriods(),
                                 columDescription.getValue().isWithDataGroups(),
                                 columDescription.getValue().isForPublic(),
+                                columDescription.getValue().isForRequest(),
                                 columDescription.getValue().getInternationalizationName()
                         ))));
 
@@ -728,23 +729,40 @@ public class AuthorizationService {
         }
         throw new NotSuperAdminException();
     }
+    public boolean isAdministratorForUser(Application application, OreSiUser user){
+        return user.getAuthorizations().stream().anyMatch(s -> Pattern.compile(s).matcher(application.getName()).matches());
+    }
+    public boolean isAdministratorForUser(Application application, UUID userId){
+        final OreSiUser user = getUser(userId.toString());
+        return user.getAuthorizations().stream().anyMatch(s -> Pattern.compile(s).matcher(application.getName()).matches());
+    }
 
-
-    public AuthorizationsResult getAuthorizationsForUser(String applicationNameOrUuid, String userLoginOrId) {
+    private OreSiUser getUser(String userLoginOrId) {
         final OreSiUser user = userRepository.findByLogin(userLoginOrId).orElseGet(() -> userRepository.findById(UUID.fromString(userLoginOrId)));
         if (user == null) {
             throw new SiOreIllegalArgumentException("unknown_user", Map.of("login", userLoginOrId));
         }
+        return user;
+    }
+
+
+    public AuthorizationsResult getAuthorizationsForUser(String applicationNameOrUuid, String userLoginOrId) {
         final Application application = repository.application().findApplication(applicationNameOrUuid);
-        final boolean isAdministrator = user.getAuthorizations().stream().anyMatch(s -> Pattern.compile(s).matcher(application.getName()).matches());
+        final OreSiUser user = getUser(userLoginOrId);
+        final boolean isAdministrator = isAdministratorForUser(application, user );
 
         final CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForRole(user.getId().toString());
         final List<OreSiAuthorization> publicAuthorizations = repository.getRepository(application.getId()).authorization().findPublicAuthorizations();
         final List<OreSiAuthorization> authorizations = repository.getRepository(application.getId()).authorization()
                 .findAuthorizationsByUserId(UUID.fromString(rolesForCurrentUser.getCurrentUser()));
-        final Map<String, Map<OperationType, List<AuthorizationParsed>>> authorizationMapByDatatype = new HashMap<>();
-        final Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> authorizationByDatatypeAndPath = new HashMap<>();
         List<String> attributes = application.getConfiguration().getRequiredAuthorizationsAttributes().stream().collect(Collectors.toList());
+        final Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> authorizationByDatatypeAndPath = new HashMap<>();
+        final Map<String, Map<OperationType, List<AuthorizationParsed>>> authorizationMapByDatatype = new HashMap<>();
+        authorizationsToParsedAuthorizations(authorizations, authorizationMapByDatatype, authorizationByDatatypeAndPath, attributes);
+        return new AuthorizationsResult(authorizationMapByDatatype, application.getName(), authorizationByDatatypeAndPath, isAdministrator);
+    }
+
+    public static void authorizationsToParsedAuthorizations(List<OreSiAuthorization> authorizations, Map<String, Map<OperationType, List<AuthorizationParsed>>> authorizationsParsed, Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> authorizationByDatatypeAndPath, List<String> attributes) {
         for (OreSiAuthorization authorization : authorizations) {
             for (Map.Entry<String, Map<OperationType, List<Authorization>>> authorizationEntry : authorization.getAuthorizations().entrySet()) {
                 String datatype = authorizationEntry.getKey();
@@ -760,7 +778,7 @@ public class AuthorizationService {
                                             authorizationToParse.getTimeScope() == null || !authorizationToParse.getTimeScope().getRange().hasLowerBound() ? null : authorizationToParse.getTimeScope().getRange().lowerEndpoint().toLocalDate(),
                                             authorizationToParse.getTimeScope() == null || !authorizationToParse.getTimeScope().getRange().hasUpperBound() ? null : authorizationToParse.getTimeScope().getRange().upperEndpoint().toLocalDate()
                                     )).
-                                    forEach(authorizationResult -> authorizationMapByDatatype
+                                    forEach(authorizationResult -> authorizationsParsed
                                             .computeIfAbsent(datatype, k -> new HashMap<>())
                                             .computeIfAbsent(key, k -> new LinkedList<>())
                                             .add(authorizationResult));
@@ -788,7 +806,6 @@ public class AuthorizationService {
                         });
             }
         }
-        return new AuthorizationsResult(authorizationMapByDatatype, application.getName(), authorizationByDatatypeAndPath, isAdministrator);
     }
 
 

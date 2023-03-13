@@ -51,7 +51,10 @@ public class RightsRequestService {
         final RightsRequestSearchHelper rightsRequestSearchHelper = new RightsRequestSearchHelper(application, rightsRequestInfos);
         final String where = rightsRequestSearchHelper.buildWhereRequest();
         authenticationService.setRoleForClient();
-        List<RightsRequest> list = repo.getRepository(application).rightsRequestRepository().findAllByWhereClause(where, rightsRequestSearchHelper.getParamSource());
+        List<RightsRequest> list = repo
+                .getRepository(application)
+                .rightsRequestRepository()
+                .findAllByWhereClause(where, rightsRequestSearchHelper.getParamSource());
         return list;
     }
 

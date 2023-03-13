@@ -19,6 +19,7 @@ export class Authorizations {
             title: "Label",
             display: true,
             forPublic: true,
+            forRequest: true,
             internationalizationName: {fr: "Domaine", en: "Domain"},
         },
     };
