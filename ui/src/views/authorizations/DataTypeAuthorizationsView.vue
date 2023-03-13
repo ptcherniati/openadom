@@ -326,7 +326,7 @@ export default class DataTypeAuthorizationsView extends Vue {
         Object.values(authorizationForUser.authorizationResults || []).some((a) => a.admin);
     } catch (error) {
       this.alertService.toastServerError;
-      this.authorizationByUser = this.authorizations.reduce((acc, auth) => {
+      this.authorizationByUser = (this.authorizations || []).reduce((acc, auth) => {
         var user = auth.user;
         var userAuth = acc[user] || [];
         userAuth.push(auth);
