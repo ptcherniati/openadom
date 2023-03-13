@@ -643,6 +643,7 @@ public class OreSiResourcesTest {
         {
             String rightsRequest = "{\n" +
                     "  \"id\": \"\",\n" +
+                    "  \"comment\": \"Un commentaire\",\n" +
                     "  \"fields\": {\n" +
                     "    \"organization\": \"INRAE\",\n" +
                     "    \"project\": \"openAdom\",\n" +

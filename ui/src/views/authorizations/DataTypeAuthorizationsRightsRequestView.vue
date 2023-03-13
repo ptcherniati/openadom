@@ -43,7 +43,7 @@
               :data-groups="dataGroups[datatype]"
               :datatype="{id:datatype, name: (datatypeInfos.name)}"
               :is-root="true"
-              :isApplicationAdmin="new RegExp(isApplicationAdmin[datatype]).test(datatype)"
+              :isApplicationAdmin="canManage"
               :ownAuthorizations="ownAuthorizations[datatype]"
               :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath[datatype]"
               :publicAuthorizations="publicAuthorizations[datatype] || {}"
@@ -165,6 +165,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
   application = new ApplicationResult();
   selectedUsers = [];
   isApplicationAdmin = false;
+  canManage = false;
   isLoading;
   datatypes = []
 
@@ -399,7 +400,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
               );
               return auth
             }, initialValue);
-        this.isApplicationAdmin = this.isApplicationAdmin ||
+        this.canManage = this.isApplicationAdmin ||
             (
                 authorizations.users &&
                 authorizations.users[0].login == JSON.parse(localStorage.getItem('authenticatedUser')).login)
@@ -419,9 +420,8 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
               );
               return acc
             }, initialValue);
-
+        this.canManage= true;
       }
-      this.isApplicationAdmin = true;
       let currentAuthorizationUsers = this.authorization.users || [];
       this.selectedUsers = this.users
           .filter((user) => {
