@@ -43,7 +43,7 @@ public class GroovyContextHelper {
         return builder.build();
     }
 
-    public ImmutableMap<String, Object> getGroovyContextForDataTypes(DataRepository dataRepository, Set<String> dataTypes, @Deprecated Application application) {
+    public ImmutableMap<String, Object> getGroovyContextForDataTypes(DataRepository dataRepository, Set<String> dataTypes, Application application) {
         Map<String, List<DataRow>> datatypes = new HashMap<>();
         Map<String, List<Map<String, Map<String, String>>>> datatypesValues = new HashMap<>();
         dataTypes.forEach(dataType -> {

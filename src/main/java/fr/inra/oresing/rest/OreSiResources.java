@@ -8,11 +8,13 @@ import fr.inra.oresing.checker.LineChecker;
 import fr.inra.oresing.checker.ReferenceLineChecker;
 import fr.inra.oresing.checker.ReferenceLineCheckerDisplay;
 import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.rest.exceptions.additionalfiles.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.exceptions.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.exceptions.data.BadBinaryFileDatasetQuery;
@@ -20,6 +22,7 @@ import fr.inra.oresing.rest.exceptions.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.assertj.core.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -32,6 +35,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.util.UriUtils;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -152,6 +157,9 @@ public class OreSiResources {
                 });
             });
         }
+        final Map<String, ApplicationResult.AdditionalFile> additionalfiles = Maps.transformEntries(application.getConfiguration().getAdditionalFiles(),
+                (additionnalFileName, additionalFile) -> new ApplicationResult.AdditionalFile(additionalFile.getFormat().keySet().stream().collect(Collectors.toList()))
+        );
         Map<String, ApplicationResult.Reference> references = withReferenceType ? Maps.transformEntries(
                 application.getConfiguration().getReferences(),
                 (reference, referenceDescription) -> {
@@ -209,7 +217,7 @@ public class OreSiResources {
         final Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights = withDatatypes ? service.getAuthorizationsDatatypesRights(nameOrId, dataTypes.keySet()) : new HashMap<>();
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
         Boolean isAdministrator = service.isAdmnistrator(application);
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, authorizationsDatatypesRights, rightsRequest, configuration, isAdministrator);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, additionalfiles, authorizationsDatatypesRights, rightsRequest, configuration, isAdministrator);
         return ResponseEntity.ok(applicationResult);
     }
 
@@ -274,23 +282,6 @@ public class OreSiResources {
             throw new BadRightsRequestInfosQuery(e.getMessage());
         }
     }
-
-
-//    @PutMapping(value = "/applications/{nameOrId}/users/{role}/{userId}")
-//    public ResponseEntity addUserForApplication(@PathVariable("nameOrId") String nameOrId,
-//                                  @PathVariable("role") String role,
-//                                  @PathVariable("userId") UUID userId,
-//                                  @RequestBody(required = false) UUID[] excludedReference) {
-//        Optional<Application> opt = repo.findApplication(nameOrId);
-//        if (opt.isEmpty()) {
-//            return ResponseEntity.notFound().build();
-//        }
-//        Application app = opt.get();
-//        ApplicationRight appRole = ApplicationRight.valueOf(StringUtils.upperCase(role));
-//        authRepo.addUserRight(userId, app.getId(), appRole, excludedReference);
-//
-//        return ResponseEntity.ok().build();
-//    }
 
     /**
      * Liste les noms des types de referenciels disponible
@@ -361,6 +352,51 @@ public class OreSiResources {
     public ResponseEntity<List<String>> listDataType(@PathVariable("nameOrId") String nameOrId) {
         Application application = service.getApplication(nameOrId);
         return ResponseEntity.ok(application.getDataType());
+    }
+
+
+    /**
+     * Liste toutes les valeurs possibles pour un type de referenciel
+     *
+     * @param nameOrId           l'id ou le nom de l'application
+     * @param additionalFileName le type du referenciel
+     * @return un tableau de chaine
+     */
+    @GetMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetAdditionalFilesResult> listAdditionalFilesNames(
+            @PathVariable("nameOrId") String nameOrId,
+            @PathVariable("additionalFileName") String additionalFileName,
+            @RequestParam(required = false) MultiValueMap<String, String> params) {
+        GetAdditionalFilesResult list = service.findAdditionalFile(nameOrId, additionalFileName, params);
+        return ResponseEntity.ok(list);
+    }
+
+    @GetMapping(value = "/applications/{nameOrId}/additionalFiles", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @ApiOperation(value = "Get a additionalFiles with their description using search params", notes = "Returns a zip containing additional files and their description")
+    public ResponseEntity<byte[]> getAdditionalFilesNamesZip(
+            @ApiParam(required = true, value = "The name or uuid of an application")
+            @PathVariable("nameOrId") String nameOrId,
+
+            @ApiParam(required = false, value = "The parameters for filter the search")
+            @RequestParam(value = "params", required = false) String params) throws IOException, BadAdditionalFileParamsSearchException {
+        AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
+        final byte[] body = service.getAdditionalFilesNamesZip(nameOrId, additionalFilesInfos);
+        final File file = new File("/tmp/fichier.zip");
+        try(FileOutputStream fileOutputStream = new FileOutputStream(file)){
+            fileOutputStream.write(body);
+        }
+        return ResponseEntity.ok(body);
+    }
+
+    @PostMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> createAdditionalFile(@PathVariable("nameOrId") String nameOrId,
+                                                  @RequestParam(value = "file", required = false) MultipartFile file,
+                                                  @RequestParam(value = "params", required = true) String params) throws IOException {
+        CreateAdditionalFileRequest createAdditionalFileRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFileOrUUIDQuery(params);
+        UUID fileUUID = service.createOrUpdate(createAdditionalFileRequest, nameOrId, file);
+        return ResponseEntity.ok(fileUUID);
+
+
     }
 
     /**
@@ -506,6 +542,24 @@ public class OreSiResources {
                         .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(datatype));
             }
             return fileOrUUID;
+        } catch (IOException e) {
+            throw new BadFileOrUUIDQuery(e.getMessage());
+        }
+    }
+
+    private CreateAdditionalFileRequest deserialiseAdditionalFileOrUUIDQuery(String params) {
+        try {
+            CreateAdditionalFileRequest createAdditionalFileRequest = params != null && params != "undefined" ? new ObjectMapper().readValue(params, CreateAdditionalFileRequest.class) : null;
+            return createAdditionalFileRequest;
+        } catch (IOException e) {
+            throw new BadFileOrUUIDQuery(e.getMessage());
+        }
+    }
+
+    private AdditionalFilesInfos deserialiseAdditionalFilesInfos(String params) {
+        try {
+            AdditionalFilesInfos additionalFilesInfos = params != null && params != "undefined" ? new ObjectMapper().readValue(params, AdditionalFilesInfos.class) : null;
+            return additionalFilesInfos;
         } catch (IOException e) {
             throw new BadFileOrUUIDQuery(e.getMessage());
         }

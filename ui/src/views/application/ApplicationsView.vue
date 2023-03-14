@@ -234,6 +234,15 @@
                       {{ $t("applications.dataset") }}
                     </b-button>
                   </div>
+                  <div class="card-footer-item">
+                    <b-button
+                        v-if="application.additionalFile.length !== 0"
+                        icon-left="file"
+                        @click="displayAdditionalFilesManagement(application)"
+                    >
+                      {{ $t("applications.additionalFile") }}
+                    </b-button>
+                  </div>
                 </div>
               </div>
             </div>

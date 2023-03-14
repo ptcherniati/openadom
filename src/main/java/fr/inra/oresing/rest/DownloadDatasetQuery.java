@@ -307,7 +307,7 @@ public class DownloadDatasetQuery {
             return "numeric".equals(type);
         }
 
-        public Boolean isdDate() {
+        public Boolean isDate() {
             return "date".equals(type);
         }
     }

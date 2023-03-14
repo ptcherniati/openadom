@@ -35,6 +35,7 @@ public class Application extends OreSiEntity {
     private Integer version;
     private List<String> referenceType;
     private List<String> dataType;
+    private List<String> additionalFile;
     private Configuration configuration;
     private UUID configFile; // lien vers un BinaryFile
 

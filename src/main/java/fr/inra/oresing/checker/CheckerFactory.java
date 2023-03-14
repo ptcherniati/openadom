@@ -19,11 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -128,7 +124,7 @@ public class CheckerFactory {
                 lineChecker = new ReferenceLineChecker(target, refType, referenceValues, configuration, transformer);
                 break;
             default:
-                CheckerType.getError(checkerDescription.getName(), Set.of( CheckerType.Date,CheckerType.Integer,CheckerType.Float, CheckerType.RegularExpression,CheckerType.Reference));
+                CheckerType.getError(checkerDescription.getName(), Set.of(CheckerType.Date, CheckerType.Integer, CheckerType.Float, CheckerType.RegularExpression, CheckerType.Reference));
         }
         Preconditions.checkState(lineChecker.getTarget().equals(target));
         return lineChecker;
@@ -137,13 +133,13 @@ public class CheckerFactory {
     private LineChecker newLineChecker(Application app, Configuration.LineValidationRuleDescription lineValidationRuleDescription) {
         Configuration.CheckerDescription checkerDescription = lineValidationRuleDescription.getChecker();
         Configuration.CheckerConfigurationDescription configurationDescription = checkerDescription.getParams();
-        LineChecker lineChecker=null;
+        LineChecker lineChecker = null;
         if (CheckerType.GroovyExpression.equals(checkerDescription.getName())) {
             String expression = configurationDescription.getGroovy().getExpression();
             Set<String> references = configurationDescription.getGroovy().getReferences();
             Set<String> dataTypes = configurationDescription.getGroovy().getDatatypes();
             ReferenceValueRepository referenceValueRepository = repository.getRepository(app).referenceValue();
-            ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references,null);
+            ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references, null);
             DataRepository dataRepository = repository.getRepository(app).data();
             ImmutableMap<String, Object> groovyContextForDataTypes = groovyContextHelper.getGroovyContextForDataTypes(dataRepository, dataTypes, app);
             ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()

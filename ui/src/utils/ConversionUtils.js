@@ -1,11 +1,11 @@
-export function convertReferencesToTrees(initialReference) {
-  const references = JSON.parse(JSON.stringify(initialReference));
-  const parents = references.filter((ref) => {
-    return !references.some(
+export function convertReferencesToTrees(initialValue) {
+  const value = JSON.parse(JSON.stringify(initialValue));
+  const parents = value.filter((ref) => {
+    return !value.some(
       (r) => r.children && r.children.length !== 0 && r.children.some((c) => c === ref.id)
     );
   });
-  return replaceChildrenIdByObject(parents, references);
+  return replaceChildrenIdByObject(parents, value);
 }
 
 function replaceChildrenIdByObject(references, initialRef) {

@@ -23,6 +23,7 @@ public class ApplicationResult {
     AuthorizationsForUserResult authorizationReferencesRights;
     List<ReferenceSynthesis> referenceSynthesis;
     Map<String, DataType> dataTypes;
+    Map<String, AdditionalFile> additionalFiles;
     Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights;
     ApplicationResult.RightsRequest rightsRequest;
     Configuration configuration;
@@ -34,6 +35,11 @@ public class ApplicationResult {
         Configuration.RightsRequestDescription description;
     }
 
+
+    @Value
+    public static class AdditionalFile {
+        List<String> fields;
+    }
 
     @Value
     public static class Reference {

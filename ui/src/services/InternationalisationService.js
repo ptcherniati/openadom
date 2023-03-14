@@ -92,6 +92,31 @@ export class InternationalisationService extends Fetcher {
     }
   }
 
+  localeAdditionalFilesName(application) {
+    if (application.internationalization != null) {
+      let additionalFiles = application.internationalization.additionalFiles;
+      for (let additionalFilesKey in additionalFiles) {
+        localStorage.getItem(LOCAL_STORAGE_LANG);
+        application.additionalFiles[additionalFilesKey] = {
+          ...application.additionalFiles[additionalFilesKey],
+          localName:
+            additionalFiles[additionalFilesKey].internationalizationName?.[
+              localStorage.getItem(LOCAL_STORAGE_LANG)
+            ] || additionalFilesKey,
+        };
+      }
+    } else {
+      let additionalFiles = application.additionalFiles;
+      for (let additionalFilesKey in additionalFiles) {
+        application.additionalFiles[additionalFilesKey] = {
+          ...application.additionalFiles[additionalFilesKey],
+          localName: application.additionalFiles[additionalFilesKey].name,
+        };
+      }
+    }
+    return application.additionalFiles;
+  }
+
   localeDatatypeName(application) {
     if (application.internationalization != null) {
       let applicationDataTypes = application.internationalization.dataTypes;
@@ -134,6 +159,39 @@ export class InternationalisationService extends Fetcher {
       }
     }
     return references;
+  }
+  additionalFilesNames(refs){
+    if (refs.internationalization) {
+      let additionalFiles = refs.internationalization.additionalFiles;
+      for (let additionalFilesKey in additionalFiles) {
+        let format = additionalFiles[additionalFilesKey].format;
+        let localFields={};
+        for (const formatKey in format) {
+          localFields[formatKey] = format[formatKey]?.[
+                  localStorage.getItem(LOCAL_STORAGE_LANG)
+                  ]
+        }
+        refs.additionalFiles[additionalFilesKey] = {
+          ...refs.additionalFiles[additionalFilesKey],
+          localFields,
+          refNameLocal:
+              additionalFiles[additionalFilesKey]?.[
+                  localStorage.getItem(LOCAL_STORAGE_LANG)
+                  ],
+          name: additionalFilesKey
+        };
+      }
+    } else {
+      let additionalFiles = refs.additionalFiles;
+      for (let additionalFilesKey in additionalFiles) {
+        refs.additionalFiles[additionalFilesKey] = {
+          ...refs.additionalFiles[additionalFilesKey],
+          refNameLocal: refs.additionalFiles[additionalFilesKey].name,
+          name: refs.additionalFiles[additionalFilesKey].name
+        };
+      }
+    }
+    return refs.additionalFiles
   }
 
   treeReferenceName(refs) {

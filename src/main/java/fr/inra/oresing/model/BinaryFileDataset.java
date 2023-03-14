@@ -5,7 +5,6 @@ import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.rest.OreSiService;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,7 +12,6 @@ import java.util.stream.Collectors;
 
 @Getter
 @Setter
-@ToString(callSuper = true)
 public class BinaryFileDataset {
     public final static BinaryFileDataset EMPTY_INSTANCE(){
         return new BinaryFileDataset();

@@ -381,7 +381,6 @@ export default class DataTypesManagementView extends Vue {
         this.errorsList = [];
         error.content.then((value) => {
           for (let i = 0; i < value.length; i++) {
-            console.log(value[i]);
             this.errorsList[i] = value[i];
           }
           if (this.errorsList.length !== 0) {

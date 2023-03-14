@@ -629,7 +629,6 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.configuration.rightsRequest.format.organization", Matchers.not(Matchers.empty())));
         }
         CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx");
-
         String withRigthsUserId = withRightsUserResult.getUserId().toString();
         Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withrigths")
@@ -1006,17 +1005,70 @@ public class OreSiResourcesTest {
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string(fileUUID2));
 
-        // on supprime l'authorization'
-        mockMvc.perform(delete("/api/v1/applications/monsore/references/authorization/{authorizationId}", referencesRight)
-                        .cookie(authCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(content().string(referencesRight));
-        response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/authorization")
-                        .cookie(withRigthsCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.authorizationResults", Matchers.hasSize(0)))
-                .andReturn().getResponse().getContentAsString();
-        log.debug(response);
+
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile addFile = new MockMultipartFile("file", "monsoere.yaml", "text/plain", in);
+            mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers")
+                    .file(addFile)
+                    .param("params", "{\"id\":\"\",\"fileType\":\"fichiers\",\"fields\":{\"age\":\"10\",\"nom\":\"dix\",\"date\":\"10/10/1010\",\"site\":\"oir\",\"poids\":\"10.10\"},\"associates\":[]}")
+                    .cookie(authCookie)))
+                    .andExpect(status().is2xxSuccessful());
+
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                    .cookie(authCookie));
+
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                    .cookie(withRigthsCookie))
+                    .andExpect(status().is2xxSuccessful());
+
+            String error = mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                    .cookie(lambdaCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException().getMessage();
+            Assert.assertEquals("application inconnue 'monsore'", error);
+
+           String json = "{\n" +
+                    "  \"uuids\": [],\n" +
+                    "  \"additionalFilesInfos\": {\n" +
+                    "    \"fichiers\": {\n" +
+                    "      \"fieldFilters\": [\n" +
+                    "        {\n" +
+                    "          \"field\": \"nom\",\n" +
+                    "          \"filter\": \"dix\",\n" +
+                    "          \"type\": \"\",\n" +
+                    "          \"format\": null,\n" +
+                    "          \"intervalValues\": null,\n" +
+                    "          \"isRegExp\": false\n" +
+                    "        }\n" +
+                    "      ]\n" +
+                    "    }\n" +
+                    "  },\n" +
+                    "  \"locale\": \"fr_FR\",\n" +
+                    "  \"offset\": 0,\n" +
+                    "  \"limit\": null\n" +
+                    "}";
+           //pas de droits
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
+                            .param("nameOrId", "monsore")
+                            .param("params", json)
+                            .cookie(lambdaCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException().getMessage();
+
+            Assert.assertEquals("application inconnue 'monsore'", error);
+           //avec droits
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
+                            .param("nameOrId", "monsore")
+                            .param("params", json)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
+                            .param("nameOrId", "monsore")
+                            .param("params", "{\"uuids\":null,\"fileNames\":null,\"additionalFilesInfos\":{\"fichiers\":{\"fieldFilters\":[]}}}")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+
+        }
 
     }
 

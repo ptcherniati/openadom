@@ -12,6 +12,8 @@ import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
 import fr.inra.oresing.model.*;
+import fr.inra.oresing.model.additionalfiles.AdditionalBinaryFile;
+import fr.inra.oresing.model.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
 import fr.inra.oresing.model.rightsrequest.RightsRequest;
 import fr.inra.oresing.model.rightsrequest.RightsRequestInfos;
@@ -23,6 +25,8 @@ import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
+import fr.inra.oresing.rest.exceptions.additionalfiles.AdditionalFileParamsParsingResult;
+import fr.inra.oresing.rest.exceptions.additionalfiles.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
@@ -116,6 +120,9 @@ public class OreSiService {
 
     @Autowired
     private BeanFactory beanFactory;
+
+    @Autowired
+    private AdditionalFileService additionalFileService;
 
     /**
      * @deprecated utiliser directement {@link Ltree#escapeToLabel(String)}
@@ -306,6 +313,7 @@ public class OreSiService {
         Configuration configuration = configurationParsingResult.getResult();
         app.setReferenceType(new ArrayList<>(configuration.getReferences().keySet()));
         app.setDataType(new ArrayList<>(configuration.getDataTypes().keySet()));
+        app.setAdditionalFile(new ArrayList<>(configuration.getAdditionalFiles().keySet()));
         app.setConfiguration(configuration);
         try {
             app = initApplication.apply(app);
@@ -1345,6 +1353,12 @@ public class OreSiService {
         return referenceService.findReferenceAccordingToRights(applicationOrApplicationAccordingToRights, refType, params);
     }
 
+    public GetAdditionalFilesResult findAdditionalFile(String nameOrId, String additionalFile, MultiValueMap<String, String> params) {
+        Configuration.AdditionalFileDescription description = getApplication(nameOrId).getConfiguration().getAdditionalFiles().get(additionalFile);
+        final List<AdditionalBinaryFile> additionalFiles = additionalFileService.findAdditionalFile(nameOrId, additionalFile, params);
+        return new GetAdditionalFilesResult(additionalFile, additionalFiles, description);
+    }
+
     public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
         return referenceService.getReferenceValuesCsv(applicationNameOrId, referenceType, params);
     }
@@ -1574,6 +1588,82 @@ public class OreSiService {
     public Boolean isAdmnistrator(Application application) {
         final UUID requestUserId = request.getRequestUserId();
         return authorizationService.isAdministratorForUser(application, requestUserId);
+    }
+
+    public byte[] getAdditionalFilesNamesZip(String nameOrId, AdditionalFilesInfos additionalFilesInfos) throws IOException {
+        Application application = getApplication(nameOrId);
+        final AdditionalFileParamsParsingResult additionalFileParamsParsingResult = getAdditionalFileSearchHelper(nameOrId, additionalFilesInfos);
+        BadAdditionalFileParamsSearchException.check(additionalFileParamsParsingResult);
+        AdditionalFileSearchHelper additionalFileSearchHelper = additionalFileParamsParsingResult.getResult();
+        try {
+            List<AdditionalBinaryFile> additionalBinaryFiles = repo
+                    .getRepository(application).additionalBinaryFile()
+                    .findByCriteria(additionalFileSearchHelper);
+            return additionalFileSearchHelper.zip(additionalBinaryFiles);
+        }catch(DataIntegrityViolationException e){
+            return new byte[0];
+        }
+    }
+
+    public AdditionalFileParamsParsingResult getAdditionalFileSearchHelper(String nameOrId, AdditionalFilesInfos additionalFilesInfos) {
+        Application application = getApplication(nameOrId);
+        AdditionalFileParamsParsingResult.Builder builder = AdditionalFileParamsParsingResult.builder();
+        for (Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry : additionalFilesInfos.getAdditionalFilesInfos().entrySet()) {
+            String additionalFileName = entry.getKey();
+            final Configuration.AdditionalFileDescription additionalFileDescription = application.getConfiguration().getAdditionalFiles().get(additionalFileName);
+            if (additionalFileDescription == null) {
+                builder.unknownAdditionalFilename(additionalFileName, additionalFilesInfos.getAdditionalFilesInfos().keySet());
+            } else {
+                final AdditionalFilesInfos.AdditionalFileInfos value = entry.getValue();
+                if (value != null && !CollectionUtils.isEmpty(value.getFieldFilters())) {
+                    for (AdditionalFilesInfos.FieldFilters filter : value.getFieldFilters()) {
+                        if (additionalFileDescription.getFormat().get(filter.field) == null) {
+                            builder.unknownFieldAdditionalFilename(additionalFileName, filter.field, additionalFileDescription.getFormat().keySet());
+                        }
+                    }
+                }
+            }
+
+        }
+        final AdditionalFileParamsParsingResult build = builder.build(application, additionalFilesInfos);
+        return build;
+    }
+
+    public UUID createOrUpdate(CreateAdditionalFileRequest createAdditionalFileRequest, String nameOrId, MultipartFile file) {
+        authenticationService.setRoleForClient();
+        Application application = getApplication(nameOrId);
+
+        final AdditionalBinaryFile additionalBinaryFile = Optional.of(createAdditionalFileRequest)
+                .map(CreateAdditionalFileRequest::getId)
+                .map(id -> repo.getRepository(application).additionalBinaryFile().findById(id))
+                .orElseGet(AdditionalBinaryFile::new);
+        additionalBinaryFile.setFileInfos(createAdditionalFileRequest.getFields());
+        additionalBinaryFile.setApplication(application.getId());
+        if (file != null) {
+            additionalBinaryFile.setSize(file.getSize());
+            additionalBinaryFile.setFileName(file.getOriginalFilename());
+            try {
+                additionalBinaryFile.setData(file.getBytes());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        additionalBinaryFile.setFileType(createAdditionalFileRequest.getFileType());
+        additionalBinaryFile.setCreationUser(additionalBinaryFile.getCreationUser() == null ? getCurrentUser().getId() : additionalBinaryFile.getCreationUser());
+        additionalBinaryFile.setUpdateUser(getCurrentUser().getId());
+        additionalBinaryFile.setComment("un commentaire");
+        additionalBinaryFile.setId(additionalBinaryFile.getId() == null ? UUID.randomUUID() : additionalBinaryFile.getId());
+        final List<OreSiAuthorization> authorizations = createAdditionalFileRequest.getAssociates().stream()
+                .map(authorization -> {
+                    final OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
+                    oreSiAuthorization.setId(additionalBinaryFile.getId());
+                    oreSiAuthorization.setApplication(application.getId());
+                    oreSiAuthorization.setAuthorizations(authorization.getAuthorizations());
+                    return oreSiAuthorization;
+                })
+                .collect(Collectors.toList());
+        additionalBinaryFile.setAssociates(authorizations);
+        return repo.getRepository(application).additionalBinaryFile().store(additionalBinaryFile);
     }
 
 

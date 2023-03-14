@@ -67,6 +67,73 @@ rightsRequest:
           required: false
           multiplicity: MANY
 
+additionalFiles:
+  fichiers:
+    internationalizationName:
+      fr: Fichiers
+      en: Files
+    format:
+      nom:
+        internationalizationName:
+          fr: Nom
+          en: Name
+        checker:
+          name: RegularExpression
+          params:
+            pattern: "[a-z]*"
+      date:
+        internationalizationName:
+          fr: Date
+          en: Date
+        checker:
+          name: Date
+          params:
+            pattern: "dd/MM/yyyy"
+      age:
+        internationalizationName:
+          fr: Age
+          en: Age
+        checker:
+          name: Integer
+      poids:
+        internationalizationName:
+          fr: Poids
+          en: Weight
+        checker:
+          name: Float
+          params:
+            required: false
+      site:
+        internationalizationName:
+          fr: Site
+          en: Place
+        checker:
+          name: Reference
+          params:
+            refType: mareferencesite
+            required: true
+  utilisateurs:
+    internationalizationName:
+      fr: Users
+      en: User
+    format:
+      nom:
+        internationalizationName:
+          fr: Nom
+          en: Name
+        checker:
+          name: RegularExpression
+          params:
+            pattern: "[a-z]*"
+      prenom:
+        internationalizationName:
+          fr: Prénom
+          en: Surname
+        checker:
+          name: RegularExpression
+          params:
+            pattern: "[a-z]*"
+
 compositeReferences:
   sites:
     components:

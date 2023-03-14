@@ -96,6 +96,7 @@ create table Application
     comment       TEXT NOT NULL,
     referenceType TEXT[], -- liste des types de references existantes
     dataType      TEXT[], -- liste des types de data existants
+    additionalFile      TEXT[], -- liste des fichiers aditionnels existants
     configuration jsonb,  -- le fichier de configuration sous forme json
     configFile    uuid CHECK (fk_check(name || '.BinaryFile', configFile))
 );

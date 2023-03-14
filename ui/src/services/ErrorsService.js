@@ -142,7 +142,6 @@ export class ErrorsService {
   getCsvErrorsMessages(csvErrors) {
     return csvErrors.map((csvError) => {
       const func = ERRORS[csvError.validationCheckResult.message];
-      // console.log(csvError.validationCheckResult.messageParams.target);
       if (csvError.validationCheckResult.messageParams.target != null) {
         if (csvError.validationCheckResult.messageParams.target.column != null) {
           csvError.validationCheckResult.messageParams.target =

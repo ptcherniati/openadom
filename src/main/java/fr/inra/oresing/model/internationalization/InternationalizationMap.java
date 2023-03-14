@@ -29,5 +29,8 @@ public class InternationalizationMap {
     @Nullable
     @ApiModelProperty(notes = "The internationalization description from section rightsRequest", required = false)
     InternationalizationRightsRequestMap rightsRequest;
+    @Nullable
+    @ApiModelProperty(notes = "The internationalization description from section additional files", required = false)
+    Map<String, InternationalizationAdditonalFilesMap> additionalFiles;
 
 }

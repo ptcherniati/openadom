@@ -12,7 +12,6 @@ import org.flywaydb.core.api.Location;
 import org.flywaydb.core.api.callback.Callback;
 import org.flywaydb.core.api.callback.Context;
 import org.flywaydb.core.api.callback.Event;
-import org.flywaydb.core.api.configuration.ClassicConfiguration;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -57,6 +56,7 @@ public class MigrateService {
                 put("1", new Migrate1());
                 put("2", new Migrate2());
                 put("3", new Migrate3());
+                put("5", new Migrate5());
             }};
 
     @Autowired
@@ -64,7 +64,7 @@ public class MigrateService {
 
     public void migrateAll() {
         log.info("\n**************************************\n" +
-                "* mise à jour des schémas de données *\n"+
+                "* mise à jour des schémas de données *\n" +
                 "**************************************");
         beanFactory.getBean(MigrateService.class);
         applicationRepository.findAll().stream()
@@ -84,14 +84,17 @@ public class MigrateService {
 
     public Flyway getFlyway() {
         SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-        ClassicConfiguration flywayConfiguration = new ClassicConfiguration();
-        flywayConfiguration.setDataSource(dataSource);
-        flywayConfiguration.setSchemas(sqlSchemaForApplication.getName());
-        flywayConfiguration.setLocations(new Location("classpath:migration/application"));
-        flywayConfiguration.getPlaceholders().put("applicationSchema", sqlSchemaForApplication.getSqlIdentifier());
-        flywayConfiguration.getPlaceholders().put("requiredAuthorizations", sqlSchemaForApplication.requiredAuthorizationsAttributes(application));
-        flywayConfiguration.getPlaceholders().put("requiredAuthorizationscomparing", sqlSchemaForApplication.requiredAuthorizationsAttributesComparing(application));
-        Flyway flyway = new Flyway(flywayConfiguration);
+        Flyway flyway = Flyway.configure()
+                .dataSource(dataSource)
+                .placeholders(Map.of(
+                        "applicationSchema", sqlSchemaForApplication.getSqlIdentifier(),
+                        "requiredAuthorizations", sqlSchemaForApplication.requiredAuthorizationsAttributes(application),
+                        "requiredAuthorizationscomparing", sqlSchemaForApplication.requiredAuthorizationsAttributesComparing(application)
+                ))
+                .locations(new Location("classpath:migration/application"))
+                .schemas(sqlSchemaForApplication.getName())
+                .callbacks(new FlywayCallback())
+                .load();
         return flyway;
     }
 
@@ -114,7 +117,7 @@ public class MigrateService {
 
         @Override
         public void handle(Event event, Context context) {
-        Connection connection = context.getConnection();
+            Connection connection = context.getConnection();
             final String version = context.getMigrationInfo().getVersion().getVersion();
             Optional.ofNullable(callBackFunction.get(version))
                     .ifPresent(actionToDoAfterMigration -> {
@@ -177,17 +180,17 @@ public class MigrateService {
                     "name = '" + application.getName() + "'"
             ).policyToCreateSql());
 
-            statement.execute(sqlSchemaForApplication.setSchemaOwnerSql( adminOnApplicationRole));
-            statement.execute(sqlSchemaForApplication.setGrantToSql( readerOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.setSchemaOwnerSql(adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.setGrantToSql(readerOnApplicationRole));
 
-            statement.execute(sqlSchemaForApplication.data().setTableOwnerSql( adminOnApplicationRole));
-            statement.execute(sqlSchemaForApplication.referenceValue().setTableOwnerSql( adminOnApplicationRole));
-            statement.execute(sqlSchemaForApplication.binaryFile().setTableOwnerSql( adminOnApplicationRole));
-            statement.execute(sqlSchemaForApplication.authorization().setTableOwnerSql( adminOnApplicationRole));
-            statement.execute(sqlSchemaForApplication.synthesis().setTableOwnerSql( adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.data().setTableOwnerSql(adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.referenceValue().setTableOwnerSql(adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.binaryFile().setTableOwnerSql(adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.authorization().setTableOwnerSql(adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.synthesis().setTableOwnerSql(adminOnApplicationRole));
 
             OreSiUserRole creator = authenticationService.getUserRole(request.getRequestUserId());
-            statement.execute( adminOnApplicationRole.addUserInRoleSql(creator, false));
+            statement.execute(adminOnApplicationRole.addUserInRoleSql(creator, false));
             statement.close();
             log.info("migration 1 --> ok");
         }
@@ -211,7 +214,7 @@ public class MigrateService {
                     "application = '" + application.getId().toString() + "'::uuid",
                     null
             ).policyToCreateSql());
-            statement.execute(sqlSchemaForApplication.authorizationReference().setTableOwnerSql( adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.authorizationReference().setTableOwnerSql(adminOnApplicationRole));
             statement.close();
             log.info("migration 2 --> ok");
 
@@ -236,15 +239,32 @@ public class MigrateService {
                     "application = '" + application.getId().toString() + "'::uuid",
                     "application = '" + application.getId().toString() + "'::uuid"
             ).policyToCreateSql());
-            statement.execute("CREATE POLICY \"" + application.getId().toString() +"\""+
+            statement.execute("CREATE POLICY \"" + application.getId().toString() + "\"" +
                     "    ON " + SqlSchema.forApplication(application).rightsRequest().getSqlIdentifier() + "\n" +
                     "    AS PERMISSIVE\n" +
                     "    USING ( \"user\" = current_role::uuid)" +
                     "    WITH CHECK (\"user\" = current_role::uuid)");
-            statement.execute(sqlSchemaForApplication.rightsRequest().setTableOwnerSql( adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.rightsRequest().setTableOwnerSql(adminOnApplicationRole));
             statement.close();
 
             log.info("migration 3 --> ok");
+        }
+
+    }
+
+    private class Migrate5 implements ActionToDoAfterMigration {
+
+        @Override
+        public void execute(Connection connection) throws SQLException {
+            SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
+            OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(application);
+            final Statement statement = connection.createStatement();
+            log.info("--->migration 4");
+
+            statement.execute(sqlSchemaForApplication.additionalBinaryFile().setTableOwnerSql(adminOnApplicationRole));
+            statement.close();
+
+            log.info("migration 4 --> ok");
         }
 
     }

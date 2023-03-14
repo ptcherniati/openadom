@@ -51,7 +51,9 @@ public class Configuration {
             "You can define several composite references, and a composite reference can contain only one reference or contain a recursion.\n" +
             "All references used in a datatype.authorization.authorizationscope section must be composite.", required = true)
     private LinkedHashMap<String, CompositeReferenceDescription> compositeReferences = new LinkedHashMap<>();
-
+    @ApiModelProperty(notes = "An additional file is a file that is dropped onto an application providing additional information described in the configuration.\n" +
+            "The deposited files are then associated with \"data\" objects by choosing the authorizationScopes and an interval of dates.", required = false)
+    private LinkedHashMap<String, AdditionalFileDescription> additionalFiles = new LinkedHashMap<>();
     @ApiModelProperty(notes = "A data type describes a set of data representing a cohesive set of measurements or observations. (values can be stored in one csv file format).", required = false)
     private LinkedHashMap<String, DataTypeDescription> dataTypes = new LinkedHashMap<>();
 
@@ -60,6 +62,7 @@ public class Configuration {
         internationalizationMap.setApplication(Optional.ofNullable(application).map(ApplicationDescription::getInternationalization).orElse(null));
         internationalizationMap.setDataTypes(Optional.ofNullable(dataTypes).map(DataTypeDescription::getInternationalization).orElse(null));
         internationalizationMap.setReferences(Optional.ofNullable(references).map(ReferenceDescription::getInternationalization).orElse(null));
+        internationalizationMap.setAdditionalFiles(Optional.ofNullable(additionalFiles).map(AdditionalFileDescription::getInternationalization).orElse(null));
         internationalizationMap.setInternationalizedTags(tags);
         internationalizationMap.setRightsRequest(Optional.ofNullable(rightsRequest).map(RightsRequestDescription::getInternationalization).orElse(null));
 
@@ -343,6 +346,39 @@ public class Configuration {
 
         @ApiModelProperty(notes = "The column in 'reference' that contains the column names", required = true, example = "name")
         private String referenceColumnToLookForHeader;
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class AdditionalFileDescription extends InternationalizationImpl {
+        @ApiModelProperty(notes = "An additional file is a file that is dropped onto an application providing additional information described in the configuration.\n" +
+                "The deposited files are then associated with \"data\" objects by choosing the authorizationScopes and an interval of dates.", required = false)
+        private Map<String, AdditionalFileFieldFormat> format = new HashMap();
+        public static Map<String, InternationalizationAdditonalFilesMap> getInternationalization(LinkedHashMap<String, AdditionalFileDescription> additionalFilesDescriptionMap) {
+            Map<String, InternationalizationAdditonalFilesMap> internationalizationAdditionalDescriptionMap = new HashMap<>();
+            for (Map.Entry<String, AdditionalFileDescription> entry : additionalFilesDescriptionMap.entrySet()) {
+                final String additionaleFilename = entry.getKey();
+                final AdditionalFileDescription additionalFileDescription = entry.getValue();
+                final InternationalizationAdditonalFilesMap internationalizationAdditonalFilesMap = new InternationalizationAdditonalFilesMap();
+                internationalizationAdditonalFilesMap.setInternationalizationName(additionalFileDescription.getInternationalizationName());
+                internationalizationAdditonalFilesMap.setInternationalizedColumns(additionalFileDescription.getInternationalizedColumns());
+                Map<String, Internationalization> internationalizedFormat =
+                        Maps.transformValues(additionalFileDescription.getFormat(), InternationalizationImpl::getInternationalizationName);
+                internationalizationAdditonalFilesMap.setFormat(internationalizedFormat);
+                internationalizationAdditionalDescriptionMap.put(additionaleFilename, internationalizationAdditonalFilesMap);
+                internationalizationAdditionalDescriptionMap.put(additionaleFilename, internationalizationAdditonalFilesMap);
+            }
+            return internationalizationAdditionalDescriptionMap;
+        }
+    }
+
+    @Getter
+    @Setter
+    @ToString
+    public static class AdditionalFileFieldFormat extends InternationalizationImpl {
+        @ApiModelProperty(notes = "The description of an information field of an additional file. \nIf not provided the field is considered as a text field.", required = false)
+        private CheckerDescription checker;
     }
 
     @Getter
