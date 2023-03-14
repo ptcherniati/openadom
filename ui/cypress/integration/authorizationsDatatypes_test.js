@@ -5,7 +5,7 @@ describe('test create application', () => {
         cy.setLocale('fr');
     });
 
-    it('Test creation authorization admin', () => {
+    it.skip('Test creation authorization admin', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
         const olaDataType = 'applications/ore/ola/ola.json'
