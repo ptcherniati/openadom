@@ -5,7 +5,7 @@ describe('test create application', () => {
         cy.setLocale('fr');
     });
 
-    it.skip('Test creation authorization admin', () => {
+    it('Test creation authorization admin', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
         const olaDataType = 'applications/ore/ola/ola.json'
@@ -4440,7 +4440,7 @@ describe('test create application', () => {
             'http://localhost:8081/api/v1/logout', {
                 statusCode: 200,
             }).as('logout')
-        cy.visit(Cypress.env('login_url'))
+        //cy.visit(Cypress.env('login_url'))
     })
 
     it('Test creation authorization regularUser', () => {
