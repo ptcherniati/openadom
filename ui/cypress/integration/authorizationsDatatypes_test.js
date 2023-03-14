@@ -5,7 +5,7 @@ describe('test create application', () => {
         cy.setLocale('fr');
     });
 
-    it.skip('Test creation authorization admin', () => {
+    it('Test creation authorization admin', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
         const olaDataType = 'applications/ore/ola/ola.json'
@@ -290,7 +290,8 @@ describe('test create application', () => {
             }).as('pageDATA')
 
         cy.visit(Cypress.env('ola_dataTypes_url'))
-/* get datatype*/
+
+        /* get datatype*/
         cy.fixture(olaDataType).then(olaContent => {
             cy.intercept(
                 'GET',
@@ -668,7 +669,6 @@ describe('test create application', () => {
 
         cy.visit(Cypress.env('ola_dataTypes_authorizations_url'))
 
-        cy.get('.column > .button').click()
         cy.wait(150)
         cy.fixture(olaDataType).then(olaContent => {
             cy.intercept(
@@ -3541,7 +3541,6 @@ describe('test create application', () => {
         cy.get(':nth-child(5) > :nth-child(1) > div.rows > .card-content > :nth-child(2) > :nth-child(1) > .folder > [style="margin-right: 10px;"] > .svg-inline--fa > path').click()
         cy.get(':nth-child(5) > :nth-child(1) > [current-authorization-scope="[object Object]"] > li[data-v-6bd0a084=""] > ul.rows > .rows > .card-content > :nth-child(3) > :nth-child(1) > .columns > :nth-child(5) > .column > .field-body > .field > .is-warning > .tooltip-trigger > .icon').click()
 
-        cy.get('.buttons > .button').click()
 /* intercept pour get authorization "aa5fee55-bab4-49bb-a1c5-6fdf5fc1b301"*/
         cy.intercept(
             'POST',
