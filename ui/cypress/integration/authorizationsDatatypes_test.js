@@ -4825,7 +4825,7 @@ describe('test create application', () => {
         cy.visit(Cypress.env('ola_dataTypes_authorizations_url'))
         cy.get('.column > .button').contains("Ajouter une autorisation")
 
-        cy.get(':nth-child(1) > [data-label="Actions"] > .is-warning > .icon').click()
+        cy.get(':nth-child(1) > [data-label="Actions"] > .is-warning > .icon')
         cy.fixture(olaDataType).then(olaContent => {
             cy.intercept(
                 'GET',
