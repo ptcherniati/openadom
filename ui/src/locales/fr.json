@@ -306,7 +306,7 @@
     "tooltip-jeux de données": "Sélectionnez un jeu de données pour connaître la liste des fichiers versionnés correspondants (révisions)."
   },
   "dataTypeAuthorizations": {
-    "field_form_description": "Vous pouvez demander des droits à l'application monsore en remplissant ce formulaire",
+    "field_form_description": "Vous pouvez demander des droits à l'application {applicationName} en remplissant ce formulaire",
     "title": "Demande d'autorisations pour l'utilisateur {label}",
     "comment": "Commentaire",
     "creationDate": "Date de création",

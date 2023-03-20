@@ -306,7 +306,7 @@
     "tooltip-jeux de données": "Select a dataset to see the list of corresponding versioned files (revisions)."
   },
   "dataTypeAuthorizations": {
-    "field_form_description": "You can request rights to the monsore application by filling out this form",
+    "field_form_description": "You can request rights to the {applicationName} application by filling out this form",
     "title": "Authorizations request for {label}",
     "comment": "Comment",
     "creationDate": "Creation date",
