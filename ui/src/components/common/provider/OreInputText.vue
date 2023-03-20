@@ -86,7 +86,7 @@ export default {
       if (typeof value == 'string') {
         return this.regexp(value)
       } else {
-        return value
+        return value && value
             .map(v => this.regexp(v))
             .filter(v => v == false)
             .length == 0
@@ -96,7 +96,7 @@ export default {
       if (typeof value == 'string') {
         return !!value
       } else {
-        return value.length > 0
+        return value && value.length > 0
       }
     }
   },

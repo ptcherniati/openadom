@@ -692,23 +692,23 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-             String json = "{\n" +
-                     "  \"uuids\": [],\n" +
-                     "  \"authorizations\": [],\n" +
-                     "  \"locale\": \"fr_FR\",\n" +
-                     "  \"offset\": 0,\n" +
-                     "  \"limit\": 1,\n" +
-                     "  \"fieldFilters\": [\n" +
-                     "    {\n" +
-                     "      \"field\": \"organization\",\n" +
-                     "      \"filter\": \"INRAE\",\n" +
-                     "      \"type\": null,\n" +
-                     "      \"format\": null,\n" +
-                     "      \"intervalValues\": null,\n" +
-                     "      \"isRegExp\": null\n" +
-                     "    }\n" +
-                     "  ]\n" +
-                     "}";
+            String json = "{\n" +
+                    "  \"uuids\": [],\n" +
+                    "  \"authorizations\": [],\n" +
+                    "  \"locale\": \"fr_FR\",\n" +
+                    "  \"offset\": 0,\n" +
+                    "  \"limit\": 1,\n" +
+                    "  \"fieldFilters\": [\n" +
+                    "    {\n" +
+                    "      \"field\": \"organization\",\n" +
+                    "      \"filter\": \"INRAE\",\n" +
+                    "      \"type\": null,\n" +
+                    "      \"format\": null,\n" +
+                    "      \"intervalValues\": null,\n" +
+                    "      \"isRegExp\": null\n" +
+                    "    }\n" +
+                    "  ]\n" +
+                    "}";
 
             response = mockMvc.perform((get("/api/v1/applications/monsore/rightsRequest")
                             .contentType(MediaType.APPLICATION_JSON)
@@ -1008,26 +1008,57 @@ public class OreSiResourcesTest {
 
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile addFile = new MockMultipartFile("file", "monsoere.yaml", "text/plain", in);
+            String json = "{\n" +
+                    "  \"id\": \"\",\n" +
+                    "  \"fileType\": \"fichiers\",\n" +
+                    "  \"fields\": {\n" +
+                    "    \"age\": \"10\",\n" +
+                    "    \"nom\": \"dix\",\n" +
+                    "    \"date\": \"10/10/1010\",\n" +
+                    "    \"site\": \"oir\",\n" +
+                    "    \"poids\": \"10.10\"\n" +
+                    "  },\n" +
+                    "  \"associates\": {\n" +
+                    "    \"authorizations\": {\n" +
+                    "      \"pem\": {\n" +
+                    "        \"associate\": [\n" +
+                    "          {\n" +
+                    "            \"dataGroups\": [],\n" +
+                    "            \"requiredAuthorizations\": {\n" +
+                    "              \"projet\":  \"projet_atlantique\"\n" +
+                    "            }\n" +
+                    "          },\n" +
+                    "          {\n" +
+                    "            \"dataGroups\": [],\n" +
+                    "            \"requiredAuthorizations\": {\n" +
+                    "              \"projet\": \"projet_manche\"\n" +
+                    "            }\n" +
+                    "          }\n" +
+                    "        ]\n" +
+                    "      }\n" +
+                    "    }\n" +
+                    "  }\n" +
+                    "}";
             mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers")
-                    .file(addFile)
-                    .param("params", "{\"id\":\"\",\"fileType\":\"fichiers\",\"fields\":{\"age\":\"10\",\"nom\":\"dix\",\"date\":\"10/10/1010\",\"site\":\"oir\",\"poids\":\"10.10\"},\"associates\":[]}")
-                    .cookie(authCookie)))
+                            .file(addFile)
+                            .param("params", json)
+                            .cookie(authCookie)))
                     .andExpect(status().is2xxSuccessful());
 
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
                     .cookie(authCookie));
 
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
-                    .cookie(withRigthsCookie))
+                            .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful());
 
             String error = mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
-                    .cookie(lambdaCookie))
+                            .cookie(lambdaCookie))
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResolvedException().getMessage();
             Assert.assertEquals("application inconnue 'monsore'", error);
 
-           String json = "{\n" +
+            json = "{\n" +
                     "  \"uuids\": [],\n" +
                     "  \"additionalFilesInfos\": {\n" +
                     "    \"fichiers\": {\n" +
@@ -1047,7 +1078,7 @@ public class OreSiResourcesTest {
                     "  \"offset\": 0,\n" +
                     "  \"limit\": null\n" +
                     "}";
-           //pas de droits
+            //pas de droits
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
                             .param("nameOrId", "monsore")
                             .param("params", json)
@@ -1056,7 +1087,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResolvedException().getMessage();
 
             Assert.assertEquals("application inconnue 'monsore'", error);
-           //avec droits
+            //avec droits
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
                             .param("nameOrId", "monsore")
                             .param("params", json)
@@ -1073,7 +1104,7 @@ public class OreSiResourcesTest {
     }
 
     private String getJsonRightsforMonSoererepository(String withRigthsUserId, String role, String datatype, String localization, String from, String to, Cookie authenticateCookie) throws Exception {
-        authenticateCookie=authenticateCookie==null?authCookie:authenticateCookie;
+        authenticateCookie = authenticateCookie == null ? authCookie : authenticateCookie;
         final String json = String.format("{\n" +
                 "   \"usersId\":[\"" + withRigthsUserId + "\"],\n" +
                 "   \"applicationNameOrId\":\"monsore\",\n" +
@@ -1270,7 +1301,7 @@ public class OreSiResourcesTest {
                     "   ]\n" +
                     "}\n" +
                     "}\n" +
-                    "}",lambdaUserId, "date_de_visite") ;
+                    "}", lambdaUserId, "date_de_visite");
 
             String response = mockMvc.perform(get("/api/v1/applications")
                             .cookie(readerCookies)

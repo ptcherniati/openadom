@@ -764,7 +764,9 @@ public class AuthorizationService {
 
     public static void authorizationsToParsedAuthorizations(List<OreSiAuthorization> authorizations, Map<String, Map<OperationType, List<AuthorizationParsed>>> authorizationsParsed, Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> authorizationByDatatypeAndPath, List<String> attributes) {
         for (OreSiAuthorization authorization : authorizations) {
-            for (Map.Entry<String, Map<OperationType, List<Authorization>>> authorizationEntry : authorization.getAuthorizations().entrySet()) {
+            for (Map.Entry<String, Map<OperationType, List<Authorization>>> authorizationEntry : Optional.ofNullable(authorization.getAuthorizations())
+                    .orElseGet(HashMap::new)
+                    .entrySet()) {
                 String datatype = authorizationEntry.getKey();
                 authorizationEntry.getValue().entrySet()
                         .forEach(entry -> {

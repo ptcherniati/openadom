@@ -76,9 +76,14 @@ public class AdditionalFileSearchHelper {
                             .collect(Collectors.joining(" or ", "(", ")"))
                     );
                 });
+
+        final String byFileType = Optional.ofNullable(additionalFilesInfos.getFiletype())
+                .map(this::addArgumentAndReturnSubstitution)
+                .map(substitution -> String.format(" AND filetype = %s", substitution))
+                .orElse("");
         return CollectionUtils.isEmpty(where) ? "" : where.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.joining(" or ", "(", ")"));
+                .collect(Collectors.joining(" or ", "(", ")"+byFileType));
     }
 
     private String whereForAdditionalFileName(Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry) {
@@ -159,16 +164,8 @@ public class AdditionalFileSearchHelper {
                 .collect(Collectors.joining(" AND ", "(", ")"));
     }
 
-    public String buildRequest(String sqlStart, String sqlEnd) {
-        String filterBy = filterBy();
-        if (!Strings.isNullOrEmpty(filterBy)) {
-            filterBy = String.join("\n", "where ", filterBy);
-        }
-        return String.join("\n ",
-                sqlStart,
-                filterBy,
-                sqlEnd
-        );
+    public String buildWhereRequest() {
+        return additionalFilesInfos==null?null:filterBy();
 
     }
 

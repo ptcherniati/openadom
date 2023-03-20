@@ -70,6 +70,22 @@ export class Fetcher {
         return this._handleResponse(response, isText);
     }
 
+    getPath(url, params = {}) {
+        const path = new URL(url, config.API_URL);
+
+        Object.entries(params).forEach(([name, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach((v) => {
+                    path.searchParams.append(name, v);
+                });
+            } else {
+                path.searchParams.append(name, value);
+            }
+        });
+        return path;
+    }
+
+
     async delete(url, data) {
         const formData = this.convertToFormData(data);
         const response = await fetch(`${config.API_URL}${url}`, {

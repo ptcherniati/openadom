@@ -196,6 +196,7 @@ public class Configuration {
         configurationforNotAuthorized.setReferences((this.referenceAccordingToRights()));
         configurationforNotAuthorized.setDataTypes(this.datatypeAccordingToRights());
         configurationforNotAuthorized.setRightsRequest(this.getRightsRequest());
+        configurationforNotAuthorized.setAdditionalFiles(this.getAdditionalFiles());
         return configurationforNotAuthorized;
     }
 

@@ -53,8 +53,7 @@ public class RightsRequestService {
         authenticationService.setRoleForClient();
         List<RightsRequest> list = repo
                 .getRepository(application)
-                .rightsRequestRepository()
-                .findAllByWhereClause(where, rightsRequestSearchHelper.getParamSource());
+                .rightsRequestRepository().findByCriteria(rightsRequestSearchHelper);
         return list;
     }
 

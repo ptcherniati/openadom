@@ -18,7 +18,8 @@
                 class="clickable mr-3"
                 tabindex="0"
             />
-            {{ description }}</strong>
+            {{ description }}
+          </strong>
         </div>
       </template>
       <div>

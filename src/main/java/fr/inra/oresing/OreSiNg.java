@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 import springfox.documentation.builders.ApiInfoBuilder;
@@ -39,11 +40,11 @@ public class OreSiNg implements WebMvcConfigurer {
         registry.addResourceHandler("swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
         registry
-            .addResourceHandler("/static/**")
-            .addResourceLocations("file://" + new File(".").getAbsolutePath() + "/src/main/resources/web/", "classpath:/web/")
-            .setCachePeriod( 0 )
-            .resourceChain(false)
-            .addResolver(new PathResourceResolver());
+                .addResourceHandler("/static/**")
+                .addResourceLocations("file://" + new File(".").getAbsolutePath() + "/src/main/resources/web/", "classpath:/web/")
+                .setCachePeriod(0)
+                .resourceChain(false)
+                .addResolver(new PathResourceResolver());
     }
 
     @Override
@@ -60,28 +61,41 @@ public class OreSiNg implements WebMvcConfigurer {
     }
 
     @Bean
-    public Docket api(){
+    public Docket api() {
         return new Docket(DocumentationType.SWAGGER_2)
-            .select()
-            .apis(RequestHandlerSelectors.any())
-            .paths(PathSelectors.regex("/api/.*"))
-            .build()
-            .apiInfo(apiInfo());
+                .select()
+                .apis(RequestHandlerSelectors.any())
+                .paths(PathSelectors.regex("/api/.*"))
+                .build()
+                .apiInfo(apiInfo());
     }
 
     private ApiInfo apiInfo() {
         return new ApiInfoBuilder()
-            .title("ore-si-ng")
-            .description("Api Rest pour le stockage et la restitution de fichier CSV")
-            .version("1.0")
-            .termsOfServiceUrl("https://inra.fr")
-            .license("LICENSE")
-            .licenseUrl("https://www.gnu.org/licenses/lgpl.html")
-            .build();
+                .title("ore-si-ng")
+                .description("Api Rest pour le stockage et la restitution de fichier CSV")
+                .version("1.0")
+                .termsOfServiceUrl("https://inra.fr")
+                .license("LICENSE")
+                .licenseUrl("https://www.gnu.org/licenses/lgpl.html")
+                .build();
     }
+
     @EventListener(ApplicationReadyEvent.class)
     public void migrateFlywayDataBases() {
         migrate.migrateAll();
+    }
+
+    @Bean
+    public ThreadPoolTaskExecutor mvcTaskExecutor() {
+        ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+        taskExecutor.setCorePoolSize(10);
+        taskExecutor.setMaxPoolSize(10);
+        return taskExecutor;
+    }
+
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        configurer.setTaskExecutor(mvcTaskExecutor());
     }
 
 }

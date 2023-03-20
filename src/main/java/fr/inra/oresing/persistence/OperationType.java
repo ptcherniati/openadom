@@ -11,7 +11,8 @@ public enum OperationType {
     depot("depot", true,false,false,false,false,  Map.of("fr","Dépôt", "en","Deposit")),
     delete("delete", true,false,false, false,false, Map.of("fr","Suppression", "en","Deletion")),
     publication("publication", true,false,false,false,false,  Map.of("fr","Publication", "en","Publication")),
-    extraction("extraction", true,true,true,true,true,  Map.of("fr","Extraction", "en","Extraction"));
+    extraction("extraction", true,true,true,true,true,  Map.of("fr","Extraction", "en","Extraction")),
+    associate("associate", false,true,true,true,true,  Map.of("fr","Associer", "en","Associate"));
 
     public Configuration.AuthorizationColumnsDescription getAuthorizationColumnsDescription() {
         return authorizationColumnsDescription;

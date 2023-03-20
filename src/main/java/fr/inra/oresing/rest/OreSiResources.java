@@ -33,10 +33,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.util.UriUtils;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -157,7 +156,7 @@ public class OreSiResources {
                 });
             });
         }
-        final Map<String, ApplicationResult.AdditionalFile> additionalfiles = Maps.transformEntries(application.getConfiguration().getAdditionalFiles(),
+        final Map<String, ApplicationResult.AdditionalFile> additionalFiles = Maps.transformEntries(application.getConfiguration().getAdditionalFiles(),
                 (additionnalFileName, additionalFile) -> new ApplicationResult.AdditionalFile(additionalFile.getFormat().keySet().stream().collect(Collectors.toList()))
         );
         Map<String, ApplicationResult.Reference> references = withReferenceType ? Maps.transformEntries(
@@ -217,7 +216,7 @@ public class OreSiResources {
         final Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizationsDatatypesRights = withDatatypes ? service.getAuthorizationsDatatypesRights(nameOrId, dataTypes.keySet()) : new HashMap<>();
         Configuration configuration = withConfiguration ? application.getConfiguration() : null;
         Boolean isAdministrator = service.isAdmnistrator(application);
-        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, additionalfiles, authorizationsDatatypesRights, rightsRequest, configuration, isAdministrator);
+        ApplicationResult applicationResult = new ApplicationResult(application.getId().toString(), application.getName(), application.getConfiguration().getApplication().getName(), application.getComment(), application.getConfiguration().getInternationalization(), references, authorizationReferencesRights, referenceSynthesis, dataTypes, additionalFiles, authorizationsDatatypesRights, rightsRequest, configuration, isAdministrator);
         return ResponseEntity.ok(applicationResult);
     }
 
@@ -366,26 +365,37 @@ public class OreSiResources {
     public ResponseEntity<GetAdditionalFilesResult> listAdditionalFilesNames(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("additionalFileName") String additionalFileName,
-            @RequestParam(required = false) MultiValueMap<String, String> params) {
-        GetAdditionalFilesResult list = service.findAdditionalFile(nameOrId, additionalFileName, params);
+            @RequestParam(required = false) String params) {
+        AdditionalFilesInfos additionalFilesInfos = deserialiseAdditionalFilesInfos(params);
+        if (additionalFilesInfos == null) {
+            additionalFilesInfos = new AdditionalFilesInfos();
+        }
+        additionalFilesInfos.setFiletype(additionalFilesInfos.getFiletype() == null ? additionalFileName : additionalFilesInfos.getFiletype());
+        GetAdditionalFilesResult list = service.findAdditionalFile(nameOrId, additionalFilesInfos);
         return ResponseEntity.ok(list);
     }
 
-    @GetMapping(value = "/applications/{nameOrId}/additionalFiles", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
+    @GetMapping(value = "/applications/{nameOrId}/additionalFiles")
     @ApiOperation(value = "Get a additionalFiles with their description using search params", notes = "Returns a zip containing additional files and their description")
-    public ResponseEntity<byte[]> getAdditionalFilesNamesZip(
+    public ResponseEntity<StreamingResponseBody> getAdditionalFilesNamesZip(
             @ApiParam(required = true, value = "The name or uuid of an application")
             @PathVariable("nameOrId") String nameOrId,
-
             @ApiParam(required = false, value = "The parameters for filter the search")
             @RequestParam(value = "params", required = false) String params) throws IOException, BadAdditionalFileParamsSearchException {
         AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
-        final byte[] body = service.getAdditionalFilesNamesZip(nameOrId, additionalFilesInfos);
-        final File file = new File("/tmp/fichier.zip");
-        try(FileOutputStream fileOutputStream = new FileOutputStream(file)){
-            fileOutputStream.write(body);
-        }
-        return ResponseEntity.ok(body);
+        final byte[] additionalFilesNamesZip = service.getAdditionalFilesNamesZip(nameOrId, additionalFilesInfos);
+        StreamingResponseBody stream = response -> {
+            response.write(additionalFilesNamesZip);
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.set("Content-Disposition", "attachment; filename=additionalFiles.zip" );
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(additionalFilesNamesZip.length)
+                .headers(headers)
+                .body(stream);
     }
 
     @PostMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)

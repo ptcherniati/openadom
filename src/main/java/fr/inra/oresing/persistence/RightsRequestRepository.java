@@ -96,8 +96,7 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
 
     public List<RightsRequest> findByCriteria(RightsRequestSearchHelper rightsrequestSearchHelper) {
         String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json \n" +
-                "FROM (select id,creationdate,updatedate\n" +
-                "application,\"user\", comment, rightsRequestForm, rightsRequest, setted  \n" +
+                "FROM (select *  \n" +
                 "from %s ";
         String query = rightsrequestSearchHelper.buildRequest(sql, ") t");
         query = String.format(query, getEntityClass().getName(), getTable().getSqlIdentifier());

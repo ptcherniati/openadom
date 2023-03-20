@@ -12,10 +12,12 @@ import java.util.*;
 @Setter
 @ToString(callSuper = true)
 public class AdditionalFilesInfos {
-    @ApiModelProperty(notes = "A list of UUIDS of additionalfiles to find", required = false)
+    @ApiModelProperty(notes = "A list of UUIDS of additionalFiles to find", required = false)
     Set<UUID> uuids = new LinkedHashSet<>();
-    @ApiModelProperty(notes = "A list of filenames of additionalfiles to find", required = false)
+    @ApiModelProperty(notes = "A list of filenames of additionalFiles to find", required = false)
     Set<String> fileNames = new LinkedHashSet<>();
+
+    String filetype = null;
     @ApiModelProperty(notes = "A list of authorizationss of additionalfiles to find", required = false)
     Set<Authorization> authorizations = new LinkedHashSet<>();
     @ApiModelProperty(notes = "A map of List of AdditionalFileInfos by additionalFileName ", required = false)

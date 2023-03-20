@@ -78,7 +78,6 @@ public class MigrateService {
     public int runFlywayUpdate() {
         authenticationService.resetRole();
         Flyway flyway = getFlyway();
-        flyway.setCallbacks(new FlywayCallback());
         return flyway.migrate();
     }
 
@@ -180,8 +179,8 @@ public class MigrateService {
                     "name = '" + application.getName() + "'"
             ).policyToCreateSql());
 
-            statement.execute(sqlSchemaForApplication.setSchemaOwnerSql(adminOnApplicationRole));
-            statement.execute(sqlSchemaForApplication.setGrantToSql(readerOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.setSchemaOwnerSql( adminOnApplicationRole));
+            statement.execute(sqlSchemaForApplication.setGrantToSql( readerOnApplicationRole));
 
             statement.execute(sqlSchemaForApplication.data().setTableOwnerSql(adminOnApplicationRole));
             statement.execute(sqlSchemaForApplication.referenceValue().setTableOwnerSql(adminOnApplicationRole));

@@ -11,6 +11,22 @@ import java.util.UUID;
 @Setter
 @ToString(callSuper = true)
 public class Application extends OreSiEntity {
+    private String name;
+    private String comment;
+    private Integer version;
+    private List<String> referenceType;
+    private List<String> dataType;
+    private List<String> additionalFile;
+    private Configuration configuration;
+    private UUID configFile; // lien vers un BinaryFile
+
+
+    public Application applicationAccordingToRights() {
+        final Configuration configuration = this.getConfiguration();
+        Configuration configurationforNotAuthorized = configuration.configurationAccordingToRights();
+        this.setConfiguration((configurationforNotAuthorized));
+        return this;
+    }
     public final Application filterFields(List<ApplicationInformation> filters){
         final Application returnApp = new Application();
         returnApp.setComment(this.getComment());
@@ -29,21 +45,5 @@ public class Application extends OreSiEntity {
             returnApp.setReferenceType(this.getReferenceType());
         }
         return returnApp;
-    }
-    private String name;
-    private String comment;
-    private Integer version;
-    private List<String> referenceType;
-    private List<String> dataType;
-    private List<String> additionalFile;
-    private Configuration configuration;
-    private UUID configFile; // lien vers un BinaryFile
-
-
-    public Application applicationAccordingToRights() {
-        final Configuration configuration = this.getConfiguration();
-        Configuration configurationforNotAuthorized = configuration.configurationAccordingToRights();
-        this.setConfiguration((configurationforNotAuthorized));
-        return this;
     }
 }

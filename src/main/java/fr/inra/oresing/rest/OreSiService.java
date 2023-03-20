@@ -52,6 +52,7 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Nullable;
+import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -1353,10 +1354,17 @@ public class OreSiService {
         return referenceService.findReferenceAccordingToRights(applicationOrApplicationAccordingToRights, refType, params);
     }
 
-    public GetAdditionalFilesResult findAdditionalFile(String nameOrId, String additionalFile, MultiValueMap<String, String> params) {
-        Configuration.AdditionalFileDescription description = getApplication(nameOrId).getConfiguration().getAdditionalFiles().get(additionalFile);
-        final List<AdditionalBinaryFile> additionalFiles = additionalFileService.findAdditionalFile(nameOrId, additionalFile, params);
-        return new GetAdditionalFilesResult(additionalFile, additionalFiles, description);
+    public GetAdditionalFilesResult findAdditionalFile(String nameOrId, AdditionalFilesInfos additionalFilesInfos) {
+        final Application application = getApplication(nameOrId);
+        Configuration.AdditionalFileDescription description = Optional.ofNullable(application.getConfiguration().getAdditionalFiles())
+                .map(map->map.get(additionalFilesInfos.getFiletype()))
+                .orElseGet( Configuration.AdditionalFileDescription::new);
+        final List<AdditionalBinaryFile> additionalFiles = additionalFileService.findAdditionalFile(application, additionalFilesInfos);
+        final List<AdditionalBinaryFileResult> additionalBinaryFileResults = additionalFiles.stream()
+                .map(af -> getAdditionalBinaryFileResult(af, application))
+                .collect(Collectors.toList());
+        final ImmutableSortedSet<GetGrantableResult.User> grantableUsers = authorizationService.getGrantableUsers();
+        return new GetAdditionalFilesResult(grantableUsers, additionalFilesInfos.getFiletype(), additionalBinaryFileResults, description);
     }
 
     public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
@@ -1554,6 +1562,17 @@ public class OreSiService {
         return new RightsRequestResult(rightsRequest, authorizationsparsed, authorizationByDatatypeAndPath);
     }
 
+    private AdditionalBinaryFileResult getAdditionalBinaryFileResult(AdditionalBinaryFile additionalBinaryFile, Application application) {
+        List<String> attributes = Optional.ofNullable(application.getConfiguration())
+                .map(Configuration::getRequiredAuthorizationsAttributes)
+                .map(rca -> rca.stream().collect(Collectors.toList()))
+                .orElseGet(List::of);
+        final Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> authorizationByDatatypeAndPath = new HashMap<>();
+        final Map<String, Map<OperationType, List<AuthorizationParsed>>> authorizationsparsed = new HashMap<>();
+        authorizationService.authorizationsToParsedAuthorizations(additionalBinaryFile.getAssociates(), authorizationsparsed, authorizationByDatatypeAndPath, attributes);
+        return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsparsed, authorizationByDatatypeAndPath);
+    }
+
     public UUID createOrUpdate(CreateRightsRequestRequest createRightsRequestRequest, String nameOrId) {
         authenticationService.setRoleForClient();
         Application application = getApplicationOrApplicationAccordingToRights(nameOrId);
@@ -1653,15 +1672,11 @@ public class OreSiService {
         additionalBinaryFile.setUpdateUser(getCurrentUser().getId());
         additionalBinaryFile.setComment("un commentaire");
         additionalBinaryFile.setId(additionalBinaryFile.getId() == null ? UUID.randomUUID() : additionalBinaryFile.getId());
-        final List<OreSiAuthorization> authorizations = createAdditionalFileRequest.getAssociates().stream()
-                .map(authorization -> {
-                    final OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
+        final OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
                     oreSiAuthorization.setId(additionalBinaryFile.getId());
                     oreSiAuthorization.setApplication(application.getId());
-                    oreSiAuthorization.setAuthorizations(authorization.getAuthorizations());
-                    return oreSiAuthorization;
-                })
-                .collect(Collectors.toList());
+                    oreSiAuthorization.setAuthorizations(createAdditionalFileRequest.getAssociates().getAuthorizations());
+        final List<OreSiAuthorization> authorizations = List.of(oreSiAuthorization);
         additionalBinaryFile.setAssociates(authorizations);
         return repo.getRepository(application).additionalBinaryFile().store(additionalBinaryFile);
     }

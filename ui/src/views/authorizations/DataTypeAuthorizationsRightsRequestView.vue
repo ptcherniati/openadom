@@ -3,10 +3,9 @@
     <SubMenu
         :aria-label="$t('menu.aria-sub-menu')"
         :paths="subMenuPaths"
-        :root="application.localName || application.title"
         role="navigation"
+        :root="application.localName || application.title"
     />
-
     <h1 class="title main-title">
       <span>{{
           $t("dataTypeAuthorizations.title", currentUser)

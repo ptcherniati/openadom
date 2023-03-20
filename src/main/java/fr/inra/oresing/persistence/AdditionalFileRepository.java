@@ -104,12 +104,21 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
     }
 
     public List<AdditionalBinaryFile> findByCriteria(AdditionalFileSearchHelper additionalFileSearchHelper) {
+        String whereClause = additionalFileSearchHelper.buildWhereRequest();
+        SqlParameterSource sqlParameterSource = additionalFileSearchHelper.getParamSource();;
+        if(sqlParameterSource==null){
+            sqlParameterSource= new MapSqlParameterSource();
+        }
         String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json \n" +
                 "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
                 "application,fileType, fileName,comment,size, convert_from(data, 'UTF8') as \"data\",fileinfos,associates  \n" +
                 "from %s ";
-        String query = additionalFileSearchHelper.buildRequest(sql, ") t");
-        query = String.format(query, getEntityClass().getName(), getTable().getSqlIdentifier());
-        return getNamedParameterJdbcTemplate().query(query, additionalFileSearchHelper.getParamSource(), getJsonRowMapper());
+        if (whereClause != null && !"()".equals(whereClause)&& !"".equals(whereClause)) {
+            sql += " WHERE " + whereClause;
+        }
+        sql += ") t";
+        String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
+        List<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper());
+        return result;
     }
 }

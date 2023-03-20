@@ -58,13 +58,19 @@ const routes = [
     component: AuthorizationManagementView,
   },
   {
+    path: "/applications/:applicationName/additionalFiles/:additionalFileName",
+    name: "Additional files management view",
+    component: AdditionalFilesManagementView,
+    props: true,
+  },
+  {
     path: "/applications/:applicationName/additionalFiles",
     name: "Additional files management view",
     component: AdditionalFilesManagementView,
     props: true,
   },
   {
-    path: "/applications/:applicationName/additionalFiles/:additionalFileName/:id",
+    path: "/applications/:applicationName/additionalFiles/:additionalFileName/:additionalFileId",
     name: "New additional file management view",
     component: AdditionalFileInfosView,
     props: true,

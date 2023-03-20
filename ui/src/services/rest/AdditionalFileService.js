@@ -37,7 +37,7 @@ export class AdditionalFileService extends Fetcher {
 
     async getAdditionalFiles(applicationName, additionalFileName, params) {
         return this.get(`applications/${applicationName}/additionalFiles/${additionalFileName}`, {
-            downloadDatasetQuery: JSON.stringify(params),
+            params: JSON.stringify(params),
         });
     }
 
@@ -48,8 +48,8 @@ export class AdditionalFileService extends Fetcher {
         });
     }
 
-    async getAdditionalFileZip(applicationName, additionalFilesInfos) {
-        return this.getBlob(`applications/${applicationName}/additionalFiles`, {
+    getAdditionalFileZip(applicationName, additionalFilesInfos) {
+        return this.getPath(`applications/${applicationName}/additionalFiles`, {
             params: JSON.stringify(additionalFilesInfos),
         },
       'blob');

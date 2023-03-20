@@ -481,7 +481,7 @@ export default class DataTypeAuthorizationInfoView extends Vue {
         applicationNameOrId: this.applicationName,
         authorizations: {}
       };
-      authorizationToSend.usersId = (this.isPublicAuthorizations ? this.publicAuthorizations : this.selectedUsers).map(user => user.id);
+      authorizationToSend.usersId = (this.isPublicAuthorizations ? this.publicUsers : this.selectedUsers).map(user => user.id);
       for (const datatype in this.authorization.authorizations) {
         let authorizationForDatatype = this.authorization.authorizations[datatype].authorizations
         for (const scope in authorizationForDatatype) {

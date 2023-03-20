@@ -1,580 +1,286 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-        :root="additionalFile.localName"
-        :paths="subMenuPaths"
-        role="navigation"
         :aria-label="$t('menu.aria-sub-menu')"
+        :paths="subMenuPaths"
+        :root="additionalFile.localName"
+        role="navigation"
     />
     <h1 class="title main-title">
-      {{ $t("titles.additionalFile", additionalFile) }}
+      <span>{{
+          $t("titles.additionalFile", additionalFile)
+        }}</span>
     </h1>
-    <section class="section" v-if="additionalFiles && canShowForm">
-      <article class="addNewAdditionalFileForm" v-show="id!='consult'">
-        Le formulaire
+    <caption v-if="!this.columnsVisible" class="columns">
+      <div class="column loader-wrapper">
+        <div class="loader is-loading"></div>
+      </div>
+    </caption>
+    <section class="section">
+      <ValidationObserver ref="observer">
+        <article class="fieldsForm">
+          <FieldsForm
+              :application="application"
+              :comment="comment"
+              :description="description"
+              :fields="fields"
+              :format="format"
+              :ref-values="references"
+              :showComment="true"
+              pathForKey="rightsRequest.format"
+              @update:fields="updateFields"
+              @update:comment="updateComment"
+          >
 
-        <ValidationProvider
-            :rules="rules()"
-            ref="provider"
-            class="column is-12"
-            v-slot="{ errors, valid }"
+          </FieldsForm>
+        </article>
+        <article class="additionalFileUpoald">
 
-        >
-          <b-field
-              class="file is-primary column is-12"
-              :type="{
+          <b-collapse
+              v-model="isOpenFileUpload"
+              animation="slide"
+              class="panel">
+            <template #trigger>
+              <div
+                  :aria-expanded="isOpenFileUpload"
+                  aria-controls="contentIdForA11y2"
+                  class="panel-heading"
+                  role="button">
+                <strong>
+                  <FontAwesomeIcon
+                      :icon="isOpenFileUpload ? 'caret-down' : 'caret-right'"
+                      class="clickable mr-3"
+                      tabindex="0"
+                  />
+                  Téléchargement du fichier additionnel
+                </strong>
+              </div>
+            </template>
+
+            <ValidationProvider
+                ref="provider"
+                v-slot="{ errors, valid }"
+                :rules="rules()"
+                class="column is-12"
+
+            >
+              <b-field
+                  :label="'Fichier additionnel'"
+                  :message="errors"
+                  :type="{
                               'is-danger': errors && errors.length > 0,
                               'is-success': valid,
                             }"
-              :message="errors"
-              :label="'Fichier additionnel'">
-            <b-upload required
-                      v-model="file"
-                      class="file-label"
-                      style="margin-top: 30px"
-                      data-cy="changeFileButton"
-            >
+                  class="file is-primary column is-12">
+                <b-upload v-model="file"
+                          class="file-label"
+                          data-cy="changeFileButton"
+                          required
+                          style="margin-top: 30px"
+                          @input="loadFile"
+                >
                         <span class="file-cta">
                           <b-icon class="file-icon" icon="upload"></b-icon>
                           <span class="file-label">{{
                               $t("dataTypesRepository.choose-file")
                             }}</span>
                         </span>
-              <span v-if="file" class="file-name">
+                  <span v-if="file" class="file-name">
                           {{ file.name }}
                         </span>
-            </b-upload>
-            <span>{{ errors[0] }}</span>
-          </b-field>
-        </ValidationProvider>
-        <ValidationObserver tag="form" ref="form" v-slot="{ handleSubmit, invalid }">
-          <div v-for="(item,key) in description" :key="key">
+                </b-upload>
+                <span>{{ errors[0] }}</span>
+              </b-field>
+            </ValidationProvider>
+          </b-collapse>
+        </article>
+        <article class="additionalFileAssociate">
 
-            <OreInputText
-                v-if="!item.checker ||  item.checker.name == 'RegularExpression' ||  item.checker.name == 'GroovyExpression'"
-                :label="internationalisationService.getLocaleforPath(application,'additionalFiles.'+additionalFileName+'.format.'+key, key)"
-                :checker="item.checker"
-                @update:value="fields[key]=$event"
-                v-bind:value="fields[key]"
-                :vid="key"/>
-            <OreInputNumber
-                v-else-if="item.checker.name == 'Integer' || item.checker.name == 'Float' "
-                :label="internationalisationService.getLocaleforPath(application,'additionalFiles.'+additionalFileName+'.format.'+key, key)"
-                :checker="item.checker"
-                @update:value="fields[key]=$event"
-                v-bind:value="fields[key]"
-                :vid="key"/>
-            <OreInputDate
-                v-else-if="item.checker.name == 'Date' "
-                :label="internationalisationService.getLocaleforPath(application,'additionalFiles.'+additionalFileName+'.format.'+key, key)"
-                :checker="item.checker"
-                @update:value="fields[key]=$event"
-                v-bind:value="fields[key]"
-                :vid="key"/>
-            <OreInputReference
-                v-else-if="item.checker.name == 'Reference'  && refValues[key]"
-                :label="internationalisationService.getLocaleforPath(application,'additionalFiles.'+additionalFileName+'.format.'+key, key)"
-                :checker="item.checker"
-                :references="refValues[key].referenceValues"
-                @update:value="fields[key]=$event"
-                v-bind:value="fields[key]"
-                :vid="key"/>
-          </div>
-          <div v-if=" application && application.dataTypes">
-            <div class="row">
-              <div class="columns">
-                <b-field
-                    v-for="(column, indexColumn) of columnsVisible"
-                    :key="indexColumn"
-                    :field="indexColumn"
-                    :label="getColumnTitle(column)"
-                    class="column"
-                ></b-field>
+          <b-collapse
+              v-model="isOpenFileAssociate"
+              animation="slide"
+              class="panel">
+            <template #trigger>
+              <div
+                  :aria-expanded="isOpenFileAssociate"
+                  aria-controls="contentIdForA11y2"
+                  class="panel-heading"
+                  role="button">
+                <strong>
+                  <FontAwesomeIcon
+                      :icon="isOpenFileAssociate ? 'caret-down' : 'caret-right'"
+                      class="clickable mr-3"
+                      tabindex="0"
+                  />
+                  Association d'objets au fichier additionnel
+                </strong>
+              </div>
+            </template>
+            <div v-for="(datatypeInfos, datatype) in datatypes" :key="datatype">
+              <div v-if="dataGroups[datatype] && authReferences[datatype] && columnsVisible[datatype] ">
+                <AuthorizationTableForDatatype
+                    :auth-references="authReferences[datatype]"
+                    :authorization="authorization.authorizations[datatype]"
+                    :authorization-scopes="authorizationScopes[datatype]"
+                    :columns-visible="columnsVisible[datatype]"
+                    :current-authorization-scope="{}"
+                    :data-groups="dataGroups[datatype]"
+                    :datatype="{id:datatype, name: (datatypeInfos.name)}"
+                    :is-root="true"
+                    :isApplicationAdmin="canManage"
+                    :ownAuthorizations="ownAuthorizations[datatype]"
+                    :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath[datatype]"
+                    :publicAuthorizations="publicAuthorizations[datatype] || {}"
+                    class="rows"
+                    @modifyAuthorization="modifyAuthorization($event, datatype)"
+                    @registerCurrentAuthorization="registerCurrentAuthorization($event,datatype)"
+                >
+                  <div class="row">
+                    <div class="columns">
+                      <b-field
+                          v-for="(column, indexColumn) of columnsVisible[datatype]"
+                          :key="indexColumn"
+                          :field="indexColumn"
+                          :label="getColumnTitle(column)"
+                          :style="!column.display ? 'display : contents' : ''"
+                          class="column"
+                      ></b-field>
+                    </div>
+                  </div>
+                </AuthorizationTableForDatatype>
               </div>
             </div>
-            <ul v-for="dataType in application && application.dataTypes?Object.keys(application.dataTypes):[]"
-                :key="dataType"
-                class="rows"
-            >
-              <AdditionalFilesAssociation
-                  v-if="applications.length && (isAdmin ||grantables[dataType].canShowLine) "
-                  :additionalFiles="additionalFiles"
-                  :ref-values="refValues" :configuration="configuration" :application-name="applicationName"
-                  :applications="applications"
-                  :data-type="dataType"
-                  :authorizationId="id"
-                  :authorizationsToSet="authorizations"
-                  :columns-visible="columnsVisible"
-                  :data-type-description="dataTypeDescriptions[dataType]"
-                  :grantable-infos=grantables[dataType]
-                  @modifyAssociates="modifyAssociate"
-                  @update:refValues="refValues=$event"
-              />
-            </ul>
+          </b-collapse>
+        </article>
 
-          </div>
+
+        <div class="buttons">
           <b-button
               :type="'is-danger'"
-              @click="modifyAssociateFile('consult')"
               icon-left="times-circle"
+              @click="modifyAssociateFile('consult')"
           >
             Annuler
           </b-button>
           <b-button
-              :type="invalid?'is-warning':'is-primary'"
-              @click="handleSubmit(changeConfiguration)"
+              :type="valid?'is-primary':'is-warning'"
               icon-left="edit"
+              :active="valid"
+              @click="changeConfiguration"
           >
             Soumettre
           </b-button>
-        </ValidationObserver>
-      </article>
-      <article class="addNewAdditionalFileList" v-if="id=='consult'">
-
-        <div class="columns">
-          <!--      <div class="column is-5-desktop is-4-tablet">
-                  <b-button
-                    icon-left="sort-amount-down"
-                    :label="$t('applications.trier')"
-                    type="is-dark"
-                    @click="showSort = !showSort"
-                    outlined
-                  ></b-button>
-                </div>-->
-          <div class="column is-5-desktop is-4-tablet">
-            <b-button
-                icon-left="filter"
-                :label="$t('applications.filter')"
-                type="is-light"
-                @click="showFilter = !showFilter"
-                outlined
-                inverted
-            ></b-button>
-          </div>
-          <!--      <div class="column is-2-desktop is-4-tablet">
-                  <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
-                    >{{ $t("dataTypesManagement.réinitialiser") }}
-                    {{ $t("dataTypesManagement.all") }}</b-button
-                  >
-                </div>-->
         </div>
-        <div v-if="showFilter" class="notification" role="search">
-          <h2>{{ $t("applications.filter") }}</h2>
-          <div class="columns is-multiline">
-            <div
-                class="column is-2-widescreen is-6-desktop is-12-tablet"
-                v-for="(additionalFile, index) in configuration.configuration.additionalFiles[additionalFileName].format"
-                :key="additionalFile.id"
-                :addtionalFile="additionalFile.id"
-            >
-              <h1>index:{{ index }}</h1>
-              <b-collapse
-                  class="card"
-                  animation="slide"
-                  :open="isOpen === index"
-                  @open="isOpen = index"
-              >
-                <template #trigger="props">
-                  <div class="card-header" role="button">
-                    <p class="card-header-title" style="text-transform: capitalize">
-                      <b-field
-                          :label="fieldfilters[index].format.localName"></b-field>
-                    </p>
-                    <a class="card-header-icon">
-                      <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"></b-icon>
-                    </a>
-                  </div>
-                </template>
-                <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
-                    <b-field v-if="'date' === fieldfilters[index].value.type || 'numeric' === fieldfilters[index].value.type">
-                      <CollapsibleInterval
-                          :variable-component="fieldfilters[index].value"
-                          @setting_interval="fieldfilters[index].value.intervalValues = $event.intervalValues;addAdditionalFileFieldSearch(index)"
-                      ></CollapsibleInterval>
-                    </b-field>
-                    <b-input
-                        v-model="fieldfilters[index].value.filter"
-                        icon-right="search"
-                        :placeholder="$t('dataTypeAuthorizations.search')"
-                        type="search"
-                        @blur="addAdditionalFileFieldSearch(index)"
-                        size="is-small"
-                    ></b-input>
-                </div>
-                <b-field>
-                  <b-switch
-                      v-model="fieldfilters[index].value.isRegex"
-                      passive-type="is-dark"
-                      type="is-primary"
-                      :true-value="$t('dataTypesManagement.accepted')"
-                      :false-value="$t('dataTypesManagement.refuse')"
-                  >{{ $t("ponctuation.regEx") }} {{ fieldfilters[index].value.isRegex }}
-                  </b-switch
-                  >
-                </b-field>
-                <b-field>{{additionalFile}}</b-field>
-
-              </b-collapse>
-            </div>
-          </div>
-
-        </div>
-        <table
-            class="table is-hoverable is-striped is-fullwidth"
-            style="text-align: center; vertical-align: center">
-          <caption v-if="id=='consult'">
-            <b-button icon-left="plus"
-                      size="is-small"
-                      type="is-primary is-light"
-                      @click="modifyAssociateFile('new')">
-              Ajouter un fichier
-            </b-button>
-          </caption>
-          <thead>
-          <tr
-              style="text-align: center; vertical-align: center">
-            <th></th>
-            <th>Nom</th>
-            <th>Taille</th>
-            <th>Commentaire</th>
-            <th> Créé le</th>
-            <th> Par</th>
-            <th> Modifié le</th>
-            <th>Par</th>
-            <th>Associé</th>
-            <th>Action</th>
-          </tr>
-          </thead>
-          <tbody v-for="(file) in additionalFiles" :key="file.id">
-          <tr>
-            <td>
-              <b-button :icon-left="showFileInfos==file.id?'caret-down':'caret-right'"
-                        @click="toggleFileInfos(file.id)"/>
-            </td>
-            <td>
-              {{ file.fileName }}
-            </td>
-            <td>
-              {{ file.size / 1000 }} ko
-            </td>
-            <td>
-              {{ file.comment }}
-            </td>
-            <td>
-              {{ dateParser(dateParser(file.createDate).toDate()).format("DD/MM/YYYY") }}
-            </td>
-            <td>
-              {{ file.creationUser }}
-            </td>
-            <td>
-              {{ dateParser(dateParser(file.updateDate).toDate()).format("DD/MM/YYYY") }}
-            </td>
-            <td>
-              {{ file.updateUser }}
-            </td>
-            <td>
-              {{ file.associates.length ? 'Oui' : 'Non' }}
-            </td>
-            <td>
-              <b-button icon-left="times-circle"
-                        size="is-small"
-                        type="is-danger is-light"
-              />
-              <b-button icon-left="pen-square"
-                        size="is-small"
-                        type="is-primary is-light"
-                        @click="modifyAssociateFile(file.id)"/>
-              <b-button icon-left="upload"
-                        size="is-small"
-                        type="is-primary is-light"
-                        @click="download(file)"/>
-            </td>
-          </tr>
-          <tr v-if="showFileInfos==file.id">
-            <td colspan="9">
-              <table
-                  class="table is-hoverable is-striped is-fullwidth"
-                  style="text-align: center; vertical-align: center">
-                <thead>
-                <tr
-                    style="text-align: center; vertical-align: center">
-                  <th v-for="(field, id) in description" :key="id" :length="field">{{ id }}</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr>
-                  <td v-for="(field, id) in description" :key="id" :length="field">{{ file.fileInfos[id] }}</td>
-                </tr>
-                </tbody>
-              </table>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </article>
-    </section>
-    <section v-else-if="additionalFiles">
-      NO RIGHTS
-    </section>
-    <section v-else>
-      LOADING....
+      </ValidationObserver>
     </section>
   </PageView>
 </template>
 
 <script>
+import {ValidationObserver, ValidationProvider, extend} from "vee-validate";
+
+
+import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
-import OreInputText from "@/components/common/provider/OreInputText";
-import OreInputNumber from "@/components/common/provider/OreInputNumber";
-import OreInputDate from "@/components/common/provider/OreInputDate";
-import OreInputReference from "@/components/common/provider/OreInputReference";
-import AdditionalFilesAssociation from "@/components/common/provider/AdditionalFilesAssociation";
-import {extend, ValidationObserver, ValidationProvider} from "vee-validate";
 import {AlertService} from "@/services/AlertService";
 import {ApplicationService} from "@/services/rest/ApplicationService";
-import {AdditionalFileService} from "@/services/rest/AdditionalFileService";
 import {AuthorizationService} from "@/services/rest/AuthorizationService";
+import {UserPreferencesService} from "@/services/UserPreferencesService";
+import {AdditionalFileService} from "@/services/rest/AdditionalFileService";
 import {Component, Prop, Vue, Watch} from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
 import {InternationalisationService} from "@/services/InternationalisationService";
+import {ApplicationResult} from "@/model/ApplicationResult";
 import {ReferenceService} from "@/services/rest/ReferenceService";
+import AuthorizationTable from "@/components/common/AuthorizationTable";
+import AuthorizationTableForDatatype from "@/components/common/AuthorizationTableForDatatype.vue";
 import {Authorization} from "@/model/authorization/Authorization";
-import moment from "moment";
-import {AdditionalFilesInfos} from "@/model/additionalFiles/AdditionalFilesInfos";
-import {AdditionalFileInfos} from "@/model/additionalFiles/AdditionalFileInfos";
-import {FieldFilters} from "@/model/additionalFiles/FieldFilters";
-import CollapsibleInterval from "@/components/common/CollapsibleInterval";
-import {VariableComponentFilters} from "@/model/application/VariableComponentFilters";
-import {VariableComponentKey} from "@/model/application/VariableComponentKey";
-import {IntervalValues} from "@/model/application/IntervalValues";
+import {Authorizations} from "@/model/authorization/Authorizations";
+import FieldsForm from "@/components/common/provider/FieldsForm.vue";
 
+import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 
 @Component({
   components: {
-    PageView, SubMenu, ValidationProvider, ValidationObserver,
-    OreInputText, OreInputNumber, OreInputDate, OreInputReference,
-    SubMenuPath, AdditionalFilesAssociation, AuthorizationService, CollapsibleInterval
+    AuthorizationTable,
+    AuthorizationTableForDatatype,
+    PageView,
+    SubMenu,
+    CollapsibleTree,
+    ValidationObserver,
+    ValidationProvider,
+    FontAwesomeIcon,
+    FieldsForm,
+    InternationalisationService,
   },
 })
 export default class AdditionalFileInfosView extends Vue {
   @Prop() applicationName;
   @Prop() additionalFileName;
-  @Prop() id;
-  application = null;
-  additionalFile = {localName: 'loading...'};
-  additionalFiles = null;
-  dateParser = moment
-  subMenuPaths = [];
+  @Prop({default: "new"}) additionalFileId;
+  __DEFAULT__ = "__DEFAULT__";
+  referenceService = ReferenceService.INSTANCE;
+  references = {};
+  authorizationService = AuthorizationService.INSTANCE;
   alertService = AlertService.INSTANCE;
   applicationService = ApplicationService.INSTANCE;
-  additionalFileService = AdditionalFileService.INSTANCE;
+  userPreferencesService = UserPreferencesService.INSTANCE;
   internationalisationService = InternationalisationService.INSTANCE;
-  authorizationService = AuthorizationService.INSTANCE
-  description = {}
-  fields = {}
-  file = null
-  referenceService = ReferenceService.INSTANCE;
-  refValues = {};
+  isOpenFileUpload = true;
+  isOpenFileAssociate = true;
+  additionalFileService = AdditionalFileService.INSTANCE;
+  authorization = {};
+  publicAuthorizations = {};
+  ownAuthorizations = [];
+  ownAuthorizationsColumnsByPath = {};
   authorizations = [];
-  configuration = null;
-  references = {}
-  columnsVisible = {
+  users = [];
+  name = null;
+  dataGroups = {};
+  authorizationScopes = {};
+  application = new ApplicationResult();
+  selectedUsers = [];
+  isApplicationAdmin = false;
+  canManage = false;
+  isLoading;
+  datatypes = []
+
+  fields = {};
+  file = null
+  validForm = false;
+  valid = false;
+  periods = {
+    FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
+    TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
+    FROM_DATE_TO_DATE: this.$t("dataTypeAuthorizations.from-date-to-date"),
+    ALWAYS: this.$t("dataTypeAuthorizations.always"),
+  };
+  COLUMNS_VISIBLE = {
     label: {
       title: "Label",
       display: true,
       internationalizationName: {fr: "Domaine", en: "Domain"},
     },
-    associate: {
-      title: "Association",
-      display: true,
-      internationalizationName: {fr: "Associer", en: "Associate"},
-    },
-  }
-  dataTypeDescriptions = null;
-  associates = {};
-  selectedFile = null;
-  grantables = {}
-  showFileInfos = {}
-
-  isOpen =false;
-  format = null;
-  fieldfilters = {}
-  openPanel = false;
-  showFilter = false;
-
-  @Watch("id")
-  onIdChanged(id) {
-    this.initForm(id)
-  }
-
-  async changeConfiguration() {
-    try {
-      let authorizationsToSend = [];
-      for (const datatype in this.associates) {
-        let authorizationToSend = {
-          ...this.associates[datatype],
-          dataType: datatype,
-          applicationNameOrId: this.applicationName,
-        };
-        for (const scope in authorizationToSend.authorizations) {
-          authorizationToSend.authorizations[scope] = authorizationToSend.authorizations[scope].map(
-              (auth) => {
-                var returnedAuth = new Authorization(auth);
-                returnedAuth.intervalDates = {
-                  fromDay: returnedAuth.fromDay,
-                  toDay: returnedAuth.toDay,
-                };
-                returnedAuth.dataGroups = returnedAuth.dataGroups.map((dg) => dg.id || dg);
-                delete returnedAuth.from
-                delete returnedAuth.to
-                return returnedAuth;
-              }
-          );
-        }
-        delete authorizationToSend.scopes
-        delete authorizationToSend.users
-        authorizationsToSend.push(authorizationToSend)
-      }
-
-      let fields = {...this.fields}
-      delete fields.files;
-
-      await this.additionalFileService.saveAdditionalFile(
-          this.id == 'new' ? '' : this.id,
-          this.additionalFileName,
-          this.applicationName,
-          this.additionalFileName,
-          this.file,
-          fields,
-          authorizationsToSend);
-      this.alertService.toastSuccess('fichier enregistré')
-      this.initAdditionalFiles()
-      this.$router.push(`/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/consult`);
-    } catch (error) {
-      this.alertService.toastServerError(error);
-    }
-
-  }
-
-  get canShowForm() {
-
-    return this.isAdmin || (this.grantables && Object.values(this.grantables).find(grantable => grantable.canShowLine))
-  }
-
-  get userAuthorizations() {
-    return JSON.parse(localStorage.getItem('authenticatedUser'))?.authorizations || [];
-  }
-
-  get isAdmin() {
-    return this.userAuthorizations.find(auth => new RegExp(auth).test(this.applicationName));
-  }
-
-  rules() {
-    extend('required', () => {
-      return () => this.fields.files && this.fields.files.length
-    })
-    return 'required'
   };
-
-  applications = [];
-
+  columnsVisible = false;
+  period = this.periods.FROM_DATE_TO_DATE;
+  startDate = null;
+  endDate = null;
+  configuration = {};
   authReferences = {};
+  subMenuPaths = [];
+  repository = null;
+  filteredTags = [];
+  format = {};
+  description = "";
 
-  async created() {
-    this.subMenuPaths = [
-      new SubMenuPath(
-          this.$t("additionalFilesmanagement.additionalFilesManagement").toLowerCase(),
-          () => this.$router.push(`/applications/${this.applicationName}/additionalFiles`),
-          () => this.$router.push("/applications")
-      ),
-      new SubMenuPath(
-          this.$t("additionalFilesmanagement.additionalFilesManagementFor", {additionalFileName: this.additionalFileName}).toLowerCase(),
-          () => {
-          },
-          () => this.$router.push(`/applications/${this.applicationName}/additionalFiles`)
-      ),
-    ];
-    await this.init();
-  }
+  currentUser = {};
+  comment = null;
+  additionalFile = {}
 
-  canShowLine(...args) {
-    return !!args.find(arg => {
-      return arg && Object.keys(arg).length;
-    })
-  }
-
-  async init() {
-    try {
-      this.applications = await this.applicationService.getApplications();
-      this.application = await this.applicationService.getApplication(this.applicationName);
-      this.dataTypeDescriptions = this.internationalisationService.localeDatatypeName(this.application)
-      for (const dataTypeDescription in this.dataTypeDescriptions) {
-        this.authorizations[dataTypeDescription] = {}
-        const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
-            this.applicationName,
-            dataTypeDescription
-        );
-        grantableInfos.canShowLine = this.canShowLine(
-            grantableInfos.authorizationsForUser.authorizationByPath.admin,
-            grantableInfos.authorizationsForUser.authorizationByPath.publication,
-            grantableInfos.authorizationsForUser.authorizationByPath.depot,
-        );
-        this.grantables[dataTypeDescription] = grantableInfos;
-      }
-      this.configuration = this.applications.find(app => app.name == this.applicationName)
-      if (this.configuration.configuration.additionalFiles) {
-        const additionalFileInfos = {}
-        additionalFileInfos[this.additionalFileName] = new AdditionalFileInfos();
-        this.format = new AdditionalFilesInfos(null, null, null, additionalFileInfos)
-        for (const formatName in this.configuration.configuration.additionalFiles[this.additionalFileName].format) {
-          const format = this.configuration.configuration.additionalFiles[this.additionalFileName].format[formatName]
-          this.fieldfilters[formatName] = {}
-          this.fieldfilters[formatName].format = format
-          this.fieldfilters[formatName].format.localName = this.internationalisationService.getLocaleforPath(this.application, 'additionalFiles.' + this.additionalFileName + '.format.' + formatName);
-          this.fieldfilters[formatName].value = new FieldFilters();
-          this.fieldfilters[formatName].value.key = formatName;
-          if (format.checker){
-            if (format.checker.name == 'Date'){
-              this.fieldfilters[formatName].value.type = 'date';
-              this.fieldfilters[formatName].value.format = format.checker.params.pattern
-            } else if (format.checker.name == 'Integer' || format.checker.name == 'Float'){
-              this.fieldfilters[formatName].value.type = 'numeric';
-              this.fieldfilters[formatName].value.format=format.checker.name == 'Integer'?'integer':'float'
-            }else if (format.checker.name == 'Reference' ){
-              this.fieldfilters[formatName].value.type = 'reference';
-            }else if (format.checker.name == 'GroovyExpression' ){
-              this.fieldfilters[formatName].value.type = 'groovy';
-            }else if (format.checker.name == 'RegularExpression' ){
-              this.fieldfilters[formatName].value.type = 'regexp';
-              this.fieldfilters[formatName].value.format = format.checker.params.pattern
-            }
-          }
-        }
-      }
-      let localRefName = this.internationalisationService.additionalFilesNames(this.application);
-      this.additionalFile = this.convertToNode(localRefName)
-      this.additionalFile.fields.forEach(field => this.fields[field] = '')
-      this.initAdditionalFiles();
-    } catch (error) {
-      this.alertService.toastServerError();
-    }
-  }
-
-  async initAdditionalFiles() {
-    let additionalFiles = await this.additionalFileService.getAdditionalFiles(this.applicationName, this.additionalFileName)
-    this.additionalFiles = additionalFiles.additionalBinaryFiles
-    this.description = additionalFiles.description.format
-    for (const name in this.description) {
-      let description = this.description[name]
-      let refType = description?.checker?.params?.refType
-      if (refType) {
-        let references = await this.getOrLoadReferences(refType);
-        this.refValues[name] = references;
-      }
-    }
-    if (this.id != 'new' && this.id != 'consult') {
-      this.initForm(this.id)
-    }
+  @Watch("authReferences")
+  onExternalOpenStateChanged(newVal) {
+    this.authReferences = newVal;
   }
 
   getColumnTitle(column) {
@@ -586,6 +292,246 @@ export default class AdditionalFileInfosView extends Vue {
     }
   }
 
+  modifyAuthorization(event) {
+    let datatype = event.datatype;
+    var authorization = this.authorization.authorizations[datatype];
+    var authorizations = authorization.authorizations[event.indexColumn] || [];
+    for (const authorizationKeytoAdd in event.authorizations.toAdd) {
+      authorizations.push(event.authorizations.toAdd[authorizationKeytoAdd]);
+    }
+    for (const authorizationKeytoDelete in event.authorizations.toDelete) {
+      var toDeleteElement = event.authorizations.toDelete[authorizationKeytoDelete];
+      authorizations = authorizations.filter((auth) => {
+        return !new Authorization(auth).equals(
+            toDeleteElement,
+            this.authorizationScopes[datatype].map((scope) => scope.id)
+        );
+      });
+    }
+    authorization.authorizations[event.indexColumn] = authorizations;
+    this.$set(this.authorization.authorizations, datatype, new Authorizations(
+        authorization,
+        this.authorizationScopes[datatype].map((as) => as.id)
+    ));
+  }
+
+  registerCurrentAuthorization(event) {
+    let datatype = event.datatype;
+    var authorization = this.authorization.authorizations[event.datatype];
+    var authorizations = authorization.authorizations[event.indexColumn] || [];
+    var authorizationToReplace = event.authorizations;
+    authorizationToReplace.fromDay = authorizationToReplace.from && [
+      authorizationToReplace.from.getFullYear(),
+      authorizationToReplace.from.getMonth() + 1,
+      authorizationToReplace.from.getDate(),
+    ];
+    authorizationToReplace.toDay = authorizationToReplace.to && [
+      authorizationToReplace.to.getFullYear(),
+      authorizationToReplace.to.getMonth() + 1,
+      authorizationToReplace.to.getDate(),
+    ];
+    authorizations = authorizations.map((auth) => {
+      if (
+          !new Authorization(auth).equals(
+              authorizationToReplace,
+              this.authorizationScopes[datatype].map((scope) => scope.id)
+          )
+      ) {
+        return auth;
+      } else {
+        return authorizationToReplace;
+      }
+    });
+    authorization.authorizations[event.indexColumn] = authorizations;
+    this.$set(this.authorization.authorizations, event.datatype, new Authorizations(
+        authorization,
+        this.authorizationScopes.map((as) => as.id)
+    ));
+  }
+
+  async created() {
+    this.init();
+    this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
+    this.subMenuPaths = [
+      new SubMenuPath(
+          this.$t("dataTypesManagement.data-types").toLowerCase(),
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+          () => this.$router.push("/applications")
+      ),
+      new SubMenuPath(
+          this.$t(`dataTypeAuthorizations.sub-menu-request-authorization`),
+          () => {
+            this.$router.push(
+                `/applications/${this.applicationName}/authorizationsRequest`
+            );
+          },
+          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+      ),
+      new SubMenuPath(
+          this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
+          () => {
+          },
+          () => {
+            this.$router.push(
+                `/applications/${this.applicationName}/authorizationsRequest/new`
+            );
+          }
+      ),
+    ];
+    this.isLoading = false;
+  }
+
+  mounted() {
+  }
+
+  async init() {
+    this.isLoading = true;
+    try {
+      this.application = await this.applicationService.getApplication(this.applicationName, [
+        "CONFIGURATION",
+        "DATATYPE",
+        "RIGHTSREQUEST",
+      ]);
+      this.datatypes = (Object.keys(this.application.configuration.dataTypes) || [])
+          .reduce((acc, datatype) => {
+            acc[datatype] = {
+              name: this.internationalisationService.localeDataTypeIdName(
+                  this.application,
+                  this.application.dataTypes[datatype]
+              ) || datatype
+            }
+            return acc
+          }, {});
+      this.format =(( (this.application?.configuration?.additionalFiles || {})[this.additionalFileName] || {}).format) || {}
+      this.description = this.$t('additionalFilesmanagement.additionalFileDescrition')
+      this.fields = (Object.keys(this.format) || [])
+          .reduce((acc, field) => {
+            acc[field] = ""
+            return acc;
+          }, {});
+      this.configuration = (Object.keys(this.datatypes) || [])
+          .reduce((acc, datatype) => {
+            acc[datatype] = this.application.configuration.dataTypes[datatype]
+            return acc
+          }, {})
+      this.application = {
+        ...this.application,
+        localName: this.internationalisationService.mergeInternationalization(this.application)
+            .localName,
+      };
+      this.authorizations = (Object.keys(this.datatypes) || [])
+          .reduce((acc, datatype) => {
+            acc[datatype] = this.configuration[datatype]?.authorization?.authorizationScopes || []
+            return acc
+          }, {});
+      this.repository = (Object.keys(this.datatypes) || [])
+          .reduce((acc, datatype) => {
+            acc[datatype] = this.application.dataTypes[datatype].repository
+            return acc
+          }, {})
+      const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
+          this.applicationName
+      );
+      ({
+        authorizationScopes: this.authorizationScopes,
+        dataGroups: this.dataGroups,
+        users: this.users,
+        publicAuthorizations: this.publicAuthorizations,
+        isApplicationAdmin: this.isApplicationAdmin,
+        ownAuthorizations: this.ownAuthorizations,
+        ownAuthorizationsColumnsByPath: this.ownAuthorizationsColumnsByPath,
+        columnsVisible: this.columnsVisible
+      } = Authorizations.parseGrantableInfos(grantableInfos, this.datatypes, this.repository));
+
+      if (this.additionalFileId != "new") {
+        this.validForm = true
+        this.valid = true
+        let additionalFiles = await this.additionalFileService.getAdditionalFiles(
+            this.applicationName,
+            this.additionalFileName,
+            {uuids: [this.additionalFileId]}
+        );
+
+        const additionalFile = additionalFiles && additionalFiles.additionalBinaryFiles && additionalFiles.additionalBinaryFiles[0]
+        this.currentUser =additionalFiles.users
+            .find(user =>
+                user.id == (
+                    (additionalFile.user) ||
+                    JSON.parse(localStorage.authenticatedUser).id)
+            );
+        this.comment = additionalFile.comment;
+        this.fields = Object.keys((this.format || {}) || [])
+            .reduce((acc, field) => {
+              acc[field] =  (additionalFile.additionalBinaryFileForm || {})[field]
+              return acc;
+            }, {});
+
+        let authorizations = (additionalFile && additionalFile.associates) || []
+        let initialValue = new Authorizations({
+          authorizations: {},
+          applicationNameOrId: this.applicationName,
+          users: [this.users],
+          name: additionalFile.comment,
+          uuid: additionalFile.id
+        }, []);
+        this.authorization = (Object.keys(this.datatypes) || [])
+            .reduce((auth, datatype) => {
+              auth.authorizations[datatype] = new Authorizations(
+                  {authorizations: authorizations[datatype]},
+                  (this.authorizationScopes[datatype] || []).map((as) => as.id)
+              );
+              return auth
+            }, initialValue);
+        this.canManage = this.isApplicationAdmin ||
+            (
+                authorizations.users &&
+                authorizations.users[0].login == JSON.parse(localStorage.getItem('authenticatedUser')).login)
+      } else {
+        let initialValue = new Authorizations({
+          authorizations: {},
+          applicationNameOrId: this.applicationName,
+          users: [],
+          name: "",
+          uuid: null
+        }, []);
+        this.authorization = (Object.keys(this.datatypes) || [])
+            .reduce((acc, datatype) => {
+              acc.authorizations[datatype] = new Authorizations(
+                  {dataType: datatype, applicationNameOrId: this.applicationName},
+                  (this.authorizationScopes[datatype] || []).map((as) => as.id)
+              );
+              return acc
+            }, initialValue);
+        this.canManage = true;
+      }
+      let currentAuthorizationUsers = this.authorization.users || [];
+      this.selectedUsers = (this.users || [])
+          .filter((user) => {
+            return currentAuthorizationUsers.find((u) => {
+              return u.id == user.id;
+            });
+          });
+      this.selectedUsers.sort();
+      this.authReferences = await Authorizations.initAuthReferences(this.configuration, this.authorizations, this.authorizationScopes, this.getOrLoadReferences)
+
+      let columnsVisible = {}
+      for (const datatype in this.columnsVisible) {
+        columnsVisible[datatype] = {
+          ...Authorizations.COLUMNS_VISIBLE,
+          associate: {
+            title: "associate",
+            display: true,
+            forPublic: true,
+            forRequest: true,
+            internationalizationName: {fr: "Associer", en: "Associate"},
+          }}
+
+      }
+      this.columnsVisible = columnsVisible;
+    } catch (error) {
+      this.alertService.toastServerError(error);
+    }
+  }
 
   async getOrLoadReferences(reference) {
     if (this.references[reference]) {
@@ -598,158 +544,164 @@ export default class AdditionalFileInfosView extends Vue {
     return ref;
   }
 
-  convertToNode(additionalFiles) {
-    let additionalFile = additionalFiles[this.additionalFileName]
-    let af = {
-      children: [],
-      fields: additionalFile.fields,
-      id: this.additionalFileName,
-      label: additionalFile.refNameLocal || additionalFile.name,
-      localName: additionalFile.refNameLocal || additionalFile.name,
-      name: additionalFile.name,
-      localFields: additionalFile.localFields
+  updateFields(event) {
+    this.fields = event.fields;
+    this.validForm = event.valid
+    this.loadFile(event)
+  }
+
+  updateComment(event) {
+    this.comment = event.comment;
+    this.validForm = event.valid
+    this.loadFile(event)
+  }
+
+  @Watch("period")
+  onPeriodChanged() {
+    this.endDate = null;
+    this.startDate = null;
+  }
+
+  async changeConfiguration() {
+    if (!this.valid) {
+      return
     }
-    return af
+    try {
+      let authorizationToSend = {
+        uuid: this.authorization.uuid,
+        name: this.authorization.name,
+        applicationNameOrId: this.applicationName,
+        authorizations: {}
+      };
+      authorizationToSend.usersId = this.selectedUsers.map(user => user.id);
+      for (const datatype in this.authorization.authorizations) {
+        let authorizationForDatatype = this.authorization.authorizations[datatype].authorizations
+        for (const scope in authorizationForDatatype) {
+          authorizationForDatatype[scope] = authorizationForDatatype[scope].map(
+              (auth) => {
+                var returnedAuth = new Authorization(auth);
+                returnedAuth.intervalDates = {
+                  fromDay: returnedAuth.fromDay,
+                  toDay: returnedAuth.toDay,
+                };
+                delete returnedAuth.fromDay
+                delete returnedAuth.toDay
+                delete returnedAuth.from
+                delete returnedAuth.to
+                delete returnedAuth.path
+                returnedAuth.dataGroups = returnedAuth.dataGroups.map((dg) => dg.id || dg);
+                return returnedAuth;
+              }
+          );
+          authorizationToSend.authorizations[datatype] = authorizationForDatatype
+        }
+      }
+      if (!(this.comment && this.comment.length)) {
+        this.$buefy.dialog.prompt({
+          message: this.$t('dataTypeAuthorizations.addComment'),
+          inputAttrs: {
+            placeholder: this.$t('dataTypeAuthorizations.commentExample'),
+            maxlength: 255,
+            minLength: 3,
+            canCancel: false,
+            confirmText: this.$t('dataTypeAuthorizations.grantRequestConfirm'),
+
+          },
+          trapFocus: true,
+          onConfirm: (value) => this.comment = value
+        })
+      }
+
+      await this.additionalFileService.saveAdditionalFile(
+          this.additionalFileId == 'new' ? '' : this.additionalFileId,
+          this.additionalFileName,
+          this.applicationName,
+          this.additionalFileName,
+          this.file,
+          {...this.fields},
+          authorizationToSend);
+      if ('new' == this.additionalFileId) {
+        this.alertService.toastSuccess(this.$t("alert.create-request"));
+      } else {
+        this.alertService.toastSuccess(this.$t("alert.modified-request"));
+      }
+      this.$router.push(`/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}`);
+    } catch (error) {
+      this.alertService.toastServerError(error);
+    }
+
   }
 
-  modifyAssociate(event) {
-    this.associates[event.dataType] = event.associates
-  }
 
-  toggleFileInfos(id) {
-    let show = this.showFileInfos == id ? null : id
-    this.showFileInfos = show
-    this.$forceUpdate()
+  rules() {
+    extend('required', () => {
+      return () => this.fields.files && this.fields.files.length
+    })
+    return 'required'
   }
 
   modifyAssociateFile(id) {
     this.$router.push(`/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/${id}`);
 
   }
-
-  initForm(id) {
-    let file = this.additionalFiles.find(file => file.id == id)
-    let fields = this.fields
-    this.file = null;
-    for (const fileKey in this.fields) {
-      fields[fileKey] = file ? file.fileInfos[fileKey] : ''
-    }
-    this.fields = fields
-    this.$refs.form.$forceUpdate()
-    this.authorizations = file ? file.associates : []
-  }
-
-  async download(file) {
-    let param = new AdditionalFilesInfos(
-        [file.id]
-    );
-    let data = await this.additionalFileService.getAdditionalFileZip(
-        this.applicationName, param);
-    let blob = new Blob([data], {
-      type: "application/zip, application/octet-stream"
-    });
-    let objectUrl = URL.createObjectURL(blob);
-    let link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = file.fileName + ".zip";
-    link.click();
-    window.URL.revokeObjectURL(link.href);
-    return false;
-  }
-  addAdditionalFileFieldSearch( index) {
-    const value = this.fieldfilters[index].value;
-    new FieldFilters(index, value.field, value.type, value.format, )
-    let isRegExp = this.params.variableComponentFilters.isRegex;
-    let value = this.search[key];
-    this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
-        (c) =>
-            c.variableComponentKey.variable !== variable ||
-            c.variableComponentKey.component !== component
-    );
-    let search = null;
-    if (value && value.length > 0) {
-      search = new VariableComponentFilters({
-        variableComponentKey: new VariableComponentKey({
-          variable: variable,
-          component: component,
-        }),
-        filter: value,
-        type: type,
-        format: format,
-        isRegExp: isRegExp,
-      });
-    }
-    if (field.intervalValues) {
-      search = new VariableComponentFilters({
-        variableComponentKey: new VariableComponentKey({
-          variable: variable,
-          component: component,
-        }),
-        type: type,
-        format: format,
-        isRegExp: isRegExp,
-        intervalValues: field.intervalValues,
-        ...(search ? new IntervalValues(search) : {}),
-      });
-    }
-    if (search) {
-      this.variableSearch.push(search);
-    }
-    this.initDatatype();
+  loadFile(){
+    this.valid = this.validForm && (!!this.file || 'new'!=this.additionalFileId)
   }
 }
 </script>
 
-<style lang="scss" scoped>
-.table th:not([align]) {
-  text-align: center;
+<style lang="scss">
+.DataTypeAuthorizationInfoView-periods-container {
+  .field-body .field.has-addons {
+    display: flex;
+    flex-direction: column;
+  }
 }
 
-.authorizationTable {
-  margin-left: 10px;
-  padding: 0 0 0 5px;
+.DataTypeAuthorizationInfoView-radio-field {
+  height: 40px;
 
-  button {
-    opacity: 0.75;
+  &.b-radio {
+    .control-label {
+      display: flex;
+      align-items: center;
+      width: 100%;
+    }
   }
+}
 
-  .dropdown-menu .dropdown-content .dropDownMenu button {
-    opacity: 0.5;
-  }
+.DataTypeAuthorizationInfoView-radio-label {
+  width: 200px;
+}
 
-  dgSelected {
-    color: #007f7f;
-  }
+.collapse-content .card-content .content .CollapsibleTree-header .CollapsibleTree-buttons {
+  visibility: hidden;
+  display: none;
+}
+
+.leaf label {
+  font-weight: lighter;
+  font-style: italic;
+  color: #2c3e50;
+}
+
+.folder label {
+  font-weight: bolder;
+  color: $dark;
+}
+
+.rows .card-content .row.label .columns .column {
+  padding: 0 0 0 10px;
+  border-bottom: 2px solid;
+  border-color: $dark;
+  margin-bottom: 12px;
+}
+
+ul li.card-content {
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 a {
   color: $dark;
-  font-weight: bold;
-  text-decoration: underline;
 }
-
-a:hover {
-  color: $primary;
-  text-decoration: none;
-}
-
-p {
-  font-weight: bold;
-}
-
-::marker {
-  color: transparent;
-}
-
-.column {
-  padding: 6px;
-}
-
-.show-check-details {
-  margin-left: 0.6em;
-}
-
-.show-detail-for-selected {
-  height: 60px;
-}
-</style>
+</style>s

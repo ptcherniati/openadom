@@ -218,7 +218,7 @@
                 <div class="card-footer">
                   <div class="card-footer-item">
                     <b-button
-                        v-if="application.referenceType.length !== 0"
+                        v-if="application.referenceType && application.referenceType.length !== 0"
                         icon-left="drafting-compass"
                         @click="displayReferencesManagement(application)"
                     >
@@ -227,7 +227,7 @@
                   </div>
                   <div class="card-footer-item">
                     <b-button
-                        v-if="application.dataType.length !== 0"
+                        v-if="application.dataType && application.dataType.length !== 0"
                         icon-left="poll"
                         @click="displayDataSetManagement(application)"
                     >
@@ -236,7 +236,7 @@
                   </div>
                   <div class="card-footer-item">
                     <b-button
-                        v-if="application.additionalFile.length !== 0"
+                        v-if="application.additionalFile &&application.additionalFile.length !== 0"
                         icon-left="file"
                         @click="displayAdditionalFilesManagement(application)"
                     >
@@ -388,6 +388,13 @@ export default class ApplicationsView extends Vue {
       return;
     }
     this.$router.push("/applications/" + application.name + "/dataTypes");
+  }
+
+  displayAdditionalFilesManagement(application) {
+    if (!application) {
+      return;
+    }
+    this.$router.push("/applications/" + application.name + "/additionalFiles");
   }
 
   showModal(name) {

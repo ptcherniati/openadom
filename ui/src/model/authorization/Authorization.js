@@ -1,69 +1,80 @@
 export class Authorization {
-  requiredAuthorizations = {};
-  dataGroups = [];
-  from = null;
-  to = null;
+    requiredAuthorizations = {};
+    dataGroups = [];
+    from = null;
+    to = null;
 
-  constructor(datagroupsOrAuthorization, requiredAuthorizations, from, to) {
-    if (! Array.isArray(datagroupsOrAuthorization)) {
-      Object.assign(this, datagroupsOrAuthorization);
-    } else {
-      this.dataGroups = [...(datagroupsOrAuthorization || [])];
-      this.from = from;
-      this.to = to;
-      this.requiredAuthorizations = requiredAuthorizations;
+    constructor(datagroupsOrAuthorization, requiredAuthorizations, from, to) {
+        if (!Array.isArray(datagroupsOrAuthorization)) {
+            Object.assign(this, datagroupsOrAuthorization);
+        } else {
+            this.dataGroups = [...(datagroupsOrAuthorization || [])];
+            this.from = from;
+            this.to = to;
+            this.requiredAuthorizations = requiredAuthorizations;
+        }
     }
-  }
 
-  getPath(scopeId) {
-    var path = [];
-    for (const scopeIdKey in scopeId) {
-      if (this.requiredAuthorizations[scopeId[scopeIdKey]]) {
-        path.push(this.requiredAuthorizations[scopeId[scopeIdKey]]);
-      }
+    toAuthorizationRest(auth) {
+        return {
+            intervalDates: {
+                fromDay: auth.fromDay,
+                toDay: auth.toDay,
+            },
+            dataGroups: auth.dataGroups,
+            requiredAuthorizations: auth.requiredAuthorizations
+        }
     }
-    path = path.join(".");
-    return path;
-  }
 
-  getPath2(scopeId) {
-    var path = [];
-    for (const scopeIdKey in scopeId) {
-      if (this.requiredAuthorizations[scopeId[scopeIdKey]]) {
-        path.push(this.requiredAuthorizations[scopeId[scopeIdKey]].sql);
-      }
+    getPath(scopeId) {
+        var path = [];
+        for (const scopeIdKey in scopeId) {
+            if (this.requiredAuthorizations[scopeId[scopeIdKey]]) {
+                path.push(this.requiredAuthorizations[scopeId[scopeIdKey]]);
+            }
+        }
+        path = path.join(".");
+        return path;
     }
-    path = path.reverse().join(".");
-    return path;
-  }
 
-  equals(auth, scopes) {
-    for (const scope in scopes) {
-      if (
-        this.requiredAuthorizations[scopes[scope]] != auth.requiredAuthorizations[scopes[scope]]
-      ) {
-        return false;
-      }
+    getPath2(scopeId) {
+        var path = [];
+        for (const scopeIdKey in scopeId) {
+            if (this.requiredAuthorizations[scopeId[scopeIdKey]]) {
+                path.push(this.requiredAuthorizations[scopeId[scopeIdKey]].sql);
+            }
+        }
+        path = path.reverse().join(".");
+        return path;
     }
-    return true;
-  }
 
-  parse() {
-    return {
-      requiredAuthorizations: this.requiredAuthorizations,
-      dataGroups: (this.dataGroups || []).map((dataGroups) => dataGroups.id),
-      intervalDates: {
-        fromDay: this.parseDate(this.from),
-        toDay: this.parseDate(this.to),
-      },
-    };
-  }
-
-  parseDate(date) {
-    let parsedDate = null;
-    if (date) {
-      parsedDate = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
+    equals(auth, scopes) {
+        for (const scope in scopes) {
+            if (
+                this.requiredAuthorizations[scopes[scope]] != auth.requiredAuthorizations[scopes[scope]]
+            ) {
+                return false;
+            }
+        }
+        return true;
     }
-    return parsedDate;
-  }
+
+    parse() {
+        return {
+            requiredAuthorizations: this.requiredAuthorizations,
+            dataGroups: (this.dataGroups || []).map((dataGroups) => dataGroups.id),
+            intervalDates: {
+                fromDay: this.parseDate(this.from),
+                toDay: this.parseDate(this.to),
+            },
+        };
+    }
+
+    parseDate(date) {
+        let parsedDate = null;
+        if (date) {
+            parsedDate = [date.getFullYear(), date.getMonth() + 1, date.getDate()];
+        }
+        return parsedDate;
+    }
 }
