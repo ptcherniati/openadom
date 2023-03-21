@@ -160,25 +160,21 @@ export class InternationalisationService extends Fetcher {
     }
     return references;
   }
-  additionalFilesNames(refs){
+  additionalFilesNames(refs) {
     if (refs.internationalization) {
       let additionalFiles = refs.internationalization.additionalFiles;
       for (let additionalFilesKey in additionalFiles) {
         let format = additionalFiles[additionalFilesKey].format;
-        let localFields={};
+        let localFields = {};
         for (const formatKey in format) {
-          localFields[formatKey] = format[formatKey]?.[
-                  localStorage.getItem(LOCAL_STORAGE_LANG)
-                  ]
+          localFields[formatKey] = format[formatKey]?.[localStorage.getItem(LOCAL_STORAGE_LANG)];
         }
         refs.additionalFiles[additionalFilesKey] = {
           ...refs.additionalFiles[additionalFilesKey],
           localFields,
           refNameLocal:
-              additionalFiles[additionalFilesKey]?.[
-                  localStorage.getItem(LOCAL_STORAGE_LANG)
-                  ],
-          name: additionalFilesKey
+            additionalFiles[additionalFilesKey]?.[localStorage.getItem(LOCAL_STORAGE_LANG)],
+          name: additionalFilesKey,
         };
       }
     } else {
@@ -187,11 +183,11 @@ export class InternationalisationService extends Fetcher {
         refs.additionalFiles[additionalFilesKey] = {
           ...refs.additionalFiles[additionalFilesKey],
           refNameLocal: refs.additionalFiles[additionalFilesKey].name,
-          name: refs.additionalFiles[additionalFilesKey].name
+          name: refs.additionalFiles[additionalFilesKey].name,
         };
       }
     }
-    return refs.additionalFiles
+    return refs.additionalFiles;
   }
 
   treeReferenceName(refs) {

@@ -99,7 +99,15 @@
     	"authorizations": "Autorisations"
     },
     "additionalFiles": {
-        "menu": "Choisissez un type de fichier additionel"
+        "menu": "Choisissez un type de fichier additionel",
+        "titles": {
+            "upload": "Téléchargement du fichier additionnel",
+            "associate": "Association d'objets au fichier additionnel"
+        },
+        "buttons": {
+            "cancel": "Annuler",
+            "submit": "Soumettre"
+        }
     },
     "applications": {
         "chose-config": "Choisir une configuration",

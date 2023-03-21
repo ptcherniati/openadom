@@ -16,14 +16,14 @@ export class ApplicationService extends Fetcher {
   }
 
   async getApplications(filter) {
-    var applications = await this.get("applications/", {filter});
+    var applications = await this.get("applications/", { filter });
     return applications.map((a) => {
       return InternationalisationService.INSTANCE.mergeInternationalization(a);
     });
   }
 
   async getApplication(name, filter) {
-    var application = await this.get("applications/" + name, {filter});
+    var application = await this.get("applications/" + name, { filter });
     return InternationalisationService.INSTANCE.mergeInternationalization(application);
   }
 

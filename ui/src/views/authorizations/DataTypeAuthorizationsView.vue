@@ -382,7 +382,7 @@ export default class DataTypeAuthorizationsView extends Vue {
   }
 
   showModalRole(name, authorization, configuration) {
-    for(const authorization in configuration) {
+    for (const authorization in configuration) {
       for (let i = 0; i < configuration[authorization].length; i++) {
         this.localizations = Object.keys(configuration[authorization][i].requiredAuthorizations);
       }

@@ -1,15 +1,13 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-        :aria-label="$t('menu.aria-sub-menu')"
-        :paths="subMenuPaths"
-        :root="additionalFile.localName"
-        role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+      :paths="subMenuPaths"
+      :root="additionalFile.localName"
+      role="navigation"
     />
     <h1 class="title main-title">
-      <span>{{
-          $t("titles.additionalFile", additionalFile)
-        }}</span>
+      <span>{{ $t("titles.additionalFile", additionalFile) }}</span>
     </h1>
     <caption v-if="!this.columnsVisible" class="columns">
       <div class="column loader-wrapper">
@@ -20,74 +18,69 @@
       <ValidationObserver ref="observer">
         <article class="fieldsForm">
           <FieldsForm
-              :application="application"
-              :comment="comment"
-              :description="description"
-              :fields="fields"
-              :format="format"
-              :ref-values="references"
-              :showComment="true"
-              pathForKey="rightsRequest.format"
-              @update:fields="updateFields"
-              @update:comment="updateComment"
+            :application="application"
+            :comment="comment"
+            :description="description"
+            :fields="fields"
+            :format="format"
+            :ref-values="references"
+            :showComment="true"
+            pathForKey="rightsRequest.format"
+            @update:fields="updateFields"
+            @update:comment="updateComment"
           >
-
           </FieldsForm>
         </article>
         <article class="additionalFileUpoald">
-
-          <b-collapse
-              v-model="isOpenFileUpload"
-              animation="slide"
-              class="panel">
+          <b-collapse v-model="isOpenFileUpload" animation="slide" class="panel">
             <template #trigger>
               <div
-                  :aria-expanded="isOpenFileUpload"
-                  aria-controls="contentIdForA11y2"
-                  class="panel-heading"
-                  role="button">
+                :aria-expanded="isOpenFileUpload"
+                aria-controls="contentIdForA11y2"
+                class="panel-heading"
+                role="button"
+              >
                 <strong>
                   <FontAwesomeIcon
-                      :icon="isOpenFileUpload ? 'caret-down' : 'caret-right'"
-                      class="clickable mr-3"
-                      tabindex="0"
+                    :icon="isOpenFileUpload ? 'caret-down' : 'caret-right'"
+                    class="clickable mr-3"
+                    tabindex="0"
                   />
-                  Téléchargement du fichier additionnel
+                  {{ $t("additionalFiles.titles.upload") }}
                 </strong>
               </div>
             </template>
 
             <ValidationProvider
-                ref="provider"
-                v-slot="{ errors, valid }"
-                :rules="rules()"
-                class="column is-12"
-
+              ref="provider"
+              v-slot="{ errors, valid }"
+              :rules="rules()"
+              class="column is-12"
             >
               <b-field
-                  :label="'Fichier additionnel'"
-                  :message="errors"
-                  :type="{
-                              'is-danger': errors && errors.length > 0,
-                              'is-success': valid,
-                            }"
-                  class="file is-primary column is-12">
-                <b-upload v-model="file"
-                          class="file-label"
-                          data-cy="changeFileButton"
-                          required
-                          style="margin-top: 30px"
-                          @input="loadFile"
+                :label="'Fichier additionnel'"
+                :message="errors"
+                :type="{
+                  'is-danger': errors && errors.length > 0,
+                  'is-success': valid,
+                }"
+                class="file is-primary column is-12"
+              >
+                <b-upload
+                  v-model="file"
+                  class="file-label"
+                  data-cy="changeFileButton"
+                  required
+                  style="margin-top: 30px"
+                  @input="loadFile"
                 >
-                        <span class="file-cta">
-                          <b-icon class="file-icon" icon="upload"></b-icon>
-                          <span class="file-label">{{
-                              $t("dataTypesRepository.choose-file")
-                            }}</span>
-                        </span>
+                  <span class="file-cta">
+                    <b-icon class="file-icon" icon="upload"></b-icon>
+                    <span class="file-label">{{ $t("dataTypesRepository.choose-file") }}</span>
+                  </span>
                   <span v-if="file" class="file-name">
-                          {{ file.name }}
-                        </span>
+                    {{ file.name }}
+                  </span>
                 </b-upload>
                 <span>{{ errors[0] }}</span>
               </b-field>
@@ -95,55 +88,54 @@
           </b-collapse>
         </article>
         <article class="additionalFileAssociate">
-
-          <b-collapse
-              v-model="isOpenFileAssociate"
-              animation="slide"
-              class="panel">
+          <b-collapse v-model="isOpenFileAssociate" animation="slide" class="panel">
             <template #trigger>
               <div
-                  :aria-expanded="isOpenFileAssociate"
-                  aria-controls="contentIdForA11y2"
-                  class="panel-heading"
-                  role="button">
+                :aria-expanded="isOpenFileAssociate"
+                aria-controls="contentIdForA11y2"
+                class="panel-heading"
+                role="button"
+              >
                 <strong>
                   <FontAwesomeIcon
-                      :icon="isOpenFileAssociate ? 'caret-down' : 'caret-right'"
-                      class="clickable mr-3"
-                      tabindex="0"
+                    :icon="isOpenFileAssociate ? 'caret-down' : 'caret-right'"
+                    class="clickable mr-3"
+                    tabindex="0"
                   />
-                  Association d'objets au fichier additionnel
+                  {{ $t("additionalFiles.titles.associate") }}
                 </strong>
               </div>
             </template>
             <div v-for="(datatypeInfos, datatype) in datatypes" :key="datatype">
-              <div v-if="dataGroups[datatype] && authReferences[datatype] && columnsVisible[datatype] ">
+              <div
+                v-if="dataGroups[datatype] && authReferences[datatype] && columnsVisible[datatype]"
+              >
                 <AuthorizationTableForDatatype
-                    :auth-references="authReferences[datatype]"
-                    :authorization="authorization.authorizations[datatype]"
-                    :authorization-scopes="authorizationScopes[datatype]"
-                    :columns-visible="columnsVisible[datatype]"
-                    :current-authorization-scope="{}"
-                    :data-groups="dataGroups[datatype]"
-                    :datatype="{id:datatype, name: (datatypeInfos.name)}"
-                    :is-root="true"
-                    :isApplicationAdmin="canManage"
-                    :ownAuthorizations="ownAuthorizations[datatype]"
-                    :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath[datatype]"
-                    :publicAuthorizations="publicAuthorizations[datatype] || {}"
-                    class="rows"
-                    @modifyAuthorization="modifyAuthorization($event, datatype)"
-                    @registerCurrentAuthorization="registerCurrentAuthorization($event,datatype)"
+                  :auth-references="authReferences[datatype]"
+                  :authorization="authorization.authorizations[datatype]"
+                  :authorization-scopes="authorizationScopes[datatype]"
+                  :columns-visible="columnsVisible[datatype]"
+                  :current-authorization-scope="{}"
+                  :data-groups="dataGroups[datatype]"
+                  :datatype="{ id: datatype, name: datatypeInfos.name }"
+                  :is-root="true"
+                  :isApplicationAdmin="canManage"
+                  :ownAuthorizations="ownAuthorizations[datatype]"
+                  :ownAuthorizationsColumnsByPath="ownAuthorizationsColumnsByPath[datatype]"
+                  :publicAuthorizations="publicAuthorizations[datatype] || {}"
+                  class="rows"
+                  @modifyAuthorization="modifyAuthorization($event, datatype)"
+                  @registerCurrentAuthorization="registerCurrentAuthorization($event, datatype)"
                 >
                   <div class="row">
                     <div class="columns">
                       <b-field
-                          v-for="(column, indexColumn) of columnsVisible[datatype]"
-                          :key="indexColumn"
-                          :field="indexColumn"
-                          :label="getColumnTitle(column)"
-                          :style="!column.display ? 'display : contents' : ''"
-                          class="column"
+                        v-for="(column, indexColumn) of columnsVisible[datatype]"
+                        :key="indexColumn"
+                        :field="indexColumn"
+                        :label="getColumnTitle(column)"
+                        :style="!column.display ? 'display : contents' : ''"
+                        class="column"
                       ></b-field>
                     </div>
                   </div>
@@ -153,22 +145,21 @@
           </b-collapse>
         </article>
 
-
         <div class="buttons">
           <b-button
-              :type="'is-danger'"
-              icon-left="times-circle"
-              @click="modifyAssociateFile('consult')"
+            :type="'is-danger'"
+            icon-left="times-circle"
+            @click="modifyAssociateFile('consult')"
           >
-            Annuler
+            {{ $t("additionalFiles.buttons.cancel") }}
           </b-button>
           <b-button
-              :type="valid?'is-primary':'is-warning'"
-              icon-left="edit"
-              :active="valid"
-              @click="changeConfiguration"
+            :type="valid ? 'is-primary' : 'is-warning'"
+            icon-left="edit"
+            :active="valid"
+            @click="changeConfiguration"
           >
-            Soumettre
+            {{ $t("additionalFiles.buttons.submit") }}
           </b-button>
         </div>
       </ValidationObserver>
@@ -177,28 +168,27 @@
 </template>
 
 <script>
-import {ValidationObserver, ValidationProvider, extend} from "vee-validate";
-
+import { ValidationObserver, ValidationProvider, extend } from "vee-validate";
 
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
-import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
-import {AlertService} from "@/services/AlertService";
-import {ApplicationService} from "@/services/rest/ApplicationService";
-import {AuthorizationService} from "@/services/rest/AuthorizationService";
-import {UserPreferencesService} from "@/services/UserPreferencesService";
-import {AdditionalFileService} from "@/services/rest/AdditionalFileService";
-import {Component, Prop, Vue, Watch} from "vue-property-decorator";
+import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { AlertService } from "@/services/AlertService";
+import { ApplicationService } from "@/services/rest/ApplicationService";
+import { AuthorizationService } from "@/services/rest/AuthorizationService";
+import { UserPreferencesService } from "@/services/UserPreferencesService";
+import { AdditionalFileService } from "@/services/rest/AdditionalFileService";
+import { Component, Prop, Vue, Watch } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
-import {InternationalisationService} from "@/services/InternationalisationService";
-import {ApplicationResult} from "@/model/ApplicationResult";
-import {ReferenceService} from "@/services/rest/ReferenceService";
+import { InternationalisationService } from "@/services/InternationalisationService";
+import { ApplicationResult } from "@/model/ApplicationResult";
+import { ReferenceService } from "@/services/rest/ReferenceService";
 import AuthorizationTable from "@/components/common/AuthorizationTable";
 import AuthorizationTableForDatatype from "@/components/common/AuthorizationTableForDatatype.vue";
-import {Authorization} from "@/model/authorization/Authorization";
-import {Authorizations} from "@/model/authorization/Authorizations";
+import { Authorization } from "@/model/authorization/Authorization";
+import { Authorizations } from "@/model/authorization/Authorizations";
 import FieldsForm from "@/components/common/provider/FieldsForm.vue";
 
-import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
+import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 
 @Component({
   components: {
@@ -217,7 +207,7 @@ import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
 export default class AdditionalFileInfosView extends Vue {
   @Prop() applicationName;
   @Prop() additionalFileName;
-  @Prop({default: "new"}) additionalFileId;
+  @Prop({ default: "new" }) additionalFileId;
   __DEFAULT__ = "__DEFAULT__";
   referenceService = ReferenceService.INSTANCE;
   references = {};
@@ -243,10 +233,10 @@ export default class AdditionalFileInfosView extends Vue {
   isApplicationAdmin = false;
   canManage = false;
   isLoading;
-  datatypes = []
+  datatypes = [];
 
   fields = {};
-  file = null
+  file = null;
   validForm = false;
   valid = false;
   periods = {
@@ -259,7 +249,7 @@ export default class AdditionalFileInfosView extends Vue {
     label: {
       title: "Label",
       display: true,
-      internationalizationName: {fr: "Domaine", en: "Domain"},
+      internationalizationName: { fr: "Domaine", en: "Domain" },
     },
   };
   columnsVisible = false;
@@ -276,7 +266,7 @@ export default class AdditionalFileInfosView extends Vue {
 
   currentUser = {};
   comment = null;
-  additionalFile = {}
+  additionalFile = {};
 
   @Watch("authReferences")
   onExternalOpenStateChanged(newVal) {
@@ -286,8 +276,8 @@ export default class AdditionalFileInfosView extends Vue {
   getColumnTitle(column) {
     if (column.display) {
       return (
-          (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) ||
-          column.title
+        (column.internationalizationName && column.internationalizationName[this.$i18n.locale]) ||
+        column.title
       );
     }
   }
@@ -303,16 +293,20 @@ export default class AdditionalFileInfosView extends Vue {
       var toDeleteElement = event.authorizations.toDelete[authorizationKeytoDelete];
       authorizations = authorizations.filter((auth) => {
         return !new Authorization(auth).equals(
-            toDeleteElement,
-            this.authorizationScopes[datatype].map((scope) => scope.id)
+          toDeleteElement,
+          this.authorizationScopes[datatype].map((scope) => scope.id)
         );
       });
     }
     authorization.authorizations[event.indexColumn] = authorizations;
-    this.$set(this.authorization.authorizations, datatype, new Authorizations(
+    this.$set(
+      this.authorization.authorizations,
+      datatype,
+      new Authorizations(
         authorization,
         this.authorizationScopes[datatype].map((as) => as.id)
-    ));
+      )
+    );
   }
 
   registerCurrentAuthorization(event) {
@@ -332,10 +326,10 @@ export default class AdditionalFileInfosView extends Vue {
     ];
     authorizations = authorizations.map((auth) => {
       if (
-          !new Authorization(auth).equals(
-              authorizationToReplace,
-              this.authorizationScopes[datatype].map((scope) => scope.id)
-          )
+        !new Authorization(auth).equals(
+          authorizationToReplace,
+          this.authorizationScopes[datatype].map((scope) => scope.id)
+        )
       ) {
         return auth;
       } else {
@@ -343,10 +337,14 @@ export default class AdditionalFileInfosView extends Vue {
       }
     });
     authorization.authorizations[event.indexColumn] = authorizations;
-    this.$set(this.authorization.authorizations, event.datatype, new Authorizations(
+    this.$set(
+      this.authorization.authorizations,
+      event.datatype,
+      new Authorizations(
         authorization,
         this.authorizationScopes.map((as) => as.id)
-    ));
+      )
+    );
   }
 
   async created() {
@@ -354,35 +352,29 @@ export default class AdditionalFileInfosView extends Vue {
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
     this.subMenuPaths = [
       new SubMenuPath(
-          this.$t("dataTypesManagement.data-types").toLowerCase(),
-          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
-          () => this.$router.push("/applications")
+        this.$t("dataTypesManagement.data-types").toLowerCase(),
+        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+        () => this.$router.push("/applications")
       ),
       new SubMenuPath(
-          this.$t(`dataTypeAuthorizations.sub-menu-request-authorization`),
-          () => {
-            this.$router.push(
-                `/applications/${this.applicationName}/authorizationsRequest`
-            );
-          },
-          () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
+        this.$t(`dataTypeAuthorizations.sub-menu-request-authorization`),
+        () => {
+          this.$router.push(`/applications/${this.applicationName}/authorizationsRequest`);
+        },
+        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
       new SubMenuPath(
-          this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
-          () => {
-          },
-          () => {
-            this.$router.push(
-                `/applications/${this.applicationName}/authorizationsRequest/new`
-            );
-          }
+        this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
+        () => {},
+        () => {
+          this.$router.push(`/applications/${this.applicationName}/authorizationsRequest/new`);
+        }
       ),
     ];
     this.isLoading = false;
   }
 
-  mounted() {
-  }
+  mounted() {}
 
   async init() {
     this.isLoading = true;
@@ -392,45 +384,46 @@ export default class AdditionalFileInfosView extends Vue {
         "DATATYPE",
         "RIGHTSREQUEST",
       ]);
-      this.datatypes = (Object.keys(this.application.configuration.dataTypes) || [])
-          .reduce((acc, datatype) => {
-            acc[datatype] = {
-              name: this.internationalisationService.localeDataTypeIdName(
-                  this.application,
-                  this.application.dataTypes[datatype]
-              ) || datatype
-            }
-            return acc
-          }, {});
-      this.format =(( (this.application?.configuration?.additionalFiles || {})[this.additionalFileName] || {}).format) || {}
-      this.description = this.$t('additionalFilesmanagement.additionalFileDescrition')
-      this.fields = (Object.keys(this.format) || [])
-          .reduce((acc, field) => {
-            acc[field] = ""
-            return acc;
-          }, {});
-      this.configuration = (Object.keys(this.datatypes) || [])
-          .reduce((acc, datatype) => {
-            acc[datatype] = this.application.configuration.dataTypes[datatype]
-            return acc
-          }, {})
+      this.datatypes = (Object.keys(this.application.configuration.dataTypes) || []).reduce(
+        (acc, datatype) => {
+          acc[datatype] = {
+            name:
+              this.internationalisationService.localeDataTypeIdName(
+                this.application,
+                this.application.dataTypes[datatype]
+              ) || datatype,
+          };
+          return acc;
+        },
+        {}
+      );
+      this.format =
+        ((this.application?.configuration?.additionalFiles || {})[this.additionalFileName] || {})
+          .format || {};
+      this.description = this.$t("additionalFilesmanagement.additionalFileDescrition");
+      this.fields = (Object.keys(this.format) || []).reduce((acc, field) => {
+        acc[field] = "";
+        return acc;
+      }, {});
+      this.configuration = (Object.keys(this.datatypes) || []).reduce((acc, datatype) => {
+        acc[datatype] = this.application.configuration.dataTypes[datatype];
+        return acc;
+      }, {});
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-            .localName,
+          .localName,
       };
-      this.authorizations = (Object.keys(this.datatypes) || [])
-          .reduce((acc, datatype) => {
-            acc[datatype] = this.configuration[datatype]?.authorization?.authorizationScopes || []
-            return acc
-          }, {});
-      this.repository = (Object.keys(this.datatypes) || [])
-          .reduce((acc, datatype) => {
-            acc[datatype] = this.application.dataTypes[datatype].repository
-            return acc
-          }, {})
+      this.authorizations = (Object.keys(this.datatypes) || []).reduce((acc, datatype) => {
+        acc[datatype] = this.configuration[datatype]?.authorization?.authorizationScopes || [];
+        return acc;
+      }, {});
+      this.repository = (Object.keys(this.datatypes) || []).reduce((acc, datatype) => {
+        acc[datatype] = this.application.dataTypes[datatype].repository;
+        return acc;
+      }, {});
       const grantableInfos = await this.authorizationService.getAuthorizationGrantableInfos(
-          this.applicationName
+        this.applicationName
       );
       ({
         authorizationScopes: this.authorizationScopes,
@@ -440,81 +433,90 @@ export default class AdditionalFileInfosView extends Vue {
         isApplicationAdmin: this.isApplicationAdmin,
         ownAuthorizations: this.ownAuthorizations,
         ownAuthorizationsColumnsByPath: this.ownAuthorizationsColumnsByPath,
-        columnsVisible: this.columnsVisible
+        columnsVisible: this.columnsVisible,
       } = Authorizations.parseGrantableInfos(grantableInfos, this.datatypes, this.repository));
 
       if (this.additionalFileId != "new") {
-        this.validForm = true
-        this.valid = true
+        this.validForm = true;
+        this.valid = true;
         let additionalFiles = await this.additionalFileService.getAdditionalFiles(
-            this.applicationName,
-            this.additionalFileName,
-            {uuids: [this.additionalFileId]}
+          this.applicationName,
+          this.additionalFileName,
+          { uuids: [this.additionalFileId] }
         );
 
-        const additionalFile = additionalFiles && additionalFiles.additionalBinaryFiles && additionalFiles.additionalBinaryFiles[0]
-        this.currentUser =additionalFiles.users
-            .find(user =>
-                user.id == (
-                    (additionalFile.user) ||
-                    JSON.parse(localStorage.authenticatedUser).id)
-            );
+        const additionalFile =
+          additionalFiles &&
+          additionalFiles.additionalBinaryFiles &&
+          additionalFiles.additionalBinaryFiles[0];
+        this.currentUser = additionalFiles.users.find(
+          (user) =>
+            user.id == (additionalFile.user || JSON.parse(localStorage.authenticatedUser).id)
+        );
         this.comment = additionalFile.comment;
-        this.fields = Object.keys((this.format || {}) || [])
-            .reduce((acc, field) => {
-              acc[field] =  (additionalFile.additionalBinaryFileForm || {})[field]
-              return acc;
-            }, {});
+        this.fields = Object.keys(this.format || {} || []).reduce((acc, field) => {
+          acc[field] = (additionalFile.additionalBinaryFileForm || {})[field];
+          return acc;
+        }, {});
 
-        let authorizations = (additionalFile && additionalFile.associates) || []
-        let initialValue = new Authorizations({
-          authorizations: {},
-          applicationNameOrId: this.applicationName,
-          users: [this.users],
-          name: additionalFile.comment,
-          uuid: additionalFile.id
-        }, []);
-        this.authorization = (Object.keys(this.datatypes) || [])
-            .reduce((auth, datatype) => {
-              auth.authorizations[datatype] = new Authorizations(
-                  {authorizations: authorizations[datatype]},
-                  (this.authorizationScopes[datatype] || []).map((as) => as.id)
-              );
-              return auth
-            }, initialValue);
-        this.canManage = this.isApplicationAdmin ||
-            (
-                authorizations.users &&
-                authorizations.users[0].login == JSON.parse(localStorage.getItem('authenticatedUser')).login)
+        let authorizations = (additionalFile && additionalFile.associates) || [];
+        let initialValue = new Authorizations(
+          {
+            authorizations: {},
+            applicationNameOrId: this.applicationName,
+            users: [this.users],
+            name: additionalFile.comment,
+            uuid: additionalFile.id,
+          },
+          []
+        );
+        this.authorization = (Object.keys(this.datatypes) || []).reduce((auth, datatype) => {
+          auth.authorizations[datatype] = new Authorizations(
+            { authorizations: authorizations[datatype] },
+            (this.authorizationScopes[datatype] || []).map((as) => as.id)
+          );
+          return auth;
+        }, initialValue);
+        this.canManage =
+          this.isApplicationAdmin ||
+          (authorizations.users &&
+            authorizations.users[0].login ==
+              JSON.parse(localStorage.getItem("authenticatedUser")).login);
       } else {
-        let initialValue = new Authorizations({
-          authorizations: {},
-          applicationNameOrId: this.applicationName,
-          users: [],
-          name: "",
-          uuid: null
-        }, []);
-        this.authorization = (Object.keys(this.datatypes) || [])
-            .reduce((acc, datatype) => {
-              acc.authorizations[datatype] = new Authorizations(
-                  {dataType: datatype, applicationNameOrId: this.applicationName},
-                  (this.authorizationScopes[datatype] || []).map((as) => as.id)
-              );
-              return acc
-            }, initialValue);
+        let initialValue = new Authorizations(
+          {
+            authorizations: {},
+            applicationNameOrId: this.applicationName,
+            users: [],
+            name: "",
+            uuid: null,
+          },
+          []
+        );
+        this.authorization = (Object.keys(this.datatypes) || []).reduce((acc, datatype) => {
+          acc.authorizations[datatype] = new Authorizations(
+            { dataType: datatype, applicationNameOrId: this.applicationName },
+            (this.authorizationScopes[datatype] || []).map((as) => as.id)
+          );
+          return acc;
+        }, initialValue);
         this.canManage = true;
       }
       let currentAuthorizationUsers = this.authorization.users || [];
-      this.selectedUsers = (this.users || [])
-          .filter((user) => {
-            return currentAuthorizationUsers.find((u) => {
-              return u.id == user.id;
-            });
-          });
+      this.selectedUsers = (this.users || []).filter((user) => {
+        return currentAuthorizationUsers.find((u) => {
+          return u.id == user.id;
+        });
+      });
       this.selectedUsers.sort();
-      this.authReferences = await Authorizations.initAuthReferences(this.configuration, this.authorizations, this.authorizationScopes, this.getOrLoadReferences)
+      this.authReferences = await Authorizations.initAuthReferences(
+        this.configuration,
+        this.authorizations,
+        this.authorizationScopes,
+        this.getOrLoadReferences
+      );
 
-      let columnsVisible = {}
+      let columnsVisible = {};
       for (const datatype in this.columnsVisible) {
         columnsVisible[datatype] = {
           ...Authorizations.COLUMNS_VISIBLE,
@@ -523,9 +525,9 @@ export default class AdditionalFileInfosView extends Vue {
             display: true,
             forPublic: true,
             forRequest: true,
-            internationalizationName: {fr: "Associer", en: "Associate"},
-          }}
-
+            internationalizationName: { fr: "Associer", en: "Associate" },
+          },
+        };
       }
       this.columnsVisible = columnsVisible;
     } catch (error) {
@@ -546,14 +548,14 @@ export default class AdditionalFileInfosView extends Vue {
 
   updateFields(event) {
     this.fields = event.fields;
-    this.validForm = event.valid
-    this.loadFile(event)
+    this.validForm = event.valid;
+    this.loadFile(event);
   }
 
   updateComment(event) {
     this.comment = event.comment;
-    this.validForm = event.valid
-    this.loadFile(event)
+    this.validForm = event.valid;
+    this.loadFile(event);
   }
 
   @Watch("period")
@@ -564,88 +566,87 @@ export default class AdditionalFileInfosView extends Vue {
 
   async changeConfiguration() {
     if (!this.valid) {
-      return
+      return;
     }
     try {
       let authorizationToSend = {
         uuid: this.authorization.uuid,
         name: this.authorization.name,
         applicationNameOrId: this.applicationName,
-        authorizations: {}
+        authorizations: {},
       };
-      authorizationToSend.usersId = this.selectedUsers.map(user => user.id);
+      authorizationToSend.usersId = this.selectedUsers.map((user) => user.id);
       for (const datatype in this.authorization.authorizations) {
-        let authorizationForDatatype = this.authorization.authorizations[datatype].authorizations
+        let authorizationForDatatype = this.authorization.authorizations[datatype].authorizations;
         for (const scope in authorizationForDatatype) {
-          authorizationForDatatype[scope] = authorizationForDatatype[scope].map(
-              (auth) => {
-                var returnedAuth = new Authorization(auth);
-                returnedAuth.intervalDates = {
-                  fromDay: returnedAuth.fromDay,
-                  toDay: returnedAuth.toDay,
-                };
-                delete returnedAuth.fromDay
-                delete returnedAuth.toDay
-                delete returnedAuth.from
-                delete returnedAuth.to
-                delete returnedAuth.path
-                returnedAuth.dataGroups = returnedAuth.dataGroups.map((dg) => dg.id || dg);
-                return returnedAuth;
-              }
-          );
-          authorizationToSend.authorizations[datatype] = authorizationForDatatype
+          authorizationForDatatype[scope] = authorizationForDatatype[scope].map((auth) => {
+            var returnedAuth = new Authorization(auth);
+            returnedAuth.intervalDates = {
+              fromDay: returnedAuth.fromDay,
+              toDay: returnedAuth.toDay,
+            };
+            delete returnedAuth.fromDay;
+            delete returnedAuth.toDay;
+            delete returnedAuth.from;
+            delete returnedAuth.to;
+            delete returnedAuth.path;
+            returnedAuth.dataGroups = returnedAuth.dataGroups.map((dg) => dg.id || dg);
+            return returnedAuth;
+          });
+          authorizationToSend.authorizations[datatype] = authorizationForDatatype;
         }
       }
       if (!(this.comment && this.comment.length)) {
         this.$buefy.dialog.prompt({
-          message: this.$t('dataTypeAuthorizations.addComment'),
+          message: this.$t("dataTypeAuthorizations.addComment"),
           inputAttrs: {
-            placeholder: this.$t('dataTypeAuthorizations.commentExample'),
+            placeholder: this.$t("dataTypeAuthorizations.commentExample"),
             maxlength: 255,
             minLength: 3,
             canCancel: false,
-            confirmText: this.$t('dataTypeAuthorizations.grantRequestConfirm'),
-
+            confirmText: this.$t("dataTypeAuthorizations.grantRequestConfirm"),
           },
           trapFocus: true,
-          onConfirm: (value) => this.comment = value
-        })
+          onConfirm: (value) => (this.comment = value),
+        });
       }
 
       await this.additionalFileService.saveAdditionalFile(
-          this.additionalFileId == 'new' ? '' : this.additionalFileId,
-          this.additionalFileName,
-          this.applicationName,
-          this.additionalFileName,
-          this.file,
-          {...this.fields},
-          authorizationToSend);
-      if ('new' == this.additionalFileId) {
+        this.additionalFileId == "new" ? "" : this.additionalFileId,
+        this.additionalFileName,
+        this.applicationName,
+        this.additionalFileName,
+        this.file,
+        { ...this.fields },
+        authorizationToSend
+      );
+      if ("new" == this.additionalFileId) {
         this.alertService.toastSuccess(this.$t("alert.create-request"));
       } else {
         this.alertService.toastSuccess(this.$t("alert.modified-request"));
       }
-      this.$router.push(`/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}`);
+      this.$router.push(
+        `/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}`
+      );
     } catch (error) {
       this.alertService.toastServerError(error);
     }
-
   }
 
-
   rules() {
-    extend('required', () => {
-      return () => this.fields.files && this.fields.files.length
-    })
-    return 'required'
+    extend("required", () => {
+      return () => this.fields.files && this.fields.files.length;
+    });
+    return "required";
   }
 
   modifyAssociateFile(id) {
-    this.$router.push(`/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/${id}`);
-
+    this.$router.push(
+      `/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/${id}`
+    );
   }
-  loadFile(){
-    this.valid = this.validForm && (!!this.file || 'new'!=this.additionalFileId)
+  loadFile() {
+    this.valid = this.validForm && (!!this.file || "new" != this.additionalFileId);
   }
 }
 </script>
@@ -704,4 +705,5 @@ ul li.card-content {
 a {
   color: $dark;
 }
-</style>s
+</style>
+s

@@ -1,59 +1,57 @@
 <template>
-
   <ValidationProvider
-      v-slot="{ errors, valid }"
-      :name="vid"
-      :rules="rules"
-      :vid="vid"
-      class="column is-12"
-
+    v-slot="{ errors, valid }"
+    :name="vid"
+    :rules="rules"
+    :vid="vid"
+    class="column is-12"
   >
     <b-field
-        :label="label"
-        :message="errors"
-        :type="{
-                              'is-danger': errors && errors.length > 0,
-                              'is-success': valid,
-                            }"
-        class="file is-primary column is-12">
+      :label="label"
+      :message="errors"
+      :type="{
+        'is-danger': errors && errors.length > 0,
+        'is-success': valid,
+      }"
+      class="file is-primary column is-12"
+    >
       <template v-slot:label>
-        <span v-if="required" class="required">*</span>
+        <span v-if="required" class="required">{{ $t("ponctuation.star") }}</span>
         <label>{{ label }}</label>
       </template>
-      <b-taginput v-if="multiplicity=='MANY'"
-                  v-model="val"
-                  required
-                  type="text"
-                  @blur="updateValue"
-                  @input="updateValue"/>
-      <b-input v-else
-               v-model="val"
-               required
-               type="text"
-               @blur="updateValue"
-               @input="updateValue"/>
+      <b-taginput
+        v-if="multiplicity == 'MANY'"
+        v-model="val"
+        required
+        type="text"
+        @blur="updateValue"
+        @input="updateValue"
+      />
+      <b-input v-else v-model="val" required type="text" @blur="updateValue" @input="updateValue" />
     </b-field>
   </ValidationProvider>
 </template>
 
 <script>
-
-import moment from 'moment'
-import {extend, ValidationProvider} from "vee-validate";
-import {watch, ref} from "vue";
+import moment from "moment";
+import { extend, ValidationProvider } from "vee-validate";
+import { watch, ref } from "vue";
 
 export default {
   setup(props) {
     const val = ref("");
-    watch(() => props.value, () => {
-      val.value = ref(props.value)
-    });
-    return {val}
+    watch(
+      () => props.value,
+      () => {
+        val.value = ref(props.value);
+      }
+    );
+    return { val };
   },
   name: "OreInputDate",
-  emits: ['update:value'],
+  emits: ["update:value"],
   components: {
-    ValidationProvider
+    ValidationProvider,
   },
   props: {
     checker: {
@@ -78,123 +76,120 @@ export default {
         "dd/MM/yyyy": {
           pattern: "DD-MM-YYYY",
           regexp: /(\d{2})\/(\d{2})\/(\d{4})/,
-          replace: '$1 $2 $3'
+          replace: "$1 $2 $3",
         },
         "dd/MM/yy": {
           pattern: "DD-MM-YY",
           regexp: /(\d{2})\/(\d{2})\/(\d{2})/,
-          replace: '$1 $2 $3'
+          replace: "$1 $2 $3",
         },
         "MM/yyyy": {
           pattern: "MM-YYYY",
           regexp: /(\d{2})\/(\d{4})/,
-          replace: '$1 $2'
+          replace: "$1 $2",
         },
         "MM/yy": {
           pattern: "MM-YY",
           regexp: /(\d{2})\/(\d{2})/,
-          replace: '$1 $2'
+          replace: "$1 $2",
         },
-        "yyyy": {
+        yyyy: {
           pattern: "YYYY",
           regexp: /(\d{4})/,
-          replace: '$1'
+          replace: "$1",
         },
         "hh:mm": {
           pattern: "hh:mm",
           regexp: /(\d{2}):(\d{2})/,
-          replace: '$1 $2'
+          replace: "$1 $2",
         },
         "hh:mm:ss": {
           pattern: "hh:mm:ss",
           regexp: /(\d{2}):(\d{2}):(\d{2})/,
-          replace: '$1 $2 $3'
+          replace: "$1 $2 $3",
         },
         "dd/MM/yyyy hh:mm:ss": {
           pattern: "DD-MM-YYYY hh:mm:ss",
           regexp: /(\d{2})\/(\d{2})\/(\d{4}) (\d{2}):(\d{2}):(\d{2})/,
-          replace: '$1 $2 $3 $4:$5:$6'
+          replace: "$1 $2 $3 $4:$5:$6",
         },
         "dd/MM/yy hh:mm:ss": {
           pattern: "DD-MM-YY hh:mm:ss",
           regexp: /(\d{2})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2}):(\d{2})/,
-          replace: '$1 $2 $3 $4:$5:$6'
-        }
-      }
-    }
+          replace: "$1 $2 $3 $4:$5:$6",
+        },
+      },
+    };
   },
   methods: {
     extend,
     validDate(value) {
-      let patternElement = this.pattern[this.checker.params.pattern]
-      let formattedDate = moment(value, patternElement.pattern).format(patternElement.pattern)
-      let parsedDate = formattedDate.replaceAll('-', '/')
-      return parsedDate == value
+      let patternElement = this.pattern[this.checker.params.pattern];
+      let formattedDate = moment(value, patternElement.pattern).format(patternElement.pattern);
+      let parsedDate = formattedDate.replaceAll("-", "/");
+      return parsedDate == value;
     },
     validateDate(value) {
       if (Array.isArray(value)) {
-        return value
-            .map(this.validDate)
-            .filter(v => v == false)
-            .length == 0
+        return value.map(this.validDate).filter((v) => v == false).length == 0;
       } else {
-        return this.validDate(value)
+        return this.validDate(value);
       }
     },
     validateRequired(value) {
-      if (typeof value == 'string') {
-        return !!value
+      if (typeof value == "string") {
+        return !!value;
       } else {
-        return value.length > 0
+        return value.length > 0;
       }
     },
     updateValue(event) {
       if (typeof event == "object") {
-        event = event.target.value
+        event = event.target.value;
       }
-      this.$emit('update:value', event)
-    }
+      this.$emit("update:value", event);
+    },
   },
   computed: {
     required: {
       get() {
-        return this.checker && this.checker.params && this.checker.params.required
-      }
+        return this.checker && this.checker.params && this.checker.params.required;
+      },
     },
     multiplicity: {
       get() {
-        return this.checker && this.checker.params && this.checker.params.multiplicity == 'MANY'
-      }
+        return this.checker && this.checker.params && this.checker.params.multiplicity == "MANY";
+      },
     },
     isValidDate: {
       get() {
-        return this.parsedDate == this.value
-      }
+        return this.parsedDate == this.value;
+      },
     },
     rules: {
       get() {
-        let rules = []
+        let rules = [];
         if (this.checker) {
-          if (this.checker.name == 'Date') {
+          if (this.checker.name == "Date") {
             if (this.checker.params.pattern) {
-              this.extend('date', value => {
-                return this.validateDate(value) || this.$t('rules.date', this.checker.params)
-              })
-              rules.push('date')
+              this.extend("date", (value) => {
+                return this.validateDate(value) || this.$t("rules.date", this.checker.params);
+              });
+              rules.push("date");
             }
           }
           if (this.checker.params.required) {
-            this.extend('required', value => {
-              return !!value || this.$t('rules.required')
-            })
-            rules.push('required')
+            this.extend("required", (value) => {
+              return !!value || this.$t("rules.required");
+            });
+            rules.push("required");
           }
         }
-        return rules.join('|')
-      }
-    }
-  }
-}
+        return rules.join("|");
+      },
+    },
+  },
+};
 </script>
 
 <style scoped>
@@ -202,6 +197,5 @@ export default {
   color: red;
   padding-right: 5px;
   font-size: 150%;
- }
-
+}
 </style>

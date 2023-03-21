@@ -72,35 +72,29 @@
           </b-field>
         </ValidationProvider>
       </div>
-      <b-table
-          :data="arrayReferences">
+      <b-table :data="arrayReferences">
         <b-table-column :label="$t('referencesManagement.references')" v-slot="props">
           {{ props.row.refNameLocal }}
         </b-table-column>
         <b-table-column :label="$t('referencesManagement.admin')" v-slot="props">
-          <b-checkbox-button
-              type="is-light"
-              v-model="props.row.isAdmin"
-          >
+          <b-checkbox-button type="is-light" v-model="props.row.isAdmin">
             <b-icon
-                :icon="props.row.isAdmin ? 'square-check' : 'square'"
-                type="is-primary"
-                class="clickable"
-                pack="far"
-                size="is-medium"
+              :icon="props.row.isAdmin ? 'square-check' : 'square'"
+              type="is-primary"
+              class="clickable"
+              pack="far"
+              size="is-medium"
             />
           </b-checkbox-button>
         </b-table-column>
         <b-table-column :label="$t('referencesManagement.gestion')" v-slot="props">
-          <b-checkbox-button
-              v-model="props.row.isManage"
-          >
+          <b-checkbox-button v-model="props.row.isManage">
             <b-icon
-                :icon="props.row.isManage ? 'square-check' : 'square'"
-                type="is-primary"
-                class="clickable"
-                pack="far"
-                size="is-medium"
+              :icon="props.row.isManage ? 'square-check' : 'square'"
+              type="is-primary"
+              class="clickable"
+              pack="far"
+              size="is-medium"
             />
           </b-checkbox-button>
         </b-table-column>
@@ -423,7 +417,10 @@ a {
   color: $dark;
 }
 
-.b-checkbox.checkbox.button, .b-checkbox.checkbox.button:hover, .b-checkbox.checkbox.button:active, .b-checkbox.checkbox.button:focus {
+.b-checkbox.checkbox.button,
+.b-checkbox.checkbox.button:hover,
+.b-checkbox.checkbox.button:active,
+.b-checkbox.checkbox.button:focus {
   border-color: transparent;
   background-color: transparent;
   box-shadow: none;

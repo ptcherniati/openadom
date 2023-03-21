@@ -249,7 +249,10 @@ export default class ReferenceTableView extends Vue {
   async init() {
     this.isLoading = true;
     try {
-      this.application = await this.applicationService.getApplication(this.applicationName,['CONFIGURATION','REFERENCETYPE']);
+      this.application = await this.applicationService.getApplication(this.applicationName, [
+        "CONFIGURATION",
+        "REFERENCETYPE",
+      ]);
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)

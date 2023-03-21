@@ -2,11 +2,11 @@
   <div>
     <div>
       <b-button
-          size="is-small"
-          type="is-dark is-light"
-          icon-left="plus"
-          outlined
-          @click="isCardModalActive = true"
+        size="is-small"
+        type="is-dark is-light"
+        icon-left="plus"
+        outlined
+        @click="isCardModalActive = true"
       />
       <b-modal v-model="isCardModalActive" outlined scroll="keep">
         <div class="card">
@@ -26,12 +26,12 @@
                 </div>
                 <div class="column is-four-fifth">
                   <b-input
-                      :type="inputType"
-                      :placeholder="format"
-                      :validation-message="format"
-                      :pattern="pattern"
-                      :format="format"
-                      v-model="from"
+                    :type="inputType"
+                    :placeholder="format"
+                    :validation-message="format"
+                    :pattern="pattern"
+                    :format="format"
+                    v-model="from"
                   />
                 </div>
               </div>
@@ -44,13 +44,13 @@
                 </div>
                 <div class="column is-four-fifth">
                   <b-input
-                      label="et"
-                      :type="inputType"
-                      :placeholder="format"
-                      :validation-message="format"
-                      :pattern="pattern"
-                      :format="format"
-                      v-model="to"
+                    label="et"
+                    :type="inputType"
+                    :placeholder="format"
+                    :validation-message="format"
+                    :pattern="pattern"
+                    :format="format"
+                    v-model="to"
                   />
                 </div>
               </div>
@@ -60,11 +60,11 @@
                 <div class="column is-4"></div>
                 <div class="column is-4">
                   <b-button
-                      icon-left="filter"
-                      type="is-dark"
-                      expanded
-                      @click="submit"
-                      outlined
+                    icon-left="filter"
+                    type="is-dark"
+                    expanded
+                    @click="submit"
+                    outlined
                   ></b-button>
                 </div>
               </div>
@@ -77,12 +77,11 @@
 </template>
 
 <script>
-
 export default {
   name: "CollapsibleInterval",
   components: {},
   props: {
-    variableComponent: Object
+    variableComponent: Object,
   },
   data() {
     return {
@@ -96,23 +95,22 @@ export default {
       from: "",
       to: "",
       dateTimeFormat: {
-        d: {pattern: "\\d", type: "date"},
-        h: {pattern: "\\d", type: "time"},
-        m: {pattern: "\\d", type: "time"},
-        s: {pattern: "\\d", type: "time"},
-        n: {pattern: "\\d", type: "time"},
-        a: {pattern: "[AP]M]", type: "time"},
-        y: {pattern: "\\d", type: "date"},
-        M: {pattern: "\\d", type: "date"},
-        Z: {pattern: "[+-]\\d{4}", type: "date"},
-        G: {pattern: "[AB]D", type: "date"},
+        d: { pattern: "\\d", type: "date" },
+        h: { pattern: "\\d", type: "time" },
+        m: { pattern: "\\d", type: "time" },
+        s: { pattern: "\\d", type: "time" },
+        n: { pattern: "\\d", type: "time" },
+        a: { pattern: "[AP]M]", type: "time" },
+        y: { pattern: "\\d", type: "date" },
+        M: { pattern: "\\d", type: "date" },
+        Z: { pattern: "[+-]\\d{4}", type: "date" },
+        G: { pattern: "[AB]D", type: "date" },
       },
       pattern: /.*/,
       inputType: "text",
-    }
+    };
   },
   created() {
-
     if (this.variableComponent) {
       this.type = this.variableComponent.type;
       this.format = this.variableComponent.format;
@@ -121,7 +119,7 @@ export default {
       this.key = this.variableComponent.key;
     }
     let p = this.format;
-    let t = {date: false, time: false, isNumeric: false};
+    let t = { date: false, time: false, isNumeric: false };
     if (this.type == "date") {
       Object.keys(this.dateTimeFormat).forEach((search) => {
         if (p.match(search)) {
@@ -151,7 +149,7 @@ export default {
       this.inputType = "number";
     }
   },
-  emits:["setting_interval"],
+  emits: ["setting_interval"],
   methods: {
     submit() {
       this.$emit("setting_interval", {
@@ -170,9 +168,9 @@ export default {
         },
       });
       this.isCardModalActive = false;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

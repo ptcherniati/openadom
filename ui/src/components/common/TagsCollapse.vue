@@ -1,10 +1,5 @@
 <template>
-  <b-collapse
-    class="card"
-    :open="open"
-    animation="slide"
-    aria-id="contentIdForA11y3"
-  >
+  <b-collapse class="card" :open="open" animation="slide" aria-id="contentIdForA11y3">
     <template #trigger="props">
       <div
         class="card-header"
@@ -21,7 +16,7 @@
       </div>
     </template>
     <div class="card-content">
-      <div class="content columns" style="display: flex; flex-wrap: wrap;">
+      <div class="content columns" style="display: flex; flex-wrap: wrap">
         <b-field class="column is-narrow" v-for="(tag, index) in tags" :key="index">
           <b-switch v-model="tag.selected" passive-type="is-light" type="is-dark">
             {{ tag.localName === "no-tag" ? $t("tags.no-tag") : tag.localName }}
@@ -30,11 +25,10 @@
       </div>
     </div>
   </b-collapse>
-
 </template>
 
 <script>
-import { Component,Prop, Vue } from "vue-property-decorator";
+import { Component, Prop, Vue } from "vue-property-decorator";
 @Component({
   components: {},
 })
@@ -44,6 +38,4 @@ export default class TagsCollapse extends Vue {
 }
 </script>
 
-<style scoped>
-
-</style>
+<style scoped></style>
