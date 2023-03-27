@@ -593,6 +593,59 @@ public class OreSiResourcesTest {
 
     @Test
     @Category(OTHERS_TEST.class)
+    public void testMultiplicityMany() throws Exception {
+        URL resource = getClass().getResource(fixtures.getMultiplicityMany());
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
+            //définition de l'application
+            addUserRightCreateApplication(authUserId, "multiplicity");
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/multiplicity")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+
+            JsonPath.parse(response).read("$.id");
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/multiplicity", "ALL,REFERENCETYPE")
+                            .cookie(authCookie)
+                            .param("filter", "ALL"))
+                    .andExpect(status().is2xxSuccessful());
+        }
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getMultiplicityReferencesFiles().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                String response = mockMvc.perform(multipart("/api/v1/applications/multiplicity/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated())
+                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                        .andReturn().getResponse().getContentAsString();
+
+                JsonPath.parse(response).read("$.id");
+            }
+        }
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/multiplicity/references/reference1")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues[*].values.[?(@.projets==[\"4\",\"5\",\"9\"])]", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.referenceValues[*].values.[?(@.names==[\"toto1.3\",\"toto1.1\",\"toto1.2\"])]", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.referenceValues[*].values.[?(@.duration==[\"3.2\",\"4.5\",\"5.6\"])]", Matchers.hasSize(3)))
+                .andExpect(jsonPath("$.referenceValues[*].values.[?(@.dates==[\"date:1970-01-01T00:00:00:20/01/2014\",\"date:1970-01-01T00:00:00:23/06/2014\"])]", Matchers.hasSize(4)));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/multiplicity/references/reference2")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.referenceValues[*].values.reference1[0]", Matchers.hasItems("[toto__toto2,toto__toto1]", "[tutu__tutu2,tutu__tutu1]" )));
+    }
+
+
+    @Test
+    @Category(OTHERS_TEST.class)
     public void addApplicationMonsoreWithRepository() throws Exception {
         URL resource = getClass().getResource(fixtures.getMonsoreApplicationConfigurationWithRepositoryResourceName());
         String oirFilesUUID;

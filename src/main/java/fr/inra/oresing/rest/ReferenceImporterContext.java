@@ -174,7 +174,7 @@ public class ReferenceImporterContext {
         return expectedColumnsPerHeaders;
     }
 
-    public void pushValue(ReferenceDatum referenceDatum, String header, String cellContent, SetMultimap<String, UUID> refsLinkedTo) {
+    public void pushValue(ReferenceDatum referenceDatum, String header, String cellContent, SetMultimap<String, Set<UUID>> refsLinkedTo) {
         Column column = getExpectedColumnsPerHeaders().get(header);
         column.pushValue(cellContent, referenceDatum, refsLinkedTo);
     }
@@ -439,7 +439,7 @@ public class ReferenceImporterContext {
             return isExpected() && getExpectedHeader().equals(header);
         }
 
-        abstract void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo);
+        abstract void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, Set<UUID>> refsLinkedTo);
 
         abstract String getCsvCellContent(ReferenceDatum referenceDatum);
 
@@ -475,7 +475,7 @@ public class ReferenceImporterContext {
         }
 
         @Override
-        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo) {
+        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, Set<UUID>> refsLinkedTo) {
             ReferenceColumnValue referenceColumnValue = new ReferenceColumnSingleValue(cellContent);
             referenceDatum.put(getReferenceColumn(), referenceColumnValue);
         }
@@ -496,7 +496,7 @@ public class ReferenceImporterContext {
         }
 
         @Override
-        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo) {
+        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, Set<UUID>> refsLinkedTo) {
             Set<String> values = Splitter.on(CSV_CELL_SEPARATOR)
                     .splitToStream(cellContent)
                     .collect(Collectors.toSet());
@@ -524,16 +524,16 @@ public class ReferenceImporterContext {
         /**
          * Cette colonne dynamique a été générée par une ligne de référentiel, donc il faut lier la donnée à ce référentiel
          */
-        private final Map.Entry<String, UUID> refsLinkedToEntryToAdd;
+        private final Map.Entry<String, Set<UUID>> refsLinkedToEntryToAdd;
 
-        public DynamicColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey, Map.Entry<String, UUID> refsLinkedToEntryToAdd, ComputedValueUsage computedValueUsage) {
+        public DynamicColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, Ltree expectedHierarchicalKey, Map.Entry<String, Set<UUID>> refsLinkedToEntryToAdd, ComputedValueUsage computedValueUsage) {
             super(referenceColumn, presenceConstraint, computedValueUsage);
             this.expectedHierarchicalKey = expectedHierarchicalKey;
             this.refsLinkedToEntryToAdd = refsLinkedToEntryToAdd;
         }
 
         @Override
-        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, UUID> refsLinkedTo) {
+        public void pushValue(String cellContent, ReferenceDatum referenceDatum, SetMultimap<String, Set<UUID>> refsLinkedTo) {
             ReferenceColumnIndexedValue existingReferenceColumnIndexedValue;
             final Map<Ltree, String> values;
             if (referenceDatum.contains(getReferenceColumn())) {

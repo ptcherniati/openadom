@@ -464,11 +464,11 @@ public class OreSiResources {
                                 list.stream()
                                         .limit(1)
                                         .forEach(dataRow -> {
-                                            UUID refId = dataRow.getRefsLinkedTo().get(((VariableComponentKey) referenceLineChecker.getTarget()).getVariable()).get(((VariableComponentKey) referenceLineChecker.getTarget()).getComponent());
+                                            Set<UUID> refIds = dataRow.getRefsLinkedTo().get(((VariableComponentKey) referenceLineChecker.getTarget()).getVariable()).get(((VariableComponentKey) referenceLineChecker.getTarget()).getComponent());
                                             requiredreferencesValues.values().stream()
                                                     .map(l ->
                                                             l.stream()
-                                                                    .filter(referenceValue -> referenceValue.getId().equals(refId))
+                                                                    .filter(referenceValue -> refIds.contains(referenceValue.getId()))
                                                                     .findFirst())
                                                     .filter(Optional::isPresent)
                                                     .map(Optional::get)

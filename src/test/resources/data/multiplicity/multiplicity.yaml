@@ -1,0 +1,60 @@
+version: 1
+application:
+  defaultLanguage: fr
+  internationalizationName:
+    fr: Test de valeurs multiples
+    en: Multiple values test
+  name: multiplicity
+  version: 1
+references:
+  reference1:
+    keyColumns: [group,equipe]
+    columns:
+      group:
+      equipe:
+      projets:
+        checker:
+          name: Integer
+          params:
+            required: true
+            multiplicity: "MANY"
+      names:
+        checker:
+          name: RegularExpression
+          params:
+            pattern: .*
+            required: true
+            multiplicity: "MANY"
+      duration:
+        checker:
+          name: Float
+          params:
+            required: false
+            multiplicity: "MANY"
+      dates:
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/YYYY
+            required: false
+            multiplicity: "MANY"
+  reference2:
+    keyColumns: [group]
+    columns:
+      group:
+    computedColumns:
+      reference1:
+        checker:
+          name: Reference
+          params:
+            multiplicity: MANY
+            refType: reference1
+        computation:
+          expression: >
+            String group = datum["group"];
+            references.reference1
+            .findAll({it.refValues.group.equals(group)})
+            .collect({it.naturalKey})
+            .join(",");
+          references:
+            - reference1

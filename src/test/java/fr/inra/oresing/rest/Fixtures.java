@@ -941,6 +941,17 @@ public class Fixtures {
         }
     }
 
+    public String getMultiplicityMany() {
+        return "/data/multiplicity/multiplicity.yaml";
+    }
+
+    public Map<String, String> getMultiplicityReferencesFiles() {
+        Map<String, String> references = new HashMap<>();
+        references.put("reference1","/data/multiplicity/references/reference1.csv");
+        references.put("reference2","/data/multiplicity/references/reference2.csv");
+        return references;
+    }
+
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),

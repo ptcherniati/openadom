@@ -8,6 +8,7 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 import lombok.Value;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -26,12 +27,12 @@ public class ReferenceValidationCheckResult implements ValidationCheckResult {
     /**
      * En cas de succès, l'identifiant naturel du référentiel correspondant à la valeur qui a été validée
      */
-    Ltree matchedReferenceHierarchicalKey;
+    Set<Ltree> matchedReferenceHierarchicalKey;
 
     /**
      * En cas de succès, l'identifiant technique du référentiel correspondant à la valeur qui a été validée
      */
-    UUID matchedReferenceId;
+    Set<UUID> matchedReferenceId;
 
     /**
      * En cas d'erreur, la clé i18n du message d'erreur
@@ -43,7 +44,7 @@ public class ReferenceValidationCheckResult implements ValidationCheckResult {
      */
     Map<String, Object> messageParams;
 
-    public static ReferenceValidationCheckResult success(CheckerTarget target, String rawValue, Ltree matchedReferenceHierarchicalKey, UUID matchedReferenceId) {
+    public static ReferenceValidationCheckResult success(CheckerTarget target, String rawValue, Set<Ltree> matchedReferenceHierarchicalKey, Set<UUID> matchedReferenceId) {
         return new ReferenceValidationCheckResult(target, ValidationLevel.SUCCESS, rawValue, matchedReferenceHierarchicalKey, matchedReferenceId, null, null);
     }
 

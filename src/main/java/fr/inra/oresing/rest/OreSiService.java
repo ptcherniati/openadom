@@ -22,11 +22,11 @@ import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRole;
 import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.rest.exceptions.additionalfiles.AdditionalFileParamsParsingResult;
+import fr.inra.oresing.rest.exceptions.additionalfiles.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
-import fr.inra.oresing.rest.exceptions.additionalfiles.AdditionalFileParamsParsingResult;
-import fr.inra.oresing.rest.exceptions.additionalfiles.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
@@ -52,7 +52,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Nullable;
-import javax.servlet.http.HttpServletResponse;
 import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -221,7 +220,7 @@ public class OreSiService {
                         String dataGroup = migration.getDataGroup();
                         String variable = migration.getVariable();
                         Map<String, String> variableValue = new LinkedHashMap<>();
-                        Map<String, UUID> refsLinkedToAddForVariable = new LinkedHashMap<>();
+                        Map<String, Set<UUID>> refsLinkedToAddForVariable = new LinkedHashMap<>();
                         for (Map.Entry<String, Configuration.AddVariableMigrationDescription> componentEntry : migration.getComponents().entrySet()) {
                             String component = componentEntry.getKey();
                             String componentValue = Optional.ofNullable(componentEntry.getValue())
@@ -232,13 +231,13 @@ public class OreSiService {
                                 ReferenceLineChecker referenceLineChecker = referenceLineCheckers.get(variableComponentKey);
                                 ReferenceValidationCheckResult referenceCheckResult = referenceLineChecker.check(componentValue);
                                 Preconditions.checkState(referenceCheckResult.isSuccess(), componentValue + " n'est pas une valeur par défaut acceptable pour " + variableComponentKey);
-                                UUID referenceId = referenceCheckResult.getMatchedReferenceId();
+                                Set<UUID> referenceId = referenceCheckResult.getMatchedReferenceId();
                                 refsLinkedToAddForVariable.put(component, referenceId);
                             }
                             variableValue.put(component, componentValue);
                         }
                         Map<String, Map<String, String>> variablesToAdd = Map.of(variable, variableValue);
-                        Map<String, Map<String, UUID>> refsLinkedToAdd = Map.of(variable, refsLinkedToAddForVariable);
+                        Map<String, Map<String, Set<UUID>>> refsLinkedToAdd = Map.of(variable, refsLinkedToAddForVariable);
                         int migratedCount = dataRepository.migrate(dataType, dataGroup, variablesToAdd, refsLinkedToAdd);
                         if (log.isInfoEnabled()) {
                             log.info(migratedCount + " lignes migrées");
@@ -609,7 +608,7 @@ public class OreSiService {
 
         return rowWithData -> {
             Datum datum = Datum.copyOf(rowWithData.getDatum());
-            Map<VariableComponentKey, UUID> refsLinkedTo = new LinkedHashMap<>();
+            Map<VariableComponentKey, Set<UUID>> refsLinkedTo = new LinkedHashMap<>();
             Map<VariableComponentKey, DateValidationCheckResult> dateValidationCheckResultImmutableMap = new HashMap<>();
             List<CsvRowValidationCheckResult> rowErrors = new LinkedList<>();
 
@@ -626,11 +625,23 @@ public class OreSiService {
                             if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                                 ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
                                 if (configuration.getTransformation().getGroovy() != null) {
-                                    datum.put((VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(), ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey().getSql());
+                                    final Set<Ltree> matchedReferenceHierarchicalKeys = ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey();
+                                    datum.put(
+                                            (VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(),
+                                            matchedReferenceHierarchicalKeys
+                                                    .stream()
+                                                    .map(Ltree::getSql)
+                                                    .collect(Collectors.joining(
+                                                            ",",
+                                                            matchedReferenceHierarchicalKeys.size()>1?"[":"",
+                                                            matchedReferenceHierarchicalKeys.size()>1?"]":"")
+                                                    )
+                                    );
+                                    System.out.println("toto");
                                 }
                                 ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                                 VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget();
-                                UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
+                                Set<UUID> referenceId = referenceValidationCheckResult.getMatchedReferenceId();
                                 refsLinkedTo.put(variableComponentKey, referenceId);
                             }
                         } else {
@@ -687,7 +698,7 @@ public class OreSiService {
                 Datum dataGroupValues = datum.filterOnVariable(includeInDataGroupPredicate);
 
                 Map<String, Map<String, String>> toStore = new LinkedHashMap<>();
-                Map<String, Map<String, UUID>> refsLinkedToToStore = new LinkedHashMap<>();
+                Map<String, Map<String, Set<UUID>>> refsLinkedToToStore = new LinkedHashMap<>();
                 for (Map.Entry<VariableComponentKey, String> entry2 : dataGroupValues.asMap().entrySet()) {
                     VariableComponentKey variableComponentKey = entry2.getKey();
                     String variable = variableComponentKey.getVariable();

@@ -118,6 +118,11 @@ public class GroovyLineCheckerTest {
             }
 
             @Override
+            public Multiplicity getMultiplicity() {
+                return Multiplicity.ONE;
+            }
+
+            @Override
             public GroovyConfiguration getGroovy() {
                 return new GroovyConfiguration() {
                     @Override
@@ -138,4 +143,5 @@ public class GroovyLineCheckerTest {
             }
         };
     }
+
 }

@@ -2,31 +2,14 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMultiset;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.ImmutableSetMultimap;
-import com.google.common.collect.ImmutableSortedSet;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.LinkedListMultimap;
-import com.google.common.collect.ListMultimap;
-import com.google.common.collect.Maps;
-import com.google.common.collect.SetMultimap;
+import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.InvalidDatasetContentException;
 import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.model.ComputedValueUsage;
-import fr.inra.oresing.model.ReferenceColumn;
-import fr.inra.oresing.model.ReferenceColumnMultipleValue;
-import fr.inra.oresing.model.ReferenceColumnSingleValue;
-import fr.inra.oresing.model.ReferenceColumnValue;
-import fr.inra.oresing.model.ReferenceDatum;
-import fr.inra.oresing.model.ReferenceValue;
+import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
@@ -45,18 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -208,12 +180,12 @@ abstract class ReferenceImporter {
     private RowWithReferenceDatum csvRecordToRowWithReferenceDatum(ImmutableList<String> columns, CSVRecord csvRecord) {
         Iterator<String> currentHeader = columns.iterator();
         ReferenceDatum referenceDatum = new ReferenceDatum();
-        SetMultimap<String, UUID> refsLinkedTo = HashMultimap.create();
+        SetMultimap<String, Set<UUID>> refsLinkedTo = HashMultimap.create();
         csvRecord
                 .forEach(cellContent -> {
-            String header = currentHeader.next();
-            referenceImporterContext.pushValue(referenceDatum, header, cellContent.trim(), refsLinkedTo);
-        });
+                    String header = currentHeader.next();
+                    referenceImporterContext.pushValue(referenceDatum, header, cellContent.trim(), refsLinkedTo);
+                });
         int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
         return new RowWithReferenceDatum(lineNumber, referenceDatum, ImmutableSetMultimap.copyOf(refsLinkedTo));
     }
@@ -231,7 +203,7 @@ abstract class ReferenceImporter {
      */
     private ReferenceDatumAfterChecking check(RowWithReferenceDatum rowWithReferenceDatum) {
         ReferenceDatum referenceDatumBeforeChecking = rowWithReferenceDatum.getReferenceDatum();
-        ImmutableSetMultimap.Builder<String, UUID> refsLinkedToBuilder = ImmutableSetMultimap.builder();
+        ImmutableSetMultimap.Builder<String, Set<UUID>> refsLinkedToBuilder = ImmutableSetMultimap.builder();
         ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder = ImmutableList.builder();
         ReferenceDatum referenceDatum = ReferenceDatum.copyOf(referenceDatumBeforeChecking);
         referenceImporterContext.getLineCheckers().forEach(lineChecker -> {
@@ -260,8 +232,13 @@ abstract class ReferenceImporter {
                         .filter(ReferenceValidationCheckResult.class::isInstance)
                         .map(ReferenceValidationCheckResult.class::cast)
                         .forEach(referenceValidationCheckResult -> {
-                            UUID referenceId = referenceValidationCheckResult.getMatchedReferenceId();
-                            rawValueReplacedByKeys.put(referenceColumn, referenceValidationCheckResult.getMatchedReferenceHierarchicalKey().getSql());
+                            Set<UUID> referenceId = referenceValidationCheckResult.getMatchedReferenceId();
+                            final List<String> sqls = referenceValidationCheckResult.getMatchedReferenceHierarchicalKey().stream()
+                                    .map(Ltree::getSql)
+                                    .collect(Collectors.toList());
+                            rawValueReplacedByKeys.put(
+                                    referenceColumn,
+                                    sqls.stream().collect(Collectors.joining(",",sqls.size()>1?"[":"",sqls.size()>1?"]":"")) );
                             refsLinkedToBuilder.put(Ltree.escapeToLabel(reference), referenceId);
                         });
                 Multiplicity multiplicity = referenceLineChecker.getConfiguration().getMultiplicity();
@@ -337,7 +314,7 @@ abstract class ReferenceImporter {
         e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
         e.setHierarchicalReference(hierarchicalReference);
-        e.setRefsLinkedTo(Maps.transformValues(referenceDatumAfterChecking.getRefsLinkedTo().asMap(), Set::copyOf));
+        e.setRefsLinkedTo(Maps.transformValues(referenceDatumAfterChecking.getRefsLinkedTo().asMap(), set-> set.stream().flatMap(Set::stream).collect(Collectors.toSet())));
         e.setNaturalKey(naturalKey);
         e.setApplication(referenceImporterContext.getApplicationId());
         e.setRefValues(referenceDatum);
@@ -372,7 +349,7 @@ abstract class ReferenceImporter {
     private static class RowWithReferenceDatum {
         int lineNumber;
         ReferenceDatum referenceDatum;
-        ImmutableSetMultimap<String, UUID> refsLinkedTo;
+        ImmutableSetMultimap<String, Set<UUID>> refsLinkedTo;
     }
 
     @Value
@@ -380,7 +357,7 @@ abstract class ReferenceImporter {
         int lineNumber;
         ReferenceDatum referenceDatumBeforeChecking;
         ReferenceDatum referenceDatumAfterChecking;
-        ImmutableSetMultimap<String, UUID> refsLinkedTo;
+        ImmutableSetMultimap<String, Set<UUID>> refsLinkedTo;
         ImmutableList<CsvRowValidationCheckResult> errors;
     }
 
