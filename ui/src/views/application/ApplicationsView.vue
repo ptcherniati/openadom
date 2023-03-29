@@ -7,11 +7,11 @@
         <section>
           <div v-if="canCreateApplication" class="card is-clickable">
             <div
-              class="card-header createApplication"
-              role="button"
-              style="margin-bottom: 50px"
-              tabindex="0"
-              @click="createApplication"
+                class="card-header createApplication"
+                role="button"
+                style="margin-bottom: 50px"
+                tabindex="0"
+                @click="createApplication"
             >
               <a class="card-header-icon createApplication">
                 <b-icon icon="plus"></b-icon>
@@ -31,37 +31,37 @@
               <div class="content">
                 <b-field class="columns">
                   <b-checkbox
-                    v-model="checkboxDate"
-                    class="column"
-                    false-value="false"
-                    field="name"
-                    true-value="true"
-                    @input="recalculate"
-                    >{{ $t("applications.trierRecent") }}
+                      v-model="checkboxDate"
+                      class="column"
+                      false-value="false"
+                      field="name"
+                      true-value="true"
+                      @input="recalculate"
+                  >{{ $t("applications.trierRecent") }}
                   </b-checkbox>
                 </b-field>
               </div>
               <div class="content">
                 <b-field class="columns">
                   <b-checkbox
-                    id="checkboxTrieA_z"
-                    v-model="checkboxTrieA_z"
-                    class="column"
-                    false-value="false"
-                    field="name"
-                    true-value="true"
-                    @input="recalculate"
-                    >{{ $t("applications.trierA_z") }}
+                      id="checkboxTrieA_z"
+                      v-model="checkboxTrieA_z"
+                      class="column"
+                      false-value="false"
+                      field="name"
+                      true-value="true"
+                      @input="recalculate"
+                  >{{ $t("applications.trierA_z") }}
                   </b-checkbox>
                   <b-checkbox
-                    id="checkboxTrieZ_a"
-                    v-model="checkboxTrieZ_a"
-                    class="column"
-                    false-value="false"
-                    field="name"
-                    true-value="true"
-                    @input="recalculate"
-                    >{{ $t("applications.trierZ_a") }}
+                      id="checkboxTrieZ_a"
+                      v-model="checkboxTrieZ_a"
+                      class="column"
+                      false-value="false"
+                      field="name"
+                      true-value="true"
+                      @input="recalculate"
+                  >{{ $t("applications.trierZ_a") }}
                   </b-checkbox>
                 </b-field>
               </div>
@@ -76,12 +76,12 @@
                 <b-field>
                   {{ $t("applications.name") }}
                   <b-autocomplete
-                    v-model="filterName"
-                    :data="selectedApplications"
-                    field="localName"
-                    placeholder="olac"
-                    @click.native="recalculate"
-                    @keyup.native="recalculate"
+                      v-model="filterName"
+                      :data="selectedApplications"
+                      field="localName"
+                      placeholder="olac"
+                      @click.native="recalculate"
+                      @keyup.native="recalculate"
                   >
                   </b-autocomplete>
                 </b-field>
@@ -98,30 +98,31 @@
         </caption>
         <div class="columns">
           <div
-            v-for="(application, index) in selectedApplications"
-            :key="application.name"
-            style="margin-left: 30px"
+              v-for="(application, index) in selectedApplications"
+              :key="application.name"
+              style="margin-left: 30px"
           >
-            <div class="column is-3-widescreen is-6-desktop is-12-tablet">
+            <div class="column">
               <div
-                v-if="index >= (current - 1) * perPage && index < current * perPage"
-                class="applicationCard card"
+                  v-if="index >= (current - 1) * perPage && index < current * perPage"
+                  class="applicationCard card"
+                  style="padding-bottom: 10px"
               >
                 <div class="card-header">
                   <div class="title card-header-title">
                     <p field="name" style="font-size: 1.5rem">{{ application.localName }}</p>
                   </div>
                   <b-button
-                    class="btnModal"
-                    icon-left="ellipsis-h"
-                    size="is-medium"
-                    type="is-primary"
-                    @click="showModal(application.name)"
+                      class="btnModal"
+                      icon-left="ellipsis-h"
+                      size="is-medium"
+                      type="is-primary"
+                      @click="showModal(application.name)"
                   />
                   <b-modal
-                    v-show="isSelectedName === application.name"
-                    :id="application.name"
-                    v-model="isCardModalActive"
+                      v-show="isSelectedName === application.name"
+                      :id="application.name"
+                      v-model="isCardModalActive"
                   >
                     <div class="card">
                       <div class="card-header">
@@ -132,7 +133,7 @@
                       <div class="card-content">
                         <div class="content">
                           <p
-                            v-html="
+                              v-html="
                               $t('applications.version', {
                                 applicationName: application.localName,
                                 version: application.version,
@@ -141,12 +142,12 @@
                           />
                           <p class="comment">
                             <span
-                              :class="application.comment ? 'has-text-primary' : 'has-text-warning'"
+                                :class="application.comment ? 'has-text-primary' : 'has-text-warning'"
                             >
                               {{
                                 application.comment
-                                  ? $t("applications.comment")
-                                  : $t("applications.no-comment")
+                                    ? $t("applications.comment")
+                                    : $t("applications.no-comment")
                               }}
                             </span>
                             <span>{{ application.comment }}</span>
@@ -156,21 +157,21 @@
                       <div class="card-footer">
                         <div class="card-footer-item">
                           <b-button
-                            icon-left="drafting-compass"
-                            @click="displayReferencesManagement(application)"
-                            >{{ $t("applications.references") }}
+                              icon-left="drafting-compass"
+                              @click="displayReferencesManagement(application)"
+                          >{{ $t("applications.references") }}
                           </b-button>
                         </div>
                         <div class="card-footer-item">
                           <b-button icon-left="poll" @click="displayDataSetManagement(application)"
-                            >{{ $t("applications.dataset") }}
+                          >{{ $t("applications.dataset") }}
                           </b-button>
                         </div>
                         <div v-if="canCreateApplication" class="card-footer-item">
                           <b-button
-                            icon-left="pen-square"
-                            type="is-warning"
-                            @click="updateApplication(application.id)"
+                              icon-left="pen-square"
+                              type="is-warning"
+                              @click="updateApplication(application.id)"
                           >
                             {{ $t("applications.change") }}
                           </b-button>
@@ -179,27 +180,27 @@
                       <div class="card-footer">
                         <div v-if="canCreateApplication" class="card-footer-item">
                           <b-button
-                            icon-left="download"
-                            type="is-primary"
-                            @click="downloadYamlApplication(application)"
+                              icon-left="download"
+                              type="is-primary"
+                              @click="downloadYamlApplication(application)"
                           >
                             {{ $t("referencesManagement.download") }}
                           </b-button>
                         </div>
                         <div v-if="!canCreateApplication" class="card-footer-item">
                           <b-button
-                            icon-left="users-cog"
-                            type="is-primary"
-                            @click="showRequestRights(application)"
+                              icon-left="users-cog"
+                              type="is-primary"
+                              @click="showRequestRights(application)"
                           >
                             {{ $t("dataTypeAuthorizations.showRequests") }}
                           </b-button>
                         </div>
                         <div v-else class="card-footer-item">
                           <b-button
-                            icon-left="users-cog"
-                            type="is-primary"
-                            @click="requestRights(application)"
+                              icon-left="users-cog"
+                              type="is-primary"
+                              @click="requestRights(application)"
                           >
                             {{ $t("dataTypeAuthorizations.request") }}
                           </b-button>
@@ -208,7 +209,7 @@
                     </div>
                   </b-modal>
                 </div>
-                <div class="card-content">
+                <div class="card-content" style="padding: 12px">
                   <div class="content">
                     <p field="creationDate">
                       {{ new Date(application.creationDate).toLocaleString(localLang) }}
@@ -216,29 +217,31 @@
                   </div>
                 </div>
                 <div class="card-footer">
-                  <div class="card-footer-item">
+                  <div v-if="application.referenceType && application.referenceType.length !== 0"
+                       class="card-footer-item">
                     <b-button
-                      v-if="application.referenceType && application.referenceType.length !== 0"
-                      icon-left="drafting-compass"
-                      @click="displayReferencesManagement(application)"
+                        icon-left="drafting-compass"
+                        @click="displayReferencesManagement(application)"
                     >
                       {{ $t("applications.references") }}
                     </b-button>
                   </div>
-                  <div class="card-footer-item">
+                  <div v-if="application.dataType && application.dataType.length !== 0"
+                       class="card-footer-item">
                     <b-button
-                      v-if="application.dataType && application.dataType.length !== 0"
-                      icon-left="poll"
-                      @click="displayDataSetManagement(application)"
+                        icon-left="poll"
+                        @click="displayDataSetManagement(application)"
                     >
                       {{ $t("applications.dataset") }}
                     </b-button>
                   </div>
-                  <div class="card-footer-item">
+                </div>
+                <div class="card-footer">
+                  <div v-if="application.additionalFile && application.additionalFile.length !== 0"
+                       class="card-footer-item">
                     <b-button
-                      v-if="application.additionalFile && application.additionalFile.length !== 0"
-                      icon-left="file"
-                      @click="displayAdditionalFilesManagement(application)"
+                        icon-left="file"
+                        @click="displayAdditionalFilesManagement(application)"
                     >
                       {{ $t("applications.additionalFile") }}
                     </b-button>
@@ -248,21 +251,21 @@
             </div>
           </div>
         </div>
-        <hr />
+        <hr/>
         <b-pagination
-          v-if="perPage <= applications.length"
-          :aria-current-label="$t('menu.aria-curent-page')"
-          :aria-label="$t('menu.aria-pagination')"
-          :aria-next-label="$t('menu.aria-next-page')"
-          :aria-previous-label="$t('menu.aria-previous-page')"
-          :current.sync="current"
-          :per-page="perPage"
-          :range-after="2"
-          :range-before="2"
-          :rounded="true"
-          :total="applications.length"
-          order="is-centered"
-          role="navigation"
+            v-if="perPage <= applications.length"
+            :aria-current-label="$t('menu.aria-curent-page')"
+            :aria-label="$t('menu.aria-pagination')"
+            :aria-next-label="$t('menu.aria-next-page')"
+            :aria-previous-label="$t('menu.aria-previous-page')"
+            :current.sync="current"
+            :per-page="perPage"
+            :range-after="2"
+            :range-before="2"
+            :rounded="true"
+            :total="applications.length"
+            order="is-centered"
+            role="navigation"
         >
         </b-pagination>
       </div>
@@ -271,15 +274,15 @@
 </template>
 
 <script>
-import { ApplicationService } from "@/services/rest/ApplicationService";
-import { InternationalisationService } from "@/services/InternationalisationService";
-import { Component, Vue } from "vue-property-decorator";
+import {ApplicationService} from "@/services/rest/ApplicationService";
+import {InternationalisationService} from "@/services/InternationalisationService";
+import {Component, Vue} from "vue-property-decorator";
 import PageView from "@/views/common/PageView.vue";
-import { LoginService } from "@/services/rest/LoginService";
-import { FileService } from "@/services/rest/FileService";
+import {LoginService} from "@/services/rest/LoginService";
+import {FileService} from "@/services/rest/FileService";
 
 @Component({
-  components: { PageView },
+  components: {PageView},
 })
 export default class ApplicationsView extends Vue {
   applicationService = ApplicationService.INSTANCE;
@@ -287,7 +290,7 @@ export default class ApplicationsView extends Vue {
 
   applications = [];
   canCreateApplication =
-    LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
+      LoginService.INSTANCE.getAuthenticatedUser().authorizedForApplicationCreation;
   fileService = FileService.INSTANCE;
   // show modal and cards
   isSelectedName = "";
@@ -315,7 +318,7 @@ export default class ApplicationsView extends Vue {
 
     // filter by name
     this.selectedApplications = this.selectedApplications.filter(
-      (a) => a.localName.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0
+        (a) => a.localName.toString().toLowerCase().indexOf(this.filterName.toLowerCase()) >= 0
     );
 
     // order by date or name
@@ -324,14 +327,14 @@ export default class ApplicationsView extends Vue {
     else this.selectedApplications.sort((a, b) => b.creationDate - a.creationDate).reverse();
     if (this.checkboxTrieZ_a === "true" || this.checkboxTrieA_z === "true") {
       if (
-        this.checkboxTrieA_z === "true" &&
-        document.activeElement.parentElement === document.getElementById("checkboxTrieA_z")
+          this.checkboxTrieA_z === "true" &&
+          document.activeElement.parentElement === document.getElementById("checkboxTrieA_z")
       ) {
         this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name));
         this.checkboxTrieZ_a = "false";
       } else if (
-        this.checkboxTrieZ_a === "true" &&
-        document.activeElement.parentElement === document.getElementById("checkboxTrieZ_a")
+          this.checkboxTrieZ_a === "true" &&
+          document.activeElement.parentElement === document.getElementById("checkboxTrieZ_a")
       ) {
         this.selectedApplications.sort((a, b) => a.name.localeCompare(b.name)).reverse();
         this.checkboxTrieA_z = "false";
@@ -434,6 +437,13 @@ export default class ApplicationsView extends Vue {
 
       .card-footer {
         border: none;
+        .card-footer-item {
+          padding-right: 0px;
+          .button {
+            padding-right: 10px;
+            padding-left: 10px;
+          }
+        }
       }
     }
 
