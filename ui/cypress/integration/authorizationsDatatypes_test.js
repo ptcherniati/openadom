@@ -5,7 +5,7 @@ describe('test create application', () => {
         cy.setLocale('fr');
     });
 
-    it('Test creation authorization admin', () => {
+    it('Test creation authorization admin ola', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
         const olaDataType = 'applications/ore/ola/ola.json'
@@ -4443,7 +4443,7 @@ describe('test create application', () => {
         //cy.visit(Cypress.env('login_url'))
     })
 
-    it('Test creation authorization regularUser', () => {
+    it('Test creation authorization regularUser ola', () => {
         cy.login("regularUser", ['applications/ore/ore_application_description.json'])
         cy.wait(['@postUserResponse', '@getApplicationResponse'])
         const olaDataType = 'applications/ore/ola/ola.json'

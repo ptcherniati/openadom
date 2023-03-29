@@ -11,6 +11,7 @@
         "repository_foret_url": "/applications/foret/dataTypesRepository/swc_j",
         "zone_etude_url": "applications/foret/references/zones_etudes.js",
         "ola_references_url": "/applications/ola/references",
+        "monsore_references_url": "/applications/monsore/references",
         "ola_authorization_references_url": "/applications/ola/references/authorizations",
         "ola_new_authorization_references_url": "/applications/ola/references/authorizations/new",
         "ola_dataTypes_url": "/applications/ola/dataTypes",
