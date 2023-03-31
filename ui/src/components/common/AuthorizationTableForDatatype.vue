@@ -197,12 +197,15 @@ export default {
     },
     selectCheckboxAll(indexColumn) {
       let state = this.getState(indexColumn);
-      let auths =  Object.keys(this.authReferences[0])
-          .filter(path => this.isApplicationAdmin || (this.ownAuthorizationsColumnsByPath[path] || []).includes('admin'));
+      let auths = Object.keys(this.authReferences[0]).filter(
+        (path) =>
+          this.isApplicationAdmin ||
+          (this.ownAuthorizationsColumnsByPath[path] || []).includes("admin")
+      );
       for (const index of auths) {
         if (this.haveRightsOn(index, indexColumn)) {
           let requiredAuthorizations = {};
-          console.log(auths)
+          console.log(auths);
           requiredAuthorizations[this.authReferences[0][auths[index]].authorizationScope] =
             auths[index];
           let authorizations = new Authorization([], requiredAuthorizations);

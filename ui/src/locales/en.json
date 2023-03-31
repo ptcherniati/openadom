@@ -14,6 +14,9 @@
     "requestMapperSerializationError": "Failed to transform json string {requestClient}: {message}"
   },
   "titles": {
+        "additionalFileDescrition": "To describe the additional file, fill in the form",
+        "additionalFileWithType" : "Additional Files os type: {localName}",
+        "additionalFile" : "Additional Files",
     "login-page": "Welcome to Open ADOM",
     "applications-page": "My applications",
     "aide": "Help writing an application's configuration file.",
@@ -100,6 +103,9 @@
     "aria-previous-page": "Previous page",
     "authorizations": "Authorizations"
   },
+    "additionalFiles": {
+        "menu": "Choose an additional file type"
+    },
   "applications": {
     "chose-config": "Chose a configuration",
     "create": "Create application",
@@ -111,6 +117,7 @@
     "creation-date": "Creation date",
     "actions": "Actions",
     "references": "References",
+        "additionalFile": "Additional files",
     "dataset": "Data types",
     "trier": "Sort by",
     "trierA_z": "Name A - z",
