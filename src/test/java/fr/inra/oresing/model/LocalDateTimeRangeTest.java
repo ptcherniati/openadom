@@ -2,6 +2,7 @@ package fr.inra.oresing.model;
 
 import fr.inra.oresing.checker.DateLineChecker;
 import fr.inra.oresing.checker.DateLineCheckerConfiguration;
+import fr.inra.oresing.checker.Multiplicity;
 import fr.inra.oresing.transformer.TransformationConfiguration;
 import org.junit.Assert;
 import org.junit.Test;
@@ -29,27 +30,27 @@ public class LocalDateTimeRangeTest {
     }
     @Test
     public void testDayPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", getDateCheckerConfiguration("2 MONTHS"), null));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", getDateCheckerConfiguration("2 MONTHS", Multiplicity.ONE), null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
          range = LocalDateTimeRange.parse("01/01/2020", new DateLineChecker(null, "dd/MM/yyyy", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-01-02 00:00:00\")", range.toSqlExpression());
     }
     @Test
     public void testSemiHourlyPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", getDateCheckerConfiguration("30 MINUTES"), null));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", getDateCheckerConfiguration("30 MINUTES", Multiplicity.ONE), null));
         Assert.assertEquals("[\"2020-01-01 01:30:00\",\"2020-01-01 02:00:00\")", range.toSqlExpression());
          range = LocalDateTimeRange.parse("01/01/2020 01:30:00", new DateLineChecker(null, "dd/MM/yyyy HH:mm:ss", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-01-02 00:00:00\")", range.toSqlExpression());
     }
     @Test
     public void testMounthPattern() {
-        LocalDateTimeRange range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", getDateCheckerConfiguration("2 MONTHS"), null));
+        LocalDateTimeRange range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", getDateCheckerConfiguration("2 MONTHS", Multiplicity.ONE), null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
          range = LocalDateTimeRange.parse("01/2020", new DateLineChecker(null, "MM/yyyy", null, null));
         Assert.assertEquals("[\"2020-01-01 00:00:00\",\"2020-02-01 00:00:00\")", range.toSqlExpression());
     }
 
-    private DateLineCheckerConfiguration getDateCheckerConfiguration(String duration) {
+    private DateLineCheckerConfiguration getDateCheckerConfiguration(String duration, Multiplicity multiplicity) {
         return new DateLineCheckerConfiguration() {
             @Override
             public String getPattern() {
@@ -64,6 +65,11 @@ public class LocalDateTimeRangeTest {
             @Override
             public boolean isRequired() {
                 throw new UnsupportedOperationException("doublure de test");
+            }
+
+            @Override
+            public Multiplicity getMultiplicity() {
+                return multiplicity;
             }
 
             @Override

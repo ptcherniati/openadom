@@ -12,6 +12,7 @@ public interface LineCheckerConfiguration {
      */
     boolean isRequired();
 
+    Multiplicity getMultiplicity();
     /**
      * Les transformation à appliquer avant de faire le contrôle
      */

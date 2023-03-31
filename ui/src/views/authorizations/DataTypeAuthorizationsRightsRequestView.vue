@@ -3,11 +3,12 @@
     <SubMenu
       :aria-label="$t('menu.aria-sub-menu')"
       :paths="subMenuPaths"
-      role="navigation"
       :root="application.localName || application.title"
+      role="navigation"
     />
+
     <h1 class="title main-title">
-      <span>{{ $t("dataTypeAuthorizations.title", currentUser) }}</span>
+      <span>{{ $t("dataTypeAuthorizations.title", { label: currentUser.label }) }}</span>
     </h1>
     <caption v-if="!this.columnsVisible" class="columns">
       <div class="column loader-wrapper">
@@ -16,13 +17,13 @@
     </caption>
     <ValidationObserver ref="observer" v-slot="{ handleSubmit }">
       <FieldsForm
-        :comment="comment"
-        :showComment="true"
         :application="application"
+        :comment="comment"
         :description="description"
         :fields="fields"
         :format="format"
         :ref-values="references"
+        :showComment="true"
         pathForKey="rightsRequest.format"
         @update:fields="updateFields"
         @update:comment="updateComment"
@@ -74,7 +75,7 @@
           {{ $t("dataTypeAuthorizations.grantRequests") }}
         </b-button>
         <b-button
-          v-else-if="'new' == authorizationId"
+          v-else-if="'new' === authorizationId"
           icon-left="plus"
           style="margin-bottom: 10px"
           type="is-dark"
@@ -320,7 +321,10 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
       this.description =
         this.application?.rightsRequest?.description?.description[
           this.userPreferencesService.getUserPrefLocale()
-        ] || this.$t("dataTypeAuthorizations.field_form_description");
+        ] ||
+        this.$t("dataTypeAuthorizations.field_form_description", {
+          applicationName: this.application.localName,
+        });
       this.fields = (Object.keys(this.format) || []).reduce((acc, field) => {
         acc[field] = "";
         return acc;
@@ -356,7 +360,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         columnsVisible: this.columnsVisible,
       } = Authorizations.parseGrantableInfos(grantableInfos, this.datatypes, this.repository));
 
-      if (this.authorizationId != "new") {
+      if (this.authorizationId !== "new") {
         this.valid = true;
         let request = await this.requestRightsService.getRightsRequests(this.applicationName, {
           uuids: [this.authorizationId],
@@ -364,7 +368,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
 
         this.currentUser = request.users.find(
           (user) =>
-            user.id ==
+            user.id ===
             ((request &&
               request.rightsRequests &&
               request.rightsRequests[0] &&
@@ -398,7 +402,7 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         this.canManage =
           this.isApplicationAdmin ||
           (authorizations.users &&
-            authorizations.users[0].login ==
+            authorizations.users[0].login ===
               JSON.parse(localStorage.getItem("authenticatedUser")).login);
       } else {
         let initialValue = new Authorizations(
@@ -420,10 +424,11 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         }, initialValue);
         this.canManage = true;
       }
+      console.log(this.currentUser);
       let currentAuthorizationUsers = this.authorization.users || [];
       this.selectedUsers = (this.users || []).filter((user) => {
         return currentAuthorizationUsers.find((u) => {
-          return u.id == user.id;
+          return u.id === user.id;
         });
       });
       this.selectedUsers.sort();
@@ -439,7 +444,11 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         columnsVisible[datatype] = {};
         for (const scope in this.columnsVisible[datatype]) {
           let columnsVisibleFordatatypeAndScope = this.columnsVisible[datatype][scope];
-          if (columnsVisibleFordatatypeAndScope.forRequest) {
+          if (
+            columnsVisibleFordatatypeAndScope.forRequest ||
+            (columnsVisibleFordatatypeAndScope.display &&
+              !columnsVisibleFordatatypeAndScope.forPublic)
+          ) {
             columnsVisible[datatype][scope] = columnsVisibleFordatatypeAndScope;
           }
         }
@@ -529,13 +538,13 @@ export default class DataTypeAuthorizationsRightsRequestView extends Vue {
         });
       }
       await this.requestRightsService.createRequestRights(this.applicationName, {
-        id: this.authorizationId == "new" ? null : this.authorizationId,
+        id: this.authorizationId === "new" ? null : this.authorizationId,
         fields: this.fields,
         rightsRequest: authorizationToSend,
         setted: isSetted,
         comment: this.comment,
       });
-      if ("new" == this.authorizationId) {
+      if ("new" === this.authorizationId) {
         this.alertService.toastSuccess(this.$t("alert.create-request"));
       } else if (isSetted) {
         this.alertService.toastSuccess(this.$t("alert.valid-request"));

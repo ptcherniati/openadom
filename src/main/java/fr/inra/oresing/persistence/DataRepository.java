@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -69,7 +70,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return sql;
     }
 
-    public int migrate(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd, Map<String, Map<String, UUID>> refsLinkedToToAdd) {
+    public int migrate(String dataType, String dataGroup, Map<String, Map<String, String>> variablesToAdd, Map<String, Map<String, Set<UUID>>> refsLinkedToToAdd) {
         String setRefsLinkedToClause;
         if (refsLinkedToToAdd.isEmpty()) {
             setRefsLinkedToClause = "";
@@ -102,7 +103,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         String insertSql = String.join(" "
                 , "INSERT INTO " + getTable().getSchema().getSqlIdentifier() + ".Data_Reference(dataId, referencesBy)"
                 , "with tuple as ("
-                , "  select id dataId,((jsonb_each_text( (jsonb_each(refsLinkedTo)).value)).value)::uuid referencesBy"
+                , "  select id dataId, "
+                ,"    (jsonb_path_query(refsLinkedTo, '$.*.* ? (@!= null)')#>> '{}') ::uuid referencesBy"
                 , "  from " + getTable().getSqlIdentifier() + ""
                 , ")"
                 , "select dataId, referencesBy from tuple"

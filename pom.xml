@@ -443,6 +443,7 @@
             <id>openadom_deploiement</id>
             <properties>
                 <db.host_port>database</db.host_port>
+                <maven.test.skip>true</maven.test.skip>
             </properties>
         </profile>
     </profiles>

@@ -7,6 +7,10 @@ import fr.inra.oresing.rest.ValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker<IntegerCheckerConfiguration> {
     private final CheckerTarget target;
     private final IntegerCheckerConfiguration configuration;
@@ -27,8 +31,16 @@ public class IntegerChecker implements CheckerOnOneVariableComponentLineChecker<
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         try {
-            Integer.parseInt(value);
-            validationCheckResult = DefaultValidationCheckResult.success();
+            if(Multiplicity.MANY.equals(getConfiguration().getMultiplicity())){
+                final Set<String> values = Arrays.stream(value.split(","))
+                        .map(Integer::parseInt)
+                        .map(Number::toString)
+                        .collect(Collectors.toSet());
+                validationCheckResult = DefaultValidationCheckResult.success();
+            } else {
+                Integer.parseInt(value);
+                validationCheckResult = DefaultValidationCheckResult.success();
+            }
         } catch (NumberFormatException e) {
             validationCheckResult = DefaultValidationCheckResult.error(
                     getTarget().getInternationalizedKey("invalidInteger"),

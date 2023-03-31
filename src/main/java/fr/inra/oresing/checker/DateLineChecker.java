@@ -10,7 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.temporal.TemporalAccessor;
+import java.util.List;
 
 public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker<DateLineCheckerConfiguration> {
 
@@ -63,9 +63,8 @@ public class DateLineChecker implements CheckerOnOneVariableComponentLineChecker
     public ValidationCheckResult check(String value) {
         ValidationCheckResult validationCheckResult;
         try {
-            value = sortableDateToFormattedDate(value);
-            TemporalAccessor date = dateTimeFormatter.parse(value);
-            validationCheckResult = DateValidationCheckResult.success(target, date);
+            value = sortableDateToFormattedDate(value.trim());
+            validationCheckResult = DateValidationCheckResult.success(target,List.of(dateTimeFormatter.parse(value)));
         } catch (DateTimeParseException e) {
             validationCheckResult = DateValidationCheckResult.error(
                     target,

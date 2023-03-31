@@ -5,10 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import fr.inra.oresing.checker.CheckerFactory;
-import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.checker.Multiplicity;
-import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.groovy.Expression;
 import fr.inra.oresing.groovy.GroovyContextHelper;
 import fr.inra.oresing.groovy.StringGroovyExpression;
@@ -71,10 +68,13 @@ public class ReferenceService {
         ImmutableSet<LineChecker> lineCheckers = checkerFactory.getReferenceValidationLineCheckers(app, refType);
         final ImmutableMap<Ltree, UUID> storedReferences = referenceValueRepository.getReferenceIdPerKeys(refType);
 
-        ImmutableMap<ReferenceColumn, Multiplicity> multiplicityPerColumns = lineCheckers.stream()
-                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
-                .map(lineChecker -> (ReferenceLineChecker) lineChecker)
-                .collect(ImmutableMap.toImmutableMap(referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget(), referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity()));
+        ImmutableMap<ReferenceColumn, Multiplicity> multiplicityReferencePerColumns = lineCheckers.stream()
+                .filter(lineChecker -> lineChecker instanceof CheckerOnOneVariableComponentLineChecker)
+                .map(lineChecker -> (CheckerOnOneVariableComponentLineChecker) lineChecker)
+                .collect(ImmutableMap.toImmutableMap(
+                        referenceLineChecker -> (ReferenceColumn) referenceLineChecker.getTarget(),
+                        referenceLineChecker -> referenceLineChecker.getConfiguration().getMultiplicity())
+                );
 
         Configuration.ReferenceDescription referenceDescription = conf.getReferences().get(refType);
         boolean allowUnexpectedColumns = referenceDescription.isAllowUnexpectedColumns();
@@ -82,7 +82,7 @@ public class ReferenceService {
         ImmutableSet<ReferenceImporterContext.Column> staticColumns = referenceDescription.getColumns().entrySet().stream()
                 .map(entry -> {
                     ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
-                    Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+                    Multiplicity multiplicity = multiplicityReferencePerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
                     Configuration.ReferenceStaticNotComputedColumnDescription referenceStaticNotComputedColumnDescription = MoreObjects.firstNonNull(entry.getValue(), new Configuration.ReferenceStaticNotComputedColumnDescription());
                     ColumnPresenceConstraint presenceConstraint = referenceStaticNotComputedColumnDescription.getPresenceConstraint();
                     ReferenceImporterContext.Column column = Optional.ofNullable(referenceStaticNotComputedColumnDescription.getDefaultValue())
@@ -95,7 +95,7 @@ public class ReferenceService {
                 .map(entry -> {
                     ReferenceColumn referenceColumn = new ReferenceColumn(entry.getKey());
                     Configuration.ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription = entry.getValue();
-                    Multiplicity multiplicity = multiplicityPerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
+                    Multiplicity multiplicity = multiplicityReferencePerColumns.getOrDefault(referenceColumn, Multiplicity.ONE);
                     return computedColumnDescriptionToColumn(referenceValueRepository, referenceColumn, multiplicity, referenceStaticComputedColumnDescription);
                 }).collect(ImmutableSet.toImmutableSet());
 
@@ -119,19 +119,27 @@ public class ReferenceService {
                 refType,
                 repo.getRepository(app).referenceValue());
         Set<String> patternColumns = constants.getPatternColumns()
-                .map(m->m.values().stream().flatMap(List::stream).collect(Collectors.toSet()))
+                .map(m -> m.values().stream().flatMap(List::stream).collect(Collectors.toSet()))
                 .orElseGet(HashSet::new);
-        final Map<String, String> referenceToColumnName = lineCheckers.stream()
+        final Map<String, List<String>> referenceToColumnName = lineCheckers.stream()
                 .filter(ReferenceLineChecker.class::isInstance)
                 .map(ReferenceLineChecker.class::cast)
-                .collect(Collectors.toMap(ReferenceLineChecker::getRefType, referenceLineChecker -> ((ReferenceColumn) referenceLineChecker.getTarget()).getColumn()));
+                .collect(Collectors.groupingBy(
+                                ReferenceLineChecker::getRefType,
+                                Collectors.mapping(referenceLineChecker -> ((ReferenceColumn) referenceLineChecker.getTarget()).getColumn(), Collectors.toList())
+                        )
+                );
         final Map<String, Map<String, Map<String, String>>> displayByReferenceAndNaturalKey =
                 lineCheckers.stream()
                         .filter(ReferenceLineChecker.class::isInstance)
                         .map(ReferenceLineChecker.class::cast)
                         .map(ReferenceLineChecker::getRefType)
                         .filter(rt -> patternColumns.contains(rt))
-                        .collect(Collectors.toMap(ref -> referenceToColumnName.getOrDefault(ref, ref), ref -> repo.getRepository(app).referenceValue().findDisplayByNaturalKey(ref)));
+                        .collect(Collectors.toMap(ref ->
+                                Optional.ofNullable(referenceToColumnName.getOrDefault(ref, null))
+                                        .map(l->l.get(0))
+                                        .orElse(ref),
+                                ref -> repo.getRepository(app).referenceValue().findDisplayByNaturalKey(ref)));
         final ReferenceImporterContext referenceImporterContext =
                 new ReferenceImporterContext(
                         constants,
@@ -160,7 +168,7 @@ public class ReferenceService {
                             referenceColumn,
                             presenceConstraint,
                             hierarchicalKey,
-                            Map.entry(reference, referenceValue.getId()),
+                            Map.entry(reference, Set.of(referenceValue.getId())),
                             ComputedValueUsage.NOT_COMPUTED
                     ) {
                         @Override
@@ -322,7 +330,7 @@ public class ReferenceService {
 
     private ImmutableMap<String, Object> computeGroovyContext(ReferenceValueRepository referenceValueRepository, GroovyDataInjectionConfiguration groovyDataInjectionConfiguration) {
         Set<String> configurationReferences = groovyDataInjectionConfiguration.getReferences();
-        ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences,null);
+        ImmutableMap<String, Object> contextForExpression = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, null);
         Preconditions.checkState(groovyDataInjectionConfiguration.getDatatypes().isEmpty(), "à ce stade, on ne gère pas le chargement de données. Les référentiels ne doivent pas dépendre des données expérimentales.");
         return contextForExpression;
     }
@@ -338,6 +346,7 @@ public class ReferenceService {
         List<ReferenceValue> list = repo.getRepository(nameOrId).referenceValue().findAllByReferenceType(refType, params);
         return list;
     }
+
     List<ReferenceValue> findReferenceAccordingToRights(Application application, String refType, MultiValueMap<String, String> params) {
         authenticationService.setRoleForClient();
         List<ReferenceValue> list = repo.getRepository(application).referenceValue().findAllByReferenceType(refType, params);
