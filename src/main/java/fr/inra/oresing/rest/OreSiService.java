@@ -633,8 +633,8 @@ public class OreSiService {
                                                     .map(Ltree::getSql)
                                                     .collect(Collectors.joining(
                                                             ",",
-                                                            matchedReferenceHierarchicalKeys.size()>1?"[":"",
-                                                            matchedReferenceHierarchicalKeys.size()>1?"]":"")
+                                                            matchedReferenceHierarchicalKeys.size() > 1 ? "[" : "",
+                                                            matchedReferenceHierarchicalKeys.size() > 1 ? "]" : "")
                                                     )
                                     );
                                     System.out.println("toto");
@@ -705,7 +705,11 @@ public class OreSiService {
                     String component = variableComponentKey.getComponent();
                     String value = entry2.getValue();
                     if (dateValidationCheckResultImmutableMap.containsKey(entry2.getKey())) {
-                        value = String.format("date:%s:%s", dateValidationCheckResultImmutableMap.get(variableComponentKey).getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), value);
+                        final boolean isMany = dateValidationCheckResultImmutableMap.get(variableComponentKey).getLocalDateTime().size() > 1;
+                        final String finalValue = value;
+                        value = dateValidationCheckResultImmutableMap.get(variableComponentKey).getLocalDateTime().stream()
+                                .map(date -> String.format("date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), finalValue))
+                                .collect(Collectors.joining(",", isMany ? "[" : "", isMany ? "]" : ""));
                     }
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
                     refsLinkedToToStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, refsLinkedTo.get(variableComponentKey));
@@ -1368,8 +1372,8 @@ public class OreSiService {
     public GetAdditionalFilesResult findAdditionalFile(String nameOrId, AdditionalFilesInfos additionalFilesInfos) {
         final Application application = getApplication(nameOrId);
         Configuration.AdditionalFileDescription description = Optional.ofNullable(application.getConfiguration().getAdditionalFiles())
-                .map(map->map.get(additionalFilesInfos.getFiletype()))
-                .orElseGet( Configuration.AdditionalFileDescription::new);
+                .map(map -> map.get(additionalFilesInfos.getFiletype()))
+                .orElseGet(Configuration.AdditionalFileDescription::new);
         final List<AdditionalBinaryFile> additionalFiles = additionalFileService.findAdditionalFile(application, additionalFilesInfos);
         final List<AdditionalBinaryFileResult> additionalBinaryFileResults = additionalFiles.stream()
                 .map(af -> getAdditionalBinaryFileResult(af, application))
@@ -1630,7 +1634,7 @@ public class OreSiService {
                     .getRepository(application).additionalBinaryFile()
                     .findByCriteria(additionalFileSearchHelper);
             return additionalFileSearchHelper.zip(additionalBinaryFiles);
-        }catch(DataIntegrityViolationException e){
+        } catch (DataIntegrityViolationException e) {
             return new byte[0];
         }
     }
@@ -1684,9 +1688,9 @@ public class OreSiService {
         additionalBinaryFile.setComment("un commentaire");
         additionalBinaryFile.setId(additionalBinaryFile.getId() == null ? UUID.randomUUID() : additionalBinaryFile.getId());
         final OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
-                    oreSiAuthorization.setId(additionalBinaryFile.getId());
-                    oreSiAuthorization.setApplication(application.getId());
-                    oreSiAuthorization.setAuthorizations(createAdditionalFileRequest.getAssociates().getAuthorizations());
+        oreSiAuthorization.setId(additionalBinaryFile.getId());
+        oreSiAuthorization.setApplication(application.getId());
+        oreSiAuthorization.setAuthorizations(createAdditionalFileRequest.getAssociates().getAuthorizations());
         final List<OreSiAuthorization> authorizations = List.of(oreSiAuthorization);
         additionalBinaryFile.setAssociates(authorizations);
         return repo.getRepository(application).additionalBinaryFile().store(additionalBinaryFile);

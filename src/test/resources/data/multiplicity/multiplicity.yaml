@@ -35,7 +35,7 @@ references:
         checker:
           name: Date
           params:
-            pattern: dd/MM/YYYY
+            pattern: dd/MM/yyyy
             required: false
             multiplicity: "MANY"
   reference2:
@@ -58,3 +58,73 @@ references:
             .join(",");
           references:
             - reference1
+dataTypes:
+  bugs:
+    data:
+      bug:
+        components:
+          no:
+          fichiers:
+            checker:
+              name: RegularExpression
+              params:
+                pattern: .*
+                required: true
+                multiplicity: "MANY"
+          dates:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+                required: false
+                multiplicity: "MANY"
+          projets:
+            checker:
+              name: Integer
+              params:
+                required: true
+                multiplicity: "MANY"
+          durations:
+            checker:
+              name: Float
+              params:
+                required: false
+                multiplicity: "MANY"
+          reference1:
+            checker:
+              name: Reference
+              params:
+                multiplicity: MANY
+                refType: reference1
+
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: no
+          boundTo:
+            variable: bug
+            component: no
+        - header: fichiers
+          boundTo:
+            variable: bug
+            component: fichiers
+        - header: dates
+          boundTo:
+            variable: bug
+            component: dates
+        - header: projets
+          boundTo:
+            variable: bug
+            component: projets
+        - header: durations
+          boundTo:
+            variable: bug
+            component: durations
+        - header: reference1
+          boundTo:
+            variable: bug
+            component: reference1
+    uniqueness:
+      - variable: bug
+        component: no

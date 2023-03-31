@@ -635,12 +635,36 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.referenceValues[*].values.[?(@.projets==[\"4\",\"5\",\"9\"])]", Matchers.hasSize(1)))
                 .andExpect(jsonPath("$.referenceValues[*].values.[?(@.names==[\"toto1.3\",\"toto1.1\",\"toto1.2\"])]", Matchers.hasSize(1)))
                 .andExpect(jsonPath("$.referenceValues[*].values.[?(@.duration==[\"3.2\",\"4.5\",\"5.6\"])]", Matchers.hasSize(3)))
-                .andExpect(jsonPath("$.referenceValues[*].values.[?(@.dates==[\"date:1970-01-01T00:00:00:20/01/2014\",\"date:1970-01-01T00:00:00:23/06/2014\"])]", Matchers.hasSize(4)));
+                .andExpect(jsonPath("$.referenceValues[*].values.dates[0]", Matchers.hasItems("[date:2014-01-20T00:00:00:20/01/2014]", "[date:2014-01-20T00:00:00:20/01/2014]", "[date:2014-01-20T00:00:00:20/01/2014]", "[date:2014-01-20T00:00:00:20/01/2014]")));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/multiplicity/references/reference2")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.referenceValues[*].values.reference1[0]", Matchers.hasItems("[toto__toto2,toto__toto1]", "[tutu__tutu2,tutu__tutu1]" )));
+                .andExpect(jsonPath("$.referenceValues[*].values.reference1[0]", Matchers.hasItems("[toto__toto2,toto__toto1]", "[tutu__tutu2,tutu__tutu1]")));
+
+        try (InputStream refStream = getClass().getResourceAsStream(fixtures.getMultiplicityManyData())) {
+            MockMultipartFile refFile = new MockMultipartFile("file", "bugs.csv", "text/plain", refStream);
+
+            String response = mockMvc.perform(multipart("/api/v1/applications/multiplicity/data/bugs")
+                            .file(refFile)
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
+
+            response = mockMvc.perform(get("/api/v1/applications/multiplicity/data/bugs")
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker.bug_reference1.referenceLineChecker.referenceValues",Matchers.hasKey("tutu__tutu1")))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker.bug_reference1.referenceLineChecker.referenceValues",Matchers.hasKey("tutu__tutu2")))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker.bug_reference1.referenceLineChecker.referenceValues",Matchers.hasKey("toto__toto1")))
+                    .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker.bug_reference1.referenceLineChecker.referenceValues",Matchers.hasKey("toto__toto2")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.dates",Matchers.is("[date:2002-01-23T00:00:00:23/01/2002,24/01/2002,date:2002-01-24T00:00:00:23/01/2002,24/01/2002]")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.projets",Matchers.is("1,2")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.fichiers",Matchers.is("file1,file2")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.durations",Matchers.is("3.2,5.4")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.reference1",Matchers.is("toto__toto1,tutu__tutu1")))
+                    .andReturn().getResponse().getContentAsString();
+        }
     }
 
 

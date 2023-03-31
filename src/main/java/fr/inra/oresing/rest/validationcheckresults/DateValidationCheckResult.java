@@ -9,10 +9,10 @@ import lombok.Value;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Value
 public class DateValidationCheckResult implements ValidationCheckResult {
@@ -20,16 +20,22 @@ public class DateValidationCheckResult implements ValidationCheckResult {
     String message;
     Map<String, Object> messageParams;
     CheckerTarget target;
-    TemporalAccessor date;
-    LocalDateTime localDateTime;
+    List<TemporalAccessor> date;
+    SortedSet<LocalDateTime> localDateTime;
 
-    public static DateValidationCheckResult success(CheckerTarget target, TemporalAccessor date) {
-        LocalDate localdate = date.query(TemporalQueries.localDate());
-        localdate = localdate == null ? LocalDate.of(1970, 1, 1) : localdate;
-        LocalTime localTime = date.query(TemporalQueries.localTime());
-        localTime = localTime == null ? LocalTime.MIN : localTime;
-        LocalDateTime localDateTime = localdate.atTime(localTime);
-        return new DateValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, date, localDateTime);
+    public static DateValidationCheckResult success(CheckerTarget target, List<TemporalAccessor> dates) {
+        final SortedSet<LocalDateTime> datesTime = dates.stream()
+                .map(date -> {
+                            LocalDate localdate = date.query(TemporalQueries.localDate());
+                            localdate = localdate == null ? LocalDate.of(1970, 1, 1) : localdate;
+                            LocalTime localTime = date.query(TemporalQueries.localTime());
+                            localTime = localTime == null ? LocalTime.MIN : localTime;
+                            LocalDateTime localDateTime = localdate.atTime(localTime);
+                            return localDateTime;
+                        }
+                )
+                .collect(Collectors.toCollection(TreeSet::new));
+        return new DateValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, dates, datesTime);
     }
 
     public static DateValidationCheckResult error(CheckerTarget target, String message, ImmutableMap<String, Object> messageParams) {

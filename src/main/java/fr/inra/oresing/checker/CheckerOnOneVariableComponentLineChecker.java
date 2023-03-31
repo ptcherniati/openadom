@@ -7,12 +7,13 @@ import fr.inra.oresing.model.ReferenceDatum;
 import fr.inra.oresing.model.VariableComponentKey;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.rest.ValidationCheckResult;
+import fr.inra.oresing.rest.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import fr.inra.oresing.transformer.LineTransformer;
 import org.assertj.core.util.Strings;
 
-import java.util.Collection;
-import java.util.Set;
+import java.time.temporal.TemporalAccessor;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerConfiguration> extends LineChecker<C> {
@@ -34,7 +35,17 @@ public interface CheckerOnOneVariableComponentLineChecker<C extends LineCheckerC
                 validationCheckResult = DefaultValidationCheckResult.success();
             }
         } else {
-            validationCheckResult = check(value);
+            if (Multiplicity.MANY.equals(getConfiguration().getMultiplicity()) && this instanceof DateLineChecker) {
+                final List<TemporalAccessor> collect = Arrays.stream(value.split(","))
+                        .map(this::check)
+                        .map(vcr -> (DateValidationCheckResult) vcr)
+                        .map(DateValidationCheckResult::getLocalDateTime)
+                        .flatMap(Set::stream)
+                        .collect(Collectors.toList());
+                return DateValidationCheckResult.success(getTarget(),collect);
+            } else {
+                validationCheckResult = check(value);
+            }
         }
         return validationCheckResult;
     }

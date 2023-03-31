@@ -209,6 +209,7 @@ abstract class ReferenceImporter {
         referenceImporterContext.getLineCheckers().forEach(lineChecker -> {
             Set<ValidationCheckResult> validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking);
             if (lineChecker instanceof DateLineChecker) {
+                final boolean isMany = Multiplicity.MANY.equals(lineChecker.getConfiguration().getMultiplicity());
                 validationCheckResults.stream()
                         .filter(ValidationCheckResult::isSuccess)
                         .filter(DateValidationCheckResult.class::isInstance)
@@ -218,8 +219,10 @@ abstract class ReferenceImporter {
                             ReferenceColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(referenceColumn);
                             ReferenceColumnValue valueToStoreInDatabase = referenceColumnRawValue
                                     .transform(rawValue ->
-                                            String.format("date:%s:%s", dateValidationCheckResult.getLocalDateTime().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), rawValue)
-                                    );
+                                        dateValidationCheckResult.getLocalDateTime().stream()
+                                                        .map(date->String.format("date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), rawValue))
+                                                .collect(Collectors.joining(",", isMany?"[":"",isMany?"]":""))
+                                     );
                             referenceDatum.put(referenceColumn, valueToStoreInDatabase);
                         });
             } else if (lineChecker instanceof ReferenceLineChecker) {

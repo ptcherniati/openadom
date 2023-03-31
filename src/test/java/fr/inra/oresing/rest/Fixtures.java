@@ -952,6 +952,10 @@ public class Fixtures {
         return references;
     }
 
+    public String getMultiplicityManyData() {
+        return "/data/multiplicity/data/bugs.csv";
+    }
+
     enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
