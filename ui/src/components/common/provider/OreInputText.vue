@@ -20,7 +20,7 @@
         <label>{{ label }}</label>
       </template>
       <b-taginput
-        v-if="multiplicity == 'MANY'"
+        v-if="multiplicity === 'MANY'"
         v-model="val"
         required
         type="textarea"
@@ -91,7 +91,7 @@ export default {
       if (typeof value == "string") {
         return this.regexp(value);
       } else {
-        return value && value.map((v) => this.regexp(v)).filter((v) => v == false).length == 0;
+        return value && value.map((v) => this.regexp(v)).filter((v) => v === false).length === 0;
       }
     },
     validateRequired(value) {
@@ -110,14 +110,14 @@ export default {
     },
     multiplicity: {
       get() {
-        return this.checker && this.checker.params && this.checker.params.multiplicity == "MANY";
+        return this.checker && this.checker.params && this.checker.params.multiplicity === "MANY";
       },
     },
     rules: {
       get() {
         let rules = [];
         if (this.checker) {
-          if (this.checker.name == "RegularExpression") {
+          if (this.checker.name === "RegularExpression") {
             if (this.checker.params.pattern) {
               this.extend("regexp", (value) => {
                 return this.validateRegExp(value) || this.$t("rules.regexp", this.checker.params);

@@ -19,31 +19,13 @@
         </div>
       </template>
       <div>
-        <OreInputText
-          v-if="showComment"
-          :checker="{ params: { required: true } }"
-          :label="$t('applications.comment')"
-          :value="comment"
-          :vid="comment"
-          @update:value="updateComment($event)"
-        />
         <div v-for="(item, key) in format" :key="key">
           <OreInputText
             v-if="
               (fields && !item.checker) ||
-              item.checker.name == 'RegularExpression' ||
-              item.checker.name == 'GroovyExpression'
+              item.checker.name === 'RegularExpression' ||
+              item.checker.name === 'GroovyExpression'
             "
-            :checker="item.checker"
-            :label="
-              internationalisationService.getLocaleforPath(application, pathForKey + '.' + key, key)
-            "
-            :value="fields[key]"
-            :vid="key"
-            @update:value="updateValue(key, $event)"
-          />
-          <OreInputNumber
-            v-else-if="item.checker.name == 'Integer' || item.checker.name == 'Float'"
             :checker="item.checker"
             :label="
               internationalisationService.getLocaleforPath(application, pathForKey + '.' + key, key)
@@ -53,27 +35,45 @@
             @update:value="updateValue(key, $event)"
           />
           <OreInputDate
-            v-else-if="item.checker.name == 'Date'"
-            :checker="item.checker"
-            :label="
+              v-else-if="item.checker.name === 'Date'"
+              :checker="item.checker"
+              :label="
               internationalisationService.getLocaleforPath(application, pathForKey + '.' + key, key)
             "
-            :value="fields[key]"
-            :vid="key"
-            @update:value="updateValue(key, $event)"
+              :value="fields[key]"
+              :vid="key"
+              @update:value="updateValue(key, $event)"
           />
           <OreInputReference
-            v-else-if="item.checker.name == 'Reference' && refValues[key]"
+              v-else-if="item.checker.name === 'Reference' && refValues[key]"
+              :checker="item.checker"
+              :label="
+              internationalisationService.getLocaleforPath(application, pathForKey + '.' + key, key)
+            "
+              :references="refValues[key].referenceValues"
+              :value="fields[key]"
+              :vid="key"
+              @update:value="updateValue(key, $event)"
+          />
+          <OreInputNumber
+            v-else-if="item.checker.name === 'Integer' || item.checker.name === 'Float'"
             :checker="item.checker"
             :label="
               internationalisationService.getLocaleforPath(application, pathForKey + '.' + key, key)
             "
-            :references="refValues[key].referenceValues"
             :value="fields[key]"
             :vid="key"
             @update:value="updateValue(key, $event)"
           />
         </div>
+        <OreInputText
+            v-if="showComment"
+            :checker="{ params: { required: true } }"
+            :label="$t('applications.comment')"
+            :value="comment"
+            :vid="comment"
+            @update:value="updateComment($event)"
+        />
       </div>
     </b-collapse>
   </ValidationObserver>

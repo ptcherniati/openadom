@@ -1,52 +1,62 @@
 <template>
   <ValidationProvider
-    v-slot="{ errors, valid }"
-    :name="vid"
-    :rules="rules"
-    :vid="vid"
-    class="column is-12"
+      v-slot="{ errors, valid }"
+      :name="vid"
+      :rules="rules"
+      :vid="vid"
+      class="column is-12"
   >
     <b-field
-      :label="label"
-      :message="errors"
-      :type="{
+        :label="label"
+        :message="errors"
+        :type="{
         'is-danger': errors && errors.length > 0,
         'is-success': valid,
       }"
-      class="file is-primary column is-12"
+        class="file is-primary column is-12"
     >
       <template v-slot:label>
         <span v-if="required" class="required">{{ $t("ponctuation.star") }}</span>
         <label>{{ label }}</label>
       </template>
       <b-taginput
-        v-if="multiplicity == 'MANY'"
-        v-model="val"
-        required
-        type="text"
-        @blur="updateValue"
-        @input="updateValue"
+          v-if="multiplicity === 'MANY'"
+          v-model="val"
+          required
+          type="text"
+          @blur="updateValue"
+          @input="updateValue"
       />
-      <b-input v-else v-model="val" required type="text" @blur="updateValue" @input="updateValue" />
+      <b-field v-else>
+        <b-input v-model="val" required type="text" @blur="updateValue" @input="updateValue"/>
+        <b-datepicker v-model="val" :mobile-native="false">
+          <template v-slot:trigger>
+            <b-button
+                icon-left="calendar"
+                type="is-primary"
+                disabled/>
+          </template>
+        </b-datepicker>
+      </b-field>
     </b-field>
   </ValidationProvider>
 </template>
 
 <script>
 import moment from "moment";
-import { extend, ValidationProvider } from "vee-validate";
-import { watch, ref } from "vue";
+import {extend, ValidationProvider} from "vee-validate";
+import {watch, ref} from "vue";
 
 export default {
   setup(props) {
     const val = ref("");
     watch(
-      () => props.value,
-      () => {
-        val.value = ref(props.value);
-      }
+        () => props.value,
+        () => {
+          val.value = ref(props.value);
+        }
     );
-    return { val };
+    return {val};
   },
   name: "OreInputDate",
   emits: ["update:value"],
@@ -127,11 +137,11 @@ export default {
       let patternElement = this.pattern[this.checker.params.pattern];
       let formattedDate = moment(value, patternElement.pattern).format(patternElement.pattern);
       let parsedDate = formattedDate.replaceAll("-", "/");
-      return parsedDate == value;
+      return parsedDate === value;
     },
     validateDate(value) {
       if (Array.isArray(value)) {
-        return value.map(this.validDate).filter((v) => v == false).length == 0;
+        return value.map(this.validDate).filter((v) => v === false).length === 0;
       } else {
         return this.validDate(value);
       }
@@ -158,19 +168,19 @@ export default {
     },
     multiplicity: {
       get() {
-        return this.checker && this.checker.params && this.checker.params.multiplicity == "MANY";
+        return this.checker && this.checker.params && this.checker.params.multiplicity === "MANY";
       },
     },
     isValidDate: {
       get() {
-        return this.parsedDate == this.value;
+        return this.parsedDate === this.value;
       },
     },
     rules: {
       get() {
         let rules = [];
         if (this.checker) {
-          if (this.checker.name == "Date") {
+          if (this.checker.name === "Date") {
             if (this.checker.params.pattern) {
               this.extend("date", (value) => {
                 return this.validateDate(value) || this.$t("rules.date", this.checker.params);

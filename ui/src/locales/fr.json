@@ -27,8 +27,8 @@
     "aria-btn-signup": "Bouton création d'un compte"
   },
   "titles": {
-        "additionalFileWithType": "Fichiers additionnels de type : {localName}",
-        "additionalFile": "Fichiers additionnels",
+    "additionalFileWithType": "Fichiers additionnels de type : {localName}",
+    "additionalFile": "Fichiers additionnels",
     "login-page": "Bienvenue sur Open ADOM",
     "applications-page": "Mes applications",
     "aide": "Aide à l'écriture du fichier de configuration d'une application.",
@@ -37,7 +37,7 @@
     "application-creation": "Créer une application",
     "data-types-page": "Type de données de {applicationName}",
     "data-types-repository": "Gestion des jeux de données de {applicationName}",
-    "data-type-authorizations": "Autorisations sur les jeux de données",
+    "data-type-authorizations": "Autorisations de {dataType}",
     "references-authorizations": "Autorisations des référentiels",
     "data-type-new-authorization": "Nouvelle autorisation",
     "data-type-request-authorization": "Demande d' autorisations",
@@ -259,17 +259,16 @@
     "invalidCapturingGroupForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> n'existe pas. Valeurs possibles <code>{registerScopes}</code>.",
     "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de début <code>{token}</code> être compris entre 0 et {countGroups}.",
     "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de fin <code>{token}</code> être compris entre 0 et {countGroups}.",
-    "exception":  "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. ",
-    "invalidPatternForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l' expression de recherche est invalide.",
-    "invalidCapturingGroupForDatatypeRepositoryAuthorizationScope": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> est <code>{scopeToken}</code>; il doit être compris entre 0 et {countGroups}.",
-    "invalidCapturingGroupForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> n'existe pas. Valeurs possibles <code>{registerScopes}</code>.",
-    "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de début <code>{token}</code> être compris entre 0 et {countGroups}.",
-    "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de fin <code>{token}</code> être compris entre 0 et {countGroups}."
+    "exception":  "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. "
   },
-  "additionalFilesmanagement": {
+  "additionalFilesManagement": {
     "additionalFileDescrition": "Pour décrire le fichier additionnel, remplissez le formulaire",
     "additionalFilesManagement": "Fichiers additionels",
     "additionalFilesManagementFor": "{additionalFileName}",
+    "selectAdditionalFilesType": "Sélectionner un type de fichier additionnel",
+    "emptyAdditionalFilesList": "Pas de fichier disponible",
+    "addAdditionalFile": "Ajouter un {localName}",
+    "recap": "Récapitulatif du formulaire",
     "buttons": {
       "actions": "Actions",
       "consult": "Consulter",

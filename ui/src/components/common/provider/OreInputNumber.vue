@@ -14,13 +14,14 @@
         'is-success': valid,
       }"
       class="file is-primary column is-12"
+      grouped
     >
       <template v-slot:label>
         <span v-if="required" class="required">{{ $t("ponctuation.star") }}</span>
         <label>{{ label }}</label>
       </template>
       <b-taginput
-        v-if="multiplicity == 'MANY'"
+        v-if="multiplicity === 'MANY'"
         v-model="val"
         required
         type="number"

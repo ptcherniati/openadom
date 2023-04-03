@@ -3,11 +3,16 @@
     <SubMenu
       :aria-label="$t('menu.aria-sub-menu')"
       :paths="subMenuPaths"
-      :root="additionalFile.localName"
+      :root="application.localName || application.title"
       role="navigation"
     />
     <h1 class="title main-title">
-      <span>{{ $t("titles.additionalFile", additionalFile) }}</span>
+      {{ $t("titles.additionalFileWithType", {
+              localName: internationalisationService.getLocaleforPath(
+                  application,
+                  "additionalFiles." + additionalFileName + ".internationalizationName"
+              ),
+            }) }}
     </h1>
     <caption v-if="!this.columnsVisible" class="columns">
       <div class="column loader-wrapper">
@@ -157,6 +162,7 @@
             :type="valid ? 'is-primary' : 'is-warning'"
             icon-left="edit"
             :active="valid"
+            :disabled="!valid"
             @click="changeConfiguration"
           >
             {{ $t("additionalFiles.buttons.submit") }}
@@ -352,23 +358,21 @@ export default class AdditionalFileInfosView extends Vue {
     this.chosenLocale = this.userPreferencesService.getUserPrefLocale();
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("dataTypesManagement.data-types").toLowerCase(),
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+        this.$t("additionalFilesManagement.additionalFilesManagement").toLowerCase(),
+        () => this.$router.push(`/applications/${this.applicationName}/additionalFiles`),
         () => this.$router.push("/applications")
       ),
       new SubMenuPath(
-        this.$t(`dataTypeAuthorizations.sub-menu-request-authorization`),
-        () => {
-          this.$router.push(`/applications/${this.applicationName}/authorizationsRequest`);
-        },
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
-      ),
-      new SubMenuPath(
-        this.$t(`dataTypeAuthorizations.sub-menu-new-authorization`),
-        () => {},
-        () => {
-          this.$router.push(`/applications/${this.applicationName}/authorizationsRequest/new`);
-        }
+          this.$t(
+              this.additionalFileId === "new"
+                  ? `referencesAuthorizations.sub-menu-new-authorization`
+                  : "referencesAuthorizations.sub-menu-modify-authorization",
+              { additionalFileId: this.additionalFileId }
+          ),
+          () => {},
+          () => {
+            this.$router.push(`/applications/${this.applicationName}/additionalFiles`);
+          }
       ),
     ];
     this.isLoading = false;
@@ -400,7 +404,7 @@ export default class AdditionalFileInfosView extends Vue {
       this.format =
         ((this.application?.configuration?.additionalFiles || {})[this.additionalFileName] || {})
           .format || {};
-      this.description = this.$t("additionalFilesmanagement.additionalFileDescrition");
+      this.description = this.$t("additionalFilesManagement.additionalFileDescrition");
       this.fields = (Object.keys(this.format) || []).reduce((acc, field) => {
         acc[field] = "";
         return acc;

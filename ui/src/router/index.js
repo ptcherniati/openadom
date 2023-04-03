@@ -59,7 +59,7 @@ const routes = [
   },
   {
     path: "/applications/:applicationName/additionalFiles/:additionalFileName",
-    name: "Additional files management view",
+    name: "Additional files management by Additional file name view",
     component: AdditionalFilesManagementView,
     props: true,
   },

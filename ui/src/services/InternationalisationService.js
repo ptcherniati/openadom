@@ -42,17 +42,20 @@ export class InternationalisationService extends Fetcher {
     if (!path || !path.length) {
       return defaultValue;
     }
-    var navigateConfiguration = application.internationalization;
-    let pathArray = path.split(".");
-    var pathItem = pathArray.shift();
-    while (pathItem) {
-      navigateConfiguration = navigateConfiguration[pathItem];
-      if (!navigateConfiguration) {
-        return defaultValue;
+    if(application.internationalization) {
+      var navigateConfiguration = application.internationalization;
+      let pathArray = path.split(".");
+      var pathItem = pathArray.shift();
+      while (pathItem) {
+        navigateConfiguration = navigateConfiguration[pathItem];
+        if (!navigateConfiguration) {
+          return defaultValue;
+        }
+        pathItem = pathArray.shift();
       }
-      pathItem = pathArray.shift();
+      return navigateConfiguration[localStorage.getItem(LOCAL_STORAGE_LANG)] || defaultValue;
     }
-    return navigateConfiguration[localStorage.getItem(LOCAL_STORAGE_LANG)] || defaultValue;
+      return defaultValue;
   }
 
   mergeInternationalization(application) {
