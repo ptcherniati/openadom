@@ -42,7 +42,7 @@ export class InternationalisationService extends Fetcher {
     if (!path || !path.length) {
       return defaultValue;
     }
-    if(application.internationalization) {
+    if (application.internationalization) {
       var navigateConfiguration = application.internationalization;
       let pathArray = path.split(".");
       var pathItem = pathArray.shift();
@@ -55,7 +55,7 @@ export class InternationalisationService extends Fetcher {
       }
       return navigateConfiguration[localStorage.getItem(LOCAL_STORAGE_LANG)] || defaultValue;
     }
-      return defaultValue;
+    return defaultValue;
   }
 
   mergeInternationalization(application) {

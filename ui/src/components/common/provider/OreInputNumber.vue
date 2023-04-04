@@ -1,59 +1,66 @@
 <template>
   <ValidationProvider
-    v-slot="{ errors, valid }"
-    :name="vid"
-    :rules="rules"
-    :vid="vid"
-    class="column is-12"
+      v-slot="{ errors, valid }"
+      :name="vid"
+      :rules="rules"
+      :vid="vid"
+      class="column is-12"
   >
     <b-field
-      :label="label"
-      :message="errors"
-      :type="{
+        :label="label"
+        :message="errors"
+        :type="{
         'is-danger': errors && errors.length > 0,
         'is-success': valid,
       }"
-      class="file is-primary column is-12"
-      grouped
+        class="file is-primary column is-12"
+        grouped
     >
       <template v-slot:label>
         <span v-if="required" class="required">{{ $t("ponctuation.star") }}</span>
         <label>{{ label }}</label>
       </template>
       <b-taginput
-        v-if="multiplicity === 'MANY'"
-        v-model="val"
-        required
-        type="number"
-        @blur="updateValue"
-        @input="updateValue"
+          v-if="multiplicity === 'MANY'"
+          v-model="val"
+          required
+          type="number"
+          @blur="updateValue"
+          @input="updateValue"
       />
+<!--      <b-numberinput
+          v-else
+          v-model="val"
+          controls-position="compact"
+          required
+          @blur="updateValue"
+          @input="updateValue"></b-numberinput>-->
       <b-input
-        v-else
-        v-model="val"
-        required
-        type="number"
-        @blur="updateValue"
-        @input="updateValue"
+          v-else
+          v-model="val"
+          required
+          type="number"
+          @blur="updateValue"
+          @input="updateValue"
       />
     </b-field>
   </ValidationProvider>
 </template>
 
 <script>
-import { extend, ValidationProvider } from "vee-validate";
-import { ref, watch } from "vue";
+import {extend, ValidationProvider} from "vee-validate";
+import {ref, watch} from "vue";
 
 export default {
   setup(props) {
-    const val = ref("");
+    const val = ref(0);
     watch(
-      () => props.value,
-      () => {
-        val.value = ref(props.value);
-      }
+        () => props.value,
+        () => {
+          val.value = ref(props.value);
+        }
     );
-    return { val };
+    return {val};
   },
   name: "OreInputNumber",
   emits: ["update:value"],

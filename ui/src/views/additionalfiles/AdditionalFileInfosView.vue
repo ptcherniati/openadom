@@ -7,12 +7,14 @@
       role="navigation"
     />
     <h1 class="title main-title">
-      {{ $t("titles.additionalFileWithType", {
-              localName: internationalisationService.getLocaleforPath(
-                  application,
-                  "additionalFiles." + additionalFileName + ".internationalizationName"
-              ),
-            }) }}
+      {{
+        $t("titles.additionalFileWithType", {
+          localName: internationalisationService.getLocaleforPath(
+            application,
+            "additionalFiles." + additionalFileName + ".internationalizationName"
+          ),
+        })
+      }}
     </h1>
     <caption v-if="!this.columnsVisible" class="columns">
       <div class="column loader-wrapper">
@@ -159,7 +161,7 @@
             {{ $t("additionalFiles.buttons.cancel") }}
           </b-button>
           <b-button
-            :type="valid ? 'is-primary' : 'is-warning'"
+            :type="additionalFileId === 'new' ? 'is-primary' : 'is-warning'"
             icon-left="edit"
             :active="valid"
             :disabled="!valid"
@@ -363,16 +365,16 @@ export default class AdditionalFileInfosView extends Vue {
         () => this.$router.push("/applications")
       ),
       new SubMenuPath(
-          this.$t(
-              this.additionalFileId === "new"
-                  ? `referencesAuthorizations.sub-menu-new-authorization`
-                  : "referencesAuthorizations.sub-menu-modify-authorization",
-              { additionalFileId: this.additionalFileId }
-          ),
-          () => {},
-          () => {
-            this.$router.push(`/applications/${this.applicationName}/additionalFiles`);
-          }
+        this.$t(
+          this.additionalFileId === "new"
+            ? `referencesAuthorizations.sub-menu-new-authorization`
+            : "referencesAuthorizations.sub-menu-modify-authorization",
+          { additionalFileId: this.additionalFileId }
+        ),
+        () => {},
+        () => {
+          this.$router.push(`/applications/${this.applicationName}/additionalFiles`);
+        }
       ),
     ];
     this.isLoading = false;

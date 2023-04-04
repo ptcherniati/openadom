@@ -1,36 +1,36 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
-        :aria-label="$t('menu.aria-sub-menu')"
-        :paths="subMenuPaths"
-        :root="application.localName || application.title"
-        role="navigation"
+      :aria-label="$t('menu.aria-sub-menu')"
+      :paths="subMenuPaths"
+      :root="application.localName || application.title"
+      role="navigation"
     />
     <h1 class="title main-title">
       {{
         additionalFileName
-            ? $t("titles.additionalFileWithType", {
+          ? $t("titles.additionalFileWithType", {
               localName: internationalisationService.getLocaleforPath(
-                  application,
-                  "additionalFiles." + additionalFileName + ".internationalizationName"
+                application,
+                "additionalFiles." + additionalFileName + ".internationalizationName"
               ),
             })
-            : $t("titles.additionalFile")
+          : $t("titles.additionalFile")
       }}
     </h1>
     <div>
       <div class="columns">
         <b-select
-            v-model="additionalFileName"
-            :placeholder="$t('additionalFiles.menu')"
-            style="margin: 10px"
-            @input="loadAdditionalFiles"
+          v-model="additionalFileName"
+          :placeholder="$t('additionalFiles.menu')"
+          style="margin: 10px"
+          @input="loadAdditionalFiles"
         >
           <option v-for="(option, id) in additionalFileNames" :key="id" :value="option">
             {{
               internationalisationService.getLocaleforPath(
-                  application,
-                  "additionalFiles." + option + ".internationalizationName"
+                application,
+                "additionalFiles." + option + ".internationalizationName"
               )
             }}
           </option>
@@ -40,8 +40,8 @@
             {{
               $t("additionalFilesManagement.addAdditionalFile", {
                 localName: internationalisationService.getLocaleforPath(
-                    application,
-                    "additionalFiles." + additionalFileName + ".internationalizationName"
+                  application,
+                  "additionalFiles." + additionalFileName + ".internationalizationName"
                 ),
               })
             }}
@@ -56,16 +56,16 @@
       <div v-for="(additionalFile, i) in additionalFiles" :key="i">
         <div v-if="additionalFile.fileType === additionalFileName">
           <CollapsibleTree
-              v-if="true || isVisibleRequest(additionalFile.setted)"
-              :id="additionalFile.id"
-              :application-title="$t('titles.references-page')"
-              :buttons="buttons"
-              :level="0"
-              :line-count="12"
-              :on-click-label-cb="() => ''"
-              :option="additionalFile"
-              :repository-redirect="(label) => manageRequest(label)"
-              class="liste"
+            v-if="true || isVisibleRequest(additionalFile.setted)"
+            :id="additionalFile.id"
+            :application-title="$t('titles.references-page')"
+            :buttons="buttons"
+            :level="0"
+            :line-count="12"
+            :on-click-label-cb="() => ''"
+            :option="additionalFile"
+            :repository-redirect="(label) => manageRequest(label)"
+            class="liste"
           >
             <template v-slot:secondaryMenu> &nbsp;</template>
             <template v-slot:upload> &nbsp;</template>
@@ -92,23 +92,23 @@
             <template v-slot:default="{ option, displayChildren }">
               <div v-if="displayChildren" class="rows">
                 <div style="padding-left: 1rem">
-                  <p style="text-decoration: underline; font-size: large">{{
-                      $t("additionalFilesManagement.recap")
-                    }}{{ $t("ponctuation.colon") }} </p>
+                  <p style="text-decoration: underline; font-size: large">
+                    {{ $t("additionalFilesManagement.recap") }}{{ $t("ponctuation.colon") }}
+                  </p>
                 </div>
                 <div
-                    v-for="(value, name) in option.additionalBinaryFileForm"
-                    :key="name"
-                    class="row"
+                  v-for="(value, name) in option.additionalBinaryFileForm"
+                  :key="name"
+                  class="row"
                 >
                   <div class="columns">
                     <div v-if="value !== ''" class="column is-offset-1 is-primary">
                       <p>
                         {{
                           internationalisationService.getLocaleforPath(
-                              application,
-                              "rightsRequest.format." + name,
-                              name
+                            application,
+                            "rightsRequest.format." + name,
+                            name
                           )
                         }}{{ $t("ponctuation.colon") }} {{ value }}
                       </p>
@@ -121,7 +121,9 @@
         </div>
         <div class="columns" v-else>
           <caption class="column is-one-quarter">
-            <p style="color: rgb(255, 170, 0);">{{ $t("additionalFilesManagement.emptyAdditionalFilesList") }}</p>
+            <p style="color: rgb(255, 170, 0)">
+              {{ $t("additionalFilesManagement.emptyAdditionalFilesList") }}
+            </p>
           </caption>
         </div>
       </div>
@@ -131,20 +133,20 @@
 
 <script>
 import moment from "moment";
-import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
-import {AlertService} from "@/services/AlertService";
-import {ApplicationService} from "@/services/rest/ApplicationService";
-import {AdditionalFileService} from "@/services/rest/AdditionalFileService";
-import {InternationalisationService} from "@/services/InternationalisationService";
-import {Component, Prop, Vue} from "vue-property-decorator";
+import SubMenu, { SubMenuPath } from "@/components/common/SubMenu.vue";
+import { AlertService } from "@/services/AlertService";
+import { ApplicationService } from "@/services/rest/ApplicationService";
+import { AdditionalFileService } from "@/services/rest/AdditionalFileService";
+import { InternationalisationService } from "@/services/InternationalisationService";
+import { Component, Prop, Vue } from "vue-property-decorator";
 import PageView from "../common/PageView.vue";
-import {ApplicationResult} from "@/model/ApplicationResult";
-import {Button} from "@/model/Button";
+import { ApplicationResult } from "@/model/ApplicationResult";
+import { Button } from "@/model/Button";
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
-import {AdditionalFilesInfos} from "@/model/additionalFiles/AdditionalFilesInfos";
+import { AdditionalFilesInfos } from "@/model/additionalFiles/AdditionalFilesInfos";
 
 @Component({
-  components: {PageView, SubMenu, CollapsibleTree},
+  components: { PageView, SubMenu, CollapsibleTree },
 })
 export default class AdditionalFilesManagementView extends Vue {
   @Prop() applicationName;
@@ -169,13 +171,13 @@ export default class AdditionalFilesManagementView extends Vue {
   users = [];
   buttons = [
     new Button(
-        this.$t("referencesManagement.consult"),
-        "eye",
-        (label) => this.consultAdditionalFile(label),
-        "is-dark"
+      this.$t("referencesManagement.consult"),
+      "eye",
+      (label) => this.consultAdditionalFile(label),
+      "is-dark"
     ),
     new Button(this.$t("referencesManagement.download"), "download", (label) =>
-        this.downloadAdditionalFile(label)
+      this.downloadAdditionalFile(label)
     ),
   ];
   filterState = 0;
@@ -210,10 +212,9 @@ export default class AdditionalFilesManagementView extends Vue {
     this.init();
     this.subMenuPaths = [
       new SubMenuPath(
-          this.$t("additionalFilesManagement.additionalFilesManagement").toLowerCase(),
-          () => {
-          },
-          () => this.$router.push("/applications")
+        this.$t("additionalFilesManagement.additionalFilesManagement").toLowerCase(),
+        () => {},
+        () => this.$router.push("/applications")
       ),
     ];
   }
@@ -232,14 +233,14 @@ export default class AdditionalFilesManagementView extends Vue {
       this.application = {
         ...this.application,
         localName: this.internationalisationService.mergeInternationalization(this.application)
-            .localName,
+          .localName,
       };
       this.additionalFileNames = Object.keys(this.application.additionalFiles || {});
       this.canManageRights =
-          this.application.isAdministrator ||
-          Object.values(this.application.authorizationsDatatypesRights || []).some(
-              (rights) => rights.ADMIN
-          );
+        this.application.isAdministrator ||
+        Object.values(this.application.authorizationsDatatypesRights || []).some(
+          (rights) => rights.ADMIN
+        );
     } catch (error) {
       this.alertService.toastServerError;
     }
@@ -259,7 +260,7 @@ export default class AdditionalFilesManagementView extends Vue {
     const ref = this.findAdditionalFileByLabel(label);
     if (ref) {
       this.$router.push(
-          `/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/${ref.id}`
+        `/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/${ref.id}`
       );
     }
   }
@@ -267,7 +268,7 @@ export default class AdditionalFilesManagementView extends Vue {
   addAdditionalFile() {
     if (this.additionalFileName) {
       this.$router.push(
-          `/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/new`
+        `/applications/${this.applicationName}/additionalFiles/${this.additionalFileName}/new`
       );
     }
   }
@@ -294,9 +295,9 @@ export default class AdditionalFilesManagementView extends Vue {
 
   async loadAdditionalFiles() {
     let additionalFiles = await this.additionalFileService.getAdditionalFiles(
-        this.applicationName,
-        this.additionalFileName,
-        {}
+      this.applicationName,
+      this.additionalFileName,
+      {}
     );
     let users1 = additionalFiles.users || [];
     users1.shift();
@@ -317,8 +318,8 @@ export default class AdditionalFilesManagementView extends Vue {
     }
 
     const units = si
-        ? ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
-        : ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+      ? ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"]
+      : ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
     let u = -1;
     const r = 10 ** dp;
 

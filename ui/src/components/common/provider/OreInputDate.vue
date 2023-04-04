@@ -27,17 +27,30 @@
           @blur="updateValue"
           @input="updateValue"
       />
-      <b-field v-else>
-        <b-input v-model="val" required type="text" @blur="updateValue" @input="updateValue"/>
-        <b-datepicker v-model="val" :mobile-native="false">
-          <template v-slot:trigger>
-            <b-button
-                icon-left="calendar"
-                type="is-primary"
-                disabled/>
-          </template>
+      <b-input
+          v-else
+          v-model="val"
+          :placeholder="checker.params.pattern"
+          required
+          type="text"
+          @blur="updateValue"
+          @input="updateValue"
+      />
+<!--      <b-field v-else>
+        <b-datepicker
+            ref="datepicker"
+            v-model="val"
+            editable
+            placeholder="Select a date"
+            @blur="updateValue"
+            @input="updateValue">
         </b-datepicker>
-      </b-field>
+        <b-button
+            v-model="val"
+            icon-left="calendar"
+            type="is-primary"
+            @click="$refs.datepicker.toggle()"/>
+      </b-field>-->
     </b-field>
   </ValidationProvider>
 </template>

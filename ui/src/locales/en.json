@@ -13,6 +13,19 @@
     "jsonDeserializationError": "Failed to transform json string {json}: {message}",
     "requestMapperSerializationError": "Failed to transform json string {requestClient}: {message}"
   },
+  "login": {
+    "signin": "Sign in",
+    "signup": "Sign up",
+    "login": "Login",
+    "login-placeholder": "Ex: michel",
+    "pwd": "Password",
+    "pwd-placeholder": "Ex: xxxx",
+    "pwd-forgotten": "Forgotten password ? ",
+    "register": "Register",
+    "confirm-pwd": "Confirmer le mot de passe",
+    "aria-btn-login": "Validate login form button",
+    "aria-btn-signup": "Create an account button"
+  },
   "titles": {
     "additionalFileDescrition": "To describe the additional file, fill in the form",
     "additionalFileWithType": "Additional Files os type: {localName}",
@@ -30,19 +43,6 @@
     "data-type-new-authorization": "New authorization",
     "data-type-request-authorization": "Request authorizations",
     "authorizations-management": "Authorizations management of applications"
-  },
-  "login": {
-    "signin": "Sign in",
-    "signup": "Sign up",
-    "login": "Login",
-    "login-placeholder": "Ex: michel",
-    "pwd": "Password",
-    "pwd-placeholder": "Ex: xxxx",
-    "pwd-forgotten": "Forgotten password ? ",
-    "register": "Register",
-    "confirm-pwd": "Confirmer le mot de passe",
-    "aria-btn-login": "Validate login form button",
-    "aria-btn-signup": "Create an account button"
   },
   "tags": {
     "no-tag": "No tag",
@@ -104,7 +104,15 @@
     "authorizations": "Authorizations"
   },
   "additionalFiles": {
-    "menu": "Choose an additional file type"
+    "menu": "Choose an additional file type",
+    "titles": {
+      "upload": "Download additional file",
+      "associate": "Association of objects to the additional file"
+    },
+    "buttons": {
+      "cancel": "Cancel",
+      "submit": "Submit"
+    }
   },
   "applications": {
     "chose-config": "Chose a configuration",
@@ -254,6 +262,23 @@
     "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "In the repository section of datatype <code>{dataType}</code> the start date capture group <code>{token}</code> must be between 0 and {countGroups}.",
     "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "In repository section of datatype <code>{dataType}</code> end date capture group <code>{token}</code> be between 0 and {countGroups}.",
     "exception": "The translation string for the following error is missing. Please verify that this is not an indentation problem before contacting the administrators. "
+  },
+  "additionalFilesManagement": {
+    "additionalFileDescrition": "To describe the additional file, complete the form",
+    "additionalFilesManagement": "Additional files",
+    "additionalFilesManagementFor": "{additionalFileName}",
+    "selectAdditionalFilesType": "Select additional file type",
+    "emptyAdditionalFilesList": "No file available",
+    "addAdditionalFile": "Add one {localName}",
+    "recap": "Summary of the form",
+    "buttons": {
+      "actions": "Shares",
+      "consult": "To consult",
+      "download": "Download",
+      "delete": "Delete",
+      "references": "References",
+      "data": "Data"
+    }
   },
   "referencesManagement": {
     "actions": "Actions",
