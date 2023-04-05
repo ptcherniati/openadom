@@ -42,7 +42,8 @@
     "references-authorizations": "Autorisations des référentiels",
     "data-type-new-authorization": "Nouvelle autorisation",
     "data-type-request-authorization": "Demande d' autorisations",
-    "authorizations-management": "Gestion des autorisations sur les applications"
+    "authorizations-management": "Gestion des autorisations sur les applications",
+    "requestAuthorization": "Demande d'autorisation de {applicationName}"
   },
   "tags": {
     "no-tag": "Sans étiquette",
@@ -261,6 +262,7 @@
     "invalidCapturingGroupForDatatypeRepository": "Dans la section repository du datatype <code>{dataType}</code> l'authorizationScope <code>{scopeName}</code> n'existe pas. Valeurs possibles <code>{registerScopes}</code>.",
     "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de début <code>{token}</code> être compris entre 0 et {countGroups}.",
     "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "Dans la section repository du datatype <code>{dataType}</code> le groupe de capture de la date de fin <code>{token}</code> être compris entre 0 et {countGroups}.",
+    "characterNotAcceptInName" : "Il y a des caractère non accepté dans le nom de l'application : <code>{name}</code>",
     "exception": "Il manque la chaine de traduction pour l'erreur suivante. Merci de vérifiez que ce n'est pas un problème d'indantation avant de contacter les administrateurs. "
   },
   "additionalFilesManagement": {
@@ -408,6 +410,9 @@
     "addComment": "Vous pouvez ajouter un commentaire à votre demande de droits",
     "commentExample": "Un commentaire",
     "validate": "confirmer"
+  },
+  "requestAuthorization" : {
+    "request": "Demande d'autorisation"
   },
   "referencesAuthorizations": {
     "add-auhtorization": "Ajouter une autorisation",

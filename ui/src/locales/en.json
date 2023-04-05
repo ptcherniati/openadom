@@ -42,7 +42,8 @@
     "references-authorizations": "References authorizations",
     "data-type-new-authorization": "New authorization",
     "data-type-request-authorization": "Request authorizations",
-    "authorizations-management": "Authorizations management of applications"
+    "authorizations-management": "Authorizations management of applications",
+    "requestAuthorization": "Application for authorization to {applicationName}"
   },
   "tags": {
     "no-tag": "No tag",
@@ -261,6 +262,7 @@
     "invalidCapturingGroupForDatatypeRepository": "In repository section of datatype <code>{dataType}</code> the authorizationScope <code>{scopeName}</code> does not exist. Possible values ​​<code>{registerScopes}</code >.",
     "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "In the repository section of datatype <code>{dataType}</code> the start date capture group <code>{token}</code> must be between 0 and {countGroups}.",
     "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "In repository section of datatype <code>{dataType}</code> end date capture group <code>{token}</code> be between 0 and {countGroups}.",
+    "characterNotAcceptInName" : "There are characters not accepted in the name of the application: <code>{name}</code>",
     "exception": "The translation string for the following error is missing. Please verify that this is not an indentation problem before contacting the administrators. "
   },
   "additionalFilesManagement": {
@@ -408,6 +410,9 @@
     "addComment": "You can add a comment to your rights request",
     "commentExample": "A comment",
     "validate": "confirm"
+  },
+  "requestAuthorization" : {
+    "request": "Authorization request"
   },
   "referencesAuthorizations": {
     "add-auhtorization": "Add an authorization",

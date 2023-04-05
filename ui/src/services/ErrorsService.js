@@ -122,6 +122,7 @@ const ERRORS = {
   invalidCapturingGroupForDatatypeRepository: (params) => i18n.t("errors.invalidCapturingGroupForDatatypeRepository", params),
   invalidCapturingGroupForStartDateDatatypeRepositoryDate: (params) => i18n.t("errors.invalidCapturingGroupForStartDateDatatypeRepositoryDate", params),
   invalidCapturingGroupForEndDateDatatypeRepositoryDate: (params) => i18n.t("errors.invalidCapturingGroupForEndDateDatatypeRepositoryDate", params),
+  characterNotAcceptInName: (params) => i18n.t("errors.characterNotAcceptInName", params),
   variableInMultipleDataGroup: (params) => i18n.t("errors.variableInMultipleDataGroup", params),
 };
 
