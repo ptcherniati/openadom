@@ -42,7 +42,9 @@ a {
   top: -2px;
 }
 .control.has-icons-left .icon {
-  top: -5px;
+  .is-small {
+    top: -5px;
+  }
 }
 .b-checkbox.checkbox.button {
   display: inline-flex;

@@ -8,8 +8,8 @@
     />
     <h1 class="title main-title">
       {{
-        $t("titles.data-type-authorizations", {
-          dataType: application.localDatatypeName || dataTypeId,
+        $t("titles.requestAuthorization", {
+          applicationName: application.localName || application.title,
         })
       }}
     </h1>
@@ -53,7 +53,7 @@
               {{ (option.creationDate && getDate(option.creationDate)) || "---" }}
             </div>
             <div class="column is-one-fifth">
-              {{ users.find((user) => user.id == option.user).label || "---" }}
+              {{ users.find((user) => user.id === option.user).label || "---" }}
             </div>
           </template>
           <template v-slot:default="{ option, displayChildren }">
@@ -148,18 +148,9 @@ export default class RequestAuthorizationManagementView extends Vue {
     this.init();
     this.subMenuPaths = [
       new SubMenuPath(
-        this.$t("dataTypesManagement.data-types").toLowerCase(),
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`),
+        this.$t("requestAuthorization.request").toLowerCase(),
+        () => {},
         () => this.$router.push("/applications")
-      ),
-      new SubMenuPath(
-        this.$t(`dataTypeAuthorizations.sub-menu-data-type-authorizations`, {
-          dataType: this.dataTypeId,
-        }),
-        () => {
-          this.$router.push(`/applications/${this.applicationName}/authorizations`);
-        },
-        () => this.$router.push(`/applications/${this.applicationName}/dataTypes`)
       ),
     ];
   }
@@ -189,7 +180,7 @@ export default class RequestAuthorizationManagementView extends Vue {
       let users1 = rightsRequests.users || [];
       users1.shift();
       users1 = users1.filter((user) => {
-        return rightsRequests.rightsRequests.some((rr) => rr.user == user.id);
+        return rightsRequests.rightsRequests.some((rr) => rr.user === user.id);
       });
       for (const request of rightsRequests.rightsRequests) {
         request.children = [{}];
@@ -203,9 +194,9 @@ export default class RequestAuthorizationManagementView extends Vue {
   }
 
   isVisibleRequest(setted) {
-    if (this.filterState == 0) {
+    if (this.filterState === 0) {
       return !setted;
-    } else if (this.filterState == 1) {
+    } else if (this.filterState === 1) {
       return setted;
     } else {
       return true;

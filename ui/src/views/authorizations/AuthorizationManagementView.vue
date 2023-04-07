@@ -9,6 +9,9 @@
     <h1 class="title main-title">
       {{ $t("titles.authorizations-management") }}
     </h1>
+    <b-notification aria-close-label="Close notification">
+      Délégation des droits de création pour une ou plusieurs application(s).
+    </b-notification>
     <div class="rows">
       <b-table
         class="row"
@@ -37,21 +40,26 @@
         <b-table-column
           searchable
           field="admin"
-          :label="'login'"
-          width="300"
+          :label="$t('dataTypeAuthorizations.users')"
           sortable
-          v-slot="props"
           :custom-search="search"
         >
-          <template>
+          <template #searchable="props">
+            <b-input
+              v-model="props.filters[props.column.field]"
+              :placeholder="$t('dataTypeAuthorizations.search')"
+              icon="search"
+              size="is-normal"
+            />
+          </template>
+          <template v-slot="props">
             {{ props.row.login }}
           </template>
         </b-table-column>
         <b-table-column
           v-if="currentUser.superadmin"
           field="administrator"
-          :label="'Administration'"
-          width="300"
+          :label="$t('referencesManagement.admin')"
           sortable
           v-slot="props"
         >
@@ -62,8 +70,7 @@
         <b-table-column
           v-if="currentUser.authorizedForApplicationCreation"
           field="applications"
-          :label="'Applications'"
-          width="300"
+          :label="$t('menu.applications')"
           sortable
           v-slot="props"
         >
@@ -236,5 +243,8 @@ export default class AuthorizationManagementView extends Vue {
 <style lang="scss" scoped>
 .icon {
   font-size: 0.5rem;
+}
+.control.has-icons-left .icon {
+  top: 5px;
 }
 </style>
