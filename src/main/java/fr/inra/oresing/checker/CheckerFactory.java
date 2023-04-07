@@ -13,6 +13,7 @@ import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.rest.GetGrantableResult;
 import fr.inra.oresing.transformer.LineTransformer;
 import fr.inra.oresing.transformer.TransformerFactory;
 import lombok.extern.slf4j.Slf4j;
@@ -43,10 +44,7 @@ public class CheckerFactory {
     private TransformerFactory transformerFactory;
 
     public ImmutableMap<VariableComponentKey, ReferenceLineChecker> getReferenceLineCheckers(Application app, String dataType) {
-        return getLineCheckers(app, dataType).stream()
-                .filter(lineChecker -> lineChecker instanceof ReferenceLineChecker)
-                .map(lineChecker -> (ReferenceLineChecker) lineChecker)
-                .collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget(), Function.identity()));
+        return getLineCheckers(app, dataType).stream().filter(lineChecker -> lineChecker instanceof ReferenceLineChecker).map(lineChecker -> (ReferenceLineChecker) lineChecker).collect(ImmutableMap.toImmutableMap(rlc -> (VariableComponentKey) rlc.getTarget(), Function.identity()));
     }
 
     public ImmutableSet<LineChecker> getReferenceValidationLineCheckers(Application app, String reference) {
@@ -57,10 +55,7 @@ public class CheckerFactory {
             String column = variableEntry.getKey();
             ReferenceColumn referenceColumn = new ReferenceColumn(column);
             Configuration.ReferenceStaticColumnDescription variableDescription = variableEntry.getValue();
-            Optional.ofNullable(variableEntry.getValue())
-                    .map(Configuration.ReferenceStaticColumnDescription::getChecker)
-                    .map(checkerDescription -> newChecker(app, checkerDescription, referenceColumn))
-                    .ifPresent(checkersBuilder::add);
+            Optional.ofNullable(variableEntry.getValue()).map(Configuration.ReferenceStaticColumnDescription::getChecker).map(checkerDescription -> newChecker(app, checkerDescription, referenceColumn)).ifPresent(checkersBuilder::add);
         }
         ImmutableMap<String, Configuration.LineValidationRuleDescription> validations = ImmutableMap.copyOf(referenceDescription.getValidations());
         checkersBuilder.addAll(validationRulesToLineCheckers(app, validations));
@@ -81,10 +76,7 @@ public class CheckerFactory {
             for (Map.Entry<String, Configuration.VariableComponentDescription> componentEntry : variableDescription.doGetAllComponentDescriptions().entrySet()) {
                 String component = componentEntry.getKey();
                 VariableComponentKey variableComponentKey = new VariableComponentKey(variable, component);
-                Optional.ofNullable(componentEntry.getValue())
-                        .map(Configuration.VariableComponentDescription::getChecker)
-                        .map(checkerDescription -> newChecker(app, checkerDescription, variableComponentKey))
-                        .ifPresent(checkersBuilder::add);
+                Optional.ofNullable(componentEntry.getValue()).map(Configuration.VariableComponentDescription::getChecker).map(checkerDescription -> newChecker(app, checkerDescription, variableComponentKey)).ifPresent(checkersBuilder::add);
             }
         }
         ImmutableMap<String, Configuration.LineValidationRuleDescription> validations = ImmutableMap.copyOf(dataTypeDescription.getValidations());
@@ -96,12 +88,28 @@ public class CheckerFactory {
         return lineCheckers;
     }
 
+    public ImmutableSet<LineChecker> getLineCheckersReferences(Application app, String references) {
+        Preconditions.checkArgument(
+                app.getConfiguration().getReferences().containsKey(references),
+                "Pas de references " + references + " dans " + app);
+        Configuration.ReferenceDescription dataTypeDescription = app.getConfiguration().getReferences().get(references);
+        ImmutableSet.Builder<LineChecker> checkersBuilder = ImmutableSet.builder();
+        for (Map.Entry<String, Configuration.ReferenceStaticNotComputedColumnDescription> variableEntry : dataTypeDescription.getColumns().entrySet()) {
+            String variable = variableEntry.getKey();
+            ReferenceColumn variableComponentKey = new ReferenceColumn(variable);
+            Optional.ofNullable(variableEntry.getValue()).map(Configuration.ReferenceStaticColumnDescription::getChecker).map(checkerDescription -> newChecker(app, checkerDescription, variableComponentKey)).ifPresent(checkersBuilder::add);
+        }
+        ImmutableMap<String, Configuration.LineValidationRuleDescription> validations = ImmutableMap.copyOf(dataTypeDescription.getValidations());
+        checkersBuilder.addAll(validationRulesToLineCheckers(app, validations));
+        ImmutableSet<LineChecker> lineCheckers = checkersBuilder.build();
+        if (log.isTraceEnabled()) {
+            log.trace("pour " + app.getName() + ", " + references + ", on validera avec " + lineCheckers);
+        }
+        return lineCheckers;
+    }
+
     private CheckerOnOneVariableComponentLineChecker newChecker(Application app, Configuration.CheckerDescription checkerDescription, CheckerTarget target) {
-        Configuration.CheckerConfigurationDescription configuration =
-                MoreObjects.firstNonNull(
-                        checkerDescription.getParams(),
-                        new Configuration.CheckerConfigurationDescription()
-                );
+        Configuration.CheckerConfigurationDescription configuration = MoreObjects.firstNonNull(checkerDescription.getParams(), new Configuration.CheckerConfigurationDescription());
         LineTransformer transformer = transformerFactory.newTransformer(configuration.getTransformation(), app, target);
         CheckerOnOneVariableComponentLineChecker lineChecker = null;
         switch (checkerDescription.getName()) {
@@ -142,11 +150,7 @@ public class CheckerFactory {
             ImmutableMap<String, Object> groovyContextForReferences = groovyContextHelper.getGroovyContextForReferences(referenceValueRepository, references, null);
             DataRepository dataRepository = repository.getRepository(app).data();
             ImmutableMap<String, Object> groovyContextForDataTypes = groovyContextHelper.getGroovyContextForDataTypes(dataRepository, dataTypes, app);
-            ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()
-                    .putAll(groovyContextForReferences)
-                    .putAll(groovyContextForDataTypes)
-                    .put("application", app)
-                    .build();
+            ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder().putAll(groovyContextForReferences).putAll(groovyContextForDataTypes).put("application", app).build();
             lineChecker = GroovyLineChecker.forExpression(expression, context, configurationDescription);
         } else {
             throw CheckerType.getError(checkerDescription.getName(), Set.of(CheckerType.GroovyExpression));
@@ -163,9 +167,7 @@ public class CheckerFactory {
                 LineChecker lineChecker = newLineChecker(app, lineValidationRuleDescription);
                 checkersBuilder.add(lineChecker);
             } else {
-                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = lineValidationRuleDescription.doGetCheckerTargets().stream()
-                        .map(checkerTarget -> newChecker(app, checkerDescription, checkerTarget))
-                        .collect(Collectors.toList());
+                List<CheckerOnOneVariableComponentLineChecker> lineCheckers = lineValidationRuleDescription.doGetCheckerTargets().stream().map(checkerTarget -> newChecker(app, checkerDescription, checkerTarget)).collect(Collectors.toList());
                 checkersBuilder.addAll(lineCheckers);
             }
         }

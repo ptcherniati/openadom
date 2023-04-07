@@ -5,6 +5,7 @@ import lombok.Value;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @Value
 public class GetReferenceResult {
@@ -16,5 +17,6 @@ public class GetReferenceResult {
         String hierarchicalReference;
         String naturalKey;
         Map<String, Object> values;
+        Map<String, Set<UUID>> refsLinkedTo;
     }
 }

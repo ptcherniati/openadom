@@ -1230,6 +1230,33 @@ public class OreSiService {
                 .build();
     }
 
+    public Map<String, Map<String, LineChecker>> getFormatChecked(String nameOrId, String references) {
+        return checkerFactory.getLineCheckersReferences(getApplication(nameOrId), references)
+                .stream().filter(c -> (c instanceof DateLineChecker) || (c instanceof IntegerChecker) || (c instanceof FloatChecker) || (c instanceof ReferenceLineChecker))
+                .collect(
+                        Collectors.groupingBy(
+                                c -> c.getClass().getSimpleName(),
+                                Collectors.toMap(
+                                        c -> {
+                                            ReferenceColumn vc;
+                                            if (c instanceof DateLineChecker) {
+                                                vc = (ReferenceColumn) ((DateLineChecker) c).getTarget();
+                                            } else if (c instanceof IntegerChecker) {
+                                                vc = (ReferenceColumn) ((IntegerChecker) c).getTarget();
+                                            } else if (c instanceof FloatChecker) {
+                                                vc = (ReferenceColumn) ((FloatChecker) c).getTarget();
+                                            } else {
+                                                vc = (ReferenceColumn) ((ReferenceLineChecker) c).getTarget();
+                                                //System.out.println(vc);
+                                            }
+                                            return vc.asString();
+                                        },
+                                        c -> c
+                                )
+                        )
+                );
+    }
+
     public Map<String, Map<String, LineChecker>> getcheckedFormatVariableComponents(String nameOrId, String dataType) {
         return checkerFactory.getLineCheckers(getApplication(nameOrId), dataType)
                 .stream()

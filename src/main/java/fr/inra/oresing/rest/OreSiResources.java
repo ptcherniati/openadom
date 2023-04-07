@@ -308,6 +308,12 @@ public class OreSiResources {
             @RequestParam MultiValueMap<String, String> params) {
         List<ReferenceValue> list = service.findReference(nameOrId, refType, params);
 
+        Map<String, Map<String, LineChecker>> checkedFormatColumns = service.getFormatChecked(nameOrId, refType);
+        final Set<String> listOfReferenceIds = list.stream()
+                .map(ReferenceValue::getReferenceType)
+                .collect(Collectors.toSet());
+        Map<Ltree, List<ReferenceValue>> requiredReferencesValues = service.getReferenceDisplaysById(service.getApplication(nameOrId), listOfReferenceIds);
+        final Map<String, LineChecker> referenceLineCheckers = checkedFormatColumns.get(ReferenceLineChecker.class.getSimpleName());
 
         ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
                 .map(referenceValue ->
@@ -315,7 +321,8 @@ public class OreSiResources {
                                 referenceValue.getHierarchicalKey().getSql(),
                                 referenceValue.getHierarchicalReference().getSql(),
                                 referenceValue.getNaturalKey().getSql(),
-                                referenceValue.getRefValues().toJsonForFrontend()
+                                referenceValue.getRefValues().toJsonForFrontend(),
+                                referenceValue.getRefsLinkedTo()
                         )
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));
@@ -389,7 +396,7 @@ public class OreSiResources {
         };
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-        headers.set("Content-Disposition", "attachment; filename=additionalFiles.zip" );
+        headers.set("Content-Disposition", "attachment; filename=additionalFiles.zip");
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
