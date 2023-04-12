@@ -8,9 +8,9 @@ application:
   version: 1
 references:
   reference1:
-    keyColumns: [group,equipe]
+    keyColumns: [groupe,equipe]
     columns:
-      group:
+      groupe:
       equipe:
       projets:
         checker:
@@ -39,9 +39,9 @@ references:
             required: false
             multiplicity: "MANY"
   reference2:
-    keyColumns: [group]
+    keyColumns: [groupe]
     columns:
-      group:
+      groupe:
     computedColumns:
       reference1:
         checker:
@@ -51,9 +51,9 @@ references:
             refType: reference1
         computation:
           expression: >
-            String group = datum["group"];
+            String groupe = datum["groupe"];
             references.reference1
-            .findAll({it.refValues.group.equals(group)})
+            .findAll({it.refValues.groupe.equals(groupe)})
             .collect({it.naturalKey})
             .join(",");
           references:
