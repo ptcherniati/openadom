@@ -3,10 +3,7 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-import fr.inra.oresing.checker.InvalidDatasetContentException;
-import fr.inra.oresing.checker.LineChecker;
-import fr.inra.oresing.checker.ReferenceLineChecker;
-import fr.inra.oresing.checker.ReferenceLineCheckerDisplay;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.model.chart.OreSiSynthesis;
@@ -162,7 +159,13 @@ public class OreSiResources {
         Map<String, ApplicationResult.Reference> references = withReferenceType ? Maps.transformEntries(
                 application.getConfiguration().getReferences(),
                 (reference, referenceDescription) -> {
-                    Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), null));
+                    Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), Optional.ofNullable(columnDescription)
+                            .map(cd->cd.getChecker())
+                            .filter(check-> CheckerType.Reference.equals(check.getName()))
+                            .map(check->check.getParams())
+                            .map(param -> param.getRefType())
+                            .orElse(null)
+                    ));
                     Map<String, ApplicationResult.Reference.DynamicColumn> dynamicColumns = Maps.transformEntries(referenceDescription.getDynamicColumns(), (dynamicColumnName, dynamicColumnDescription) ->
                             new ApplicationResult.Reference.DynamicColumn(
                                     dynamicColumnName,
