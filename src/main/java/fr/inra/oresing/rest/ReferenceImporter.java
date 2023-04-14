@@ -221,7 +221,7 @@ abstract class ReferenceImporter {
                                     .transform(rawValue ->
                                         dateValidationCheckResult.getLocalDateTime().stream()
                                                         .map(date->String.format("date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), rawValue))
-                                                .collect(Collectors.joining(",", isMany?"[":"",isMany?"]":""))
+                                                .collect(Collectors.joining(","))
                                      );
                             referenceDatum.put(referenceColumn, valueToStoreInDatabase);
                         });
@@ -241,7 +241,9 @@ abstract class ReferenceImporter {
                                     .collect(Collectors.toList());
                             rawValueReplacedByKeys.put(
                                     referenceColumn,
-                                    sqls.stream().collect(Collectors.joining(",",sqls.size()>1?"[":"",sqls.size()>1?"]":"")) );
+                                    sqls.stream()
+                                            .map(sql -> String.format("\"%s\"", sql))
+                                            .collect(Collectors.joining("," )));
                             refsLinkedToBuilder.put(Ltree.escapeToLabel(reference), referenceId);
                         });
                 Multiplicity multiplicity = referenceLineChecker.getConfiguration().getMultiplicity();

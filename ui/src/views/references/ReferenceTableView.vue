@@ -81,7 +81,7 @@
             :sticky="column.key"
             sortable
         >
-          <span v-if="(info(column.id) || multiplicity(column.id, props.row[column.id]))">
+          <span v-if="(info(column.id))">
             <b-button
                 v-if="showBtnTablDynamicColumn(props.row[column.id])"
                 icon-left="eye"
@@ -113,6 +113,22 @@
                 </div>
               </div>
             </b-modal>
+          </span>
+          <span v-else-if="multiplicity(column.id, props.row[column.id])">
+            <div v-for="test in props.row[column.id]" :key="test.id">
+              <b-button
+                  v-if="column.linkedTo !== null"
+                  icon-left="eye"
+                  rounded
+                  size="is-small"
+                  style="height: inherit"
+                  type="is-dark"
+                  @click="showModal(column.id, props.row[column.id])"
+              >
+                {{ test }}
+              </b-button>
+              <p v-else>{{ test }}</p>
+            </div>
           </span>
           <span v-else-if="column.linkedTo !== null">
             <a @click="getCheckerReferenceValues(referenceValues[tableValues.indexOf(props.row)].naturalKey, column.linkedTo, '')">{{
@@ -206,6 +222,8 @@ export default class ReferenceTableView extends Vue {
 
   async showModal(columName, tablDynamicColumn) {
     this.isCardModalActive = true;
+    console.log(columName)
+    console.log(tablDynamicColumn)
     this.modalArrayObj = Object.entries(tablDynamicColumn)
         .filter((a) => a[1])
         .map(function (a) {
@@ -242,6 +260,7 @@ export default class ReferenceTableView extends Vue {
 
   info(refType) {
     let dynamicColumns = Object.entries(this.reference.dynamicColumns).filter((a) => a[1]);
+    console.log(dynamicColumns)
     for (let i = 0; i < dynamicColumns.length; i++) {
       if (dynamicColumns[i][0] === refType) return true;
     }
@@ -260,6 +279,7 @@ export default class ReferenceTableView extends Vue {
   }
 
   multiplicity(column, arrayValues) {
+    console.log(this.reference)
     for (let i = 0; i < this.tableValues.length; i++) {
       let showModal = Object.entries(this.tableValues[i]).filter((a) => a[1]);
       for (let j = 0; j < showModal.length; j++) {
