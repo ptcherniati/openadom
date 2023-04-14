@@ -13,14 +13,29 @@
     <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails">
       <div class="card">
         <header class="card-header is-align-content-center">
-          <p class="card-header-title">{{ currentReferenceDetail.reference }}</p>
+          <p class="card-header-title" field="name" style="font-size: 1.5rem; color: #007F7F">
+            {{ currentReferenceDetail.reference }}
+          </p>
         </header>
         <div class="card-content">
           <div class="content is-align-content-center">
             <b-table
-                :columns="currentReferenceDetail.columns"
                 :data="currentReferenceDetail.data"
-            />
+            >
+              <b-table-column
+                  v-for="column in currentReferenceDetail.columns"
+                  :key="column.id"
+                  v-slot="props">
+                <span v-for="refParent in currentReferenceDetail.refParent"
+                      :key="refParent.valueRefParent">
+                    <a v-if="refParent.valueRefParent === props.row[column.field]"
+                       @click="getCheckerReferenceValues(refParent.valueRefParent, refParent.nameRefParent, refParent.idRefParent[refParent.nameRefParent])"> {{
+                        props.row[column.field]
+                      }} </a>
+                  <p v-else> {{ props.row[column.field] }} </p>
+                </span>
+              </b-table-column>
+            </b-table>
           </div>
         </div>
       </div>
@@ -66,7 +81,7 @@
             :sticky="column.key"
             sortable
         >
-          <span v-if="column.linkedTo === null && (info(column.id) || multiplicity(column.id, props.row[column.id]))">
+          <span v-if="(info(column.id) || multiplicity(column.id, props.row[column.id]))">
             <b-button
                 v-if="showBtnTablDynamicColumn(props.row[column.id])"
                 icon-left="eye"
@@ -76,12 +91,6 @@
                 type="is-dark"
                 @click="showModal(column.id, props.row[column.id])"
             >
-              <span class="tile">
-                {{
-                  props.row[column.id] &&
-                  Object.values(props.row[column.id]).filter((value) => value.length).length
-                }}</span
-              >
             </b-button>
             <b-modal v-model="isCardModalActive" class="modalCardRef" width="70%">
               <div class="card">
@@ -97,14 +106,18 @@
                     <p v-if="key.column" class="column">
                       {{ key.column }} {{ $t("ponctuation.colon") }}
                     </p>
-                    <p v-if="key.value" class="column">{{ key.value }}</p>
+                    <p v-if="key.value" class="column">
+                      {{ key.value }}
+                    </p>
                   </div>
                 </div>
               </div>
             </b-modal>
           </span>
           <span v-else-if="column.linkedTo !== null">
-            <a @click="getCheckerReferenceValues(referenceValues[tableValues.indexOf(props.row)].naturalKey, column.linkedTo)">{{ props.row[column.id] }}</a>
+            <a @click="getCheckerReferenceValues(referenceValues[tableValues.indexOf(props.row)].naturalKey, column.linkedTo, '')">{{
+                props.row[column.id]
+              }}</a>
           </span>
           <span v-else-if="column.id !== '#'">
             {{ props.row[column.id] }}
@@ -171,7 +184,7 @@ export default class ReferenceTableView extends Vue {
   referencesDynamic;
   display = "__display_" + window.localStorage.lang;
   loadedReferences = {};
-  currentReferenceDetail = { active: false };
+  currentReferenceDetail = {active: false};
 
   async changePage(value) {
     this.params.offset = (value - 1) * this.params.limit;
@@ -205,6 +218,7 @@ export default class ReferenceTableView extends Vue {
         let hierarchicalKey = this.referencesDynamic.referenceValues[i].hierarchicalKey;
         for (let j = 0; j < this.modalArrayObj.length; j++) {
           if (this.modalArrayObj[j][hierarchicalKey]) {
+            console.log(this.referencesDynamic.referenceValues[i])
             let column = this.referencesDynamic.referenceValues[i].values[this.display]
                 ? this.referencesDynamic.referenceValues[i].values[this.display]
                 : hierarchicalKey;
@@ -304,56 +318,70 @@ export default class ReferenceTableView extends Vue {
     this.isLoading = false;
   }
 
-  async getCheckerReferenceValues(rowId, refType) {
-    let checkerId = "";
+  async getCheckerReferenceValues(rowId, refType, checkerId) {
     for (let i = 0; i < this.referenceValues.length; i++) {
-      if(this.referenceValues[i].naturalKey === rowId) {
+      if (this.referenceValues[i].naturalKey === rowId) {
         checkerId = this.referenceValues[i].refsLinkedTo[refType][0];
-        if (!this.loadedReferences[checkerId]) {
-          let refvalues;
-          if (!refvalues) {
-            let params = { _row_id_: [checkerId] };
-            if (!refType) {
-              params.any = true;
-            }
-            const reference = await this.referenceService.getReferenceValues(
-                this.applicationName,
-                refType,
-                params
-            );
-            refvalues = reference.referenceValues[0].values;
+      }
+      if (!this.loadedReferences[checkerId]) {
+        let refvalues;
+        let valueRefParent;
+        let nameRefParent;
+        let idRefParent;
+        if (!refvalues) {
+          let params = {_row_id_: [checkerId]};
+          if (!refType) {
+            params.any = true;
           }
-          const data = Object.entries(refvalues)
-              .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))
-              .reduce((acc, entry) => {
-                acc.push(entry);
-                return acc;
-              }, []);
-          const result = {};
-          result[checkerId] = {
-            data: data,
-            columns: [
-              {
-                field: "colonne",
-                label: "Colonne",
-              },
-              {
-                field: "valeur",
-                label: "Valeur",
-              },
-            ],
-            active: true,
-            reference: refType,
-          };
-          this.loadedReferences = {
-            ...this.loadedReferences,
-            ...result,
-          };
+          const reference = await this.referenceService.getReferenceValues(
+              this.applicationName,
+              refType,
+              params
+          );
+          if (Object.keys(reference.referenceValues[0].refsLinkedTo).length > 0) {
+            valueRefParent = reference.referenceValues[0].hierarchicalKey.split('.')[0];
+            nameRefParent = reference.referenceValues[0].hierarchicalReference.split('.')[0];
+            idRefParent = reference.referenceValues[0].refsLinkedTo;
+          }
+          refvalues = reference.referenceValues[0].values;
         }
+        const data = Object.entries(refvalues)
+            .map((entry) => ({colonne: entry[0], valeur: entry[1]}))
+            .reduce((acc, entry) => {
+              acc.push(entry);
+              return acc;
+            }, []);
+        const result = {};
+        result[checkerId] = {
+          data: data,
+          columns: [
+            {
+              field: "colonne",
+              label: "Colonne",
+            },
+            {
+              field: "valeur",
+              label: "Valeur",
+            },
+          ],
+          active: true,
+          reference: refType,
+          refParent: [
+            {
+              valueRefParent: valueRefParent,
+              nameRefParent: nameRefParent,
+              idRefParent: idRefParent,
+            }
+          ],
+        };
+        this.loadedReferences = {
+          ...this.loadedReferences,
+          ...result,
+        };
       }
     }
     let referenceValue = this.loadedReferences[checkerId];
-    this.currentReferenceDetail = { ...referenceValue, active: true };
+    this.currentReferenceDetail = {...referenceValue, active: true};
     return referenceValue;
   }
 
