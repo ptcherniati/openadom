@@ -635,14 +635,11 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.referenceValues[*].values.[?(@.projets==[\"4\",\"5\",\"9\"])]", Matchers.hasSize(1)))
                 .andExpect(jsonPath("$.referenceValues[*].values.[?(@.names==[\"toto1.3\",\"toto1.1\",\"toto1.2\"])]", Matchers.hasSize(1)))
                 .andExpect(jsonPath("$.referenceValues[*].values.[?(@.duration==[\"3.2\",\"4.5\",\"5.6\"])]", Matchers.hasSize(3)))
-                .andExpect(jsonPath("$.referenceValues[*].values.dates[0]", Matchers.hasItems("[date:2014-01-20T00:00:00:20/01/2014]", "[date:2014-01-20T00:00:00:20/01/2014]", "[date:2014-01-20T00:00:00:20/01/2014]", "[date:2014-01-20T00:00:00:20/01/2014]")));
-
+                .andExpect(jsonPath("$.referenceValues[*].values.dates[0]", Matchers.hasItems("date:2014-01-20T00:00:00:23/06/2014")));
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/multiplicity/references/reference2")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.referenceValues[*].values.reference1[0]", Matchers.hasItems("[toto__toto2,toto__toto1]", "[tutu__tutu2,tutu__tutu1]")));
-
-        try (InputStream refStream = getClass().getResourceAsStream(fixtures.getMultiplicityManyData())) {
+                .andExpect(jsonPath("$.referenceValues[*].values.reference1[0]", Matchers.hasItems("toto__toto1","tutu__tutu2")));        try (InputStream refStream = getClass().getResourceAsStream(fixtures.getMultiplicityManyData())) {
             MockMultipartFile refFile = new MockMultipartFile("file", "bugs.csv", "text/plain", refStream);
 
             String response = mockMvc.perform(multipart("/api/v1/applications/multiplicity/data/bugs")

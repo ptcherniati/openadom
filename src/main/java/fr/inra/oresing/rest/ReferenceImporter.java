@@ -219,10 +219,10 @@ abstract class ReferenceImporter {
                             ReferenceColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(referenceColumn);
                             ReferenceColumnValue valueToStoreInDatabase = referenceColumnRawValue
                                     .transform(rawValue ->
-                                        dateValidationCheckResult.getLocalDateTime().stream()
-                                                        .map(date->String.format("date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), rawValue))
-                                                .collect(Collectors.joining(","))
-                                     );
+                                            dateValidationCheckResult.getLocalDateTime().stream()
+                                                    .map(date -> String.format("date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), rawValue))
+                                                    .collect(Collectors.joining(","))
+                                    );
                             referenceDatum.put(referenceColumn, valueToStoreInDatabase);
                         });
             } else if (lineChecker instanceof ReferenceLineChecker) {
@@ -236,14 +236,12 @@ abstract class ReferenceImporter {
                         .map(ReferenceValidationCheckResult.class::cast)
                         .forEach(referenceValidationCheckResult -> {
                             Set<UUID> referenceId = referenceValidationCheckResult.getMatchedReferenceId();
-                            final List<String> sqls = referenceValidationCheckResult.getMatchedReferenceHierarchicalKey().stream()
+                            referenceValidationCheckResult.getMatchedReferenceHierarchicalKey().stream()
                                     .map(Ltree::getSql)
-                                    .collect(Collectors.toList());
-                            rawValueReplacedByKeys.put(
-                                    referenceColumn,
-                                    sqls.stream()
-                                            .map(sql -> String.format("\"%s\"", sql))
-                                            .collect(Collectors.joining("," )));
+                                    .forEach(sql ->
+                                            rawValueReplacedByKeys.put(
+                                                    referenceColumn,
+                                                    sql));
                             refsLinkedToBuilder.put(Ltree.escapeToLabel(reference), referenceId);
                         });
                 Multiplicity multiplicity = referenceLineChecker.getConfiguration().getMultiplicity();
@@ -319,7 +317,7 @@ abstract class ReferenceImporter {
         e.setReferenceType(referenceImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
         e.setHierarchicalReference(hierarchicalReference);
-        e.setRefsLinkedTo(Maps.transformValues(referenceDatumAfterChecking.getRefsLinkedTo().asMap(), set-> set.stream().flatMap(Set::stream).collect(Collectors.toSet())));
+        e.setRefsLinkedTo(Maps.transformValues(referenceDatumAfterChecking.getRefsLinkedTo().asMap(), set -> set.stream().flatMap(Set::stream).collect(Collectors.toSet())));
         e.setNaturalKey(naturalKey);
         e.setApplication(referenceImporterContext.getApplicationId());
         e.setRefValues(referenceDatum);
