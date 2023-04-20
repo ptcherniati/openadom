@@ -65,6 +65,8 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasItemInArray;
@@ -928,6 +930,27 @@ public class OreSiResourcesTest {
             }
         }
 
+        String additionalJsonRequest = "{\n" +
+                "  \"uuids\": [],\n" +
+                "  \"additionalFilesInfos\": {\n" +
+                "    \"fichiers\": {\n" +
+                "      \"fieldFilters\": [\n" +
+                "        {\n" +
+                "          \"field\": \"nom\",\n" +
+                "          \"filter\": \"dix\",\n" +
+                "          \"type\": \"\",\n" +
+                "          \"format\": null,\n" +
+                "          \"intervalValues\": null,\n" +
+                "          \"isRegExp\": false\n" +
+                "        }\n" +
+                "      ]\n" +
+                "    }\n" +
+                "  },\n" +
+                "  \"locale\": \"fr_FR\",\n" +
+                "  \"offset\": 0,\n" +
+                "  \"limit\": null\n" +
+                "}";
+        String additionalfileUUID;
         try (InputStream in = Objects.requireNonNull(resource).openStream()) {
             MockMultipartFile addFile = new MockMultipartFile("file", "monsoere.yaml", "text/plain", in);
             String json = "{\n" +
@@ -961,11 +984,12 @@ public class OreSiResourcesTest {
                     "    }\n" +
                     "  }\n" +
                     "}";
-            mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers")
+            additionalfileUUID = mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers")
                             .file(addFile)
                             .param("params", json)
                             .cookie(authCookie)))
-                    .andExpect(status().is2xxSuccessful());
+                    .andExpect(status().is2xxSuccessful())
+                    .andReturn().getResponse().getContentAsString();
 
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
                     .cookie(authCookie));
@@ -979,47 +1003,70 @@ public class OreSiResourcesTest {
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResolvedException().getMessage();
             Assert.assertEquals("application inconnue 'monsore'", error);
-
-            json = "{\n" +
-                    "  \"uuids\": [],\n" +
-                    "  \"additionalFilesInfos\": {\n" +
-                    "    \"fichiers\": {\n" +
-                    "      \"fieldFilters\": [\n" +
-                    "        {\n" +
-                    "          \"field\": \"nom\",\n" +
-                    "          \"filter\": \"dix\",\n" +
-                    "          \"type\": \"\",\n" +
-                    "          \"format\": null,\n" +
-                    "          \"intervalValues\": null,\n" +
-                    "          \"isRegExp\": false\n" +
-                    "        }\n" +
-                    "      ]\n" +
-                    "    }\n" +
-                    "  },\n" +
-                    "  \"locale\": \"fr_FR\",\n" +
-                    "  \"offset\": 0,\n" +
-                    "  \"limit\": null\n" +
-                    "}";
             //pas de droits
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
                             .param("nameOrId", "monsore")
-                            .param("params", json)
+                            .param("params", additionalJsonRequest)
                             .cookie(lambdaCookie))
                     .andExpect(status().is4xxClientError())
-                    .andReturn().getResolvedException().getMessage();
+                    .andExpect(result -> Assert.assertEquals("application inconnue 'monsore'", result.getResolvedException().getMessage()));
+
 
             Assert.assertEquals("application inconnue 'monsore'", error);
             //avec droits
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
                             .param("nameOrId", "monsore")
-                            .param("params", json)
+                            .param("params", additionalJsonRequest)
                             .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(result -> {
+                        List<ZipEntry> entries = new ArrayList<>();
+                        ZipInputStream zi = null;
+                        try {
+                            zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+
+                            ZipEntry zipEntry = null;
+                            while ((zipEntry = zi.getNextEntry()) != null) {
+                                entries.add(zipEntry);
+                            }
+                        } finally {
+                            if (zi != null) {
+                                zi.close();
+                            }
+                        }
+                        final List<String> entryNames = entries.stream()
+                                .map(ZipEntry::getName)
+                                .collect(Collectors.toList());
+                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere.yaml"));
+                    });
+            ;
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
                             .param("nameOrId", "monsore")
                             .param("params", "{\"uuids\":null,\"fileNames\":null,\"additionalFilesInfos\":{\"fichiers\":{\"fieldFilters\":[]}}}")
                             .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
+                    .andExpect(status().is2xxSuccessful()).andExpect(result -> {
+                        List<ZipEntry> entries = new ArrayList<>();
+                        ZipInputStream zi = null;
+                        try {
+                            zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+
+                            ZipEntry zipEntry = null;
+                            while ((zipEntry = zi.getNextEntry()) != null) {
+                                entries.add(zipEntry);
+                            }
+                        } finally {
+                            if (zi != null) {
+                                zi.close();
+                            }
+                        }
+                        final List<String> entryNames = entries.stream()
+                                .map(ZipEntry::getName)
+                                .collect(Collectors.toList());
+                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere.yaml"));
+                    });
+            ;
 
         }
 
@@ -1137,9 +1184,34 @@ public class OreSiResourcesTest {
                             .accept(MediaType.TEXT_PLAIN_VALUE)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
+                    .andExpect(status().is2xxSuccessful()).andExpect(result -> {
+                        List<ZipEntry> entries = new ArrayList<>();
+                        ZipInputStream zi = null;
+                        try {
+                            zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+
+                            ZipEntry zipEntry = null;
+                            while ((zipEntry = zi.getNextEntry()) != null) {
+                                entries.add(zipEntry);
+                            }
+                        } finally {
+                            if (zi != null) {
+                                zi.close();
+                            }
+                        }
+                        final List<String> entryNames = entries.stream()
+                                .map(ZipEntry::getName)
+                                .collect(Collectors.toList());
+                        Assert.assertTrue(entryNames.contains("pem.csv"));
+                        Assert.assertTrue(entryNames.contains("references/variables_et_unites_par_types_de_donnees.csv"));
+                        Assert.assertTrue(entryNames.contains("references/sites.csv"));
+                        Assert.assertTrue(entryNames.contains("references/types_de_donnees_par_themes_de_sites_et_projet.csv"));
+                        Assert.assertTrue(entryNames.contains("additionalFiles/fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(entryNames.contains("additionalFiles/fichiers/monsoere/monsoere.yaml"));
+                    })
                     .andReturn().getResponse().getContentAsByteArray();
 
-            Files.write(Path.of("/tmp/data.zip"),responseToByteArray);
+            Files.write(Path.of("/tmp/data.zip"), responseToByteArray);
         }
         //on publie 4 fichiers
 
@@ -1234,7 +1306,14 @@ public class OreSiResourcesTest {
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string(fileUUID2));
+        // on supprime le fichier additionnel
 
+        mockMvc.perform(delete("/api/v1/applications/monsore/additionalFiles")
+                        .param("nameOrId", "monsore")
+                        .param("params", additionalJsonRequest)
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(result -> Assert.assertEquals(additionalfileUUID.replace("\"", ""), result.getResponse().getContentAsString()));
     }
 
     private String getJsonRightsforMonSoererepository(String withRigthsUserId, String role, String datatype, String localization, String from, String to, Cookie authenticateCookie) throws Exception {

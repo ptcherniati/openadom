@@ -9,10 +9,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -37,7 +35,7 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         Preconditions.checkArgument(id != null);
         String query = String.format("SELECT '%s' as \"@class\", to_jsonb(t) as json " +
                 "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
-                "application,fileType, fileName,comment,size,convert_from(data, 'UTF8') as \"data\",fileinfos,associates  \n" +
+                "application,fileType, fileName,comment,size,convert_from(data, 'UTF8') as \"data\",fileinfos,associates,forapplication  \n" +
                 " from %s  WHERE id = :id) t", getEntityClass().getName(), getTable().getSqlIdentifier());
         Optional<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("id", id), getJsonRowMapper()).stream().findFirst();
         return result;
@@ -46,7 +44,7 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
     protected List<AdditionalBinaryFile> find(String whereClause, SqlParameterSource sqlParameterSource) {
         String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json \n" +
                 "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
-                "application,fileType, fileName,comment,size,null as \"data\",fileinfos,associates  \n" +
+                "application,fileType, fileName,comment,size,null as \"data\",fileinfos,associates,forapplication  \n" +
                 "from %s ";
         if (whereClause != null) {
             sql += " WHERE " + whereClause;
@@ -55,6 +53,18 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
         List<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper());
         return result;
+    }
+    public List<String> getFileNamesForFiletype(String fileType){
+        if(fileType==null){
+            return List.of();
+        }
+        String sql = "SELECT fileName \n" +
+                "from %s " +
+                "where fileType=:fileType;" ;
+        return  getNamedParameterJdbcTemplate().queryForList(
+                String.format(sql, getTable().getSqlIdentifier()),
+                Map.of("fileType", fileType) ,
+                String.class);
     }
 
     public List<AdditionalBinaryFile> getAssociatedAdditionalFiles(Set<UUID> dataIds) {
@@ -84,10 +94,14 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
                 "\t\tjoin aggregatedAdditionalFile aaf on aaf.associateid = bf.id\n" +
                 "\t\tjoin %2$s.\"data\" d on d.\"authorization\" @> aaf.auth\n" +
                 "\twhere (d.rowid::uuid) in(:dataIds)\n" +
+                "\tunion \n" +
+                "\tselect id\n" +
+                "\t\tfrom monsore.additionalBinaryFile bf\n" +
+                "\twhere forApplication\n" +
                 "\t)\n" +
-                "SELECT '%3$s' as \"@class\", to_jsonb(t) as json " +
+                "SELECT distinct '%3$s' as \"@class\", to_jsonb(t) as json " +
                 "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
-                "application,fileType, fileName,comment,size,convert_from(data, 'UTF8') as \"data\",fileinfos,associates  \n" +
+                "application,fileType, fileName,comment,size,convert_from(data, 'UTF8') as \"data\",fileinfos,associates,forapplication  \n" +
                 "from additionalFileId join %1$s  using(id)) t";
         String query = String.format(
                 sql,
@@ -111,7 +125,7 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
     @Override
     protected String getUpsertQuery() {
         return "INSERT INTO " + getTable().getSqlIdentifier() + " AS t (id,creationdate,updatedate,creationuser,updateuser,\n" +
-                "application,fileType,fileName,comment,size,data,fileinfos,associates)\n" +
+                "application,fileType,fileName,comment,size,data,fileinfos,associates,forapplication)\n" +
                 "select id,\n" +
                 "COALESCE(creationdate,now()),\n" +
                 "COALESCE(updatedate,now()),\n" +
@@ -124,7 +138,8 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
                 "size,\n" +
                 "data,\n" +
                 "fileinfos,\n" +
-                "associates\n" +
+                "associates,\n" +
+                "forapplication\n" +
                 "FROM json_populate_recordset(NULL::monsore.additionalBinaryFile, \n" +
                 ":json::json) \n" +
                 "ON CONFLICT (id)\n" +
@@ -136,7 +151,8 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
                 "size=COALESCE(EXCLUDED.size, t.size),\n" +
                 "data=COALESCE(EXCLUDED.data, t.data),\n" +
                 "fileinfos=EXCLUDED.fileinfos,\n" +
-                "associates=EXCLUDED.associates\n" +
+                "associates=EXCLUDED.associates,\n" +
+                "forapplication=EXCLUDED.forapplication\n" +
                 "returning id;";
     }
 
@@ -159,7 +175,7 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         }
         String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json \n" +
                 "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
-                "application,fileType, fileName,comment,size, convert_from(data, 'UTF8') as \"data\",fileinfos,associates  \n" +
+                "application,fileType, fileName,comment,size, convert_from(data, 'UTF8') as \"data\",fileinfos,associates, forapplication  \n" +
                 "from %s ";
         if (whereClause != null && !"()".equals(whereClause) && !"".equals(whereClause)) {
             sql += " WHERE " + whereClause;
@@ -167,6 +183,32 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         sql += ") t";
         String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
         List<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper());
+        return result;
+    }
+
+    public List<UUID> deleteByCriteria(AdditionalFileSearchHelper additionalFileSearchHelper) {
+        String whereClause = additionalFileSearchHelper.buildWhereRequest();
+        SqlParameterSource sqlParameterSource = additionalFileSearchHelper.getParamSource();
+        ;
+        if (sqlParameterSource == null) {
+            sqlParameterSource = new MapSqlParameterSource();
+        }
+        String sql = "delete from %1$s";
+        if (whereClause != null && !"()".equals(whereClause) && !"".equals(whereClause)) {
+            sql += " WHERE " + whereClause+"\n";
+        }else{
+            return List.of();
+        }
+            sql += "returning  '%2$s' as \"@class\",  to_jsonb(" +
+                    "(id,creationdate,updatedate,creationuser,updateuser, \n" +
+                    "\"application\",fileType, fileName,comment,size, null,null,null,null" +
+                    ")::%1$s) as json";
+
+        String query = String.format(sql, getTable().getSqlIdentifier(), getEntityClass().getName());
+        final List<UUID> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper())
+                .stream()
+                .map(AdditionalBinaryFile::getId)
+                .collect(Collectors.toList());
         return result;
     }
 }

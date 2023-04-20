@@ -258,12 +258,26 @@ public class MigrateService {
             SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
             OreSiRightOnApplicationRole adminOnApplicationRole = OreSiRightOnApplicationRole.adminOn(application);
             final Statement statement = connection.createStatement();
-            log.info("--->migration 4");
-
+            log.info("--->migration 5");
+            statement.execute(new SqlPolicy(
+                    String.join("_", adminOnApplicationRole.getAsSqlRole(), SqlPolicy.Statement.ALL.name()),
+                    SqlSchema.forApplication(application).additionalBinaryFile(),
+                    SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
+                    List.of(SqlPolicy.Statement.ALL),
+                    adminOnApplicationRole,
+                    "application = '" + application.getId().toString() + "'::uuid",
+                    "application = '" + application.getId().toString() + "'::uuid"
+            ).policyToCreateSql());
+            statement.execute("CREATE POLICY \"" + application.getId().toString() + "\"" +
+                    "    ON " + SqlSchema.forApplication(application).additionalBinaryFile().getSqlIdentifier() + "\n" +
+                    "    AS PERMISSIVE\n" +
+                    "    USING ( creationUser = current_role::uuid or updateUser = current_role::uuid)  " +
+                    "    WITH CHECK ( creationUser = current_role::uuid or updateUser = current_role::uuid)"
+            );
             statement.execute(sqlSchemaForApplication.additionalBinaryFile().setTableOwnerSql(adminOnApplicationRole));
             statement.close();
 
-            log.info("migration 4 --> ok");
+            log.info("migration 5 --> ok");
         }
 
     }

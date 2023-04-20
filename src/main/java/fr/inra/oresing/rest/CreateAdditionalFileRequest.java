@@ -11,4 +11,5 @@ public class CreateAdditionalFileRequest {
     String fileType;
     Map<String, String> fields;
     CreateAuthorizationRequest associates;
+    Boolean forApplication;
 }

@@ -37,8 +37,11 @@ create table AdditionalBinaryFile
     size            INT,
     data            bytea,
     fileinfos       jsonb,
-    associates ${applicationSchema}.OreSiAuthorization[]
+    associates ${applicationSchema}.OreSiAuthorization[],
+    forapplication boolean default false
 );
+ALTER TABLE IF EXISTS additionalbinaryfile
+    ADD CONSTRAINT "UKByFileTypeAndFileName" UNIQUE (filetype, filename);
 --CREATE INDEX additional_binary_file_params_index ON AdditionalBinaryFile USING gin (params);
 CREATE INDEX additional_binary_file_info_index ON AdditionalBinaryFile USING gin (fileinfos);
 

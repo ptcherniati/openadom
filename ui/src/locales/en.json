@@ -105,6 +105,8 @@
     "authorizations": "Authorizations"
   },
   "additionalFiles": {
+    "additionalFile": "Additional file",
+    "forApplication": "Provide this file for all extractions",
     "menu": "Choose an additional file type",
     "titles": {
       "upload": "Download additional file",
@@ -112,7 +114,17 @@
     },
     "buttons": {
       "cancel": "Cancel",
-      "submit": "Submit"
+      "submit": "Submit",
+      "consult": "Consult",
+      "download": "Download",
+      "delete": "Remove"
+    },
+    "alert": {
+      "alertDelete": "You are deleting the additional file <i><b>{fileName}</i></b>.?,",
+      "confirmDelete": "Deleting file <i><b{fileName}</i></b>.",
+      "alertDeleteTitle": "Additional file deletion",
+      "alertDeleteConfirm": "Delete",
+      "alertDeleteCancel": "Cancel"
     }
   },
   "applications": {
@@ -262,7 +274,7 @@
     "invalidCapturingGroupForDatatypeRepository": "In repository section of datatype <code>{dataType}</code> the authorizationScope <code>{scopeName}</code> does not exist. Possible values ​​<code>{registerScopes}</code >.",
     "invalidCapturingGroupForStartDateDatatypeRepositoryDate": "In the repository section of datatype <code>{dataType}</code> the start date capture group <code>{token}</code> must be between 0 and {countGroups}.",
     "invalidCapturingGroupForEndDateDatatypeRepositoryDate": "In repository section of datatype <code>{dataType}</code> end date capture group <code>{token}</code> be between 0 and {countGroups}.",
-    "characterNotAcceptInName" : "There are characters not accepted in the name of the application: <code>{name}</code>",
+    "characterNotAcceptInName": "There are characters not accepted in the name of the application: <code>{name}</code>",
     "exception": "The translation string for the following error is missing. Please verify that this is not an indentation problem before contacting the administrators. "
   },
   "additionalFilesManagement": {
@@ -411,7 +423,7 @@
     "commentExample": "A comment",
     "validate": "confirm"
   },
-  "requestAuthorization" : {
+  "requestAuthorization": {
     "request": "Authorization request"
   },
   "referencesAuthorizations": {

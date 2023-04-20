@@ -1337,7 +1337,8 @@ public class OreSiService {
                 .map(af -> getAdditionalBinaryFileResult(af, application))
                 .collect(Collectors.toList());
         final ImmutableSortedSet<GetGrantableResult.User> grantableUsers = authorizationService.getGrantableUsers();
-        return new GetAdditionalFilesResult(grantableUsers, additionalFilesInfos.getFiletype(), additionalBinaryFileResults, description);
+        final List<String> fileNamesForFiletype = repo.getRepository(application).additionalBinaryFile().getFileNamesForFiletype(additionalFilesInfos.getFiletype());
+        return new GetAdditionalFilesResult(grantableUsers, additionalFilesInfos.getFiletype(), additionalBinaryFileResults, description, fileNamesForFiletype);
     }
 
     public byte[] getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
@@ -1597,6 +1598,21 @@ public class OreSiService {
         }
     }
 
+    public List<UUID> deleteAdditionalFiles(String nameOrId, AdditionalFilesInfos additionalFilesInfos) throws IOException {
+        Application application = getApplication(nameOrId);
+        final AdditionalFileParamsParsingResult additionalFileParamsParsingResult = getAdditionalFileSearchHelper(nameOrId, additionalFilesInfos);
+        BadAdditionalFileParamsSearchException.check(additionalFileParamsParsingResult);
+        AdditionalFileSearchHelper additionalFileSearchHelper = additionalFileParamsParsingResult.getResult();
+        try {
+            List<UUID> deletedAdditionalBinaryFiles = repo
+                    .getRepository(application).additionalBinaryFile()
+                    .deleteByCriteria(additionalFileSearchHelper);
+            return deletedAdditionalBinaryFiles;
+        } catch (DataIntegrityViolationException e) {
+            return null;
+        }
+    }
+
     public AdditionalFileParamsParsingResult getAdditionalFileSearchHelper(String nameOrId, AdditionalFilesInfos additionalFilesInfos) {
         Application application = getApplication(nameOrId);
         AdditionalFileParamsParsingResult.Builder builder = AdditionalFileParamsParsingResult.builder();
@@ -1631,6 +1647,7 @@ public class OreSiService {
                 .orElseGet(AdditionalBinaryFile::new);
         additionalBinaryFile.setFileInfos(createAdditionalFileRequest.getFields());
         additionalBinaryFile.setApplication(application.getId());
+        additionalBinaryFile.setForApplication(createAdditionalFileRequest.getForApplication());
         if (file != null) {
             additionalBinaryFile.setSize(file.getSize());
             additionalBinaryFile.setFileName(file.getOriginalFilename());

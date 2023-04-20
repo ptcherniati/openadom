@@ -105,6 +105,8 @@
     "authorizations": "Autorisations"
   },
   "additionalFiles": {
+    "additionalFile": "FichierAdditionel",
+    "forApplication": "Fournir ce fichier pour toutes les extractions",
     "menu": "Choisissez un type de fichier additionel",
     "titles": {
       "upload": "Téléchargement du fichier additionnel",
@@ -112,7 +114,17 @@
     },
     "buttons": {
       "cancel": "Annuler",
-      "submit": "Soumettre"
+      "submit": "Soumettre",
+      "download": "Télécharger",
+      "consult": "Consulter",
+      "delete": "Supprimer"
+    },
+    "alert": {
+      "alertDelete": "Vous êtes en train de supprimer le fichier additionnel <i><b>{fileName}</b></i>.?,",
+      "confirmDelete": "<i><b>Suppression du fichier {fileName}</i></b>.",
+      "alertDeleteTitle": "Suppression de fichier additionnel",
+      "alertDeleteConfirm": "Supprimer",
+      "alertDeleteCancel": "Annuler"
     }
   },
   "applications": {

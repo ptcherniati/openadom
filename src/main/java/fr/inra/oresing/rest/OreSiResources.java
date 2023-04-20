@@ -57,10 +57,10 @@ public class OreSiResources {
     @Autowired
     private OreSiApiRequestContext request;
 
-    @DeleteMapping(value = "/applications/{name}/file/{id}")
+    @DeleteMapping(value = "/applications/{name}/file/{id}",produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> removeFile(@PathVariable("name") String name, @PathVariable("id") UUID id) {
         Optional<BinaryFile> optionalBinaryFile = service.getFile(name, id);
-        boolean deleted = service.removeFile(name, id);
+        service.removeFile(name, id);
         if (optionalBinaryFile.isPresent()) {
             return ResponseEntity.ok(id.toString());
         } else {
@@ -419,8 +419,24 @@ public class OreSiResources {
                 .body(stream);
     }
 
+    @DeleteMapping(value = "/applications/{nameOrId}/additionalFiles", produces = MediaType.TEXT_PLAIN_VALUE)
+    @ApiOperation(value = "Delete a additionalFiles ", notes = "Delete additional file based on params search")
+    public ResponseEntity<String> removeAdditionalFiles(
+            @ApiParam(required = true, value = "The name or uuid of an application")
+            @PathVariable("nameOrId") String nameOrId,
+            @ApiParam(required = false, value = "The parameters for filter the search")
+            @RequestParam(value = "params", required = false) String params) throws IOException, BadAdditionalFileParamsSearchException {
+        AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
+        List<UUID> deletedFiles = service.deleteAdditionalFiles(nameOrId, additionalFilesInfos);
+        if (deletedFiles!=null && !deletedFiles.isEmpty()) {
+            return ResponseEntity.ok(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(",")));
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createAdditionalFile(@PathVariable("nameOrId") String nameOrId,
+    public ResponseEntity<UUID> createAdditionalFile(@PathVariable("nameOrId") String nameOrId,
                                                   @RequestParam(value = "file", required = false) MultipartFile file,
                                                   @RequestParam(value = "params", required = true) String params) throws IOException {
         CreateAdditionalFileRequest createAdditionalFileRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFileOrUUIDQuery(params);

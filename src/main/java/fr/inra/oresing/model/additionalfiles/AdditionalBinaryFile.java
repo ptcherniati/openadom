@@ -31,4 +31,5 @@ public class AdditionalBinaryFile extends OreSiEntity {
     private UUID creationUser;
     private UUID updateUser;
     Map<String, String> fileInfos;
+    boolean forApplication = false;
 }

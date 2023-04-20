@@ -98,7 +98,7 @@ export class Fetcher {
     });
 
     if (response.ok) {
-      return Promise.resolve(response);
+      return this._handleResponse(response,true);
     } else if (response.status === HttpStatusCodes.UNAUTHORIZED) {
       this.notifyCrendentialsLost();
     }

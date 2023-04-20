@@ -12,4 +12,5 @@ public class GetAdditionalFilesResult {
     String additionalFileName;
     List<AdditionalBinaryFileResult> additionalBinaryFiles;
     Configuration.AdditionalFileDescription description;
+    List<String> fileNames;
 }

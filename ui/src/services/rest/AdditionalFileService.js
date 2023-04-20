@@ -14,7 +14,8 @@ export class AdditionalFileService extends Fetcher {
     additionalFileName,
     file,
     fields,
-    associates
+    associates,
+    forApplication
   ) {
     /* associates = Object.keys(associates)
              .reduce((acc, dataType)=>{
@@ -28,6 +29,7 @@ export class AdditionalFileService extends Fetcher {
         fileType,
         fields,
         associates,
+        forApplication
       }),
     });
   }
@@ -56,6 +58,15 @@ export class AdditionalFileService extends Fetcher {
         params: JSON.stringify(additionalFilesInfos),
       },
       "blob"
+    );
+  }
+
+  async deleteAdditionalFile(applicationName, additionalFilesInfos) {
+    return this.delete(
+      `applications/${applicationName}/additionalFiles`,
+      {
+        params: JSON.stringify(additionalFilesInfos),
+      }
     );
   }
 }

@@ -26,6 +26,7 @@ public class AdditionalBinaryFileResult {
     Map<String, Map<OperationType, List<AuthorizationParsed>>> associates;
     Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> associatesByDatatypeAndPath;
     private final Date updateDate;
+    private Boolean forApplication;
 
     public AdditionalBinaryFileResult(AdditionalBinaryFile additionalBinaryFile, Map<String, Map<OperationType, List<AuthorizationParsed>>> associatesParsed, Map<String, Map<OperationType, Map<String, List<AuthorizationParsed>>>> associatesByDatatypeAndPath) {
         this.id = additionalBinaryFile.getId();
@@ -41,5 +42,6 @@ public class AdditionalBinaryFileResult {
         this.updateUser = additionalBinaryFile.getUpdateUser();
         this.fileType = additionalBinaryFile.getFileType();
         this.updateDate = additionalBinaryFile.getUpdateDate();
+        this.forApplication = additionalBinaryFile.isForApplication();
     }
 }
