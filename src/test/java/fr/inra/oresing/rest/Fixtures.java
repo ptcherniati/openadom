@@ -57,6 +57,22 @@ public class Fixtures {
     private UserRepository userRepository;
     private Cookie cookie;
 
+    public String getApplicationWithComputedComponentsWithReferences() {
+        return "/data/minotaur/minotaur.yaml";
+    }
+    public Map<String, String> getApplicationWithComputedComponentsWithReferencesReferences() {
+        Map<String, String> referentielFiles = new HashMap<>();
+        referentielFiles.put("site", "/data/minotaur/references/site.csv");
+        referentielFiles.put("parcelle", "/data/minotaur/references/parcelle.csv");
+        referentielFiles.put("bloc", "/data/minotaur/references/bloc.csv");
+        return referentielFiles;
+    }
+    public Map<String, String> getApplicationWithComputedComponentsWithReferencesData() {
+        Map<String, String> dataFiles = new HashMap<>();
+        dataFiles.put("dataset", "/data/minotaur/data/datateSet.csv");
+        return dataFiles;
+    }
+
     public String getMonsoreApplicationName() {
         return Application.MONSORE.getName();
     }

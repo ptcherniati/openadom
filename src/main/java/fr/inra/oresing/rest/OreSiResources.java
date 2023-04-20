@@ -487,6 +487,7 @@ public class OreSiResources {
                                         .forEach(dataRow -> {
                                             Set<UUID> refIds = dataRow.getRefsLinkedTo().get(((VariableComponentKey) referenceLineChecker.getTarget()).getVariable()).get(((VariableComponentKey) referenceLineChecker.getTarget()).getComponent());
                                             requiredreferencesValues.values().stream()
+                                                    .filter(k->refIds!=null)
                                                     .map(l ->
                                                             l.stream()
                                                                     .filter(referenceValue -> refIds.contains(referenceValue.getId()))

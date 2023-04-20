@@ -1,0 +1,136 @@
+version: 1
+application:
+  defaultLanguage: en
+  internationalizationName:
+    fr: Prototype de l'application minotaur
+    en: Minotaur
+  name: minotaur
+  version: 1
+tags:
+  localisation:
+    fr: "Localisation"
+    en: "Localization"
+  agriculture:
+    fr: "ITK"
+    en: "Agriculture"
+  scope:
+    fr: "Porté"
+    en: "Scope"
+  study:
+    fr: "Etude"
+    en: "Study"
+  soils:
+    fr: "Sol"
+    en: "Soil"
+  metadata:
+    fr: "Métadonnées"
+    en: "Metadata"
+  data:
+    fr: "Données"
+    en: "Data"
+  bacteria:
+    fr: "Bacterie"
+    en: "Bacteria"
+  fungi:
+    fr: "Champignon"
+    en: "Fungi"
+  microfauna:
+    fr: "Microfaune"
+    en: "Microfauna"
+  mesofauna:
+    fr: "Mésofaune"
+    en: "Mesofauna"
+  macrofauna:
+    fr: "Macrofaune"
+    en: "Macrofauna"
+  observation:
+    fr: "Observation"
+    en: "Observation"
+  methodology:
+    fr: "methodology"
+    en: "methodologie"
+  biological_data:
+    fr : "Données biologique"
+    en : "Biological data"
+  fauna:
+    fr: "Données Faune"
+    en: "Fauna data"
+  earthworms:
+    fr: "Verre de terre"
+    en: "Earthworms"
+references:
+############################ Metadata study
+  site:
+    tags: [localisation]
+    internationalizationName:
+      fr: Site
+      en: Site name
+    internationalizedColumns:
+    keyColumns: [ code site ]
+    columns:
+      nom site:
+      code site:
+  parcelle:
+    keyColumns: [code parcelle]
+    columns:
+      id site:
+      nom parcelle:
+      code parcelle:
+  bloc:
+    keyColumns: [code bloc]
+    columns:
+      id parcelle:
+      nom bloc:
+      code bloc:
+dataTypes:
+  dataset:
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "idnvx"
+          boundTo:
+            variable: informations
+            component: idnvx
+        - header: "nxobs"
+          boundTo:
+            variable: informations
+            component: nxobs
+        - header: "valeur"
+          boundTo:
+            variable: informations
+            component: valeur
+    data:
+      informations:
+        components:
+          idnvx:
+          nxobs:
+          valeur:
+        computedComponents:
+          site:
+            computation:
+              expression: >
+                datum.informations.nxobs.equals("site")?datum.informations.idnvx:"";
+            checker:
+              name: Reference
+              params:
+                refType: site
+                required: false
+          parcelle:
+            computation:
+              expression: >
+                datum.informations.nxobs.equals("parcelle")?datum.informations.idnvx:"";
+            checker:
+              name: Reference
+              params:
+                refType: parcelle
+                required: false
+          bloc:
+            computation:
+              expression: >
+                datum.informations.nxobs.equals("bloc")?datum.informations.idnvx:"";
+            checker:
+              name: Reference
+              params:
+                refType: bloc
+                required: false

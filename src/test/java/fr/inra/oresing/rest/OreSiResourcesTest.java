@@ -666,6 +666,56 @@ public class OreSiResourcesTest {
         }
     }
 
+    @Test
+    @Category(OTHERS_TEST.class)
+    public void addApplicationWithComputedComponentsWithReferences() throws Exception {
+        URL resource = getClass().getResource(fixtures.getApplicationWithComputedComponentsWithReferences());
+
+        try (InputStream in = Objects.requireNonNull(resource).openStream()) {
+            MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
+            //définition de l'application
+            addUserRightCreateApplication(authUserId, "minautor");
+
+            String response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/minautor")
+                            .file(configuration)
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+        }
+        // Ajout de referentiel
+        for (Map.Entry<String, String> e : fixtures.getApplicationWithComputedComponentsWithReferencesReferences().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                mockMvc.perform(multipart("/api/v1/applications/minautor/references/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+        // Ajout de data
+        for (Map.Entry<String, String> e : fixtures.getApplicationWithComputedComponentsWithReferencesData().entrySet()) {
+            try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                mockMvc.perform(multipart("/api/v1/applications/minautor/data/{refType}", e.getKey())
+                                .file(refFile)
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+        mockMvc.perform(get("/api/v1/applications/minautor/data/dataset")
+                        .cookie(authCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.rows[*].values.informations.site", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.site", Matchers.hasSize(1)))
+                .andExpect(jsonPath("$.rows[*].values.informations.parcelle", Matchers.hasSize(2)))
+                .andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.parcelle", Matchers.hasSize(2)))
+                .andExpect(jsonPath("$.rows[*].values.informations.bloc", Matchers.hasSize(4)))
+                .andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.bloc", Matchers.hasSize(4)));
+    }
+
 
     @Test
     @Category(OTHERS_TEST.class)
