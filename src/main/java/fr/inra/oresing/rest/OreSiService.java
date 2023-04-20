@@ -21,7 +21,6 @@ import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRole;
-import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.additionalfiles.AdditionalFileParamsParsingResult;
 import fr.inra.oresing.rest.exceptions.additionalfiles.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.exceptions.application.NoSuchApplicationException;
@@ -37,7 +36,6 @@ import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
-import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.commons.lang3.StringUtils;
 import org.assertj.core.util.Streams;
@@ -56,7 +54,6 @@ import javax.sql.DataSource;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringWriter;
 import java.time.Duration;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -637,7 +634,6 @@ public class OreSiService {
                                                             matchedReferenceHierarchicalKeys.size() > 1 ? "]" : "")
                                                     )
                                     );
-                                    System.out.println("toto");
                                 }
                                 ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                                 VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget();
@@ -1150,83 +1146,18 @@ public class OreSiService {
         return computeDefaultValueFn;
     }
 
-    public String getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) {
-        DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
-        List<DataRow> list = findData(downloadDatasetQueryCopy, nameOrId, dataType);
-        Configuration.FormatDescription format = downloadDatasetQueryCopy.getApplication()
-                .getConfiguration()
-                .getDataTypes()
-                .get(dataType)
-                .getFormat();
-        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> allColumns = ImmutableMap.copyOf(getExportColumns(format).entrySet().stream()
-                .collect(Collectors.toMap(
-                        e -> e.getKey(),
-                        e -> new DownloadDatasetQuery.VariableComponentOrderBy(e.getValue(), DownloadDatasetQuery.Order.ASC)
-                )));
-        ImmutableMap<String, DownloadDatasetQuery.VariableComponentOrderBy> columns;
-        List<String> dateLineCheckerVariableComponentKeyIdList = checkerFactory.getLineCheckers(getApplication(nameOrId), dataType).stream()
-                .filter(ch -> ch instanceof DateLineChecker)
-                .map(ch -> (DateLineChecker) ch)
-                .map(ch -> ((VariableComponentKey) ch.getTarget()).getId())
-                .collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(downloadDatasetQueryCopy.getVariableComponentOrderBy())) {
-            columns = allColumns;
-        } else {
-            columns = ImmutableMap.copyOf(downloadDatasetQueryCopy.getVariableComponentOrderBy().stream()
-                    .collect(Collectors.toMap(DownloadDatasetQuery.VariableComponentOrderBy::getId, k -> k)));
-        }
-        String result = "";
-        if (list.size() > 0) {
-            CSVFormat csvFormat = CSVFormat.DEFAULT
-                    .withDelimiter(format.getSeparator())
-                    .withSkipHeaderRecord();
-            StringWriter out = new StringWriter();
-            try {
-                CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
-                csvPrinter.printRecord(columns.keySet());
-                for (DataRow dataRow : list) {
-                    Map<String, Map<String, String>> record = dataRow.getValues();
-                    ImmutableList<String> rowAsRecord = columns.values().stream()
-                            .map(variableComponentSelect -> {
-                                Map<String, String> components = record.computeIfAbsent(variableComponentSelect.getVariable(), k -> Collections.emptyMap());
-                                String value = components.getOrDefault(variableComponentSelect.getComponent(), "");
-                                if (dateLineCheckerVariableComponentKeyIdList.contains(variableComponentSelect.variableComponentKey.getId())) {
-                                    value = DateLineChecker.sortableDateToFormattedDate(value);
-                                }
-                                return value;
-                            })
-                            .collect(ImmutableList.toImmutableList());
-                    csvPrinter.printRecord(rowAsRecord);
-                }
-            } catch (IOException e) {
-                throw new SiOreIllegalArgumentException(
-                        "IOException",
-                        Map.of(
-                                "message", e.getLocalizedMessage()
-                        )
-                );
-                // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
-            }
-            result = out.toString();
-        }
-        return result;
-    }
-
-    private ImmutableMap<String, VariableComponentKey> getExportColumns(Configuration.FormatDescription format) {
-        ImmutableMap<String, VariableComponentKey> valuesFromStaticColumns = format.getColumns().stream()
-                .collect(ImmutableMap.toImmutableMap(Configuration.ColumnBindingDescription::getHeader, Configuration.ColumnBindingDescription::getBoundTo));
-        ImmutableMap<String, VariableComponentKey> valuesFromConstants = format.getConstants().stream()
-                .collect(ImmutableMap.toImmutableMap(Configuration.HeaderConstantDescription::getExportHeader, Configuration.HeaderConstantDescription::getBoundTo));
-        ImmutableMap<String, VariableComponentKey> valuesFromHeaderPatterns = format.getRepeatedColumns().stream()
-                .flatMap(repeatedColumnBindingDescription -> repeatedColumnBindingDescription.getTokens().stream())
-                .collect(ImmutableMap.toImmutableMap(Configuration.HeaderPatternToken::getExportHeader, Configuration.HeaderPatternToken::getBoundTo));
-        ImmutableMap<String, VariableComponentKey> valuesFromRepeatedColumns = format.getRepeatedColumns().stream()
-                .collect(ImmutableMap.toImmutableMap(Configuration.RepeatedColumnBindingDescription::getExportHeader, Configuration.RepeatedColumnBindingDescription::getBoundTo));
-        return ImmutableMap.<String, VariableComponentKey>builder()
-                .putAll(valuesFromStaticColumns)
-                .putAll(valuesFromConstants)
-                .putAll(valuesFromHeaderPatterns)
-                .putAll(valuesFromRepeatedColumns)
+    public byte[] getDataCsv(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType, String locale) throws IOException {
+        final Application application = getApplication(nameOrId);
+        DownloadDatasetQuery downloadDatasetQueryCopy = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, application);
+        List<DataRow> datas = findData(downloadDatasetQueryCopy, nameOrId, dataType);
+        return DataCsvBuilder.getDataCsvBuilder()
+                .withApplication(application)
+                .withDatatype(dataType)
+                .withDownloadDatasetQuery(downloadDatasetQueryCopy)
+                .withCheckerFactory(checkerFactory)
+                .withReferenceService(referenceService)
+                .onRepositories(repo)
+                .addDatas(datas)
                 .build();
     }
 
@@ -1409,7 +1340,7 @@ public class OreSiService {
         return new GetAdditionalFilesResult(grantableUsers, additionalFilesInfos.getFiletype(), additionalBinaryFileResults, description);
     }
 
-    public String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
+    public byte[] getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
         return referenceService.getReferenceValuesCsv(applicationNameOrId, referenceType, params);
     }
 

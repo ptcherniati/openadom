@@ -42,6 +42,10 @@ public class AdditionalFileSearchHelper {
         this.paramSource = new MapSqlParameterSource("applicationId", application.getId());
     }
 
+    public AdditionalFileSearchHelper() {
+        super();
+    }
+
     String filterBy() {
         List<String> where = new LinkedList<>();
         Optional.ofNullable(this.additionalFilesInfos.getUuids())
@@ -83,7 +87,7 @@ public class AdditionalFileSearchHelper {
                 .orElse("");
         return CollectionUtils.isEmpty(where) ? "" : where.stream()
                 .filter(Objects::nonNull)
-                .collect(Collectors.joining(" or ", "(", ")"+byFileType));
+                .collect(Collectors.joining(" or ", "(", ")" + byFileType));
     }
 
     private String whereForAdditionalFileName(Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry) {
@@ -165,26 +169,33 @@ public class AdditionalFileSearchHelper {
     }
 
     public String buildWhereRequest() {
-        return additionalFilesInfos==null?null:filterBy();
+        return additionalFilesInfos == null ? null : filterBy();
 
     }
 
     public byte[] zip(List<AdditionalBinaryFile> additionalBinaryFiles) throws IOException {
         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
+            addAdditionalFilesToZip(additionalBinaryFiles, zipOutputStream, "");
+        }
+        return byteArrayOutputStream.toByteArray();
+    }
+
+    public void addAdditionalFilesToZip(List<AdditionalBinaryFile> additionalBinaryFiles, ZipOutputStream zipOutputStream, String folder) throws IOException {
+        if(folder==null){
+            folder="";
+        }
         List<MemoryFile> memoryFiles = additionalBinaryFiles.stream()
                 .map(this::getMemoriesFiles)
                 .flatMap(List::stream)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(byteArrayOutputStream)) {
-            for (MemoryFile memoryFile : memoryFiles) {
-                ZipEntry zipEntry = new ZipEntry(memoryFile.fileName);
-                zipOutputStream.putNextEntry(zipEntry);
-                zipOutputStream.write(memoryFile.contents);
-                zipOutputStream.closeEntry();
-            }
+        for (MemoryFile memoryFile : memoryFiles) {
+            ZipEntry zipEntry = new ZipEntry(String.format("%s%s",folder, memoryFile.fileName));
+            zipOutputStream.putNextEntry(zipEntry);
+            zipOutputStream.write(memoryFile.contents);
+            zipOutputStream.closeEntry();
         }
-        return byteArrayOutputStream.toByteArray();
     }
 
     private List<MemoryFile> getMemoriesFiles(AdditionalBinaryFile additionalBinaryFile) {

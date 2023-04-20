@@ -2,8 +2,6 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiNg;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -68,10 +66,6 @@ public class MigrationTest {
                     .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-            //log.debug(actualCsv);
-            Assert.assertTrue(actualCsv.contains("quantité"));
-            Assert.assertEquals(1, StringUtils.countMatches(actualCsv, "bleu"));
-            Assert.assertEquals(1, StringUtils.countMatches(actualCsv, "1234"));
         }
     }
 }

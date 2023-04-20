@@ -2,7 +2,6 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.checker.*;
@@ -15,10 +14,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
-import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,7 +23,6 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.io.StringWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -353,50 +348,17 @@ public class ReferenceService {
         return list;
     }
 
-    String getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
+    byte[] getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
+        final ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(applicationNameOrId, referenceType);
+        ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
+        final List<ReferenceValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(referenceType, params);
+        return referenceImporterContext.buildReferenceCSV(allByReferenceType);
+    }
+
+    ReferenceImporterContext getReferenceImporterContext(String applicationNameOrId, String referenceType) {
         Application application = getApplication(applicationNameOrId);
         ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(application, referenceType);
-        ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();
-        Stream<ImmutableList<String>> recordsStream = referenceValueRepository.findAllByReferenceType(referenceType, params).stream()
-                .map(ReferenceValue::getRefValues)
-                .map(referenceDatum -> {
-                    ImmutableList<String> rowAsRecord = referenceImporterContext.getExpectedHeaders().stream()
-                            .map(header -> referenceImporterContext.getCsvCellContent(referenceDatum, header))
-                            .collect(ImmutableList.toImmutableList());
-                    return rowAsRecord;
-                });
-        ImmutableSet<String> headers = referenceImporterContext.getExpectedHeaders();
-        CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(referenceImporterContext.getCsvSeparator())
-                .withSkipHeaderRecord();
-        StringWriter out = new StringWriter();
-        try {
-            CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
-            csvPrinter.printRecord(headers);
-            recordsStream.forEach(record -> {
-                try {
-                    csvPrinter.printRecord(record);
-                } catch (IOException e) {
-                    throw new SiOreIllegalArgumentException(
-                            "IOException",
-                            Map.of(
-                                    "message", e.getLocalizedMessage()
-                            )
-                    );
-                    // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
-                }
-            });
-        } catch (IOException e) {
-            throw new SiOreIllegalArgumentException(
-                    "IOException",
-                    Map.of(
-                            "message", e.getLocalizedMessage()
-                    )
-            );
-            // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
-        }
-        String csv = out.toString();
-        return csv;
+        return referenceImporterContext;
     }
 
     private Application getApplication(String nameOrId) {

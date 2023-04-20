@@ -12,11 +12,18 @@ import fr.inra.oresing.model.internationalization.InternationalizationMap;
 import fr.inra.oresing.model.internationalization.InternationalizationReferenceMap;
 import fr.inra.oresing.persistence.Ltree;
 import fr.inra.oresing.persistence.ReferenceValueRepository;
+import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import lombok.AllArgsConstructor;
+import org.apache.commons.csv.CSVFormat;
+import org.apache.commons.csv.CSVPrinter;
 
+import java.io.IOException;
+import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Toutes les informations nécessaires à l'import d'un référentiel donné.
@@ -554,5 +561,48 @@ public class ReferenceImporterContext {
             ReferenceColumnIndexedValue referenceColumnIndexedValue = (ReferenceColumnIndexedValue) referenceDatum.get(getReferenceColumn());
             return referenceColumnIndexedValue.getValues().get(expectedHierarchicalKey);
         }
+    }
+
+    public byte[] buildReferenceCSV(List<ReferenceValue> referenceValues){
+        Stream<ImmutableList<String>> recordsStream = referenceValues.stream()
+                .map(ReferenceValue::getRefValues)
+                .map(referenceDatum -> {
+                    ImmutableList<String> rowAsRecord = getExpectedHeaders().stream()
+                            .map(header -> getCsvCellContent(referenceDatum, header))
+                            .collect(ImmutableList.toImmutableList());
+                    return rowAsRecord;
+                });
+        ImmutableSet<String> headers = getExpectedHeaders();
+        CSVFormat csvFormat = CSVFormat.DEFAULT
+                .withDelimiter(getCsvSeparator())
+                .withSkipHeaderRecord();
+        StringWriter out = new StringWriter();
+        try {
+            CSVPrinter csvPrinter = new CSVPrinter(out, csvFormat);
+            csvPrinter.printRecord(headers);
+            recordsStream.forEach(record -> {
+                try {
+                    csvPrinter.printRecord(record);
+                } catch (IOException e) {
+                    throw new SiOreIllegalArgumentException(
+                            "IOException",
+                            Map.of(
+                                    "message", e.getLocalizedMessage()
+                            )
+                    );
+                    // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+                }
+            });
+        } catch (IOException e) {
+            throw new SiOreIllegalArgumentException(
+                    "IOException",
+                    Map.of(
+                            "message", e.getLocalizedMessage()
+                    )
+            );
+            // throw new OreSiTechnicalException("erreur lors de la génération du fichier CSV", e);
+        }
+        String csv = out.toString();
+        return csv.getBytes(StandardCharsets.UTF_8);
     }
 }

@@ -333,12 +333,23 @@ public class OreSiResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/csv", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> listReferencesCsv(
+    public ResponseEntity<StreamingResponseBody> listReferencesCsv(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("refType") String refType,
             @RequestParam MultiValueMap<String, String> params) {
-        String csv = service.getReferenceValuesCsv(nameOrId, refType, params);
-        return ResponseEntity.ok(csv);
+        final byte[] referenceValuesCsv = service.getReferenceValuesCsv(nameOrId, refType, params);
+        StreamingResponseBody stream = response -> {
+            response.write(referenceValuesCsv);
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.set("Content-Disposition", String.format("attachment; filename=%s.csv", refType));
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(referenceValuesCsv.length)
+                .headers(headers)
+                .body(stream);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -521,10 +532,10 @@ public class OreSiResources {
      * export as CSV
      */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/csv", produces = {MediaType.TEXT_PLAIN_VALUE, MediaType.APPLICATION_OCTET_STREAM_VALUE})
-    public ResponseEntity<String> getAllDataCsvForce(
+    public ResponseEntity<StreamingResponseBody> getAllDataCsvForce(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
+            @RequestParam(value = "downloadDatasetQuery", required = false) String params) throws IOException {
         return getAllDataCsv(nameOrId, dataType, params);
     }
 
@@ -532,14 +543,25 @@ public class OreSiResources {
      * export as CSV
      */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> getAllDataCsv(
+    public ResponseEntity<StreamingResponseBody> getAllDataCsv(
             @PathVariable("nameOrId") String nameOrId,
             @PathVariable("dataType") String dataType,
-            @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
+            @RequestParam(value = "downloadDatasetQuery", required = false) String params) throws IOException {
         DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
         String locale = downloadDatasetQuery != null && downloadDatasetQuery.getLocale() != null ? downloadDatasetQuery.getLocale() : LocaleContextHolder.getLocale().getLanguage();
-        String result = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType, locale);
-        return ResponseEntity.ok(result);
+        byte[] dataCsv = service.getDataCsv(downloadDatasetQuery, nameOrId, dataType, locale);
+        StreamingResponseBody stream = response -> {
+            response.write(dataCsv);
+        };
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+        headers.set("Content-Disposition", "attachment; filename=additionalFiles.zip");
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .contentLength(dataCsv.length)
+                .headers(headers)
+                .body(stream);
     }
 
     private DownloadDatasetQuery deserialiseParamDownloadDatasetQuery(String params) {

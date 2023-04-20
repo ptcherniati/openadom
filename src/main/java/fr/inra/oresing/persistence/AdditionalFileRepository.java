@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 @Component
@@ -53,6 +54,52 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         sql += ") t";
         String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
         List<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper());
+        return result;
+    }
+
+    public List<AdditionalBinaryFile> getAssociatedAdditionalFiles(Set<UUID> dataIds) {
+        if (dataIds == null || dataIds.isEmpty()) {
+            return List.of();
+        }
+        String sql = "with associates as (\n" +
+                "\tselect id associateid, unnest(associates) auth\n" +
+                " \tfrom %1$s t\n" +
+                "),\n" +
+                "additionalFileAuthorizations as (\n" +
+                "\tselect  distinct \n" +
+                "\tassociateid, \n" +
+                "\t(jsonb_populate_recordset(null::%2$s.\"authorization\", (auth).authorizations #> '{pem, associate}')) auth\n" +
+                "\tfrom associates\n" +
+                "),\n" +
+                "aggregatedAdditionalFile as (\n" +
+                "\tselect distinct associateid  , array_agg(auth) auth\n" +
+                "\tfrom additionalFileAuthorizations\n" +
+                "\tgroup by associateid\n" +
+                "\n" +
+                "),\n" +
+                "additionalFileId as (\n" +
+                "\n" +
+                "\tselect distinct associateid id \n" +
+                "\t\tfrom %1$s bf\n" +
+                "\t\tjoin aggregatedAdditionalFile aaf on aaf.associateid = bf.id\n" +
+                "\t\tjoin %2$s.\"data\" d on d.\"authorization\" @> aaf.auth\n" +
+                "\twhere (d.rowid::uuid) in(:dataIds)\n" +
+                "\t)\n" +
+                "SELECT '%3$s' as \"@class\", to_jsonb(t) as json " +
+                "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
+                "application,fileType, fileName,comment,size,convert_from(data, 'UTF8') as \"data\",fileinfos,associates  \n" +
+                "from additionalFileId join %1$s  using(id)) t";
+        String query = String.format(
+                sql,
+                getTable().getSqlIdentifier(),
+                getSchema().getSqlIdentifier(),
+                getEntityClass().getName()
+        );
+        List<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().query(
+                query,
+                new MapSqlParameterSource("dataIds", dataIds),
+                getJsonRowMapper()
+        );
         return result;
     }
 
@@ -105,15 +152,16 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
 
     public List<AdditionalBinaryFile> findByCriteria(AdditionalFileSearchHelper additionalFileSearchHelper) {
         String whereClause = additionalFileSearchHelper.buildWhereRequest();
-        SqlParameterSource sqlParameterSource = additionalFileSearchHelper.getParamSource();;
-        if(sqlParameterSource==null){
-            sqlParameterSource= new MapSqlParameterSource();
+        SqlParameterSource sqlParameterSource = additionalFileSearchHelper.getParamSource();
+        ;
+        if (sqlParameterSource == null) {
+            sqlParameterSource = new MapSqlParameterSource();
         }
         String sql = "SELECT '%s' as \"@class\",  to_jsonb(t) as json \n" +
                 "FROM (select id,creationdate,updatedate,creationuser,updateuser, \n" +
                 "application,fileType, fileName,comment,size, convert_from(data, 'UTF8') as \"data\",fileinfos,associates  \n" +
                 "from %s ";
-        if (whereClause != null && !"()".equals(whereClause)&& !"".equals(whereClause)) {
+        if (whereClause != null && !"()".equals(whereClause) && !"".equals(whereClause)) {
             sql += " WHERE " + whereClause;
         }
         sql += ") t";

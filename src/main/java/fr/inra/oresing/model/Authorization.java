@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 @Setter
 @ToString(callSuper = true)
 public class Authorization {
-    LocalDateTimeRange timeScope;
+    LocalDateTimeRange timeScope= LocalDateTimeRange.always();
     private List<String> dataGroups = new LinkedList<>();
     private Map<String, Ltree> requiredAuthorizations;
 

@@ -245,4 +245,32 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         );
         return referencesValuesMap;
     }
+
+    public List<ReferenceValue> getLinkedReferenceValues(Set<UUID> ids){
+
+        if(ids==null || ids.isEmpty()){
+            return List.of();
+        }
+        String sql = "WITH RECURSIVE refs AS (\n" +
+                "      SELECT referenceid, referencesby\n" +
+                "      FROM %1$s.reference_reference\n" +
+                "      WHERE referencesby in (:ids) \n" +
+                "   UNION ALL\n" +
+                "      SELECT rr.referenceid, rr.referencesby\n" +
+                "      FROM %1$s.reference_reference rr\n" +
+                "         JOIN refs ON rr.referenceid = refs.referencesby\n" +
+                ")\n" +
+                "SELECT distinct '%2$s' as \"@class\",  to_jsonb(rv) as json  " +
+                "FROM refs\n" +
+                "join %3$s rv on rv.id=refs.referenceid;";
+        String query = String.format(
+                sql,
+                getTable().getSchema().getSqlIdentifier(),
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier()
+        );
+        List<ReferenceValue> result = getNamedParameterJdbcTemplate()
+                .query(query, new MapSqlParameterSource("ids", ids), getJsonRowMapper());
+        return result;
+    }
 }
