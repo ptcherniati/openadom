@@ -105,6 +105,12 @@
     "authorizations": "Autorisations"
   },
   "additionalFiles": {
+    "file": {
+      "forApplication": "Ce fichier sera fourni avec toutes les extractions.",
+      "linked": "Ce fichier sera fourni pour les données correspondant aux associations définies.",
+      "notLinked": "Ce fichier ne sera pas fourni avec les données."
+
+    },
     "additionalFile": "FichierAdditionel",
     "forApplication": "Fournir ce fichier pour toutes les extractions",
     "menu": "Choisissez un type de fichier additionel",

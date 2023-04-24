@@ -5,6 +5,7 @@ import router from "./router";
 import Buefy from "buefy";
 import { library } from "@fortawesome/fontawesome-svg-core";
 import {
+  faLink,
   faAngleLeft,
   faAngleRight,
   faArchive,
@@ -88,6 +89,7 @@ import { extend } from "vee-validate";
 library.add(farFloppyDisk, farCalendarDays, farCalendar, farSquare, farMinusSquare, farCheckSquare);
 library.add(
   faUsersCog,
+  faLink,
   faCircle,
   faEye,
   faEyeSlash,
