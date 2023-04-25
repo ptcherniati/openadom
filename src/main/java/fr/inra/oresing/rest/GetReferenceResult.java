@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest;
 
-import fr.inra.oresing.model.internationalization.Internationalization;
 import lombok.Value;
 
 import java.util.Map;
@@ -13,10 +12,12 @@ public class GetReferenceResult {
 
     @Value
     public static class ReferenceValue {
+        String id;
         String hierarchicalKey;
         String hierarchicalReference;
         String naturalKey;
         Map<String, Object> values;
         Map<String, Set<UUID>> refsLinkedTo;
+        Map<String, String> referenceTypeForReferencingColumns;
     }
 }
