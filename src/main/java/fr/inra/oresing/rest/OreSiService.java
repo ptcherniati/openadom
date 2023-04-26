@@ -1327,6 +1327,11 @@ public class OreSiService {
         return referenceService.findReferenceAccordingToRights(applicationOrApplicationAccordingToRights, refType, params);
     }
 
+    public List<UUID> deleteReference(String nameOrId, String refType, MultiValueMap<String, String> params) {
+        final Application applicationOrApplicationAccordingToRights = getApplicationOrApplicationAccordingToRights(nameOrId);
+        return referenceService.deleteReferenceAccordingToRights(applicationOrApplicationAccordingToRights, refType, params);
+    }
+
     public GetAdditionalFilesResult findAdditionalFile(String nameOrId, AdditionalFilesInfos additionalFilesInfos) {
         final Application application = getApplication(nameOrId);
         Configuration.AdditionalFileDescription description = Optional.ofNullable(application.getConfiguration().getAdditionalFiles())
@@ -1647,7 +1652,7 @@ public class OreSiService {
                 .orElseGet(AdditionalBinaryFile::new);
         additionalBinaryFile.setFileInfos(createAdditionalFileRequest.getFields());
         additionalBinaryFile.setApplication(application.getId());
-        additionalBinaryFile.setForApplication(createAdditionalFileRequest.getForApplication());
+        additionalBinaryFile.setForApplication(Optional.ofNullable(createAdditionalFileRequest.getForApplication()).orElse( Boolean.FALSE));
         if (file != null) {
             additionalBinaryFile.setSize(file.getSize());
             additionalBinaryFile.setFileName(file.getOriginalFilename());

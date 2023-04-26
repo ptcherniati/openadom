@@ -53,7 +53,7 @@ import { ref, watch } from "vue";
 
 export default {
   setup(props) {
-    const val = ref(0);
+    const val = ref(props.value || 0);
     watch(
       () => props.value,
       () => {

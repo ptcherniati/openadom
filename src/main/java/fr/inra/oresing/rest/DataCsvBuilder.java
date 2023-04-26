@@ -108,14 +108,21 @@ public class DataCsvBuilder {
                 csvPrinter = new CSVPrinter(out, csvFormat);
                 addDatasToZip(datas, columns, dateLineCheckerVariableComponentKeyIdList, csvPrinter);
                 final Set<UUID> referencedUUID = getReferencesLinkedTo();
-                final Map<String, List<ReferenceValue>> referencesValues = repo.getRepository(application.getId()).referenceValue().getLinkedReferenceValues(referencedUUID)
+                final Map<String, List<ReferenceValue>> referencesValues =  Optional.ofNullable(application.getConfiguration().getReferences())
+                        .filter(a->!a.isEmpty())
+                        .map(a->repo.getRepository(application.getId()).referenceValue().getLinkedReferenceValues(referencedUUID)
                         .stream()
-                        .collect(Collectors.groupingBy(ReferenceValue::getReferenceType));
+                        .collect(Collectors.groupingBy(ReferenceValue::getReferenceType)))
+                        .orElseGet(LinkedHashMap::new);
                 final Set<UUID> datasIds = datas.stream().map(DataRow::getRowId).map(UUID::fromString).collect(Collectors.toSet());
-                final List<AdditionalBinaryFile> additionalBinaryFiles = repo.getRepository(application.getId()).additionalBinaryFile()
+                final List<AdditionalBinaryFile> additionalBinaryFiles = Optional.ofNullable(application.getConfiguration().getAdditionalFiles())
+                        .filter(a->!a.isEmpty())
+                        .map(a->
+                        repo.getRepository(application.getId()).additionalBinaryFile()
                         .getAssociatedAdditionalFiles(datasIds)
                         .stream()
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList()))
+                        .orElseGet(LinkedList::new);
                 result = zipData(application, csvFormat, out.toString(), dataType, referencesValues, additionalBinaryFiles);
             } catch (IOException e) {
                 throw new RuntimeException(e);

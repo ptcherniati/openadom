@@ -42,7 +42,7 @@ import { ref, watch } from "vue";
 const defaultLanguage = localStorage.getItem(LOCAL_STORAGE_LANG);
 export default {
   setup(props) {
-    const val = ref("");
+    const val = ref(props.value);
     watch(
       () => props.value,
       () => {

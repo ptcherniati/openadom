@@ -348,6 +348,12 @@ public class ReferenceService {
         return list;
     }
 
+    List<UUID> deleteReferenceAccordingToRights(Application application, String refType, MultiValueMap<String, String> params) {
+        authenticationService.setRoleForClient();
+        List<UUID> list = repo.getRepository(application).referenceValue().deleteReferenceType(refType, params);
+        return list;
+    }
+
     byte[] getReferenceValuesCsv(String applicationNameOrId, String referenceType, MultiValueMap<String, String> params) {
         final ReferenceImporterContext referenceImporterContext = getReferenceImporterContext(applicationNameOrId, referenceType);
         ReferenceValueRepository referenceValueRepository = repo.getRepository(applicationNameOrId).referenceValue();

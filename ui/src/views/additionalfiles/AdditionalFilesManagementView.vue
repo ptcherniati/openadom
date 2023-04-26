@@ -72,10 +72,32 @@
                         <template v-slot:secondaryMenu> &nbsp;</template>
                         <template v-slot:upload> &nbsp;</template>
                         <template v-slot:label="{ option }">
-                            <b-icon :icon="'check'" :type="'is-primary'" class="column">
-                                {{ $t("dataTypeAuthorizations.scopes.close") }}
-                            </b-icon>
-                            <div class="column">{{ option.fileName }}</div>
+                            <div class="column">
+                                <b-icon :icon="'check'" :type="'is-primary'" class="column">
+                                    {{ $t("dataTypeAuthorizations.scopes.close") }}
+                                </b-icon>
+                            </div>
+                            <div class="column" v-if="option.forApplication">
+                                <b-tooltip class="is-primary"
+                                           :label="$t('additionalFiles.file.forApplication')"
+                                           multilined position="is-top" size="is-large">
+                                    <b-tag icon="link" icon-type="is-primary">{{ option.fileName }}</b-tag>
+                                </b-tooltip>
+                            </div>
+                            <div class="column" v-else-if="option.associates && (Object.keys(option.associates)).length">
+                                <b-tooltip class="is-warning"
+                                           :label="$t('additionalFiles.file.linked')"
+                                           multilined position="is-top" size="is-large">
+                                    <b-tag icon="link" icon-type="is-warning">{{ option.fileName }}</b-tag>
+                                </b-tooltip>
+                            </div>
+                            <div class="column" v-else>
+                                <b-tooltip class="is-danger"
+                                           :label="$t('additionalFiles.file.notLinked')"
+                                           multilined position="is-top" size="is-large">
+                                    <b-tag icon="link" icon-type="is-danger">{{ option.fileName }}</b-tag>
+                                </b-tooltip>
+                            </div>
                             <div class="column">{{ humanFileSize(option.size) }}</div>
                             <div class="column">
                                 <b-tooltip :label="option.comment" multilined position="is-top" size="is-large">

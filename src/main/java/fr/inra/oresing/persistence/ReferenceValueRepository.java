@@ -60,6 +60,26 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
      * @param params  les parametres query de la requete http. 'ANY' est utiliser pour dire n'importe quelle colonne
      * @return la liste qui satisfont aux criteres
      */
+    public List<UUID> deleteReferenceType(String refType, MultiValueMap<String, String> params) {
+        String sql =  "delete from %1$s%n"+
+                "WHERE application=:applicationId::uuid AND referenceType=:refType%n";
+        MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("refType", refType);
+
+        AtomicInteger i = new AtomicInteger();
+        // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
+
+        sql += addReferenceConditions(params, paramSource);
+        sql += "%nreturning  '%2$s' as \"@class\",  to_jsonb(" +
+                "(id,  creationdate, updatedate, application, referencetype, hierarchicalkey, hierarchicalreference, naturalkey, refslinkedto, refvalues, binaryfile)::%1$s) as json";
+        String query = String.format(sql, getTable().getSqlIdentifier(), getEntityClass().getName());
+        final List<UUID> result = getNamedParameterJdbcTemplate().query(query, paramSource, getJsonRowMapper())
+                .stream()
+                .map(ReferenceValue::getId)
+                .collect(Collectors.toList());
+        return result;
+    }
+
     public List<ReferenceValue> findAllByReferenceType(String refType, MultiValueMap<String, String> params) {
         int offset = Optional.of(params)
                 .map(m -> m.remove("_offset_"))
@@ -84,6 +104,13 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
                 .addValue("refType", refType);
 
+        String cond = addReferenceConditions(params, paramSource);
+        cond = String.format("%s offset %d  limit %s", cond, offset, limit);
+
+        List result = getNamedParameterJdbcTemplate().query(query + cond, paramSource, getJsonRowMapper());
+        return (List<ReferenceValue>) result;
+    }
+    private String addReferenceConditions(MultiValueMap<String, String> params, MapSqlParameterSource paramSource){
         AtomicInteger i = new AtomicInteger();
         // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
         String cond = params.entrySet().stream().flatMap(e -> {
@@ -96,6 +123,18 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                                 })
                                 .collect(Collectors.joining(", "));
                         return Stream.ofNullable(String.format("array[id]::uuid[] <@ array[%s]::uuid[]", collect));
+                    } else if (StringUtils.equalsAnyIgnoreCase("_row_key_", k)) {
+                        String collect = e.getValue().stream()
+                                .map(v -> {
+                                    String arg = ":arg" + i.getAndIncrement();
+                                    paramSource.addValue(arg, v);
+                                    return String.format("'%s'",v);
+                                })
+                                .collect(Collectors.joining(", " ));
+                        if(collect.isEmpty()){
+                            return null;
+                        }
+                        return Stream.ofNullable(String.format(" (naturalKey in (%1$s) or hierarchicalKey in (%1$s)) ", collect));
                     } else if (StringUtils.equalsAnyIgnoreCase("any", k)) {
                         return e.getValue().stream().map(v -> {
                             String arg = ":arg" + i.getAndIncrement();
@@ -112,10 +151,7 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
         if (StringUtils.isNotBlank(cond)) {
             cond = " AND (" + cond + ")";
         }
-        cond = String.format("%s offset %d  limit %s", cond, offset, limit);
-
-        List result = getNamedParameterJdbcTemplate().query(query + cond, paramSource, getJsonRowMapper());
-        return (List<ReferenceValue>) result;
+        return cond;
     }
 
     public Map<String, Map<String, String>> findDisplayByNaturalKey(String refType) {

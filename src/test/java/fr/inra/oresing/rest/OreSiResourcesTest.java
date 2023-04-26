@@ -764,6 +764,8 @@ public class OreSiResourcesTest {
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
 
         final String typeDeSites = fixtures.getMonsoreReferentielFiles().get("type_de_sites");
+
+        final String sites = fixtures.getMonsoreReferentielFiles().get("sites");
         /**
          * on test la demande de droits pour un utilisateur lambda
          */
@@ -857,6 +859,16 @@ public class OreSiResourcesTest {
                     .andExpect(content().string("application inconnue 'monsore'"))
                     .andReturn().getResponse().getContentAsString();
         }
+        try (InputStream refStream = getClass().getResourceAsStream(sites)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", sites, "text/plain", refStream);
+
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", "sites")
+                            .file(refFile)
+                            .cookie(withRigthsCookie))
+                    .andExpect(status().is4xxClientError())
+                    .andExpect(content().string("application inconnue 'monsore'"))
+                    .andReturn().getResponse().getContentAsString();
+        }
 
         String referencesRight = getJsonReferenceRightsforMonSoererepository(withRigthsUserId, "manage");
         referencesRight = JsonPath.parse(referencesRight).read("authorizationId");
@@ -914,6 +926,76 @@ public class OreSiResourcesTest {
 
             JsonPath.parse(response).read("$.id");
         }
+
+        try (InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {
+            MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
+
+            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
+                            .file(refFile)
+                            .cookie(withRigthsCookie))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                    .andReturn().getResponse().getContentAsString();
+
+            JsonPath.parse(response).read("$.id");
+        }
+        //rechercher les lignes
+        final List<String> naturalKeys = new LinkedList<>(), hierarchicalKeys = new LinkedList<>(), ids = new LinkedList<>();
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
+                        .cookie(withRigthsCookie))
+                .andDo(result -> {
+                    final String contentAsString = result.getResponse().getContentAsString();
+                    String[] read1 = JsonPath.parse(contentAsString).read("$.referenceValues[*].naturalKey", String[].class);
+                    Arrays.stream(read1).forEach(naturalKeys::add);
+                    System.out.println(naturalKeys);
+                    Assert.assertEquals("bassin_versant", naturalKeys.get(0));
+                    Assert.assertEquals("plateforme", naturalKeys.get(1));
+
+                    read1 = JsonPath.parse(contentAsString).read("$.referenceValues[*].hierarchicalKey", String[].class);
+                    Arrays.stream(read1).forEach(hierarchicalKeys::add);
+                    System.out.println(hierarchicalKeys);
+                    Assert.assertEquals("bassin_versant", hierarchicalKeys.get(0));
+                    Assert.assertEquals("plateforme", hierarchicalKeys.get(1));
+
+                    read1 = JsonPath.parse(contentAsString).read("$.referenceValues[*].id", String[].class);
+                    Arrays.stream(read1).forEach(ids::add);
+                    Assert.assertEquals(2, read1.length);
+                });
+        // recherche sur un critère
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
+                        .param("tze_nom_en", "Platform")
+                        .cookie(withRigthsCookie))
+                .andExpect(jsonPath("$.referenceValues.length()", Matchers.equalTo(1)))
+                .andExpect(jsonPath("$.referenceValues[0].values.tze_nom_en", Matchers.equalTo("Platform")))
+                .andReturn().getResponse().getContentAsString();
+
+
+
+        // recherche d'une ligne
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
+                        .param("_row_id_", ids.get(1))
+                        .cookie(withRigthsCookie))
+                .andExpect(jsonPath("$.referenceValues[0].id",Matchers.equalTo(ids.get(1))));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
+                        .param("_row_key_", hierarchicalKeys.get(1))
+                        .cookie(withRigthsCookie))
+                .andExpect(jsonPath("$.referenceValues[0].hierarchicalKey", Matchers.equalTo(hierarchicalKeys.get(1))));
+
+        //suppression par critère
+        String deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
+                        .param("_row_id_", ids.get(1))
+                        .cookie(withRigthsCookie))
+                .andReturn().getResponse().getContentAsString();
+        Assert.assertEquals(ids.get(1), deletedIds);
+
+        //suppression par id
+        deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
+                        .param("_row_id_", ids.get(1))
+                        .cookie(withRigthsCookie))
+                .andReturn().getResponse().getContentAsString();
+        Assert.assertEquals("", deletedIds);
+
         // Ajout de referentiel
         for (Map.Entry<String, String> e : fixtures.getMonsoreReferentielFiles().entrySet()) {
             try (InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
@@ -1037,8 +1119,8 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("fichiers/monsoere/monsoere.yaml"));
                     });
             ;
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
@@ -1063,8 +1145,8 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("fichiers/monsoere/monsoere.yaml"));
                     });
             ;
 
@@ -1202,12 +1284,12 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(entryNames.contains("pem.csv"));
-                        Assert.assertTrue(entryNames.contains("references/variables_et_unites_par_types_de_donnees.csv"));
-                        Assert.assertTrue(entryNames.contains("references/sites.csv"));
-                        Assert.assertTrue(entryNames.contains("references/types_de_donnees_par_themes_de_sites_et_projet.csv"));
-                        Assert.assertTrue(entryNames.contains("additionalFiles/fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(entryNames.contains("additionalFiles/fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","pem.csv"),entryNames.contains("pem.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","variables_et_unites_par_types_de_donnees.csv"),entryNames.contains("references/variables_et_unites_par_types_de_donnees.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","sites.csv"),entryNames.contains("references/sites.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","types_de_donnees_par_themes_de_sites_et_projet.csv"),entryNames.contains("references/types_de_donnees_par_themes_de_sites_et_projet.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("additionalFiles/fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("additionalFiles/fichiers/monsoere/monsoere.yaml"));
                     })
                     .andReturn().getResponse().getContentAsByteArray();
 

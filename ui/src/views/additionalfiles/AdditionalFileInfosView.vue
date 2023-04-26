@@ -38,7 +38,7 @@
                     >
                     </FieldsForm>
                 </article>
-                <article class="additionalFileUpoald">
+                <article class="additionalFileUpload">
                     <b-collapse v-model="isOpenFileUpload" animation="slide" class="panel">
                         <template #trigger>
                             <div
@@ -59,7 +59,7 @@
                         </template>
 
                         <ValidationProvider
-                                ref="provider"
+                                ref="file"
                                 v-slot="{ errors, valid }"
                                 :rules="rules()"
                                 class="column is-12"
@@ -86,9 +86,27 @@
                     <b-icon class="file-icon" icon="upload"></b-icon>
                     <span class="file-label">{{ $t("dataTypesRepository.choose-file") }}</span>
                   </span>
-<!--                                    <b-input  v-model="fileName" />-->
                                 </b-upload>
                                 <span>{{ errors[0] }}</span>
+                            </b-field>
+                        </ValidationProvider>
+
+                        <ValidationProvider
+                                ref="fileName"
+                                v-slot="{ errors, valid }"
+                                :rules="rules()"
+                                class="column is-12"
+                        >
+                            <b-field
+                                    :label="'nom du fichier'"
+                                    :message="errors"
+                                    :type="{
+                  'is-danger': errors && errors.length > 0,
+                  'is-success': valid,
+                }"
+                                    class="file is-primary column is-12"
+                            >
+                                <b-input v-model="fileName" type="text"/>
                             </b-field>
                             <b-field
                                     :label="$t('additionalFiles.forApplication')">
@@ -164,8 +182,8 @@
                         {{ $t("additionalFiles.buttons.cancel") }}
                     </b-button>
                     <b-button
-                            :active="valid"
-                            :disabled="!valid"
+                            :active="validFile && validForm"
+                            :disabled="!validFile || !validForm"
                             :type="additionalFileId === 'new' ? 'is-primary' : 'is-warning'"
                             icon-left="edit"
                             @click="changeConfiguration"
@@ -179,7 +197,7 @@
 </template>
 
 <script>
-import {ValidationObserver, ValidationProvider, extend} from "vee-validate";
+import {ValidationObserver, ValidationProvider, extend,} from "vee-validate";
 
 import CollapsibleTree from "@/components/common/CollapsibleTree.vue";
 import SubMenu, {SubMenuPath} from "@/components/common/SubMenu.vue";
@@ -212,7 +230,7 @@ import {FontAwesomeIcon} from "@fortawesome/vue-fontawesome";
         ValidationProvider,
         FontAwesomeIcon,
         FieldsForm,
-        InternationalisationService,
+        InternationalisationService
     },
 })
 export default class AdditionalFileInfosView extends Vue {
@@ -249,7 +267,7 @@ export default class AdditionalFileInfosView extends Vue {
     fields = {};
     file = null;
     validForm = false;
-    valid = false;
+    validFile = false;
     periods = {
         FROM_DATE: this.$t("dataTypeAuthorizations.from-date"),
         TO_DATE: this.$t("dataTypeAuthorizations.to-date"),
@@ -281,6 +299,7 @@ export default class AdditionalFileInfosView extends Vue {
     forApplication = false;
     fileNames = []
     fileName = null
+    extend = extend
 
     @Watch("authReferences")
     onExternalOpenStateChanged(newVal) {
@@ -461,9 +480,10 @@ export default class AdditionalFileInfosView extends Vue {
                 );
             let additionalFile = additionalFiles.additionalBinaryFiles
                 .find(file => file.id == this.additionalFileId);
+            this.fileName = additionalFile && additionalFile.fileName;
             if (this.additionalFileId != "new") {
                 this.validForm = true;
-                this.valid = true;
+                this.validFile = true;
                 this.forApplication = additionalFile.forApplication;
                 this.currentUser = additionalFiles.users.find(
                     (user) =>
@@ -582,7 +602,7 @@ export default class AdditionalFileInfosView extends Vue {
     }
 
     async changeConfiguration() {
-        if (!this.valid) {
+        if (!this.validFile || !this.validForm) {
             return;
         }
         try {
@@ -671,10 +691,41 @@ export default class AdditionalFileInfosView extends Vue {
     }
 
     rules() {
-        extend("required", () => {
-            return () => this.fields.files && this.fields.files.length;
-        });
-        return "required";
+        this.extend("extended", this.testFileAndFileName);
+        return "extended";
+    }
+
+    testFileAndFileName(value) {
+        this.validFile = false
+        if (!value && !this.file) {
+            if (this.additionalFileId == 'new') {
+                return "Vous devez fournir un fichier."
+            } else {
+                this.fileName = this.file.name;
+                this.validFile = true;
+                return true
+            }
+        }
+        let fileName
+        if (typeof value === "object") {
+            this.fileName = value.name
+            fileName = this.fileName
+        } else if (typeof value === 'string') {
+            if (this.file) {
+                this.file = new File([this.file], value)
+            }
+            fileName = value
+        } else if (this.additionalFileId == 'new') {
+            return "Vous devez fournir un fichier."
+        }
+        if (!/([A-Z]|[a-z]|[0-9]|_|-|\.|\s)+/.test(fileName)) {
+            return "Vous devez fournir un nom de fichier valide.";
+        }
+        if (this.fileNames.includes(fileName)) {
+            return 'Il existe déjà un fichier additionnel "' + fileName + '"'
+        }
+        this.validFile = true;
+        return true;
     }
 
     modifyAssociateFile(id) {
@@ -684,8 +735,11 @@ export default class AdditionalFileInfosView extends Vue {
     }
 
     loadFile() {
-        this.valid = this.validForm && (!!this.file || "new" != this.additionalFileId);
-        this.fileName = this.file.name
+        if (this.file) {
+            if (!this.fileName) {
+                this.fileName = this.file.name
+            }
+        }
     }
 }
 </script>
