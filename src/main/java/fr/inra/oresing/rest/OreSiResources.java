@@ -317,17 +317,22 @@ public class OreSiResources {
                 .collect(Collectors.toSet());
         Map<Ltree, List<ReferenceValue>> requiredReferencesValues = service.getReferenceDisplaysById(service.getApplication(nameOrId), listOfReferenceIds);
         final Map<String, LineChecker> referenceLineCheckers = checkedFormatColumns.get(ReferenceLineChecker.class.getSimpleName());
-        final Map<String, String> referencesForColumns = checkedFormatColumns.get(ReferenceLineChecker.class.getSimpleName()).entrySet()
-                .stream().collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                e -> Optional.ofNullable(e)
-                                        .map(Map.Entry::getValue)
-                                        .filter(v -> v instanceof ReferenceLineChecker)
-                                        .map(v -> (ReferenceLineChecker) v)
-                                        .map(ReferenceLineChecker::getRefType)
-                                        .orElse("erreur")
+        final Map<String, String> referenceTypeForReferencingColumns =
+                Optional.ofNullable(checkedFormatColumns.get(ReferenceLineChecker.class.getSimpleName()))
+                        .map(checkedFormatColumn -> checkedFormatColumn.entrySet()
+                                .stream()
+                                .collect(Collectors.toMap(
+                                                Map.Entry::getKey,
+                                                e -> Optional.ofNullable(e)
+                                                        .map(Map.Entry::getValue)
+                                                        .filter(v -> v instanceof ReferenceLineChecker)
+                                                        .map(v -> (ReferenceLineChecker) v)
+                                                        .map(ReferenceLineChecker::getRefType)
+                                                        .orElse("erreur")
+                                        )
+                                )
                         )
-                );
+                        .orElseGet(LinkedHashMap::new);
         ImmutableSet<GetReferenceResult.ReferenceValue> referenceValues = list.stream()
                 .map(referenceValue ->
                         new GetReferenceResult.ReferenceValue(
@@ -336,13 +341,13 @@ public class OreSiResources {
                                 referenceValue.getHierarchicalReference().getSql(),
                                 referenceValue.getNaturalKey().getSql(),
                                 referenceValue.getRefValues().toJsonForFrontend(),
-                                referenceValue.getRefsLinkedTo(),
-                                referencesForColumns
+                                referenceValue.getRefsLinkedTo()
                         )
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));
-        return ResponseEntity.ok(new GetReferenceResult(referenceValues));
-    }
+        return ResponseEntity.ok(new GetReferenceResult(referenceValues,
+                referenceTypeForReferencingColumns));
+    }/*
 
     @DeleteMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> deleteReferences(
@@ -351,7 +356,7 @@ public class OreSiResources {
             @RequestParam MultiValueMap<String, String> params) {
         List<UUID> deletedReferences = service.deleteReference(nameOrId, refType, params);
         return ResponseEntity.ok(deletedReferences.stream().map(UUID::toString).collect(Collectors.joining()));
-    }
+    }*/
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/csv", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<StreamingResponseBody> listReferencesCsv(

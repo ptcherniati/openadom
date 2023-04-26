@@ -1037,8 +1037,8 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("fichiers/monsoere/monsoere.yaml"));
                     });
             ;
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
@@ -1063,8 +1063,8 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(entryNames.contains("fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("fichiers/monsoere/monsoere.yaml"));
                     });
             ;
 
@@ -1202,12 +1202,12 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(entryNames.contains("pem.csv"));
-                        Assert.assertTrue(entryNames.contains("references/variables_et_unites_par_types_de_donnees.csv"));
-                        Assert.assertTrue(entryNames.contains("references/sites.csv"));
-                        Assert.assertTrue(entryNames.contains("references/types_de_donnees_par_themes_de_sites_et_projet.csv"));
-                        Assert.assertTrue(entryNames.contains("additionalFiles/fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(entryNames.contains("additionalFiles/fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","pem.csv"),entryNames.contains("pem.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","variables_et_unites_par_types_de_donnees.csv"),entryNames.contains("references/variables_et_unites_par_types_de_donnees.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","sites.csv"),entryNames.contains("references/sites.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","types_de_donnees_par_themes_de_sites_et_projet.csv"),entryNames.contains("references/types_de_donnees_par_themes_de_sites_et_projet.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("additionalFiles/fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("additionalFiles/fichiers/monsoere/monsoere.yaml"));
                     })
                     .andReturn().getResponse().getContentAsByteArray();
 

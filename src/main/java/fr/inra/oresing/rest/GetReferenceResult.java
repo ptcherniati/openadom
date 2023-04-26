@@ -9,6 +9,7 @@ import java.util.UUID;
 @Value
 public class GetReferenceResult {
     Set<ReferenceValue> referenceValues;
+    Map<String, String> referenceTypeForReferencingColumns;
 
     @Value
     public static class ReferenceValue {
@@ -18,6 +19,5 @@ public class GetReferenceResult {
         String naturalKey;
         Map<String, Object> values;
         Map<String, Set<UUID>> refsLinkedTo;
-        Map<String, String> referenceTypeForReferencingColumns;
     }
 }
