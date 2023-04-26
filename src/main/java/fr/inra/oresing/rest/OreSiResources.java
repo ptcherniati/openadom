@@ -57,7 +57,7 @@ public class OreSiResources {
     @Autowired
     private OreSiApiRequestContext request;
 
-    @DeleteMapping(value = "/applications/{name}/file/{id}",produces = MediaType.TEXT_PLAIN_VALUE)
+    @DeleteMapping(value = "/applications/{name}/file/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> removeFile(@PathVariable("name") String name, @PathVariable("id") UUID id) {
         Optional<BinaryFile> optionalBinaryFile = service.getFile(name, id);
         service.removeFile(name, id);
@@ -160,9 +160,9 @@ public class OreSiResources {
                 application.getConfiguration().getReferences(),
                 (reference, referenceDescription) -> {
                     Map<String, ApplicationResult.Reference.Column> columns = Maps.transformEntries(referenceDescription.doGetStaticColumnDescriptions(), (column, columnDescription) -> new ApplicationResult.Reference.Column(column, column, referenceDescription.getKeyColumns().contains(column), Optional.ofNullable(columnDescription)
-                            .map(cd->cd.getChecker())
-                            .filter(check-> CheckerType.Reference.equals(check.getName()))
-                            .map(check->check.getParams())
+                            .map(cd -> cd.getChecker())
+                            .filter(check -> CheckerType.Reference.equals(check.getName()))
+                            .map(check -> check.getParams())
                             .map(param -> param.getRefType())
                             .orElse(null)
                     ));
@@ -347,7 +347,7 @@ public class OreSiResources {
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));
         return ResponseEntity.ok(new GetReferenceResult(referenceValues,
                 referenceTypeForReferencingColumns));
-    }/*
+    }
 
     @DeleteMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> deleteReferences(
@@ -356,7 +356,7 @@ public class OreSiResources {
             @RequestParam MultiValueMap<String, String> params) {
         List<UUID> deletedReferences = service.deleteReference(nameOrId, refType, params);
         return ResponseEntity.ok(deletedReferences.stream().map(UUID::toString).collect(Collectors.joining()));
-    }*/
+    }
 
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}/csv", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<StreamingResponseBody> listReferencesCsv(
@@ -454,7 +454,7 @@ public class OreSiResources {
             @RequestParam(value = "params", required = false) String params) throws IOException, BadAdditionalFileParamsSearchException {
         AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
         List<UUID> deletedFiles = service.deleteAdditionalFiles(nameOrId, additionalFilesInfos);
-        if (deletedFiles!=null && !deletedFiles.isEmpty()) {
+        if (deletedFiles != null && !deletedFiles.isEmpty()) {
             return ResponseEntity.ok(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(",")));
         } else {
             return ResponseEntity.notFound().build();
@@ -463,8 +463,8 @@ public class OreSiResources {
 
     @PostMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UUID> createAdditionalFile(@PathVariable("nameOrId") String nameOrId,
-                                                  @RequestParam(value = "file", required = false) MultipartFile file,
-                                                  @RequestParam(value = "params", required = true) String params) throws IOException {
+                                                     @RequestParam(value = "file", required = false) MultipartFile file,
+                                                     @RequestParam(value = "params", required = true) String params) throws IOException {
         CreateAdditionalFileRequest createAdditionalFileRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFileOrUUIDQuery(params);
         UUID fileUUID = service.createOrUpdate(createAdditionalFileRequest, nameOrId, file);
         return ResponseEntity.ok(fileUUID);
@@ -529,7 +529,7 @@ public class OreSiResources {
                                         .forEach(dataRow -> {
                                             Set<UUID> refIds = dataRow.getRefsLinkedTo().get(((VariableComponentKey) referenceLineChecker.getTarget()).getVariable()).get(((VariableComponentKey) referenceLineChecker.getTarget()).getComponent());
                                             requiredreferencesValues.values().stream()
-                                                    .filter(k->refIds!=null)
+                                                    .filter(k -> refIds != null)
                                                     .map(l ->
                                                             l.stream()
                                                                     .filter(referenceValue -> refIds.contains(referenceValue.getId()))
