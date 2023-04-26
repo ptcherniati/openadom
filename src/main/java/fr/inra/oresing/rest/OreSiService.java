@@ -1647,7 +1647,7 @@ public class OreSiService {
                 .orElseGet(AdditionalBinaryFile::new);
         additionalBinaryFile.setFileInfos(createAdditionalFileRequest.getFields());
         additionalBinaryFile.setApplication(application.getId());
-        additionalBinaryFile.setForApplication(createAdditionalFileRequest.getForApplication());
+        additionalBinaryFile.setForApplication(Optional.ofNullable(createAdditionalFileRequest.getForApplication()).orElse( Boolean.FALSE));
         if (file != null) {
             additionalBinaryFile.setSize(file.getSize());
             additionalBinaryFile.setFileName(file.getOriginalFilename());
