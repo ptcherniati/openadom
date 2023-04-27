@@ -21,7 +21,6 @@ import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.persistence.roles.CurrentUserRoles;
 import fr.inra.oresing.persistence.roles.OreSiRole;
-import fr.inra.oresing.rest.exceptions.additionalfiles.AdditionalFileParamsParsingResult;
 import fr.inra.oresing.rest.exceptions.additionalfiles.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
@@ -1221,6 +1220,15 @@ public class OreSiService {
         String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
         Application app = getApplication(applicationNameOrId);
         List<DataRow> data = repo.getRepository(app).data().findAllByDataType(downloadDatasetQuery);
+        return data;
+    }
+
+    public List<UUID> deleteData(DownloadDatasetQuery downloadDatasetQuery, String nameOrId, String dataType) {
+        downloadDatasetQuery = DownloadDatasetQuery.buildDownloadDatasetQuery(downloadDatasetQuery, nameOrId, dataType, getApplication(nameOrId));
+        authenticationService.setRoleForClient();
+        String applicationNameOrId = downloadDatasetQuery.getApplicationNameOrId();
+        Application app = getApplication(applicationNameOrId);
+        List<UUID> data = repo.getRepository(app).data().deleteDataType(downloadDatasetQuery);
         return data;
     }
 

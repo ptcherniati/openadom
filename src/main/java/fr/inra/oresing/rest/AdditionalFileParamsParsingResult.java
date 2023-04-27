@@ -1,10 +1,9 @@
-package fr.inra.oresing.rest.exceptions.additionalfiles;
+package fr.inra.oresing.rest;
 
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.model.Application;
 import fr.inra.oresing.model.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.persistence.AdditionalFileSearchHelper;
-import fr.inra.oresing.rest.ValidationCheckResult;
 import fr.inra.oresing.rest.validationcheckresults.DefaultValidationCheckResult;
 import lombok.Value;
 

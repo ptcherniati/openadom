@@ -146,7 +146,7 @@ public class DownloadDatasetQuery {
                 .stream()
                 .map(vck -> getFormat(vck))
                 .filter(f -> !Strings.isNullOrEmpty(f))
-                .collect(Collectors.joining(" AND "));
+                .collect(Collectors.joining(" \nAND "));
         return Strings.isNullOrEmpty(filter) ? query : String.format("%s \nWHERE %s", query, filter);
     }
 
@@ -206,7 +206,28 @@ public class DownloadDatasetQuery {
         }
         return filters.stream()
                 .filter(filter -> !Strings.isNullOrEmpty(filter))
-                .collect(Collectors.joining(" AND "));
+                .collect(Collectors.joining(" \nAND "));
+    }
+    public String buildDeleteQuery(String toMergeDataGroupsQuery) {
+        String query ="WITH my_data AS (\n" +
+                " SELECT \n" +
+                "\trowId, \n" +
+                "\tjsonb_object_agg(datavalues) AS dataValues, \n" +
+                "\tjsonb_object_agg(refsLinkedTo) AS refsLinkedTo \n" +
+                "FROM %1$s \n" +
+                "WHERE dataType = 'pem' \n" +
+                "GROUP BY rowId\n" +
+                "),\n";
+        query += "rowids as (SELECT rowid\n" +
+                "FROM my_data  \n";
+        query = filterBy(query);
+        query += ")\n" +
+                "delete from %1$s t\n" +
+                "using rowids \n" +
+                "where t.rowid = rowids.rowid";
+        query = query +"\nreturning t.rowid::uuid";
+        return query;
+
     }
 
     public String buildQuery(String toMergeDataGroupsQuery) {

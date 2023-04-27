@@ -17,6 +17,7 @@ import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
+import fr.inra.oresing.rest.exceptions.data.DeleteOnrepositoryApplicationNotAllowedException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -377,8 +378,9 @@ public class OreSiResourcesTest {
          *      par site.plateforme -> a < p1 < p2
          *
          */
+        String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
+
         {
-            String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
             Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.json")), Charsets.UTF_8);
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                             .cookie(monsoreCookie)
@@ -461,6 +463,16 @@ public class OreSiResourcesTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
+                        .param("downloadDatasetQuery", filter)
+                        .cookie(monsoreCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andDo(result -> {
+                    final String[] uuids = result.getResponse().getContentAsString().split(",");
+                    int expectedUUIDs = 24;
+                    Assert.assertTrue(String.format("On attend %d lignes; la requête en renvoie %d", expectedUUIDs, uuids.length),uuids.length == 24);
+
+                });
         String adminRights = getJsonRightsforMonSoererepository(withRigthsUserId,
                 OperationType.admin.name(),
                 "pem",
@@ -1379,6 +1391,12 @@ public class OreSiResourcesTest {
         Assert.assertEquals("NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION", resolvedException.getMessage());
         Assert.assertEquals("pem", resolvedException.getDataType());
         Assert.assertEquals("monsore", resolvedException.getApplicationName());
+        final Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
+                        .cookie(authCookie))
+                .andExpect(status().is4xxClientError())
+                .andReturn()
+                .getResolvedException();
+        Assert.assertTrue(resolvedException1 instanceof DeleteOnrepositoryApplicationNotAllowedException);
 
         //on donne les droits de suppression
         final String deleteRights = getJsonRightsforMonSoererepository(withRigthsUserId, OperationType.delete.name(), "pem", "plateforme.nivelle.nivelle__p1", "1984,1,1", "1984,1,6", authCookie);

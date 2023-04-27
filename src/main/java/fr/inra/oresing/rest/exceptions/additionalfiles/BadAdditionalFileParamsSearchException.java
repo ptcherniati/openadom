@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.exceptions.additionalfiles;
 
 import fr.inra.oresing.OreSiTechnicalException;
+import fr.inra.oresing.rest.AdditionalFileParamsParsingResult;
 
 public class BadAdditionalFileParamsSearchException extends OreSiTechnicalException {
 
