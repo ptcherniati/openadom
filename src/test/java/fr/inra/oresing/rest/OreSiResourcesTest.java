@@ -17,6 +17,7 @@ import fr.inra.oresing.rest.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.rest.exceptions.authentication.NotApplicationCreatorRightsException;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
+import fr.inra.oresing.rest.exceptions.data.DeleteOnrepositoryApplicationNotAllowedException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -329,6 +330,31 @@ public class OreSiResourcesTest {
                                 "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
                                 "['Nombre d\\'individus'].value",
                         Matchers.hasItem("54")));
+        final String contentAsString = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                        .cookie(monsoreCookie))
+                .andReturn().getResponse().getContentAsString();
+
+        final net.minidev.json.JSONArray rowIds = JsonPath.parse(contentAsString)
+                .read("$.rows[0,1].rowId");
+        List<String> filterByRowId = new LinkedList<>();
+        int len = rowIds.size();
+        for (int i = 0; i < len; i++) {
+            filterByRowId.add(rowIds.get(i).toString());
+        }
+
+        mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
+                        .param("downloadDatasetQuery",
+                                String.format("{\n" +
+                                                "  \"rowIds\": [%s]\n" +
+                                                "}",
+                                        filterByRowId.stream()
+                                                .map(s -> String.format("\"%s\"", s))
+                                                .collect(Collectors.joining(","))))
+                        .cookie(monsoreCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.rows.length()", Matchers.equalTo(2)))
+                .andExpect(jsonPath("$.rows[*].rowId", Matchers.hasItems(filterByRowId.get(0),filterByRowId.get(1))))
+                .andReturn().getResponse().getContentAsString();
 
         //récupération du data
 
@@ -377,8 +403,9 @@ public class OreSiResourcesTest {
          *      par site.plateforme -> a < p1 < p2
          *
          */
+        String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
+
         {
-            String filter = "{\"application\":null,\"applicationNameOrId\":null,\"dataType\":null,\"offset\":null,\"limit\":15,\"variableComponentSelects\":[],\"variableComponentFilters\":[{\"variableComponentKey\":{\"variable\":\"date\",\"component\":\"value\"},\"filter\":null,\"type\":\"date\",\"format\":\"dd/MM/yyyy\",\"intervalValues\":{\"from\":\"1984-01-01\",\"to\":\"1984-01-01\"}},{\"variableComponentKey\":{\"variable\":\"Nombre d'individus\",\"component\":\"value\"},\"filter\":null,\"type\":\"numeric\",\"format\":\"integer\",\"intervalValues\":{\"from\":\"20\",\"to\":\"29\"}},{\"variableComponentKey\":{\"variable\":\"Couleur des individus\",\"component\":\"value\"},\"filter\":\"vert\",\"type\":\"reference\",\"format\":\"uuid\",\"intervalValues\":null}],\"variableComponentOrderBy\":[{\"variableComponentKey\":{\"variable\":\"site\",\"component\":\"plateforme\"},\"order\":\"ASC\",\"type\":null,\"format\":null}]}";
             Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.json")), Charsets.UTF_8);
             String actualJson = mockMvc.perform(get("/api/v1/applications/monsore/data/pem")
                             .cookie(monsoreCookie)
@@ -461,6 +488,16 @@ public class OreSiResourcesTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
+        mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
+                        .param("downloadDatasetQuery", filter)
+                        .cookie(monsoreCookie))
+                .andExpect(status().is2xxSuccessful())
+                .andDo(result -> {
+                    final String[] uuids = result.getResponse().getContentAsString().split(",");
+                    int expectedUUIDs = 24;
+                    Assert.assertTrue(String.format("On attend %d lignes; la requête en renvoie %d", expectedUUIDs, uuids.length), uuids.length == 24);
+
+                });
         String adminRights = getJsonRightsforMonSoererepository(withRigthsUserId,
                 OperationType.admin.name(),
                 "pem",
@@ -487,80 +524,6 @@ public class OreSiResourcesTest {
         registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/authorisation/grantable.json", getGrantable);
         registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/authorisation/authorizations.json", getAuthorizations);
 
-//        // restitution de data json
-//        resource = getClass().getResource("/data/compare/export.json");
-//        try (InputStream in = resource.openStream()) {
-//            String jsonCompare = new String(in.readAllBytes());
-//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
-//                    .cookie(authCookie)
-//                    .accept(MediaType.APPLICATION_JSON))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().json(jsonCompare))
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-//
-//        // restitution de data csv
-//        resource = getClass().getResource("/data/compare/export.csv");
-//        try (InputStream in = resource.openStream()) {
-//            String csvCompare = new String(in.readAllBytes());
-//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir")
-//                    .cookie(authCookie)
-//                    .accept(MediaType.TEXT_PLAIN))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().string(csvCompare))
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-
-//        // restitution de data csv
-//        resource = getClass().getResource("/data/compare/exportColumn.csv");
-//        try (InputStream in = resource.openStream()) {
-//            String csvCompare = new String(in.readAllBytes());
-//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
-//                    .cookie(authCookie)
-//                    .accept(MediaType.TEXT_PLAIN))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().string(csvCompare))
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-
-//        // recuperation de l'id du referentiel
-//        response = mockMvc.perform(get("/api/v1/applications/monsore/references/especes?esp_nom=LPF")
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .cookie(authCookie))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-//                .andReturn().getResponse().getContentAsString();
-//
-//        ReferenceValue[] refEspeces = objectMapper.readValue(response, ReferenceValue[].class);
-//        UUID refId = Stream.of(refEspeces).map(ReferenceValue::getId).findFirst().orElseThrow();
-//
-//        // creation d'un user qui aura le droit de lire les données mais pas certain referenciel
-//        OreSiUser restrictedReader = authRepository.createUser("UnPetitReader", "xxxxxxxx");
-//        mockMvc.perform(put("/api/v1/applications/{nameOrId}/users/{role}/{userId}",
-//                appId, ApplicationRight.RESTRICTED_READER.name(), restrictedReader.getId().toString())
-//                .contentType(MediaType.APPLICATION_JSON)
-//                .cookie(authCookie)
-//                .content("[\"" + refId + "\"]"))
-//                .andExpect(status().isOk());
-
-//        Cookie authRestrictedReaderCookie = mockMvc.perform(post("/api/v1/login")
-//                .param("login", "UnPetitReader")
-//                .param("password", "xxxxxxxx"))
-//                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-
-//        // restitution de data csv
-//        resource = getClass().getResource("/data/compare/exportColumnRestrictedReader.csv");
-//        try (InputStream in = resource.openStream()) {
-//            String csvCompare = new String(in.readAllBytes());
-//            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem?projet=Projet atlantique&site=oir&outColumn=date;espece;plateforme;Nombre d'individus")
-//                    .cookie(authRestrictedReaderCookie)
-//                    .accept(MediaType.TEXT_PLAIN))
-//                    .andExpect(status().isOk())
-//                    .andExpect(content().string(csvCompare))
-//                    .andReturn().getResponse().getContentAsString();
-//        }
-
-        // changement du fichier de config avec un mauvais (qui ne permet pas d'importer les fichiers
     }
 
     private String getPemData(Cookie monsoreCookie) throws Exception {
@@ -970,12 +933,11 @@ public class OreSiResourcesTest {
                 .andReturn().getResponse().getContentAsString();
 
 
-
         // recherche d'une ligne
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
                         .param("_row_id_", ids.get(1))
                         .cookie(withRigthsCookie))
-                .andExpect(jsonPath("$.referenceValues[0].id",Matchers.equalTo(ids.get(1))));
+                .andExpect(jsonPath("$.referenceValues[0].id", Matchers.equalTo(ids.get(1))));
 
         mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/monsore/references/{refType}", "type_de_sites")
                         .param("_row_key_", hierarchicalKeys.get(1))
@@ -1119,13 +1081,21 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "monsoere_infos.txt"), entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "monsoere.yaml"), entryNames.contains("fichiers/monsoere/monsoere.yaml"));
                     });
             ;
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles")
                             .param("nameOrId", "monsore")
-                            .param("params", "{\"uuids\":null,\"fileNames\":null,\"additionalFilesInfos\":{\"fichiers\":{\"fieldFilters\":[]}}}")
+                            .param("params", "{\n" +
+                                    "  \"uuids\": null,\n" +
+                                    "  \"fileNames\": null,\n" +
+                                    "  \"additionalFilesInfos\": {\n" +
+                                    "    \"fichiers\": {\n" +
+                                    "      \"fieldFilters\": []\n" +
+                                    "    }\n" +
+                                    "  }\n" +
+                                    "}")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful()).andExpect(result -> {
                         List<ZipEntry> entries = new ArrayList<>();
@@ -1145,8 +1115,8 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "monsoere_infos.txt"), entryNames.contains("fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "monsoere.yaml"), entryNames.contains("fichiers/monsoere/monsoere.yaml"));
                     });
             ;
 
@@ -1284,12 +1254,12 @@ public class OreSiResourcesTest {
                         final List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","pem.csv"),entryNames.contains("pem.csv"));
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","variables_et_unites_par_types_de_donnees.csv"),entryNames.contains("references/variables_et_unites_par_types_de_donnees.csv"));
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","sites.csv"),entryNames.contains("references/sites.csv"));
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","types_de_donnees_par_themes_de_sites_et_projet.csv"),entryNames.contains("references/types_de_donnees_par_themes_de_sites_et_projet.csv"));
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere_infos.txt"),entryNames.contains("additionalFiles/fichiers/monsoere/monsoere_infos.txt"));
-                        Assert.assertTrue(String.format("Le zip doit contenir %s","monsoere.yaml"),entryNames.contains("additionalFiles/fichiers/monsoere/monsoere.yaml"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "pem.csv"), entryNames.contains("pem.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "variables_et_unites_par_types_de_donnees.csv"), entryNames.contains("references/variables_et_unites_par_types_de_donnees.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "sites.csv"), entryNames.contains("references/sites.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "types_de_donnees_par_themes_de_sites_et_projet.csv"), entryNames.contains("references/types_de_donnees_par_themes_de_sites_et_projet.csv"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "monsoere_infos.txt"), entryNames.contains("additionalFiles/fichiers/monsoere/monsoere_infos.txt"));
+                        Assert.assertTrue(String.format("Le zip doit contenir %s", "monsoere.yaml"), entryNames.contains("additionalFiles/fichiers/monsoere/monsoere.yaml"));
                     })
                     .andReturn().getResponse().getContentAsByteArray();
 
@@ -1379,6 +1349,12 @@ public class OreSiResourcesTest {
         Assert.assertEquals("NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION", resolvedException.getMessage());
         Assert.assertEquals("pem", resolvedException.getDataType());
         Assert.assertEquals("monsore", resolvedException.getApplicationName());
+        final Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
+                        .cookie(authCookie))
+                .andExpect(status().is4xxClientError())
+                .andReturn()
+                .getResolvedException();
+        Assert.assertTrue(resolvedException1 instanceof DeleteOnrepositoryApplicationNotAllowedException);
 
         //on donne les droits de suppression
         final String deleteRights = getJsonRightsforMonSoererepository(withRigthsUserId, OperationType.delete.name(), "pem", "plateforme.nivelle.nivelle__p1", "1984,1,1", "1984,1,6", authCookie);

@@ -30,6 +30,7 @@ public class DownloadDatasetQuery {
     String locale;
     Long offset;
     Long limit;
+    Set<String> rowIds;
     @Nullable
     Set<VariableComponentKey> variableComponentSelects;
     @Nullable
@@ -60,11 +61,12 @@ public class DownloadDatasetQuery {
         // .addValue("refType", refType);
     }
 
-    public DownloadDatasetQuery(String applicationNameOrId, String dataType, Long offset, Long limit, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Application application) {
+    public DownloadDatasetQuery(String applicationNameOrId, String dataType,  Long offset, Long limit, Set<String> rowIds, @Nullable Set<VariableComponentKey> variableComponentSelects, @Nullable Set<VariableComponentFilters> variableComponentFilters, @Nullable Set<VariableComponentOrderBy> variableComponentOrderBy, Application application) {
         this.applicationNameOrId = applicationNameOrId;
         this.dataType = dataType;
         this.offset = offset;
         this.limit = limit;
+        this.rowIds = rowIds;
         this.variableComponentSelects = variableComponentSelects;
         this.variableComponentFilters = variableComponentFilters;
         this.variableComponentOrderBy = variableComponentOrderBy;
@@ -82,12 +84,14 @@ public class DownloadDatasetQuery {
                         null,
                         null,
                         null,
+                        null,
                         application) :
                 new DownloadDatasetQuery(
                         nameOrId == null ? downloadDatasetQuery.applicationNameOrId : nameOrId,
                         dataType == null ? downloadDatasetQuery.dataType : dataType,
                         downloadDatasetQuery.offset,
                         downloadDatasetQuery.limit,
+                        downloadDatasetQuery.rowIds,
                         downloadDatasetQuery.variableComponentSelects,
                         downloadDatasetQuery.variableComponentFilters,
                         downloadDatasetQuery.variableComponentOrderBy,
@@ -139,14 +143,23 @@ public class DownloadDatasetQuery {
     }
 
     String filterBy(String query) {
-        Set<VariableComponentFilters> variableComponentKeySet = new LinkedHashSet<>();
-        String filter = Optional.ofNullable(variableComponentFilters)
-                .filter(vck -> !CollectionUtils.isEmpty(vck))
-                .orElseGet(LinkedHashSet::new)
-                .stream()
-                .map(vck -> getFormat(vck))
-                .filter(f -> !Strings.isNullOrEmpty(f))
-                .collect(Collectors.joining(" AND "));
+        String filter = "";
+        final Set<String> uuids2 = Optional.ofNullable(rowIds)
+                .filter(uuids1 -> !rowIds.isEmpty())
+                .orElse(null);
+        if(rowIds !=null && !rowIds.isEmpty()){
+            final String uuidArgument = addArgumentAndReturnSubstitution( uuids2);
+            filter = String. format( "\n  rowid in (%s) \n", uuidArgument);
+        }else {
+            Set<VariableComponentFilters> variableComponentKeySet = new LinkedHashSet<>();
+            filter = Optional.ofNullable(variableComponentFilters)
+                    .filter(vck -> !CollectionUtils.isEmpty(vck))
+                    .orElseGet(LinkedHashSet::new)
+                    .stream()
+                    .map(vck -> getFormat(vck))
+                    .filter(f -> !Strings.isNullOrEmpty(f))
+                    .collect(Collectors.joining(" \nAND "));
+        }
         return Strings.isNullOrEmpty(filter) ? query : String.format("%s \nWHERE %s", query, filter);
     }
 
@@ -206,7 +219,28 @@ public class DownloadDatasetQuery {
         }
         return filters.stream()
                 .filter(filter -> !Strings.isNullOrEmpty(filter))
-                .collect(Collectors.joining(" AND "));
+                .collect(Collectors.joining(" \nAND "));
+    }
+    public String buildDeleteQuery(String toMergeDataGroupsQuery) {
+        String query ="WITH my_data AS (\n" +
+                " SELECT \n" +
+                "\trowId, \n" +
+                "\tjsonb_object_agg(datavalues) AS dataValues, \n" +
+                "\tjsonb_object_agg(refsLinkedTo) AS refsLinkedTo \n" +
+                "FROM %1$s \n" +
+                "WHERE dataType = 'pem' \n" +
+                "GROUP BY rowId\n" +
+                "),\n";
+        query += "rowids as (SELECT rowid\n" +
+                "FROM my_data  \n";
+        query = filterBy(query);
+        query += ")\n" +
+                "delete from %1$s t\n" +
+                "using rowids \n" +
+                "where t.rowid = rowids.rowid";
+        query = query +"\nreturning t.rowid::uuid";
+        return query;
+
     }
 
     public String buildQuery(String toMergeDataGroupsQuery) {

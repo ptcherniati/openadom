@@ -16,6 +16,7 @@ import fr.inra.oresing.rest.exceptions.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.rest.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.exceptions.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.rest.exceptions.data.BadDownloadDatasetQuery;
+import fr.inra.oresing.rest.exceptions.data.DeleteOnrepositoryApplicationNotAllowedException;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
 import io.swagger.annotations.ApiOperation;
@@ -341,7 +342,8 @@ public class OreSiResources {
                                 referenceValue.getHierarchicalReference().getSql(),
                                 referenceValue.getNaturalKey().getSql(),
                                 referenceValue.getRefValues().toJsonForFrontend(),
-                                referenceValue.getRefsLinkedTo()
+                                referenceValue.getRefsLinkedTo(),
+                                referenceValue.getReferencingreferences()
                         )
                 )
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetReferenceResult.ReferenceValue::getHierarchicalKey)));
@@ -545,6 +547,33 @@ public class OreSiResources {
             }
         }
         return ResponseEntity.ok(new GetDataResult(variables, list, totalRows, checkedFormatVariableComponents));
+    }
+
+    /**
+     * export as JSON
+     */
+    @DeleteMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
+    public ResponseEntity<String> deleteData(
+            @PathVariable("nameOrId") String nameOrId,
+            @PathVariable("dataType") String dataType,
+            @RequestParam(value = "downloadDatasetQuery", required = false) String params) {
+
+        ResponseEntity<String> resposeEntity = null;
+        boolean deleteOnrepositoryApplicationNotAllowed = Optional.ofNullable(service.getApplication(nameOrId)
+                        .getConfiguration()
+                        .getDataTypes())
+                .map(l->l.get(dataType))
+                .map(Configuration.DataTypeDescription::getRepository)
+                .isPresent();
+        if (deleteOnrepositoryApplicationNotAllowed) {
+            throw new DeleteOnrepositoryApplicationNotAllowedException();
+        }
+
+        DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params);
+        ;
+        List<UUID> deletedData = service.deleteData(downloadDatasetQuery, nameOrId, dataType);
+        return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(",")));
+
     }
 
     private LinkedHashSet<String> buildOrderedVariables(String nameOrId, String dataType) {

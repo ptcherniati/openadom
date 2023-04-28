@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -21,4 +22,5 @@ public class ReferenceValue extends OreSiEntity {
     private ReferenceDatum refValues;
     private Map<String, Set<UUID>> refsLinkedTo;
     private UUID binaryFile;
+    private Map<String, Map<String, List<String>>> referencingreferences;
 }

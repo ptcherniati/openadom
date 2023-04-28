@@ -12,10 +12,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
 import java.sql.PreparedStatement;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -48,6 +45,17 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         String query = downloadDatasetQuery.buildQuery(toMergeDataGroupsQuery);
         List result = getNamedParameterJdbcTemplate().query(query, downloadDatasetQuery.getParamSource(), getJsonRowMapper());
         return (List<DataRow>) result;
+    }
+
+    public List<UUID> deleteDataType(DownloadDatasetQuery downloadDatasetQuery) {
+        String toMergeDataGroupsQuery = getSqlToMergeData(downloadDatasetQuery);
+        String query = downloadDatasetQuery.buildDeleteQuery(toMergeDataGroupsQuery);
+        query = String.format(query, getTable().getSqlIdentifier());
+        final HashMap sqlParameterSource = new HashMap();
+        Arrays.stream(downloadDatasetQuery.getParamSource().getParameterNames())
+                .forEach(parameter->sqlParameterSource.put(parameter, downloadDatasetQuery.getParamSource().getValue(parameter)));
+        List<UUID> result = getNamedParameterJdbcTemplate().queryForList(query, sqlParameterSource, UUID.class);
+        return  result;
     }
 
     public int removeByFileId(UUID fileId) {
