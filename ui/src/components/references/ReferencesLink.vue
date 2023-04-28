@@ -1,8 +1,8 @@
 <template>
   <div>
     <!-- section pour visualisation un lien de référence -->
-    <a v-if="referenceType" @click="openReferenceDetail()">{{ columnId ? columnId : value }}</a>
-    <p v-else>{{ value }}</p>
+    <a v-if="referenceType" class="column" @click="openReferenceDetail()">{{ columnId ? columnId : value }}</a>
+    <p v-else class="column">{{ value }}</p>
 
     <!-- modal de visualisation d'une donnée de référence -->
     <b-modal v-model="refValues.active" custom-class="referenceDetails">
@@ -25,8 +25,16 @@
                       :reference-type="dynamicColumnReferences(props.row.colonne)"
                       :loaded-references-by-key="{}"
                       :column-id="column.id"
-                      :column-title="column.title"
                   ></ReferencesDynamicLink>
+                  <ReferencesManyLink
+                      v-else-if="Array.isArray(props.row[column.field])"
+                      :multiplicity="true"
+                      :info-values="props.row[column.field]"
+                      :application="application"
+                      :reference-type="column.linkedTo"
+                      :loaded-references-by-key="{}"
+                      :column-id="column.id"
+                  ></ReferencesManyLink>
                   <ReferencesLink
                       v-else-if="
                         (column.field === 'valeur') &&
@@ -71,6 +79,7 @@ export default {
   },
   beforeCreate() {
     this.$options.components.ReferencesDynamicLink = require("./ReferencesDynamicLink.vue").default;
+    this.$options.components.ReferencesManyLink = require("./ReferencesManyLink.vue").default;
   },
   computed: {
     applicationName(){

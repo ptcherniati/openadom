@@ -18,7 +18,7 @@
         <div class="card-header">
           <div class="title card-header-title">
             <p field="name" style="font-size: 1.5rem">
-              {{ columnTitle }} pour :
+              {{ columnTitle }}
             </p>
           </div>
         </div>
@@ -32,7 +32,9 @@
               :loaded-references-by-key="{}"
               :column-id="key.columnName"
             ></ReferencesLink>
-            <p v-else class="column">{{ key.column }} {{ $t("ponctuation.colon") }}</p>
+            <div v-else>
+              <p class="column">{{ key.column }} {{ $t("ponctuation.colon") }}</p>
+            </div>
 
             <p v-if="key.value" class="column">
               {{ key.value }}
@@ -47,11 +49,12 @@
 <script>
 import { ReferenceService } from "@/services/rest/ReferenceService";
 import { InternationalisationService } from "@/services/InternationalisationService";
+import ReferencesLink from "@/components/references/ReferencesLink.vue";
 
 export default {
   name: "ReferencesDynamicLink",
   emits: ["changedRefValues"],
-  components: {},
+  components: {ReferencesLink},
   props: {
     application: Object,
     referenceType: String,
