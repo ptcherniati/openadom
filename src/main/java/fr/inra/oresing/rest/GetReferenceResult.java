@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import lombok.Value;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -19,5 +20,6 @@ public class GetReferenceResult {
         String naturalKey;
         Map<String, Object> values;
         Map<String, Set<UUID>> refsLinkedTo;
+        Map<String,Map<String, List<String>>> referencingReference;
     }
 }

@@ -99,8 +99,46 @@ public class ReferenceValueRepository extends JsonTableInApplicationSchemaReposi
                 .map(l -> l.get(0))
                 .filter(o -> o.matches("[0-9]*|ALL"))
                 .orElse("ALL");
-        String query = "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) as json FROM "
-                + getTable().getSqlIdentifier() + " t, jsonb_each_text(t.refvalues) kv WHERE application=:applicationId::uuid AND referenceType=:refType";
+        String query = String.format("with referencingids as (%n" +
+                "select %n" +
+                "rr.referenceid referenceid, rr.referencesby referencesby, 'reference' \"type\", r2.referencetype \"name\"%n" +
+                "from %1$s.reference_reference rr%n" +
+                "left join %2$s r2 on rr.referenceid = r2.id%n" +
+                "union%n" +
+                "select %n" +
+                "dr.dataid referenceid, dr.referencesby referencesby, 'data' \"type\",  d2.datatype \"name\"%n" +
+                "from %1$s.data_reference dr%n" +
+                "left join %1$s.\"data\" d2 on dr.dataid = d2.id%n" +
+                "),%n" +
+                "agg1 as (%n" +
+                "select referenceid,referencesby,\"type\", array_agg(\"name\") agg%n" +
+                "from referencingids%n" +
+                "group by referenceid,referencesby,\"type\"%n" +
+                "),%n" +
+                "agg2 as (%n" +
+                " select referenceid,referencesby,%n" +
+                "         json_object_agg(%n" +
+                "            \"type\",%n" +
+                "            agg%n" +
+                "        ) agg%n" +
+                "    from agg1%n" +
+                "    group by referenceid,referencesby%n" +
+                "),\n" +
+                "agg3 as\n" +
+                "( select referencesby,\n" +
+                "         json_object_agg(\n" +
+                "            referenceid,\n" +
+                "            agg\n" +
+                "        ) agg\n" +
+                "    from agg2\n" +
+                "    group by referencesby\n" +
+                ")\n",getSchema().getSqlIdentifier(), getTable().getSqlIdentifier());
+        query += "SELECT DISTINCT '" + ReferenceValue.class.getName() + "' as \"@class\",  to_jsonb(t) ||  jsonb_build_object('referencingreferences',agg3.agg) as json \n" +
+                "FROM "
+                + getTable().getSqlIdentifier() + " t " +
+                "left join agg3 on agg3.referencesby = t.id,\n" +
+                "jsonb_each_text(t.refvalues) kv \n"+
+                "WHERE application=:applicationId::uuid AND referenceType=:refType\n";
         MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
                 .addValue("refType", refType);
 
