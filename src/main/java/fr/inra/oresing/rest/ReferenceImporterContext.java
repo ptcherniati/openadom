@@ -496,7 +496,7 @@ public class ReferenceImporterContext {
 
     public static abstract class ManyValuesStaticColumn extends Column {
 
-        private static final String CSV_CELL_SEPARATOR = ",";
+        public static final String CSV_CELL_SEPARATOR = ",";
 
         public ManyValuesStaticColumn(ReferenceColumn referenceColumn, ColumnPresenceConstraint presenceConstraint, ComputedValueUsage computedValueUsage) {
             super(referenceColumn, presenceConstraint, computedValueUsage);
@@ -514,10 +514,7 @@ public class ReferenceImporterContext {
         @Override
         public String getCsvCellContent(ReferenceDatum referenceDatum) {
             ReferenceColumnMultipleValue referenceColumnMultipleValue = (ReferenceColumnMultipleValue) referenceDatum.get(getReferenceColumn());
-            String csvCellContent = referenceColumnMultipleValue.getValues().stream()
-                    .peek(value -> Preconditions.checkState(!value.contains(CSV_CELL_SEPARATOR), value + " contient " + CSV_CELL_SEPARATOR))
-                    .collect(Collectors.joining(CSV_CELL_SEPARATOR));
-            return csvCellContent;
+            return referenceColumnMultipleValue.getCsvCellContent();
         }
     }
 
