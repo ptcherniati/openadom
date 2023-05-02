@@ -436,6 +436,7 @@
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.computedComponent])[1] }}
                 </span>
                 <span v-else>
+                  <!-- TODO ajout à faire de ReferencesManyLink -->
 <!--                  <ReferencesManyLink
                       v-if="Array.isArray(row[component.variable][component.component])"
                       :multiplicity="true"
@@ -449,7 +450,10 @@
                       v-if="getRefsLinkedToId(row, component)"
                       :application="application"
                       :reference-type="component.checker.referenceValues.referenceType"
-                      :value="row[component.variable][component.component]"
+                      :value="
+                        referenceLineCheckers[component.variable+'_'+component.component]?.referenceValues.hierarchicalKey.sql ?
+                        referenceLineCheckers[component.variable+'_'+component.component]?.referenceValues.hierarchicalKey.sql :
+                        row[component.variable][component.component]"
                       :loaded-references-by-key="{}"
                       :column-id="getDisplay(row, component.variable, component.component)"
                       :column-title="row[component.variable][component.component]"

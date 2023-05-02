@@ -34,7 +34,6 @@
                 :reference-type="referenceType"
                 :value="key.value"
             ></ReferencesLink>
-            <!-- TODO ajout à faire de ReferencesDynamicLink -->
             <ReferencesDynamicLink
                 v-if="!key.value.length && key.value.length!==0"
                 :info="!key.value.length && key.value.length!==0"
