@@ -73,6 +73,7 @@
     "reference-deletion-msg": "Vous allez supprimer le référentiel : {label}. Êtes-vous sûr ?",
     "delete": "Supprimer",
     "reference-csv-upload-error": "Une erreur s'est produite au téléversement du fichier csv",
+    "delete-reference-error": "Une erreur s'est produite lors de la suppression de la référence",
     "reference-updated": "Référentiel mis à jour",
     "data-updated": "Type de données mis à jour",
     "registered-user": "Compte utilisateur créé",

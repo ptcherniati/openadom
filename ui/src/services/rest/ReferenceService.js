@@ -28,4 +28,8 @@ export class ReferenceService extends Fetcher {
       file: refFile,
     });
   }
+
+  async deleteReference(applicationName, referenceId, params) {
+    return this.delete(`applications/${applicationName}/references/${referenceId}`, params);
+  }
 }

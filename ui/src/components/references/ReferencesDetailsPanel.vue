@@ -47,6 +47,8 @@
 import { AlertService } from "@/services/AlertService";
 import { Component, Prop, Vue } from "vue-property-decorator";
 import SidePanel from "../common/SidePanel.vue";
+import { ReferenceService } from "@/services/rest/ReferenceService";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
 
 @Component({
   components: { SidePanel },
@@ -60,6 +62,7 @@ export default class ReferencesDetailsPanel extends Vue {
   @Prop() tags;
 
   alertService = AlertService.INSTANCE;
+  referenceService = ReferenceService.INSTANCE;
 
   askDeletionConfirmation() {
     this.alertService.dialog(
@@ -71,8 +74,31 @@ export default class ReferencesDetailsPanel extends Vue {
     );
   }
 
-  deleteReference() {
+  async deleteReference() {
     console.log("DELETE", this.reference);
+    try {
+      await this.referenceService.deleteReference(this.applicationName, this.reference.label);
+      this.alertService.toastSuccess(this.$t("alert.reference-updated"));
+    } catch (errors) {
+      await this.checkMessageErrors(errors);
+    }
+  }
+
+  async checkMessageErrors(errors) {
+    if (errors.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
+      errors.content.then((value) => {
+        for (let i = 0; i < value.length; i++) {
+          this.errorsList[i] = value[i];
+        }
+        if (this.errorsList.length !== 0) {
+          this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
+        } else {
+          this.errorsMessages = this.errorsService.getErrorsMessages(errors);
+        }
+      });
+    } else {
+      this.alertService.toastError(this.$t("alert.delete-reference-error"), errors);
+    }
   }
 
   consultAuthorization() {
