@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- section pour visualisation un lien de référence -->
-    <a v-if="referenceType" class="column" @click="openReferenceDetail()">{{ columnId ? columnId : value }}</a>
+    <a v-if="referenceType" class="button inTable" @click="openReferenceDetail()">{{ columnId ? columnId : value }}</a>
     <p v-else class="column">{{ value }}</p>
 
     <!-- modal de visualisation d'une donnée de référence -->
@@ -58,11 +58,13 @@
 <script>
 import {ReferenceService} from "@/services/rest/ReferenceService";
 import { InternationalisationService } from "@/services/InternationalisationService";
+import ReferencesDynamicLink from "@/components/references/ReferencesDynamicLink.vue";
+import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 
 export default {
   name: "ReferencesLink",
   emits: ["changedRefValues"],
-  components: {},
+  components: {ReferencesManyLink, ReferencesDynamicLink},
   props: {
     application: Object,
     referenceType: String,
@@ -72,6 +74,11 @@ export default {
     loadedReferencesByKey: {
       type: Object,
     },
+    row: {
+      type: Object,
+    },
+    variable: String,
+    component: String,
     columnId: String,
     // loadedReferencesById: {
     //   type: Object,
@@ -166,4 +173,17 @@ export default {
 };
 </script>
 
-<style scoped></style>
+<style lang="scss" scoped>
+.button.inTable {
+  color: $dark;
+  background-color: transparent;
+  border: transparent;
+}
+
+.button.inTable:hover {
+  color: $dark;
+  background-color: transparent;
+  border: transparent;
+  text-decoration: underline;
+}
+</style>

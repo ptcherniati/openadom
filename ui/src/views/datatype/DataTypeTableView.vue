@@ -436,13 +436,27 @@
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.computedComponent])[1] }}
                 </span>
                 <span v-else>
-                  <a
-                    v-if="getRefsLinkedToId(row, component)"
-                    class="button inTable"
-                    @click="getReferenceValues(row, component)"
-                  >
-                    {{ getDisplay(row, component.variable, component.component) }}
-                  </a>
+<!--                  <ReferencesManyLink
+                      v-if="Array.isArray(row[component.variable][component.component])"
+                      :multiplicity="true"
+                      :info-values="row[component.variable][component.component]"
+                      :application="application"
+                      :reference-type="component.checker.referenceValues.referenceType"
+                      :loaded-references-by-key="{}"
+                      :column-id="getDisplay(row, component.variable, component.component)"
+                  ></ReferencesManyLink>-->
+                  <ReferencesLink
+                      v-if="getRefsLinkedToId(row, component)"
+                      :application="application"
+                      :reference-type="component.checker.referenceValues.referenceType"
+                      :value="row[component.variable][component.component]"
+                      :loaded-references-by-key="{}"
+                      :column-id="getDisplay(row, component.variable, component.component)"
+                      :column-title="row[component.variable][component.component]"
+                      :row="row"
+                      :variable="component.variable"
+                      :component="component.component"
+                  ></ReferencesLink>
                   <p
                     v-if="
                       !getRefsLinkedToId(row, component) &&
@@ -509,10 +523,12 @@ import { VariableComponentKey } from "@/model/application/VariableComponentKey";
 import { IntervalValues } from "@/model/application/IntervalValues";
 import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
 import draggable from "vuedraggable";
+import ReferencesLink from "@/components/references/ReferencesLink.vue";
+import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleInterval, draggable },
+  components: { PageView, SubMenu, CollapsibleInterval, draggable, ReferencesManyLink, ReferencesLink },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -740,7 +756,6 @@ export default class DataTypeTableView extends Vue {
   }
 
   async getReferenceValues(row, component) {
-    console.log(component);
     //let valueRefEnfant = row[component.variable][component.label];
     let valueRefParent = component.checker.referenceValues.hierarchicalKey.sql.split(".");
     let nameRefParent = Object.keys(component.checker.referenceValues.refsLinkedTo);

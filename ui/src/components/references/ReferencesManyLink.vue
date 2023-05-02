@@ -34,6 +34,16 @@
                 :reference-type="referenceType"
                 :value="key.value"
             ></ReferencesLink>
+            <!-- TODO ajout à faire de ReferencesDynamicLink -->
+            <ReferencesDynamicLink
+                v-if="!key.value.length && key.value.length!==0"
+                :info="!key.value.length && key.value.length!==0"
+                :info-values="key.value"
+                :application="application"
+                :reference-type="dynamicColumnReferences(key.value)"
+                :loaded-references-by-key="{}"
+                :column-id="key.value"
+            ></ReferencesDynamicLink>
           </div>
         </div>
       </div>
@@ -44,11 +54,13 @@
 <script>
 import {ReferenceService} from "@/services/rest/ReferenceService";
 import ReferencesLink from "@/components/references/ReferencesLink.vue";
+import ReferencesDynamicLink from "@/components/references/ReferencesDynamicLink.vue";
+
 
 export default {
   name: "ReferencesManyLink",
   emits: ["changedRefValues"],
-  components: {ReferencesLink},
+  components: {ReferencesLink, ReferencesDynamicLink},
   props: {
     application: Object,
     referenceType: String,
@@ -65,6 +77,7 @@ export default {
     // },
   },
   beforeCreate() {
+    this.$options.components.ReferencesDynamicLink = require("./ReferencesDynamicLink.vue").default;
     this.$options.components.ReferencesLink = require("./ReferencesLink.vue").default;
   },
   computed: {
@@ -95,6 +108,9 @@ export default {
   methods: {
     async getReferenceValuesByKey(applicationName, referenceType, value) {
       return this.referenceService.getReferenceValuesByKey(applicationName, referenceType, value);
+    },
+    dynamicColumnReferences(nameId) {
+      return this.application.references[this.referenceType].dynamicColumns[nameId].reference;
     },
     async openReferenceDetail() {
       this.isCardModalActive = false;
@@ -160,7 +176,7 @@ export default {
           });
       return showModal.length !== 0;
     },
-    showModal(/*columName, tablDynamicColumn*/) {
+    showModal() {
       this.isCardModalActive = true;
       if (this.currentReferenceDetail?.active) {
         this.currentReferenceDetail.active = false;
@@ -180,37 +196,6 @@ export default {
         }
       }
       console.log(this.modalArrayObj);
-      /*if (this.referencesDynamic) {
-        for (let i = 0; i < this.referencesDynamic.referenceValues.length; i++) {
-          let hierarchicalKey = this.referencesDynamic.referenceValues[i].hierarchicalKey;
-          for (let j = 0; j < this.modalArrayObj.length; j++) {
-            if (this.modalArrayObj[j][hierarchicalKey]) {
-              let column = this.referencesDynamic.referenceValues[i].values[this.display]
-                  ? this.referencesDynamic.referenceValues[i].values[this.display]
-                  : hierarchicalKey;
-              let value = this.modalArrayObj[j][hierarchicalKey];
-              this.modalArrayObj[j] = {...this.modalArrayObj[j], column: column, value: value};
-            }
-          }
-          for (let j = 0; j < tablDynamicColumn.length; j++) {
-            if (tablDynamicColumn[j] === hierarchicalKey) {
-              let column = this.referencesDynamic.referenceValues[i].values[this.display]
-                  ? this.referencesDynamic.referenceValues[i].values[this.display]
-                  : columName;
-              this.modalArrayObj[j] = {...this.modalArrayObj[j], column: column, value: hierarchicalKey};
-              /!*this.paramsForMany = { ...this.paramsForMany, row_id_:hierarchicalKey }
-              console.log(this.paramsForMany)
-              const reference = await this.referenceService.getReferenceValues(
-                  this.applicationName,
-                  columName,
-                  this.paramsForMany
-              );
-              console.log(reference)*!/
-            }
-          }
-        }
-        return this.modalArrayObj;
-      }*/
       /*return this.modalArrayObj;*/
     },
   },

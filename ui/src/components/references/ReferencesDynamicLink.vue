@@ -32,6 +32,15 @@
               :loaded-references-by-key="{}"
               :column-id="key.columnName"
             ></ReferencesLink>
+            <ReferencesManyLink
+                v-else-if="Array.isArray(key.column)"
+                :multiplicity="true"
+                :info-values="key.column"
+                :application="application"
+                :reference-type="referenceType"
+                :loaded-references-by-key="{}"
+                :column-id="key.columnName"
+            ></ReferencesManyLink>
             <div v-else>
               <p class="column">{{ key.column }} {{ $t("ponctuation.colon") }}</p>
             </div>
@@ -50,11 +59,12 @@
 import { ReferenceService } from "@/services/rest/ReferenceService";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import ReferencesLink from "@/components/references/ReferencesLink.vue";
+import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 
 export default {
   name: "ReferencesDynamicLink",
   emits: ["changedRefValues"],
-  components: {ReferencesLink},
+  components: {ReferencesManyLink, ReferencesLink},
   props: {
     application: Object,
     referenceType: String,
@@ -72,6 +82,7 @@ export default {
   },
   beforeCreate() {
     this.$options.components.ReferencesLink = require("./ReferencesLink.vue").default;
+    this.$options.components.ReferencesManyLink = require("./ReferencesManyLink.vue").default;
   },
   computed: {
     applicationName(){
