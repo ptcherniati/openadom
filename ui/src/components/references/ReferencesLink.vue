@@ -1,7 +1,10 @@
 <template>
   <div>
     <!-- section pour visualisation un lien de référence -->
-    <a v-if="referenceType" class="button inTable" @click="openReferenceDetail()">{{ columnId ? columnId : value }}</a>
+    <a v-if="referenceType" class="button inTable" @click="openReferenceDetail()">
+      {{ columnId ? columnId : value }}
+      <b-loading v-model="isLoading" :is-full-page="null"></b-loading>
+    </a>
     <p v-else class="column">{{ value }}</p>
 
     <!-- modal de visualisation d'une donnée de référence -->
@@ -106,6 +109,7 @@ export default {
       referenceService: ReferenceService.INSTANCE,
       refValues: {active: false},
       isCardModalActive: false,
+      isLoading: false,
     };
   },
   watch: {
@@ -118,6 +122,7 @@ export default {
       return this.referenceService.getReferenceValuesByKey(applicationName, referenceType, value);
     },
     async openReferenceDetail() {
+      this.isLoading = true;
       let refValues =
           this.refValues &&
           this.loadedReferencesByKey[this.referenceType] &&
@@ -164,6 +169,7 @@ export default {
         // hierarchicalKey,
         refValues,
       });
+      this.isLoading = false;
       return refValues;
     },
     dynamicColumnReferences(nameId) {

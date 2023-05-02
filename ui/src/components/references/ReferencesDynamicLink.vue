@@ -1,7 +1,7 @@
 <template>
   <div>
     <!-- section pour visualisation une Dynamique colonne-->
-    <span v-if="info">
+    <span v-if="info && showBtnTablDynamicColumn(infoValues)">
       <b-button
         icon-left="eye"
         rounded
@@ -10,6 +10,7 @@
         type="is-dark"
         @click="showModal()"
       >
+        <b-loading v-model="isLoading" :is-full-page="null"></b-loading>
       </b-button>
     </span>
     <!-- modal de multiplicity et dynamique colonne -->
@@ -103,6 +104,7 @@ export default {
       refValues: { active: false },
       isCardModalActive: false,
       modalArrayObj: {},
+      isLoading: false,
       display: "__display_" + window.localStorage.lang,
     };
   },
@@ -128,6 +130,7 @@ export default {
     },
 
     async showModal() {
+      this.isLoading = true;
       if (this.currentReferenceDetail?.active) {
         this.currentReferenceDetail.active = false;
       }
@@ -167,6 +170,7 @@ export default {
         modalArrayObj: this.modalArrayObj,
       });
       this.isCardModalActive = true;
+      this.isLoading = false;
       return this.modalArrayObj;
     },
 

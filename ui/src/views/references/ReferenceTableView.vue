@@ -42,54 +42,65 @@
           />
         </template>
         <b-table-column
+          searchable
           v-for="column in columns"
           :key="column.id"
-          v-slot="props"
           :field="column.id"
           :label="column.title"
           :sticky="column.key"
           sortable
         >
-          <ReferencesDynamicLink
-            v-if="info(column.id)"
-            :info="info(column.id)"
-            :info-values="props.row[column.id]"
-            :application="application"
-            :reference-type="column.reference"
-            :loaded-references-by-key="{}"
-            :column-id="column.id"
-          ></ReferencesDynamicLink>
-          <ReferencesManyLink
-            v-else-if="multiplicity(column.id, props.row[column.id])"
-            :multiplicity="multiplicity(column.id, props.row[column.id])"
-            :info-values="props.row[column.id]"
-            :application="application"
-            :reference-type="column.linkedTo"
-            :loaded-references-by-key="{}"
-            :column-id="column.id"
-          ></ReferencesManyLink>
-          <ReferencesLink
-            v-else-if="column.id !== '#'"
-            :application="application"
-            :reference-type="column.linkedTo"
-            :value="
+          <template #searchable="props">
+            <b-input
+              v-if="column.id !== '#'"
+              v-model="props.filters[props.column.field]"
+              :placeholder="$t('dataTypeAuthorizations.search')"
+              icon="search"
+              size="is-normal"
+            />
+          </template>
+          <template v-slot="props">
+            <ReferencesDynamicLink
+                v-if="info(column.id)"
+                :info="info(column.id)"
+                :info-values="props.row[column.id]"
+                :application="application"
+                :reference-type="column.reference"
+                :loaded-references-by-key="{}"
+                :column-id="column.id"
+            ></ReferencesDynamicLink>
+            <ReferencesManyLink
+                v-else-if="multiplicity(column.id, props.row[column.id])"
+                :multiplicity="multiplicity(column.id, props.row[column.id])"
+                :info-values="props.row[column.id]"
+                :application="application"
+                :reference-type="column.linkedTo"
+                :loaded-references-by-key="{}"
+                :column-id="column.id"
+            ></ReferencesManyLink>
+            <ReferencesLink
+                v-else-if="column.id !== '#'"
+                :application="application"
+                :reference-type="column.linkedTo"
+                :value="
               info(column.id) || multiplicity(column.id, props.row[column.id])
                 ? ''
                 : props.row[column.id]
             "
-            :loaded-references-by-key="{}"
-            :column-title="column.title"
-          ></ReferencesLink>
-          <b-collapse v-else :open="false">
-            <template #trigger>
-              <b-button
-                :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
-                aria-controls="contentIdForA11y1"
-                type="is-small"
-              />
-            </template>
-            {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
-          </b-collapse>
+                :loaded-references-by-key="{}"
+                :column-title="column.title"
+            ></ReferencesLink>
+            <b-collapse v-else :open="false">
+              <template #trigger>
+                <b-button
+                    :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
+                    aria-controls="contentIdForA11y1"
+                    type="is-small"
+                />
+              </template>
+              {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
+            </b-collapse>
+          </template>
         </b-table-column>
       </b-table>
     </div>
@@ -137,6 +148,7 @@ export default class ReferenceTableView extends Vue {
   columns = [];
   referenceValues = [];
   tableValues = [];
+  checkedRows = [];
 
   // show modal and cards
   isCardModalActive = false;
@@ -146,6 +158,16 @@ export default class ReferenceTableView extends Vue {
   display = "__display_" + window.localStorage.lang;
   loadedReferences = {};
   currentReferenceDetail = { active: false };
+
+  async deleteRowReference(rowId) {
+    console.log("DELETE", this.reference);
+    try {
+      await this.referenceService.deleteReference(this.applicationName, this.reference.label, rowId);
+      this.alertService.toastSuccess(this.$t("alert.reference-updated"));
+    } catch (errors) {
+      await this.checkMessageErrors(errors);
+    }
+  }
 
   async changePage(value) {
     this.params.offset = (value - 1) * this.params.limit;
