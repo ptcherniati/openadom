@@ -90,16 +90,29 @@
                 :loaded-references-by-key="{}"
                 :column-title="column.title"
             ></ReferencesLink>
-            <b-collapse v-else :open="false">
-              <template #trigger>
-                <b-button
-                    :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
-                    aria-controls="contentIdForA11y1"
-                    type="is-small"
-                />
-              </template>
-              {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
-            </b-collapse>
+            <div v-else class="columns">
+              <a @click="askDeletionConfirmation(referenceValues[tableValues.indexOf(props.row)].naturalKey)">
+                <b-icon
+                    icon="times-circle"
+                    class="clickable"
+                    size="is-small"
+                    type="is-danger"
+                >
+                </b-icon>
+              </a>
+              <b-collapse
+                  :open="false"
+                  class="column">
+                <template #trigger>
+                  <b-button
+                      :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
+                      aria-controls="contentIdForA11y1"
+                      type="is-small"
+                  />
+                </template>
+                {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
+              </b-collapse>
+            </div>
           </template>
         </b-table-column>
       </b-table>
@@ -120,6 +133,7 @@ import { DownloadDatasetQuery } from "@/model/application/DownloadDatasetQuery";
 import ReferencesLink from "@/components/references/ReferencesLink.vue";
 import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 import ReferencesDynamicLink from "@/components/references/ReferencesDynamicLink.vue";
+import { HttpStatusCodes } from "@/utils/HttpUtils";
 
 @Component({
   components: { PageView, SubMenu, ReferencesLink, ReferencesManyLink, ReferencesDynamicLink },
@@ -159,13 +173,41 @@ export default class ReferenceTableView extends Vue {
   loadedReferences = {};
   currentReferenceDetail = { active: false };
 
+
+  askDeletionConfirmation(rowId) {
+    this.alertService.dialog(
+        this.$t("alert.warning"),
+        this.$t("alert.reference-deletion-msg", { label: rowId }),
+        this.$t("alert.delete"),
+        "is-danger",
+        () => this.deleteRowReference(rowId)
+    );
+  }
+
   async deleteRowReference(rowId) {
-    console.log("DELETE", this.reference);
+    console.log(rowId);
     try {
-      await this.referenceService.deleteReference(this.applicationName, this.reference.label, rowId);
+      await this.referenceService.deleteReferenceValuesByKey(this.applicationName, this.reference.label, rowId);
       this.alertService.toastSuccess(this.$t("alert.reference-updated"));
     } catch (errors) {
       await this.checkMessageErrors(errors);
+    }
+  }
+
+  async checkMessageErrors(errors) {
+    if (errors.httpResponseCode === HttpStatusCodes.BAD_REQUEST) {
+      errors.content.then((value) => {
+        for (let i = 0; i < value.length; i++) {
+          this.errorsList[i] = value[i];
+        }
+        if (this.errorsList.length !== 0) {
+          this.errorsMessages = this.errorsService.getCsvErrorsMessages(this.errorsList);
+        } else {
+          this.errorsMessages = this.errorsService.getErrorsMessages(errors);
+        }
+      });
+    } else {
+      this.alertService.toastError(this.$t("alert.delete-reference-error"), errors);
     }
   }
 

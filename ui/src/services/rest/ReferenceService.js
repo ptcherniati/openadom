@@ -29,6 +29,10 @@ export class ReferenceService extends Fetcher {
     });
   }
 
+  async deleteReferenceValuesByKey(applicationName, referenceId, referenceKey) {
+    let params = { _row_key_: referenceKey };
+    return this.delete(`applications/${applicationName}/references/${referenceId}`, params);
+  }
   async deleteReference(applicationName, referenceId, params) {
     return this.delete(`applications/${applicationName}/references/${referenceId}`, params);
   }

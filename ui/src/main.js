@@ -72,6 +72,7 @@ import {
   faFloppyDisk as farFloppyDisk,
   faMinusSquare as farMinusSquare,
   faSquare as farSquare,
+  faTimesCircle as farTimesCircle,
 } from "@fortawesome/free-regular-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/vue-fontawesome";
 import "@/style/global.scss";
@@ -86,7 +87,7 @@ import "vee-validate";
 import { confirmed, required } from "vee-validate/dist/rules";
 import { extend } from "vee-validate";
 
-library.add(farFloppyDisk, farCalendarDays, farCalendar, farSquare, farMinusSquare, farCheckSquare);
+library.add(farFloppyDisk, farCalendarDays, farCalendar, farSquare, farMinusSquare, farCheckSquare, farTimesCircle);
 library.add(
   faUsersCog,
   faLink,
