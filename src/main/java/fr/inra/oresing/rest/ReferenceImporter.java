@@ -5,10 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.common.primitives.Ints;
 import fr.inra.oresing.ValidationLevel;
-import fr.inra.oresing.checker.DateLineChecker;
-import fr.inra.oresing.checker.InvalidDatasetContentException;
-import fr.inra.oresing.checker.Multiplicity;
-import fr.inra.oresing.checker.ReferenceLineChecker;
+import fr.inra.oresing.checker.*;
 import fr.inra.oresing.model.*;
 import fr.inra.oresing.model.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.persistence.Ltree;
@@ -262,6 +259,22 @@ abstract class ReferenceImporter {
                         throw Multiplicity.getError(multiplicity);
                 }
                 referenceDatum.put(referenceColumn, referenceColumnNewValue);
+            } else if (lineChecker instanceof IntegerChecker) {
+                final ReferenceColumn referenceColumn = (ReferenceColumn) ((IntegerChecker) lineChecker).getTarget();
+                if (lineChecker.getConfiguration().getMultiplicity() == Multiplicity.MANY) {
+                    final Set<Integer> valueToStoreInDatabase = referenceDatumBeforeChecking.getValuesToCheck(referenceColumn).stream()
+                            .map(Integer::parseInt)
+                            .collect(Collectors.toSet());
+                    referenceDatum.put(referenceColumn, new ReferenceColumnMultipleValue(valueToStoreInDatabase));
+                }
+            } else if (lineChecker instanceof FloatChecker) {
+                final ReferenceColumn referenceColumn = (ReferenceColumn) ((FloatChecker) lineChecker).getTarget();
+                if (lineChecker.getConfiguration().getMultiplicity() == Multiplicity.MANY) {
+                    final Set<Float> valueToStoreInDatabase = referenceDatumBeforeChecking.getValuesToCheck(referenceColumn).stream()
+                            .map(Float::parseFloat)
+                            .collect(Collectors.toSet());
+                    referenceDatum.put(referenceColumn, new ReferenceColumnMultipleValue(valueToStoreInDatabase));
+                }
             }
             List<CsvRowValidationCheckResult> checkerErrors = validationCheckResults.stream()
                     .filter(validationCheckResult -> !validationCheckResult.isSuccess())

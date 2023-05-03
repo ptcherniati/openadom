@@ -622,11 +622,11 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker.bug_reference1.referenceLineChecker.referenceValues", Matchers.hasKey("tutu__tutu2")))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker.bug_reference1.referenceLineChecker.referenceValues", Matchers.hasKey("toto__toto1")))
                     .andExpect(jsonPath("$.checkedFormatVariableComponents.ReferenceLineChecker.bug_reference1.referenceLineChecker.referenceValues", Matchers.hasKey("toto__toto2")))
-                    .andExpect(jsonPath("$.rows[0].values.bug.dates", Matchers.is("[date:2002-01-23T00:00:00:23/01/2002,24/01/2002,date:2002-01-24T00:00:00:23/01/2002,24/01/2002]")))
-                    .andExpect(jsonPath("$.rows[0].values.bug.projets", Matchers.is("1,2")))
-                    .andExpect(jsonPath("$.rows[0].values.bug.fichiers", Matchers.is("file1,file2")))
-                    .andExpect(jsonPath("$.rows[0].values.bug.durations", Matchers.is("3.2,5.4")))
-                    .andExpect(jsonPath("$.rows[0].values.bug.reference1", Matchers.is("toto__toto1,tutu__tutu1")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.dates", Matchers.is("[\"date:2002-01-23T00:00:00:23/01/2002,24/01/2002\",\"date:2002-01-24T00:00:00:23/01/2002,24/01/2002\"]")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.projets", Matchers.is("[1,2]")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.fichiers", Matchers.is("[\"file1\",\"file2\"]")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.durations", Matchers.is("[3.2,5.4]")))
+                    .andExpect(jsonPath("$.rows[0].values.bug.reference1", Matchers.is("[\"toto__toto1\",\"tutu__tutu1\"]")))
                     .andReturn().getResponse().getContentAsString();
         }
     }

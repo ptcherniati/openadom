@@ -617,27 +617,62 @@ public class OreSiService {
                             if (validationCheckResult instanceof DateValidationCheckResult) {
                                 VariableComponentKey variableComponentKey = (VariableComponentKey) ((DateValidationCheckResult) validationCheckResult).getTarget();
                                 dateValidationCheckResultImmutableMap.put(variableComponentKey, (DateValidationCheckResult) validationCheckResult);
-                            }
-                            if (validationCheckResult instanceof ReferenceValidationCheckResult) {
+                            } else if (validationCheckResult instanceof ReferenceValidationCheckResult) {
                                 ReferenceLineCheckerConfiguration configuration = (ReferenceLineCheckerConfiguration) lineChecker.getConfiguration();
-                                if (configuration.getTransformation().getGroovy() != null) {
-                                    final Set<Ltree> matchedReferenceHierarchicalKeys = ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey();
-                                    datum.put(
-                                            (VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(),
-                                            matchedReferenceHierarchicalKeys
-                                                    .stream()
-                                                    .map(Ltree::getSql)
-                                                    .collect(Collectors.joining(
-                                                            ",",
-                                                            matchedReferenceHierarchicalKeys.size() > 1 ? "[" : "",
-                                                            matchedReferenceHierarchicalKeys.size() > 1 ? "]" : "")
-                                                    )
-                                    );
-                                }
+                                final Set<Ltree> matchedReferenceHierarchicalKeys = ((ReferenceValidationCheckResult) validationCheckResult).getMatchedReferenceHierarchicalKey();
+                                datum.put(
+                                        (VariableComponentKey) ((ReferenceValidationCheckResult) validationCheckResult).getTarget(),
+                                        matchedReferenceHierarchicalKeys
+                                                .stream()
+                                                .map(Ltree::getSql)
+                                                .map(s -> String.format(
+                                                        matchedReferenceHierarchicalKeys.size() > 1 ?
+                                                                "\"%s\"" :
+                                                                "%s",
+                                                        s)
+                                                )
+                                                .collect(Collectors.joining(
+                                                        ",",
+                                                        matchedReferenceHierarchicalKeys.size() > 1 ? "[" : "",
+                                                        matchedReferenceHierarchicalKeys.size() > 1 ? "]" : "")
+                                                )
+                                );
                                 ReferenceValidationCheckResult referenceValidationCheckResult = (ReferenceValidationCheckResult) validationCheckResult;
                                 VariableComponentKey variableComponentKey = (VariableComponentKey) referenceValidationCheckResult.getTarget();
                                 Set<UUID> referenceId = referenceValidationCheckResult.getMatchedReferenceId();
                                 refsLinkedTo.put(variableComponentKey, referenceId);
+                            } else if (lineChecker instanceof IntegerChecker) {
+                                IntegerChecker integerChecker = (IntegerChecker) lineChecker;
+                                final VariableComponentKey vc = (VariableComponentKey) integerChecker.getTarget();
+                                final String s = datum.get(vc);
+                                if (s!=null && s.contains(ReferenceImporterContext.ManyValuesStaticColumn.CSV_CELL_SEPARATOR)) {
+                                    datum.put(
+                                            vc,
+                                            String.format("[%s]", s));
+                                }
+                            } else if (lineChecker instanceof FloatChecker) {
+                                FloatChecker floatChecker = (FloatChecker) lineChecker;
+                                final VariableComponentKey vc = (VariableComponentKey) floatChecker.getTarget();
+                                final String s = datum.get(vc);
+                                if (s!=null && s.contains(ReferenceImporterContext.ManyValuesStaticColumn.CSV_CELL_SEPARATOR)) {
+                                    datum.put(
+                                            vc,
+                                            String.format("[%s]", s));
+                                }
+                            } else if (lineChecker instanceof RegularExpressionChecker) {
+                                RegularExpressionChecker regularExpressionChecker = (RegularExpressionChecker) lineChecker;
+                                final VariableComponentKey vc = (VariableComponentKey) regularExpressionChecker.getTarget();
+                                final String s = datum.get(vc);
+                                if (s!=null && s.contains(ReferenceImporterContext.ManyValuesStaticColumn.CSV_CELL_SEPARATOR)) {
+                                    datum.put(
+                                            vc,
+                                            String.format(
+                                                    "[%s]",
+                                                    Arrays.stream(s.split(ReferenceImporterContext.ManyValuesStaticColumn.CSV_CELL_SEPARATOR))
+                                                            .map(u -> String.format("\"%s\"", u))
+                                                            .collect(Collectors.joining(ReferenceImporterContext.ManyValuesStaticColumn.CSV_CELL_SEPARATOR)))
+                                    );
+                                }
                             }
                         } else {
                             rowErrors.add(new CsvRowValidationCheckResult(validationCheckResult, rowWithData.getLineNumber()));
@@ -703,7 +738,7 @@ public class OreSiService {
                         final boolean isMany = dateValidationCheckResultImmutableMap.get(variableComponentKey).getLocalDateTime().size() > 1;
                         final String finalValue = value;
                         value = dateValidationCheckResultImmutableMap.get(variableComponentKey).getLocalDateTime().stream()
-                                .map(date -> String.format("date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), finalValue))
+                                .map(date -> String.format(isMany ? "\"date:%s:%s\"" : "date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), finalValue))
                                 .collect(Collectors.joining(",", isMany ? "[" : "", isMany ? "]" : ""));
                     }
                     toStore.computeIfAbsent(variable, k -> new LinkedHashMap<>()).put(component, value);
@@ -1660,7 +1695,7 @@ public class OreSiService {
                 .orElseGet(AdditionalBinaryFile::new);
         additionalBinaryFile.setFileInfos(createAdditionalFileRequest.getFields());
         additionalBinaryFile.setApplication(application.getId());
-        additionalBinaryFile.setForApplication(Optional.ofNullable(createAdditionalFileRequest.getForApplication()).orElse( Boolean.FALSE));
+        additionalBinaryFile.setForApplication(Optional.ofNullable(createAdditionalFileRequest.getForApplication()).orElse(Boolean.FALSE));
         if (file != null) {
             additionalBinaryFile.setSize(file.getSize());
             additionalBinaryFile.setFileName(file.getOriginalFilename());
