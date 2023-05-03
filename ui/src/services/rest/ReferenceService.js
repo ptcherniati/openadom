@@ -14,6 +14,10 @@ export class ReferenceService extends Fetcher {
       return this.get(`applications/${applicationName}/references/${referenceId}`);
     }
   }
+  async getReferenceValuesByKey(applicationName, referenceType, referenceKey) {
+    let params = { _row_key_: referenceKey };
+    return this.get(`applications/${applicationName}/references/${referenceType}`, params);
+  }
 
   async getReferenceCsv(applicationName, referenceId) {
     return this.get(`applications/${applicationName}/references/${referenceId}/csv`, {}, true);
@@ -23,5 +27,9 @@ export class ReferenceService extends Fetcher {
     return this.post(`applications/${applicationName}/references/${referenceId}`, {
       file: refFile,
     });
+  }
+
+  async deleteReference(applicationName, referenceId, params) {
+    return this.delete(`applications/${applicationName}/references/${referenceId}`, params);
   }
 }

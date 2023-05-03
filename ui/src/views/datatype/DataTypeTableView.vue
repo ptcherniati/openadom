@@ -2,14 +2,14 @@
 <template>
   <PageView class="with-submenu">
     <SubMenu
+      :aria-label="$t('menu.aria-sub-menu')"
       :paths="subMenuPaths"
       :root="application.localName || application.title"
       role="navigation"
-      :aria-label="$t('menu.aria-sub-menu')"
     />
 
     <h1 class="title main-title">{{ application.localDatatypeName || dataTypeId }}</h1>
-    <div class="columns" v-if="!showSort && !showFilter">
+    <div v-if="!showSort && !showFilter" class="columns">
       <div
         v-if="
           this.params.variableComponentOrderBy.length !== 0 ||
@@ -18,17 +18,17 @@
         class="column is-5-desktop is-12-tablet"
       >
         {{ $t("dataTypesManagement.sorted") }} {{ $t("ponctuation.colon") }}
-        <b-field grouped group-multiline>
+        <b-field group-multiline grouped>
           <b-taglist>
             <div
               v-for="(variableComponent, index) in this.params.variableComponentOrderBy"
               :key="index"
             >
               <b-tag
-                type="is-dark"
-                size="is-medium"
                 rounded
+                size="is-medium"
                 style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
+                type="is-dark"
               >
                 {{ variableComponent.variableComponentKey.variable }}
                 {{ $t("ponctuation.colon") }}
@@ -48,15 +48,15 @@
         class="column is-5-desktop is-12-tablet"
       >
         {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
-        <b-field grouped group-multiline>
+        <b-field group-multiline grouped>
           <b-taglist>
             <div
               v-for="(variableComponent, index) in this.params.variableComponentFilters"
               :key="index"
             >
               <b-tag
-                size="is-medium"
                 rounded
+                size="is-medium"
                 style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
               >
                 {{ variableComponent.variableComponentKey.variable }}
@@ -73,41 +73,68 @@
     <div class="columns">
       <div class="column is-5-desktop is-4-tablet">
         <b-button
-          icon-left="sort-amount-down"
           :label="$t('applications.trier')"
+          icon-left="sort-amount-down"
+          outlined
           type="is-dark"
           @click="showSort = !showSort"
-          outlined
         ></b-button>
       </div>
       <div class="column is-5-desktop is-4-tablet">
         <b-button
-          icon-left="filter"
           :label="$t('applications.filter')"
+          icon-left="filter"
+          inverted
+          outlined
           type="is-light"
           @click="showFilter = !showFilter"
-          outlined
-          inverted
         ></b-button>
       </div>
       <div class="column is-2-desktop is-4-tablet">
-        <b-button icon-left="redo" type="is-danger" @click="reInit" outlined
+        <b-button icon-left="redo" outlined type="is-danger" @click="reInit"
           >{{ $t("dataTypesManagement.réinitialiser") }}
-          {{ $t("dataTypesManagement.all") }}</b-button
-        >
+          {{ $t("dataTypesManagement.all") }}
+        </b-button>
       </div>
     </div>
     <b-modal v-model="currentReferenceDetail.active" custom-class="referenceDetails">
       <div class="card">
         <header class="card-header is-align-content-center">
-          <p class="card-header-title">{{ currentReferenceDetail.reference }}</p>
+          <p class="card-header-title">
+            {{ currentReferenceDetail.reference }}
+          </p>
         </header>
         <div class="card-content">
           <div class="content is-align-content-center">
-            <b-table
-              :columns="currentReferenceDetail.columns"
-              :data="currentReferenceDetail.data"
-            />
+            <b-table :data="currentReferenceDetail.data">
+              <b-table-column
+                v-for="column in currentReferenceDetail.columns"
+                :key="column.id"
+                v-slot="props"
+              >
+                <span v-for="(refParent, indx) in currentReferenceDetail.refParent" :key="indx">
+                  <a v-if="showLinkRefParent(refParent.valueRefParent, props.row[column.field])">
+                    {{ props.row[column.field] }}
+                  </a>
+                  <p
+                    v-else-if="
+                      !props.row[column.field].length && props.row[column.field].length !== 0
+                    "
+                  >
+                    <b-button
+                      v-if="showBtnTablDynamicColumn(props.row[column.field])"
+                      icon-left="eye"
+                      rounded
+                      size="is-small"
+                      style="height: inherit"
+                      type="is-dark"
+                      @click="showModal(column.field, props.row[column.field])"
+                    />
+                  </p>
+                  <p v-else>{{ props.row[column.field] }}</p>
+                </span>
+              </b-table-column>
+            </b-table>
           </div>
         </div>
       </div>
@@ -125,9 +152,9 @@
             <b-tabs
               v-model="activeTab"
               :multiline="true"
-              type="is-boxed"
               position="is-centered"
               style="text-transform: capitalize; text-decoration: none"
+              type="is-boxed"
             >
               <template v-for="variable in variables" class="row variableComponent">
                 <b-tab-item
@@ -185,12 +212,12 @@
                 class="row"
               >
                 <div
-                  class="control column"
-                  style="padding: 6px"
                   :id="
                     variableComponent.variableComponentKey.variable +
                     variableComponent.variableComponentKey.component
                   "
+                  class="control column"
+                  style="padding: 6px"
                 >
                   <div class="tags has-addons">
                     <span class="tag is-dark grape" style="font-size: 1rem">
@@ -220,16 +247,16 @@
             <div class="row">
               <div class="columns">
                 <div class="column">
-                  <b-button icon-left="redo" expanded type="is-danger" @click="clearOrder" outlined
+                  <b-button expanded icon-left="redo" outlined type="is-danger" @click="clearOrder"
                     >{{ $t("dataTypesManagement.réinitialiser") }}
-                    {{ $t("dataTypesManagement.tri") }}</b-button
-                  >
+                    {{ $t("dataTypesManagement.tri") }}
+                  </b-button>
                 </div>
                 <div class="column">
-                  <b-button icon-left="check" type="is-dark" expanded @click="initDatatype" outlined
+                  <b-button expanded icon-left="check" outlined type="is-dark" @click="initDatatype"
                     >{{ $t("dataTypesManagement.validate") }}
-                    {{ $t("dataTypesManagement.tri") }}</b-button
-                  >
+                    {{ $t("dataTypesManagement.tri") }}
+                  </b-button>
                 </div>
               </div>
             </div>
@@ -241,15 +268,15 @@
       <h2>{{ $t("applications.filter") }}</h2>
       <div class="columns is-multiline">
         <div
-          class="column is-2-widescreen is-6-desktop is-12-tablet"
           v-for="(variable, index) in variables"
           :key="variable.id"
           :variable="variable.id"
+          class="column is-2-widescreen is-6-desktop is-12-tablet"
         >
           <b-collapse
-            class="card"
-            animation="slide"
             :open="isOpen === index"
+            animation="slide"
+            class="card"
             @open="isOpen = index"
           >
             <template #trigger="props">
@@ -258,17 +285,17 @@
                   {{ variable.id }}
                 </p>
                 <a class="card-header-icon">
-                  <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"> </b-icon>
+                  <b-icon :icon="props.open ? 'chevron-up' : 'chevron-down'"></b-icon>
                 </a>
               </div>
             </template>
             <div class="card-content" style="padding-bottom: 12px; padding-top: 12px">
               <div
-                class="content"
                 v-for="(component, index) in variableComponents"
                 :key="`${index}`"
                 :component="component.component"
                 :variable="component.variable"
+                class="content"
                 style="margin-bottom: 10px"
               >
                 <b-field v-if="variable.id === component.variable" :label="component.component">
@@ -279,14 +306,14 @@
                     ></CollapsibleInterval>
                   </b-field>
                   <b-input
-                    class="is-primary"
                     v-model="search[component.variable + '_' + component.component]"
-                    icon="search"
                     :placeholder="$t('dataTypeAuthorizations.search')"
-                    type="search"
                     autocomplete="off"
-                    @blur="addVariableSearch(component)"
+                    class="is-primary"
+                    icon="search"
                     size="is-small"
+                    type="search"
+                    @blur="addVariableSearch(component)"
                   ></b-input>
                 </b-field>
               </div>
@@ -297,10 +324,10 @@
       <b-field>
         <b-switch
           v-model="params.variableComponentFilters.isRegex"
+          :false-value="$t('dataTypesManagement.refuse')"
+          :true-value="$t('dataTypesManagement.accepted')"
           passive-type="is-dark"
           type="is-primary"
-          :true-value="$t('dataTypesManagement.accepted')"
-          :false-value="$t('dataTypesManagement.refuse')"
         >
           {{ $t("ponctuation.regEx") }} {{ params.variableComponentFilters.isRegex }}
         </b-switch>
@@ -308,15 +335,15 @@
       <div class="columns">
         <div class="column is-8-widescreen is-6-desktop">
           {{ $t("dataTypesManagement.filtered") }} {{ $t("ponctuation.colon") }}
-          <b-field grouped group-multiline>
+          <b-field group-multiline grouped>
             <b-taglist>
               <div
                 v-for="(variableComponent, index) in this.params.variableComponentFilters"
                 :key="index"
               >
                 <b-tag
-                  size="is-medium"
                   rounded
+                  size="is-medium"
                   style="margin-left: 10px; margin-right: 10px; margin-bottom: 10px"
                 >
                   {{ variableComponent.variableComponentKey.variable }}
@@ -330,17 +357,17 @@
           </b-field>
         </div>
         <div class="column is-2-widescreen is-3-desktop">
-          <b-button icon-left="redo" expanded type="is-danger" outlined @click="clearSearch"
+          <b-button expanded icon-left="redo" outlined type="is-danger" @click="clearSearch"
             >{{ $t("dataTypesManagement.réinitialiser") }}
-            {{ $t("dataTypesManagement.filtre") }}</b-button
-          >
+            {{ $t("dataTypesManagement.filtre") }}
+          </b-button>
         </div>
         <div class="column is-2-widescreen is-3-desktop">
           <p class="control">
-            <b-button icon-left="check" type="is-dark" expanded outlined @click="addSearch"
+            <b-button expanded icon-left="check" outlined type="is-dark" @click="addSearch"
               >{{ $t("dataTypesManagement.validate") }}
-              {{ $t("dataTypesManagement.filtre") }}</b-button
-            >
+              {{ $t("dataTypesManagement.filtre") }}
+            </b-button>
           </p>
         </div>
       </div>
@@ -384,11 +411,11 @@
           <tbody>
             <tr v-for="(row, rowIndex) in rows" :key="row.rowId" :rowId="row.rowId">
               <td
-                style="text-align: center; vertical-align: middle"
                 v-for="(component, index) in variableComponents"
                 :key="`row_${rowIndex}-${index}`"
                 :component="component.component"
                 :variable="component.variable"
+                style="text-align: center; vertical-align: middle"
               >
                 <span
                   v-if="
@@ -409,13 +436,31 @@
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.computedComponent])[1] }}
                 </span>
                 <span v-else>
-                  <a
-                    class="button inTable"
-                    v-if="getRefsLinkedToId(row, component)"
-                    @click="getReferenceValues(row, component)"
-                  >
-                    {{ getDisplay(row, component.variable, component.component) }}
-                  </a>
+                  <!-- TODO ajout à faire de ReferencesManyLink -->
+<!--                  <ReferencesManyLink
+                      v-if="Array.isArray(row[component.variable][component.component])"
+                      :multiplicity="true"
+                      :info-values="row[component.variable][component.component]"
+                      :application="application"
+                      :reference-type="component.checker.referenceValues.referenceType"
+                      :loaded-references-by-key="{}"
+                      :column-id="getDisplay(row, component.variable, component.component)"
+                  ></ReferencesManyLink>-->
+                  <ReferencesLink
+                      v-if="getRefsLinkedToId(row, component)"
+                      :application="application"
+                      :reference-type="component.checker.referenceValues.referenceType"
+                      :value="
+                        referenceLineCheckers[component.variable+'_'+component.component]?.referenceValues.hierarchicalKey.sql ?
+                        referenceLineCheckers[component.variable+'_'+component.component]?.referenceValues.hierarchicalKey.sql :
+                        row[component.variable][component.component]"
+                      :loaded-references-by-key="{}"
+                      :column-id="getDisplay(row, component.variable, component.component)"
+                      :column-title="row[component.variable][component.component]"
+                      :row="row"
+                      :variable="component.variable"
+                      :component="component.component"
+                  ></ReferencesLink>
                   <p
                     v-if="
                       !getRefsLinkedToId(row, component) &&
@@ -440,27 +485,27 @@
       </div>
       <b-pagination
         v-model="currentPage"
-        :per-page="params.limit"
-        :total="totalRows"
-        role="navigation"
-        :aria-label="$t('menu.aria-pagination')"
         :aria-current-label="$t('menu.aria-curent-page')"
+        :aria-label="$t('menu.aria-pagination')"
         :aria-next-label="$t('menu.aria-next-page')"
         :aria-previous-label="$t('menu.aria-previous-page')"
+        :per-page="params.limit"
+        :rounded="true"
+        :total="totalRows"
         order="is-centered"
         range-after="3"
         range-before="3"
-        :rounded="true"
+        role="navigation"
         @change="changePage"
       >
       </b-pagination>
       <div class="buttons" style="margin-top: 16px">
         <b-button
+          style="margin-bottom: 15px; float: right"
           type="is-primary"
           @click.prevent="downloadResultSearch"
-          style="margin-bottom: 15px; float: right"
-          >{{ $t("referencesManagement.download") }}</b-button
-        >
+          >{{ $t("referencesManagement.download") }}
+        </b-button>
       </div>
     </div>
   </PageView>
@@ -482,10 +527,12 @@ import { VariableComponentKey } from "@/model/application/VariableComponentKey";
 import { IntervalValues } from "@/model/application/IntervalValues";
 import { VariableComponentOrderBy } from "@/model/application/VariableComponentOrderBy";
 import draggable from "vuedraggable";
+import ReferencesLink from "@/components/references/ReferencesLink.vue";
+import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleInterval, draggable },
+  components: { PageView, SubMenu, CollapsibleInterval, draggable, ReferencesManyLink, ReferencesLink },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -548,6 +595,60 @@ export default class DataTypeTableView extends Vue {
     ];
   }
 
+  showBtnTablDynamicColumn(tablDynamicColumn) {
+    let showModal = Object.entries(tablDynamicColumn)
+      .filter((a) => a[1])
+      .map(function (a) {
+        let obj = {};
+        obj[a[0]] = a[1];
+        return obj;
+      });
+    return showModal.length !== 0;
+  }
+  showLinkRefParent(valueRefHierarchicalKeys, value) {
+    for (let i = 0; valueRefHierarchicalKeys.length >= i; i++) {
+      if (valueRefHierarchicalKeys[i] === value) {
+        return true;
+      }
+    }
+  }
+
+  async showModal(columName, tablDynamicColumn) {
+    this.isCardModalActive = true;
+    this.currentReferenceDetail.active = false;
+    this.modalArrayObj = Object.entries(tablDynamicColumn)
+      .filter((a) => a[1])
+      .map(function (a) {
+        let obj = {};
+        obj[a[0]] = a[1];
+        return obj;
+      });
+    if (this.referencesDynamic) {
+      for (let i = 0; i < this.referencesDynamic.referenceValues.length; i++) {
+        let hierarchicalKey = this.referencesDynamic.referenceValues[i].hierarchicalKey;
+        for (let j = 0; j < this.modalArrayObj.length; j++) {
+          if (this.modalArrayObj[j][hierarchicalKey]) {
+            let column = this.referencesDynamic.referenceValues[i].values[this.display]
+              ? this.referencesDynamic.referenceValues[i].values[this.display]
+              : hierarchicalKey;
+            let value = this.modalArrayObj[j][hierarchicalKey];
+            this.modalArrayObj[j] = { ...this.modalArrayObj[j], column: column, value: value };
+          }
+        }
+        for (let j = 0; j < tablDynamicColumn.length; j++) {
+          if (tablDynamicColumn[j] === hierarchicalKey) {
+            let value = this.referencesDynamic.referenceValues[i].values[this.display]
+              ? this.referencesDynamic.referenceValues[i].values[this.display]
+              : columName;
+            this.modalArrayObj[j] = { ...this.modalArrayObj[j], value: value };
+          }
+        }
+      }
+      return this.modalArrayObj;
+    }
+    return this.modalArrayObj;
+  }
+
   async reInit() {
     this.params = new DownloadDatasetQuery({
       application: null,
@@ -559,7 +660,7 @@ export default class DataTypeTableView extends Vue {
       variableComponentFilters: [],
       variableComponentOrderBy: [],
     });
-    window.location.reload();
+    //window.location.reload();
     this.initDatatype();
   }
 
@@ -657,28 +758,27 @@ export default class DataTypeTableView extends Vue {
       row[component.variable][component.computedComponent];
     return translation;
   }
+
   async getReferenceValues(row, component) {
+    //let valueRefEnfant = row[component.variable][component.label];
+    let valueRefParent = component.checker.referenceValues.hierarchicalKey.sql.split(".");
+    let nameRefParent = Object.keys(component.checker.referenceValues.refsLinkedTo);
+    let idRefParent = component.checker.referenceValues.refsLinkedTo;
     const rowId = this.getRefsLinkedToId(row, component);
+    console.log(rowId);
     const refType = component.checker.referenceLineChecker.refType;
-    const key = component.key;
+    //const key = component.key;
     if (!this.loadedReferences[rowId]) {
-      let refvalues;
-      if (this.referenceLineCheckers[key].referenceValues) {
-        refvalues =
-          this.referenceLineCheckers[key].referenceValues.refValues.evaluationContext.datum;
+      let params = { _row_id_: [rowId] };
+      if (!refType) {
+        params.any = true;
       }
-      if (!refvalues) {
-        let params = { _row_id_: [rowId] };
-        if (!refType) {
-          params.any = true;
-        }
-        const reference = await this.referenceService.getReferenceValues(
-          this.applicationName,
-          refType,
-          params
-        );
-        refvalues = reference.referenceValues[0].values;
-      }
+      const reference = await this.referenceService.getReferenceValues(
+        this.applicationName,
+        refType,
+        params
+      );
+      let refvalues = reference.referenceValues[0].values;
       const data = Object.entries(refvalues)
         .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))
         .reduce((acc, entry) => {
@@ -700,6 +800,13 @@ export default class DataTypeTableView extends Vue {
         ],
         active: true,
         reference: refType,
+        refParent: [
+          {
+            valueRefParent: valueRefParent,
+            nameRefParent: nameRefParent,
+            idRefParent: idRefParent,
+          },
+        ],
       };
       this.loadedReferences = {
         ...this.loadedReferences,
@@ -740,6 +847,7 @@ export default class DataTypeTableView extends Vue {
       );
     }
   }
+
   deleteTag(variable, component) {
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
       (c) =>
@@ -810,6 +918,7 @@ export default class DataTypeTableView extends Vue {
     }
     this.initDatatype();
   }
+
   addSearch() {
     this.params.variableComponentFilters = [];
     for (var i = 0; i < this.variableSearch.length; i++) {
@@ -856,12 +965,14 @@ export default class DataTypeTableView extends Vue {
     }
     this.initDatatype();
   }
+
   clearOrder() {
     for (var i = 0; i < this.params.variableComponentOrderBy.length; i++) {
       this.params.variableComponentOrderBy = [];
     }
     this.initDatatype();
   }
+
   getDisplay(row, variable, component) {
     var key = variable + "_" + component;
     var value = row[variable][component];
@@ -952,6 +1063,7 @@ $row-variable-height: 60px;
 .orderLabel {
   flex-grow: 10;
 }
+
 .grape {
   cursor: move;
 }
@@ -959,13 +1071,16 @@ $row-variable-height: 60px;
 .row.variableComponent {
   padding: 0;
 }
+
 .row.variableComponent:hover {
   background-color: rgba(0, 163, 166, 0.2);
 }
+
 .button.is-dark.is-outlined.active {
   background-color: $dark;
   color: #dbdbdb;
 }
+
 .ASC .asc,
 .DESC .desc {
   background-color: $dark;
@@ -981,21 +1096,25 @@ $row-variable-height: 60px;
   background-color: transparent;
   border: transparent;
 }
+
 .button.inTable:hover {
   color: $dark;
   background-color: transparent;
   border: transparent;
   text-decoration: underline;
 }
+
 .columns {
   margin: 0;
 }
+
 .icon.is-small {
   font-size: 5rem;
 }
 
 .loader-wrapper {
   margin: 50px;
+
   .loader {
     height: 100px;
     width: 100px;

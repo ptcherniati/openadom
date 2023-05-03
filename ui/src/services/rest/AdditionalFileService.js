@@ -29,7 +29,7 @@ export class AdditionalFileService extends Fetcher {
         fileType,
         fields,
         associates,
-        forApplication
+        forApplication,
       }),
     });
   }
@@ -62,11 +62,8 @@ export class AdditionalFileService extends Fetcher {
   }
 
   async deleteAdditionalFile(applicationName, additionalFilesInfos) {
-    return this.delete(
-      `applications/${applicationName}/additionalFiles`,
-      {
-        params: JSON.stringify(additionalFilesInfos),
-      }
-    );
+    return this.delete(`applications/${applicationName}/additionalFiles`, {
+      params: JSON.stringify(additionalFilesInfos),
+    });
   }
 }

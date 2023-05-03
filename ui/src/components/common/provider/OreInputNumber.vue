@@ -28,21 +28,14 @@
         @blur="updateValue"
         @input="updateValue"
       />
-      <!--      <b-numberinput
-          v-else
-          v-model="val"
-          controls-position="compact"
-          required
-          @blur="updateValue"
-          @input="updateValue"></b-numberinput>-->
-      <b-input
+      <b-numberinput
         v-else
         v-model="val"
+        controls-position="compact"
         required
-        type="number"
         @blur="updateValue"
         @input="updateValue"
-      />
+      ></b-numberinput>
     </b-field>
   </ValidationProvider>
 </template>
