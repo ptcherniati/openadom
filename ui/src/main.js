@@ -87,7 +87,15 @@ import "vee-validate";
 import { confirmed, required } from "vee-validate/dist/rules";
 import { extend } from "vee-validate";
 
-library.add(farFloppyDisk, farCalendarDays, farCalendar, farSquare, farMinusSquare, farCheckSquare, farTimesCircle);
+library.add(
+  farFloppyDisk,
+  farCalendarDays,
+  farCalendar,
+  farSquare,
+  farMinusSquare,
+  farCheckSquare,
+  farTimesCircle
+);
 library.add(
   faUsersCog,
   faLink,

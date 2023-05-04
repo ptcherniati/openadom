@@ -437,32 +437,35 @@
                 </span>
                 <span v-else>
                   <!-- TODO ajout à faire de ReferencesManyLink -->
-<!--                  <ReferencesManyLink
-                      v-if="Array.isArray(row[component.variable][component.component])"
-                      :multiplicity="true"
-                      :info-values="row[component.variable][component.component]"
-                      :application="application"
-                      :reference-type="component.checker.referenceValues.referenceType"
-                      :loaded-references-by-key="{}"
-                      :column-id="getDisplay(row, component.variable, component.component)"
-                  ></ReferencesManyLink>-->
+                  <ReferencesManyLink
+                    v-if="testMultiplicity(row[component.variable][component.component])"
+                    :multiplicity="true"
+                    :info-values="getValuesRow(row[component.variable][component.component])"
+                    :application="application"
+                    :reference-type="getRefType(component.checker)"
+                    :loaded-references-by-key="{}"
+                    :column-id="getDisplay(row, component.variable, component.component)"
+                  ></ReferencesManyLink>
                   <ReferencesLink
-                      v-if="getRefsLinkedToId(row, component)"
-                      :application="application"
-                      :reference-type="component.checker.referenceValues.referenceType"
-                      :value="
-                        referenceLineCheckers[component.variable+'_'+component.component]?.referenceValues.hierarchicalKey.sql ?
-                        referenceLineCheckers[component.variable+'_'+component.component]?.referenceValues.hierarchicalKey.sql :
-                        row[component.variable][component.component]"
-                      :loaded-references-by-key="{}"
-                      :column-id="getDisplay(row, component.variable, component.component)"
-                      :column-title="row[component.variable][component.component]"
-                      :row="row"
-                      :variable="component.variable"
-                      :component="component.component"
+                    v-else-if="getRefsLinkedToId(row, component)"
+                    :application="application"
+                    :reference-type="component.checker.referenceValues.referenceType"
+                    :value="
+                      referenceLineCheckers[component.variable + '_' + component.component]
+                        ?.referenceValues.hierarchicalKey.sql
+                        ? referenceLineCheckers[component.variable + '_' + component.component]
+                            ?.referenceValues.hierarchicalKey.sql
+                        : row[component.variable][component.component]
+                    "
+                    :loaded-references-by-key="{}"
+                    :column-id="getDisplay(row, component.variable, component.component)"
+                    :column-title="row[component.variable][component.component]"
+                    :row="row"
+                    :variable="component.variable"
+                    :component="component.component"
                   ></ReferencesLink>
                   <p
-                    v-if="
+                    v-else-if="
                       !getRefsLinkedToId(row, component) &&
                       row[component.variable][component.component]
                     "
@@ -532,7 +535,14 @@ import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 import { InternationalisationService } from "@/services/InternationalisationService";
 
 @Component({
-  components: { PageView, SubMenu, CollapsibleInterval, draggable, ReferencesManyLink, ReferencesLink },
+  components: {
+    PageView,
+    SubMenu,
+    CollapsibleInterval,
+    draggable,
+    ReferencesManyLink,
+    ReferencesLink,
+  },
 })
 export default class DataTypeTableView extends Vue {
   @Prop() applicationName;
@@ -561,7 +571,6 @@ export default class DataTypeTableView extends Vue {
     variableComponentFilters: [],
     variableComponentOrderBy: [],
   });
-  showDetails = false;
   showSort = false;
   showFilter = false;
   controlPanels = null;
@@ -577,6 +586,27 @@ export default class DataTypeTableView extends Vue {
   variableSearch = [];
   referenceLineCheckers = [];
   displayDataTypes = false;
+
+  getRefType(checkerRow) {
+    if (checkerRow?.configuration === null) {
+      console.log(checkerRow);
+      if (checkerRow?.referenceLineChecker?.refType) {
+        return checkerRow.referenceLineChecker.refType;
+      }
+    }
+  }
+  getValuesRow(valuesRow) {
+    const tableValuesRow = valuesRow.substring(1, valuesRow.length - 1).split(",");
+    for (let i = 0; i < tableValuesRow.length; i++) {
+      if (tableValuesRow[i].includes('"')) {
+        tableValuesRow[i] = tableValuesRow[i].slice(1, -1);
+      }
+    }
+    return tableValuesRow;
+  }
+  testMultiplicity(value) {
+    if (value.includes("]") || value.includes("[")) return true;
+  }
 
   async created() {
     await this.init();
@@ -752,13 +782,6 @@ export default class DataTypeTableView extends Vue {
     );
   }
 
-  getTranslation(row, component) {
-    let translation =
-      row[component.variable][component.component] ||
-      row[component.variable][component.computedComponent];
-    return translation;
-  }
-
   async getReferenceValues(row, component) {
     //let valueRefEnfant = row[component.variable][component.label];
     let valueRefParent = component.checker.referenceValues.hierarchicalKey.sql.split(".");
@@ -823,17 +846,6 @@ export default class DataTypeTableView extends Vue {
     await this.initDatatype();
   }
 
-  getVariableIndex(columnIndex) {
-    let variableIndex = 0;
-    for (const [key, value] of this.mapVariableIndexByColumnIndex) {
-      if (value.some((v) => v === columnIndex)) {
-        variableIndex = key;
-        break;
-      }
-    }
-    return variableIndex;
-  }
-
   addVariableComponentToSortedList(variableComponentSorted, order) {
     variableComponentSorted.order = variableComponentSorted.order === order ? null : order;
     this.params.variableComponentOrderBy = this.params.variableComponentOrderBy.filter(
@@ -856,26 +868,6 @@ export default class DataTypeTableView extends Vue {
     );
     this.params.variableComponentOrderBy.delete();
     document.getElementById(variable + component).remove();
-  }
-
-  getSortIcon(variable, component) {
-    variable, component, event;
-    let icon = this.params.variableComponentOrderBy
-      .filter(
-        (c) =>
-          c.variableComponentKey.variable === variable &&
-          c.variableComponentKey.component === component
-      )
-      .map((vc) => {
-        if (vc.order === "ASC") {
-          return "arrow-down";
-        } else if (vc.order === "DESC") {
-          return "arrow-up";
-        } else {
-          return "";
-        }
-      })[0];
-    return icon ? icon : null;
   }
 
   addVariableSearch(variableComponent) {

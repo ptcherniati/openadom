@@ -21,31 +21,34 @@
               <b-table-column v-for="column in refValues.columns" :key="column.id" v-slot="props">
                 <span>
                   <ReferencesDynamicLink
-                      v-if="!props.row[column.field].length && props.row[column.field].length!==0"
-                      :info="!props.row[column.field].length && props.row[column.field].length!==0"
-                      :info-values="props.row[column.field]"
-                      :application="application"
-                      :reference-type="dynamicColumnReferences(props.row.colonne)"
-                      :loaded-references-by-key="{}"
-                      :column-id="column.id"
+                    v-if="!props.row[column.field].length && props.row[column.field].length !== 0"
+                    :info="!props.row[column.field].length && props.row[column.field].length !== 0"
+                    :info-values="props.row[column.field]"
+                    :application="application"
+                    :reference-type="dynamicColumnReferences(props.row.colonne)"
+                    :loaded-references-by-key="{}"
+                    :column-id="column.id"
                   ></ReferencesDynamicLink>
                   <ReferencesManyLink
-                      v-else-if="Array.isArray(props.row[column.field])"
-                      :multiplicity="true"
-                      :info-values="props.row[column.field]"
-                      :application="application"
-                      :reference-type="column.linkedTo"
-                      :loaded-references-by-key="{}"
-                      :column-id="column.id"
+                    v-else-if="Array.isArray(props.row[column.field])"
+                    :multiplicity="true"
+                    :info-values="props.row[column.field]"
+                    :application="application"
+                    :reference-type="column.linkedTo"
+                    :loaded-references-by-key="{}"
+                    :column-id="column.id"
                   ></ReferencesManyLink>
                   <ReferencesLink
-                      v-else-if="
-                        (column.field === 'valeur') &&
-                        refValues.referenceTypeForReferencingColumns[props.row.colonne]"
-                      :application="application"
-                      :reference-type="refValues.referenceTypeForReferencingColumns[props.row.colonne]"
-                      :value="props.row.valeur"
-                      :loaded-references-by-key="{}"
+                    v-else-if="
+                      column.field === 'valeur' &&
+                      refValues.referenceTypeForReferencingColumns[props.row.colonne]
+                    "
+                    :application="application"
+                    :reference-type="
+                      refValues.referenceTypeForReferencingColumns[props.row.colonne]
+                    "
+                    :value="props.row.valeur"
+                    :loaded-references-by-key="{}"
                   ></ReferencesLink>
                   <p v-else>{{ props.row[column.field] }}</p>
                 </span>
@@ -59,7 +62,7 @@
 </template>
 
 <script>
-import {ReferenceService} from "@/services/rest/ReferenceService";
+import { ReferenceService } from "@/services/rest/ReferenceService";
 import { InternationalisationService } from "@/services/InternationalisationService";
 import ReferencesDynamicLink from "@/components/references/ReferencesDynamicLink.vue";
 import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
@@ -67,7 +70,7 @@ import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 export default {
   name: "ReferencesLink",
   emits: ["changedRefValues"],
-  components: {ReferencesManyLink, ReferencesDynamicLink},
+  components: { ReferencesManyLink, ReferencesDynamicLink },
   props: {
     application: Object,
     referenceType: String,
@@ -92,14 +95,14 @@ export default {
     this.$options.components.ReferencesManyLink = require("./ReferencesManyLink.vue").default;
   },
   computed: {
-    applicationName(){
+    applicationName() {
       return this.application.name;
     },
     columnTitle() {
       let displayRef = this.internationalisationService.localeReferenceName(
-          {label: this.referenceType},
-          this.application
-      )
+        { label: this.referenceType },
+        this.application
+      );
       return displayRef;
     },
   },
@@ -107,7 +110,7 @@ export default {
     return {
       internationalisationService: InternationalisationService.INSTANCE,
       referenceService: ReferenceService.INSTANCE,
-      refValues: {active: false},
+      refValues: { active: false },
       isCardModalActive: false,
       isLoading: false,
     };
@@ -124,28 +127,28 @@ export default {
     async openReferenceDetail() {
       this.isLoading = true;
       let refValues =
-          this.refValues &&
-          this.loadedReferencesByKey[this.referenceType] &&
-          this.loadedReferences[this.referenceType][this.value];
+        this.refValues &&
+        this.loadedReferencesByKey[this.referenceType] &&
+        this.loadedReferences[this.referenceType][this.value];
       if (!refValues) {
         const reference = await this.getReferenceValuesByKey(
-            this.applicationName,
-            this.referenceType,
-            this.value
+          this.applicationName,
+          this.referenceType,
+          this.value
         );
         let referenceTypeForReferencingColumns = reference.referenceTypeForReferencingColumns;
         let refValue = reference.referenceValues[0].values;
-          refValues = {
-            referenceTypeForReferencingColumns,
-            refValue
-          };
+        refValues = {
+          referenceTypeForReferencingColumns,
+          refValue,
+        };
       }
       const data = Object.entries(refValues.refValue)
-          .map((entry) => ({colonne: entry[0], valeur: entry[1]}))
-          .reduce((acc, entry) => {
-            acc.push(entry);
-            return acc;
-          }, []);
+        .map((entry) => ({ colonne: entry[0], valeur: entry[1] }))
+        .reduce((acc, entry) => {
+          acc.push(entry);
+          return acc;
+        }, []);
       const result = {
         data: data,
         columns: [
@@ -162,7 +165,7 @@ export default {
         reference: this.referenceType,
       };
       this.isCardModalActive = false;
-      this.refValues = {...refValues, ...result};
+      this.refValues = { ...refValues, ...result };
       this.$emit("changedRefValues", {
         key: this.value,
         refType: this.referenceType,

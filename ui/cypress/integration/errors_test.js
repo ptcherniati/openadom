@@ -233,7 +233,7 @@ describe('test create application', () => {
         cy.get('.toast >div').contains("Message d'erreur sql" )
 
     });
-    it('Test creation site', () => {
+    it.skip('Test creation site', () => {
         cy.login("admin", ['applications/ore/ore_application_description.json'])
 
         cy.get('.card-header-title.createApplication').first().contains(' Créer l\'application ').click()

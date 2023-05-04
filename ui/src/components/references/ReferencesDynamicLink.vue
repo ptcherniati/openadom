@@ -34,13 +34,13 @@
               :column-id="key.columnName"
             ></ReferencesLink>
             <ReferencesManyLink
-                v-else-if="Array.isArray(key.column)"
-                :multiplicity="true"
-                :info-values="key.column"
-                :application="application"
-                :reference-type="referenceType"
-                :loaded-references-by-key="{}"
-                :column-id="key.columnName"
+              v-else-if="Array.isArray(key.column)"
+              :multiplicity="true"
+              :info-values="key.column"
+              :application="application"
+              :reference-type="referenceType"
+              :loaded-references-by-key="{}"
+              :column-id="key.columnName"
             ></ReferencesManyLink>
             <div v-else>
               <p class="column">{{ key.column }} {{ $t("ponctuation.colon") }}</p>
@@ -65,7 +65,7 @@ import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 export default {
   name: "ReferencesDynamicLink",
   emits: ["changedRefValues"],
-  components: {ReferencesManyLink, ReferencesLink},
+  components: { ReferencesManyLink, ReferencesLink },
   props: {
     application: Object,
     referenceType: String,
@@ -86,14 +86,14 @@ export default {
     this.$options.components.ReferencesManyLink = require("./ReferencesManyLink.vue").default;
   },
   computed: {
-    applicationName(){
+    applicationName() {
       return this.application.name;
     },
     columnTitle() {
       let displayRef = this.internationalisationService.localeReferenceName(
-          {label: this.referenceType},
-          this.application
-      )
+        { label: this.referenceType },
+        this.application
+      );
       return displayRef;
     },
   },
@@ -175,14 +175,14 @@ export default {
     },
 
     dynamicColumnInfo(refType) {
-      console.log(this.reference.dynamicColumns)
+      console.log(this.reference.dynamicColumns);
       let dynamicColumns = Object.entries(this.reference.dynamicColumns).filter((a) => a[1]);
       //console.log(dynamicColumns)
       for (let i = 0; i < dynamicColumns.length; i++) {
         if (dynamicColumns[i][0] === refType) return true;
       }
       return false;
-    }
+    },
   },
 };
 </script>
