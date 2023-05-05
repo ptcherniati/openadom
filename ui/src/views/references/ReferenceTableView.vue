@@ -222,6 +222,7 @@ export default class ReferenceTableView extends Vue {
       this.$t("alert.reference-deletion-msg", { label: rowId }),
       this.$t("alert.delete"),
       "is-danger",
+      this.$t("alert.cancel"),
       () => this.deleteRowReference(rowId)
     );
   }

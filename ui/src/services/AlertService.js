@@ -59,14 +59,14 @@ export class AlertService {
     }
   }
 
-  dialog(title, message, confirmText, type, onConfirmCb) {
+  dialog(title, message, confirmText, type, cancelMsg, onConfirmCb) {
     DialogProgrammatic.confirm({
       title: title,
       message: message,
       confirmText: confirmText,
       type: type,
       hasIcon: true,
-      cancelText: this.cancelMsg,
+      cancelText: cancelMsg,
       onConfirm: () => {
         onConfirmCb();
       },

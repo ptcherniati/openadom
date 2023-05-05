@@ -67,9 +67,10 @@ export default class ReferencesDetailsPanel extends Vue {
   askDeletionConfirmation() {
     this.alertService.dialog(
       this.$t("alert.warning"),
-      this.$t("alert.reference-deletion-msg", { label: this.reference.label }),
+      this.$t("alert.purge-reference-msg", { label: this.reference.localName ? this.reference.localName : this.reference.label }),
       this.$t("alert.delete"),
       "is-danger",
+      this.$t("alert.cancel"),
       () => this.deleteReference()
     );
   }
