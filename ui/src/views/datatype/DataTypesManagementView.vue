@@ -38,6 +38,7 @@
         :key="data.id"
         :buttons="buttons(data)"
         :is-loading="isLoading"
+        :is-uploading="isUploading"
         :level="0"
         :on-click-label-cb="(event, label) => openDataTypeCb(event, label)"
         :on-click-label-synthesis-detail-cb="
@@ -120,6 +121,7 @@ export default class DataTypesManagementView extends Vue {
   errorsService = ErrorsService.INSTANCE;
   application = new ApplicationResult();
   isLoading = false;
+  isUploading = false;
   subMenuPaths = [];
   dataTypes = [];
   errorsMessages = [];
@@ -352,6 +354,7 @@ export default class DataTypesManagementView extends Vue {
   }
 
   async uploadDataTypeCsv(label, file) {
+    this.isUploading = true;
     this.errorsMessages = [];
     try {
       await this.dataService.addData(this.applicationName, label, file);
@@ -359,6 +362,7 @@ export default class DataTypesManagementView extends Vue {
     } catch (error) {
       this.checkMessageErrors(error);
     }
+    this.isUploading = false;
   }
 
   async downloadDataType(event) {

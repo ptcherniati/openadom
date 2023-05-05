@@ -135,7 +135,10 @@
               @input="() => onUploadCb(option.label, refFile) && showChildren()"
             >
               <span :disabled="!option.canUpload" class="file-cta">
-                <b-icon icon="upload"></b-icon>
+                <div v-if="isUploading && refFile" class="loader-wrapper">
+                  <div class="loader is-loading"></div>
+                </div>
+                <b-icon v-else icon="upload"></b-icon>
               </span>
             </b-upload>
           </div>
@@ -229,6 +232,7 @@ export default {
       default: 0,
     },
     isLoading: Boolean,
+    isUploading: Boolean,
     applicationTitle: {
       type: String,
     },

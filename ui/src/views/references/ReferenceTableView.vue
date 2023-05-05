@@ -61,53 +61,52 @@
           </template>
           <template v-slot="props">
             <ReferencesDynamicLink
-                v-if="info(column.id)"
-                :info="info(column.id)"
-                :info-values="props.row[column.id]"
-                :application="application"
-                :reference-type="column.reference"
-                :loaded-references-by-key="{}"
-                :column-id="column.id"
+              v-if="info(column.id)"
+              :info="info(column.id)"
+              :info-values="props.row[column.id]"
+              :application="application"
+              :reference-type="column.reference"
+              :loaded-references-by-key="{}"
+              :column-id="column.id"
             ></ReferencesDynamicLink>
             <ReferencesManyLink
-                v-else-if="multiplicity(column.id, props.row[column.id])"
-                :multiplicity="multiplicity(column.id, props.row[column.id])"
-                :info-values="props.row[column.id]"
-                :application="application"
-                :reference-type="column.linkedTo"
-                :loaded-references-by-key="{}"
-                :column-id="column.id"
+              v-else-if="multiplicity(column.id, props.row[column.id])"
+              :multiplicity="multiplicity(column.id, props.row[column.id])"
+              :info-values="props.row[column.id]"
+              :application="application"
+              :reference-type="column.linkedTo"
+              :loaded-references-by-key="{}"
+              :column-id="column.id"
             ></ReferencesManyLink>
             <ReferencesLink
-                v-else-if="column.id !== '#'"
-                :application="application"
-                :reference-type="column.linkedTo"
-                :value="
-              info(column.id) || multiplicity(column.id, props.row[column.id])
-                ? ''
-                : props.row[column.id]
-            "
-                :loaded-references-by-key="{}"
-                :column-title="column.title"
+              v-else-if="column.id !== '#'"
+              :application="application"
+              :reference-type="column.linkedTo"
+              :value="
+                info(column.id) || multiplicity(column.id, props.row[column.id])
+                  ? ''
+                  : props.row[column.id]
+              "
+              :loaded-references-by-key="{}"
+              :column-title="column.title"
             ></ReferencesLink>
             <div v-else class="columns">
-              <a @click="askDeletionConfirmation(referenceValues[tableValues.indexOf(props.row)].naturalKey)">
-                <b-icon
-                    icon="times-circle"
-                    class="clickable"
-                    size="is-small"
-                    type="is-danger"
-                >
+              <a
+                @click="
+                  askDeletionConfirmation(
+                    referenceValues[tableValues.indexOf(props.row)].naturalKey
+                  )
+                "
+              >
+                <b-icon icon="times-circle" class="clickable" size="is-small" type="is-danger">
                 </b-icon>
               </a>
-              <b-collapse
-                  :open="false"
-                  class="column">
+              <b-collapse :open="false" class="column">
                 <template #trigger>
                   <b-button
-                      :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
-                      aria-controls="contentIdForA11y1"
-                      type="is-small"
+                    :label="'' + (tableValues.indexOf(props.row) + 1 + params.offset)"
+                    aria-controls="contentIdForA11y1"
+                    type="is-small"
                   />
                 </template>
                 {{ referenceValues[tableValues.indexOf(props.row)].naturalKey }}
@@ -134,6 +133,8 @@ import ReferencesLink from "@/components/references/ReferencesLink.vue";
 import ReferencesManyLink from "@/components/references/ReferencesManyLink.vue";
 import ReferencesDynamicLink from "@/components/references/ReferencesDynamicLink.vue";
 import { HttpStatusCodes } from "@/utils/HttpUtils";
+import { VariableComponentFilters } from "@/model/application/VariableComponentFilters";
+import { IntervalValues } from "@/model/application/IntervalValues";
 
 @Component({
   components: { PageView, SubMenu, ReferencesLink, ReferencesManyLink, ReferencesDynamicLink },
@@ -172,22 +173,67 @@ export default class ReferenceTableView extends Vue {
   display = "__display_" + window.localStorage.lang;
   loadedReferences = {};
   currentReferenceDetail = { active: false };
+  columnSearch = [];
 
+  addVariableSearch(columnName) {
+    let { key, column, type, format } = columnName;
+    let value = this.search[key];
+    this.params.variableComponentFilters = this.params.variableComponentFilters.filter(
+      (c) => c.column !== column
+    );
+    let search = null;
+    if (value && value.length > 0) {
+      search = new VariableComponentFilters({
+        columnKey: column,
+        filter: value,
+        type: type,
+        format: format,
+      });
+    }
+    if (columnName.intervalValues) {
+      search = new VariableComponentFilters({
+        columnKey: column,
+        type: type,
+        format: format,
+        intervalValues: columnName.intervalValues,
+        ...(search ? new IntervalValues(search) : {}),
+      });
+    }
+    if (search) {
+      this.columnSearch.push(search);
+    }
+    this.init();
+  }
+
+  addSearch() {
+    this.params.variableComponentFilters = [];
+    for (var i = 0; i < this.variableSearch.length; i++) {
+      if (this.variableSearch[i]) {
+        this.params.variableComponentFilters.push(this.variableSearch[i]);
+      }
+    }
+    this.initDatatype();
+    this.showFilter = false;
+  }
 
   askDeletionConfirmation(rowId) {
     this.alertService.dialog(
-        this.$t("alert.warning"),
-        this.$t("alert.reference-deletion-msg", { label: rowId }),
-        this.$t("alert.delete"),
-        "is-danger",
-        () => this.deleteRowReference(rowId)
+      this.$t("alert.warning"),
+      this.$t("alert.reference-deletion-msg", { label: rowId }),
+      this.$t("alert.delete"),
+      "is-danger",
+      () => this.deleteRowReference(rowId)
     );
   }
 
   async deleteRowReference(rowId) {
     console.log(rowId);
     try {
-      await this.referenceService.deleteReferenceValuesByKey(this.applicationName, this.reference.label, rowId);
+      await this.referenceService.deleteReferenceValuesByKey(
+        this.applicationName,
+        this.reference.label,
+        rowId
+      );
       this.alertService.toastSuccess(this.$t("alert.reference-updated"));
     } catch (errors) {
       await this.checkMessageErrors(errors);
@@ -237,7 +283,6 @@ export default class ReferenceTableView extends Vue {
     }
     return false;
   }
-
 
   multiplicity(column, arrayValues) {
     for (let i = 0; i < this.tableValues.length; i++) {

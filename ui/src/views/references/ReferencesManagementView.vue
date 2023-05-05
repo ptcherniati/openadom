@@ -34,6 +34,7 @@
         :application-title="$t('titles.references-page')"
         :buttons="buttons"
         :level="0"
+        :is-uploading="isUploading"
         :line-count="lineCount(ref)"
         :on-click-label-cb="(event, label) => openRefDetails(event, label)"
         :on-upload-cb="(label, refFile) => uploadReferenceCsv(label, refFile)"
@@ -90,6 +91,7 @@ export default class ReferencesManagementView extends Vue {
   subMenuPaths = [];
   errorsMessages = [];
   errorsList = [];
+  isUploading = false;
   buttons = [
     new Button(
       this.$t("referencesManagement.consult"),
@@ -269,6 +271,7 @@ export default class ReferencesManagementView extends Vue {
   }
 
   async uploadReferenceCsv(label, refFile) {
+    this.isUploading = true;
     this.errorsMessages = [];
     const reference = this.findReferenceByLabel(label);
     try {
@@ -277,6 +280,7 @@ export default class ReferencesManagementView extends Vue {
     } catch (errors) {
       await this.checkMessageErrors(errors);
     }
+    this.isUploading = false;
   }
 
   async checkMessageErrors(errors) {
