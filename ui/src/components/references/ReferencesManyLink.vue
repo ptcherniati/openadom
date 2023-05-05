@@ -11,6 +11,7 @@
           :reference-type="referenceType"
           :value="val"
         ></ReferencesLink>
+        <p v-else-if="val.indexOf('date:') !== -1">{{ /.{25}(.*$)/.exec(val)[1] }}</p>
         <p v-else class="column">{{ val }}</p>
       </div>
     </span>

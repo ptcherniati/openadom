@@ -419,12 +419,14 @@
               >
                 <span
                   v-if="
-                    row[component.variable][component.component] &&
+                    (row[component.variable][component.component] ||
+                    row[component.variable][component.computedComponent]) &&
                     component.checker &&
-                    component.checker.pattern
+                    component.checker.pattern &&
+                    !testMultiplicity(row[component.variable][component.component], component.checker)
                   "
                 >
-                  {{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
+<!--                  {{ getValuesRow(row[component.variable][component.component])}}  -->{{ /.{25}(.*$)/.exec(row[component.variable][component.component])[1] }}
                 </span>
                 <span
                   v-else-if="
@@ -594,13 +596,19 @@ export default class DataTypeTableView extends Vue {
     }
   }
   getValuesRow(valuesRow) {
+    const rowValues=[];
     const tableValuesRow = valuesRow.substring(1, valuesRow.length - 1).split(",");
     for (let i = 0; i < tableValuesRow.length; i++) {
-      if (tableValuesRow[i].includes('"')) {
+      if (tableValuesRow[i].includes('/') && tableValuesRow[i].indexOf("date:") === -1) {
+        rowValues.push(tableValuesRow[i].slice(0, -1));
+      } else if (tableValuesRow[i].includes('"')) {
         tableValuesRow[i] = tableValuesRow[i].slice(1, -1);
       }
     }
-    return tableValuesRow;
+    if (rowValues.length !==0)
+      return rowValues;
+    else
+      return tableValuesRow;
   }
   testMultiplicity(value, checker) {
     if (value.includes(".") && checker?.sqlType === "NUMERIC") {
