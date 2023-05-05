@@ -436,9 +436,8 @@
                   {{ /.{25}(.*$)/.exec(row[component.variable][component.computedComponent])[1] }}
                 </span>
                 <span v-else>
-                  <!-- TODO ajout à faire de ReferencesManyLink -->
                   <ReferencesManyLink
-                    v-if="testMultiplicity(row[component.variable][component.component])"
+                    v-if="testMultiplicity(row[component.variable][component.component], component.checker)"
                     :multiplicity="true"
                     :info-values="getValuesRow(row[component.variable][component.component])"
                     :application="application"
@@ -589,7 +588,6 @@ export default class DataTypeTableView extends Vue {
 
   getRefType(checkerRow) {
     if (checkerRow?.configuration === null) {
-      console.log(checkerRow);
       if (checkerRow?.referenceLineChecker?.refType) {
         return checkerRow.referenceLineChecker.refType;
       }
@@ -604,8 +602,10 @@ export default class DataTypeTableView extends Vue {
     }
     return tableValuesRow;
   }
-  testMultiplicity(value) {
-    if (value.includes("]") || value.includes("[")) return true;
+  testMultiplicity(value, checker) {
+    if (value.includes(".") && checker?.sqlType === "NUMERIC") {
+      return true;
+    } else return !!((value.includes("]") || value.includes("[")) && checker?.sqlType !== "NUMERIC");
   }
 
   async created() {
