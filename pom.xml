@@ -59,7 +59,8 @@
 
     <properties>
 
-        <projectId>si-ore-ng</projectId>
+        <<sonar.organization>openadom</sonar.organization>
+  <sonar.host.url>https://sonarcloud.io</sonar.host.url>si-ore-ng</projectId>
 
         <!-- license to use  -->
         <license.licenseName>lgpl_v3</license.licenseName>
