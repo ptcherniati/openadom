@@ -1,0 +1,53 @@
+site;hesse;Hesse 1;;;;;;;;;;;;;;;;;;
+theme;meteo;;;;;;;;;;;;;;;;;;;
+frequence;mensuel;;;;;;;;;;;;;;;;;;;
+date de debut;01/2012;;;;;;;;;;;;;;;;;;;
+date de fin;03/2012;;;;;;;;;;;;;;;;;;;
+commentaire;un commentaire;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+;Précipitations;"rayonnement 
+solaire incident";"Rayonnement 
+solaire réfléchi";"Rayonnement 
+incident 
+de grande
+longueur d'onde";"Rayonnement 
+réfléchi 
+de grande 
+longueur d'onde";Rayonnement net;"Rayonnement
+ global diffus";"Densité de flux
+de photons
+photo-
+synthétiquement
+actif";"Rayonnement 
+photo-
+synthétiquement 
+actif diffus";"Rayonnement 
+photo-
+synthétiquement
+actif réfléchi";"Rayonnement 
+photo-
+synthétiquement 
+actif sous la 
+canopée";"Interception du 
+rayonnement 
+photo-
+synthétiquement
+actif par la 
+canopée";"Température 
+de l'air";"Pression 
+atmosphérique";"Température 
+radiative de 
+la canopée";"Température 
+des tiges 
+d'arbres";"Flux de 
+chaleur 
+au sol";"Humidité 
+relative";"Direction 
+du vent";"Vitesse 
+horizontale 
+du vent"
+date;P;Rg;Rr;Lwin;Lwout;Rn;Rd;PPFD;PPFDd;PPFDr;PPFDbc;APAR;Ta;Pa;Tc;Tarbre;G;Rh;WD;WS
+MM/yyyy;m;MJ_m-2_m-1;MJ_m-2_m-1;MJ_m-2_m-1;MJ_m-2_m-1;MJ_m-2_m-1;MJ_m-2_m-1;µmol_m-2_m-1;µmol_m-2_m-1;µmol_m-2_m-1;µmol_m-2_m-1;µmol_m-2_m-1;°C;kPa;°C;°C;MJ_m-2_m-1;%;°;m_s-1
+01/2012;0,0702956989;31,4342650672;4,0028498534;306,9437044354;329,8893425947;4,4857770545;-9999;60,4723763649;41,4653355623;4,2730851115;8,6510867608;48,2948368096;3,1741552424;98,4269325269;-9999;3,1347301747;-2,7964740726;85,9876972043;187,1574478746;2,5392717372
+02/2012;0,0122126437;81,9464125289;10,6081270747;263,6457402256;306,3322256329;28,6907202347;-9999;100,3895363546;71,8957320463;13,698834324;20,7316395402;65,9590624904;-2,0744518268;98,8717112644;-9999;-2,0886289511;-2,5396157723;74,5463303161;150,9522039886;2,0856491337
+03/2012;0,0147849462;155,4443354424;17,4830935627;297,9337438496;355,7732103446;79,6510787199;-9999;235,2376379695;119,9944415988;19,7354388983;47,6712392518;167,8309598194;8,4179841165;98,8087277285;-9999;8,7814747984;1,1714505477;65,7119786895;150,4403330373;1,7689587198

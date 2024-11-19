@@ -1,0 +1,12 @@
+Instructions :
+
+1. installer Groovy version 4 minimum https://groovy.apache.org/download.html#osinstall
+
+2. vérifier que Groovy fonctionne en lançant groovy --version
+
+Exemple de retour correct :
+Groovy Version: 4.0.15 JVM: 17.0.8.1 Vendor: Private Build OS: Linux
+
+3. lancer le script d’import en masse
+
+groovy OpenAdomClient.groovy

@@ -1,0 +1,853 @@
+{
+  "tags" : {
+    "unit" : {
+      "en" : "unit",
+      "fr" : "unité"
+    },
+    "data" : {
+      "en" : "data",
+      "fr" : "données"
+    },
+    "test" : {
+      "en" : "test",
+      "fr" : "test"
+    },
+    "context" : {
+      "en" : "context",
+      "fr" : "contexte"
+    },
+    "temporal" : {
+      "en" : "Temporal",
+      "fr" : "Temporel"
+    }
+  },
+  "application" : {
+    "title" : {
+      "en" : "My application",
+      "fr" : "Mon application"
+    },
+    "description" : {
+      "en" : "My application SI",
+      "fr" : "Si de mon application"
+    }
+  },
+  "data" : {
+    "variables" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en}",
+          "fr" : "{nom_fr}"
+        },
+        "description" : {
+          "en" : "{definition_en}",
+          "fr" : "{definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Variables",
+          "fr" : "Variables"
+        },
+        "description" : {
+          "en" : "Variables list",
+          "fr" : "Liste de variables"
+        }
+      }
+    },
+    "experimental_plot" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : null,
+      "i18n" : {
+        "title" : {
+          "en" : "Experimental plot",
+          "fr" : "Parcelle expérimentale"
+        },
+        "description" : {
+          "en" : "Experimental plots list",
+          "fr" : "Liste de parcelles expérimentales"
+        }
+      }
+    },
+    "especes" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{esp_nom}",
+          "fr" : "{esp_nom}"
+        },
+        "description" : {
+          "en" : "{esp_definition_en}",
+          "fr" : "{esp_definition_en}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Species",
+          "fr" : "Espèces"
+        },
+        "description" : {
+          "en" : "Species list",
+          "fr" : "Liste d'espèces"
+        }
+      }
+    },
+    "site_theme_datatype" : {
+      "validations" : {
+        "checkDatatype" : {
+          "fr" : "test"
+        },
+        "sitesRef" : {
+          "fr" : "référence au site"
+        },
+        "themesRef" : {
+          "fr" : "référence au theme"
+        }
+      },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "projet name: {projet}, site name : {site}, theme name : {theme}, data type name : {datatype}",
+          "fr" : "nom du projet: {projet}, nom du site : {site}, nom du thème : {theme}, nom du type de données : {datatype}"
+        },
+        "description" : {
+          "en" : "projet name: {projet}, site name : {site}, theme name : {theme}, data type name : {datatype}",
+          "fr" : "nom du projet: {projet}, nom du site : {site}, nom du thème : {theme}, nom du type de données : {datatype}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Data types by site and project",
+          "fr" : "Types de données par site et projet"
+        },
+        "description" : {
+          "en" : "Data types by site and project list",
+          "fr" : "Liste de types de données par site et projet"
+        }
+      }
+    },
+    "type_de_sites" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{tze_nom_en}",
+          "fr" : "{tze_nom_fr}"
+        },
+        "description" : {
+          "en" : "{tze_definition_en}",
+          "fr" : "{tze_definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Sites types",
+          "fr" : "Types de sites"
+        },
+        "description" : {
+          "en" : "Sites types list",
+          "fr" : "Liste de types de sites"
+        }
+      }
+    },
+    "variables_et_unites_par_types_de_donnees" : {
+      "validations" : {
+        "checkDatatype" : {
+          "fr" : "test"
+        },
+        "uniteRef" : {
+          "fr" : "référence à l'unité'"
+        },
+        "variableRef" : {
+          "fr" : "référence à la variable"
+        }
+      },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "datatype name : {datatype}, variable name : {variable}, : unit name {unite}",
+          "fr" : "nom du type de données : {datatype}, nom de la variable : {variable}, : nom de l'unité {unite}"
+        },
+        "description" : { }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Variables and units by data type",
+          "fr" : "Variables et unités par type de données"
+        },
+        "description" : {
+          "en" : "Variables and units by data type list joins",
+          "fr" : "Liste de jointure de variables et unités par type de données"
+        }
+      }
+    },
+    "sites" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{zet_nom_en}",
+          "fr" : "{zet_nom_fry}"
+        },
+        "description" : {
+          "en" : "{zet_description_en}",
+          "fr" : "{zet_description_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Site",
+          "fr" : "Site"
+        },
+        "description" : {
+          "en" : "Sites list",
+          "fr" : "Liste de sites"
+        }
+      }
+    },
+    "themes" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en}",
+          "fr" : "{nom_fr}"
+        },
+        "description" : {
+          "en" : "{description_en}",
+          "fr" : "{description_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Thematic",
+          "fr" : "Thème"
+        },
+        "description" : {
+          "en" : "Thematics list",
+          "fr" : "Liste de thèmes"
+        }
+      }
+    },
+    "t_teledetection_tel" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "tel_date" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "date en",
+              "fr" : "date fr"
+            },
+            "description" : {
+              "en" : "date en",
+              "fr" : "date fr"
+            }
+          }
+        },
+        "tel_experimental_site" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "experimental site",
+              "fr" : "experimental site"
+            },
+            "description" : {
+              "en" : "experimental site",
+              "fr" : "experimental site"
+            }
+          }
+        },
+        "tel_value_qualifier" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "qualifier en",
+              "fr" : "qualificatif fr"
+            },
+            "description" : {
+              "en" : "qualifier en",
+              "fr" : "qualificatif fr"
+            }
+          }
+        },
+        "tel_value_resolution" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "resolution en",
+              "fr" : "resolution fr"
+            },
+            "description" : {
+              "en" : "resolution en",
+              "fr" : "resolution fr"
+            }
+          }
+        },
+        "tel_experimental_network" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "experimental network",
+              "fr" : "experimental network"
+            },
+            "description" : {
+              "en" : "experimental network",
+              "fr" : "experimental network"
+            }
+          }
+        },
+        "tel_value_variable" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "variable en",
+              "fr" : "variable fr"
+            },
+            "description" : {
+              "en" : "variable en",
+              "fr" : "variable fr"
+            }
+          }
+        },
+        "tel_value" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "value",
+              "fr" : "valeur"
+            },
+            "description" : {
+              "en" : "value",
+              "fr" : "valeur"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : {
+          "sites" : {
+            "title" : {
+              "en" : "Network",
+              "fr" : "Réseau"
+            },
+            "description" : {
+              "en" : "Network",
+              "fr" : "Réseau"
+            }
+          },
+          "tr_plot_plo" : {
+            "title" : {
+              "en" : "Select a plot...",
+              "fr" : "Select a plot..."
+            },
+            "description" : {
+              "en" : "Select a plot...",
+              "fr" : "Select a plot..."
+            }
+          }
+        }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "<em>[data display]</em>: {sit_code} ({sit_label_en})",
+          "fr" : "<em>[data display]</em>: {sit_code} ({sit_label_fr})"
+        },
+        "description" : {
+          "en" : "<em>[data display]</em>: {sit_code} ({sit_label_en})",
+          "fr" : "<em>[data display]</em>: {sit_code} ({sit_label_fr})"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "remote sensing data plot",
+          "fr" : "données de télédétection plot"
+        },
+        "description" : {
+          "en" : "remote sensing data plot",
+          "fr" : "données de télédétection plot"
+        }
+      }
+    },
+    "unites" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en} ({code_en})",
+          "fr" : "{nom_fr} ({code_fr})"
+        },
+        "description" : {
+          "en" : "{nom_en} ({code_en})",
+          "fr" : "{nom_fr} ({code_fr})"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Units",
+          "fr" : "Unités"
+        },
+        "description" : {
+          "en" : "Units list",
+          "fr" : "Liste d'unités"
+        }
+      }
+    },
+    "plot" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : null,
+      "i18n" : {
+        "title" : {
+          "en" : "Plot",
+          "fr" : "Parcelle"
+        },
+        "description" : {
+          "en" : "Plots list",
+          "fr" : "Liste de parcelles"
+        }
+      }
+    },
+    "projet" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en}",
+          "fr" : "{nom_fr}"
+        },
+        "description" : {
+          "en" : "{definition_en}",
+          "fr" : "{definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Project",
+          "fr" : "Projet"
+        },
+        "description" : {
+          "en" : "Projects list",
+          "fr" : "Liste de projets"
+        }
+      }
+    },
+    "valeurs_qualitatives" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en} : {valeur_en}",
+          "fr" : "{nom_fr} : {valeur_fr}"
+        },
+        "description" : {
+          "en" : "{valeur_en} of list {nom_en}",
+          "fr" : "{valeur_fr} de la liste {nom_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Qualitative values",
+          "fr" : "Valeurs qualitatives"
+        },
+        "description" : {
+          "en" : "Qualitative values",
+          "fr" : "Valeurs qualitatives"
+        }
+      }
+    },
+    "type_de_fichiers" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en}",
+          "fr" : "{nom_fr}"
+        },
+        "description" : {
+          "en" : "{description_en}",
+          "fr" : "{description_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Files types",
+          "fr" : "Types de fichiers"
+        },
+        "description" : {
+          "en" : "Files types list",
+          "fr" : "Liste de types de fichiers"
+        }
+      }
+    },
+    "pem" : {
+      "validations" : {
+        "unitOfIndividus" : {
+          "fr" : "vérifie l'unité du nombre d'individus"
+        },
+        "unitOfColor" : {
+          "fr" : "vérifie l'unité de la couleur des individus"
+        }
+      },
+      "exceptions" : { },
+      "components" : {
+        "color_value" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "United colors",
+              "fr" : "Couleur des individus"
+            },
+            "description" : {
+              "en" : "United colors",
+              "fr" : "Couleur des individus"
+            }
+          }
+        },
+        "individusNumbervalue" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Nombre d'individus"
+            },
+            "description" : {
+              "fr" : "Nombre d'individus"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : {
+          "projet" : {
+            "title" : {
+              "en" : "Project",
+              "fr" : "Projet"
+            },
+            "description" : {
+              "en" : "Project",
+              "fr" : "Projet"
+            }
+          },
+          "sites" : {
+            "title" : {
+              "en" : "Localization",
+              "fr" : "Localisation"
+            },
+            "description" : {
+              "en" : "Localization",
+              "fr" : "Localisation"
+            }
+          }
+        }
+      },
+      "i18nDisplayPattern" : null,
+      "i18n" : {
+        "title" : {
+          "en" : "Trap in ascent",
+          "fr" : "Piégeage en Montée"
+        },
+        "description" : {
+          "en" : "Trap in ascent data",
+          "fr" : "Données de piégeage en Montée"
+        }
+      }
+    },
+    "taxon" : {
+      "validations" : {
+        "determinedTaxonName" : {
+          "fr" : "nom du taxon déterminé"
+        }
+      },
+      "exceptions" : { },
+      "components" : {
+        "propriete_taxons" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Properties of Taxa",
+              "fr" : "Propriétés de Taxons"
+            },
+            "description" : {
+              "en" : "Properties of Taxa",
+              "fr" : "Propriétés de Taxons"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom}",
+          "fr" : "{nom}"
+        },
+        "description" : {
+          "en" : "{nom}",
+          "fr" : "{nom}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Taxa",
+          "fr" : "Taxons"
+        },
+        "description" : {
+          "en" : "Taxa",
+          "fr" : "Taxons"
+        }
+      }
+    },
+    "proprietes_taxon" : {
+      "validations" : {
+        "reference" : {
+          "fr" : "les reference"
+        },
+        "floats" : {
+          "fr" : "les décimaux"
+        },
+        "integer" : {
+          "fr" : "les entiers"
+        }
+      },
+      "exceptions" : { },
+      "components" : {
+        "type_associe" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Associated type",
+              "fr" : "Type asocié"
+            },
+            "description" : {
+              "en" : "Associated type",
+              "fr" : "Type asocié"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{propriete_en}",
+          "fr" : "{propriete_fr}"
+        },
+        "description" : {
+          "en" : "{definition_en}",
+          "fr" : "{definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Properties of Taxa",
+          "fr" : "Proprétés de Taxon"
+        },
+        "description" : {
+          "en" : "Properties of Taxa list",
+          "fr" : "Liste de proprétés de Taxon"
+        }
+      }
+    }
+  },
+  "rightsrequest" : {
+    "fields" : {
+      "endDate" : {
+        "title" : {
+          "en" : "Project end date",
+          "fr" : "Date de fin du projet"
+        },
+        "description" : {
+          "en" : "Project end date",
+          "fr" : "Date de fin du projet"
+        }
+      },
+      "organization" : {
+        "title" : {
+          "en" : "Name of research organization",
+          "fr" : "Nom de l'organisme de recherche"
+        },
+        "description" : {
+          "en" : "Name of research organization",
+          "fr" : "Nom de l'organisme de recherche"
+        }
+      },
+      "project" : {
+        "title" : {
+          "en" : "Description of the research project",
+          "fr" : "Description du projet de recherche"
+        },
+        "description" : {
+          "en" : "Description of the research project",
+          "fr" : "Description du projet de recherche"
+        }
+      },
+      "startDate" : {
+        "title" : {
+          "en" : "Project start date",
+          "fr" : "Date de début du projet"
+        },
+        "description" : {
+          "en" : "Project start date",
+          "fr" : "Date de début du projet"
+        }
+      }
+    },
+    "i18n" : {
+      "title" : {
+        "en" : "Rights request to the monsore application by filling out this form",
+        "fr" : "Demande de droits à l'application monsore en remplissant ce formulaire"
+      },
+      "description" : {
+        "en" : "You can request rights to the monsore application by filling out this form",
+        "fr" : "Vous pouvez demander des droits à l'application monsore en remplissant ce formulaire"
+      }
+    }
+  },
+  "additionalFiles" : {
+    "utilisateurs" : {
+      "i18n" : {
+        "title" : {
+          "en" : "User",
+          "fr" : "Users"
+        },
+        "description" : {
+          "en" : "User",
+          "fr" : "Users"
+        }
+      },
+      "fields" : {
+        "prenom" : {
+          "title" : {
+            "en" : "Surname",
+            "fr" : "Prénom"
+          },
+          "description" : {
+            "en" : "Surname",
+            "fr" : "Prénom"
+          }
+        },
+        "nom" : {
+          "title" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          },
+          "description" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          }
+        }
+      }
+    },
+    "fichiers" : {
+      "i18n" : {
+        "title" : {
+          "en" : "Files",
+          "fr" : "Fichiers"
+        },
+        "description" : {
+          "en" : "Files",
+          "fr" : "Fichiers"
+        }
+      },
+      "fields" : {
+        "date" : {
+          "title" : {
+            "en" : "Date",
+            "fr" : "Date"
+          },
+          "description" : {
+            "en" : "Date",
+            "fr" : "Date"
+          }
+        },
+        "site" : {
+          "title" : {
+            "en" : "Place",
+            "fr" : "Site"
+          },
+          "description" : {
+            "en" : "Place",
+            "fr" : "Site"
+          }
+        },
+        "poids" : {
+          "title" : {
+            "en" : "Weight",
+            "fr" : "Poids"
+          },
+          "description" : {
+            "en" : "Weight",
+            "fr" : "Poids"
+          }
+        },
+        "nom" : {
+          "title" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          },
+          "description" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          }
+        },
+        "age" : {
+          "title" : {
+            "en" : "Age",
+            "fr" : "Age"
+          },
+          "description" : {
+            "en" : "Age",
+            "fr" : "Age"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,64 @@
+package fr.inra.oresing.rest.model.data;
+
+import com.google.common.collect.ImmutableSet;
+import fr.inra.oresing.domain.checker.type.FieldType;
+import fr.inra.oresing.domain.checker.type.NullType;
+import fr.inra.oresing.domain.data.RefsLinkedToValue;
+import fr.inra.oresing.persistence.DataRow;
+import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
+import org.apache.commons.collections.keyvalue.DefaultMapEntry;
+
+import java.util.*;
+import java.util.stream.Collectors;
+
+
+public record DataRowResult(List<String> rowId, String naturalKey, String hierarchicalKey, Map<String, Object> values,
+                            Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo, Long totalRows, Long rowNumber,
+                            Map<Object, Object> displaysForRow,
+                            List<String> allPatternColumnName) {
+
+    public static final String DEFAULT = "default";
+
+    public static DataRowResult of(DataRow dataRow,
+                                   ImmutableSet<String> variables,
+                                   String locale,
+                                   DataRepositoryWithBuffer dataRepositoryWithBuffer) {
+        final Map<String, Object> rows = new HashMap<>();
+        for (final Map.Entry<String, FieldType> componentEntry : dataRow.getValues().entrySet()) {
+            final String component = componentEntry.getKey();
+            if (variables.contains(component)) {
+                rows
+                        .put(component, Optional.ofNullable(componentEntry)
+                                .map(Map.Entry::getValue)
+                                .map(FieldType::toJsonForFrontend)
+                                .orElse(NullType.INSTANCE));
+            }
+        }
+        Map<Object, Object> displaysForRow = dataRow.getRefsLinkedTo().entrySet()
+                .stream()
+                .map(referenceEntry -> {
+                    String referenceName = referenceEntry.getKey();
+                    Map<Object, Object> naturalKeysDisplay = referenceEntry.getValue().values().stream()
+                            .map(RefsLinkedToValue::hierarchicalKey)
+                            .map(hierarchicalKey -> hierarchicalKey.getSql().replaceAll(".*[a-z]K", ""))
+                            .map(naturalKey -> {
+                                String fr = dataRepositoryWithBuffer.findDisplayByReferenceTypeAndNaturalKeyAndLocale(referenceName, naturalKey, locale);
+                                fr = fr != null ? fr : dataRepositoryWithBuffer.findDisplayByReferenceTypeAndNaturalKeyAndLocale(referenceName, naturalKey, DEFAULT);
+                                fr = fr != null ? fr : naturalKey;
+                                return new DefaultMapEntry(naturalKey, fr);
+                            })
+                            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> existing));
+                    return new DefaultMapEntry(referenceName, naturalKeysDisplay);
+                })
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> existing));
+        return new DataRowResult(dataRow.getRowId(),
+                dataRow.getNaturalKey().getSql(),
+                dataRow.getHierarchicalKey().getSql(),
+                rows,
+                dataRow.getRefsLinkedTo(),
+                dataRow.getTotalRows(),
+                dataRow.getRowNumber(),
+                displaysForRow,
+                dataRow.getAllPatternColumnNames());
+    }
+}

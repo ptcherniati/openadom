@@ -1,0 +1,13 @@
+site;hesse;Hesse 1;;;;;;;;;;;;;;;;;;
+theme;meteo;;;;;;;;;;;;;;;;;;;
+frequence;journalier;;;;;;;;;;;;;;;;;;;
+date de debut;01/01/2012;;;;;;;;;;;;;;;;;;;
+date de fin;03/01/2012;;;;;;;;;;;;;;;;;;;
+commentaire;un commentaire;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;
+;Précipitations;rayonnement solaire incident;Rayonnement solaire réfléchi;Rayonnement incident de grande longueur d'onde;Rayonnement réfléchi de grande longueur d'onde;Rayonnement net;Rayonnement global diffus;Densité de flux de photons photo-synthétiquement actif;Rayonnement photo-synthétiquement actif diffus;Rayonnement photo-synthétiquement actif réfléchi;Rayonnement photo-synthétiquement actif sous la canopée;Interception du rayonnement photo-synthétiquement actif par la canopée;Température de l'air;Pression atmosphérique;Température radiative de la canopée;Température des tiges d'arbres;Flux de chaleur au sol;Humidité relative;Direction du vent;Vitesse horizontale du vent
+date;P;Rg;Rr;Lwin;Lwout;Rn;Rd;PPFD;PPFDd;PPFDr;PPFDbc;APAR;Ta;Pa;Tc;Tarbre;G;Rh;WD;WS
+dd/mm/yyyy;mm;MJ_m-2_d-1;MJ_m-2_d-1;MJ_m-2_d-1;MJ_m-2_d-1;MJ_m-2_d-1;MJ_m-2_d-1;µmol_m-2_d-1;µmol_m-2_d-1;µmol_m-2_d-1;µmol_m-2_d-1;µmol_m-2_d-1;°C;kPa;°C;°C;MJ_m-2_d-1;%;°;m_s-1
+01/01/2012;0,06;18,5908547021;1,3292884888;5,5940067749;5,3382004063;28,517372582;-9999;22,1613812047;19,0904426638;1,383722841;7,57;13,21;11,0337127917;97,7953122917;-9999;10,2117708333;4,095453125;89,1;219,8410770302;3,49
+02/01/2012;0,14;16,251233441;2,2331468954;5,4929739865;5,009889579;23,4988290468;-9999;78,4367104171;67,4287830698;1,2425918806;6,57;70,63;7,9388609792;97,6230254167;-9999;8,5790625;0,2067163542;84,8;231,0601306952;3,37
+03/01/2012;0,08;34,630586368;4,2854218114;5,7746768756;5,6370802635;20,5172388312;-9999;82,4798378791;76,3521908759;3,9081004416;10,46;88,11;6,4440495833;98,1032577083;-9999;5,5407395833;-2,7260823958;76,2;217,9493572514;4,82

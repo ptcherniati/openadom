@@ -1,0 +1,416 @@
+OA_version: 2.0.1
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    fr: ORE OLA 2024
+    en: ORE OLA 2024
+  OA_comment: Fichier de ola de l'application brokenADOM
+  OA_name: ola
+  OA_version: 1.0.2
+OA_tags:
+  profondeur:
+    fr: Profondeur
+    en: Profondeur
+  localisation:
+    fr: Localisation
+    en: Localization
+  unit:
+    fr: unité
+    en: unit
+  taxon:
+    fr: Taxon
+    en: Taxa
+OA_data:
+  tr_project_pro:
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - pro_nom_projet_key
+    OA_i18n:
+      fr: Projet
+      en: Project
+    OA_basicComponents:
+      pro_nom_projet_key:
+        OA_importHeader: nom du projet_key
+        OA_tags: [ __ORDER_1__ ]
+      pro_nom_projet_fr:
+        OA_importHeader: nom du projet_fr
+        OA_tags: [ __ORDER_2__ ]
+      pro_nom_projet_en:
+        OA_importHeader: nom du projet_en
+        OA_tags: [ __ORDER_3__ ]
+      pro_description_projet_fr:
+        OA_importHeader: description du projet_fr
+      pro_description_projet_en:
+        OA_importHeader: description du projet_en
+  tr_site_type_tsi:
+    OA_tags: [ localisation ]
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - tsi_nom_key
+    OA_i18n:
+      fr: Type de site
+      en: Site type
+    OA_basicComponents:
+      tsi_nom_key:
+        OA_importHeader: nom_key
+        OA_tags: [ __ORDER_1__ ]
+      tsi_nom_fr:
+        OA_importHeader: nom_fr
+        OA_tags: [ __ORDER_2__ ]
+      tsi_nom_en:
+        OA_importHeader: nom_en
+        OA_tags: [ __ORDER_3__ ]
+      tsi_description_fr:
+        OA_importHeader: description_fr
+      tsi_description_en:
+        OA_importHeader: description_en
+      tsi_code_sandre:
+        OA_importHeader: code sandre
+      tsi_code_sandre_contexte:
+        OA_importHeader: code sandre du contexte
+  tr_site_sit:
+    OA_tags: [ localisation ]
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - sit_nom_type_site
+      - sit_nom_site_key
+    OA_i18n:
+      fr: Site
+      en: Site
+    OA_basicComponents:
+      sit_nom_type_site:
+        OA_importHeader: nom du type de site
+        OA_tags: [ __ORDER_1__ ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_site_type_tsi
+              OA_isParent: true
+      sit_nom_site_key:
+        OA_importHeader: nom du site_key
+        OA_tags: [ __ORDER_2__ ]
+      sit_nom_site_fr:
+        OA_importHeader: nom du site_fr
+        OA_tags: [ __ORDER_3__ ]
+      sit_nom_site_en:
+        OA_importHeader: nom du site_en
+        OA_tags: [ __ORDER_4__ ]
+      sit_description_site_fr:
+        OA_importHeader: description du site_fr
+      sit_description_site_en:
+        OA_importHeader: description du site_en
+      sit_code_sandre_plan_eau:
+        OA_importHeader: code sandre du Plan d'eau
+      sit_code_sandre_masse_eau_plan_eau:
+        OA_importHeader: code sandre de la Masse d'eau plan d'eau
+  tr_platform_type_tpl:
+    OA_tags: [ localisation ]
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - tpl_nom_type_plateforme_fr
+    OA_i18n:
+      fr: Type de plateforme
+      en: Platform type
+    OA_basicComponents:
+      tpl_nom_type_plateforme_key:
+        OA_importHeader:  nom du type de plateforme_key
+        OA_tags: [ __ORDER_1__ ]
+      tpl_nom_type_plateforme_fr:
+        OA_importHeader:  nom du type de plateforme_fr
+        OA_tags: [ __ORDER_2__ ]
+      tpl_nom_type_plateforme_en:
+        OA_importHeader:  nom du type de plateforme_en
+        OA_tags: [ __ORDER_3__ ]
+      tpl_description_fr:
+        OA_importHeader:  description_fr
+      tpl_description_en:
+        OA_importHeader:  description_en
+      tpl_code_sandre:
+        OA_importHeader:  code sandre
+      tpl_code_sandre_contexte:
+        OA_importHeader:  code sandre du contexte
+  tr_platform_pla:
+    OA_tags: [ localisation ]
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - pla_nom_site
+      - pla_nom_type_plateforme_key
+      - pla_nom_plateforme_key
+    OA_i18n:
+      fr: Plateforme
+      en: Platform
+    OA_basicComponents:
+      pla_nom_site:
+        OA_importHeader: nom du site
+        OA_tags: [ __ORDER_1__ ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_site_sit
+              # OA_isParent: true
+      pla_nom_plateforme_key:
+        OA_importHeader: nom de la plateforme_key
+        OA_tags: [ __ORDER_2__ ]
+      pla_nom_plateforme_fr:
+        OA_importHeader: nom de la plateforme_fr
+        OA_tags: [ __ORDER_3__ ]
+      pla_nom_plateforme_en:
+        OA_importHeader: nom de la plateforme_en
+        OA_tags: [ __ORDER_4__ ]
+      pla_latitude:
+        OA_importHeader: latitude
+      pla_longitude:
+        OA_importHeader: longitude
+      pla_altitude:
+        OA_importHeader: altitude
+      pla_nom_type_plateforme_key:
+        OA_importHeader: nom du type de plateforme_key
+        OA_tags: [ __ORDER_5__ ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_platform_type_tpl
+              OA_isParent: true
+      pla_code_sandre:
+        OA_importHeader: code sandre
+      pla_code_sandre_contexte:
+        OA_importHeader: code sandre du contexte
+  tr_unit_uni:
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_i18n:
+      fr: Unités
+      en: Units
+    OA_naturalKey:
+      - uni_nom_key
+    OA_basicComponents:
+      uni_code:
+        OA_importHeader: code
+      uni_nom_key:
+        OA_importHeader: nom_key
+      uni_nom_fr:
+        OA_importHeader: nom_fr
+      uni_nom_en:
+        OA_importHeader: nom_en
+  tr_niveau_taxon_ntx:
+    OA_tags: [ taxon ]
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_i18n:
+      fr: Niveau de taxon
+      en: Level of taxon
+    OA_naturalKey:
+      - ntx_nom_key
+    OA_basicComponents:
+      ntx_nom_key:
+        OA_importHeader: nom_key
+        OA_tags: [ __ORDER_1__ ]
+      ntx_nom_fr:
+        OA_importHeader: nom_fr
+        OA_tags: [ __ORDER_2__ ]
+      ntx_nom_en:
+        OA_importHeader: nom_en
+        OA_tags: [ __ORDER_3__ ]
+      ntx_code_sandre:
+        OA_importHeader: code sandre
+      ntx_code_sandre_contexte:
+        OA_importHeader: code sandre du contexte
+  tr_propriete_taxon_ptx:
+    OA_tags: [ taxon ]
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - ptx_propriete_key
+    OA_i18n: 
+      fr: Propriété des taxon
+      en: Taxa properties
+    OA_basicComponents:
+      ptx_propriete_key:
+        OA_importHeader: nom de la propriété_key
+        OA_tags: [ __ORDER_1__ ]
+      ptx_propriete_fr:
+        OA_importHeader: nom de la propriété_fr
+        OA_tags: [ __ORDER_2__ ]
+      ptx_propriete_en:
+        OA_importHeader: nom de la propriété_en
+        OA_tags: [ __ORDER_3__ ]
+      ptx_definition_fr:
+        OA_importHeader: définition_fr
+      ptx_definition_en:
+        OA_importHeader: définition_en
+      ptx_isFloatValue:
+        OA_importHeader: isFloatValue
+      ptx_isQualitative:
+        OA_importHeader: isQualitative
+      ptx_type_associe:
+        OA_importHeader: type associé
+      ptx_ordre_affichage:
+        OA_importHeader: ordre d'affichage
+  tr_taxon_phytoplancton_txp:
+    OA_tags: [ taxon ]
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - tax_taxon_determine
+    OA_i18n:
+      fr: Taxon du phytoplancton
+      en: Taxa phytoplancton
+    OA_basicComponents:
+      tax_taxon_determine:
+        OA_required: true
+        OA_importHeader: nom du taxon déterminé
+        OA_tags: [ __ORDER_1__ ]
+      tax_theme:
+        OA_importHeader: theme
+      tax_niveau_taxon:
+        OA_required: true
+        OA_importHeader: nom du niveau de taxon
+        OA_tags: [ __ORDER_2__ ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_niveau_taxon_ntx
+              OA_isParent: true
+      tax_taxon_superieur:
+        OA_importHeader: nom du taxon superieur
+        OA_tags: [ __ORDER_3__ ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_taxon_phytoplancton_txp
+              OA_isParent: true
+      tax_code_sandre_taxon:
+        OA_importHeader: code sandre du taxon
+      tax_code_sandre_taxon_sup:
+        OA_importHeader: code sandre du taxon supérieur
+      tax_niveau_incertitude_determination:
+        OA_importHeader: niveau incertitude de détermination
+        OA_tags: [ __ORDER_4__ ]
+      tax_auteur_description:
+        OA_importHeader: Auteur de la description
+      tax_annee_description:
+        OA_importHeader: Année de la description
+      tax_reference_description:
+        OA_importHeader: Référence de la description
+      tax_reference_relatives_taxon:
+        OA_importHeader: Références relatives à ce taxon
+      tax_synonyme_ancien:
+        OA_importHeader: Synonyme ancien
+      tax_synonyme_recent:
+        OA_importHeader: Synonyme récent
+      tax_classe_algale_sensu_bourrelly:
+        OA_importHeader: Classe algale sensu Bourrelly
+      tax_code_sandre:
+        OA_importHeader: Code Sandre
+      tax_notes_libres:
+        OA_importHeader: Notes libres
+    OA_dynamicComponents: 
+      tax_propriete_taxon: 
+        OA_headerPrefix: pt_
+        OA_reference: tr_propriete_taxon_ptx
+        OA_referenceColumnToLookForHeader: ptx_propriete_fr
+  t_chlorophylle_chl:
+    OA_tags: [ taxon, __DATA__ ]
+    OA_i18n:
+      fr: Donnée de chlorophylle
+      en: Chlorophyll data
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - chl_date
+      - chl_projet
+      - chl_site
+      - chl_plateforme
+    OA_basicComponents:
+      chl_date:
+        OA_importHeader: Date de prelevement
+        OA_tags: [ __ORDER_1__ ]
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      chl_projet:
+        OA_importHeader: nom du projet
+        OA_tags: [ __ORDER_2__, localisation ]
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_project_pro
+      chl_site:
+        OA_importHeader: nom du site
+        OA_tags: [ __ORDER_3__, localisation ]
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_site_sit
+      chl_plateforme:
+        OA_importHeader: nom de la plateforme
+        OA_tags: [ __ORDER_4__, localisation ]
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_platform_pla
+      chl_profondeur_min:
+        OA_importHeader: profondeur min
+        OA_tags: [ __ORDER_5__, profondeur ]
+        OA_checker:
+          OA_name: OA_float
+      chl_profondeur_max:
+        OA_importHeader: profondeur max
+        OA_tags: [ __ORDER_6__, profondeur ]
+        OA_checker:
+          OA_name: OA_float
+      chl_profondeur_unit:
+        OA_tags: [ __ORDER_7__, profondeur ]
+        OA_defaultValue:
+          OA_expression: return "metre"
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unit_uni
+      chl_a_strickland_parsons:
+        OA_importHeader: chlorophylle a strickland-parsons
+        OA_checker:
+          OA_name: OA_float
+      chl_a_scor_unesco:
+        OA_importHeader: chlorophylle a scor-unesco
+        OA_checker:
+          OA_name: OA_float
+      chl_c:
+        OA_importHeader: chlorophylle c
+        OA_checker:
+          OA_name: OA_float
+      chl_carotenoide:
+        OA_importHeader: carotenoide
+        OA_checker:
+          OA_name: OA_float
+      chl_pheopigments:
+        OA_importHeader: pheopigments
+        OA_checker:
+          OA_name: OA_float
+      chl_unit:
+        OA_defaultValue:
+          OA_expression: return "microgramme par litre"
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unit_uni

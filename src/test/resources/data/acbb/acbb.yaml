@@ -1,0 +1,1736 @@
+version: 1
+application:
+  name: ACBB
+  version: 1
+references:
+  agroecosystemes :
+    keyColumns: [agroecosystem_key]
+    columns:
+      agroecosystem_key:
+        headerName: Agroécosystème_key
+      agroecosystem_fr:
+        headerName: Agroécosystème_fr
+      agroecosystem_en:
+        headerName: Agroécosystème_en
+      region:
+      departement:
+        headerName: Département
+  sites:
+    keyColumns: [site_key]
+    validations:
+      agroecosystemRef:
+        internationalizationName:
+          fr: "référence à l'agroécosystème"
+        checker:
+          name: Reference
+          params:
+            refType: agroecosystemes
+        columns: [ agroecosystem ]
+      checkDateMiseEnService:
+        internationalizationName:
+          fr: "validation de date"
+        checker:
+          name: Date
+          params:
+            pattern : "dd/MM/yyyy"
+        columns: [ "date_mise_en_service" ]
+    columns:
+      agroecosystem:
+        headerName: Agroécosystème
+      site_key:
+        headerName: nom du site_key
+      site_fr:
+        headerName: nom du site_fr
+      site_en:
+        headerName: nom du site_en
+      ville:
+      adresse:
+      coordonees:
+        headerName: cordonnées du dispositif
+      milieu:
+      climat:
+      pluviometrie:
+        headerName: pluviométrie moyenne (mm)
+      temperature:
+        headerName: température moyenne (°C)
+      vent_dominant:
+        headerName: vent dominant
+      vitesse_vent:
+        headerName: vitesse moyenne du vent (km/h)
+      type_sol:
+        headerName: type de sol
+      profondeur_moyenne:
+        headerName: profondeur moyenne du sol (m)
+      altitude_moyenne:
+        headerName: altitude moyenne (m)
+      date_mise_en_service:
+        headerName: date mise en service du dispositif
+  parcelles:
+    keyColumns: [site,parcelle_key]
+    columns:
+      site:
+      bloc:
+      repetition:
+        headerName: répétition
+      parcelle_key:
+        headerName: nom de la parcelle_key
+      parcelle_fr:
+        headerName: nom de la parcelle_fr
+      parcelle_en:
+        headerName: nom de la parcelle_en
+      surface:
+      date_creation:
+        headerName: date de création
+      commentaire_fr:
+      commentaire_en:
+  blocs:
+    validations:
+      creationDate:
+        internationalizationName:
+          fr: "date de création"
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+        columns: [ date_creation ]
+    keyColumns: [site,nom_du_bloc,repetition]
+    columns:
+      site:
+      nom_du_bloc:
+      repetition:
+        headerName: répétition
+      date_creation:
+        headerName: date creation
+      decription_fr:
+      description_en:
+  unites:
+    keyColumns: [nom_key]
+    columns:
+      code_key:
+      code_fr:
+      code_en:
+      nom_key:
+      nom_fr:
+      nom_en:
+  modalites:
+    internationalizedColumns:
+      nom_fr:
+        fr: nom_fr
+        en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_fr} ({code})'
+        en: '{nom_fr} ({code})'
+    keyColumns: [code]
+    columns:
+      variable_forcage:
+        headerName: Variable de forcage
+      code:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  version_de_traitement:
+    keyColumns: [site, traitement]
+    internationalizationDisplay:
+      pattern:
+        fr: '{traitement} ({modalites})'
+        en: '{traitement} ({modalites})'
+    columns:
+      site:
+      traitement:
+      version:
+      date_debut:
+        headerName: date début
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            required: true
+      date_fin:
+        headerName: date fin
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            required: false
+      commentaire_fr:
+      commentaire_en:
+      modalites:
+    validations:
+      modalitesRef:
+        internationalizationName:
+          fr: "référence aux modalités"
+        columns: [ modalites ]
+        checker:
+          name: Reference
+          params:
+            refType: modalites
+            transformation:
+              codify: true
+            multiplicity: MANY
+compositeReferences:
+  localizations:
+    components:
+      - reference: sites
+      - reference: parcelles
+        parentKeyColumn: "site"
+dataTypes:
+  flux_tours:
+    uniqueness:
+      - variable: site
+        component: chemin
+      - variable: parcelle
+        component: chemin
+      - variable: date
+        component: datetime
+    validations:
+      check_CO2_value:
+        internationalizationName:
+          fr: check value in range
+        checker:
+          name: GroovyExpression
+          params:
+            groovy:
+              expression: >
+                String stringValue = datum.CO2.value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                }
+                    Float value = stringValue.equals("")?null:Float.parseFloat(stringValue);
+                Float minValue = (String)datum.CO2.min_value.equals("")?null:Float.parseFloat((String)datum.CO2.min_value);
+                Float maxValue = (String)datum.CO2.max_value.equals("")?null:Float.parseFloat((String)datum.CO2.max_value);
+                Boolean isValid = true;
+                isValid = minValue==null  || minValue<value;
+                isValid = isValid && (maxValue!=null || value<=maxValue);
+                return isValid
+
+    data:
+      site:
+        components:
+          chemin:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      parcelle:
+        components:
+          chemin:
+            defaultValue:
+              expression: >
+                String site = datum.site.chemin;
+                String parcelle = datum.parcelle.name;
+                return site+"."+site+"__"+parcelle;
+            checker:
+              name: Reference
+              params:
+                refType: parcelles
+      date:
+        components:
+          datetime:
+            defaultValue:
+              expression: return (String)datum.date.day +" " +(String)datum.date.time
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm:ss
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
+      CO2:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"micromole_par_mole\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          min_value:
+            checker:
+              name: Float
+          max_value:
+            checker:
+              name: Float
+      H2O:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"millimole_par_mole\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          min_value:
+            checker:
+              name: Float
+          max_value:
+            checker:
+              name: Float
+      ZL:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"pas_d_unite\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+      Fc:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"micromole_par_mettre_carre_et_par_seconde\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          quality:
+            checker:
+              name: Integer
+              params:
+                required: false
+      H:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"watt_par_metre_carre\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          quality:
+            checker:
+              name: Integer
+              params:
+                required: false
+      LE:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"watt_par_metre_carre\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          quality:
+            checker:
+              name: Integer
+              params:
+                required: false
+      t:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"kilogramme_par_metre_et_par_seconde\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          quality:
+            checker:
+              name: Integer
+              params:
+                required: false
+      u*:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"metre_par_seconde\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          quality:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Fc gf:
+        components:
+          value:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"micromole_par_mettre_carre_et_par_seconde\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: site
+            component: chemin
+          exportHeader: "Site"
+        - rowNumber: 1
+          columnNumber: 3
+          boundTo:
+            variable: parcelle
+            component: name
+          exportHeader: "Parcelle"
+        - rowNumber: 10
+          columnNumber: 3
+          boundTo:
+            variable: CO2
+            component: min_value
+          exportHeader: "CO2_min"
+        - rowNumber: 11
+          columnNumber: 3
+          boundTo:
+            variable: CO2
+            component: max_value
+          exportHeader: "CO2_max"
+        - rowNumber: 10
+          headerName: H2O
+          boundTo:
+            variable: H2O
+            component: min_value
+          exportHeader: "H2O_min"
+        - rowNumber: 11
+          headerName: H2O
+          boundTo:
+            variable: H2O
+            component: max_value
+          exportHeader: "H2O_max"
+      headerLine: 8
+      firstRowLine: 12
+      columns:
+        - header: "date"
+          boundTo:
+            variable: date
+            component: day
+        - header: "heure"
+          boundTo:
+            variable: date
+            component: time
+        - header: "CO2"
+          boundTo:
+            variable: CO2
+            component: value
+        - header: "H2O"
+          boundTo:
+            variable: H2O
+            component: value
+        - header: "ZL"
+          boundTo:
+            variable: ZL
+            component: value
+        - header: "Fc"
+          boundTo:
+            variable: Fc
+            component: value
+        - header: "qc1"
+          boundTo:
+            variable: Fc
+            component: quality
+        - header: "H"
+          boundTo:
+            variable: H
+            component: value
+        - header: "qc2"
+          boundTo:
+            variable: H
+            component: quality
+        - header: "LE"
+          boundTo:
+            variable: LE
+            component: value
+        - header: "qc3"
+          boundTo:
+            variable: LE
+            component: quality
+        - header: "t"
+          boundTo:
+            variable: t
+            component: value
+        - header: "qc4"
+          boundTo:
+            variable: t
+            component: quality
+        - header: "u*"
+          boundTo:
+            variable: u*
+            component: value
+        - header: "Fc gf"
+          boundTo:
+            variable: Fc gf
+            component: value
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: parcelle
+          component: chemin
+      timeScope:
+        variable: date
+        component: datetime
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - site
+            - parcelle
+            - date
+            - CO2
+            - H2O
+            - ZL
+            - Fc
+            - H
+            - LE
+            - t
+            - u*
+            - Fc gf
+  biomasse_production_teneur:
+    data:
+      parcelle:
+        components:
+          chemin:
+            checker:
+              name: Reference
+              params:
+                refType: parcelles
+      observation:
+        components:
+          valeur:
+      rotation:
+        components:
+          valeur:
+            checker:
+              name: Integer
+              params:
+                required: false
+      année:
+        components:
+          valeur:
+            checker:
+              name: Integer
+              params:
+                required: false
+      période:
+        components:
+          valeur:
+            checker:
+              name: Integer
+              params:
+                required: false
+      type intervention:
+        components:
+          valeur:
+      date ou num incrémental intervention:
+        components:
+          valeur:
+      série:
+        components:
+          valeur:
+      mav_nature:
+        components:
+          valeur:
+      nature couvert:
+        components:
+          valeur:
+      date de mesure:
+        components:
+          valeur:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      mav_dateDebut_PotProd:
+        components:
+          valeur:
+      mav:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      N:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      DMS:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"pourcentage\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      C:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Pho:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      K:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Ca:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Mg:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Bo:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Cu:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Fe:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Mn:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Na:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"gramme_par_kilo\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      Zn:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"milligramme_par_kilogramme\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      CBR:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"pourcentage\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      HUT:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"pourcentage\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+      MOR:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"pourcentage\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+          nb:
+            checker:
+              name: Integer
+              params:
+                required: false
+          et:
+            checker:
+              name: Float
+              params:
+                required: false
+          methode:
+            checker:
+              name: Integer
+              params:
+                required: false
+          IQ:
+            checker:
+              name: Integer
+              params:
+                required: false
+    format:
+      headerLine: 8
+      firstRowLine: 12
+      columns:
+        - header: "parcelle"
+          boundTo:
+            variable: parcelle
+            component: chemin
+        - header: "observation"
+          boundTo:
+            variable: observation
+            component: valeur
+        - header: "rotation"
+          boundTo:
+            variable: rotation
+            component: valeur
+        - header: "année"
+          boundTo:
+            variable: année
+            component: valeur
+        - header: "période"
+          boundTo:
+            variable: période
+            component: valeur
+        - header: "type intervention"
+          boundTo:
+            variable: type intervention
+            component: valeur
+        - header: "date ou num incrémental intervention"
+          boundTo:
+            variable: date ou num incrémental intervention
+            component: valeur
+        - header: "série"
+          boundTo:
+            variable: série
+            component: valeur
+        - header: "mav_nature"
+          boundTo:
+            variable: mav_nature
+            component: valeur
+        - header: "nature couvert"
+          boundTo:
+            variable: nature couvert
+            component: valeur
+        - header: "date de mesure"
+          boundTo:
+            variable: date de mesure
+            component: valeur
+        - header: "mav_dateDebut_PotProd"
+          boundTo:
+            variable: mav_dateDebut_PotProd
+            component: valeur
+        - header: "mav_valeur"
+          boundTo:
+            variable: mav
+            component: valeur
+        - header: "mav_nb"
+          boundTo:
+            variable: mav
+            component: nb
+        - header: "mav_et"
+          boundTo:
+            variable: mav
+            component: et
+        - header: "mav_methode"
+          boundTo:
+            variable: mav
+            component: methode
+        - header: "mav_IQ"
+          boundTo:
+            variable: mav
+            component: IQ
+        - header: "N_valeur"
+          boundTo:
+            variable: N
+            component: valeur
+        - header: "N_nb"
+          boundTo:
+            variable: N
+            component: nb
+        - header: "N_et"
+          boundTo:
+            variable: N
+            component: et
+        - header: "N_methode"
+          boundTo:
+            variable: N
+            component: methode
+        - header: "N_IQ"
+          boundTo:
+            variable: N
+            component: IQ
+        - header: "DMS_valeur"
+          boundTo:
+            variable: DMS
+            component: valeur
+        - header: "DMS_nb"
+          boundTo:
+            variable: DMS
+            component: nb
+        - header: "DMS_et"
+          boundTo:
+            variable: DMS
+            component: et
+        - header: "DMS_methode"
+          boundTo:
+            variable: DMS
+            component: methode
+        - header: "DMS_IQ"
+          boundTo:
+            variable: DMS
+            component: IQ
+        - header: "C_valeur"
+          boundTo:
+            variable: C
+            component: valeur
+        - header: "C_nb"
+          boundTo:
+            variable: C
+            component: nb
+        - header: "C_et"
+          boundTo:
+            variable: C
+            component: et
+        - header: "C_methode"
+          boundTo:
+            variable: C
+            component: methode
+        - header: "C_IQ"
+          boundTo:
+            variable: C
+            component: IQ
+        - header: "Pho_valeur"
+          boundTo:
+            variable: Pho
+            component: valeur
+        - header: "Pho_nb"
+          boundTo:
+            variable: Pho
+            component: nb
+        - header: "Pho_et"
+          boundTo:
+            variable: Pho
+            component: et
+        - header: "Pho_methode"
+          boundTo:
+            variable: Pho
+            component: methode
+        - header: "Pho_IQ"
+          boundTo:
+            variable: Pho
+            component: IQ
+        - header: "K_valeur"
+          boundTo:
+            variable: K
+            component: valeur
+        - header: "K_nb"
+          boundTo:
+            variable: K
+            component: nb
+        - header: "K_et"
+          boundTo:
+            variable: K
+            component: et
+        - header: "K_methode"
+          boundTo:
+            variable: K
+            component: methode
+        - header: "K_IQ"
+          boundTo:
+            variable: K
+            component: IQ
+        - header: "Ca_valeur"
+          boundTo:
+            variable: Ca
+            component: valeur
+        - header: "Ca_nb"
+          boundTo:
+            variable: Ca
+            component: nb
+        - header: "Ca_et"
+          boundTo:
+            variable: Ca
+            component: et
+        - header: "Ca_methode"
+          boundTo:
+            variable: Ca
+            component: methode
+        - header: "Ca_IQ"
+          boundTo:
+            variable: Ca
+            component: IQ
+        - header: "Mg_valeur"
+          boundTo:
+            variable: Mg
+            component: valeur
+        - header: "Mg_nb"
+          boundTo:
+            variable: Mg
+            component: nb
+        - header: "Mg_et"
+          boundTo:
+            variable: Mg
+            component: et
+        - header: "Mg_methode"
+          boundTo:
+            variable: Mg
+            component: methode
+        - header: "Mg_IQ"
+          boundTo:
+            variable: Mg
+            component: IQ
+        - header: "Bo_valeur"
+          boundTo:
+            variable: Bo
+            component: valeur
+        - header: "Bo_nb"
+          boundTo:
+            variable: Bo
+            component: nb
+        - header: "Bo_et"
+          boundTo:
+            variable: Bo
+            component: et
+        - header: "Bo_methode"
+          boundTo:
+            variable: Bo
+            component: methode
+        - header: "Bo_IQ"
+          boundTo:
+            variable: Bo
+            component: IQ
+        - header: "Cu_valeur"
+          boundTo:
+            variable: Cu
+            component: valeur
+        - header: "Cu_nb"
+          boundTo:
+            variable: Cu
+            component: nb
+        - header: "Cu_et"
+          boundTo:
+            variable: Cu
+            component: et
+        - header: "Cu_methode"
+          boundTo:
+            variable: Cu
+            component: methode
+        - header: "Cu_IQ"
+          boundTo:
+            variable: Cu
+            component: IQ
+        - header: "Fe_valeur"
+          boundTo:
+            variable: Fe
+            component: valeur
+        - header: "Fe_nb"
+          boundTo:
+            variable: Fe
+            component: nb
+        - header: "Fe_et"
+          boundTo:
+            variable: Fe
+            component: et
+        - header: "Fe_methode"
+          boundTo:
+            variable: Fe
+            component: methode
+        - header: "Fe_IQ"
+          boundTo:
+            variable: Fe
+            component: IQ
+        - header: "Mn_valeur"
+          boundTo:
+            variable: Mn
+            component: valeur
+        - header: "Mn_nb"
+          boundTo:
+            variable: Mn
+            component: nb
+        - header: "Mn_et"
+          boundTo:
+            variable: Mn
+            component: et
+        - header: "Mn_methode"
+          boundTo:
+            variable: Mn
+            component: methode
+        - header: "Mn_IQ"
+          boundTo:
+            variable: Mn
+            component: IQ
+        - header: "Na_valeur"
+          boundTo:
+            variable: Na
+            component: valeur
+        - header: "Na_nb"
+          boundTo:
+            variable: Na
+            component: nb
+        - header: "Na_et"
+          boundTo:
+            variable: Na
+            component: et
+        - header: "Na_methode"
+          boundTo:
+            variable: Na
+            component: methode
+        - header: "Na_IQ"
+          boundTo:
+            variable: Na
+            component: IQ
+        - header: "Zn_valeur"
+          boundTo:
+            variable: Zn
+            component: valeur
+        - header: "Zn_nb"
+          boundTo:
+            variable: Zn
+            component: nb
+        - header: "Zn_et"
+          boundTo:
+            variable: Zn
+            component: et
+        - header: "Zn_methode"
+          boundTo:
+            variable: Zn
+            component: methode
+        - header: "Zn_IQ"
+          boundTo:
+            variable: Zn
+            component: IQ
+        - header: "CBR_valeur"
+          boundTo:
+            variable: CBR
+            component: valeur
+        - header: "CBR_nb"
+          boundTo:
+            variable: CBR
+            component: nb
+        - header: "CBR_et"
+          boundTo:
+            variable: CBR
+            component: et
+        - header: "CBR_methode"
+          boundTo:
+            variable: CBR
+            component: methode
+        - header: "CBR_IQ"
+          boundTo:
+            variable: CBR
+            component: IQ
+        - header: "HUT_valeur"
+          boundTo:
+            variable: HUT
+            component: valeur
+        - header: "HUT_nb"
+          boundTo:
+            variable: HUT
+            component: nb
+        - header: "HUT_et"
+          boundTo:
+            variable: HUT
+            component: et
+        - header: "HUT_methode"
+          boundTo:
+            variable: HUT
+            component: methode
+        - header: "HUT_IQ"
+          boundTo:
+            variable: HUT
+            component: IQ
+        - header: "MOR_valeur"
+          presenceConstraint: OPTIONAL
+          boundTo:
+            variable: MOR
+            component: valeur
+        - header: "MOR_nb"
+          presenceConstraint: OPTIONAL
+          boundTo:
+            variable: MOR
+            component: nb
+        - header: "MOR_et"
+          presenceConstraint: OPTIONAL
+          boundTo:
+            variable: MOR
+            component: et
+        - header: "MOR_methode"
+          presenceConstraint: OPTIONAL
+          boundTo:
+            variable: MOR
+            component: methode
+        - header: "MOR_IQ"
+          presenceConstraint: OPTIONAL
+          boundTo:
+            variable: MOR
+            component: IQ
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: parcelle
+          component: chemin
+      timeScope:
+        variable: date de mesure
+        component: valeur
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - parcelle
+            - observation
+            - rotation
+            - année
+            - période
+            - type intervention
+            - date ou num incrémental intervention
+            - série
+            - mav_nature
+            - nature couvert
+            - date de mesure
+            - mav_dateDebut_PotProd
+            - mav
+            - N
+            - DMS
+            - C
+            - Pho
+            - K
+            - Ca
+            - Mg
+            - Bo
+            - Cu
+            - Fe
+            - Mn
+            - Na
+            - Zn
+            - CBR
+            - HUT
+            - MOR
+  SWC:
+    data:
+      Nom parcelle:
+        components:
+          chemin:
+            checker:
+              name: Reference
+              params:
+                refType: parcelles
+      Nom traitement:
+        components:
+          valeur:
+      Date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
+          datetime:
+            defaultValue:
+              expression: >
+                return (String)datum.Date.day +" " +(String)datum.Date.time
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "30 MINUTES"
+      contexte:
+        components:
+          répétition:
+            checker:
+              name: Integer
+              params:
+          profondeur:
+            checker:
+              name: Integer
+              params:
+      SWC:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          qualité:
+            checker:
+              name: Integer
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"pourcentage\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+    validations:
+      swcQualityEnumeration:
+        internationalizationName:
+          fr: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
+        checker:
+          name: GroovyExpression
+          params:
+            groovy:
+              expression: "Set.of(\"\", \"0\", \"1\", \"2\").contains(datum.get(\"SWC\").get(\"qualité\"))"
+    format:
+      headerLine: 7
+      firstRowLine: 10
+      columns:
+        - header: "Nom parcelle"
+          boundTo:
+            variable: Nom parcelle
+            component: chemin
+        - header: "Nom traitement"
+          boundTo:
+            variable: Nom traitement
+            component: valeur
+        - header: "Date"
+          boundTo:
+            variable: Date
+            component: day
+        - header: "Time"
+          boundTo:
+            variable: Date
+            component: time
+      repeatedColumns:
+        - headerPattern: "SWC_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: contexte
+                component: répétition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: contexte
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
+        - headerPattern: "qc"
+          boundTo:
+            variable: SWC
+            component: qualité
+          exportHeader: "qc"
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: Nom parcelle
+          component: chemin
+      timeScope:
+        variable: Date
+        component: datetime
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - Nom parcelle
+            - Nom traitement
+            - Date
+            - contexte
+            - SWC

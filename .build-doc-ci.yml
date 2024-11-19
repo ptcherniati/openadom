@@ -1,0 +1,38 @@
+image: alpine:latest
+
+stages:
+  - build
+  - pages
+
+build_doc:
+  image:
+    name: registry.gitlab.com/vincenttam/pandoc-mermaid-docker
+    entrypoint: [""]
+  stage: build
+  script:
+    - mkdir public
+    - cp documentations/warning.png warning.png
+    - cp documentations/services_model.* public/
+    - pandoc documentations/DOC.md -o public/doc.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
+    - pandoc documentations/Lexique_yaml.md -o public/lexique.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
+    - pandoc README.md documentations/doc_addon.md -o public/index0.html -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
+    - cat documentations/Documentation_fichier_Yaml/*.md > public/configuration.md
+    - pandoc -s -o public/fichier_de_configuration.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc --toc-depth=5 public/configuration.md
+    - cat src/test/resources/data/configuration/schemaExample.yaml > public/schemaExample.yaml
+    - cat src/test/resources/data/configuration/schemaExample.yaml
+    - cat documentations/headerhtml.html public/index0.html > public/index.html
+    - rm public/index0.html
+
+  artifacts:
+    paths:
+      - public
+
+pages:
+  stage: pages
+  needs: ["build_doc"]
+  script:
+    - ls public
+
+  artifacts:
+    paths:
+      - public

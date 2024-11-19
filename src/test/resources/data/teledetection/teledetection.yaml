@@ -1,0 +1,404 @@
+version: 1 #obligatoire, version de l'application OpenADOM
+application: #obligatoire
+  name: damienbastedeccinq #obligatoire
+  defaultLanguage: fr
+  internationalizationName:
+    fr: BAS Damien UC Teledec Scen 5
+    en: BAS Damien UC Teledec Scen 5
+  version: 1 #obligatoire, version de l'application créée avec OpenADOM
+references:
+  tr_variable_standard_vstd: # 0.tr_variable_standard_vstd.csv
+    internationalizationName:
+      fr: (0.tr_variable_standard_vstd.csv) Référentiel des variables standard
+      en: (0.tr_variable_standard_vstd.csv)Standard variable reference
+    allowUnexpectedColumns: false
+    keyColumns: [vstd_code]
+    columns:
+      vstd_code:
+      vstd_shortname_fr:
+      vstd_shortname_en:
+      vstd_label_fr:
+      vstd_label_en:
+      vstd_description_fr:
+      vstd_description_en:
+      vstd_ref:
+  tr_metadata_entity_ment: # 1.tr_metadata_entity_ment.csv
+    internationalizationName:
+      fr: (1.tr_metadata_entity_ment.csv) Liste des entités utilisables dans le référentiel des métadonnées des variables locales (r_variable_local_metadata_vlm)
+      en : (1.tr_metadata_entity_ment.csv) List of entities usable in the metadata reference of the local variable names
+    internationalizationDisplay: #tout computationChecker (dans les ddr et dans les data ?) referencant tr_metadata_entity_ment dans un autre referentiel ou les données est censé récupérer le pattern suivant en lieu et place de la keyColumns --> non fonctionnel actuellement (voir pour ce cas le referentiel ref_datafile_variable_metadata)
+      pattern:
+        fr: "{ment_name_fr}"
+        en: "{ment_name_en}"
+    allowUnexpectedColumns: false
+    keyColumns: [ment_code]
+    columns:
+      ment_code:
+      ment_name_fr:
+      ment_name_en:
+      ment_uri:
+  tr_variable_local_vloc: # 3.tr_variable_local_vloc.csv
+    internationalizationName:
+      fr: (3.tr_variable_local_vloc.csv) Liste des noms locaux des variables
+      en: (3.tr_variable_local_vloc.csv) List of local variable names
+    keyColumns: [vloc_code]
+    columns:
+      vloc_code:
+      vloc_vstd_code:
+        checker:
+          name: Reference
+          params:
+            refType: tr_variable_standard_vstd
+            required: false
+            transformation:
+              codify: true
+      vloc_qualifier:
+      vloc_context:
+      vloc_entity:
+      vloc_characteristic:
+      vloc_category:
+      vloc_unit:
+    computedColumns:
+      vloc_metadata:
+        computation:
+          expression: >
+            String search_vloc_code = (String)datum.vloc_code;
+            references.tr_variable_local_metadata_vlm
+            .findAll({it.refValues.vlm_vloc_code.equals(search_vloc_code)})
+            .collect({it.naturalKey})
+            .join(",");
+          references:
+            - tr_variable_local_metadata_vlm
+        checker:
+          name: Reference
+          params:
+            multiplicity: MANY
+            refType: tr_variable_local_metadata_vlm
+            required: false
+  tr_variable_local_metadata_vlm: # 2.tr_variable_local_metadata_vlm.csv
+    internationalizationName:
+      fr: (2.tr_variable_local_metadata_vlm.csv) Liste des métadonnées des variables locales
+      en: (2.tr_variable_local_metadata_vlm.csv) local variable metadata
+    allowUnexpectedColumns: false
+    internationalizationDisplay: #pour récupérer ces patterns en lieu et place de la clé naturelle de tr_variable_local_metadata_vlm --> non fonctionel pr le moment (voir la computedColumn vloc_metadata du referentiel tr_variable_local_vloc)
+      pattern:
+        fr: "{vlm_ment_code} : {vlm_ment_value} ({vlm_ment_value_unit_code})" # vlm_ment_code pourrait etre remplacé ici par son internationalizationDisplay ?
+        en: "{vlm_ment_code} : {vlm_ment_value} ({vlm_ment_value_unit_code})"
+    keyColumns: [vlm_vloc_code,vlm_ment_code,vlm_ment_value]
+    columns:
+      vlm_vloc_code:
+      ## computationChecker commenté car référence croisée avec celui de la colonne calculée vloc_metadata du référentiel r_variable_local_vloc
+      # computationChecker:
+      #   name: Reference #contrainte de type référentiel
+      #   params:
+      #     refType: r_variable_local_vloc #a priori on fait toujours refererence à un referentiel avec sa clé naturelle
+      #     required: true # obligatoirement dans le referentiel
+      #     transformation:
+      #       codify: true
+      vlm_ment_code:
+        checker:
+          name: Reference #contrainte de type référentiel
+          params:
+            refType: tr_metadata_entity_ment #a priori on fait toujours refrerence à un referentiel avec sa clé naturelle (ment_code ici)
+            required: true # obligatoirement dans le referentiel
+            transformation:
+              codify: true
+      vlm_ment_value:
+      vlm_ment_type:
+      vlm_ment_value_unit_code:
+      vlm_ment_value_uri:
+      vlm_ment_value_unit_code_uri:
+  tr_site_sit: # 4.tr_site_sit.csv
+    internationalizationName:
+      fr: (4.tr_site_sit.csv) Liste des sites d'étude
+      en: (4.tr_site_sit.csv) List of study sites
+    allowUnexpectedColumns: false
+    internationalizedColumns: # pour l'instant, aucun effet constaté sans l'usage associé de internationalizationDisplay --> à discuter
+      sit_label_fr:
+        fr: sit_label_en
+        en: sit_label_en
+    internationalizationDisplay:
+      pattern:
+        fr: "{sit_code} ({sit_label_fr})"
+        en: "{sit_code} ({sit_label_en})"
+    keyColumns: [sit_code]
+    columns:
+      sit_code:
+      sit_label_fr:
+      sit_label_en:
+      sit_description_fr:
+      sit_description_en:
+      sit_uri:
+      sit_net_code:
+        headerName: "sit_network_code"
+  tr_plot_type_pty: # 5.tr_plot_type_pty.csv
+    internationalizationName:
+      fr: (5.tr_plot_type_pty.csv) Liste des types de parcelles expérimentales
+      en: (5.tr_plot_type_pty.csv) List of experimental plot types
+    allowUnexpectedColumns: false
+    keyColumns: [pty_code]
+    columns:
+      pty_code:
+      pty_label_fr:
+      pty_label_en:
+      pty_description_fr:
+      pty_description_en:
+      pty_uri:
+  tr_treatment_tre: # 6.tr_treatment_tre.csv
+    internationalizationName:
+      fr: (6.tr_treatment_tre.csv) Liste des traitements
+      en: (6.tr_treatment_tre.csv) list of treatments
+    allowUnexpectedColumns: false
+    keyColumns: [tre_code]
+    columns:
+      tre_code:
+        headerName: "treatment_code"
+      tre_label_fr:
+        headerName: "treatment_label_fr"
+      tre_label_en:
+        headerName: "treatment_label_en"
+      tre_desciption_fr:
+        headerName: "treatment_description_fr"
+      tre_description_en:
+        headerName: "treatment_description_en"
+      tre_uri:
+        headerName: "treatment_uri"
+  tr_plot_plo: # 7.tr_plot_plo.csv
+    internationalizationName:
+      fr: (7.tr_plot_plo.csv) Liste des parcelles expérimentales
+      en: (7.tr_plot_plo.csv) List of experimental plots
+    allowUnexpectedColumns: false
+    # internationalizationDisplay:
+    #   pattern:
+    #     fr: "{plot_label_fr}"
+    #     en: "{plot_label_en}"
+    keyColumns: [plo_code]
+    columns:
+      plo_code:
+        headerName: "plot_code"
+      plo_label_fr:
+        headerName: "plot_label_fr"
+      plo_label_en:
+        headerName: "plot_label_en"
+      plo_desciption_fr:
+        headerName: "plot_description_fr"
+      plo_description_en:
+        headerName: "plot_description_en"
+      plo_pty_code:
+        headerName: "plot_type_code"
+        checker:
+          name: Reference #contrainte de type référentiel
+          params:
+            refType: tr_plot_type_pty
+            required: true # valeur obligatoire (clé étrangère NON null)
+            transformation:
+              codify: true
+      plo_uri:
+        headerName: "plot_uri"
+      plo_plo_parent_code:
+        headerName: "plot_parent_code"
+        checker:
+          name: Reference #contrainte de type référentiel
+          params:
+            refType: tr_plot_plo
+            required: false #valeur pouvant être absente (clé étrangère null)
+            transformation:
+              codify: true
+      plo_sit_code:
+        headerName: "site_code"
+        checker:
+          name: Reference #contrainte de type référentiel
+          params:
+            refType: tr_site_sit
+            required: false #valeur pouvant être absente (clé étrangère null)
+            transformation:
+              codify: true
+      plo_tre_code:
+        headerName: "treatment_code"
+        checker:
+          name: Reference #contrainte de type référentiel
+          params:
+            refType: tr_treatment_tre
+            required: false #valeur pouvant être absente (clé étrangère null)
+            transformation:
+              codify: true
+compositeReferences:
+  # cref_ref_plot_ref_plot:
+  #   components:
+  #     - parentRecursiveKey: plot_code_parent
+  #       reference: ref_plot
+  cref_plo_sit:
+    components:
+      - reference: tr_site_sit
+      - reference: tr_plot_plo
+        parentKeyColumn: "plo_sit_code"
+dataTypes: # types de données à gérer (un type = un modèle de fichier csv)
+  t_teledetection_tel: # solutions avec colonnes organisées verticalement et une colonne meta_info
+    # manquent sections repository, submissionScope> dataGroups, authoriationScopes, timeScope
+    internationalizationName:
+      fr: données de télédétection sans repeated columns
+      en: teledetection data
+    internationalizationDisplays: # attention : avec un S ici car peut concerner plusieurs referentiels
+      tr_site_sit: # censé surcharger l'affichage de la clé naturelle de tr_site_sit définit dan la section reference ; tr_site_sit est utilisé ici dans un computationChecker de component (section data) de ce type de données.
+        pattern:
+          fr: "<em>[data display]</em>: {sit_code} ({sit_label_fr})"
+          en: "<em>[data display]</em>: {sit_code} ({sit_label_en})"
+    uniqueness: # clé d'unicité pour chaque ligne de données
+      - variable: location
+        component: tel_experimental_plot
+      - variable: location
+        component: tel_experimental_site
+      - variable: location
+        component: tel_experimental_network
+      - variable: date
+        component: tel_date
+      - variable: date
+        component: tel_hour
+      - variable: data
+        component: tel_variable
+    data: # le format en base du type de données
+      date: # nom (libre) de variable dans la base
+        components: # section composante
+          tel_date:  # nom libre de composante en base pour la variable date
+            checker:
+              name: Date
+              params:
+                required: true
+                pattern: dd/MM/yyyy
+          tel_hour:  # nom libre de composante en base pour la variable date
+            checker:
+              name: Date
+              params:
+                required: true
+                pattern: HH:mm
+      location: # nom (libre) de variable dans la base
+        components: # section composante
+          tel_experimental_network:
+          tel_experimental_site:
+            checker:
+              name: Reference # un computationChecker de type reference
+              params:
+                required: true # la valeur ne peut être vide
+                refType: tr_site_sit
+                transformation: # a faire avant de vérifier
+                  codify: true
+          tel_experimental_plot:
+            checker:
+              name: Reference # un computationChecker de type reference
+              params:
+                required: true # la valeur ne peut être vide
+                refType: tr_plot_plo
+                transformation: # a faire avant de vérifier
+                  codify: true
+      treatment: # nom (libre) de variable dans la base
+        components: # section composante
+          tel_experimental_treatment:
+            checker:
+              name: Reference # un computationChecker de type reference
+              params:
+                required: true # la valeur ne peut être vide
+                refType: tr_treatment_tre
+                transformation: # a faire avant de vérifier
+                  codify: true
+      pixel_count:
+        computedComponents:
+          tel_pixel_count:
+            computation:
+              expression: >
+                StringToTest=(String)datum.data.get("tel_variable");
+                if(StringToTest.indexOf("10m") == -1) {return datum.get("pixel_count").get("tel_pixel_count_20m");
+                } else {
+                return datum.get("pixel_count").get("tel_pixel_count_10m");
+                }
+        components: # section composante
+          tel_pixel_count_10m:
+            tags: [__hidden__]
+          tel_pixel_count_20m:
+            tags: [__hidden__]
+      data:
+        components:
+          tel_variable:
+            checker:
+              name: Reference # un computationChecker de type reference
+              params:
+                required: true # la valeur ne peut être vide
+                refType: tr_variable_local_vloc
+                transformation: # à faire avant de vérifier
+                  codify: true
+          tel_value:
+    format:  # comment remplir les données décrites dans la section data à partir du fichier csv de ce type de données
+      allowUnexpectedColumns: true #pas d'erreur avec colonnes suppléméntaires non traitées ("Date & Heure") --> ne fonctionne pas actuellement
+      headerLine: 11 #numéro de la ligne contenant les en-têtes de colonnes
+      firstRowLine: 12 # numéro de la première ligne de données
+      separator: ";"
+      constants: # définition des constantes du fichier = valeurs d'entêtes
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo: # liens avec la section data
+            variable: location # variable de la section data à associer
+            component: tel_experimental_network # composante à associer pour la variable de la section data associée
+          exportHeader: experimental network # nom de l'en-tête de colonne à utiliser pour l'export
+        - rowNumber: 2
+          columnNumber: 2
+          boundTo: # liens avec la section data
+            variable: location # variable de la section data à associer
+            component: tel_experimental_site # composante à associer pour la variable de la section data associée
+          exportHeader: experimental site # nom de l'en-tête de colonne à utiliser pour l'export
+        - rowNumber: 3
+          columnNumber: 2
+          boundTo: # liens avec la section /applicationsdata
+            variable: location # variable de la section data à associer
+            component: tel_experimental_plot # composante à associer pour la variable de la section data associée
+          exportHeader: experimental plot # nom de l'en-tête de colonne à utiliser pour l'export
+        - rowNumber: 4
+          columnNumber: 2
+          boundTo: # liens avec la section data
+            variable: treatment # variable de la section data à associer
+            component: tel_experimental_treatment # composante à associer pour la variable de la section data associée
+          exportHeader: experimental treatment # nom de l'en-tête de colonne à utiliser pour l'export
+        - rowNumber: 5
+          columnNumber: 2
+          boundTo: # liens avec la section data
+            variable: pixel_count # variable de la section data à associer
+            component: tel_pixel_count_10m # composante à associer pour la variable de la section data associée
+          #exportHeader: pixel_count_10m # nom de l'en-tête de colonne à utiliser pour l'export
+        - rowNumber: 6
+          columnNumber: 2
+          boundTo: # liens avec la section data
+            variable: pixel_count # variable de la section data à associer
+            component: tel_pixel_count_20m # composante à associer pour la variable de la section data associée
+          exportHeader: pixel_count_20m # nom de l'en-tête de colonne à utiliser pour l'export
+      repeatedColumns:
+        - headerPattern: "(.*)"
+          tokens:
+            - boundTo:
+                variable: data
+                component: tel_variable
+              exportHeader: "variable"
+          boundTo:
+            variable: data
+            component: tel_value
+          exportHeader: "value"
+        # - headerPattern: "(.*)_S2_(.*)_(.*)"
+        #   tokens:
+        #     - boundTo:
+        #         variable: teledec_data
+        #         component: variable
+        #     - boundTo:
+        #         variable: teledec_data
+        #         component: qualifier
+        #     - boundTo:
+        #         variable: teledec_data
+        #         component: spatial_resolution
+        #   boundTo:
+        #     variable: teledec_data
+        #     component: value
+      columns:
+        - header: "Date"
+          boundTo:
+            variable: date
+            component: tel_date
+        - header: "Heure"
+          boundTo:
+            variable: date
+            component: tel_hour

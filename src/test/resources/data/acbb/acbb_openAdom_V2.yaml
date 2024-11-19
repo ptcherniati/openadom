@@ -1,0 +1,1129 @@
+OA_version: 2.0.1
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: "ACBB"
+      en: "ACBB"
+    OA_description:
+      fr: "Agroécosystèmes, Cycles Biogéochimiques et Biodiversité"
+      en: "Agroecosystems, Biogeochemical Cycles and Biodiversity"
+  OA_comment: "L'application ACBB V2"
+  OA_name: acbb_openadom_v2
+  OA_version: 1.0.2
+OA_data:
+  tr_agroecosystemes_agr:
+    OA_i18n:
+      OA_title:
+        fr: référence aux agroecosystemes
+        en: reference to agroecosystems
+      OA_description:
+        fr: Les agroécosystèmes représentent des regroupements par type de traitement
+        en: Agroecosystems represent groupings by type of treatment
+    OA_naturalKey: [agr_agroecosystem_key]
+    OA_basicComponents:
+      agr_agroecosystem_key:
+        OA_importHeader: Agroécosystème_key
+        OA_exportHeader:
+          OA_title:
+            fr: key
+            en: key
+      agr_agroecosystem_fr:
+        OA_importHeader: Agroécosystème_fr
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Agroécosysteme
+      agr_agroecosystem_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en: Agroecosystem
+        OA_importHeader: Agroécosystème_en
+      agr_region:
+        OA_importHeader: region
+        OA_exportHeader:
+          OA_title:
+            fr: Region
+            en: Region
+      agr_departement:
+        OA_importHeader: Département
+        OA_exportHeader:
+          OA_title:
+            fr: Département
+            en: Department
+  tr_sites_sit:
+    OA_i18n:
+      OA_title:
+        fr: référence aux sites
+        en: reference to sites
+      OA_description:
+        fr: sites d'etudes
+        en: study sites
+    OA_naturalKey: [sit_site_key]
+    OA_validations:
+      sit_checkDateMiseEnService:
+        OA_i18n:
+          fr: "validation de date"
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern : "dd/MM/yyyy"
+        OA_components: [ sit_date_mise_en_service ]
+    OA_basicComponents:
+      sit_agroecosystem:
+        OA_exportHeader:
+          OA_title:
+            fr: Agroécosystem
+            en: Agroecosystem
+        OA_importHeader: Agroécosystème
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_isParent: true
+              OA_name: tr_agroecosystemes_agr
+      sit_site_key:
+        OA_exportHeader:
+          OA_title:
+            fr: key
+            en: key
+        OA_importHeader: nom du site_key
+      sit_site_fr:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Site
+        OA_importHeader: nom du site_fr
+      sit_site_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en: Site
+        OA_importHeader: nom du site_en
+      sit_ville:
+        OA_exportHeader:
+          OA_title:
+            fr: Ville
+            en: City
+        OA_importHeader: ville
+      sit_adresse:
+        OA_exportHeader:
+          OA_title:
+            fr: Adresse
+            en: Adress
+        OA_importHeader: adresse
+      sit_coordonees:
+        OA_exportHeader:
+          OA_title:
+            fr: Coordonnées
+            en: Coordinates
+        OA_importHeader: cordonnées du dispositif
+      sit_milieu:
+        OA_exportHeader:
+          OA_title:
+            fr: Milieu
+            en: Environnement
+        OA_importHeader: milieu
+      sit_climat:
+        OA_exportHeader:
+          OA_title:
+            fr: Climat
+            en: Climate
+        OA_importHeader: climat
+      sit_pluviometrie:
+        OA_exportHeader:
+          OA_title:
+            fr: Pluviométrie
+            en: RainFall
+        OA_importHeader: pluviométrie moyenne (mm)
+      sit_temperature:
+        OA_exportHeader:
+          OA_title:
+            fr: Température
+            en: Température
+        OA_importHeader: température moyenne (°C)
+      sit_vent_dominant:
+        OA_exportHeader:
+          OA_title:
+            fr: Vent dominant
+            en: Prevailing wind
+        OA_importHeader: vent dominant
+      sit_vitesse_vent:
+        OA_exportHeader:
+          OA_title:
+            fr: Vitesse du vent
+            en: Wind speed
+        OA_importHeader: vitesse moyenne du vent (km/h)
+      sit_type_sol:
+        OA_exportHeader:
+          OA_title:
+            fr: Type de sol
+            en: Soil type
+        OA_importHeader: type de sol
+      sit_profondeur_moyenne:
+        OA_exportHeader:
+          OA_title:
+            fr: Profondeur moyenne
+            en: Average depth
+        OA_importHeader: profondeur moyenne du sol (m)
+      sit_altitude_moyenne:
+        OA_exportHeader:
+          OA_title:
+            fr: Altitude moyenne
+            en: Average altitude
+        OA_importHeader: altitude moyenne (m)
+      sit_date_mise_en_service:
+        OA_exportHeader:
+          OA_title:
+            fr: date mise en service du dispositif
+            en: date of commissioning of the device
+        OA_importHeader: date mise en service du dispositif
+  tr_unites_unit:
+    OA_i18n:
+      OA_title:
+        fr: référence aux unités
+        en: reference to units
+      OA_description:
+        fr: unités des différentes valeurs
+        en: units of different values
+    OA_naturalKey: [unit_code_key]
+    OA_basicComponents:
+      unit_code_key:
+        OA_exportHeader:
+          OA_title:
+            fr: key
+            en: key
+        OA_importHeader: code_key
+      unit_code_fr:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Code de l'unité
+        OA_importHeader: code_fr
+      unit_code_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en: Unit code
+        OA_importHeader: code_en
+      unit_nom_key:
+        OA_exportHeader:
+          OA_title:
+            fr: Clef du nom
+            en: key name
+        OA_importHeader: nom_key
+      unit_nom_fr:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Nom
+        OA_importHeader: nom_fr
+      unit_nom_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en: Name
+        OA_importHeader: nom_en
+  tr_modalites_mod:
+    OA_i18n:
+      OA_title:
+        fr: référence aux modalités
+        en: reference to the terms
+      OA_description:
+        fr: les modalités des traitements
+        en: the terms of the treatments
+    OA_naturalKey: [mod_code]
+    OA_basicComponents:
+      mod_variable_forcage:
+        OA_exportHeader:
+          OA_title:
+            fr: Variable de forcage
+            en: Forcing variable
+        OA_importHeader: Variable de forcage
+      mod_code:
+        OA_exportHeader:
+          OA_title:
+            fr: code
+            en: code
+        OA_importHeader: code
+      mod_nom_fr:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Nom
+        OA_importHeader: nom_fr
+      mod_nom_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en: Name
+        OA_importHeader: nom_en
+      mod_description_fr:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Description
+        OA_importHeader: description_fr
+      mod_description_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en: Description
+        OA_importHeader: description_en
+  tr_version_de_traitement_vdt:
+    OA_i18n:
+      OA_title:
+        fr: référence aux versions de traitement
+        en: reference to processing versions
+      OA_description:
+        fr: les traitements sont décrits par la liste de leurs modalités
+        en: The treatments are described by the list of their modalities
+    OA_naturalKey: [sit_key, vdt_traitement]
+    OA_computedComponents:
+      sit_key:
+        OA_exportHeader:
+          OA_title:
+            fr: Clef du ite
+            en: Site key
+        OA_tags: [ __HIDDEN__ ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_isParent: true
+              OA_name: tr_sites_sit
+        OA_withNaturalKeyComponents:
+          - sit_site
+    OA_basicComponents:
+      sit_site:
+        OA_exportHeader:
+          OA_title:
+            fr: Site
+            en: Site
+        OA_importHeader: site
+      vdt_traitement:
+        OA_exportHeader:
+          OA_title:
+            fr: Traitement
+            en: Treatment
+        OA_importHeader: traitement
+      vdt_version:
+        OA_exportHeader:
+          OA_title:
+            fr: Version
+            en: Version
+        OA_importHeader: version
+      vdt_date_debut:
+        OA_exportHeader:
+          OA_title:
+            fr: Date de début
+            en: Start date
+        OA_importHeader: date début
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      vdt_date_fin:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Date de fin
+            en: End date
+        OA_importHeader: date fin
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      vdt_commentaire_fr:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Commentaire
+        OA_importHeader: commentaire_fr
+      vdt_commentaire_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en: Comment
+        OA_importHeader: commentaire_en
+      vdt_modalites:
+        OA_exportHeader:
+          OA_title:
+            fr: Modalités
+            en: Terms
+        OA_importHeader: modalites
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_modalites_mod
+            OA_multiplicity: MANY
+  tr_parcelles_par:
+    OA_naturalKey: [ sit_site,par_parcelle_key ]
+    OA_i18n:
+      OA_title:
+        fr: parcelles
+        en: plots
+      OA_description:
+        fr: les sites sont divisés en parcelles sur lesquelles on applique un traitement. Il peut y avoir des blocs de répétitions de parcelles
+        en: Sites are divided into plots on which a treatment is applied. There may be blocks of plot repetitions
+    OA_basicComponents:
+      sit_site:
+        OA_exportHeader:
+          OA_title:
+            fr: Site
+            en: Site
+        OA_importHeader: site
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_isParent: true
+              OA_name: tr_sites_sit
+      par_bloc:
+        OA_exportHeader:
+          OA_title:
+            fr: Bloc
+            en: Bloc
+        OA_importHeader: bloc
+      par_repetition:
+        OA_exportHeader:
+          OA_title:
+            fr: Répétition
+            en: Repetition
+        OA_importHeader: répétition
+      par_parcelle_key:
+        OA_tags: [__HIDDEN__]
+        OA_importHeader: nom de la parcelle_key
+      par_parcelle_fr:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: nom de la parcelle_fr
+        OA_importHeader: nom de la parcelle_fr
+      par_parcelle_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en : Plot name
+        OA_importHeader: nom de la parcelle_en
+      par_surface:
+        OA_exportHeader:
+          OA_title:
+            fr: Surface
+            en: Surface
+        OA_importHeader: surface
+      par_date_creation:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Date de création
+            en: Create date
+        OA_importHeader: date de création
+      par_commentaire_fr:
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:
+          OA_title:
+            fr: Commentaire
+        OA_importHeader: commentaire_fr
+      par_commentaire_en:
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:
+          OA_title:
+            en: Comment
+        OA_importHeader: commentaire_en
+  t_flux_tours_flx:
+    OA_tags: [__DATA__]
+    OA_allowUnexpectedColumns: true
+    OA_dataHeaderLine: 8  #optional
+    OA_dataFirstLine: 12  #optional
+    OA_i18n:
+      OA_title:
+        fr: Données des tours à flux
+        en: Flow tower data
+      OA_description:
+        fr: Données issues des tours à flux
+        en: Data from flow towers
+    OA_naturalKey:
+      - par_parcelle
+      - flx_date
+    OA_validations:
+      check_CO2_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour le CO2
+          en: check value in range for CO2
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >                
+                String stringValue = datum.flx_co2_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_co2_min)?null:Float.parseFloat((String)datum.flx_co2_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_co2_max)?null:Float.parseFloat((String)datum.flx_co2_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_co2_value
+      check_h2o_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour l'H2O'
+          en: check value in range for H2O
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >                
+                String stringValue = datum.flx_h2o_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_h2o_min)?null:Float.parseFloat((String)datum.flx_h2o_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_h2o_max)?null:Float.parseFloat((String)datum.flx_h2o_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_h2o_value #optional
+      check_zl_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour l'ZL'
+          en: check value in range for ZL
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String stringValue = datum.flx_zl_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_zl_min)?null:Float.parseFloat((String)datum.flx_zl_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_zl_max)?null:Float.parseFloat((String)datum.flx_zl_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_zl_value #optional
+      check_fc_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour FC'
+          en: check value in range for FC
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String stringValue = datum.flx_fc_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_fc_min)?null:Float.parseFloat((String)datum.flx_fc_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_fc_max)?null:Float.parseFloat((String)datum.flx_fc_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_zl_value #optional
+      check_h_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour l'H'
+          en: check value in range for H
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String stringValue = datum.flx_h_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_h_min)?null:Float.parseFloat((String)datum.flx_h_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_h_max)?null:Float.parseFloat((String)datum.flx_h_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_h_value #optional
+      check_le_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour l'LE'
+          en: check value in range for LE
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String stringValue = datum.flx_le_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_le_min)?null:Float.parseFloat((String)datum.flx_le_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_le_max)?null:Float.parseFloat((String)datum.flx_le_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_le_value #optional
+      check_t_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour l'T'
+          en: check value in range for T
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String stringValue = datum.flx_t_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_t_min)?null:Float.parseFloat((String)datum.flx_t_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_t_max)?null:Float.parseFloat((String)datum.flx_t_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_t_value #optional
+      check_u_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour l'U*'
+          en: check value in range for U*
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String stringValue = datum.flx_u_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_u_min)?null:Float.parseFloat((String)datum.flx_u_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_u_max)?null:Float.parseFloat((String)datum.flx_u_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_u_value #optional
+      check_fc_gf_value:
+        OA_i18n:
+          fr: vérifie l'intervale de valeurs pour l'FC_GF'
+          en: check value in range for FC_GF
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String stringValue = datum.flx_fc_gf_value;
+                if(stringValue.equals("") || stringValue.equals("-9999")){
+                    return true;
+                } else {
+                    Float value = Float.parseFloat(stringValue); 
+                    Float minValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_fc_gf_min)?null:Float.parseFloat((String)datum.flx_fc_gf_min); ; 
+                    Float maxValue =
+                            com.google.common.base.Strings.isNullOrEmpty(datum.flx_fc_gf_max)?null:Float.parseFloat((String)datum.flx_fc_gf_max); ; 
+                    Boolean isValid = true; 
+                    isValid = minValue==null  || minValue<value; 
+                    isValid = isValid && (maxValue!=null || value<=maxValue); 
+                    return isValid
+                }
+        OA_components:   #optional
+          - flx_fc_gf_value #optional
+
+    OA_computedComponents:
+      flx_date:
+        OA_exportHeader:
+          OA_title:
+            fr: Date
+            en: Date
+        OA_tags: [ __HIDDEN__]
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy HH:mm:ss
+        OA_computation:
+          OA_expression: >
+            return (String)datum.flx_day +" " +(String)datum.flx_time
+      sit_key:
+        OA_tags: [ __ORDER_3__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Site
+            en: Site
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_sites_sit
+        OA_withNaturalKeyComponents:
+          - flx_site_name
+      par_parcelle:
+        OA_tags: [ __ORDER_4__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Parcelle
+            en: Plot
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_parcelles_par
+        OA_withNaturalKeyComponents:
+          - flx_site_name
+          - flx_parcelle_name
+      flx_co2_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"µmol mol-1\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+      flx_h2o_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"mmol mol-1\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+      flx_zl_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"µmol m-2 s-1\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+      flx_fc_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"µmol m-2 s-1\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+      flx_h_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"W m-2\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+      flx_le_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"W m-2\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+      flx_t_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"Kg m-1s-1\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+      flx_u_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"m s-1\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+      flx_fc_gf_unit:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: "\"µmol m-2 s-1\""
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_unites_unit
+    OA_constantComponents:
+      flx_site_name:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 1  #optional
+          OA_columnNumber: 2  #optional
+      flx_parcelle_name:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 1  #optional
+          OA_columnNumber: 3  #optional
+      flx_start_day:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 3  #optional
+          OA_columnNumber: 2  #optional
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yy
+      flx_start_time:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 3  #optional
+          OA_columnNumber: 3  #optional
+      flx_end_day:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 4  #optional
+          OA_columnNumber: 2  #optional
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yy
+      flx_end_time:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 4  #optional
+          OA_columnNumber: 3  #optional
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: HH:mm:ss
+      flx_comment:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 5  #optional
+          OA_columnNumber: 2
+      flx_co2_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 3
+      flx_co2_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 3
+      flx_h2o_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 4
+      flx_h2o_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 4
+      flx_zl_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 5
+      flx_zl_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 5
+      flx_fc_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 6
+      flx_fc_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 6
+      flx_h_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 8
+      flx_h_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 8
+      flx_le_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 10
+      flx_le_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 10
+      flx_t_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 12
+      flx_t_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 12
+      flx_u_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 14
+      flx_u_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 14
+      flx_lc_gf_min:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 10  #optional
+          OA_columnNumber: 15
+      flx_lc_gf_max:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 11  #optional
+          OA_columnNumber: 15
+    OA_basicComponents:
+      flx_day:
+        OA_importHeader:  date
+        OA_tags: [__ORDER_1__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Date
+            en: Day
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      flx_time:
+        OA_importHeader: heure
+        OA_tags: [__ORDER_2__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Heure
+            en: time
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: HH:mm:ss
+      flx_co2_value:
+        OA_importHeader: CO2
+        OA_tags: [__ORDER_5__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Concentration en dioxyde de carbone
+            en: carbon dioxide concentration
+        OA_required: true
+        OA_checker:
+          OA_name: OA_float
+      flx_h2o_value:
+        OA_importHeader: H2O
+        OA_tags: [__ORDER_6__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: concentration en vapeur d'eau
+            en: water vapor concentration
+        OA_required: true
+        OA_checker:
+          OA_name: OA_float
+      flx_zl_value:
+        OA_importHeader: ZL
+        OA_tags: [__ORDER_7__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: paramètre de stabilité de l'atmosphère
+            en: atmospheric stability parameter
+        OA_required: true
+        OA_checker:
+          OA_name: OA_float
+      flx_fc_value:
+        OA_importHeader: Fc
+        OA_tags: [__ORDER_8__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: flux de dioxyde de carbone
+            en: carbon dioxide flux
+        OA_required: true
+        OA_checker:
+          OA_name: OA_float
+      flx_fc_qc:
+        OA_importHeader: qc1
+        OA_tags: [__ORDER_9__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: indice de qualité
+            en: quality class
+        OA_required: true
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_min: 0
+            OA_max: 4
+      flx_h_value:
+        OA_importHeader: H
+        OA_tags: [__ORDER_10__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: chaleur sensible
+            en: sensible heat
+        OA_required: true
+        OA_checker:
+          OA_name: OA_float
+      flx_h_qc:
+        OA_importHeader: qc2
+        OA_tags: [__ORDER_11__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: indice de qualité
+            en: quality class
+        OA_required: true
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_min: 0
+            OA_max: 4
+      flx_le_value:
+        OA_importHeader: LE
+        OA_tags: [__ORDER_12__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: chaleur latente
+            en: latent heat
+        OA_required: true
+        OA_checker:
+          OA_name: OA_float
+      flx_le_qc:
+        OA_importHeader: qc3
+        OA_tags: [__ORDER_13__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: indice de qualité
+            en: quality class
+        OA_required: true
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_min: 0
+            OA_max: 4
+      flx_t_value:
+        OA_importHeader: t
+        OA_tags: [__ORDER_14__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: momentum
+            en: momentum
+        OA_required: true
+        OA_checker:
+          OA_name: OA_float
+      flx_t_qc:
+        OA_importHeader: qc4
+        OA_tags: [__ORDER_16__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: indice de qualité
+            en: quality class
+        OA_required: true
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_min: 0
+            OA_max: 4
+      flx_u_value:
+        OA_importHeader: u*
+        OA_tags: [__ORDER_16__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: vitesse de friction
+            en: friction velocity
+        OA_required: true
+        OA_checker:
+          OA_name: OA_float
+      flx_fc_gf_value:
+        OA_importHeader: Fc gf
+        OA_tags: [__ORDER_17__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: flux de dioxyde de carbone gapfilé
+            en: gapfiled carbon dioxide flow
+        OA_required: false
+        OA_checker:
+          OA_name: OA_float

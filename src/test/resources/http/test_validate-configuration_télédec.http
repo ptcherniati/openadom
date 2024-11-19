@@ -1,0 +1,20 @@
+###
+//POST http://localhost:8081/api/v1/login
+
+
+
+###
+POST http://localhost:8081/api/v1/validate-configuration
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+Accept: application/x-ndjson
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="teledec_exemple9_bug2.yaml"
+Content-Type: application/x-yaml
+
+< ./teledec_exemple9_bug2.yaml
+--WebAppBoundary--
+
+
+###
+GET http://localhost:8081/api/v1/applications

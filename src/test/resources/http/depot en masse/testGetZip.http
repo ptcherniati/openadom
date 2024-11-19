@@ -1,0 +1,19 @@
+# creation d'un utilisateur
+#POST {{server}}/api/v1/users?login=philippe&password=pfsp&email=toto@inrae.fr
+#Content-Type: application/json
+
+#{}
+
+### login
+
+POST {{server}}/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### On charge le zip de dépôt en masse
+
+GET {{server}}/api/v1/applications/monsore/references
+
+{}
+

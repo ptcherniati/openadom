@@ -1,0 +1,939 @@
+{
+  "tags" : {
+    "unit" : {
+      "en" : "unit",
+      "fr" : "unité"
+    },
+    "data" : {
+      "en" : "data",
+      "fr" : "données"
+    },
+    "test" : {
+      "en" : "test",
+      "fr" : "test"
+    },
+    "context" : {
+      "en" : "context",
+      "fr" : "contexte"
+    },
+    "temporal" : {
+      "en" : "temporality",
+      "fr" : "temporalité"
+    }
+  },
+  "application" : {
+    "title" : {
+      "en" : "SOERE my SOERE",
+      "fr" : "SOERE mon SOERE"
+    },
+    "description" : {
+      "en" : "SOERE my SOERE",
+      "fr" : "SOERE mon SOERE"
+    }
+  },
+  "data" : {
+    "themes" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "description_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "définition"
+            },
+            "description" : {
+              "fr" : "La definition du thème"
+            }
+          }
+        },
+        "description_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "definition"
+            },
+            "description" : {
+              "en" : "Thematic definition"
+            }
+          }
+        },
+        "nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "name"
+            },
+            "description" : {
+              "en" : "Site name"
+            }
+          }
+        },
+        "nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "nom"
+            },
+            "description" : {
+              "fr" : "Le nom du thème"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en}",
+          "fr" : "{nom_fr}"
+        },
+        "description" : {
+          "en" : "{description_en}",
+          "fr" : "{description_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Thematic",
+          "fr" : "Thème"
+        },
+        "description" : {
+          "en" : "Thematic list",
+          "fr" : "Liste des thèmes"
+        }
+      }
+    },
+    "variables" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "definition_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "definition"
+            },
+            "description" : {
+              "en" : "Variable definition"
+            }
+          }
+        },
+        "nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "name"
+            },
+            "description" : {
+              "en" : "Variable name"
+            }
+          }
+        },
+        "nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "nom"
+            },
+            "description" : {
+              "fr" : "Le nom de la variable"
+            }
+          }
+        },
+        "definition_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "définition"
+            },
+            "description" : {
+              "fr" : "La définition de la variable"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en}",
+          "fr" : "{nom_fr}"
+        },
+        "description" : {
+          "en" : "{definition_en}",
+          "fr" : "{definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Variables",
+          "fr" : "Variables"
+        },
+        "description" : {
+          "en" : "Variables list",
+          "fr" : "Liste des variables"
+        }
+      }
+    },
+    "especes" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "my_computed_column" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "computed column",
+              "fr" : "colonne calculée"
+            },
+            "description" : {
+              "en" : "a calculated column returning 'my value'",
+              "fr" : "une colonne calculée retournant 'my value'"
+            }
+          }
+        },
+        "esp_definition_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "definition"
+            },
+            "description" : {
+              "en" : "species definition"
+            }
+          }
+        },
+        "esp_definition_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "définition"
+            },
+            "description" : {
+              "fr" : "définition de l'espèce"
+            }
+          }
+        },
+        "esp_nom" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "code",
+              "fr" : "code"
+            },
+            "description" : {
+              "en" : "code name of the species",
+              "fr" : "nom codique de l'espèce"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{esp_nom}",
+          "fr" : "{esp_nom}"
+        },
+        "description" : {
+          "en" : "{esp_definition_en}",
+          "fr" : "{esp_definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Species",
+          "fr" : "Espèces"
+        },
+        "description" : {
+          "en" : "Description of species fished in the watershed",
+          "fr" : "Description des espèces pêchées sur le bassin versant"
+        }
+      }
+    },
+    "site_theme_datatype" : {
+      "validations" : {
+        "checkDatatype" : {
+          "fr" : "test"
+        },
+        "projetRef" : {
+          "fr" : "référence au projet"
+        },
+        "sitesRef" : {
+          "fr" : "référence au site"
+        },
+        "themesRef" : {
+          "fr" : "référence au theme"
+        }
+      },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "projet name: {projet}, site name : {site}, theme name : {theme}, data type name : {datatype}",
+          "fr" : "nom du projet: {projet}, nom du site : {site}, nom du thème : {theme}, nom du type de données : {datatype}"
+        },
+        "description" : {
+          "en" : "Join on projet name: {projet}, site name : {site}, theme name : {theme}, data type name : {datatype}",
+          "fr" : "Jointure nom du projet: {projet}, nom du site : {site}, nom du thème : {theme}, nom du type de données : {datatype}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Data types by site and project",
+          "fr" : "Types de données par site et projet"
+        },
+        "description" : {
+          "en" : "Join table of theme sites and datatypes",
+          "fr" : "Table de jointure des sites theme et datatypes"
+        }
+      }
+    },
+    "type_de_sites" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "tze_nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "nom"
+            },
+            "description" : {
+              "fr" : "La nom du type de sites"
+            }
+          }
+        },
+        "tze_nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "name"
+            },
+            "description" : {
+              "en" : "Site type name"
+            }
+          }
+        },
+        "tze_definition_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "definition"
+            },
+            "description" : {
+              "en" : "Site type definition"
+            }
+          }
+        },
+        "tze_definition_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "définition"
+            },
+            "description" : {
+              "fr" : "La definition du type de site"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{tze_nom_en}",
+          "fr" : "{tze_nom_fr}"
+        },
+        "description" : {
+          "en" : "{tze_definition_en}",
+          "fr" : "{tze_definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Sites types",
+          "fr" : "Types de sites"
+        },
+        "description" : {
+          "en" : "Sites types list",
+          "fr" : "Liste des types de sites"
+        }
+      }
+    },
+    "unites" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "name"
+            },
+            "description" : {
+              "en" : "Unit name"
+            }
+          }
+        },
+        "code_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "code"
+            },
+            "description" : {
+              "en" : "Unit code"
+            }
+          }
+        },
+        "nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "nom"
+            },
+            "description" : {
+              "fr" : "La nom de l'unité"
+            }
+          }
+        },
+        "code_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "code"
+            },
+            "description" : {
+              "fr" : "Le code du unité"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en} ({code_key})",
+          "fr" : "{nom_fr} ({code_key})"
+        },
+        "description" : { }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Units",
+          "fr" : "Unités"
+        },
+        "description" : {
+          "en" : "Units list",
+          "fr" : "Liste des unités"
+        }
+      }
+    },
+    "projet" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "definition_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "definition"
+            },
+            "description" : {
+              "en" : "project definition"
+            }
+          }
+        },
+        "nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Name"
+            },
+            "description" : {
+              "en" : "Project name"
+            }
+          }
+        },
+        "nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Nom"
+            },
+            "description" : {
+              "fr" : "Nom du projet"
+            }
+          }
+        },
+        "definition_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "définition"
+            },
+            "description" : {
+              "fr" : "définition du projet"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en}",
+          "fr" : "{nom_fr}"
+        },
+        "description" : {
+          "en" : "{definition_en}",
+          "fr" : "{definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Project",
+          "fr" : "Projet"
+        },
+        "description" : {
+          "en" : "List of information system projects",
+          "fr" : "Liste des projets du système d'information"
+        }
+      }
+    },
+    "valeurs_qualitatives" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "valeur_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "valeur"
+            },
+            "description" : {
+              "fr" : "La valeur dans la liste"
+            }
+          }
+        },
+        "nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "name"
+            },
+            "description" : {
+              "en" : "The name list"
+            }
+          }
+        },
+        "valeur_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "value"
+            },
+            "description" : {
+              "en" : "The value in list"
+            }
+          }
+        },
+        "nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Nom"
+            },
+            "description" : {
+              "fr" : "Le nom de la liste"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{valeur_en}",
+          "fr" : "{valeur_fr}"
+        },
+        "description" : {
+          "en" : "{valeur_en} of {nom_en}",
+          "fr" : "{valeur_fr} de {nom_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Qualitative values",
+          "fr" : "Valeurs qualitatives"
+        },
+        "description" : {
+          "en" : "List of qualitative values list",
+          "fr" : "Liste de liste de valeurs qualitatives"
+        }
+      }
+    },
+    "variables_et_unites_par_types_de_donnees" : {
+      "validations" : {
+        "checkDatatype" : {
+          "fr" : "test"
+        },
+        "uniteRef" : {
+          "fr" : "référence à l'unité'"
+        },
+        "variableRef" : {
+          "fr" : "référence à la variable"
+        }
+      },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "datatype name : {datatype}, variable name : {variable}, : unit name {unite}",
+          "fr" : "nom du type de données : {datatype}, nom de la variable : {variable}, : nom de l'unité {unite}"
+        },
+        "description" : {
+          "en" : "Join ondatatype name : {datatype}, variable name : {variable}, : unit name {unite}",
+          "fr" : "Jointure des nom du type de données : {datatype}, nom de la variable : {variable}, : nom de l'unité {unite}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Variables and units by data type",
+          "fr" : "Variables et unités par type de données"
+        },
+        "description" : {
+          "en" : "Variables and units by data type join list",
+          "fr" : "Liste de jointure des variables et unités par type de données"
+        }
+      }
+    },
+    "type_de_fichiers" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "description_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "definition"
+            },
+            "description" : {
+              "en" : "Thematic definition"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{nom_en}",
+          "fr" : "{nom_fr}"
+        },
+        "description" : {
+          "en" : "{description_en}",
+          "fr" : "{description_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Files types",
+          "fr" : "Types de fichiers"
+        },
+        "description" : {
+          "en" : "The files types",
+          "fr" : "Les types de fichiers"
+        }
+      }
+    },
+    "pem" : {
+      "validations" : {
+        "unitOfIndividus" : {
+          "fr" : "vérifie l'unité du nombre d'individus"
+        },
+        "unitOfColor" : {
+          "fr" : "vérifie l'unité de la couleur des individus"
+        }
+      },
+      "exceptions" : { },
+      "components" : {
+        "chemin" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Path",
+              "fr" : "Chemin"
+            },
+            "description" : {
+              "en" : "Data calculating the full path of the site",
+              "fr" : "Données calculant le chemin complet du site"
+            }
+          }
+        },
+        "color_value" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "United colors",
+              "fr" : "Couleur des individus"
+            },
+            "description" : { }
+          }
+        },
+        "individusNumbervalue" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Number of individuals",
+              "fr" : "Nombre d'individus"
+            },
+            "description" : { }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : {
+          "projet" : {
+            "title" : {
+              "en" : "project",
+              "fr" : "projet"
+            },
+            "description" : {
+              "en" : "Choose the project",
+              "fr" : "Choisissez le projet"
+            }
+          },
+          "sites" : {
+            "title" : {
+              "en" : "site",
+              "fr" : "site"
+            },
+            "description" : {
+              "en" : "The site",
+              "fr" : "Le site"
+            }
+          }
+        }
+      },
+      "i18nDisplayPattern" : null,
+      "i18n" : {
+        "title" : {
+          "en" : "Trap in ascent",
+          "fr" : "Piégeage en Montée"
+        },
+        "description" : {
+          "en" : "Upstream trapping fishing data",
+          "fr" : "Données de pêche par piégeage en Montée"
+        }
+      }
+    },
+    "sites" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "zet_description_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "definition"
+            },
+            "description" : {
+              "en" : "site definition"
+            }
+          }
+        },
+        "zet_nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Nom du site"
+            },
+            "description" : {
+              "fr" : "Le nom du site"
+            }
+          }
+        },
+        "zet_nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Site name"
+            },
+            "description" : {
+              "en" : "The site name"
+            }
+          }
+        },
+        "zet_description_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "définition"
+            },
+            "description" : {
+              "fr" : "La definition du site"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{zet_chemin_parent} - {zet_nom_fr}",
+          "fr" : "{zet_chemin_parent} - {zet_nom_fr} "
+        },
+        "description" : {
+          "en" : "{zet_description_en}",
+          "fr" : "{zet_description_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Site",
+          "fr" : "Site"
+        },
+        "description" : {
+          "en" : "Sites list",
+          "fr" : "Liste des sites du système d'information"
+        }
+      }
+    }
+  },
+  "rightsrequest" : {
+    "fields" : {
+      "endDate" : {
+        "title" : {
+          "en" : "Give the project end date",
+          "fr" : "Date de fin du projet"
+        },
+        "description" : {
+          "en" : "Project end date",
+          "fr" : "Donnez la date de fin du projet"
+        }
+      },
+      "organization" : {
+        "title" : {
+          "en" : "Name of research organization",
+          "fr" : "Nom de l'organisme de recherche"
+        },
+        "description" : {
+          "en" : "Usual ame of research organization",
+          "fr" : "Nom usuel de l'organisme de recherche"
+        }
+      },
+      "project" : {
+        "title" : {
+          "en" : "Description of the research project",
+          "fr" : "Description du projet de recherche"
+        },
+        "description" : {
+          "en" : "Describe your the research project",
+          "fr" : "Donnez une description du projet de recherche"
+        }
+      },
+      "startDate" : {
+        "title" : {
+          "en" : "Project start date",
+          "fr" : "Date de début du projet"
+        },
+        "description" : {
+          "en" : "Give the project start date",
+          "fr" : "Donnez la date de début du projet"
+        }
+      }
+    },
+    "i18n" : {
+      "title" : {
+        "en" : "You can request rights to the monsore application by filling out this form",
+        "fr" : "Vous pouvez demander des droits à l'application monsore en remplissant ce formulaire"
+      },
+      "description" : {
+        "en" : "Monsoere Data Access Right Request Form",
+        "fr" : "Formulaire de demande de droit d'accès aux données de Monsoere"
+      }
+    }
+  },
+  "additionalFiles" : {
+    "utilisateurs" : {
+      "i18n" : {
+        "title" : {
+          "en" : "Users",
+          "fr" : "Utilsateurs"
+        },
+        "description" : {
+          "en" : "System User Description Files",
+          "fr" : "Fichiers de dexcription des utilisateurs du système"
+        }
+      },
+      "fields" : {
+        "prenom" : {
+          "title" : {
+            "en" : "Surname",
+            "fr" : "Prénom"
+          },
+          "description" : {
+            "en" : "User surname",
+            "fr" : "Prénom de l'utilisateur"
+          }
+        },
+        "nom" : {
+          "title" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          },
+          "description" : {
+            "en" : "User name",
+            "fr" : "Nom de l'utilisateur"
+          }
+        }
+      }
+    },
+    "fichiers" : {
+      "i18n" : {
+        "title" : {
+          "en" : "Files",
+          "fr" : "Fichiers"
+        },
+        "description" : {
+          "en" : "Various files relating to the Information System",
+          "fr" : "Différents fichiers afférents au Système d'Information"
+        }
+      },
+      "fields" : {
+        "date" : {
+          "title" : {
+            "en" : "Date",
+            "fr" : "Date"
+          },
+          "description" : {
+            "en" : "The date the file was updated",
+            "fr" : "La date de mise à jour du fichier"
+          }
+        },
+        "site" : {
+          "title" : {
+            "en" : "Place",
+            "fr" : "Site"
+          },
+          "description" : {
+            "en" : "Site described by the file",
+            "fr" : "Site décrit par le fichier"
+          }
+        },
+        "poids" : {
+          "title" : {
+            "en" : "Weight",
+            "fr" : "Poids"
+          },
+          "description" : {
+            "en" : "File size in kb",
+            "fr" : "Poids du fichier en ko"
+          }
+        },
+        "nom" : {
+          "title" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          },
+          "description" : {
+            "en" : "The name of the file for download",
+            "fr" : "Le nom du fichier pour téléchargement"
+          }
+        },
+        "age" : {
+          "title" : {
+            "en" : "Age",
+            "fr" : "Age"
+          },
+          "description" : {
+            "en" : "Minimum age for file access",
+            "fr" : "Age minumum d'accès au fichier"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,7 @@
+ment_code;ment_name_fr;ment_name_en;ment_uri
+variable;Variable (fr);variable (en);http://www.anaee-france.fr/ontology/anaee-france_ontology#Variable
+qualifier;Qualificatif (fr);qualifier (en);http://ecoinformatics.org/oboe/oboe.1.0/oboe-core.owl#CharacteristicQualifier
+spatial_resolution;résolution spatiale (fr);spatial resolution (en);pas trouvé dans l’onto, à créer
+satellite;Satellite (fr);Satellite (en);pas trouvé dans l’onto, à créer
+band number;Band number (fr);Band number (en);pas trouvé dans l’onto, à créer
+protocol;Protocole (fr);Protocol (en);pas trouvé dans l’onto, à créer

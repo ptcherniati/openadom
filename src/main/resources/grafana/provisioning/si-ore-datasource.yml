@@ -1,0 +1,12 @@
+datasources:
+  - name: Postgres
+    type: postgres
+    url: postgresql
+    database: openadom
+    user: dbuser
+    secureJsonData:
+      password: 'xxxxxxxx'
+    jsonData:
+      searchPath: '"graphana"' # Spécifie le schéma à utiliser
+      postgresSqlOptions:
+        option: 'SET ROLE "$__user.login"'

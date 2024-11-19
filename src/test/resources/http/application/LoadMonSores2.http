@@ -1,0 +1,79 @@
+### login
+
+POST localhost:8081/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### add authorization
+
+POST localhost:8081/api/v1/applications/monsore/authorization
+Content-Type: application/json
+
+{
+  "usersId": [
+    "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9"
+  ],
+  "uuid": null,
+  "name": "une submissionScope sur monsore pour poussin",
+  "authorizationsWithRestriction": {
+    "pem": {
+      "extraction": [
+        {
+          "requiredAuthorizations": {
+            "projet": "projetKprojet_manche",
+            "sites": "type_de_sitesKbassin_versant.sitesKoir.sitesKoir__p1"
+          },
+          "timeScope": {
+            "fromDay": [
+              1984,
+              1,
+              2
+            ],
+            "toDay": [
+              1984,
+              1,
+              3
+            ]
+          }
+        }
+      ],
+      "depot": [
+        {
+          "requiredAuthorizations": {
+            "projet": "projetKprojet_manche",
+            "sites": "type_de_sitesKbassin_versant.sitesKoir"
+          },
+          "timeScope": {
+            "fromDay": [
+              1984,
+              1,
+              3
+            ],
+            "toDay": [
+              1984,
+              1,
+              4
+            ]
+          }
+        }
+      ]
+    }
+  }
+}
+
+### add authorization
+
+POST localhost:8081/api/v1/applications/monsore/authorization
+Content-Type: application/json
+
+{
+  "usersId": [
+    "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9"
+  ],
+  "uuid": null,
+  "name": "une submissionScope sur monsore pour poussin sur sites" ,
+  "authorizationForAll": {
+      "extraction" : ["sites"]
+  }
+}

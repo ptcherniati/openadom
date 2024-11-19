@@ -1,0 +1,11 @@
+package fr.inra.oresing.rest.model.authorization;
+
+import fr.inra.oresing.persistence.OperationReferenceType;
+
+import java.util.List;
+import java.util.Map;
+
+
+public record AuthorizationsReferencesResult(Map<OperationReferenceType, List<String>> authorizationResults,
+                                             String applicationName, Boolean isAdministrator) {
+}

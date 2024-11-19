@@ -1,0 +1,5 @@
+Agroécosystème;nom du site_key;nom du site_fr;nom du site_en;ville;adresse;cordonnées du dispositif;milieu;climat;pluviométrie moyenne (mm);température moyenne (°C);vent dominant;vitesse moyenne du vent (km/h);type de sol;profondeur moyenne du sol (m);altitude moyenne (m);date mise en service du dispositif
+grandes_cultures_et_cultures_dediees_a_la_production_de_biomasse;estrees-mons;estrees-mons;estrees-mons;Estrées-Mons;2 chaussée brunehault;49°52'16.40 N  3°01'46.9E;plaine céréalière;semi océanique;610.0;11.0;W;3.1;orthic luvicol;3.2;85.0;01/03/2008
+prairies_permanentes;laqueuille;laqueuille;laqueuille;Laqueuille;Les Razats;45°38'34.47N  2°43'53.75E;moyenne montagne;;1000.0;8.0;;;;;1040.0;01/01/2002
+rotation_prairie_culture;lusignan;lusignan;lusignan;Lusignan;Les verrines;46°25'3.14N   0°07'9.46E;plaine cultivée;océanique;850.0;11.6;SWW;2.56;cambisol saturé;;153.0;01/05/2005
+prairies_permanentes;theix;theix;theix;Theix;Saint-Genès-Campanelle;45°43'23.01N  3°01'07.57E;moyenne montagne;;780.0;8.7;;;;;870.0;01/05/2005

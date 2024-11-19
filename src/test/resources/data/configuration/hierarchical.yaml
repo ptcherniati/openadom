@@ -1,0 +1,161 @@
+OA_version: 2.0.1
+OA_application:
+  OA_comment: Fichier de test de l'application brokenADOM
+  OA_name: hierarchical
+  OA_version: 3.0.1
+OA_data:
+  type_de_site_tsi:
+    OA_naturalKey:
+      - nom
+    OA_basicComponents:
+      nom:
+  site_sit:
+    OA_naturalKey:
+      - tsi_nom
+      - nom
+      - sit_parent
+    OA_basicComponents:
+      nom:
+      tsi_nom:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: type_de_site_tsi
+              OA_isParent: true
+      sit_parent:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: site_sit
+              OA_isParent: true
+      commune:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: valeur_qualitative_vqe
+  parcelle_par:
+    OA_tags: ["__ORDER_2__"]
+    OA_naturalKey:
+      - nom
+      - tsi_nom
+      - sit_nom
+    OA_basicComponents:
+      nom:
+      tsi_nom:
+      sit_nom:
+    OA_computedComponents:
+      sit_key:
+        OA_computation:
+          OA_expression: "datum.tsi_nom+'__'+datum.sit_nom"
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: site_sit
+              OA_isParent: true
+  traitement_tra:
+    OA_tags: ["__ORDER_1__"]
+    OA_naturalKey:
+      - nom
+      - tsi_nom
+      - sit_nom
+    OA_basicComponents:
+      nom:
+      tsi_nom:
+      sit_nom:
+    OA_computedComponents:
+      sit_key:
+        OA_computation:
+          OA_expression: "datum.tsi_nom+'__'+datum.sit_nom+'__'+datum.nom"
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: site_sit
+              OA_isParent: true
+  plot_plo:
+    OA_naturalKey:
+      - nom
+      - tsi_nom
+      - sit_nom
+      - par_nom
+    OA_basicComponents:
+      nom:
+      tsi_nom:
+      sit_nom:
+      par_nom:
+    OA_computedComponents:
+      sit_key:
+        OA_computation:
+          OA_expression: "datum.tsi_nom+'__'+datum.sit_nom+'__'+datum.par_nom"
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: parcelle_par
+              OA_isParent: true
+  type_de_taxon_ttx:
+    OA_tags: ["__ORDER_6__"]
+    OA_naturalKey:
+      - nom
+    OA_basicComponents:
+      nom:
+  taxon_tax:
+    OA_naturalKey:
+      - ttx_nom
+      - nom
+    OA_basicComponents:
+      nom:
+      ttx_nom:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: type_de_taxon_ttx
+              OA_isParent: true
+      espece:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: valeur_qualitative_vqe
+  valeur_qualitative_vqe:
+    OA_tags: ["__ORDER_5__"]
+    OA_naturalKey:
+      - key
+      - value
+    OA_basicComponents:
+      key:
+      value:
+  data:
+    OA_naturalKey:
+      - date
+      - tsi_nom
+      - sit_nom
+      - par_nom
+      - plo_nom
+    OA_basicComponents:
+      date:
+      tsi_nom:
+      sit_nom:
+      par_nom:
+      plo_nom:
+      couleur:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: valeur_qualitative_vqe
+    OA_computedComponents:
+      plo_key:
+        OA_computation:
+          OA_expression: "datum.tsi_nom+'__'+datum.sit_nom+'__'+datum.par_nom+'__'+datum.plo_nom"
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: plot_plo
+

@@ -1,0 +1,59 @@
+vstd_code;vstd_shortname_fr;vstd_shortname_en;vstd_label_fr;vstd_label_en;vstd_description_fr;vstd_description_en;vstd_ref
+NDVI;ndvi;ndvi;Indice de végétation normalisé;Normalized Difference Vegetation Index;"Variation réflectance et éléments 
+biophysique des couverts 
+végétaux";NA;Rouse et Haas, 1973
+SAVI;SAVI;SAVI;"Indice de végétation 
+ajusté au sol et modifié";"Soil-Adjusted Vegetation
+Index";"Combinaison du NDVI et du
+PVI ajusté avec la droite
+des sols";NA;Huete, 1988
+TSAVI;TSAVI;TSAVI;NA;NA;NA;NA;
+MSAVI;MSAVI2;MSAVI2;"Indice de végétation ajust
+au sol modifié";"Modified Soil Adjusted 
+Vegetation Index";"Détecte la végétation au stade
+de développement,
+d'émergence";NA;Huete et al., 1994
+EVI;EVI;EVI;"Indice de végétation
+amélioré";Enhanced Vegetation Index;"Amélioration du NDVI avec
+l'utilisation de longueurs
+d'onde supplémentaires";NA;Huete et al., 1999
+GCVI;GCVI;GCVI;"Indice de végétation 
+chlorophylienne verte";"Green Chlorophyl Vegetation
+Index";"Niveau de la teneur
+en chlorophylle";NA;Gitelson et al., 1996
+NDWI ;NDWI ;NDWI ;"Indice de teneur en eau 
+par différence normalisée";"Normalized Difference
+Water Index";"Variation réflectance et éléments 
+biophysique des couverts 
+végétaux et de l'eau";NA;Gao et al., 1996
+NDRE;NDRE;NDRE;"Indice des bords rouges par
+différence normalisée";"Normalized Difference Red 
+Edge Index ";"Sensible aux longueurs d'onde
+de la lumière qui sont réfléchies
+par la chlorophylle";NA;Gitelson et Merzlyak, 1994
+NBR;NBR;NBR;Rapport de combustion normalisé;Normalized Burn Ratio;"Les longueurs d'onde du NIR et
+du SWIR réponde de façon
+opposées lorsque la végétation
+est saine ou brûlée";NA;Keeley, 2009
+RESI;RESI;RESI;Indice spectral des bords rouges;RedEdge Spectral Indice;"Prends les trois bandes du
+RedEdge pour mettre en
+évidence les feuillus/résineux";NA;Huete et al., 2002
+NDMI;NDMI;NDMI;"Indice d'humidité par
+différence normalisée";"Normalized Difference Moisture
+Index";"Teneur en eau des masses
+d'eau (et des feuilles),
+atténuer les effets de l'illumination et de l'atmosphère";NA;Xiao et al., 2019
+LAI;LAI;LAI;Indice de surface foliaire;Leaf Area Index;"Estimation à partir des bandes
+et des angles solaires et
+capteurs";NA;
+FAPAR;FAPAR;FAPAR;"Fraction de rayonnement
+solaire absorbée par
+les plantes";"Fraction of Absorbed
+Photosynthetically";"Estimation à partir des bandes
+et des angles solaires et
+capteurs";NA;
+FCOVER;FCOVER;FCOVER;"Fraction du couvert
+végétal";"Fraction of Vegetation
+Cover";"Estimation à partir des bandes
+et des angles solaires et
+capteurs";NA;

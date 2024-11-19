@@ -1,0 +1,21 @@
+# IDEA files
+*.iml
+.idea
+
+# Target
+target
+
+# Fichiers temporaires
+*~
+/ui/cypress/videos/
+/ui/cypress/screenshots/
+/ui/html/
+mermaid-filter.err
+.env
+/documentations/services_model.json
+# /ui/cypress/fixtures/applications/errors/errors.json
+# /ui/cypress/fixtures/applications/ore/monsore/**
+# /ui/cypress/fixtures/applications/ore/monsore/validateMonsore.txt
+# /ui/cypress/fixtures/applications/ore/monsore/monsoere.json
+# /ui/cypress/fixtures/applications/ore/monsore/createMonsore.txt
+# /ui/cypress/fixtures/applications/ore/monsore/changeMonsore.txt

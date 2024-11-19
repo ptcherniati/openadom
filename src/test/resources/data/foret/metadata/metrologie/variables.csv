@@ -1,0 +1,43 @@
+nom;definition_fr;definition_en
+APAR;Interception du rayonnement photosynthétiquement actif par la canopée;Absorbed Photosynthetically Active Radiation by the canopy
+CO2;Concentration en dioxyde de carbone;Carbon dioxide concentration
+FCH4;Flux de méthane;Methane flux
+FCH4_gf;Données de flux de méthane complétées;Gapfilled methane flux data
+FCO2;Flux de dioxyde de carbone;Carbon dioxide flux
+FCO2_gf;Données de flux de dioxyde de carbone complétées;Gapfilled dioxide carbon flux data
+G;Flux de chaleur au sol;Soil heat flux
+GWD;Profondeur de la nappe d'eau dans le sol;Groundwater depth
+H;Flux de chaleur sensible;Sensible heat flux
+H2O;Concentration en vapeur d'eau;Water vapour concentration
+LE;Flux de chaleur latente;Latent heat flux
+LWin;Rayonnement incident de grande longueur d'onde;Incident long wave radiation
+LWout;Rayonnement réfléchi de grande longueur d'onde;Reflected long wave radiation
+NEE;Echange net de CO2 entre écosytème et atmosphère;CO2 net ecosystem exchange
+NEE_gf;Echange net de CO2 entre écosytème et atmosphère (données complétées);CO2 net ecosystem exchange (gapfilled data)
+P;Précipitations;Rainfall
+Pa;Pression atmosphérique;Atmospheric pressure
+PPFD;Rayonnement photosynthétiquement actif incident;Incident photosynthetic photon flux density
+PPFDbc;Rayonnement photosynthétiquement actif sous la canopée;Photosynthetic photon flux density below-canopy
+PPFDd;Rayonnement photosynthétiquement actif diffus;Diffuse photosynthetic photon flux density
+PPFDr;Rayonnement photosynthétiquement actif réfléchi;Reflected photosynthetic photon flux density
+Rd;Rayonnement global diffus;Diffuse global radiation
+Rg;Rayonnement global;Global solar radiation
+Rh;Humidité relative;Relative humidity
+Rn;Rayonnement net total;Total net radiation
+Rr;Rayonnement solaire réfléchi;Reflected solar radiation
+Sa;Stockage de chaleur sensible dans la couche d'air de la canopée;Sensible heat storage in the canopy air-layer
+Sb;Stockage de chaleur dans la biomasse de la canopée;Biomass canopy heat storage
+Sc;Stockage de dioxyde de carbone dans la couche d'air de la canopée;Carbon dioxide storage in the canopy air-layer
+SMP;Tension de l'eau dans le sol;Soil matric potential
+Sw;Stockage de chaleur latente dans la couche d'air de la canopée;Latent heat storage in the canopy air-layer
+SWC;Humidité volumique du sol;Soil water content
+T;Flux de quantité de mouvement;Momentum flux
+Ta;Température de l'air;Air temperature
+Tarbre;Température des tiges d'arbres;Trees stems temperature
+Tc;Température radiative de la canopée;Radiative canopy temperature
+TR;Flux de transpiration des arbres;Tree transpiration flux
+Ts;Température du sol;Soil temperature
+u*;Vitesse de friction;Friction velocity
+WD;Direction du vent (0 au nord, 90° à l'est);Wind direction (north at 0, est at 90°)
+WS;Vitesse horizontale du vent;Horizontal wind speed
+ZL;Paramètre de stabilité de l'atmosphère;Atmospheric stability parameter

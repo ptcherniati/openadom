@@ -1,0 +1,127 @@
+### login
+
+POST localhost:8081/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### Load Application
+POST localhost:8081/api/v1/applications/acbb
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="element-name"
+Content-Type: text/plain
+
+L'application ACBB
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="monsores.yaml"
+Content-Type: application/json
+
+< ../../data/acbb/acbb.yaml
+--WebAppBoundary--
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### add agroecosystemes
+POST localhost:8081/api/v1/applications/acbb/references/agroecosystemes
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="agroecosystemes.csv"
+Content-Type: application/json
+
+< ../../data/acbb/agroecosysteme.csv
+--WebAppBoundary--
+
+### add sites
+POST localhost:8081/api/v1/applications/acbb/references/sites
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sites.csv"
+Content-Type: application/json
+
+< ../../data/acbb/sites.csv
+--WebAppBoundary--
+
+### add parcelle
+POST localhost:8081/api/v1/applications/acbb/references/parcelles
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="parcelle.csv"
+Content-Type: application/json
+
+< ../../data/acbb/parcelle.csv
+--WebAppBoundary--
+
+### add unites
+POST localhost:8081/api/v1/applications/acbb/references/unites
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="unites.csv"
+Content-Type: application/json
+
+< ../../data/acbb/unites.csv
+--WebAppBoundary--
+
+### add modalites
+POST localhost:8081/api/v1/applications/acbb/references/modalites
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="modalites.csv"
+Content-Type: application/json
+
+< ../../data/acbb/modalites.csv
+--WebAppBoundary--
+
+### add version_de_traitement
+POST localhost:8081/api/v1/applications/acbb/references/version_de_traitement
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="version_de_traitement.csv"
+Content-Type: application/json
+
+< ../../data/acbb/version_de_traitement.csv
+--WebAppBoundary--
+
+### add biomasse_production_teneur
+POST localhost:8081/api/v1/applications/acbb/data/biomasse_production_teneur
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="biomasse_production_teneur.csv"
+Content-Type: application/json
+
+< ../../data/acbb/biomasse_production_teneur.csv
+--WebAppBoundary--
+
+### add flux_tours
+POST localhost:8081/api/v1/applications/acbb/data/flux_tours
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="biomasse_production_teneur.csv"
+Content-Type: application/json
+
+< ../../data/acbb/Flux_tours.csv
+--WebAppBoundary--
+
+### add SWC
+POST localhost:8081/api/v1/applications/acbb/data/SWC
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="SWC.csv"
+Content-Type: application/json
+
+< ../../data/acbb/SWC.csv
+--WebAppBoundary--

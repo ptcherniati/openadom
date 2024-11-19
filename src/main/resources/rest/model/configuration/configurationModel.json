@@ -1,0 +1,10 @@
+{
+  "OA_ROOT": {
+    "OA_VERSION" : {
+      "type": String
+    },
+    "OA_i18n": {
+      "type": Internationalization
+    }
+  }
+}

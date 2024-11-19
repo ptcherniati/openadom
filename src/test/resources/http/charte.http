@@ -1,0 +1,38 @@
+### connexion
+POST http://localhost:8081/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{
+  "login": "poussin",
+  "password": "xxxx"
+}
+
+###
+GET http://localhost:8081/api/v1/applications
+
+### post chart
+POST http://localhost:8081/api/v1/applications/monsores/additionalFiles/__charte__
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+
+
+--WebAppBoundary
+Content-Disposition: form-data; name="params"
+
+{
+"id":"ab66022e-db46-4fcd-8115-e62d14c54167",
+"fileType":"__charte__
+}
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="data.json"
+Content-Type: application/octet-stream
+
+< ./fichier.txt
+
+
+### get charte
+
+GET http://localhost:8081/api/v1/applications/monsores/additionalFiles?params=%7B%22uuids%22%3A%5B%22ab66022e-db46-4fcd-8115-e62d14c54167%22%5D%2C%22filetype%22%3A%22__charte__%22%7D
+Accept: application/octet-stream
+

@@ -1,0 +1,18 @@
+nom de l'information complémentaire;description de l'information complémentaire_fr;description de l'information complémentaire_en;nom de la liste de valeurs d'informations complémentaires
+FCO2_sd;écart_type de la variable FCO2;standard deviation for the variable FCO2;
+FCO2_nbval;nombre de mesures pour la variable FCO2;number of measures for the variable FCO2;
+FCO2_qc;code qualité de la variable FCO2;quality code for the variable FCO2;ListeQual1
+FCO2_gf_isgf;est gapfillée;is gapfilled;
+FCH4_sd;écart_type de la variable FCH4;standard deviation for the variable FCH4;
+FCH4_nbval;nombre de mesures pour la variable FCH4;number of measures for the variable FCH4;
+FCH4_qc;code qualité de la variable FCH4;quality code for the variable FCH4;ListeQual1
+Ta_sd;écart_type de la variable Ta;standard deviation for the variable Ta;
+Ta_nbval;nombre de mesures pour la variable Ta;number of measures for the variable Ta;
+Rh_sd;écart_type de la variable Rh;standard deviation for the variable Rh;
+Rh_nbval;nombre de mesures pour la variable Rh;number of measures for the variable Rh;
+PPFD_sd;écart_type de la variable PPFD;standard deviation for the variable PPFD;
+PPFD_nbval;nombre de mesures pour la variable PPFD;number of measures for the variable PPFD;
+Ts_sd;écart_type de la variable Ts;standard deviation for the variable Ts;
+Ts_nbval;nombre de mesures pour la variable Ts;number of measures for the variable Ts;
+SWC_sd;écart_type de la variable SWC;standard deviation for the variable SWC;
+SWC_nbval;nombre de mesures pour la variable SWC;number of measures for the variable SWC;

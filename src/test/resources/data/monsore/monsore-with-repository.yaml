@@ -1,0 +1,995 @@
+OA_version: 2.0.1
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: SOERE mon SOERE
+      en: SOERE my SOERE
+    OA_description:
+      fr: SOERE mon SOERE
+      en: SOERE my SOERE
+  OA_comment: Fichier de test de l'application brokenADOM version initiale
+  OA_name: monsore
+  OA_version: 3.0.1
+OA_tags:
+  context:
+    fr: contexte
+    en: context
+  data:
+    fr: données
+    en: data
+  test:
+    fr: test
+    en: test
+  unit:
+    fr: unité
+    en: unit
+  temporal:
+    fr: temporalité
+    en: temporality
+OA_rightsRequest:
+  OA_i18n:
+    OA_title:
+      fr: Vous pouvez demander des droits à l'application monsore en remplissant ce formulaire
+      en: You can request rights to the monsore application by filling out this form
+    OA_description:
+      fr: Formulaire de demande de droit d'accès aux données de Monsoere
+      en: Monsoere Data Access Right Request Form
+  OA_formFields:
+    organization:
+      OA_i18n:
+        OA_title:
+          fr: Nom de l'organisme de recherche
+          en: Name of research organization
+        OA_description:
+          fr: Nom usuel de l'organisme de recherche
+          en: Usual ame of research organization
+      OA_required: true
+      OA_checker:
+        OA_name: OA_string
+        OA_params:
+          OA_pattern: ".*"
+    project:
+      OA_i18n:
+        OA_title:
+          fr: Description du projet de recherche
+          en: Description of the research project
+        OA_description:
+          fr: Donnez une description du projet de recherche
+          en: Describe your the research project
+      OA_checker:
+        OA_name: OA_string
+        OA_params:
+          OA_pattern: ".*"
+    startDate:
+      OA_i18n:
+        OA_title:
+          fr: Date de début du projet
+          en: Project start date
+        OA_description:
+          fr: Donnez la date de début du projet
+          en: Give the project start date
+      OA_checker:
+        OA_name: OA_date
+        OA_params:
+          OA_pattern: "dd/MM/yyyy"
+    endDate:
+      OA_i18n:
+        OA_title:
+          fr: Date de fin du projet
+          en: Give the project end date
+        OA_description:
+          fr: Donnez la date de fin du projet
+          en: Project end date
+      OA_checker:
+        OA_name: OA_date
+        OA_params:
+          OA_pattern: "dd/MM/yyyy"
+OA_additionalFiles:
+  fichiers:
+    OA_i18n:
+      OA_title:
+        fr: Fichiers
+        en: Files
+      OA_description:
+        fr: Différents fichiers afférents au Système d'Information
+        en: Various files relating to the Information System
+    OA_formFields:
+      nom:
+        OA_i18n:
+          OA_title:
+            fr: Nom
+            en: Name
+          OA_description:
+            fr: Le nom du fichier pour téléchargement
+            en: The name of the file for download
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_pattern: "[a-z]*"
+      date:
+        OA_i18n:
+          OA_title:
+            fr: Date
+            en: Date
+          OA_description:
+            fr: La date de mise à jour du fichier
+            en: The date the file was updated
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: "dd/MM/yyyy"
+      age:
+        OA_i18n:
+          OA_title:
+            fr: Age
+            en: Age
+          OA_description:
+            fr: Age minumum d'accès au fichier
+            en: Minimum age for file access
+        OA_checker:
+          OA_name: OA_integer
+      poids:
+        OA_i18n:
+          OA_title:
+            fr: Poids
+            en: Weight
+          OA_description:
+            fr: Poids du fichier en ko
+            en: File size in kb
+        OA_checker:
+          OA_name: OA_float
+          OA_params:
+            OA_min: 10.0
+            OA_max: 100.0
+      site:
+        OA_i18n:
+          OA_title:
+            fr: Site
+            en: Place
+          OA_description:
+            fr: Site décrit par le fichier
+            en: Site described by the file
+
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+  utilisateurs:
+    OA_i18n:
+      OA_title:
+        fr: Utilsateurs
+        en: Users
+      OA_description:
+        fr: Fichiers de dexcription des utilisateurs du système
+        en: System User Description Files
+    OA_formFields:
+      nom:
+        OA_i18n:
+          OA_title:
+            fr: Nom
+            en: Name
+          OA_description:
+            fr: Nom de l'utilisateur
+            en: User name
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_pattern: "[a-z]*"
+      prenom:
+        OA_i18n:
+          OA_title:
+            fr: Prénom
+            en: Surname
+          OA_description:
+            fr: Prénom de l'utilisateur
+            en: User surname
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_pattern: "[a-z]*"
+OA_data:
+  especes:
+    OA_tags: [ data ]
+    OA_i18n:
+      OA_title:
+        fr: Espèces
+        en: Species
+      OA_description:
+        fr: Description des espèces pêchées sur le bassin versant
+        en: Description of species fished in the watershed
+    OA_i18nDisplayPattern:
+        OA_title:
+          fr: "{esp_nom}"
+          en: "{esp_nom}"
+        OA_description:
+          fr: "{esp_definition_fr}"
+          en: "{esp_definition_en}"
+    OA_naturalKey:
+      - esp_nom
+    OA_basicComponents:
+      esp_nom:
+        OA_tags: [ test ]
+        OA_exportHeader:
+          OA_title:
+            fr: "code"
+            en: "code"
+          OA_description:
+            fr: "nom codique de l'espèce"
+            en: "code name of the species"
+      esp_definition_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "définition"
+          OA_description:
+            fr: "définition de l'espèce"
+        OA_langRestrictions: [fr]
+      esp_definition_en:
+        OA_exportHeader:
+          OA_title:
+            en: "definition"
+          OA_description:
+            en: "species definition"
+        OA_langRestrictions: [en]
+      colonne_homonyme_entre_referentiels: null
+    OA_computedComponents:
+      my_computed_column:
+        OA_tags: [ __HIDDEN__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: "colonne calculée"
+            en: "computed column"
+          OA_description:
+            fr: "une colonne calculée retournant 'my value'"
+            en: "a calculated column returning 'my value'"
+        OA_computation:
+          OA_expression: >
+            return "my value";
+  projet:
+    OA_tags: [ context, data, test ]
+    OA_i18n:
+      OA_title:
+        fr: Projet
+        en: Project
+      OA_description:
+        fr: Liste des projets du système d'information
+        en: List of information system projects
+    OA_i18nDisplayPattern:
+        OA_title:
+          fr: "{nom_fr}"
+          en: "{nom_en}"
+        OA_description:
+          fr: "{definition_fr}"
+          en: "{definition_en}"
+    OA_naturalKey:
+      - nom_key
+    OA_basicComponents:
+      nom_key: null
+      nom_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "Nom"
+          OA_description:
+            fr: "Nom du projet"
+        OA_langRestrictions: [fr]
+      nom_en:
+        OA_exportHeader:
+          OA_title:
+            en: "Name"
+          OA_description:
+            en: "Project name"
+        OA_langRestrictions: [en]
+      definition_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "définition"
+          OA_description:
+            fr: "définition du projet"
+        OA_langRestrictions: [fr]
+      definition_en:
+        OA_exportHeader:
+          OA_title:
+            en: "definition"
+          OA_description:
+            en: "project definition"
+        OA_langRestrictions: [en]
+      colonne_homonyme_entre_referentiels: null
+  sites:
+    OA_tags: [ context ]
+    OA_naturalKey:
+      - zet_chemin_parent
+      - zet_nom_key
+    OA_i18n:
+      OA_title:
+        fr: Site
+        en: Site
+      OA_description:
+        fr: Liste des sites du système d'information
+        en: Sites list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{zet_chemin_parent} - {zet_nom_fr} "
+        en: "{zet_chemin_parent} - {zet_nom_fr}"
+      OA_description:
+        fr: "{zet_description_fr}"
+        en: "{zet_description_en}"
+    OA_basicComponents:
+      tze_type_nom:
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: type_de_sites
+              OA_isParent: true
+      zet_nom_key: null
+      zet_nom_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "Nom du site"
+          OA_description:
+            fr: "Le nom du site"
+        OA_langRestrictions: [fr]
+      zet_nom_en:
+        OA_exportHeader:
+          OA_title:
+            en: "Site name"
+          OA_description:
+            en: "The site name"
+        OA_langRestrictions: [en]
+      zet_description_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "définition"
+          OA_description:
+            fr: "La definition du site"
+        OA_langRestrictions: [fr]
+      zet_description_en:
+        OA_exportHeader:
+          OA_title:
+            en: "definition"
+          OA_description:
+            en: "site definition"
+        OA_langRestrictions: [en]
+      zet_chemin_parent:
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+              OA_isRecursive: true
+  themes:
+    OA_tags: [ context ]
+    OA_naturalKey:
+      - nom_key
+    OA_i18n:
+      OA_title:
+        fr: Thème
+        en: Thematic
+      OA_description:
+        fr: Liste des thèmes
+        en: Thematic list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{nom_fr}"
+        en: "{nom_en}"
+      OA_description:
+        fr: "{description_fr}"
+        en: "{description_en}"
+    OA_basicComponents:
+      nom_key: null
+      nom_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "nom"
+          OA_description:
+            fr: "Le nom du thème"
+        OA_langRestrictions: [fr]
+      nom_en:
+        OA_exportHeader:
+          OA_title:
+            en: "name"
+          OA_description:
+            en: "Site name"
+        OA_langRestrictions: [en]
+      description_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "définition"
+          OA_description:
+            fr: "La definition du thème"
+        OA_langRestrictions: [fr]
+      description_en:
+        OA_exportHeader:
+          OA_title:
+            en: "definition"
+          OA_description:
+            en: "Thematic definition"
+        OA_langRestrictions: [en]
+  type_de_fichiers:
+    OA_tags: [ "__HIDDEN__" ]
+    OA_naturalKey:
+      - nom_key
+    OA_i18n:
+      OA_title:
+        fr: Types de fichiers
+        en: Files types
+      OA_description:
+        fr: Les types de fichiers
+        en: The files types
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{nom_fr}"
+        en: "{nom_en}"
+      OA_description:
+        fr: "{description_fr}"
+        en: "{description_en}"
+    OA_basicComponents:
+      nom_key: null
+      nom_fr: null
+      nom_en: null
+      description_fr: null
+      description_en:
+        OA_exportHeader:
+          OA_title:
+            en: "definition"
+          OA_description:
+            en: "Thematic definition"
+        OA_langRestrictions: [en]
+  type_de_sites:
+    OA_tags: [ context ]
+    OA_naturalKey:
+      - tze_nom_key
+    OA_i18n:
+      OA_title:
+        fr: Types de sites
+        en: Sites types
+      OA_description:
+        fr: Liste des types de sites
+        en: Sites types list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{tze_nom_fr}"
+        en: "{tze_nom_en}"
+      OA_description:
+        fr: "{tze_definition_fr}"
+        en: "{tze_definition_en}"
+    OA_basicComponents:
+      tze_nom_key: null
+      tze_nom_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "nom"
+          OA_description:
+            fr: "La nom du type de sites"
+        OA_langRestrictions: [fr]
+      tze_nom_en:
+        OA_exportHeader:
+          OA_title:
+            en: "name"
+          OA_description:
+            en: "Site type name"
+        OA_langRestrictions: [en]
+      tze_definition_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "définition"
+          OA_description:
+            fr: "La definition du type de site"
+        OA_langRestrictions: [fr]
+      tze_definition_en:
+        OA_exportHeader:
+          OA_title:
+            en: "definition"
+          OA_description:
+            en: "Site type definition"
+        OA_langRestrictions: [en]
+  site_theme_datatype:
+    OA_tags: [ context ]
+    OA_i18n:
+      OA_title:
+        fr: Types de données par site et projet
+        en: Data types by site and project
+      OA_description:
+        fr: Table de jointure des sites theme et datatypes
+        en: Join table of theme sites and datatypes
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: >-
+          nom du projet: {projet}, nom du site : {site}, nom du
+          thème : {theme}, nom du type de données : {datatype}
+        en: >-
+          projet name: {projet}, site name : {site}, theme name :
+          {theme}, data type name : {datatype}
+      OA_description:
+        fr: >-
+          Jointure nom du projet: {projet}, nom du site : {site}, nom du
+          thème : {theme}, nom du type de données : {datatype}
+        en: >-
+          Join on projet name: {projet}, site name : {site}, theme name :
+          {theme}, data type name : {datatype}
+    OA_validations:
+      projetRef:
+        OA_i18n:
+          fr: référence au projet
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: projet
+        OA_components: [ projet ]
+      sitesRef:
+        OA_i18n:
+          fr: référence au site
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+        OA_components: [ site ]
+      themesRef:
+        OA_i18n:
+          fr: référence au theme
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: themes
+        OA_components: [ theme ]
+      checkDatatype:
+        OA_i18n:
+          fr: test
+        OA_components: [ datatype ]
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String datatype = datum.datatype; 
+                def data = application.getConfiguration().i18n().data ;
+                if(data==null){
+                    return false;
+                };
+                def i18n = data
+                        .collect{ it->it.value.i18n};
+                if(i18n==null){
+                    return false;
+                };
+                def title = i18n 
+                        .collect{ it->it.title};
+                if(title==null){
+                    return false;
+                };
+                def french = title
+                        .collect { it->it.get(java.util.Locale.FRENCH)};
+                return french 
+                        .find{it->datatype.equals(fr.inra.oresing.domain.application.configuration.Ltree.fromUnescapedString(it.toString()).sql)}!=null;
+    OA_naturalKey:
+      - projet
+      - site
+      - theme
+      - datatype
+    OA_basicComponents:
+      projet:
+        OA_importHeader: nom du projet
+      site:
+        OA_importHeader: nom du site
+      theme:
+        OA_importHeader: nom du thème
+      datatype:
+        OA_importHeader: nom du type de données
+  unites:
+    OA_tags: [ data ]
+    OA_naturalKey:
+      - nom_key
+    OA_i18n:
+      OA_title:
+        fr: Unités
+        en: Units
+      OA_description:
+        fr: Liste des unités
+        en: Units list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{nom_fr} ({code_key})"
+        en: "{nom_en} ({code_key})"
+    OA_basicComponents:
+      code_key: null
+      code_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "code"
+          OA_description:
+            fr: "Le code du unité"
+        OA_langRestrictions: [fr]
+      code_en:
+        OA_exportHeader:
+          OA_title:
+            en: "code"
+          OA_description:
+            en: "Unit code"
+        OA_langRestrictions: [en]
+      nom_key: null
+      nom_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "nom"
+          OA_description:
+            fr: "La nom de l'unité"
+        OA_langRestrictions: [fr]
+      nom_en:
+        OA_exportHeader:
+          OA_title:
+            en: "name"
+          OA_description:
+            en: "Unit name"
+        OA_langRestrictions: [en]
+  valeurs_qualitatives:
+    OA_tags: [ data ]
+    OA_naturalKey:
+      - nom_key
+      - valeur_key
+    OA_i18n:
+      OA_title:
+        fr: Valeurs qualitatives
+        en: Qualitative values
+      OA_description:
+        fr: Liste de liste de valeurs qualitatives
+        en: List of qualitative values list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{valeur_fr}"
+        en: "{valeur_en}"
+      OA_description:
+        fr: "{valeur_fr} de {nom_fr}"
+        en: "{valeur_en} of {nom_en}"
+    OA_basicComponents:
+      nom_key: null
+      nom_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "Nom"
+          OA_description:
+            fr: "Le nom de la liste"
+        OA_langRestrictions: [fr]
+      nom_en:
+        OA_exportHeader:
+          OA_title:
+            en: "name"
+          OA_description:
+            en: "The name list"
+        OA_langRestrictions: [en]
+      valeur_key:
+      valeur_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "valeur"
+          OA_description:
+            fr: "La valeur dans la liste"
+        OA_langRestrictions: [fr]
+      valeur_en:
+        OA_exportHeader:
+          OA_title:
+            en: "value"
+          OA_description:
+            en: "The value in list"
+        OA_langRestrictions: [en]
+  variables:
+    OA_tags: [ data ]
+    OA_naturalKey:
+      - nom_key
+    OA_i18n:
+      OA_title:
+        fr: Variables
+        en: Variables
+      OA_description:
+        fr: Liste des variables
+        en: Variables list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{nom_fr}"
+        en: "{nom_en}"
+      OA_description:
+        fr: "{definition_fr}"
+        en: "{definition_en}"
+    OA_basicComponents:
+      nom_key: null
+      nom_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "nom"
+          OA_description:
+            fr: "Le nom de la variable"
+        OA_langRestrictions: [fr]
+      nom_en:
+        OA_exportHeader:
+          OA_title:
+            en: "name"
+          OA_description:
+            en: "Variable name"
+        OA_langRestrictions: [en]
+      definition_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "définition"
+          OA_description:
+            fr: "La définition de la variable"
+        OA_langRestrictions: [fr]
+      definition_en:
+        OA_exportHeader:
+          OA_title:
+            en: "definition"
+          OA_description:
+            en: "Variable definition"
+        OA_langRestrictions: [en]
+      is_qualitative:
+        OA_importHeader: isQualitative
+  variables_et_unites_par_types_de_donnees:
+    OA_tags: [ data ]
+    OA_validations:
+      variableRef:
+        OA_i18n:
+          fr: référence à la variable
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: variables
+        OA_components: [ variable ]
+      uniteRef:
+        OA_i18n:
+          fr: référence à l'unité'
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: unites
+        OA_components: [ unite ]
+      checkDatatype:
+        OA_i18n:
+          fr: test
+        OA_components: [ datatype ]
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String datatype = datum.datatype; 
+                def data = application.getConfiguration().i18n().data ;
+                if(data==null){
+                    return false;
+                };
+                def i18n = data
+                        .collect{ it->it.value.i18n};
+                if(i18n==null){
+                    return false;
+                };
+                def title = i18n 
+                        .collect{ it->it.title};
+                if(title==null){
+                    return false;
+                };
+                def french = title
+                        .collect { it->it.get(java.util.Locale.FRENCH)};
+                return french 
+                        .find{it->datatype.equals(fr.inra.oresing.domain.application.configuration.Ltree.fromUnescapedString(it.toString()).sql)}!=null;
+    OA_naturalKey:
+      - datatype
+      - variable
+    OA_i18n:
+      OA_title:
+        fr: Variables et unités par type de données
+        en: Variables and units by data type
+      OA_description:
+        fr: Liste de jointure des variables et unités par type de données
+        en: Variables and units by data type join list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: >-
+          nom du type de données : {datatype}, nom de la variable
+          : {variable}, : nom de l'unité {unite}
+        en: >-
+          datatype name : {datatype}, variable name : {variable}, : unit name {unite}
+      OA_description:
+        fr: >-
+          Jointure des nom du type de données : {datatype}, nom de la variable
+          : {variable}, : nom de l'unité {unite}
+        en: >-
+          Join ondatatype name : {datatype}, variable name : {variable}, : unit name {unite}
+    OA_basicComponents:
+      datatype:
+        OA_importHeader: nom du type de données
+      variable:
+        OA_importHeader: nom de la variable
+      unite:
+        OA_importHeader: nom de l'unité
+  pem:
+    OA_tags: [ context, data, test,  __DATA__, __ORDER_2__ ]
+    OA_i18n:
+      OA_title:
+        fr: Piégeage en Montée
+        en: Trap in ascent
+      OA_description:
+        fr: Données de pêche par piégeage en Montée
+        en: Upstream trapping fishing data
+    OA_naturalKey:
+      - projet
+      - site
+      - plateforme
+      - date
+      - espece
+    OA_dataHeaderLine: 4
+    OA_dataFirstLine: 5
+    OA_basicComponents:
+      projet:
+        OA_tags: [ test, __ORDER_2__ ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: projet
+      site:
+        OA_importHeader: site
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+      plateforme:
+      date:
+        OA_tags: [ temporal, __ORDER_1__ ]
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      espece:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: especes
+      color_value:
+        OA_importHeader: "Couleur des individus"
+        OA_exportHeader:
+          OA_title:
+            fr: Couleur des individus
+            en: United colors
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: valeurs_qualitatives
+      individusNumbervalue:
+        OA_importHeader: "Nombre d'individus"
+        OA_exportHeader:
+          OA_title:
+            fr: Nombre d'individus
+            en: Number of individuals
+        OA_defaultValue:
+          OA_expression: return 0
+    OA_computedComponents:
+      chemin: #optional
+        OA_withNaturalKeyComponents:   #optional
+          - site  #optional
+          - plateforme  #optional
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+        OA_exportHeader:   #optional
+          OA_title:
+            fr: Chemin
+            en: Path
+          OA_description:
+            fr: Données calculant le chemin complet du site
+            en: Data calculating the full path of the site
+      color_unit:
+        OA_computation:
+          OA_expression: "'sans_unite'"
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: unites
+      individusNumber_unit:
+        OA_computation:
+          OA_expression: "'sans_unite'"
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: unites
+    OA_validations:
+      unitOfColor:
+        OA_i18n:
+          fr: vérifie l'unité de la couleur des individus
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String datatype = "piegeage_en_montee"; 
+                String variable = "Couleur des individus"; 
+                String codeVariable = "couleur_des_individus"; 
+                String component = "unit"; 
+                return
+                referencesValues.site_theme_datatype
+                .findAll{it.datatype.equals(datatype)}
+                .find{it.variable.equals(codeVariable)}
+                .unite.equals((String)datum.variable.component)
+              OA_references:
+                - variables_et_unites_par_types_de_donnees
+      unitOfIndividus:
+        OA_i18n:
+          fr: vérifie l'unité du nombre d'individus
+        OA_required: true
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String datatype = "piegeage_en_montee"; 
+                String variable = "Nombre d'individus"; 
+                String codeVariable = "nombre_d_individus"; String component = "unit"; 
+                return referencesValues.get("variables_et_unites_par_types_de_donnees")
+                .findAll{it.get("nom du type de données").equals(datatype)}
+                .find{it.get("nom de la variable").equals(codeVariable)}
+                .get("nom de l'unité").equals((String)datum.variable.component);
+              OA_references:
+                - variables_et_unites_par_types_de_donnees
+    OA_authorizations:
+      OA_authorizationScope:
+        - projet
+        - chemin
+      OA_timeScope: date
+    OA_submission:
+      OA_strategy: OA_VERSIONING
+      OA_fileName:
+        OA_filePattern: "(.*)!(.*)!(.*)!(.*).csv"
+        OA_matchPatternScopes:
+          - projet
+          - chemin
+          - __START_DATE__  #optional
+          - __END_DATE__  #optional
+      OA_submissionScope:
+        OA_referenceScopes:
+          - OA_component: projet
+            OA_reference: projet
+            OA_i18n:
+              OA_title:
+                fr: projet
+                en: project
+              OA_description:
+                fr: Choisissez le projet
+                en: Choose the project
+            OA_exportHeader:
+              OA_title:
+                fr: projet
+                en: project
+              OA_description:
+                fr: Le projet
+                en: The project
+          - OA_component: chemin
+            OA_reference: sites
+            OA_i18n:
+              OA_title:
+                fr: site
+                en: site
+              OA_description:
+                fr: Le site
+                en: The site
+            OA_exportHeader:
+              OA_title:
+                fr: site
+                en: site
+              OA_description:
+                fr: Choisissez le site
+                en: Choose one or more site
+        OA_timeScope:
+          OA_component: date

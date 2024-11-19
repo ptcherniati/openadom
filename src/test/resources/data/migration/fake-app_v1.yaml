@@ -1,0 +1,65 @@
+version: 1
+application:
+  name: "Application pour vérifier le fonctionnement des migrations"
+  version: 1
+references:
+  couleurs:
+    keyColumns: [couleur]
+    columns:
+      couleur:
+compositeReferences:
+  localizations:
+    components:
+      - reference: couleurs
+dataTypes:
+  jeu1:
+    format:
+      columns:
+        - header: "couleur"
+          boundTo:
+            variable: couleur
+            component: value
+        - header: "date"
+          boundTo:
+            variable: date
+            component: value
+        - header: "nombre"
+          boundTo:
+            variable: nombre
+            component: value
+    data:
+      couleur:
+        components:
+          value:
+            checker:
+              name: Reference
+              params:
+                refType: couleurs
+      date:
+        components:
+          value:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      nombre:
+        components:
+          value:
+    authorization:
+      authorizationScopes:
+        couleur:
+          variable: couleur
+          component: value
+      timeScope:
+        variable: date
+        component: value
+      dataGroups:
+        groupe1:
+          label: "Un groupe de données"
+          data:
+            - couleur
+            - date
+        groupe2:
+          label: "Un autre groupe de données"
+          data:
+            - nombre

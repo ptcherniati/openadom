@@ -1,0 +1,309 @@
+version: 1
+application:
+  name: repeatedcolumns
+  version: 1
+references:
+  agroecosystemes :
+    keyColumns: [agroecosystem_key]
+    columns:
+      agroecosystem_key:
+        headerName: Agroécosystème_key
+      agroecosystem_fr:
+        headerName: Agroécosystème_fr
+      agroecosystem_en:
+        headerName: Agroécosystème_en
+      region:
+      departement:
+        headerName: Département
+  sites:
+    keyColumns: [site_key]
+    validations:
+      agroecosystemRef:
+        internationalizationName:
+          fr: "référence à l'agroécosystème"
+        checker:
+          name: Reference
+          params:
+            refType: agroecosystemes
+        columns: [ agroecosystem ]
+      checkDateMiseEnService:
+        internationalizationName:
+          fr: "validation de date"
+        checker:
+          name: Date
+          params:
+            pattern : "dd/MM/yyyy"
+        columns: [ "date_mise_en_service" ]
+    columns:
+      agroecosystem:
+        headerName: Agroécosystème
+      site_key:
+        headerName: nom du site_key
+      site_fr:
+        headerName: nom du site_fr
+      site_en:
+        headerName: nom du site_en
+      ville:
+      adresse:
+      coordonees:
+        headerName: cordonnées du dispositif
+      milieu:
+      climat:
+      pluviometrie:
+        headerName: pluviométrie moyenne (mm)
+      temperature:
+        headerName: température moyenne (°C)
+      vent_dominant:
+        headerName: vent dominant
+      vitesse_vent:
+        headerName: vitesse moyenne du vent (km/h)
+      type_sol:
+        headerName: type de sol
+      profondeur_moyenne:
+        headerName: profondeur moyenne du sol (m)
+      altitude_moyenne:
+        headerName: altitude moyenne (m)
+      date_mise_en_service:
+        headerName: date mise en service du dispositif
+  parcelles:
+    keyColumns: [site,parcelle_key]
+    columns:
+      site:
+      bloc:
+      repetition:
+        headerName: répétition
+      parcelle_key:
+        headerName: nom de la parcelle_key
+      parcelle_fr:
+        headerName: nom de la parcelle_fr
+      parcelle_en:
+        headerName: nom de la parcelle_en
+      surface:
+      date_creation:
+        headerName: date de création
+      commentaire_fr:
+      commentaire_en:
+  blocs:
+    validations:
+      creationDate:
+        internationalizationName:
+          fr: "date de création"
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+        columns: [ date_creation ]
+    keyColumns: [site,nom_du_bloc,repetition]
+    columns:
+      site:
+      nom_du_bloc:
+      repetition:
+        headerName: répétition
+      date_creation:
+        headerName: date creation
+      decription_fr:
+      description_en:
+  unites:
+    keyColumns: [nom_key]
+    columns:
+      code_key:
+      code_fr:
+      code_en:
+      nom_key:
+      nom_fr:
+      nom_en:
+  modalites:
+    internationalizedColumns:
+      nom_fr:
+        fr: nom_fr
+        en: nom_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{nom_fr} ({code})'
+        en: '{nom_fr} ({code})'
+    keyColumns: [code]
+    columns:
+      variable_forcage:
+        headerName: Variable de forcage
+      code:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  version_de_traitement:
+    keyColumns: [site, traitement]
+    internationalizationDisplay:
+      pattern:
+        fr: '{traitement} ({modalites})'
+        en: '{traitement} ({modalites})'
+    columns:
+      site:
+      traitement:
+      version:
+      date_debut:
+        headerName: date début
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            required: true
+      date_fin:
+        headerName: date fin
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            required: false
+      commentaire_fr:
+      commentaire_en:
+      modalites:
+    validations:
+      modalitesRef:
+        internationalizationName:
+          fr: "référence aux modalités"
+        columns: [ modalites ]
+        checker:
+          name: Reference
+          params:
+            refType: modalites
+            transformation:
+              codify: true
+            multiplicity: MANY
+compositeReferences:
+  localizations:
+    components:
+      - reference: sites
+      - reference: parcelles
+        parentKeyColumn: "site"
+dataTypes:
+  SWC:
+    repository:
+      filePattern:
+    data:
+      Nom parcelle:
+        components:
+          chemin:
+            checker:
+              name: Reference
+              params:
+                refType: parcelles
+      Nom traitement:
+        components:
+          valeur:
+      Date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
+          datetime:
+            defaultValue:
+              expression: >
+                return datum.Date.day +" " +datum.Date.time
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "30 MINUTES"
+      contexte:
+        components:
+          répétition:
+            checker:
+              name: Integer
+              params:
+          profondeur:
+            checker:
+              name: Integer
+              params:
+      SWC:
+        components:
+          valeur:
+            checker:
+              name: Float
+              params:
+                required: false
+          qualité:
+            checker:
+              name: Integer
+              params:
+                required: false
+          unite:
+            defaultValue:
+              expression: "\"pourcentage\""
+            checker:
+              name: Reference
+              params:
+                refType: unites
+    validations:
+      swcQualityEnumeration:
+        internationalizationName:
+          fr: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
+        checker:
+          name: GroovyExpression
+          params:
+            groovy:
+              expression: "Set.of(\"\", \"0\", \"1\", \"2\").contains(datum.get(\"SWC\").get(\"qualité\"))"
+    format:
+      allowUnexpectedColumns: true
+      headerLine: 7
+      firstRowLine: 10
+      columns:
+        - header: "Nom parcelle"
+          boundTo:
+            variable: Nom parcelle
+            component: chemin
+        - header: "Nom traitement"
+          boundTo:
+            variable: Nom traitement
+            component: valeur
+        - header: "Date"
+          boundTo:
+            variable: Date
+            component: day
+        - header: "Time"
+          boundTo:
+            variable: Date
+            component: time
+      repeatedColumns:
+        - headerPattern: "SWC_([0-9]+)_([0-9]+)"
+          tokens:
+            - boundTo:
+                variable: contexte
+                component: répétition
+              exportHeader: "Répétition"
+            - boundTo:
+                variable: contexte
+                component: profondeur
+              exportHeader: "Profondeur"
+          boundTo:
+            variable: SWC
+            component: valeur
+          exportHeader: "SWC"
+        - headerPattern: "qc"
+          boundTo:
+            variable: SWC
+            component: qualité
+          exportHeader: "qc"
+    authorization:
+      authorizationScopes:
+        localization:
+          variable: Nom parcelle
+          component: chemin
+      timeScope:
+        variable: Date
+        component: datetime
+      dataGroups:
+        all:
+          label: "Toutes les données"
+          data:
+            - Nom parcelle
+            - Nom traitement
+            - Date
+            - contexte
+            - SWC

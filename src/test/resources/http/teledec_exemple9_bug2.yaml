@@ -1,0 +1,142 @@
+version: 1 #obligatoire, version de l'application OpenADOM
+application: #obligatoire
+    name: damienbas_bug__ #obligatoire
+    defaultLanguage: fr
+    internationalizationName:
+      fr: Damien BAS bug_2
+      en: Damien BAS  bug_2
+    version: 1 #obligatoire, version de l'application créée avec OpenADOM
+references:
+  tr_datatype_dty: # 0.tr_datatype_dty.csv
+    internationalizationName:
+      fr: (0.tr_datatype_dty.csv) Référentiel des types de données
+      en: (0.tr_datatype_dty.csv) Datatype reference
+    allowUnexpectedColumns: false
+    keyColumns: [dty_code]
+    columns:
+      dty_code:
+        headerName: "datatype_code"
+      dty_name_fr:
+        headerName: "datatype_name_fr"
+      dty_name_en:
+        headerName: "datatype_name_en"
+      dty_description_fr:
+        headerName: "datatype_description_fr"
+      dty_description_en:
+        headerName: "datatype_description_en"
+  tr_metadata_entity_ment: # 2.tr_metadata_entity_ment.csv
+    internationalizationName:
+      fr: (2.tr_metadata_entity_ment.csv) Liste des entités utilisables dans le référentiel des métadonnées des variables locales (r_variable_local_metadata_vlm)
+      en : (2.tr_metadata_entity_ment.csv) List of entities usable in the metadata reference of the local variable names
+    internationalizationDisplay: #tout computationChecker (dans les ddr et dans les data ?) referencant tr_metadata_entity_ment dans un autre referentiel ou les données est censé récupérer le pattern suivant en lieu et place de la keyColumns --> non fonctionnel actuellement (voir pour ce cas le referentiel ref_datafile_variable_metadata)
+      pattern:
+        fr: "{ment_name_fr}"
+        en: "{ment_name_en}"
+    allowUnexpectedColumns: false
+    keyColumns: [ment_code]
+    columns:
+      ment_code:
+        headerName: "entity_code"
+      ment_name_fr:
+        headerName: "entity_name_fr"
+      ment_name_en:
+        headerName: "entity_name_en"
+      ment_uri:
+        headerName: "entity_uri"
+  tr_variable_var: # 4.tr_variable_var.csv
+    internationalizationName:
+      fr: (4.tr_variable_var.csv) Liste des noms des noms des colonnes de variables dans les fichiers de données
+      en: (4.tr_variable_var.csv) List of variable column names of data files
+    keyColumns: [var_code]  
+    columns:
+      var_code:
+        headerName: "var_code"
+      var_label_fr:
+        #headerName: "var_label_fr"
+      var_label_en:
+        headerName: "var_label_en"
+      var_datatype:
+        #headerName: "var_datatype"
+        checker:
+          name: Reference
+          params:
+            refType: tr_datatype_dty
+            required: false
+            transformation:
+              codify: true
+      var_category:
+        headerName: "var_category"
+        #TODO
+        #créer le fichier csv, le referentiel et ajouter un computationChecker
+      var_std_name:
+        headerName: "var_standard_name"
+      var_std_name_uri:
+        headerName: "var_standard_name_uri"
+      var_std_entity:
+        headerName: "var_standard_entity"
+      var_std_entity_uri:
+        headerName: "var_standard_entity_uri"
+      var_std_characteristic:
+        headerName: "var_standard_characteristic"
+      var_std_characteristic_uri:
+        headerName: "var_standard_characteristic_uri"
+      var_std_category:
+        headerName: "var_standard_category"
+      var_std_category_uri:
+        headerName: "var_standard_category_uri"
+      var_std_context:
+        headerName: "var_standard_context"
+      var_std_context_uri:
+        headerName: "var_standard_context_uri"
+      var_std_qualifier:
+        headerName: "var_standard_qualifier"
+      var_std_qualifier_uri:
+        headerName: "var_standard_qualifier_uri"
+      var_std_unit:
+        headerName: "var_standard_unit"
+      var_std_unit_uri:
+        headerName: "var_standard_unit_uri"
+
+
+
+
+  tr_metadata_met: # 3.tr_metadata_met.csv
+    internationalizationName:
+      fr: (3.tr_metadata_met.csv) Liste des métadonnées
+      en: (3.tr_metadata_met.csv) List of metadata
+    allowUnexpectedColumns: false
+    internationalizationDisplay: #pour récupérer ces patterns en lieu et place de la clé naturelle de ref_datafile_variable_metadata --> non fonctionel pr le moment (voir la computedColumn variable_metadata du referentiel ref_datafile_variable)
+      pattern:
+        fr: "{met_ment_code} : {met_ment_value} ({met_ment_value_unit_code})" #entity_code pourrait etre remplacé ici par son internationalizationDisplay ?
+        en: "{met_ment_code} : {met_ment_value} ({met_ment_value_unit_code})"
+    keyColumns: [met_code,met_ment_code,met_ment_value]
+    columns:
+      met_code:
+        headerName: "metadata_code"
+        ## computationChecker commenté car référence croisée avec celui de la colonne calculée var_metadata du référentiel tr_variable_var
+        # computationChecker:
+        #   name: Reference #contrainte de type référentiel
+        #   params:
+        #     refType: tr_variable_var #a priori on fait toujours refererence à un referentiel avec sa clé naturelle
+        #     required: true # obligatoirement dans le referentiel
+        #     transformation:
+        #       codify: true
+      met_ment_code:
+        headerName: "entity_code"
+        checker:
+          name: Reference #contrainte de type référentiel
+          params:
+            refType: tr_metadata_entity_ment #a priori on fait toujours refrerence à un referentiel avec sa clé naturelle (entity_code ici)
+            required: true # obligatoirement dans le referentiel
+            transformation:
+              codify: true
+      met_ment_value:
+        headerName: "entity_value"
+      met_ment_value_uri:
+        headerName: "entity_value_uri"
+      met_ment_value_type:
+        headerName: "entity_value_type"
+      met_ment_value_unit_code:
+        headerName: "entity_value_unit_code"
+      met_ment_value_unit_code_uri:
+        headerName: "entity_value_unit_code_uri"

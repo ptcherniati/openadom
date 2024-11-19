@@ -1,0 +1,83 @@
+services:
+  postgresql:
+    image: postgres:16.0
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=xxxxxxxx
+      - POSTGRES_DB=openadom
+    volumes:
+      - ./src/main/resources/migration/openadom_user.sql:/docker-entrypoint-initdb.d/openadom_user.sql
+    networks:
+      - default
+  postgresql_graphana:
+    image: postgres:16.0
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=dbuser
+      - POSTGRES_PASSWORD=xxxxxxxx
+      - POSTGRES_DB=openadom
+    networks:
+      - default
+  pgadmin:
+    image: dpage/pgadmin4:8.11
+    ports:
+      - "8083:80"
+    volumes:
+      - ./docker-pg-servers.json:/pgadmin4/servers.json
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "si-ore-developpement@list.forge.codelutin.com"
+      PGADMIN_DEFAULT_PASSWORD: "test"
+    networks:
+      - default
+    depends_on:
+      - postgresql
+      - postgresql_graphana
+    links:
+      - postgresql:pg
+
+  grafana:
+    image: grafana/grafana:10.4.4-ubuntu
+    ports:
+      - 3000:3000
+    environment:
+      GF_LOG_LEVEL: debug
+      GF_AUTH_POSTGRES_ENABLED: "true"
+      GF_DATABASE_TYPE: postgres
+      GF_DATABASE_HOST: postgresql_graphana
+      GF_DATABASE_NAME: openadom
+      GF_DATABASE_USER: dbuser
+      GF_DATABASE_PASSWORD: xxxxxxxx
+      GF_DATABASE_SSL_MODE: disable
+      GF_RENDERING_SERVER_URL: http://renderer:8081/render
+      GF_RENDERING_CALLBACK_URL: http://grafana:3000/
+      GF_LOG_FILTERS: rendering:debug
+    restart: unless-stopped
+    depends_on:
+      - postgresql
+      - postgresql_graphana
+    networks:
+      - default
+    volumes:
+     - 'grafana_storage:/var/lib/grafana'
+     #- './grafana/grafana.ini:/etc/grafana/grafana.ini'
+     - './grafana/provisioning/si-ore-datasource.yml:/etc/grafana/provisioning/si-ore-datasource.yml'
+     - './grafana/grafana-image-renderer/custom.ini:/etc/grafana/grafana-image-renderer/custom.ini'
+     - './grafana/provisioning/dashboard/pem-dashboard.json:/etc/grafana/provisioning/dashboard/pem-dashboard.json'
+
+  renderer:
+    image: grafana/grafana-image-renderer:latest
+    ports:
+      - 8081
+    networks:
+      - default
+volumes:
+  grafana_storage:
+  grafana-config:
+    driver: local
+    driver_opts:
+      type: 'none'
+      o: 'bind'
+      device: '${PWD}/grafana'

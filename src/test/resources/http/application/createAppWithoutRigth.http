@@ -1,0 +1,27 @@
+
+### login
+
+POST localhost:8081/api/v1/login?login=lulu&password=xxxx
+Content-Type: application/json
+
+{}
+
+### Load Application
+POST localhost:8081/api/v1/applications/olacondprelevgroovy
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="element-name"
+Content-Type: text/plain
+
+L'application monsoere
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="olacondprelevgroovy.yaml"
+Content-Type: application/json
+
+< ../../data/monsore/monsore-with-repository.yaml
+--WebAppBoundary--
+
+
+        referentielFiles.put("variables", "/data/monsore/refdatas/variables.csv");
+        referentielFiles.put("variables_et_unites_par_types_de_donnees", "/data/monsore/refdatas/variables_et_unites_par_types_de_donnees.csv");

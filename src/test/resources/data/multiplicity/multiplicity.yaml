@@ -1,0 +1,158 @@
+OA_version: 2.0.1
+OA_application:
+  OA_name: multiplicity
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: Test de valeurs multiples
+      en: Multiple values test
+    OA_description:
+      fr: Test de valeurs multiples
+      en: Multiple values test
+  OA_version: 1.0.1
+OA_data:
+  reference1:
+    OA_naturalKey: [groupe,equipe]
+    OA_basicComponents:
+      groupe:
+      equipe:
+      projets:
+        OA_required: true
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_multiplicity: "MANY"
+      names:
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_multiplicity: "MANY"
+      durations:
+        OA_checker:
+          OA_name: OA_float
+          OA_params:
+            OA_multiplicity: "MANY"
+      dates:
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+            OA_multiplicity: "MANY"
+  reference2:
+    OA_naturalKey: [groupe]
+    OA_basicComponents:
+      groupe:
+    OA_computedComponents:
+      reference1:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_multiplicity: MANY
+            OA_reference:
+              OA_name: reference1
+        OA_computation:
+          OA_references:
+            - reference1
+          OA_expression: >
+              String groupe = (String)datum["groupe"];
+              references.reference1
+              .findAll({it.refValues.groupe.equals(groupe)})
+              .collect({it.naturalKey})
+              .join(",");
+  bugs:
+    OA_naturalKey: ["no"]
+    OA_basicComponents:
+      nos:
+        OA_required: true
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_multiplicity: "MANY"
+      fichiers:
+        OA_required: true
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_pattern: .*
+            OA_multiplicity: "MANY"
+      dates:
+        OA_required: false
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+            OA_multiplicity: "MANY"
+      projets:
+        OA_required: true
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_multiplicity: "MANY"
+      durations:
+        OA_required: false
+        OA_checker:
+          OA_name: OA_float
+          OA_params:
+            OA_multiplicity: "MANY"
+      references:
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_multiplicity: MANY
+            OA_reference:
+              OA_name: reference1
+    OA_computedComponents:
+      no:
+        OA_required: true
+        OA_computation:
+          OA_expression: datum.nos.split(",")[0]
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_multiplicity: "ONE"
+      fichier:
+        OA_required: true
+        OA_computation:
+          OA_expression: datum.fichiers.split(",")[0]
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_pattern: .*
+            OA_multiplicity: "ONE"
+      date:
+        OA_required: false
+        OA_computation:
+          OA_expression: datum.dates.split(",")[0]
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+            OA_multiplicity: "ONE"
+      projet:
+        OA_required: true
+        OA_computation:
+          OA_expression: datum.projets.split(",")[0]
+        OA_checker:
+          OA_name: OA_integer
+          OA_params:
+            OA_multiplicity: "ONE"
+      duration:
+        OA_required: false
+        OA_computation:
+          OA_expression: datum.durations.split(",")[0]
+        OA_checker:
+          OA_name: OA_float
+          OA_params:
+            OA_multiplicity: "ONE"
+      reference:
+        OA_required: false
+        OA_computation:
+          OA_expression: datum.references.split(",")[0]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_multiplicity: ONE
+            OA_reference:
+              OA_name: reference1

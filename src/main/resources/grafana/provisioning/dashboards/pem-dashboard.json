@@ -1,0 +1,255 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {
+          "type": "grafana",
+          "uid": "-- Grafana --"
+        },
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 0,
+  "id": 1,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "postgres",
+        "name": "si-ore"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+
+          "datasource": {
+            "type": "postgres",
+            "name": "si-ore"
+          },
+          "editorMode": "code",
+          "format": "table",
+          "rawQuery": true,
+          "rawSql": "select \n\t(refvalues #>> Array['$temporalite'])::text::composite_date::timestamp \"time\", \n\t(refvalues #>> Array['$composants'])::numeric metric\n\tfrom \"$schemas\".referencevalue\nwhere referencetype = '$datatypes' and (refvalues #>> Array['$composants']) != ''\torder by 1",
+          "refId": "A",
+          "sql": {
+            "columns": [
+              {
+                "parameters": [],
+                "type": "function"
+              }
+            ],
+            "groupBy": [
+              {
+                "property": {
+                  "type": "string"
+                },
+                "type": "groupBy"
+              }
+            ],
+            "limit": 50
+          }
+        }
+      ],
+      "title": "Panel Title",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "",
+  "schemaVersion": 39,
+  "tags": [],
+  "templating": {
+    "list": [
+      {
+        "current": {
+          "selected": false,
+          "text": "monsore",
+          "value": "monsore"
+        },
+
+        "datasource": {
+          "type": "postgres",
+          "name": "si-ore"
+        },
+        "definition": "select name from application",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Choisissez un schema",
+        "multi": false,
+        "name": "schemas",
+        "options": [],
+        "query": "select name from application",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "especes",
+          "value": "especes"
+        },
+
+        "datasource": {
+          "type": "postgres",
+          "name": "si-ore"
+        },
+        "definition": "select jsonb_object_keys(configuration #>'{datadescription}') from application\nwhere \"name\" = '$schemas'",
+        "description": "",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Serlectionnez un type de données",
+        "multi": false,
+        "name": "datatypes",
+        "options": [],
+        "query": "select jsonb_object_keys(configuration #>'{datadescription}') from application\nwhere \"name\" = '$schemas'",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
+          "selected": false,
+          "text": "esp_nom",
+          "value": "esp_nom"
+        },
+
+        "datasource": {
+          "type": "postgres",
+          "name": "si-ore"
+        },
+        "definition": "select jsonb_object_keys(configuration #> array['datadescription', '$datatypes', 'componentdescriptions']) from application\nwhere \"name\" = '$schemas'",
+        "hide": 0,
+        "includeAll": false,
+        "label": "selectionner un composant",
+        "multi": false,
+        "name": "composants",
+        "options": [],
+        "query": "select jsonb_object_keys(configuration #> array['datadescription', '$datatypes', 'componentdescriptions']) from application\nwhere \"name\" = '$schemas'",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      },
+      {
+        "current": {
+          "isNone": true,
+          "selected": false,
+          "text": "None",
+          "value": ""
+        },
+        "datasource": {
+          "type": "postgres",
+          "name": "si-ore"
+        },
+        "definition": "SELECT keys\nFROM  application, \n\tjsonb_object_keys(configuration #> Array['datadescription', '$datatypes', 'componentdescriptions']) AS keys\nwhere \n\tname = '$schemas'\n\tand configuration #> Array['datadescription', '$datatypes', 'componentdescriptions', keys] @? '$ ? (@.checker.type == \"DateChecker\")'",
+        "hide": 0,
+        "includeAll": false,
+        "label": "Selectionnez la temporalité",
+        "multi": false,
+        "name": "temporalite",
+        "options": [],
+        "query": "SELECT keys\nFROM  application, \n\tjsonb_object_keys(configuration #> Array['datadescription', '$datatypes', 'componentdescriptions']) AS keys\nwhere \n\tname = '$schemas'\n\tand configuration #> Array['datadescription', '$datatypes', 'componentdescriptions', keys] @? '$ ? (@.checker.type == \"DateChecker\")'",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "type": "query"
+      }
+    ]
+  },
+  "time": {
+    "from": "1984-01-01T00:00:00.000Z",
+    "to": "1984-01-05T00:00:00.000Z"
+  },
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "pem",
+  "uid": "bdp26r206ufi8d",
+  "version": 5,
+  "weekStart": ""
+}

@@ -1,0 +1,4 @@
+localizations:
+  components:
+    - reference: zones_etudes
+      parentRecursiveKey: parent

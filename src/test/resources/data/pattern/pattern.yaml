@@ -1,0 +1,600 @@
+OA_version: 2.0.1
+OA_tags: #optional
+  data: #optional
+    fr: données
+    en: data
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: Récursivité
+      en: Recursivity
+    OA_description:
+      fr: Récursivité
+      en: Recursivity
+  OA_comment: Fichier de test de l'application pattern
+  OA_name: pattern
+  OA_version: 3.0.1
+
+OA_data:
+  proprietes_taxon:
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_validations:
+      reference:
+        OA_i18n:
+          fr: les reference
+          en: the references
+        OA_components: [site]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: site
+              OA_isParent: true
+      floats:
+        OA_i18n:
+          fr: les décimaux
+          en: the decimals
+        OA_components: [ isFloatValue ]
+        OA_checker:
+          OA_name: OA_float
+      integer:
+        OA_i18n:
+          fr: les entiers
+          en: the integers
+        OA_components: [ ordre_affichage ]
+        OA_checker:
+          OA_name: OA_integer
+    OA_i18n:
+      OA_title:
+        fr: Proprétés de Taxon
+        en: Properties of Taxa
+      OA_description:
+        fr: Proprétés de Taxon
+        en: Properties of Taxa
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: '{propriete_fr}'
+        en: '{propriete_en}'
+      OA_description:
+        fr: '{definition_fr}'
+        en: '{definition_en}'
+    OA_naturalKey: [propriete_key]
+    OA_basicComponents:
+      date:
+        OA_importHeader: Date
+        OA_exportHeader:
+          OA_title:
+            fr: Date
+            en: Date
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      propriete_key:
+        OA_importHeader: nom de la propriété_key
+        OA_exportHeader:
+          OA_title:
+            fr: nom de la propriété_key
+            en: property key name
+      propriete_fr:
+        OA_importHeader: nom de la propriété_fr
+        OA_exportHeader:
+          OA_title:
+            fr: nom de la propriété_fr
+            en: property name (French)
+      propriete_en:
+        OA_importHeader: nom de la propriété_en
+        OA_exportHeader:
+          OA_title:
+            fr: nom de la propriété_en
+            en: property name (English)
+      definition_fr:
+        OA_importHeader: définition_fr
+        OA_exportHeader:
+          OA_title:
+            fr: définition_fr
+            en: definition (French)
+      definition_en:
+        OA_importHeader: définition_en
+        OA_exportHeader:
+          OA_title:
+            fr: définition_en
+            en: definition (English)
+      isFloatValue:
+        OA_importHeader: isFloatValue
+        OA_exportHeader:
+          OA_title:
+            fr: isFloatValue
+            en: isFloatValue
+      isQualitative:
+        OA_importHeader: isQualitative
+        OA_exportHeader:
+          OA_title:
+            fr: isQualitative
+            en: isQualitative
+      type_associe:
+        OA_importHeader: type associé
+        OA_exportHeader:
+          OA_title:
+            fr: type associé
+            en: associated type
+      ordre_affichage:
+        OA_importHeader: ordre d'affichage
+        OA_exportHeader:
+          OA_title:
+            fr: ordre d'affichage
+            en: display order
+      site:
+  site:
+    OA_i18n:
+      OA_title:
+        fr: Site
+        en: Site
+      OA_description:
+        fr: Site
+        en: Site
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: '{site_fr}'
+        en: '{site_en}'
+      OA_description:
+        fr: '{description_fr}'
+        en: '{description_en}'
+    OA_naturalKey: [site_key]
+    OA_basicComponents:
+      type_site:
+        OA_importHeader: nom du type de site
+        OA_exportHeader:
+          OA_title:
+            fr: nom du type de site
+            en: site type name
+      site_key:
+        OA_importHeader: nom du site_key
+        OA_exportHeader:
+          OA_title:
+            fr: nom du site_key
+            en: site key name
+      site_fr:
+        OA_importHeader: nom du site_fr
+        OA_exportHeader:
+          OA_title:
+            fr: nom du site_fr
+            en: site name (French)
+      site_en:
+        OA_importHeader: nom du site_en
+        OA_exportHeader:
+          OA_title:
+            fr: nom du site_en
+            en: site name (English)
+      description_fr:
+        OA_importHeader: description du site_fr
+        OA_exportHeader:
+          OA_title:
+            fr: description du site_fr
+            en: site description (French)
+      description_en:
+        OA_importHeader: description du site_en
+        OA_exportHeader:
+          OA_title:
+            fr: description du site_en
+            en: site description (English)
+      sandre_eau:
+        OA_importHeader: code sandre du Plan d'eau
+        OA_exportHeader:
+          OA_title:
+            fr: code sandre du Plan d'eau
+            en: Sandre code for Water Body
+      sandre:
+        OA_importHeader: code sandre de la Masse d'eau plan d'eau
+        OA_exportHeader:
+          OA_title:
+            fr: code sandre de la Masse d'eau plan d'eau
+            en: Sandre code for Water Body Mass
+  taxon:
+    OA_i18n:
+      OA_title:
+        fr: Taxons
+        en: Taxa
+      OA_description:
+        fr: Taxons
+        en: Taxa
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: '{nom}'
+        en: '{nom}'
+      OA_description:
+        fr: '{taxon_superieur} : {nom}'
+        en: '{taxon_superieur} : {nom}'
+    OA_naturalKey: [nom]
+    OA_validations:
+      nomDuTaxonDetermine:
+        OA_required: true
+        OA_i18n:
+          fr: "nom du taxon déterminé"
+          en: "determined taxon name"
+        OA_checker:
+          OA_name: OA_string
+        OA_components: [ nom ]
+    OA_basicComponents:
+      nom:
+        OA_importHeader: nom du taxon déterminé
+        OA_exportHeader:
+          OA_title:
+            fr: nom du taxon déterminé
+            en: determined taxon name
+        OA_tags: [__ORDER_1__]
+      theme:
+        OA_tags: [__ORDER_2__]
+      niveau_taxon:
+        OA_importHeader: nom du niveau de taxon
+        OA_exportHeader:
+          OA_title:
+            fr: nom du niveau de taxon
+            en: taxon level name
+        OA_tags: [__ORDER_3__]
+      taxon_superieur:
+        OA_importHeader: nom du taxon superieur
+        OA_exportHeader:
+          OA_title:
+            fr: nom du taxon superieur
+            en: higher taxon name
+        OA_tags: [__ORDER_4__]
+      sandre_taxon:
+        OA_importHeader: code sandre du taxon
+        OA_exportHeader:
+          OA_title:
+            fr: code sandre du taxon
+            en: Sandre code for taxon
+        OA_tags: [__ORDER_5__]
+      sandre_superieur:
+        OA_importHeader: code sandre du taxon supérieur
+        OA_exportHeader:
+          OA_title:
+            fr: code sandre du taxon supérieur
+            en: Sandre code for higher taxon
+        OA_tags: [__ORDER_6__]
+      incertitude:
+        OA_importHeader: niveau incertitude de détermination
+        OA_exportHeader:
+          OA_title:
+            fr: niveau incertitude de détermination
+            en: determination uncertainty level
+        OA_tags: [__ORDER_7__]
+      auteur:
+        OA_importHeader: Auteur de la description
+        OA_exportHeader:
+          OA_title:
+            fr: Auteur de la description
+            en: Description author
+        OA_tags: [__ORDER_8__]
+      annee:
+        OA_importHeader: Année de la description
+        OA_exportHeader:
+          OA_title:
+            fr: Année de la description
+            en: Description year
+        OA_tags: [__ORDER_9__]
+      reference_description:
+        OA_importHeader: Référence de la description
+        OA_exportHeader:
+          OA_title:
+            fr: Référence de la description
+            en: Description reference
+        OA_tags: [__ORDER_10__]
+      references_taxon:
+        OA_importHeader: Références relatives à ce taxon
+        OA_exportHeader:
+          OA_title:
+            fr: Références relatives à ce taxon
+            en: References related to this taxon
+        OA_tags: [__ORDER_11__]
+      synonyme_ancien:
+        OA_importHeader: Synonyme ancien
+        OA_exportHeader:
+          OA_title:
+            fr: Synonyme ancien
+            en: Old synonym
+        OA_tags: [__ORDER_12__]
+      synonyme_recent:
+        OA_importHeader: Synonyme récent
+        OA_exportHeader:
+          OA_title:
+            fr: Synonyme récent
+            en: Recent synonym
+        OA_tags: [__ORDER_13__]
+      bourrelly:
+        OA_importHeader: Classe algale sensu Bourrelly
+        OA_exportHeader:
+          OA_title:
+            fr: Classe algale sensu Bourrelly
+            en: Algal class sensu Bourrelly
+        OA_tags: [__ORDER_14__]
+      sandre:
+        OA_importHeader: Code Sandre
+        OA_exportHeader:
+          OA_title:
+            fr: Code Sandre
+            en: Sandre Code
+        OA_tags: [__ORDER_15__]
+      notes:
+        OA_importHeader: Notes libres
+        OA_exportHeader:
+          OA_title:
+            fr: Notes libres
+            en: Free notes
+        OA_tags: [__ORDER_16__]
+    OA_dynamicComponents:
+      proprietesDeTaxon:
+        OA_tags: [__ORDER_17__]
+        OA_exportHeader:
+          OA_title:
+            fr: Propriétés de Taxons
+            en: Properties of Taxa
+          OA_description:
+            fr: Proprétés de Taxons
+            en: Properties of Taxa
+        OA_headerPrefix: "pt_"
+        OA_reference: proprietes_taxon
+        OA_referenceComponentToLookForHeader: propriete_key
+    OA_patternComponents:
+      tel_S1_value:
+        OA_patternForComponents: "(.*)_S1_(.*)_(.*)"
+        OA_required: false
+        OA_exportHeader:
+          OA_title:
+            fr: "valeur"
+            en: "value"
+          OA_description:
+            fr: "valeur"
+            en: "value"
+        OA_componentQualifiers:
+          - tel_S1_variable: #$1
+              OA_exportHeader:
+                OA_title:
+                  fr: "variable fr"
+                  en: "variable en"
+                OA_description:
+                  fr: "variable fr"
+                  en: "variable en"
+              OA_tags: [__ORDER_1__]
+              OA_checker:
+                OA_name: OA_reference
+                OA_params:
+                  OA_reference:
+                    OA_name: site
+          - tel_S1_qualifier: #$2
+              OA_tags: [__ORDER_2__]
+              OA_exportHeader:
+                OA_title:
+                  fr: "qualificatif fr"
+                  en: "qualifier en"
+                OA_description:
+                  fr: "qualificatif fr"
+                  en: "qualifier en"
+              OA_checker:
+                OA_name: OA_integer
+          - tel_S1_resolution: #$3
+              OA_tags: [__ORDER_3__]
+              OA_exportHeader:
+                OA_title:
+                  fr: "resolution fr"
+                  en: "resolution en"
+                OA_description:
+                  fr: "resolution fr"
+                  en: "resolution en"
+              OA_checker:
+                OA_name: OA_float
+        OA_componentAdjacents: #optional
+          - #optional
+            swc_sd: #optional
+              OA_importHeaderPattern: "{$1}_sd" #optional
+              OA_exportHeader: #mandatory
+                OA_title: #optional
+                  fr: écart type
+                  en: standard deviation
+              OA_required: false #optional
+              OA_mandatory: false #optional
+              OA_tags: #optional
+                - data #optional
+              OA_checker: #mandatory
+                OA_name: OA_float #mandatory
+                OA_params: #optional
+                  OA_max: 500.0 #optional
+                  OA_min: 0.0 #optional
+                  OA_multiplicity: ONE #optional
+          - #optional
+            swc_qc: #optional
+              OA_importHeaderPattern: "{$1}_qc" #optional
+              OA_exportHeader: #mandatory
+                OA_title: #optional
+                  fr: Indice de qualité
+                  en: Quality class
+                OA_description: #optional
+                  fr: 0 pour une valeur valide ; 2 pour une valeur incorrecte
+                  en: 0 for valid value; 2 for invalid value
+              OA_required: false #optional
+              OA_mandatory: false #optional
+              OA_tags: #optional
+                - data #optional
+              OA_checker: #mandatory
+                OA_name: OA_integer #mandatory
+                OA_params: #optional
+                  OA_max: 2 #optional
+                  OA_min: 0 #optional
+                  OA_multiplicity: ONE #optional
+      tel_S2_value:
+        OA_patternForComponents: "(.*)_S2_(.*)_(.*)"
+        OA_required: false
+        OA_exportHeader:
+          OA_title:
+            fr: "valeur"
+            en: "value"
+          OA_description:
+            fr: "valeur"
+            en: "value"
+        OA_componentQualifiers:
+          - tel_S2_variable: #$1
+              OA_exportHeader:
+                OA_title:
+                  fr: "variable fr"
+                  en: "variable en"
+                OA_description:
+                  fr: "variable fr"
+                  en: "variable en"
+              OA_tags: [__ORDER_1__]
+              OA_checker:
+                OA_name: OA_reference
+                OA_params:
+                  OA_reference:
+                    OA_name: site
+          - tel_S2_qualifier: #$2
+              OA_tags: [__ORDER_2__]
+              OA_exportHeader:
+                OA_title:
+                  fr: "qualificatif fr"
+                  en: "qualifier en"
+                OA_description:
+                  fr: "qualificatif fr"
+                  en: "qualifier en"
+              OA_checker:
+                OA_name: OA_integer
+          - tel_S2_resolution: #$3
+              OA_tags: [__ORDER_3__]
+              OA_exportHeader:
+                OA_title:
+                  fr: "resolution fr"
+                  en: "resolution en"
+                OA_description:
+                  fr: "resolution fr"
+                  en: "resolution en"
+              OA_checker:
+                OA_name: OA_float
+
+        OA_componentAdjacents:   #optional
+          -   #optional
+            swc_sd:   #optional
+              OA_importHeaderPattern: "sd"  #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: écart type
+                  en: standard deviation
+              OA_required: false  #optional
+              OA_mandatory: false  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_float  #mandatory
+                OA_params:   #optional
+                  OA_max: 500.0  #optional
+                  OA_min: 0.0  #optional
+                  OA_multiplicity: ONE  #optional
+          -   #optional
+            swc_qc:   #optional
+              OA_importHeaderPattern: "qc"  #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: Indice de qualité
+                  en: Quality class
+                OA_description:   #optional
+                  fr: 0 pour une valeur valide ; 2 pour une valeur incorrecte
+                  en:  0 for valid value; 2 for bad value
+              OA_required: false  #optional
+              OA_mandatory: false  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_integer  #mandatory
+                OA_params:   #optional
+                  OA_max: 2  #optional
+                  OA_min: 0  #optional
+                  OA_multiplicity: ONE  #optional
+  condition_prelevements:
+    OA_tags: ["__DATA__"]
+    OA_naturalKey:
+      - date_day
+      - date_time
+      - siteName
+    # ajout d'un nom internationnalisé
+    OA_i18n:
+      OA_title:
+        fr: Condition de prélèvement
+        en: Collection condition
+      OA_description:
+        fr: Condition de prélèvement
+        en: Collection condition
+    OA_basicComponents:
+          date_day:
+            OA_checker:
+              OA_name: OA_date
+              OA_params:
+                OA_pattern: dd/MM/yyyy
+          date_time:
+            OA_checker:
+              OA_name: OA_date
+              OA_params:
+                OA_pattern: HH:mm:ss
+          projet:
+          siteName:
+            OA_importHeader: Nom du site
+            OA_required: true
+            OA_checker:
+              OA_name: OA_reference
+              OA_params:
+                OA_reference:
+                  OA_name: site
+          sitePlateforme:
+            OA_importHeader: Plateforme du site
+          couleurDeLEau:
+            OA_importHeader: couleur de l'eau
+          directionDuVent:
+            OA_importHeader: direction du vent
+          ensoleillement:
+          temps:
+          aspectDeLEau:
+            OA_importHeader: aspect de l'eau
+          etatDeSurface:
+            OA_importHeader: etat de surface
+          nebulosite:
+          vitesseDuVent:
+            OA_importHeader: vitesse du vent
+          pressionAtmospherique:
+            OA_importHeader: pression atmospherique
+          temperatureDeLAir:
+            OA_importHeader: temperature de l'air
+            OA_checker:
+              OA_name: OA_integer
+          transparenceParDisqueInra:
+            OA_importHeader: transparence par disque inra
+          transparenceParSecchi:
+            OA_importHeader: transparence par secchi
+            OA_checker:
+              OA_name: OA_float
+          commentaire:
+    # création des authorisations
+    OA_submission:
+      OA_strategy: OA_VERSIONING
+      OA_submissionScope:
+        OA_referenceScopes:
+          - OA_i18n:
+              OA_title:
+                fr: Nom du site
+                en: Site name
+              OA_description:
+                fr: Nom du site
+                en: Site name
+            OA_component: siteName
+            OA_reference: site
+            OA_exportHeader:
+              OA_title:
+                fr: Nom du site
+                en: Site name
+              OA_description:
+                fr: Nom du site
+                en: Site name
+        # par date
+        OA_timeScope:
+          OA_component: date_day

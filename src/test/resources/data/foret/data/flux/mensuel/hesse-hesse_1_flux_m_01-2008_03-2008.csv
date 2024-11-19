@@ -1,0 +1,13 @@
+site;hesse;Hesse 1;;;;;;;;;;;;
+theme;flux;;;;;;;;;;;;;
+frequence;mensuel;;;;;;;;;;;;;
+date de debut;01/2008;;;;;;;;;;;;;
+date de fin;03/2008;;;;;;;;;;;;;
+commentaire;un commentaire;;;;;;;;;;;;;
+;;;;;;;;;;;;;;
+;carbon dioxide concentration;Water vapour concentration ;atmosphere stability parameter ;carbon dioxide flux;sensible heat flux;latent heat flux;Momentum flux;friction velocity;tree transpiration ;canopy heat storage ;CO2 storage in canopy air;Latent heat storage in canopy air;Sensible heat storage in canopy air layer ;gapfilled CO2 flux
+date;CO2;H2O;ZL;FCO2;H;LE;T;u*;TR;Sb;Sc;Sw;Sa;FCO2_gf
+MM/yyyy;µmol mol-1;mmol mol-1;-;gC m-2 m-1;MJ m-2 m-1;MJ m-2 m-1;kg m-1 s-1;m s-1;l m-1;MJ m-2 m-1;gC m-2 m-1;MJ m-2 m-1;MJ m-2 m-1;gC m-2 m-1
+01/2008;385,9843164765;6,8454530162;0,2931500047;26,4636334034;-67,4022575552;7,5906431677;1,3401417482;0,603650274;-9999;-4,542052281;-0,3912775568;-3,9972784854;0,0035988441;-9999
+02/2008;386,0918842113;7,3124210818;-0,0761056764;22,9651158673;16,863987066;7,7138837065;0,5017735128;0,3511863738;-9999;-3,7029650701;0,0593381379;3,6293427657;0,2269943003;-9999
+03/2008;381,2485463434;6,7688352292;-0,0775156675;32,2740655304;37,7121835174;19,3071644358;0,8916314133;0,4649124663;-9999;-2,7300284101;0,0107631042;-11,2645989692;-0,0790215351;-9999

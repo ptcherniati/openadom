@@ -1,0 +1,31 @@
+Variable de forcage;code;nom_fr;nom_en;description_fr;description_en
+chargement;C+;fort;strong;fort;fort
+chargement;C-;faible;low;faible;faible
+fertilisation;F-;Bas intrants azotés;Low nitrogen inputs;Fertilisation réduite;Fertilisation réduite
+fertilisation;F0;nulle;no;Aucune fertilisation;Aucune fertilisation
+fertilisation;FC;classique;classic;Fertilisation classique;Fertilisation classique
+fertilisation;FNPK;NPK;NPK;Fertilisation Phosphore  + Potassium;Fertilisation Phosphore  + Potassium
+fertilisation;FPK;PK;PK;Fertilisation Azote +  Phosphore  + Potassium;Fertilisation Azote +  Phosphore  + Potassium
+gestion_des_residus_de_culture;GE;Exportation;export;Exportation;Exportation
+gestion_des_residus_de_culture;GR;Restitution;restitution;Restitution;Restitution
+pature;PC;continue;continuous;pâture en continue;pâture en continue
+pature;PR;rotatif;rotary;pâture rotative;pâture rotative
+rotation;R1;PT>20;TP>20;témoins prairie temporaire;témoins prairie temporaire
+rotation;R2;PT, PT, PT, PT, PT, PT, maïs, blé, orge;TP, TP, TP, TP, TP, TP, corn, wheat, barley;Alternance de cultures avec une prairies temporaire sur 6 ans;Alternance de cultures avec une prairies temporaire sur 6 ans
+rotation;R3;maïs, blé, orge, PT, PT, PT;corn, wheat, barley, TP, TP, TP;Alternance de cultures avec une prairies temporaire sur 3 ans;Alternance de cultures avec une prairies temporaire sur 3 ans
+rotation;R4;maïs, blé, orge;corn, wheat, barley;Cultures en rotation : maïs, blé, orge;Cultures en rotation : maïs, blé, orge
+rotation;R5;pois, colza, blé d'hiver, orge, maïs, blé d'hiver;peas / rape / winter wheat / winter barley / corn / winter wheat;Succession : Pois (protéagineux de printemps) / Colza d'hiver / Blé Tendre d'Hiver / Orge de Printemps / Maïs / Blé Tendre d'Hiver;Succession : Pois (protéagineux de printemps) / Colza d'hiver / Blé Tendre d'Hiver / Orge de Printemps / Maïs / Blé Tendre d'Hiver
+rotation;R6;pois, blé d'hiver, colza, blé d'hiver, switchgrass , switchgrass, switchgrass, switchgrass;peas, winter wheat, oilseed rape, winter wheat, switchgrass , Swtichgrass, Switchgrass, Switchgrass;Succession : Pois (protéagineux de printemps)/ Blé d'hiver / Colza d'hiver / Blé d'hiver / Switchgrass / Switchgrass / Switchgrass / Switchgrass;Succession : Pois (protéagineux de printemps)/ Blé d'hiver / Colza d'hiver / Blé d'hiver / Switchgrass / Switchgrass / Switchgrass / Switchgrass
+rotation;R7;switchgrass;switchgrass;Succession : Switchgrass / Switchgrass / Switchgrass / Switchgrass;Succession : Switchgrass / Switchgrass / Switchgrass / Switchgrass
+type_d_animaux;TAB;bovin;cattle;bovin;bovin
+type_d_animaux;TAO;ovin;sheep;ovin;ovin
+type_d_animaux;TAVL;vache laitière;dairy cow;vache laitière;vache laitière
+utilisation;U0;Sol nu;bare soil;Maintient du sol en sol nu;Maintient du sol en sol nu
+utilisation;UA;Abandon;abandonment;Pas de traitement;Pas de traitement
+utilisation;UC;Culture;farming;Utilisation du sol en culture lors d'une rotation;Utilisation du sol en culture lors d'une rotation
+utilisation;UF;Fauche;reaping;Prairies fauchées;Prairies fauchées
+utilisation;UP;Pâture;pasture;Prairies pâturées;Prairies pâturées
+travail_du_sol;W0;Non travail du sol;No tillage;Non travail du sol;Non travail du sol
+travail_du_sol;WL;Labour;plowing;Labour;Labour
+travail_du_sol;WLO;Labour occasionnel;Labour occasional;Labour occasionnel;Labour occasionnel
+travail_du_sol;WTS;Travail superficiel;tillage;Travail superficiel;Travail superficiel

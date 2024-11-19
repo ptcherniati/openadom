@@ -1,0 +1,145 @@
+
+variables:
+  OPENADOM_DOCK_REG: $CI_REGISTRY/anaee-dev/openadom/backend
+  ## Project to trigger
+  TRIGGER_PROJECT_NAME: "anaee-dev/openadom/deployment"
+  # Instruct Testcontainers to use the daemon of DinD.
+
+.before_script_template: &before_script
+  - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  - echo   "Commit Short id = $CI_COMMIT_SHORT_SHA"
+  - BranchOrTag=$( echo $CI_COMMIT_REF_NAME | sed 's/\//_/g') # REPLACE '/' by '_'
+  - echo " >> Branch_or_Tag_Name == $BranchOrTag"
+
+development:
+  stage: build_env
+  timeout: 4 hours 00 minutes
+  interruptible: true
+  tags:
+    - stable  # Use stable runner
+    - docker  # Use docker runner
+  before_script:
+    *before_script
+  script:
+    - Branch=$( echo $CI_COMMIT_REF_NAME | sed 's/\//_/g') # REPLACE '/' by '_'
+    - IMAGE_NAME="$OPENADOM_DOCK_REG:$Branch"
+    - IMAGE_NAME_WITH_COMMIT_ID="$OPENADOM_DOCK_REG:$Branch-$CI_COMMIT_SHORT_SHA"
+    - echo "Docker Image Name         = $IMAGE_NAME "
+    - echo "Docker Image Name With ID = $IMAGE_NAME_WITH_COMMIT_ID"
+    - docker build -f docker/Dockerfile -t $IMAGE_NAME .
+    - docker push $IMAGE_NAME 
+    - docker tag  $IMAGE_NAME $IMAGE_NAME_WITH_COMMIT_ID
+    - docker push $IMAGE_NAME_WITH_COMMIT_ID
+  rules:
+    # Trigger on 'develop' branch automatically, disable for 'main' and tags, manual for others
+    - if: '$CI_COMMIT_REF_NAME == "develop"'
+      when: on_success
+    - if: '$CI_COMMIT_REF_NAME == "main" || $CI_COMMIT_TAG'
+      when: never
+    - when: manual
+
+preprod:
+  stage: build_env
+  timeout: 4 hours 00 minutes
+  interruptible: true
+  tags:
+    - stable  # Use stable runner
+    - docker  # Use docker runner
+  before_script:
+    *before_script
+  script:
+    - IMAGE_NAME="$OPENADOM_DOCK_REG:$CI_COMMIT_REF_NAME"
+    - IMAGE_NAME_WITH_COMMIT_ID="$OPENADOM_DOCK_REG:$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA"
+    - echo "Docker Image Name         = $IMAGE_NAME "
+    - echo "Docker Image Name With ID = $IMAGE_NAME_WITH_COMMIT_ID"
+    - docker build -f docker/Dockerfile -t $IMAGE_NAME .
+    - docker push $IMAGE_NAME 
+    - docker tag  $IMAGE_NAME $IMAGE_NAME_WITH_COMMIT_ID
+    - docker push $IMAGE_NAME_WITH_COMMIT_ID
+  rules:
+    # Automatically trigger for 'main' branch
+    - if: '$CI_COMMIT_REF_NAME == "main"'
+      when: on_success
+    - when: never 
+
+# Production-specific build job that validates 
+# semantic version tags and builds Docker images
+# Accepted formats : <int>, <int>.<int>, or <int>.<int>.<int>
+production:
+  stage: build_env
+  # Set a reasonable timeout for build process
+  timeout: 4 hours 00 minutes
+  # Prevent job from being canceled when a new pipeline starts
+  interruptible: false
+  # Runner tags required for this job
+  tags:
+    - stable  # Use stable runner
+    - docker  # Use docker runner
+  before_script:
+    *before_script
+  script:
+    - echo "Validating tag format for $CI_COMMIT_TAG"
+    # Check if a tag is provided
+    - |
+      if [ -n "$CI_COMMIT_TAG" ];  then
+        # Validate tag format with grep
+        if echo "$CI_COMMIT_TAG" | grep -qE "^[0-9]+(\.[0-9]+){0,2}$" && ! echo "$CI_COMMIT_TAG" | grep -q "\.$"; then
+          echo  "Tag format is valid = $CI_COMMIT_TAG"
+          echo  "Building Docker image..."
+          docker build -f docker/Dockerfile -t $OPENADOM_DOCK_REG:$CI_COMMIT_TAG .
+          echo  "Pushing Docker image to registry..."
+          docker push $OPENADOM_DOCK_REG:$CI_COMMIT_TAG
+        else
+          echo "Invalid tag format = $CI_COMMIT_TAG"
+          echo "Tag must be in format : <int>, <int>.<int>, or <int>.<int>.<int>"
+          echo "Examples : 1, 1.0, 1.0.0"
+          exit 1
+        fi
+      else
+        echo "No tag provided"
+        exit 1
+      fi
+  # Run this job only for tags ( not branches )
+  only:
+    - tags
+
+deployment:
+  stage: trigger
+  rules:
+    - if: '$CI_COMMIT_REF_NAME == "develop"' # Development Env
+      variables:
+        TRIGGERED_BY_PARENT: 'true'
+        ENV: 'development'
+        OA_BACKEND_VERSION: '$CI_COMMIT_REF_NAME' # develop branch
+        INIT_DB_USER: true
+        REMOVE_VOLUMES: true
+      when: on_success
+    - if: '$CI_COMMIT_REF_NAME == "main"' # Preprod Env
+      variables:
+        TRIGGERED_BY_PARENT: 'true'
+        ENV: 'preprod'
+        OA_BACKEND_VERSION: '$CI_COMMIT_REF_NAME' # main branch
+        INIT_DB_USER: true
+        REMOVE_VOLUMES: true 
+      when: on_success
+    - if: '$CI_COMMIT_TAG' # Production Env
+      variables:
+        TRIGGERED_BY_PARENT: 'true'
+        ENV: "production"
+        OA_BACKEND_VERSION: '$CI_COMMIT_TAG'
+        INIT_DB_USER: false
+        REMOVE_VOLUMES: false
+      when: on_success
+    - if: '$CI_MERGE_REQUEST_IID != null' # Do nothing with merge request
+      when: never
+    - when: manual # Trigger manually if needed ( Feature Dev branch )
+      variables:
+        TRIGGERED_BY_PARENT: 'true'
+        ENV: "development"
+        OA_BACKEND_VERSION: '$(echo $CI_COMMIT_REF_NAME | sed "s/\//_/g")' # REPLACE '/' by '_'
+        INIT_DB_USER: true
+        REMOVE_VOLUMES: true
+  trigger:
+    project: '$TRIGGER_PROJECT_NAME'
+    branch: main
+    strategy: depend

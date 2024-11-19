@@ -1,0 +1,54 @@
+### login
+
+POST {{server}}/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### Test Application
+POST {{server}}/api/v1/applications/ola
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="comment"
+Content-Type: text/plain
+
+L'application ola
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="ola.yaml"
+Content-Type: application/json
+
+< ../ola/ola_openadom_v2.yaml
+
+### add tr_niveau_taxon_ntx
+POST {{server}}/api/v1/applications/ola/references/tr_niveau_taxon_ntx
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="tr_niveau_taxon_ntx.csv"
+Content-Type: application/json
+
+< ../ola/niveaux_de_taxon.csv
+--WebAppBoundary--
+
+### add tr_propriete_taxon_ptx
+POST {{server}}/api/v1/applications/ola/references/tr_propriete_taxon_ptx
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="tr_propriete_taxon_ptx.csv"
+Content-Type: application/json
+
+< ../ola/proprietes_des_taxons.csv
+--WebAppBoundary--
+
+### add tr_taxon_phytoplancton_txp
+POST {{server}}/api/v1/applications/ola/references/tr_taxon_phytoplancton_txp
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="tr_taxon_phytoplancton_txp.csv"
+Content-Type: application/json
+
+< ../ola/taxons_du_phytoplancton_test.csv
+--WebAppBoundary--

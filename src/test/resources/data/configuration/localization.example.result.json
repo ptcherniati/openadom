@@ -1,0 +1,800 @@
+{
+  "tags" : {
+    "data" : {
+      "en" : "data",
+      "fr" : "données"
+    },
+    "context" : {
+      "en" : "context",
+      "fr" : "contexte"
+    }
+  },
+  "application" : {
+    "title" : {
+      "en" : "SOERE my SOERE",
+      "fr" : "SOERE mon SOERE"
+    },
+    "description" : {
+      "en" : "Example of SOERE based on small coastal river",
+      "fr" : "SOERE example basé sur petit fleuve côtiers"
+    }
+  },
+  "data" : {
+    "tr_zone_etude_zet" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "tze_type_nom" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Site types",
+              "fr" : "Type de site"
+            },
+            "description" : {
+              "en" : "Site type name",
+              "fr" : "Nom du type de site"
+            }
+          }
+        },
+        "zet_description_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Site description"
+            },
+            "description" : {
+              "en" : "A site description"
+            }
+          }
+        },
+        "zet_nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Nom du site"
+            },
+            "description" : {
+              "fr" : "Le nom du site"
+            }
+          }
+        },
+        "zet_computed_key" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Complete date",
+              "fr" : "Date complète"
+            },
+            "description" : {
+              "en" : "Complete date with format dd/MM/yyyy HH:mm:ss",
+              "fr" : "Date complète au format dd/MM/yyyy HH:mm:ss"
+            }
+          }
+        },
+        "zet_nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Site name"
+            },
+            "description" : {
+              "en" : "A site name"
+            }
+          }
+        },
+        "zet_chemin_parent" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Parent site",
+              "fr" : "Site parent"
+            },
+            "description" : {
+              "en" : "The parent study area containing the site.",
+              "fr" : "La zone d'étude parente contenant le site."
+            }
+          }
+        },
+        "zet_description_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Description du type de site"
+            },
+            "description" : {
+              "fr" : "Une description du type de site"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "'{zet_nom_en}'",
+          "fr" : "'{zet_nom_fr}'"
+        },
+        "description" : {
+          "en" : "'{zet_description_fr}'",
+          "fr" : "'{zet_description_fr}'"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Site",
+          "fr" : "Site"
+        },
+        "description" : {
+          "en" : "Site repository",
+          "fr" : "Référentiel des Sites"
+        }
+      }
+    },
+    "tr_type_zone_etude_tze" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "tze_nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Nom du type de site"
+            },
+            "description" : {
+              "fr" : "Le nom du type de site"
+            }
+          }
+        },
+        "tze_nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Site type name"
+            },
+            "description" : {
+              "en" : "A site type name"
+            }
+          }
+        },
+        "tze_definition_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Site type description"
+            },
+            "description" : {
+              "en" : "A site type description"
+            }
+          }
+        },
+        "tze_definition_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Description du type de site"
+            },
+            "description" : {
+              "fr" : "Une description du type de site"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "'Of type : {tze_nom_en}'",
+          "fr" : "'De type : {tze_nom_fr}'"
+        },
+        "description" : {
+          "en" : "'{tze_definition_en}'",
+          "fr" : "'{tze_definition_fr}'"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Sites types",
+          "fr" : "Types de sites"
+        },
+        "description" : {
+          "en" : "Sites types repository",
+          "fr" : "Référentiel des types de sites"
+        }
+      }
+    },
+    "tr_propriete_taxon_ptx" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "ptx_date" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Start Date",
+              "fr" : "Date de début"
+            },
+            "description" : {
+              "en" : "The start date in dd/MM/yyyy format",
+              "fr" : "La date de début au format dd/MM/yyyy"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "'{ptx_propriete}'",
+          "fr" : "'{ptx_propriete}'"
+        },
+        "description" : { }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Taxa properties repository",
+          "fr" : "Propriété des taxon"
+        },
+        "description" : {
+          "en" : "Taxa properties",
+          "fr" : "Référentiel des propriété des taxon"
+        }
+      }
+    },
+    "tr_projet_pro" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : {
+        "pro_nom_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Nom du projet"
+            },
+            "description" : {
+              "fr" : "Le nom du projet"
+            }
+          }
+        },
+        "pro_definition_fr" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Définition du projet"
+            },
+            "description" : {
+              "fr" : "Une description du projet"
+            }
+          }
+        },
+        "pro_definition_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Project définition"
+            },
+            "description" : {
+              "en" : "A roject description"
+            }
+          }
+        },
+        "pro_nom_en" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Project name"
+            },
+            "description" : {
+              "en" : "The project name"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "'{pro_nom_en}'",
+          "fr" : "'{pro_nom_fr}'"
+        },
+        "description" : {
+          "en" : "'{pro_definition_en}'",
+          "fr" : "'{pro_definition_fr}'"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Project",
+          "fr" : "Projet"
+        },
+        "description" : {
+          "en" : "Project repository",
+          "fr" : "Référentiel des projet"
+        }
+      }
+    },
+    "t_data_dat" : {
+      "validations" : {
+        "site_validation" : {
+          "en" : "Site validation",
+          "fr" : "Validation du site"
+        },
+        "date_validation" : {
+          "en" : "Date validation",
+          "fr" : "Validation de la date"
+        },
+        "type_site_validation" : {
+          "en" : "Site type validation",
+          "fr" : "Validation du type de sites"
+        },
+        "start_date_validation" : {
+          "en" : "Min date validation",
+          "fr" : "Validation de la borne inférieure de date"
+        },
+        "interval_date_validation" : {
+          "en" : "Checks that the date is included in the interval",
+          "fr" : "Vérifie que la date est comprise dans l'interval"
+        },
+        "end_date_validation" : {
+          "en" : "Max date validation",
+          "fr" : "Validation de la borne supérieure de date"
+        }
+      },
+      "exceptions" : {
+        "dat_end_date" : {
+          "DATE_NOT_IN_INTERVAL" : {
+            "en" : "the date ${date} is not in date intervale [${dateDebut},${dateFin}]",
+            "fr" : "la date ${date} n'est pas dans l'intervale de dates [${dateDebut},${dateFin}]"
+          },
+          "MISSING_DATE" : {
+            "en" : "missing date",
+            "fr" : "la date est manquante"
+          },
+          "BAD_DATE_FORMAT" : {
+            "en" : "the date ${date} is not in format ${format}",
+            "fr" : "la date ${date} n'est pas au format ${format}"
+          }
+        }
+      },
+      "components" : {
+        "smp::smp_qc" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Quality class",
+              "fr" : "Indic de qualité"
+            },
+            "description" : {
+              "en" : "0 for valid value; 2 for bad value",
+              "fr" : "0 pour une valeur valide ; 2 pour une valeur incorrecte"
+            }
+          }
+        },
+        "smp::smp_sd" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "standard_deviation",
+              "fr" : "écart_type"
+            },
+            "description" : { }
+          }
+        },
+        "smp_repetition" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Repetition",
+              "fr" : "Répétition"
+            },
+            "description" : {
+              "en" : "Repetition number",
+              "fr" : "N° de la répétition"
+            }
+          }
+        },
+        "dat_date_heure" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Complete date",
+              "fr" : "Date complète"
+            },
+            "description" : {
+              "en" : "Complete date with format dd/MM/yyyy HH:mm:ss",
+              "fr" : "Date complète au format dd/MM/yyyy HH:mm:ss"
+            }
+          }
+        },
+        "swc_repetition" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Repetition",
+              "fr" : "Répétition"
+            },
+            "description" : {
+              "en" : "Repetition number",
+              "fr" : "N° de la répétition"
+            }
+          }
+        },
+        "dat_start_date" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Start date",
+              "fr" : "Date de début"
+            },
+            "description" : {
+              "en" : "Start date",
+              "fr" : "Date de début"
+            }
+          }
+        },
+        "swc::swc_qc" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Quality class",
+              "fr" : "Indic de qualité"
+            },
+            "description" : {
+              "en" : "0 for valid value; 2 for bad value",
+              "fr" : "0 pour une valeur valide ; 2 pour une valeur incorrecte"
+            }
+          }
+        },
+        "swc_profondeur" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Depth",
+              "fr" : "Profondeur"
+            },
+            "description" : {
+              "en" : "Depth in positive value",
+              "fr" : "Profondeur en valeur positive"
+            }
+          }
+        },
+        "swc::swc_sd" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "standard_deviation",
+              "fr" : "écart_type"
+            },
+            "description" : { }
+          }
+        },
+        "dat_type_site" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Site type",
+              "fr" : "Type de zone d'étude"
+            },
+            "description" : {
+              "en" : "Site type name",
+              "fr" : "Nom du type de zone d'étude"
+            }
+          }
+        },
+        "dat_end_date" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "End date",
+              "fr" : "Date de fin"
+            },
+            "description" : {
+              "en" : "End date",
+              "fr" : "Date de fin"
+            }
+          }
+        },
+        "smp" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Soil moisture pressure",
+              "fr" : "Tension d'humdité du sol"
+            },
+            "description" : {
+              "en" : "Define the soil moisture pressure",
+              "fr" : "Définit la tension d'humdité du sol"
+            }
+          }
+        },
+        "dat_site" : {
+          "exportHeader" : {
+            "title" : {
+              "fr" : "Site"
+            },
+            "description" : {
+              "en" : "Site Name",
+              "fr" : "Nom du site"
+            }
+          }
+        },
+        "smp_profondeur" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Depth",
+              "fr" : "Profondeur"
+            },
+            "description" : {
+              "en" : "Depth in positive value",
+              "fr" : "Profondeur en valeur positive"
+            }
+          }
+        },
+        "swc" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Soil water content",
+              "fr" : "Humidité volumique du sol"
+            },
+            "description" : {
+              "en" : "Define the soil water content",
+              "fr" : "Définit l'humidité volumique du sol"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : {
+          "tr_zone_etude_zet" : {
+            "title" : {
+              "en" : "Site",
+              "fr" : "Site"
+            },
+            "description" : {
+              "en" : "Site repository",
+              "fr" : "Référentiel des Sites"
+            }
+          }
+        }
+      },
+      "i18nDisplayPattern" : null,
+      "i18n" : {
+        "title" : {
+          "en" : "Data",
+          "fr" : "Données"
+        },
+        "description" : {
+          "en" : "Data repository",
+          "fr" : "Référentiel des données"
+        }
+      }
+    },
+    "tr_taxon_tax" : {
+      "validations" : { },
+      "exceptions" : { },
+      "components" : { },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "'{tax_taxon}'",
+          "fr" : "'{tax_taxon}'"
+        },
+        "description" : { }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Taxa",
+          "fr" : "Taxon"
+        },
+        "description" : {
+          "en" : "Taxa repository",
+          "fr" : "Référentiel des taxon"
+        }
+      }
+    },
+    "tr_espece_spe" : {
+      "validations" : { },
+      "exceptions" : {
+        "spe_tool" : {
+          "BAD_VALUE" : {
+            "en" : "value ${value} must be in ${values}",
+            "fr" : "la valeur ${value} doit être l'une des valeurs de ${values}"
+          }
+        }
+      },
+      "components" : {
+        "spe_date" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Start Date",
+              "fr" : "Date de début"
+            },
+            "description" : {
+              "en" : "The start date in dd/MM/yyyy format",
+              "fr" : "La date de début au format dd/MM/yyyy"
+            }
+          }
+        },
+        "spe_species" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Species",
+              "fr" : "Espèce"
+            },
+            "description" : {
+              "en" : "Species repository",
+              "fr" : "Référentiel des espèces"
+            }
+          }
+        },
+        "spe_tool" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Tool",
+              "fr" : "Outil"
+            },
+            "description" : {
+              "en" : "Tool",
+              "fr" : "Outil"
+            }
+          }
+        },
+        "spe_site" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Site",
+              "fr" : "Site"
+            },
+            "description" : {
+              "en" : "Site repository",
+              "fr" : "Référentiel des Sites"
+            }
+          }
+        },
+        "spe_heure" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Time",
+              "fr" : "Heure"
+            },
+            "description" : {
+              "en" : "Time",
+              "fr" : "Heure"
+            }
+          }
+        },
+        "spe_weight" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Mass",
+              "fr" : "Masse"
+            },
+            "description" : {
+              "en" : "Mass",
+              "fr" : "Masse"
+            }
+          }
+        },
+        "spe_date_heure" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Complete date",
+              "fr" : "Date complète"
+            },
+            "description" : {
+              "en" : "Complete date with format dd/MM/yyyy HH:mm:ss",
+              "fr" : "Date complète au format dd/MM/yyyy HH:mm:ss"
+            }
+          }
+        },
+        "spe_repetition" : {
+          "exportHeader" : {
+            "title" : {
+              "en" : "Repetition",
+              "fr" : "Répétition"
+            },
+            "description" : {
+              "en" : "Repetition number",
+              "fr" : "N° de la répétition"
+            }
+          }
+        }
+      },
+      "submissions" : {
+        "referenceScopes" : { }
+      },
+      "i18nDisplayPattern" : {
+        "title" : {
+          "en" : "{spe_species}",
+          "fr" : "{spe_species}"
+        },
+        "description" : {
+          "en" : "{spe_definition_en}",
+          "fr" : "{spe_definition_fr}"
+        }
+      },
+      "i18n" : {
+        "title" : {
+          "en" : "Species",
+          "fr" : "Espèce"
+        },
+        "description" : {
+          "en" : "Species repository",
+          "fr" : "Référentiel des espèces"
+        }
+      }
+    }
+  },
+  "rightsrequest" : {
+    "fields" : {
+      "nom" : {
+        "title" : {
+          "en" : "Name of research organization",
+          "fr" : "Nom de l'organisme de recherche"
+        },
+        "description" : {
+          "en" : "Enter the name of your research organization",
+          "fr" : "Renseignez ke nom de votre organisme de recherche"
+        }
+      }
+    },
+    "i18n" : {
+      "title" : {
+        "en" : "MONSORE App Rights Request Form",
+        "fr" : "Formulaire de demande de droits de l'application MONSORE"
+      },
+      "description" : {
+        "en" : "You can request rights to the monsore application by filling out this form",
+        "fr" : "Vous pouvez demander des droits à l'application monsore en remplissant ce formulaire"
+      }
+    }
+  },
+  "additionalFiles" : {
+    "firstAdditionalfile" : {
+      "i18n" : {
+        "title" : {
+          "en" : "File",
+          "fr" : "Fichier"
+        },
+        "description" : {
+          "en" : "File to join to application",
+          "fr" : "Fichier à joindre à l'application"
+        }
+      },
+      "fields" : {
+        "projet" : {
+          "title" : {
+            "en" : "Project",
+            "fr" : "Projet"
+          },
+          "description" : {
+            "en" : "Project repository",
+            "fr" : "Référentiel des projet"
+          }
+        },
+        "nom" : {
+          "title" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          },
+          "description" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          }
+        }
+      }
+    },
+    "secondAdditionalfile" : {
+      "i18n" : {
+        "title" : {
+          "en" : "Initial data",
+          "fr" : "Données brutes"
+        },
+        "description" : {
+          "en" : "Initial data to analyse",
+          "fr" : "Données brutes à traiter"
+        }
+      },
+      "fields" : {
+        "projet" : {
+          "title" : {
+            "en" : "Project",
+            "fr" : "Projet"
+          },
+          "description" : {
+            "en" : "Project repository",
+            "fr" : "Référentiel des projet"
+          }
+        },
+        "nom" : {
+          "title" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          },
+          "description" : {
+            "en" : "Name",
+            "fr" : "Nom"
+          }
+        }
+      }
+    }
+  }
+}

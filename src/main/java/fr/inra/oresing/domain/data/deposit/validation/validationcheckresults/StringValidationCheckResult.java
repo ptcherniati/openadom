@@ -1,0 +1,22 @@
+package fr.inra.oresing.domain.data.deposit.validation.validationcheckresults;
+
+import com.google.common.collect.ImmutableMap;
+import fr.inra.oresing.ValidationLevel;
+import fr.inra.oresing.domain.checker.CheckerTarget;
+import fr.inra.oresing.domain.checker.type.StringType;
+
+import java.util.Map;
+
+
+public record StringValidationCheckResult(ValidationLevel level, String message, Map<String, Object> messageParams,
+                                          CheckerTarget target,
+                                          StringType value) implements CheckerValidationCheckResult<StringType> {
+
+    public static StringValidationCheckResult success(final CheckerTarget target, final StringType value) {
+        return new StringValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, (StringType) value.copy());
+    }
+
+    public static StringValidationCheckResult error(final CheckerTarget target, final String message, final ImmutableMap<String, Object> messageParams) {
+        return new StringValidationCheckResult(ValidationLevel.ERROR, message, messageParams, target,  null);
+    }
+}

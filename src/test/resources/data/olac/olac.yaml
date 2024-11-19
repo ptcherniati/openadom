@@ -1,0 +1,1474 @@
+version: 1
+application:
+  defaultLanguage: fr
+  internationalizationName:
+    fr: Observatoire des lacs
+    en: Lake observatory
+  name: ola
+  version: 1
+compositeReferences:
+  localizations:
+    components:
+      - reference: type_sites
+      - parentKeyColumn: type_site
+        reference: sites
+      - parentKeyColumn: site
+        reference: plateformes
+  projets:
+    components:
+      - reference: projets
+references:
+  themes:
+    internationalizationName:
+      fr: Thèmes
+      en: Themes
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    keyColumns: [nom_key]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  projets:
+    internationalizationName:
+      fr: Projet
+      en: Project
+    internationalizedColumns:
+      projet_key:
+        fr: projet_fr
+        en: projet_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    keyColumns: [projet_key]
+    columns:
+      projet_key:
+        headerName: nom du projet_key
+      projet_fr:
+        headerName: nom du projet_fr
+      projet_en:
+        headerName: nom du projet_en
+      description_fr:
+        headerName: description du projet_fr
+      description_en:
+        headerName: description du projet_en
+  type_sites:
+    internationalizationName:
+      fr: Types de sites
+      en: Sites types
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    keyColumns: [nom_key]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+      sandre:
+        headerName: code sandre
+      sandre_context:
+        headerName: code sandre du contexte
+  sites:
+    internationalizationName:
+      fr: Site
+      en: Site
+    internationalizedColumns:
+      site_key:
+        fr: nom du site_fr
+        en: nom du site_en
+      site_fr:
+        fr: description du site_fr
+        en: description du site_en
+    keyColumns: [site_key]
+    columns:
+      type_site:
+        headerName: nom du type de site
+      site_key:
+        headerName: nom du site_key
+      site_fr:
+        headerName: nom du site_fr
+      site_en:
+        headerName: nom du site_en
+      description_fr:
+        headerName: description du site_fr
+      description_en:
+        headerName: description du site_en
+      sandre_eau:
+        headerName: code sandre du Plan d'eau
+      sandre_masse_eau:
+        headerName: code sandre de la Masse d'eau plan d'eau
+  type_plateformes:
+    internationalizationName:
+      fr: Types de plateforme
+      en: Plateform types
+    internationalizedColumns:
+      type_platform_key:
+        fr: type_platform_fr
+        en: type_platform_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    keyColumns: [type_platform_key]
+    columns:
+      type_platform_key:
+        headerName: nom du type de plateforme_key
+      type_platform_fr:
+        headerName: nom du type de plateforme_fr
+      type_platform_en:
+        headerName: nom du type de plateforme_en
+      description_fr:
+        headerName: description du type de plateforme_fr
+      description_en:
+        headerName: description du type de plateforme_en
+      sandre:
+        headerName: code sandre
+      sandre_context:
+        headerName: code sandre du contexte
+  plateformes:
+    internationalizationName:
+      fr: Plateformes
+      en: Plateforms
+    internationalizedColumns:
+      platform_key:
+        fr: platform_fr
+        en: platform_en
+    keyColumns: [platform_key, type_platform_key]
+    columns:
+      site:
+        headerName: nom du site
+      platform_key:
+        headerName:  nom de la plateforme_key
+      platform_fr:
+        headerName:  nom de la plateforme_fr
+      platform_en:
+        headerName:  nom de la plateforme_en
+      latitude:
+      longitude:
+      altitude:
+      type_platform_key:
+        headerName: nom du type de plateforme_key
+      sandre:
+        headerName: code sandre
+      sandre_context:
+        headerName: code sandre du contexte
+  valeurs_qualitatives:
+    internationalizationName:
+      fr: Valeurs qualitatives
+      en: Qualitative values
+    internationalizedColumns:
+      nom_key:
+        fr: nom_fr
+        en: nom_en
+      valeur_key:
+        fr: valeur_fr
+        en: valeur_en
+    keyColumns: [nom_key, valeur_key]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      valeur_key:
+      valeur_fr:
+      valeur_en:
+dataTypes:
+  condition_prelevements:
+    internationalizationName:
+      fr: Condition de prélèvement
+      en: Collection condition
+    repository:
+      filePattern:
+    uniqueness:
+      - variable: date
+        component: datetime
+      - variable: projet
+        component: value
+      - variable: site
+        component: nom du site
+      - variable: site
+        component: nom de la plateforme
+    data:
+      date:
+        components:
+          datetime:
+            defaultValue:
+              expression: >
+                return (String)datum.date.day +" " +(String)datum.date.time+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm:ss
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+      projet:
+        components:
+          value:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      site:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      valeurs qualitatives:
+        components:
+          couleur de l'eau:
+          direction du vent:
+          ensoleillement:
+          temps:
+          aspect de l'eau:
+          etat de surface:
+          nebulosite:
+          vitesse du vent:
+      valeurs quantitatives:
+        components:
+          pression atmospherique:
+          temperature de l'air:
+          transparence par disque inra:
+          transparence par secchi:
+      commentaire:
+        components:
+          value:
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - date
+            - projet
+            - site
+            - commentaire
+        qualitatif:
+          internationalizationName:
+            fr: Données qualitatives
+            en: Qualitative data
+          label: "Données qualitatives"
+          data:
+            - valeurs qualitatives
+        quantitatif:
+          internationalizationName:
+            fr: Données quantitatives
+            en: Quantitative data
+          label: "Données quantitatives"
+          data:
+            - valeurs quantitatives
+      authorizationScopes:
+        localization_site:
+          variable: site
+          component: nom du site
+        localization_projet:
+          variable: projet
+          component: value
+      timeScope:
+        variable: date
+        component: datetime
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projet
+            component: value
+        - header: "nom du site"
+          boundTo:
+            variable: site
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: site
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: date
+            component: day
+        - header: "heure de prélèvement"
+          boundTo:
+            variable: date
+            component: time
+        - header: "commentaire"
+          boundTo:
+            variable: commentaire
+            component: value
+        - header: "aspect de l'eau"
+          boundTo:
+            variable: valeurs qualitatives
+            component: aspect de l'eau
+        - header: "couleur de l'eau"
+          boundTo:
+            variable: valeurs qualitatives
+            component: couleur de l'eau
+        - header: "direction du vent"
+          boundTo:
+            variable: valeurs qualitatives
+            component: direction du vent
+        - header: "ensoleillement"
+          boundTo:
+            variable: valeurs qualitatives
+            component: ensoleillement
+        - header: "etat de surface"
+          boundTo:
+            variable: valeurs qualitatives
+            component: etat de surface
+        - header: "nebulosite"
+          boundTo:
+            variable: valeurs qualitatives
+            component: nebulosite
+        - header: "pression atmospherique (mbar)"
+          boundTo:
+            variable: valeurs quantitatives
+            component: pression atmospherique
+        - header: "temperature de l'air (°c)"
+          boundTo:
+            variable: valeurs quantitatives
+            component: temperature de l'air
+        - header: "temps"
+          boundTo:
+            variable: valeurs qualitatives
+            component: temps
+        - header: "transparence par disque inra (m)"
+          boundTo:
+            variable: valeurs quantitatives
+            component: transparence par disque inra
+        - header: "transparence par secchi 20 cm (m)"
+          boundTo:
+            variable: valeurs quantitatives
+            component: transparence par secchi
+        - header: "vitesse du vent"
+          boundTo:
+            variable: valeurs qualitatives
+            component: vitesse du vent
+  physico-chimie:
+    internationalizationName:
+      fr: Physico Chimie
+      en: Chemical Physics
+    uniqueness:
+      - variable: date
+        component: day
+      - variable: projet
+        component: nom du projet
+      - variable: site
+        component: nom du site
+      - variable: plateforme
+        component: nom de la plateforme
+      - variable: outil
+        component: prélèvement
+      - variable: outil
+        component: mesure
+      - variable: profondeur
+        component: minimum
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      projet:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      site:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateforme:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outil:
+        components:
+          prélèvement:
+          mesure:
+      profondeur:
+        components:
+          minimum:
+          maximum:
+          réelle observée:
+      température:
+        components:
+          valeur:
+      variables:
+        components:
+          azote total:
+          azote organique:
+          azote nitrates:
+          nitrates:
+          azote ammonium:
+          ammonium:
+          azote nitrites:
+          nitrites:
+          pH:
+          silice réactive:
+          titre alcalimetrique:
+          coductivité:
+          titre alcalimetrique complet:
+          demande biologique en oxygène en 5 jours:
+          balance ionique:
+          carbone organique total:
+          carbone organique dissous:
+          carbone organique particulaire:
+          calcium:
+          magnésium:
+          sodium:
+          potassium:
+          chlorures:
+          bicarbonate:
+          sulfates:
+          oxygène dissous:
+          matiéres en suspension:
+          phosphore total:
+          phosphore particulaire:
+          phosphore orthophosphates:
+          orthophosphates:
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - date
+            - projet
+            - site
+            - plateforme
+        condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
+          label: "Contexte"
+          data:
+            - outil
+            - profondeur
+            - température
+        variable:
+          internationalizationName:
+            fr: Données
+            en: Data
+          label: "Données"
+          data:
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateforme
+          component: nom de la plateforme
+        localization_site:
+          variable: site
+          component: nom du site
+        localization_projet:
+          variable: projet
+          component: nom du projet
+      timeScope:
+        variable: date
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projet
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: site
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateforme
+            component: nom de la plateforme
+        - header: "date de prelevement"
+          boundTo:
+            variable: date
+            component: day
+        - header: "outil de prelevement"
+          boundTo:
+            variable: outil
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outil
+            component: mesure
+        - header: "profondeur minimum (m)"
+          boundTo:
+            variable: profondeur
+            component: minimum
+        - header: "profondeur maximum (m)"
+          boundTo:
+            variable: profondeur
+            component: maximum
+        - header: "profondeur reelle observee  (m)"
+          boundTo:
+            variable: profondeur
+            component: réelle observée
+        - header: "Temperature (°c)"
+          boundTo:
+            variable: température
+            component: valeur
+        - header: "Azote total (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote total
+        - header: "Azote organique particulaire (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote organique
+        - header: "Azote Nitrates (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote nitrates
+        - header: "Nitrates [mg(NO3)/l]"
+          boundTo:
+            variable: variables
+            component: nitrates
+        - header: "Azote Ammonium (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote ammonium
+        - header: "Ammonium [mg(NH4)/l]"
+          boundTo:
+            variable: variables
+            component: ammonium
+        - header: "Azote Nitrites (mg/l)"
+          boundTo:
+            variable: variables
+            component: azote nitrites
+        - header: "Nitrites [mg(NO2)/l]"
+          boundTo:
+            variable: variables
+            component: nitrites
+        - header: "pH (nounit)"
+          boundTo:
+            variable: variables
+            component: pH
+        - header: "Silice reactive (mg/l)"
+          boundTo:
+            variable: variables
+            component: silice réactive
+        - header: "Titre alcalimetrique (meq/l)"
+          boundTo:
+            variable: variables
+            component: titre alcalimetrique
+        - header: "Conductivite (μs/cm)"
+          boundTo:
+            variable: variables
+            component: coductivité
+        - header: "Titre alcalimetrique complet (meq/l)"
+          boundTo:
+            variable: variables
+            component: titre alcalimetrique complet
+        - header: "Demande biologique en oxygène en 5 jours (mg/l)"
+          boundTo:
+            variable: variables
+            component: demande biologique en oxygène en 5 jours
+        - header: "Balance ionique (%)"
+          boundTo:
+            variable: variables
+            component: balance ionique
+        - header: "Carbone organique total (mg/l)"
+          boundTo:
+            variable: variables
+            component: carbone organique total
+        - header: "Carbone organique dissous (mg/l)"
+          boundTo:
+            variable: variables
+            component: carbone organique dissous
+        - header: "Carbone organique particulaire (mg/l)"
+          boundTo:
+            variable: variables
+            component: carbone organique particulaire
+        - header: "Calcium (mg/l)"
+          boundTo:
+            variable: variables
+            component: calcium
+        - header: "Magnesium (mg/l)"
+          boundTo:
+            variable: variables
+            component: magnésium
+        - header: "Sodium (mg/l)"
+          boundTo:
+            variable: variables
+            component: sodium
+        - header: "Potassium (mg/l)"
+          boundTo:
+            variable: variables
+            component: potassium
+        - header: "Chlorures (mg/l)"
+          boundTo:
+            variable: variables
+            component: chlorures
+        - header: "Bicarbonate (meq/l)"
+          boundTo:
+            variable: variables
+            component: bicarbonate
+        - header: "Sulfates (mg/l)"
+          boundTo:
+            variable: variables
+            component: sulfates
+        - header: "Oxygene Dissous (mg/l)"
+          boundTo:
+            variable: variables
+            component: oxygène dissous
+        - header: "Matieres en suspension (mg/l)"
+          boundTo:
+            variable: variables
+            component: matiéres en suspension
+        - header: "Phosphore Total (mg/l)"
+          boundTo:
+            variable: variables
+            component: phosphore total
+        - header: "Phosphore Particulaire (mg/l)"
+          boundTo:
+            variable: variables
+            component: phosphore particulaire
+        - header: "Phosphore Orthophosphates (mg/l)"
+          boundTo:
+            variable: variables
+            component: phosphore orthophosphates
+        - header: "Orthophosphates [mg(PO4)/l]"
+          boundTo:
+            variable: variables
+            component: orthophosphates
+  sonde_truncated:
+    internationalizationName:
+      fr: Données des sondes
+      en: Probe data
+    uniqueness:
+      - variable: dates
+        component: datetime
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: mesure
+      - variable: variables
+        component: profondeur réelle observée
+    data:
+      dates:
+        components:
+          datetime:
+            defaultValue:
+              expression: return (String)datum.dates.day +" " +(String)datum.dates.time
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy HH:mm
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          commentaire_sonde:
+          mesure:
+      variables:
+        components:
+          profondeur réelle observée:
+          chl a:
+          chl a corrigée labo:
+          cond25c corrigee labo:
+          cond25degres:
+          oxygene mg:
+          oxygene mg corrige winkler:
+          oxygene saturation:
+          oxygene saturation corrige winkler:
+          pah:
+          par a:
+          par w:
+          pc:
+          ph brut:
+          ph corrigé labo:
+          ph tc:
+          température:
+          turbidite:
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
+          label: "Contexte"
+          data:
+            - outils
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "commentaire sonde"
+          boundTo:
+            variable: outils
+            component: commentaire_sonde
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "heure de prélèvement"
+          boundTo:
+            variable: dates
+            component: time
+        - header: "profondeur réelle observée (m)"
+          boundTo:
+            variable: variables
+            component: profondeur réelle observée
+        - header: "chl a (mg/m3)"
+          boundTo:
+            variable: variables
+            component: chl a
+        - header: "chl a corrigée labo (mg/m3)"
+          boundTo:
+            variable: variables
+            component: chl a corrigée labo
+        - header: "cond25c corrigee labo (ms/cm)"
+          boundTo:
+            variable: variables
+            component: cond25c corrigee labo
+        - header: "cond25degres (ms/cm)"
+          boundTo:
+            variable: variables
+            component: cond25degres
+        - header: "oxygene mg (mg/l)"
+          boundTo:
+            variable: variables
+            component: oxygene mg
+        - header: "oxygene mg corrige winkler (mg/l)"
+          boundTo:
+            variable: variables
+            component: oxygene mg corrige winkler
+        - header: "oxygene saturation (%)"
+          boundTo:
+            variable: variables
+            component: oxygene saturation
+        - header: "oxygene saturation corrige winkler (%)"
+          boundTo:
+            variable: variables
+            component: oxygene saturation corrige winkler
+        - header: "pah (μg/l)"
+          boundTo:
+            variable: variables
+            component: pah
+        - header: "par a (μe)"
+          boundTo:
+            variable: variables
+            component: par a
+        - header: "par w (μe)"
+          boundTo:
+            variable: variables
+            component: par w
+        - header: "pc (μg/l)"
+          boundTo:
+            variable: variables
+            component: pc
+        - header: "ph brut (nounit)"
+          boundTo:
+            variable: variables
+            component: ph brut
+        - header: "ph corrigé labo (nounit)"
+          boundTo:
+            variable: variables
+            component: ph corrigé labo
+        - header: "ph tc (nounit)"
+          boundTo:
+            variable: variables
+            component: ph tc
+        - header: "température (°c)"
+          boundTo:
+            variable: variables
+            component: température
+        - header: "turbidite (ftu)"
+          boundTo:
+            variable: variables
+            component: turbidite
+  phytoplancton_aggregated:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      variables:
+        components:
+          biovolume_algal:
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
+          label: "Contexte"
+          data:
+            - outils
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "biovolume algal total de l'échantillon"
+          boundTo:
+            variable: variables
+            component: biovolume_algal
+  phytoplancton__truncated:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
+      - variable: profondeurs
+        component: min
+      - variable: variables
+        component: nom du taxon déterminé
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      profondeurs:
+        components:
+          min:
+          max:
+      variables:
+        components:
+          nom du déterminateur:
+          volume sédimenté:
+          surface de comptage:
+          nom du taxon déterminé:
+          biovolume de l'espéce dans l'échantillon:
+          nombre d'objets comptés:
+          nombre d'objets par ml:
+          nombre de cellules par ml:
+          nombre de champs comptés:
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
+          label: "Contexte"
+          data:
+            - outils
+            - profondeurs
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "profondeur min (m)"
+          boundTo:
+            variable: profondeurs
+            component: min
+        - header: "profondeur max (m)"
+          boundTo:
+            variable: profondeurs
+            component: max
+        - header: "nom du déterminateur"
+          boundTo:
+            variable: variables
+            component: nom du déterminateur
+        - header: "volume sédimenté"
+          boundTo:
+            variable: variables
+            component: volume sédimenté
+        - header: "surface de comptage"
+          boundTo:
+            variable: variables
+            component: surface de comptage
+        - header: "nom du taxon déterminé"
+          boundTo:
+            variable: variables
+            component: nom du taxon déterminé
+        - header: "biovolume de l'espéce dans l'échantillon (um3/ml)"
+          boundTo:
+            variable: variables
+            component: biovolume de l'espéce dans l'échantillon
+        - header: "nombre d'objets comptés (nounit)"
+          boundTo:
+            variable: variables
+            component: nombre d'objets comptés
+        - header: "nombre d'objets par ml (ind/ml)"
+          boundTo:
+            variable: variables
+            component: nombre d'objets par ml
+        - header: "nombre de cellules par ml (ind/ml)"
+          boundTo:
+            variable: variables
+            component: nombre de cellules par ml
+        - header: "nombre de champs comptés (nounit)"
+          boundTo:
+            variable: variables
+            component: nombre de champs comptés
+  zooplancton__truncated:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
+      - variable: profondeurs
+        component: min
+      - variable: profondeurs
+        component: max
+      - variable: variables
+        component: nom du taxon déterminé
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      profondeurs:
+        components:
+          min:
+          max:
+      variables:
+        components:
+          nom du déterminateur:
+          biovolume sédimenté:
+          nom du taxon déterminé:
+          stade de développement:
+          variable:
+          valeur:
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
+          label: "Contexte"
+          data:
+            - outils
+            - profondeurs
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "profondeur minimum (m)"
+          boundTo:
+            variable: profondeurs
+            component: min
+        - header: "profondeur maximum (m)"
+          boundTo:
+            variable: profondeurs
+            component: max
+        - header: "nom du déterminateur"
+          boundTo:
+            variable: variables
+            component: nom du déterminateur
+        - header: "biovolume sédimenté"
+          boundTo:
+            variable: variables
+            component: biovolume sédimenté
+        - header: "nom du taxon déterminé"
+          boundTo:
+            variable: variables
+            component: nom du taxon déterminé
+        - header: "stade de développement"
+          boundTo:
+            variable: variables
+            component: stade de développement
+        - header: "variable"
+          boundTo:
+            variable: variables
+            component: variable
+        - header: "valeur"
+          boundTo:
+            variable: variables
+            component: valeur
+  zooplancton_biovolumes:
+    uniqueness:
+      - variable: dates
+        component: day
+      - variable: projets
+        component: nom du projet
+      - variable: sites
+        component: nom du site
+      - variable: plateformes
+        component: nom de la plateforme
+      - variable: outils
+        component: prélèvement
+      - variable: outils
+        component: mesure
+      - variable: profondeurs
+        component: max
+    data:
+      dates:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+      projets:
+        components:
+          nom du projet:
+            checker:
+              name: Reference
+              params:
+                refType: projets
+      sites:
+        components:
+          nom du site:
+            checker:
+              name: Reference
+              params:
+                refType: sites
+      plateformes:
+        components:
+          nom de la plateforme:
+            checker:
+              name: Reference
+              params:
+                refType: plateformes
+      outils:
+        components:
+          prélèvement:
+          mesure:
+      profondeurs:
+        components:
+          min:
+          max:
+      variables:
+        components:
+          nom du déterminateur:
+          volume sédimenté:
+    authorization:
+      dataGroups:
+        referentiel:
+          internationalizationName:
+            fr: Référentiel
+            en: Referential
+          label: "Référentiel"
+          data:
+            - dates
+            - projets
+            - sites
+            - plateformes
+        condition:
+          internationalizationName:
+            fr: Contexte
+            en: Context
+          label: "Contexte"
+          data:
+            - outils
+            - profondeurs
+            - variables
+      authorizationScopes:
+        localization_plateforme:
+          variable: plateformes
+          component: nom de la plateforme
+        localization_site:
+          variable: sites
+          component: nom du site
+        localization_projet:
+          variable: projets
+          component: nom du projet
+      timeScope:
+        variable: dates
+        component: day
+    format:
+      headerLine: 1
+      firstRowLine: 2
+      columns:
+        - header: "nom du projet"
+          boundTo:
+            variable: projets
+            component: nom du projet
+        - header: "nom du site"
+          boundTo:
+            variable: sites
+            component: nom du site
+        - header: "nom de la plateforme"
+          boundTo:
+            variable: plateformes
+            component: nom de la plateforme
+        - header: "date de prélèvement"
+          boundTo:
+            variable: dates
+            component: day
+        - header: "outil de prélèvement"
+          boundTo:
+            variable: outils
+            component: prélèvement
+        - header: "outil de mesure"
+          boundTo:
+            variable: outils
+            component: mesure
+        - header: "profondeur minimum(m)"
+          boundTo:
+            variable: profondeurs
+            component: min
+        - header: "profondeur maximum(m)"
+          boundTo:
+            variable: profondeurs
+            component: max
+        - header: "nom du déterminateur"
+          boundTo:
+            variable: variables
+            component: nom du déterminateur
+        - header: "volume sédimenté"
+          boundTo:
+            variable: variables
+            component: volume sédimenté

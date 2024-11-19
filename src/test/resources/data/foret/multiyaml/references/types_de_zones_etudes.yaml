@@ -1,0 +1,18 @@
+internationalizationName:
+  fr: Types de zones d'études
+  en: Types of study areas
+internationalizedColumns:
+  nom_fr:
+    fr: nom_fr
+    en: nom_en
+internationalizationDisplay:
+  pattern:
+    fr: '{nom_fr}'
+    en: '{nom_fr}'
+keyColumns:
+  - nom_fr
+columns:
+  nom_fr: null
+  nom_en: null
+  définition_fr: null
+  définition_en: null

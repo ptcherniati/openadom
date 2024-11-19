@@ -1,0 +1,122 @@
+# creation d'un utilisateur
+#POST {{server}}/api/v1/users?login=philippe&password=pfsp&email=toto@inrae.fr
+#Content-Type: application/json
+
+#{}
+
+### login
+
+POST localhost:8081/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### On met les droits sur theme. -> poussin avec depot et extraction
+POST localhost:8081/api/v1/applications/monsore/authorization
+Content-Type: application/json
+
+{
+  "uuid": null,
+  "name": "droit theme",
+  "description": "poussin avec depot et suppr",
+  "usersId": [
+    "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9"
+  ],
+  "authorizationForAll": {
+    "themes": [
+      "delete",
+      "depot"
+    ]
+  },
+  "authorizationsWithRestriction": {}
+}
+
+### On met les droits sur Types de données par site et projet et Variables et unités par type de données. -> extraction : Thème,Variables,Types de sites,Sites,Unités,Projet
+POST localhost:8081/api/v1/applications/monsore/authorization
+Content-Type: application/json
+
+{
+  "uuid": null,
+  "name": "Types de données / site / projet et Variables / unités / type de données",
+  "description": "extraction : Thème,Variables,Types de sites,Sites,Unités,Projet",
+  "usersId": [
+    "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9"
+  ],
+  "authorizationForAll": {
+    "site_theme_datatype": [
+      "delete",
+      "depot"
+    ],
+    "variables_et_unites_par_types_de_donnees": [
+      "delete",
+      "depot"
+    ]
+  },
+  "authorizationsWithRestriction": {}
+}
+
+### On met les droits test droit pem nivelle p1 + projets(les 2) de 02/10/2024 à 31/12/2024
+POST localhost:8081/api/v1/applications/monsore/authorization
+Content-Type: application/json
+
+{
+  "uuid": null,
+  "name": "pem 02/10/2024-31/12/2024",
+  "description": "test droit pem nivelle p1 + projets(les 2)",
+  "usersId": [
+    "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9"
+  ],
+  "authorizationForAll": {},
+  "authorizationsWithRestriction": {
+    "pem": {
+      "operationTypes": [
+        "extraction"
+      ],
+      "requiredAuthorizations": {
+        "sites": [
+          "type_de_sitesKbassin_versant.sitesKnivelle"
+        ],
+        "projet": [
+          "projetKprojet_atlantique",
+          "projetKprojet_manche"
+        ]
+      },
+      "timeScope": {
+        "fromDay": "2024-10-02",
+        "toDay": "2024-12-31"
+      }
+    }
+  }
+}
+
+### création d'une demande de droit d'accès aux données
+POST http://localhost:8081/api/v1/applications/monsore/rightsRequest
+Content-Type: application/json
+
+{
+  "id": null,
+  "fields": {
+    "float": "10.005",
+    "number": "5",
+    "endDate": "31/10/2024",
+    "project": "projet   manche en text",
+    "startDate": "01/10/2024",
+    "organization": "besoin des données de scarff",
+    "selcetProject": "projet_manche"
+  },
+  "rightsRequest": {
+    "uuid": null,
+    "name": "Demande d'autorisations pour l'utilisateur echo",
+    "description": "null",
+    "usersId": [
+      "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9"
+    ],
+    "authorizationForAll": {
+      "variables_et_unites_par_types_de_donnees": [
+        "extraction"
+      ]
+    },
+    "authorizationsWithRestriction": {}
+  },
+  "comment": "demande pour echo"
+}

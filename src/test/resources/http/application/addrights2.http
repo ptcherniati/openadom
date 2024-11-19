@@ -1,0 +1,39 @@
+# creation d'un utilisateur
+POST localhost:8081/api/v1/users?login=philippe&password=pfsp&email=toto@inrae.fr
+#Content-Type: application/json
+
+#{}
+
+### login
+
+POST localhost:8081/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### On met les droits
+POST localhost:8081/api/v1/applications/monsore/authorization
+Content-Type: application/json
+
+{
+  "uuid": null,
+  "name": "atlantique extraction nivelle p1",
+  "description": "une extraction sur nivelle",
+  "usersId": [
+    "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9"
+  ],
+  "authorizationForAll": {},
+  "authorizationsWithRestriction": {
+    "pem": {
+      "operationTypes": ["extraction"],
+      "requiredAuthorizations": {
+        "sites": [
+          "type_de_sitesKbassin_versant.sitesKnivelle"
+        ],
+        "projet": [
+          "projetKprojet_atlantique"
+        ]
+      }
+    }
+  }
+}

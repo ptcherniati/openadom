@@ -1,0 +1,12 @@
+### login
+
+POST {{server}}/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### get charte
+
+GET {{server}}/api/v1/applications/monsore/additionalFiles?params=%7B%22filetype%22%3A%22__charte__%22%7D
+
+{}

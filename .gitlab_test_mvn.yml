@@ -1,0 +1,118 @@
+maven_test_rest_1:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_rest_1
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+maven_test_rest_1_ACBB:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_rest_1_ACBB
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+maven_test_rest_1_Haute_Frequence:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_rest_1_Haute_Frequence
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+maven_test_rest_2:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_rest_2
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+maven_test_rest_others:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_rest_others
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+maven_test_checker:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_checker
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+maven_test_model:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_model
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+maven_test_persistence:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script: mvn --batch-mode clean test -Ptest_persistence
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+
+
+maven_swagger_build:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: test
+  script:
+    - mvn --batch-mode clean test -Pswagger_build
+  tags:
+    - docker
+  artifacts:
+    paths:
+      - documentations/
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"

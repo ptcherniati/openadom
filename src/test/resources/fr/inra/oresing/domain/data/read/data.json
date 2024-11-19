@@ -1,0 +1,242 @@
+{
+  "separator" : ";",
+  "headerLine" : 4,
+  "firstRowLine" : 7,
+  "allowUnexpectedColumns" : false,
+  "tags" : [ {
+    "tagDefinition" : "DOMAIN_TAG",
+    "tagName" : "context"
+  } ],
+  "naturalKey" : [ "data_dat" ],
+  "componentDescriptions" : {
+    "heure_dat" : {
+      "type" : "BasicComponent",
+      "componentKey" : "heure_dat",
+      "defaultValue" : {
+        "type" : "ComputationChecker",
+        "multiplicity" : "ONE",
+        "required" : false,
+        "expression" : "",
+        "references" : null,
+        "codify" : false,
+        "datatypes" : null
+      },
+      "tags" : [ {
+        "tagDefinition" : "NO_TAG"
+      } ],
+      "importHeader" : "heure_dat",
+      "exportHeaderName" : "heure_dat",
+      "required" : false,
+      "mandatory" : "OPTIONAL",
+      "checker" : null,
+      "submissionAuthorizationScope" : null
+    },
+    "type_site_dat" : {
+      "type" : "ConstantComponent",
+      "componentKey" : "type_site_dat",
+      "defaultValue" : {
+        "type" : "ComputationChecker",
+        "multiplicity" : "ONE",
+        "required" : true,
+        "expression" : "",
+        "references" : null,
+        "codify" : false,
+        "datatypes" : null
+      },
+      "tags" : [ {
+        "tagDefinition" : "NO_TAG"
+      } ],
+      "required" : true,
+      "mandatory" : "OPTIONAL",
+      "checker" : null,
+      "constantImportHeader" : {
+        "type" : "ColumnConstantHeaderByColumnNumber",
+        "rowNumber" : 1,
+        "columnNumber" : 2
+      },
+      "exportHeaderName" : "type_site_dat",
+      "submissionAuthorizationScope" : null
+    },
+    "data_dat" : {
+      "type" : "BasicComponent",
+      "componentKey" : "data_dat",
+      "defaultValue" : {
+        "type" : "ComputationChecker",
+        "multiplicity" : "ONE",
+        "required" : false,
+        "expression" : "",
+        "references" : null,
+        "codify" : false,
+        "datatypes" : null
+      },
+      "tags" : [ {
+        "tagDefinition" : "NO_TAG"
+      } ],
+      "importHeader" : "data_dat",
+      "exportHeaderName" : "data_dat",
+      "required" : false,
+      "mandatory" : "OPTIONAL",
+      "checker" : null,
+      "submissionAuthorizationScope" : null
+    },
+    "SMP" : {
+      "type" : "PatternComponent",
+      "componentKey" : "SMP",
+      "defaultValue" : {
+        "type" : "ComputationChecker",
+        "multiplicity" : "ONE",
+        "required" : false,
+        "expression" : "",
+        "references" : null,
+        "codify" : false,
+        "datatypes" : null
+      },
+      "exportHeaderName" : "SMP",
+      "tags" : [ {
+        "tagDefinition" : "DOMAIN_TAG",
+        "tagName" : "context"
+      } ],
+      "required" : false,
+      "mandatory" : "OPTIONAL",
+      "checker" : {
+        "type" : "FloatChecker",
+        "multiplicity" : "ONE",
+        "required" : false,
+        "min" : 0.0,
+        "max" : 2000.0
+      },
+      "patternColumnComponents" : { },
+      "submissionAuthorizationScope" : null
+    },
+    "start_date_dat" : {
+      "type" : "ConstantComponent",
+      "componentKey" : "start_date_dat",
+      "defaultValue" : {
+        "type" : "ComputationChecker",
+        "multiplicity" : "ONE",
+        "required" : false,
+        "expression" : "",
+        "references" : null,
+        "codify" : false,
+        "datatypes" : null
+      },
+      "tags" : [ {
+        "tagDefinition" : "NO_TAG"
+      } ],
+      "required" : false,
+      "mandatory" : "OPTIONAL",
+      "checker" : null,
+      "constantImportHeader" : {
+        "type" : "ColumnConstantHeaderByHeaderName",
+        "rowNumber" : 5,
+        "headerName" : "data_dat"
+      },
+      "exportHeaderName" : "start_date_dat",
+      "submissionAuthorizationScope" : null
+    },
+    "end_date_dat" : {
+      "type" : "ConstantComponent",
+      "componentKey" : "end_date_dat",
+      "defaultValue" : {
+        "type" : "ComputationChecker",
+        "multiplicity" : "ONE",
+        "required" : false,
+        "expression" : "",
+        "references" : null,
+        "codify" : false,
+        "datatypes" : null
+      },
+      "tags" : [ {
+        "tagDefinition" : "NO_TAG"
+      } ],
+      "required" : false,
+      "mandatory" : "OPTIONAL",
+      "checker" : null,
+      "constantImportHeader" : {
+        "type" : "ColumnConstantHeaderByHeaderName",
+        "rowNumber" : 6,
+        "headerName" : "data_dat"
+      },
+      "exportHeaderName" : "end_date_dat",
+      "submissionAuthorizationScope" : null
+    },
+    "site_dat" : {
+      "type" : "ConstantComponent",
+      "componentKey" : "site_dat",
+      "defaultValue" : {
+        "type" : "ComputationChecker",
+        "multiplicity" : "ONE",
+        "required" : true,
+        "expression" : "",
+        "references" : null,
+        "codify" : false,
+        "datatypes" : null
+      },
+      "tags" : [ {
+        "tagDefinition" : "NO_TAG"
+      } ],
+      "required" : true,
+      "mandatory" : "OPTIONAL",
+      "checker" : null,
+      "constantImportHeader" : {
+        "type" : "ColumnConstantHeaderByColumnNumber",
+        "rowNumber" : 2,
+        "columnNumber" : 2
+      },
+      "exportHeaderName" : "site_dat",
+      "submissionAuthorizationScope" : null
+    },
+    "SWC" : {
+      "type" : "PatternComponent",
+      "componentKey" : "SWC",
+      "defaultValue" : {
+        "type" : "ComputationChecker",
+        "multiplicity" : "ONE",
+        "required" : false,
+        "expression" : "",
+        "references" : null,
+        "codify" : false,
+        "datatypes" : null
+      },
+      "exportHeaderName" : "SWC",
+      "tags" : [ {
+        "tagDefinition" : "DOMAIN_TAG",
+        "tagName" : "context"
+      } ],
+      "required" : false,
+      "mandatory" : "OPTIONAL",
+      "checker" : {
+        "type" : "FloatChecker",
+        "multiplicity" : "ONE",
+        "required" : false,
+        "min" : 0.0,
+        "max" : 2000.0
+      },
+      "patternColumnComponents" : { },
+      "submissionAuthorizationScope" : null
+    }
+  },
+  "submission" : null,
+  "validations" : {
+    "type_site_validation" : {
+      "checker" : {
+        "type" : "ReferenceChecker",
+        "componentKey" : "type_site_validation",
+        "multiplicity" : "ONE",
+        "required" : true,
+        "refType" : "type_zone_etude_tze",
+        "isrecursive" : false,
+        "isParent" : true
+      },
+      "tags" : [ {
+        "tagDefinition" : "NO_TAG"
+      } ],
+      "columns" : [ "type_site_dat" ],
+      "required" : true,
+      "mandatory" : "OPTIONAL"
+    }
+  },
+  "depends" : [ ],
+  "migrations" : null,
+  "order" : 9999
+}

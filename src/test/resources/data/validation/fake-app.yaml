@@ -1,0 +1,437 @@
+version: 1
+application:
+  name: sites
+  version: 1
+  internationalizationName:
+    fr: Fausse application
+    en: Fake application
+
+tags:
+  context:
+    fr: contexte
+    en: context
+  test:
+    fr: test
+    en: test
+compositeReferences:
+  localizations:
+    components:
+      - reference: type_sites
+      - parentKeyColumn: "type_site"
+        reference: sites
+      - parentKeyColumn: "site"
+        reference: plateformes
+  taxon:
+    components:
+      - parentRecursiveKey: "taxon_superieur"
+        reference: taxon
+references:
+  projets:
+    tags: [context]
+    separator:
+    keyColumns: [projet_key]
+    internationalizationName:
+      fr: projet
+      en: Project
+    internationalizedColumns:
+      projet_key:
+        fr: nom du projet_fr
+        en: nom du projet_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{projet_fr}'
+        en: '{projet_en}'
+    columns:
+      projet_key:
+        headerName: nom du projet_key
+        tags: [test]
+      projet_fr:
+        headerName: nom du projet_fr
+      projet_en:
+        headerName: nom du projet_en
+      description_fr:
+        headerName: description du projet_fr
+      description_en:
+        headerName: description du projet_fr
+  platform_type:
+    internationalizationName:
+      fr: Types de plateforme
+      en: Plateform types
+    internationalizedColumns:
+      type_plateforme_key:
+        fr: nom du type de plateforme_fr
+        en: nom du type de plateforme_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{type_plateforme_key}'
+        en: '{type_plateforme_key}'
+    keyColumns:
+      - type_plateforme_key
+    columns:
+      type_plateforme_key:
+        headerName: nom du type de plateforme_key
+      type_plateforme_fr:
+        headerName: nom du type de plateforme_fr
+      type_plateforme_en:
+        headerName: nom du type de plateforme_en
+      description_fr: null
+      description_en: null
+      sandre:
+        headerName: code sandre
+      sandre_contexte:
+        headerName: code sandre du contexte
+  plateformes:
+    separator:
+    keyColumns: [plateforme_key]
+    columns:
+      plateforme_key:
+        headerName: nom de la plateforme_key
+      site:
+        headerName: nom du site
+      plateforme_fr:
+        headerName: nom de la plateforme_fr
+      plateforme_en:
+        headerName: nom de la plateforme_en
+      latitude:
+      longitude:
+      altitude:
+      type_plateforme:
+        headerName: nom du type de plateforme
+        checker:
+          name: Reference
+          params:
+            refType: platform_type
+            required: true
+            transformation:
+              codify: true
+      sandre:
+        headerName: code sandre
+      sandre_contexte:
+        headerName: code sandre du contexte
+  type_sites:
+    separator:
+    keyColumns: [nom_key]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  sites:
+    internationalizationName:
+      fr: Site
+      en: Site
+    internationalizedColumns:
+      site_key:
+        fr: site_fr
+        en: site_en
+      description_fr:
+        fr: description_fr
+        en: description_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{site_fr}'
+        en: '{site_en}'
+    separator:
+    keyColumns: [site_key]
+    columns:
+      type_site:
+        headerName: nom du type de site
+      site_key:
+        headerName: nom du site_key
+      site_fr:
+        headerName: nom du site_fr
+      site_en:
+        headerName: nom du site_en
+      description_fr:
+        headerName: description du site_fr
+      description_en:
+        headerName: description du site_fr
+      sandre_eau:
+        headerName: code sandre du Plan d'eau
+      sandre_masse_eau:
+        headerName: code sandre de la Masse d'eau plan d'eau
+  units:
+    keyColumns: [name]
+    columns:
+      name:
+  proprietes_taxon:
+    validations:
+      floats:
+        internationalizationName:
+          fr: les décimaux
+        columns: [ is_float_value ]
+        checker:
+          name: Float
+      integer:
+        internationalizationName:
+          fr: les entiers
+        columns: [ ordre_affichage ]
+        checker:
+          name: Integer
+    internationalizationName:
+      fr: Proprétés de Taxon
+      en: Properties of Taxa
+    internationalizedColumns:
+      propriete_key:
+        fr: propriete_fr
+        en: propriete_en
+      definition_fr:
+        fr: definition_fr
+        en: definition_en
+    internationalizationDisplay:
+      pattern:
+        fr: '{propriete_key}'
+        en: '{propriete_key}'
+    keyColumns: [propriete_key]
+    columns:
+      date:
+        headerName: Date
+        checker:
+          name: Date
+          params:
+            pattern: dd/MM/yyyy
+            duration: "1 MINUTES"
+            required: true
+      propriete_key:
+        headerName: nom de la propriété_key
+      propriete_fr:
+        headerName: nom de la propriété_fr
+      propriete_en:
+        headerName: nom de la propriété_en
+      definition_fr:
+        headerName: définition_fr
+      definition_en:
+        headerName: définition_en
+      is_float_value:
+        headerName: isFloatValue
+      is_qualitative:
+        headerName: isQualitative
+      type_associe:
+        headerName: type associé
+      ordre_affichage:
+        headerName: ordre d'affichage
+  taxon:
+    internationalizationName:
+      fr: Taxons
+      en: Taxa
+    internationalizationDisplay:
+      pattern:
+        fr: '{taxon_determine}'
+        en: '{taxon_determine}'
+    keyColumns: [taxon_determine]
+    validations:
+      taxon_determine:
+        internationalizationName:
+          fr: "nom du taxon déterminé"
+        checker:
+          name: String
+          params:
+            required: true
+            transformation:
+              codify: true
+        columns: [ taxon_determine ]
+      taxon_superieur:
+        internationalizationName:
+          fr: "nom du taxon superieur"
+        checker:
+          name: Reference
+          params:
+            required: false
+            transformation:
+              codify: true
+            refType: taxon
+        columns: [ taxon_superieur ]
+    columns:
+      taxon_determine:
+        headerName: nom du taxon déterminé
+      theme:
+      niveau_taxon:
+        headerName:  nom du niveau de taxon
+      taxon_superieur:
+        headerName: nom du taxon superieur
+      sandre_taxon:
+        headerName: code sandre du taxon
+      sandre_taxon_superieur:
+        headerName: code sandre du taxon supérieur
+      niveau_incertitude:
+        headerName: niveau incertitude de détermination
+      auteur:
+        headerName: Auteur de la description
+      annee:
+        headerName: Année de la description
+      references_description:
+        headerName: Référence de la description
+      references_taxon:
+        headerName: Références relatives à ce taxon
+      synonyme_ancien:
+        headerName: Synonyme ancien
+      synonyme_recent:
+        headerName:  Synonyme récent
+      bourrelly:
+        headerName: Classe algale sensu Bourrelly
+      sandre:
+        headerName: Code Sandre
+      notes:
+        headerName: Notes libres
+    dynamicColumns:
+      propriétés de taxons:
+        internationalizationName:
+          fr: Proprétés de Taxons
+          en: Properties of Taxa
+        headerPrefix: "pt_"
+        reference: proprietes_taxon
+        referenceColumnToLookForHeader: nom de la propriété_key
+dataTypes:
+  site:
+    tags: [context]
+    internationalizationName:
+      fr: Le site
+      en: the good place
+    internationalizationDisplays:
+      sites:
+          pattern:
+            fr: 'le nom du site {site_fr}'
+            en: 'the very good place {site_en}'
+    authorization:
+      dataGroups:
+        referentiel:
+          label: "Référentiel"
+          data:
+            - localization
+            - date
+        qualitatif:
+          label: "Données qualitatives"
+          data:
+            - Couleur des individus
+            - Nombre d'individus
+      authorizationScopes:
+        localization:
+          variable: localization
+          component: site
+      timeScope:
+        variable: date
+        component: day
+    uniqueness:
+      - variable: date
+        component: day
+      - variable: date
+        component: time
+      - variable: localization
+        component: site
+    data:
+      date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+            checker:
+              name: Date
+              params:
+                pattern: HH:mm:ss
+          datetime:
+            defaultValue:
+              expression: >
+                return (String)datum.date.day +" " +(String)datum.date.time+ ":00"
+            checker:
+              name: Date
+              params:
+                pattern: "dd/MM/yyyy HH:mm:ss"
+                duration: "1 MINUTES"
+      localization:
+        tags: [test]
+        components:
+          site:
+            tags: [test]
+            checker:
+              name: Reference
+              params:
+                refType: sites
+          typeSite:
+            checker:
+              name: Reference
+              params:
+                refType: type_sites
+      Couleur des individus:
+        components:
+          value:
+      Nombre d'individus:
+        chartDescription:
+          value: "value"
+          aggregation:
+            variable: Couleur des individus
+            component: value
+          unit: "unit"
+          standardDeviation: "standardDeviation"
+        components:
+          value:
+          unit:
+            checker:
+              name: Reference
+              params:
+                refType: units
+                transformation:
+                  codify: true
+          standardDeviation:
+    validations:
+      exampledeDeRegleDeValidation:
+        internationalizationName:
+          fr: "Juste un example"
+        checker:
+          name: GroovyExpression
+          params:
+            groovy:
+              expression: "true"
+    format:
+      constants:
+        - rowNumber: 1
+          columnNumber: 2
+          boundTo:
+            variable: localization
+            component: site
+          exportHeader: "Site"
+      headerLine: 2
+      firstRowLine: 3
+      columns:
+        - header: "typeSite"
+          boundTo:
+            variable: localization
+            component: typeSite
+        - header: "site"
+          boundTo:
+            variable: localization
+            component: site
+        - header: "date"
+          boundTo:
+            variable: date
+            component: day
+        - header: "heure"
+          boundTo:
+            variable: date
+            component: time
+        - header: "Couleur des individus"
+          boundTo:
+            variable: Couleur des individus
+            component: value
+        - header: "Nombre d'individus valeur"
+          boundTo:
+            variable: Nombre d'individus
+            component: value
+        - header: "Nombre d'individus ecart type"
+          boundTo:
+            variable: Nombre d'individus
+            component: standardDeviation
+    repository:
+      filePattern: "(.*)_(.*)_(.*)_(.*).csv"
+      authorizationScope:
+        localization: 1
+      startDate:
+        token: 3
+      endDate:
+        token: 4

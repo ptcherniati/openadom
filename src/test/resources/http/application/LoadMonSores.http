@@ -1,0 +1,386 @@
+### login
+POST localhost:8081/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### Load Application
+POST localhost:8081/api/v1/applications/monsore
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="element-name"
+Content-Type: text/plain
+
+L'application monsoere
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="monsore.yaml"
+Content-Type: application/json
+
+< ../../data/monsore/monsore-with-repository.yaml
+--WebAppBoundary--
+
+
+        referentielFiles.put("variables", "/data/monsore/refdatas/variables.csv");
+        referentielFiles.put("variables_et_unites_par_types_de_donnees", "/data/monsore/refdatas/variables_et_unites_par_types_de_donnees.csv");
+
+### add type_de_sites
+POST localhost:8081/api/v1/applications/monsore/data/type_de_sites
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="type_de_sites.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/type_de_sites.csv
+--WebAppBoundary--
+
+### add sites
+POST localhost:8081/api/v1/applications/monsore/data/sites
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sites.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/sites.csv
+--WebAppBoundary--
+
+### add especes
+POST localhost:8081/api/v1/applications/monsore/data/especes
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="especes.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/especes.csv
+--WebAppBoundary--
+
+### add projet
+POST localhost:8081/api/v1/applications/monsore/data/projet
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="projet.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/projet.csv
+--WebAppBoundary--
+
+### add themes
+POST localhost:8081/api/v1/applications/monsore/data/themes
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="themes.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/themes.csv
+--WebAppBoundary--
+
+### add site_theme_datatype
+POST localhost:8081/api/v1/applications/monsore/data/site_theme_datatype
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="types_de_donnees_par_themes_de_sites_et_projet.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/types_de_donnees_par_themes_de_sites_et_projet.csv
+--WebAppBoundary--
+
+### add unites
+POST localhost:8081/api/v1/applications/monsore/data/unites
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="unites.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/unites.csv
+--WebAppBoundary--
+
+### add reference1
+POST localhost:8081/api/v1/applications/monsore/data/valeurs_qualitatives
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="valeurs_qualitatives.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/valeurs_qualitatives.csv
+--WebAppBoundary--
+
+### add variables
+POST localhost:8081/api/v1/applications/monsore/data/variables
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="variables.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/variables.csv
+--WebAppBoundary--
+
+### add variables_et_unites_par_types_de_donnees
+POST localhost:8081/api/v1/applications/monsore/data/variables_et_unites_par_types_de_donnees
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="variables_et_unites_par_types_de_donnees.csv"
+Content-Type: application/json
+
+< ../../data/monsore/refdatas/variables_et_unites_par_types_de_donnees.csv
+--WebAppBoundary--
+
+### add data atlantique-nivelle-p1-pem
+POST localhost:8081/api/v1/applications/monsore/data/pem
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="atlantique-nivelle-p1-pem.csv"
+Content-Type: text/csv
+
+< ../../data/monsore/atlantique-nivelle-p1-pem.csv
+
+--WebAppBoundary--
+Content-Disposition: form-data; name="params";
+
+{
+    "fileid":"fa19d8d9-e802-4176-bcae-b33cde3960e7",
+    "binaryfiledataset":{
+        "datatype":"pem",
+        "requiredAuthorizations":{
+              "projet":"projet_atlantique",
+              "sites":"nivelle__p1"
+        },
+        "from":"1983-12-31 23:00:00",
+        "to":"1984-01-05 23:00:00",
+        "comment":null
+    },
+    "topublish":true
+}
+--WebAppBoundary--
+
+### add data atlantique-nivelle-p1-pem
+POST localhost:8081/api/v1/applications/monsore/data/pem
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="manche-oir-p1-pem.csv"
+Content-Type: text/csv
+
+< ../../data/monsore/manche-oir-p1-pem.csv
+
+--WebAppBoundary--
+Content-Disposition: form-data; name="params";
+
+{
+    "fileid":"fa19d8d9-e802-4176-bcae-b33cde3960e7",
+    "binaryfiledataset":{
+        "datatype":"pem",
+        "requiredAuthorizations":{
+              "projet":"projet_manche",
+              "sites":"oir__p1"
+        },
+        "from":"1983-12-31 23:00:00",
+        "to":"1984-01-05 23:00:00",
+        "comment":null
+    },
+    "topublish":true
+}
+--WebAppBoundary--
+
+### get data all
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json
+
+
+
+### get data by authorizations
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+       "authorizationDescriptions": [
+                 {
+                   "timeScope": {
+                     "from": "1984-01-01",
+                     "to": "1984-01-02"
+                   },
+                   "requiredAuthorizations": {
+                       "projet": "projetKprojet_manche",
+                       "sites": "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1"
+                     }
+                 },
+                 {
+                   "timeScope": {
+                     "from": "1984-01-03",
+                     "to": "1984-01-04"
+                   },
+                   "requiredAuthorizations": {
+                       "projet": "projetKprojet_atlantique",
+                       "sites": "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1"
+                     }
+                 }
+      ]
+    }
+
+
+### get data by site bassin : contains
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+       "componentFilters": [
+                 {
+                   "componentKey": "site",
+                   "filter": "nivelle"
+                 }
+      ],
+       "componentOrderBy": [
+           {
+              "componentKey":  "espece",
+              "order": "ASC"
+           }
+       ]
+    }
+
+### get data by site bassin and espèce value : regex
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+       "componentSelects": [ "sites"],
+       "componentFilters": [
+                 {
+                   "componentKey": "espece",
+                   "filter": "alo"
+                 },
+                 {
+                   "componentKey": "espece",
+                   "filter": "ang"
+                 }
+      ],
+       "componentOrderBy": [
+           {
+              "componentKey":  "espece",
+              "order": "ASC"
+           }
+       ]
+    }
+
+### get data by site bassin and espèce value : reference
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+       "componentSelects": ["site"],
+       "componentFilters": [
+                 {
+                   "componentKey":  "site",,
+                   "filter": "plateforme.nivelle"
+                 }
+      ]
+    }
+
+### get data by site bassin and espèce value : number
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+       "componentSelects": ["individusNumbervalue"],
+       "componentFilters": [
+                 {
+                   "componentKey": "individusNumbervalue",
+                   "filter": 41
+                 }
+      ]
+    }
+
+### get data by site bassin and espèce value : number interval
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+       "componentSelects": ["individusNumbervalue"],
+       "componentFilters": [
+                 {
+                   "componentKey": "individusNumbervalue",
+                   "intervalValues": {
+                         "from": 25,
+                         "to": 30
+                   }
+                 }
+      ]
+    }
+
+### et data by date value
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+       "componentSelects": ["date"],
+       "componentFilters": [
+                 {
+                   "componentKey": "date",
+                   "intervalValues": {
+                      "from": "01/01/1984",
+                      "to": "04/01/1984"
+                   }
+                 }
+      ]
+    }
+
+### get data by date interval
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+       "componentSelects": ["date"],
+       "componentFilters": [
+                 {
+                   "componentKey": "date",
+                   "filter": "01/01/1984"
+                 }
+      ]
+    }
+
+
+### get data by sites and espèce : date
+GET http://localhost:8081/api/v1/applications/monsore/data/pem/json?
+    downloadDatasetQuery=
+    {
+  "offset":0,
+  "limit":68,
+  "componentSelects":["date", "site", "chemin", "plateforme", "color_value","individusNumbervalue", "espece"],
+  "componentFilters":[ ],
+  "componentOrderBy":[ ],
+  "authorizationDescriptions":[ ],
+  "dataType":"pem",
+  "applicationNameOrId":"monsore"
+ }
+
+### création d'une demande de droit d'accès aux données
+POST http://localhost:8081/api/v1/applications/monsore/rightsRequest
+Content-Type: application/json
+
+{
+  "id": null,
+  "fields": {
+    "float": "10.005",
+    "number": "5",
+    "endDate": "31/10/2024",
+    "project": "projet   manche en text",
+    "startDate": "01/10/2024",
+    "organization": "besoin des données de scarff",
+    "selcetProject": "projet_manche"
+  },
+  "rightsRequest": {
+    "uuid": null,
+    "name": "Demande d'autorisations pour l'utilisateur echo",
+    "description": "null",
+    "usersId": [
+      "e7057a19-5f23-4f92-b556-a12b1ee750e6"
+    ],
+    "authorizationForAll": {
+      "variables_et_unites_par_types_de_donnees": [
+        "extraction"
+      ]
+    },
+    "authorizationsWithRestriction": {}
+  },
+  "comment": "demande pour echo"
+}

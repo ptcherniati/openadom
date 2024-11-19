@@ -1,0 +1,24 @@
+### connexion
+POST http://localhost:8081/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{
+  "login": "poussin",
+  "password": "xxxx"
+}
+
+###
+POST http://localhost:8081/api/v1/applications/multiplicity
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="element-name"
+Content-Type: text/plain
+
+Name
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="multiplicity.yaml"
+Content-Type: application/x-yaml
+
+< ./multiplicity.yaml
+--WebAppBoundary--

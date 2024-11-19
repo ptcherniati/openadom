@@ -1,0 +1,53 @@
+OA_version: 2.0.1
+OA_application:
+  OA_comment: Fichier de test de l'application brokenADOM
+  OA_name: computedwithnaturalkeycolumns
+  OA_version: 1.0.1
+OA_data:
+  type_site_tsi:
+    OA_naturalKey:
+      - tsi_nom
+    OA_basicComponents:
+      tsi_nom:
+  site_sit:
+    OA_naturalKey:
+      - tsi_nom
+      - sit_nom
+    OA_basicComponents:
+      tsi_nom:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: type_site_tsi
+              OA_isParent: true
+      tsi_noms:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_multiplicity: MANY
+            OA_reference:
+              OA_name: type_site_tsi
+              OA_isParent: true
+      sit_nom:
+      sit_noms:
+    OA_computedComponents:
+      site_natural_key:
+        OA_withNaturalKeyComponents:
+          - tsi_nom
+          - sit_nom
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: site_sit
+      site_natural_key_multi:
+        OA_withNaturalKeyComponents:
+          - tsi_noms
+          - sit_noms
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_multiplicity: MANY
+            OA_reference:
+              OA_name: site_sit

@@ -1,0 +1,300 @@
+version: 1
+application:
+  name: foret
+  version: 1
+compositeReferences:
+  localizations:
+    components:
+      - reference: types_de_zones_etudes
+      - reference: zones_etudes
+        parentKeyColumn: type_site
+      - reference: traitements
+        parentKeyColumn: site
+references:
+  types_de_zones_etudes:
+    keyColumns: [ nom_fr ]
+    columns:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  zones_etudes:
+    keyColumns: [ nom ]
+    columns:
+      type_site:
+        headerName: type de site
+      nom:
+      description_fr:
+      description_en:
+      date_debut:
+        headerName: date début
+      date_fin:
+        headerName: date fin
+      latitude:
+      longitude:
+      surface:
+      altitude:
+      pente:
+      pente_fr:
+        headerName: direction pente_fr
+      pente_en:
+        headerName: direction pente_en
+      pays_fr:
+      pays_en:
+      region_fr:
+        headerName: région_fr
+      region_en:
+        headerName: région_en
+      temps_moyenne:
+        headerName: temps moyenne
+      precip_moyenne:
+        headerName: précip moyenne
+      direction_vent_fr:
+        headerName: direction vent_fr
+      direction_vent_en:
+        headerName: direction vent_en
+      type_foret_fr:
+        headerName: type foret_fr
+      type_foret_en:
+        headerName: type foret_en
+      parent:
+  traitements:
+    keyColumns: [ code ]
+    columns:
+      site:
+        headerName: nom du site
+      code:
+      libelle_fr:
+        headerName: libellé_fr
+      libelle_en:
+        headerName: libellé_en
+      description_fr:
+      description_en:
+  data_types:
+    keyColumns: [ nom_key ]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_key:
+      description_fr:
+      description_en:
+  themes:
+    keyColumns: [ nom_key ]
+    columns:
+      nom_key:
+      nom_fr:
+      nom_en:
+      description_fr:
+      description_en:
+  theme_types_de_donnees_par_zone_etudes:
+    keyColumns: [ site, theme, datatype ]
+    columns:
+      site:
+        headerName: nom du site
+      theme:
+        headerName: nom du thème
+      datatype:
+        headerName: nom du type de données
+  variables_par_types_de_donnees:
+    keyColumns: [ datatype, variable ]
+    columns:
+      datatype:
+        headerName: nom du type de données
+      variable:
+        headerName: nom de la variable
+      unite:
+        headerName: nom de l'unité
+      min:
+      max:
+dataTypes:
+  flux_meteo_dataResult:
+    authorization:
+      dataGroups:
+        reference:
+          data:
+            - localization
+            - Date
+          label: "Reference"
+        variable:
+          label: "Variable"
+          data:
+            - Ta
+            - Tarbre
+            - Rr
+            - PPFDr
+            - Pa
+            - Rh
+            - PPFDbc
+            - G
+            - WD
+            - P
+            - Rn
+            - WS
+            - LWin
+            - PPFDd
+            - LWout
+            - Rg
+            - PPFD
+            - APAR
+      authorizationScopes:
+        authorization_zoneEtude:
+          component: zones_etudes
+          variable: localization
+      timeScope:
+        component: day
+        variable: Date
+    data:
+      Date:
+        components:
+          day:
+            checker:
+              name: Date
+              params:
+                pattern: dd/MM/yyyy
+          time:
+      localization:
+        components:
+          zones_etudes:
+            checker:
+              name: Reference
+              params:
+                refType: zones_etudes
+      Ta:
+        components:
+          °C:
+      Tarbre:
+        components:
+          °C:
+      Rr:
+        components:
+          MJ m-2 m-1:
+      PPFDr:
+        components:
+          µmol m-2 m-1:
+      Pa:
+        components:
+          kPa:
+      Rh:
+        components:
+          _%:
+      PPFDbc:
+        components:
+          µmol m-2 m-1:
+      G:
+        components:
+          MJ m-2 m-1:
+      WD:
+        components:
+          °:
+      P:
+        components:
+          m:
+      Rn:
+        components:
+          MJ m-2 m-1:
+      WS:
+        components:
+          m s-1:
+      LWin:
+        components:
+          MJ m-2 m-1:
+      PPFDd:
+        components:
+          µmol m-2 m-1:
+      LWout:
+        components:
+          MJ m-2 m-1:
+      Rg:
+        components:
+          MJ m-2 m-1:
+      PPFD:
+        components:
+          µmol m-2 m-1:
+      APAR:
+        components:
+          µmol m-2 m-1:
+    format:
+      headerLine: 2
+      firstRowLine: 4
+      columns:
+        - header: "site"
+          boundTo:
+            variable: localization
+            component: zones_etudes
+        - header: "date"
+          boundTo:
+            variable: Date
+            component: day
+        - header: "Ta"
+          boundTo:
+            variable: Ta
+            component: °C
+        - header: "Tarbre"
+          boundTo:
+            variable: Tarbre
+            component: °C
+        - header: "Rr"
+          boundTo:
+            variable: Rr
+            component: MJ m-2 m-1
+        - header: "PPFDr"
+          boundTo:
+            variable: PPFDr
+            component: µmol m-2 m-1
+        - header: "Pa"
+          boundTo:
+            variable: Pa
+            component: kPa
+        - header: "Rh"
+          boundTo:
+            variable: Rh
+            component: _%
+        - header: "PPFDbc"
+          boundTo:
+            variable: PPFDbc
+            component: µmol m-2 m-1
+        - header: "G"
+          boundTo:
+            variable: G
+            component: MJ m-2 m-1
+        - header: "WD"
+          boundTo:
+            variable: WD
+            component: °
+        - header: "P"
+          boundTo:
+            variable: P
+            component: m
+        - header: "Rn"
+          boundTo:
+            variable: Rn
+            component: MJ m-2 m-1
+        - header: "WS"
+          boundTo:
+            variable: WS
+            component: m s-1
+        - header: "LWin"
+          boundTo:
+            variable: LWin
+            component: MJ m-2 m-1
+        - header: "PPFDd"
+          boundTo:
+            variable: PPFDd
+            component: µmol m-2 m-1
+        - header: "LWout"
+          boundTo:
+            variable: LWout
+            component: MJ m-2 m-1
+        - header: "Rg"
+          boundTo:
+            variable: Rg
+            component: MJ m-2 m-1
+        - header: "PPFD"
+          boundTo:
+            variable: PPFD
+            component: µmol m-2 m-1
+        - header: "APAR"
+          boundTo:
+            variable: APAR
+            component: µmol m-2 m-1

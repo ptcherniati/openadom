@@ -1,0 +1,54 @@
+### login
+
+POST {{server}}/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### Test Application
+POST {{server}}/api/v1/applications/recursivite
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="comment"
+Content-Type: text/plain
+
+L'application ola
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="recursivite.yaml"
+Content-Type: application/json
+
+< ../../../data/recursivite/recusivite.yaml
+
+### add tr_niveau_taxon_ntx
+POST {{server}}/api/v1/applications/recursivite/references/site
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="site.csv"
+Content-Type: application/json
+
+< ../../../data/recursivite/sites.csv
+--WebAppBoundary--
+### add tr_niveau_taxon_ntx
+POST {{server}}/api/v1/applications/recursivite/references/proprietes_taxon
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="proprietes_des_taxons.csv"
+Content-Type: application/json
+
+< ../../../data/recursivite/proprietes_des_taxons.csv
+--WebAppBoundary--
+--WebAppBoundary--
+### add tr_niveau_taxon_ntx
+POST {{server}}/api/v1/applications/recursivite/references/taxon
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="taxons_du_phytoplancton-reduit-pour-recursivite.csv"
+Content-Type: application/json
+
+< ../../../data/recursivite/taxons_du_phytoplancton-reduit-pour-recursivite.csv
+--WebAppBoundary--
+

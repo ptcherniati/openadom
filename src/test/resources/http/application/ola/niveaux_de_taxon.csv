@@ -1,0 +1,23 @@
+nom_key;nom_fr;nom_en;code sandre;code sandre du contexte
+domaine;Domaine;Empire;;
+règne;Règne;Kingdom;;
+sous-règne;Sous-règne;Subkingdom;;
+infra-règne;Infra-règne;Infrakingdom;;
+embranchement;Embranchement;Phylum;;
+sous-embranchement;Sous-embranchement;Subphylum;;
+super-classe;Super-classe;Superclass;;
+classe;Classe;Class;;
+sous-classe;Sous-classe;Subclass;;
+infra-classe;Infra-classe;Infraclass;;
+super-ordre;Super-ordre;Superorder;;
+ordre;Ordre;Order;;
+sous-ordre;Sous-ordre;Suborder;;
+infra-ordre;Infra-ordre;Infraorder;;
+super-famille;Super-famille;Superfamily;;
+famille;Famille;Species;;
+sous-famille;Sous-famille;Subfamily;;
+genre espèce;Genre espèce;Genus-species;;
+genre;Genre;Genus;;
+espèce;Espèce;Species;;
+inconnu;Inconnu;unknown;;
+variété/forme/sous-espèce;variété/Forme/Sous-espèce;Variety/Form/Subspecies;;

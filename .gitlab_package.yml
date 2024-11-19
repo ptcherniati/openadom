@@ -1,0 +1,49 @@
+maven:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: package
+  script: mvn --batch-mode clean package -Dmaven.test.skip=true
+  tags:
+    - docker
+  artifacts:
+    reports:
+      junit:
+        - target/surefire-reports/TEST-*.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+maven_registry:
+  image: maven:3.9.4-amazoncorretto-21
+  stage: package
+  script:
+    - MVN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout) && echo $MVN_VERSION;
+    - if [ -n "$CI_COMMIT_BRANCH" ];
+      then
+      MVN_BRANCH=$CI_COMMIT_BRANCH && echo 'normal commit';
+      else
+      echo commit on ${CI_COMMIT_REF_NAME};
+      echo "https://forgemia.inra.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}"
+      MVN_BRANCH=$(curl GET "https://forgemia.inra.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}" | docker run --rm -i imega/jq -c ".[0].target_branch");
+      fi;
+      echo $MVN_BRANCH.$MVN_VERSION;
+    - mvn versions:set -DnewVersion=$MVN_BRANCH.$MVN_VERSION
+    - mvn versions:commit
+    - mvn deploy -Dmaven.test.skip=true -Pmia -s ci-settings.xml
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"
+
+npm:
+  image: node:12-alpine
+  stage: package
+  needs: ["maven_test_rest_1","maven_test_rest_others"]
+  script:
+    - cd ui
+    - npm ci
+    - npm run build
+  tags:
+    - docker
+  artifacts:
+    when: always
+    paths:
+      - ui/dist
+  rules:
+    - if: $CI_JOB_MANUAL!= "true"

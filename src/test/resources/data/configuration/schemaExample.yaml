@@ -1,0 +1,1084 @@
+OA_version: 2.0.1  #optional
+OA_application:   #mandatory
+  OA_name: monsore  #mandatory
+  OA_version: 3.0.1  #mandatory
+  OA_comment: Fichier de test de l'application brokenADOM  #optional
+  OA_defaultLanguage: fr  #optional
+  OA_i18n:   #mandatory
+    OA_title:   #optional
+      fr: SOERE mon SOERE
+      en: SOERE my SOERE
+    OA_description:   #optional
+      fr: SOERE example basé sur petit fleuve côtiers
+      en: Example of SOERE based on small coastal river
+OA_tags:   #optional
+  data:   #optional
+    fr: données
+    en: data
+  context:   #optional
+    fr: contexte
+    en: context
+OA_data:   #optional
+  tr_espece_spe:   #mandatory
+    OA_dataHeaderLine: 1  #optional
+    OA_dataFirstLine: 2  #optional
+    OA_naturalKey:   #mandatory
+      - spe_species  #optional
+    OA_tags:   #optional
+      - data  #optional
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Espèce
+        en: Species
+      OA_description:   #optional
+        fr: Référentiel des espèces
+        en: Species repository
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "{spe_species}"
+        en: "{spe_species}"
+      OA_description:   #optional
+        fr: "{spe_definition_fr}"
+        en: "{spe_definition_en}"
+    OA_basicComponents:   #optional
+      spe_definition_fr:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_required: false  #optional
+        OA_importHeader: Défintion de l'espèce en français  #optional
+      spe_definition_en:   #optional
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_required: false  #optional
+        OA_importHeader: English species definition  #optional
+      spe_species:   #optional
+        OA_checker:   #optional
+          OA_name: OA_string  #mandatory
+          OA_params:   #optional
+            OA_pattern: SPE_.*  #optional
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Espèce
+            en: Species
+          OA_description:   #optional
+            fr: Référentiel des espèces
+            en: Species repository
+        OA_required: true  #optional
+        OA_importHeader: Espèce  #optional
+      spe_date:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_date  #mandatory
+          OA_params:   #optional
+            OA_pattern: dd/MM/yyyy  #mandatory
+            OA_duration: 1 Day  #optional
+            OA_max: 31/12/2013  #optional
+            OA_min: 01/01/2013  #optional
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Date de début
+            en: Start Date
+          OA_description:   #optional
+            fr: La date de début au format dd/MM/yyyy
+            en: The start date in dd/MM/yyyy format
+        OA_required: true  #optional
+        OA_importHeader: Date  #optional
+      spe_heure:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_date  #mandatory
+          OA_params:   #optional
+            OA_pattern: HH:mm:ss  #mandatory
+            OA_max: 17:00:00  #optional
+            OA_min: 08:00:00  #optional
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Heure
+            en: Time
+          OA_description:   #optional
+            fr: Heure
+            en: Time
+        OA_required: true  #optional
+        OA_importHeader: Heure  #optional
+      spe_weight:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_float  #mandatory
+          OA_params:   #optional
+            OA_max: 2000.0  #optional
+            OA_min: 0.0  #optional
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Masse
+            en: Mass
+          OA_description:   #optional
+            fr: Masse
+            en: Mass
+        OA_required: true  #optional
+        OA_defaultValue:   #optional
+          OA_expression: 0  #optional
+        OA_importHeader: Quantité  #optional
+      spe_tool:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_groovyExpression  #mandatory
+          OA_params:   #optional
+            OA_groovy:
+              OA_expression: >  #optional
+                import fr.inra.oresing.domain.groovy.exception.GroovyException;
+                List<String> values = ["T_11", "T_12", "U_13", "U_14"];
+                if(values.contains(value)){
+                    return true;
+                };
+                throw new GroovyException(
+                                        "BAD_VALUE",
+                                        java.util.Map.of("valeur", value, "valeurs",values)
+                                );
+              OA_groovyExceptions:   #optional
+                BAD_VALUE:   #optional
+                  fr: la valeur ${value} doit être l'une des valeurs de ${values}
+                  en: value ${value} must be in ${values}
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Outil
+            en: Tool
+          OA_description:   #optional
+            fr: Outil
+            en: Tool
+        OA_required: true  #optional
+        OA_importHeader: Outil  #optional
+      spe_site:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_isRecursive: true  #optional
+              OA_name: tr_zone_etude_zet  #mandatory
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Site
+            en: Site
+          OA_description:   #optional
+            fr: Référentiel des Sites
+            en: Site repository
+        OA_required: true  #optional
+        OA_importHeader: Site  #optional
+      spe_is_iso:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_boolean  #mandatory
+          OA_params:   #optional
+            OA_multiplicity: ONE  #optional
+        OA_required: true  #optional
+        OA_importHeader: iso  #optional
+        OA_tags:   #optional
+          - __HIDDEN__  #optional
+      spe_repetition:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_integer  #mandatory
+          OA_params:   #optional
+            OA_max: 10  #optional
+            OA_min: 0  #optional
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Répétition
+            en: Repetition
+          OA_description:   #optional
+            fr: N° de la répétition
+            en: Repetition number
+        OA_required: false  #optional
+        OA_importHeader: Répétition  #optional
+    OA_computedComponents:   #optional
+      spe_date_heure:   #optional
+        OA_computation:
+          OA_expression: >  #optional
+            return datum.date   " "   datum.heure
+        OA_checker:   #mandatory
+          OA_name: OA_date  #mandatory
+          OA_params:   #optional
+            OA_pattern: dd/MM/yyyy HH:mm:ss  #mandatory
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Date complète
+            en: Complete date
+          OA_description:   #optional
+            fr: Date complète au format dd/MM/yyyy HH:mm:ss
+            en: Complete date with format dd/MM/yyyy HH:mm:ss
+  tr_projet_pro:   #mandatory
+    OA_dataHeaderLine: 1  #optional
+    OA_dataFirstLine: 2  #optional
+    OA_naturalKey:   #mandatory
+      - pro_nom_key  #optional
+    OA_tags:   #optional
+      - context  #optional
+      - data  #optional
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Projet
+        en: Project
+      OA_description:   #optional
+        fr: Référentiel des projet
+        en: Project repository
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "'{pro_nom_fr}'"
+        en: "'{pro_nom_en}'"
+      OA_description:   #optional
+        fr: "'{pro_definition_fr}'"
+        en: "'{pro_definition_en}'"
+    OA_basicComponents:   #optional
+      pro_nom_key:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+          - en  #optional
+        OA_required: false  #optional
+        OA_importHeader: Nom codique du projet  #optional
+      pro_nom_fr:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Nom du projet
+          OA_description:   #optional
+            fr: Le nom du projet
+        OA_required: false  #optional
+        OA_importHeader: Nom du projet en français  #optional
+      pro_nom_en:   #optional
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            en: Project name
+          OA_description:   #optional
+            en: The project name
+        OA_required: false  #optional
+        OA_importHeader: English project name  #optional
+      pro_definition_fr:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Définition du projet
+          OA_description:   #optional
+            fr: Une description du projet
+        OA_required: false  #optional
+        OA_importHeader: Définition du projet en français  #optional
+      pro_definition_en:   #optional
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            en: Project définition
+          OA_description:   #optional
+            en: A roject description
+        OA_required: false  #optional
+        OA_importHeader: English project definition  #optional
+  tr_type_zone_etude_tze:   #mandatory
+    OA_dataHeaderLine: 1  #optional
+    OA_dataFirstLine: 2  #optional
+    OA_naturalKey:   #mandatory
+      - tze_nom_key  #optional
+    OA_tags:   #optional
+      - context  #optional
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Types de sites
+        en: Sites types
+      OA_description:   #optional
+        fr: Référentiel des types de sites
+        en: Sites types repository
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "'De type : {tze_nom_fr}'"
+        en: "'Of type : {tze_nom_en}'"
+      OA_description:   #optional
+        fr: "'{tze_definition_fr}'"
+        en: "'{tze_definition_en}'"
+    OA_basicComponents:   #optional
+      tze_nom_key:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+          - en  #optional
+        OA_required: false  #optional
+        OA_importHeader: Nom codique du type de site  #optional
+      tze_nom_fr:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Nom du type de site
+          OA_description:   #optional
+            fr: Le nom du type de site
+        OA_required: false  #optional
+        OA_importHeader: Nom du type de site en français  #optional
+      tze_nom_en:   #optional
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            en: Site type name
+          OA_description:   #optional
+            en: A site type name
+        OA_required: false  #optional
+        OA_importHeader: English type site name  #optional
+      tze_definition_fr:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Description du type de site
+          OA_description:   #optional
+            fr: Une description du type de site
+        OA_required: false  #optional
+        OA_importHeader: Description du type de site en français  #optional
+      tze_definition_en:   #optional
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            en: Site type description
+          OA_description:   #optional
+            en: A site type description
+        OA_required: false  #optional
+        OA_importHeader: English type site description  #optional
+  tr_zone_etude_zet:   #mandatory
+    OA_dataHeaderLine: 1  #optional
+    OA_dataFirstLine: 2  #optional
+    OA_naturalKey:   #mandatory
+      - zet_chemin_parent  #optional
+      - zet_nom_key  #optional
+    OA_tags:   #optional
+      - context  #optional
+      - data  #optional
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Site
+        en: Site
+      OA_description:   #optional
+        fr: Référentiel des Sites
+        en: Site repository
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "'{zet_nom_fr}'"
+        en: "'{zet_nom_en}'"
+      OA_description:   #optional
+        fr: "'{zet_description_fr}'"
+        en: "'{zet_description_fr}'"
+    OA_basicComponents:   #optional
+      tze_type_nom:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_isParent: true  #optional
+              OA_name: tr_type_zone_etude_tze  #mandatory
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Type de site
+            en: Site types
+          OA_description:   #optional
+            fr: Nom du type de site
+            en: Site type name
+        OA_required: true  #optional
+        OA_importHeader: Site  #optional
+      zet_nom_key:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+          - en  #optional
+        OA_required: false  #optional
+        OA_importHeader: Nom codique du site  #optional
+      zet_nom_fr:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Nom du site
+          OA_description:   #optional
+            fr: Le nom du site
+        OA_required: false  #optional
+        OA_importHeader: Nom du site en français  #optional
+      zet_nom_en:   #optional
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            en: Site name
+          OA_description:   #optional
+            en: A site name
+        OA_required: false  #optional
+        OA_importHeader: English site name  #optional
+      zet_description_fr:   #optional
+        OA_langRestrictions:   #optional
+          - fr  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Description du type de site
+          OA_description:   #optional
+            fr: Une description du type de site
+        OA_required: false  #optional
+        OA_importHeader: Description du site en français  #optional
+      zet_description_en:   #optional
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            en: Site description
+          OA_description:   #optional
+            en: A site description
+        OA_required: false  #optional
+        OA_importHeader: English site description  #optional
+      zet_chemin_parent:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_isRecursive: true  #optional
+              OA_name: tr_zone_etude_zet  #mandatory
+            OA_multiplicity: ONE  #optional
+        OA_langRestrictions:   #optional
+          - en  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Site parent
+            en: Parent site
+          OA_description:   #optional
+            fr: La zone d'étude parente contenant le site.
+            en: The parent study area containing the site.
+        OA_required: false  #optional
+        OA_importHeader: Nom du site parent  #optional
+    OA_computedComponents:   #optional
+      zet_computed_key:   #optional
+        OA_withNaturalKeyComponents:   #optional
+          - zet_chemin_parent  #optional
+          - zet_nom_key  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_isRecursive: true  #optional
+              OA_name: tr_zone_etude_zet  #mandatory
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Date complète
+            en: Complete date
+          OA_description:   #optional
+            fr: Date complète au format dd/MM/yyyy HH:mm:ss
+            en: Complete date with format dd/MM/yyyy HH:mm:ss
+  tr_propriete_taxon_ptx:   #mandatory
+    OA_dataHeaderLine: 1  #optional
+    OA_dataFirstLine: 2  #optional
+    OA_naturalKey:   #mandatory
+      - ptx_propriete  #optional
+    OA_tags:   #optional
+      - context  #optional
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Propriété des taxon
+        en: Taxa properties repository
+      OA_description:   #optional
+        fr: Référentiel des propriété des taxon
+        en: Taxa properties
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "'{ptx_propriete}'"
+        en: "'{ptx_propriete}'"
+    OA_basicComponents:   #optional
+      ptx_date:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_date  #mandatory
+          OA_params:   #optional
+            OA_pattern: dd/MM/yyyy  #mandatory
+            OA_duration: 1 Day  #optional
+            OA_max: 31/12/2013  #optional
+            OA_min: 01/01/2013  #optional
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Date de début
+            en: Start Date
+          OA_description:   #optional
+            fr: La date de début au format dd/MM/yyyy
+            en: The start date in dd/MM/yyyy format
+        OA_required: true  #optional
+        OA_importHeader: Date  #optional
+      ptx_propriete:   #optional
+        OA_required: true  #optional
+        OA_importHeader: Proprieté  #optional
+  tr_taxon_tax:   #mandatory
+    OA_dataHeaderLine: 1  #optional
+    OA_dataFirstLine: 2  #optional
+    OA_naturalKey:   #mandatory
+      - tax_taxon  #optional
+    OA_tags:   #optional
+      - context  #optional
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Taxon
+        en: Taxa
+      OA_description:   #optional
+        fr: Référentiel des taxon
+        en: Taxa repository
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "'{tax_taxon}'"
+        en: "'{tax_taxon}'"
+    OA_basicComponents:   #optional
+      tax_taxon:   #optional
+        OA_required: true  #optional
+        OA_importHeader: Nom du taxon  #optional
+    OA_dynamicComponents:   #optional
+      tax_propriete_taxon:   #optional
+        OA_headerPrefix: pt_  #optional
+        OA_reference: tr_propriete_taxon_ptx  #optional
+        OA_referenceComponentToLookForHeader: ptx_propriete  #optional
+  t_data_dat:   #mandatory
+    OA_dataHeaderLine: 4  #optional
+    OA_dataFirstLine: 7  #optional
+    OA_naturalKey:   #mandatory
+      - dat_date  #optional
+    OA_tags:   #optional
+      - context  #optional
+      - "__DATA__"  #optional
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Données
+        en: Data
+      OA_description:   #optional
+        fr: Référentiel des données
+        en: Data repository
+    OA_basicComponents:   #optional
+      dat_date:   #optional
+      dat_heure:   #optional
+    OA_computedComponents:   #optional
+      dat_date_heure:   #optional
+        OA_computation:
+          OA_expression: >  #optional
+            return datum.dat_date   " "   datum.dat_heure
+        OA_checker:   #mandatory
+          OA_name: OA_date  #mandatory
+          OA_params:   #optional
+            OA_pattern: dd/MM/yyyy HH:mm:ss  #mandatory
+            OA_multiplicity: ONE  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Date complète
+            en: Complete date
+          OA_description:   #optional
+            fr: Date complète au format dd/MM/yyyy HH:mm:ss
+            en: Complete date with format dd/MM/yyyy HH:mm:ss
+    OA_patternComponents:   #optional
+      swc:   #optional
+        OA_patternForComponents: "SWC_(.*)_(.*)"  #optional
+        OA_tags:   #optional
+          - context  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Humidité volumique du sol
+            en: Soil water content
+          OA_description:   #optional
+            fr: Définit l'humidité volumique du sol
+            en: Define the soil water content
+        OA_required: false  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_float  #mandatory
+          OA_params:   #optional
+            OA_max: 2000.0  #optional
+            OA_min: 0.0  #optional
+            OA_multiplicity: ONE  #optional
+        OA_componentQualifiers:   #optional
+          -   #optional
+            swc_profondeur:   #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: Profondeur
+                  en: Depth
+                OA_description:   #optional
+                  fr: Profondeur en valeur positive
+                  en: Depth in positive value
+              OA_required: true  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_float  #mandatory
+                OA_params:   #optional
+                  OA_max: 500.0  #optional
+                  OA_min: 0.0  #optional
+                  OA_multiplicity: ONE  #optional
+          -   #optional
+            swc_repetition:   #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: Répétition
+                  en: Repetition
+                OA_description:   #optional
+                  fr: N° de la répétition
+                  en: Repetition number
+              OA_required: true  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_integer  #mandatory
+                OA_params:   #optional
+                  OA_max: 10  #optional
+                  OA_min: 0  #optional
+                  OA_multiplicity: ONE  #optional
+        OA_componentAdjacents:   #optional
+          -   #optional
+            swc_sd:   #optional
+              OA_importHeaderPattern: "{$1}_sd"  #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: écart_type
+                  en: standard_deviation
+              OA_required: false  #optional
+              OA_mandatory: false  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_float  #mandatory
+                OA_params:   #optional
+                  OA_max: 500.0  #optional
+                  OA_min: 0.0  #optional
+                  OA_multiplicity: ONE  #optional
+          -   #optional
+            swc_qc:   #optional
+              OA_importHeaderPattern: "{$1}_qc"  #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: Indic de qualité
+                  en: Quality class
+                OA_description:   #optional
+                  fr: 0 pour une valeur valide ; 2 pour une valeur incorrecte
+                  en:  0 for valid value; 2 for bad value
+              OA_required: false  #optional
+              OA_mandatory: false  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_integer  #mandatory
+                OA_params:   #optional
+                  OA_max: 2  #optional
+                  OA_min: 0  #optional
+                  OA_multiplicity: ONE  #optional
+      smp:   #optional
+        OA_patternForComponents: "SMP_(.*)_(.*)"  #optional
+        OA_tags:   #optional
+          - context  #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Tension d'humdité du sol
+            en: Soil moisture pressure
+          OA_description:   #optional
+            fr: Définit la tension d'humdité du sol
+            en: Define the soil moisture pressure
+        OA_required: false  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_float  #mandatory
+          OA_params:   #optional
+            OA_max: 2000.0  #optional
+            OA_min: 0.0  #optional
+            OA_multiplicity: ONE  #optional
+        OA_componentQualifiers:   #optional
+          -   #optional
+            smp_profondeur:   #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: Profondeur
+                  en: Depth
+                OA_description:   #optional
+                  fr: Profondeur en valeur positive
+                  en: Depth in positive value
+              OA_required: true  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_float  #mandatory
+                OA_params:   #optional
+                  OA_max: 500.0  #optional
+                  OA_min: 0.0  #optional
+                  OA_multiplicity: ONE  #optional
+          -   #optional
+            smp_repetition:   #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: Répétition
+                  en: Repetition
+                OA_description:   #optional
+                  fr: N° de la répétition
+                  en: Repetition number
+              OA_required: true  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_integer  #mandatory
+                OA_params:   #optional
+                  OA_max: 10  #optional
+                  OA_min: 0  #optional
+                  OA_multiplicity: ONE  #optional
+        OA_componentAdjacents:   #optional
+          -   #optional
+            smp_sd:   #optional
+              OA_importHeaderPattern: "{$1}_sd"  #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: écart_type
+                  en: standard_deviation
+              OA_required: false  #optional
+              OA_mandatory: false  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_float  #mandatory
+                OA_params:   #optional
+                  OA_max: 500.0  #optional
+                  OA_min: 0.0  #optional
+                  OA_multiplicity: ONE  #optional
+          -   #optional
+            smp_qc:   #optional
+              OA_importHeaderPattern: "{$1}_qc"  #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: Indic de qualité
+                  en: Quality class
+                OA_description:   #optional
+                  fr: 0 pour une valeur valide ; 2 pour une valeur incorrecte
+                  en:  0 for valid value; 2 for bad value
+              OA_required: false  #optional
+              OA_mandatory: false  #optional
+              OA_tags:   #optional
+                - data  #optional
+              OA_checker:   #mandatory
+                OA_name: OA_integer  #mandatory
+                OA_params:   #optional
+                  OA_max: 2  #optional
+                  OA_min: 0  #optional
+                  OA_multiplicity: ONE  #optional
+    OA_constantComponents:   #optional
+      dat_type_site:   #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Type de zone d'étude
+            en: Site type
+          OA_description:   #optional
+            fr: Nom du type de zone d'étude
+            en: Site type name
+        OA_required: true  #optional
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 1  #optional
+          OA_columnNumber: 2  #optional
+      dat_site:   #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Site
+          OA_description:   #optional
+            fr: Nom du site
+            en: Site Name
+        OA_required: true  #optional
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 2  #optional
+          OA_columnNumber: 2  #optional
+      dat_start_date:   #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Date de début
+            en: Start date
+          OA_description:   #optional
+            fr: Date de début
+            en: Start date
+        OA_required: false  #optional
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 5  #optional
+          OA_columnName: dat_date  #optional
+      dat_end_date:   #optional
+        OA_exportHeader:   #mandatory
+          OA_title:   #optional
+            fr: Date de fin
+            en: End date
+          OA_description:   #optional
+            fr: Date de fin
+            en: End date
+        OA_required: false  #optional
+        OA_importHeaderTarget:   #optional
+          OA_rowNumber: 6  #optional
+          OA_columnName: dat_date  #optional
+    OA_validations:   #optional
+      type_site_validation:   #mandatory
+        OA_i18n:   #optional
+          fr: Validation du type de sites
+          en: Site type validation
+        OA_required: true  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_isParent: true  #optional
+              OA_name: tr_type_zone_etude_tze  #mandatory
+            OA_multiplicity: ONE  #optional
+        OA_components:   #optional
+          - dat_type_site  #optional
+      site_validation:   #mandatory
+        OA_i18n:   #optional
+          fr: Validation du site
+          en: Site validation
+        OA_required: true  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_isRecursive: true  #optional
+              OA_name: tr_zone_etude_zet  #mandatory
+            OA_multiplicity: ONE  #optional
+        OA_components:   #optional
+          - dat_site  #optional
+      start_date_validation:   #mandatory
+        OA_i18n:   #optional
+          fr: Validation de la borne inférieure de date
+          en: Min date validation
+        OA_required: false  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_date  #mandatory
+          OA_params:   #optional
+            OA_pattern: dd/MM/yyyy  #mandatory
+            OA_duration: 1 Day  #optional
+            OA_min: 01/01/2004  #optional
+            OA_multiplicity: ONE  #optional
+        OA_components:   #optional
+          - dat_start_date  #optional
+      end_date_validation:   #mandatory
+        OA_i18n:   #optional
+          fr: Validation de la borne supérieure de date
+          en: Max date validation
+        OA_required: false  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_date  #mandatory
+          OA_params:   #optional
+            OA_pattern: dd/MM/yyyy  #mandatory
+            OA_duration: 1 Day  #optional
+            OA_min: 01/01/2004  #optional
+            OA_multiplicity: ONE  #optional
+        OA_components:   #optional
+          - dat_end_date  #optional
+      date_validation:   #mandatory
+        OA_i18n:   #optional
+          fr: Validation de la date
+          en: Date validation
+        OA_required: true  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_date  #mandatory
+          OA_params:   #optional
+            OA_pattern: dd/MM/yyyy  #mandatory
+            OA_duration: 1 Day  #optional
+            OA_min: 01/01/2004  #optional
+            OA_multiplicity: ONE  #optional
+        OA_components:   #optional
+          - dat_end_date  #optional
+      interval_date_validation:   #mandatory
+        OA_i18n:   #optional
+          fr: Vérifie que la date est comprise dans l'interval
+          en: Checks that the date is included in the interval
+        OA_required: true  #optional
+        OA_checker:   #mandatory
+          OA_name: OA_groovyExpression  #mandatory
+          OA_params:   #optional
+            OA_groovy:
+              OA_expression: >  #optional
+                if (datum.data_dat == null) {
+                                                throw new fr.inra.oresing.domain.groovy.exception.GroovyException(
+                                                        "MISSING_DATE"
+                                                );
+                                            };
+                                            java.time.LocalDate date = java.time.LocalDate.parse(datum.data_dat, DateTimeFormatter.ofPattern("dd/MM/yyyy")); if (datum.start_date_dat != null) {
+                                                try {
+                                                    java.time.LocalDate startDate = java.time.LocalDate.parse(datum.start_date_dat, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                                                    if (startDate.isAfter(date)) {
+                                                        throw new fr.inra.oresing.domain.groovy.exception.GroovyException(
+                                                                "DATE_NOT_IN_INTERVAL",
+                                                                java.util.Map.of(
+                                                                        "date", date,
+                                                                        "dateDebut", datum.start_date_dat,
+                                                                        "dateFin", datum.end_date_dat
+                                                                )
+                                                        )
+                                                    }
+                                                } catch (java.time.format.DateTimeParseException e) {
+                                                    throw new fr.inra.oresing.domain.groovy.exception.GroovyException(
+                                                            "BAD_DATE_FORMAT",
+                                                            java.util.Map.of(
+                                                                    "date", datum.start_date_dat
+                                                            )
+                                                    )
+                                                }
+                                            };
+                                            if (datum.end_date_dat != null) {
+                                                try {
+                                                    java.time.LocalDate endDate = java.time.LocalDate.parse(datum.end_date_dat, DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+                                                    if (endDate.isBefore(date)) {
+                                                        throw new fr.inra.oresing.domain.groovy.exception.GroovyException(
+                                                                "DATE_NOT_IN_INTERVAL",
+                                                                java.util.Map.of(
+                                                                        "date", date,
+                                                                        "dateDebut", datum.start_date_dat,
+                                                                        "dateFin", datum.end_date_dat
+                                                                )
+                                                        )
+                                                    }
+                                                } catch (java.time.format.DateTimeParseException e) {
+                                                    throw new fr.inra.oresing.domain.groovy.exception.GroovyException(
+                                                            "BAD_DATE_FORMAT",
+                                                            java.util.Map.of(
+                                                                    "date", datum.end_date_dat
+                                                            )
+                                                    )
+                                                }
+                                            };
+                                            return true;
+              OA_groovyExceptions:   #optional
+                MISSING_DATE:   #optional
+                  fr: la date est manquante
+                  en: missing date
+                DATE_NOT_IN_INTERVAL:   #optional
+                  fr: la date ${date} n'est pas dans l'intervale de dates [${dateDebut},${dateFin}]
+                  en: the date ${date} is not in date intervale [${dateDebut},${dateFin}]
+                BAD_DATE_FORMAT:   #optional
+                  fr: la date ${date} n'est pas au format ${format}
+                  en: the date ${date} is not in format ${format}
+            OA_multiplicity: ONE  #optional
+        OA_components:   #optional
+          - dat_end_date  #optional
+    OA_submission:   #optional
+      OA_strategy: OA_VERSIONING  #optional
+      OA_submissionScope:   #mandatory
+        OA_referenceScopes:   #optional
+          -   #optional
+            OA_component: dat_site  #mandatory
+            OA_reference: tr_zone_etude_zet  #optional
+            OA_i18n:   #mandatory
+              OA_title:   #optional
+                fr: Site
+                en: Site
+              OA_description:   #optional
+                fr: Référentiel des Sites
+                en: Site repository
+            OA_exportHeader:   #mandatory
+              OA_title:   #optional
+                fr: Site
+                en: Site
+              OA_description:   #optional
+                fr: Référentiel des Sites
+                en: Site repository
+        OA_timeScope:   #optional
+          OA_component: dat_date_heure  #mandatory
+      OA_fileName:   #optional
+        OA_filePattern: (.*)_(.*)_(.*).csv  #mandatory
+        OA_matchPatternScopes:   #optional
+          - dat_site  #optional
+          - __START_DATE__  #optional
+          - __END_DATE__  #optional
+    OA_authorizations:   #mandatory
+      OA_authorizationScope:   #optional
+        - dat_site  #optional
+      OA_timeScope: dat_date_heure  #optional
+OA_rightsRequest:   #optional
+  OA_i18n:   #mandatory
+    OA_title:   #optional
+      fr: Formulaire de demande de droits de l'application MONSORE
+      en: MONSORE App Rights Request Form
+    OA_description:   #optional
+      fr: Vous pouvez demander des droits à l'application monsore en remplissant ce formulaire
+      en: You can request rights to the monsore application by filling out this form
+  OA_formFields:   #optional
+    nom:   #optional
+      OA_checker:   #optional
+        OA_name: OA_string  #mandatory
+        OA_params:   #optional
+          OA_pattern: .*  #optional
+          OA_multiplicity: ONE  #optional
+      OA_i18n:   #mandatory
+        OA_title:   #optional
+          fr: Nom de l'organisme de recherche
+          en: Name of research organization
+        OA_description:   #optional
+          fr: Renseignez ke nom de votre organisme de recherche
+          en: Enter the name of your research organization
+OA_additionalFiles:   #optional
+  firstAdditionalfile:   #mandatory
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Fichier
+        en: File
+      OA_description:   #optional
+        fr: Fichier à joindre à l'application
+        en: File to join to application
+    OA_formFields:   #optional
+      nom:   #optional
+        OA_checker:   #optional
+          OA_name: OA_string  #mandatory
+          OA_params:   #optional
+            OA_pattern: "[a-z]*"  #optional
+            OA_multiplicity: ONE  #optional
+        OA_required: true  #optional
+        OA_i18n:   #mandatory
+          OA_title:   #optional
+            fr: Nom
+            en: Name
+          OA_description:   #optional
+            fr: Nom
+            en: Name
+      projet:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_name: tr_projet_pro  #mandatory
+            OA_multiplicity: MANY  #optional
+        OA_required: true  #optional
+        OA_i18n:   #mandatory
+          OA_title:   #optional
+            fr: Projet
+            en: Project
+          OA_description:   #optional
+            fr: Référentiel des projet
+            en: Project repository
+  secondAdditionalfile:   #mandatory
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: Données brutes
+        en: Initial data
+      OA_description:   #optional
+        fr: Données brutes à traiter
+        en: Initial data to analyse
+    OA_formFields:   #optional
+      nom:   #optional
+        OA_checker:   #optional
+          OA_name: OA_string  #mandatory
+          OA_params:   #optional
+            OA_pattern: "[a-z]*"  #optional
+            OA_multiplicity: ONE  #optional
+        OA_required: true  #optional
+        OA_i18n:   #mandatory
+          OA_title:   #optional
+            fr: Nom
+            en: Name
+          OA_description:   #optional
+            fr: Nom
+            en: Name
+      projet:   #optional
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_name: tr_projet_pro  #mandatory
+            OA_multiplicity: MANY  #optional
+        OA_required: true  #optional
+        OA_i18n:   #mandatory
+          OA_title:   #optional
+            fr: Projet
+            en: Project
+          OA_description:   #optional
+            fr: Référentiel des projet
+            en: Project repository

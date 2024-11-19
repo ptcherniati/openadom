@@ -1,0 +1,478 @@
+OA_version: 2.0.1
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: Application pour de faux
+      en: Fake application
+    OA_description:
+      fr: Ceci est une application pour de faux
+      en: this is a fake application
+  OA_comment: Fichier de test pour tester le builder de configuration
+  OA_name: fake_application
+  OA_version: 3.0.1
+OA_tags:
+  context:
+    fr: contexte
+    en: context
+  test:
+    fr: test
+    en: test
+OA_rightsRequest:
+  OA_i18n:
+    OA_title:
+        fr: Si pour de faux
+        en: Fake Si
+    OA_description:
+        fr: Vous pouvez demander des droits à l'application monsore en remplissant ce formulaire
+        en: You can request rights to the monsore application by filling out this form
+  OA_formFields:
+    organization:
+      OA_i18n:
+        OA_title:
+          fr: Nom de l'organisme de recherche
+          en: Name of research organization
+        OA_description:
+          fr: Indiquez le nom de l'organisme de recherche
+          en: Give the research organization name
+      OA_required: true
+      OA_checker:
+        OA_name: OA_string
+        OA_params:
+          OA_pattern: ".*"
+    project:
+      OA_i18n:
+        OA_title:
+          fr: Description du projet de recherche
+          en: Description of the research project
+        OA_description:
+          fr: Indiquez une description du projet de recherche
+          en: Give a description of the research project
+      OA_checker:
+        OA_name: OA_string
+        OA_params:
+          OA_pattern: ".*"
+    startDate:
+      OA_i18n:
+        OA_title:
+          fr: Date de début du projet
+          en: Project start date
+        OA_description:
+          fr: Indiquez la date de début du projet
+          en: Give the project start date
+      OA_checker:
+        OA_name: OA_date
+        OA_params:
+          OA_pattern: "dd/MM/yyyy"
+    endDate:
+      OA_i18n:
+        OA_title:
+          fr: Date de fin du projet
+          en: Project end date
+        OA_description:
+          fr: Indiquez la date de fin du projet
+          en: Give the project end date
+      OA_checker:
+        OA_name: OA_date
+        OA_params:
+          OA_pattern: "dd/MM/yyyy"
+OA_data:
+  especes:
+    OA_tags: [ context ]
+    OA_i18n:
+      OA_title:
+        fr: Espèces
+        en: Species
+      OA_description:
+        fr: Liste des espèces
+        en: Species list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{esp_nom}"
+        en: "{esp_nom}"
+      OA_description:
+        fr: "{esp_definition_fr}"
+        en: "{esp_definition_en}"
+    OA_naturalKey:
+      - esp_nom
+    OA_basicComponents:
+      esp_nom:
+        OA_tags: [ test ]
+        OA_exportHeader:
+          OA_title:
+            fr: "code"
+            en: "code"
+          OA_description:
+            fr: "nom codique"
+            en: "code name"
+      esp_definition_fr:
+        OA_exportHeader:
+          OA_title:
+            fr: "définition"
+          OA_description:
+            fr: "définition de l'espece"
+        OA_langRestrictions: [fr]
+      esp_definition_en:
+        OA_exportHeader:
+          OA_title:
+            en: "definition"
+          OA_description:
+            en: "species definition"
+        OA_langRestrictions: [en]
+      colonne_homonyme_entre_referentiels: null
+    OA_computedComponents:
+      my_computed_column:
+        OA_tags: [ __HIDDEN__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: "colonne calculée"
+            en: "computed column"
+          OA_description:
+            fr: "colonne calculant une constante"
+            en: "column calculating a constant"
+        OA_computation:
+          OA_expression: >
+            return "my value";
+          OA_groovyExceptions :
+            firstException:
+              fr: Ceci est la première exception
+              en: This is the first exception
+            secondException:
+              fr: Ceci est la seconde exception
+              en: This is the second exception
+  projet:
+    OA_tags: [ context, test ]
+    OA_i18n:
+      OA_title:
+        fr: Projet
+        en: Project
+      OA_description:
+        fr: Liste des projets
+        en: Project list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{nom_fr}"
+        en: "{nom_en}"
+      OA_description:
+        fr: "{definition_fr}"
+        en: "{definition_en}"
+    OA_naturalKey:
+      - nom_key
+    OA_basicComponents:
+      nom_key: null
+      nom_fr: null
+      nom_en: null
+      definition_fr: null
+      definition_en: null
+      colonne_homonyme_entre_referentiels: null
+  type_de_sites:
+    OA_tags: [ context ]
+    OA_naturalKey:
+      - tze_nom_key
+    OA_i18n:
+      OA_title:
+        fr: Types de sites
+        en: Sites types
+      OA_description:
+        fr: Liste des types de sites
+        en: Sites types list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: '{tze_nom_fr}'
+        en: '{tze_nom_en}'
+      OA_description:
+        fr: '{tze_definition_fr}'
+        en: '{tze_definition_en}'
+    OA_basicComponents:
+      tze_nom_key: null
+      tze_nom_fr: null
+      tze_nom_en: null
+      tze_definition_fr: null
+      tze_definition_en: null
+  sites:
+    OA_tags: [ context ]
+    OA_naturalKey:
+      - zet_chemin_parent
+      - zet_nom_key
+    OA_i18n:
+      OA_title:
+        fr: Site
+        en: Site
+      OA_description:
+        fr: Liste des sites
+        en: Sites list
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{zet_nom_fr}"
+        en: "{zet_nom_en}"
+      OA_description:
+        fr: "{zet_description_fr}"
+        en: "{zet_description_en}"
+    OA_basicComponents:
+      tze_type_nom:
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: type_de_sites
+              OA_isParent: true
+      zet_nom_key:
+        OA_importHeader:
+          OA_headerName: "Nom de la clé du site"
+      zet_nom_fr: null
+      zet_nom_en: null
+      zet_description_fr: null
+      zet_description_en: null
+      zet_chemin_parent:
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+              OA_isRecursive: true
+    OA_dynamicComponents:
+      proprieteDeTaxon:
+        OA_tags: [ test, context ]
+        OA_exportHeader:
+          OA_title:
+            fr: Type de Sites
+            en: Site Type
+          OA_description:
+            fr: Liste des types de Sites
+            en: Site Types list
+        OA_headerPrefix: "pt_"
+        OA_reference: type_de_sites
+        OA_referenceComponentToLookForHeader: tze_nom_key
+  pem:
+    OA_tags: [ context, test,  __DATA__, __ORDER_2__ ]
+    OA_i18n:
+      OA_title:
+        fr: Piégeage en Montée
+        en: Trap in ascent
+      OA_description:
+        fr: Données de piégeage en Montée
+        en: Trap in ascent data
+    OA_naturalKey:
+      - projet
+      - chemin
+      - plateforme
+      - date
+      - espece
+    OA_dataHeaderLine: 4
+    OA_dataFirstLine: 7
+    OA_basicComponents:
+      projet:
+        OA_required: true
+        OA_mandatory: true
+        OA_tags: [ test, __ORDER_2__ ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: projet
+      bassin:
+      site:
+      plateforme:
+      chemin:
+        OA_defaultValue:
+          OA_expression: >
+            return references.sites
+                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}
+                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}
+                    .getHierarchicalKey();
+          OA_references:
+            - sites
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+      date:
+        OA_tags: [ __ORDER_1__ ]
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      espece:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: especes
+      is_float_value:
+      ordre_affichage:
+    OA_validations:
+      reference:
+        OA_i18n:
+          fr: les reference
+        OA_required: true
+        OA_components: [ site ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+      floats:
+        OA_i18n:
+          fr: les décimaux
+        OA_components: [ is_float_value ]
+        OA_checker:
+          OA_name: OA_float
+      integer:
+        OA_i18n:
+          fr: les entiers
+        OA_components: [ ordre_affichage ]
+        OA_checker:
+          OA_name: OA_integer
+    OA_computedComponents:
+      site_bassin:
+        OA_tags: [ __HIDDEN__ ]
+        OA_computation:
+          OA_expression: >
+            return references.sites
+            .find{it.getNaturalKey().equals((String)datum.site.bassin)}
+            .getHierarchicalKey();
+          OA_references:
+            - sites
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+    OA_constantComponents:
+      tel_experimental_network:
+        OA_tags: [ test ]
+        OA_importHeaderTarget:
+          OA_rowNumber: 1
+          OA_columnNumber: 2 # ou OA_columnName: "réseau expe"
+        OA_exportHeader:
+          OA_title:
+            fr: "réseau expérimental"
+            en: "experimental network"
+          OA_description:
+            fr: "nom du réseau expérimental"
+            en: "experimental network name"
+            # nom de l'en-tête de colonne à utiliser pour l'export
+      tel_experimental_site:
+        OA_required: true # la valeur ne peut être vide
+        OA_importHeaderTarget:
+          OA_rowNumber: 5
+          OA_columnName: "site"
+        OA_defaultValue:
+          OA_expression: >
+            return references.sites
+                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}
+                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}
+                    .getHierarchicalKey();
+          OA_references:
+            - sites
+        OA_exportHeader:
+          OA_title:
+            fr: "Site expérimental"
+            en: "Experimental site"
+          OA_description:
+            fr: "Nom du site expérimental"
+            en: "experimental site name"
+        OA_checker:
+          OA_name: OA_reference # un computationChecker de type reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+    OA_patternComponents:
+      tel_value:
+        OA_patternForComponents: "(.*)_(.*)"
+        OA_required: false
+        OA_exportHeader:
+          OA_title:
+            fr: "valeur"
+            en: "value"
+          OA_description:
+            fr: "valeur de la variable"
+            en: "variable value"
+        OA_componentQualifiers:
+          - tel_date: #$1
+              OA_exportHeader:
+                OA_title:
+                  fr: "date fr"
+                  en: "date en"
+                OA_description:
+                  fr: "la date fr"
+                  en: "the date en"
+          - tel_chemin: #$2
+              OA_exportHeader:
+                OA_title:
+                  fr: "Chemin"
+                  en: "Path"
+                OA_description:
+                  fr: "le chemin"
+                  en: "The path"
+        OA_componentAdjacents:
+          -   #optional
+            swc_sd:   #optional
+              OA_importHeaderPattern: "{$1}_sd"  #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: écart_type
+                  en: standard_deviation
+              OA_required: false  #optional
+              OA_mandatory: false  #optional
+          -   #optional
+            swc_qc:   #optional
+              OA_importHeaderPattern: "{$1}_qc"  #optional
+              OA_exportHeader:   #mandatory
+                OA_title:   #optional
+                  fr: Indic de qualité
+                  en: Quality class
+                OA_description:   #optional
+                  fr: 0 pour une valeur valide ; 2 pour une valeur incorrecte
+                  en:  0 for valid value; 2 for bad value
+              OA_required: false  #optional
+              OA_mandatory: false  #optional
+    OA_submission:
+      OA_strategy: OA_VERSIONING
+      OA_fileName:
+        OA_filePattern: "(.*)_(.*)_(.*)_(.*).csv"
+        OA_matchPatternScopes:
+          - projet
+          - site_bassin
+          - __START_DATE__  #optional
+          - __END_DATE__  #optional
+      OA_submissionScope:
+        OA_referenceScopes:
+          - OA_i18n:
+              OA_title:
+                fr: Projets
+                en: Projects
+              OA_description:
+                fr: Choisissez le projet
+                en: Choose the project
+            OA_reference: projet
+            OA_component: projet
+            OA_exportHeader:
+              OA_title:
+                fr: projet
+                en: project
+              OA_description:
+                fr: le projet
+                en: les projects
+          - OA_i18n:
+              OA_title:
+                fr: Localisation
+                en: Localization
+              OA_description:
+                fr: Choississez la localisation
+                en: Choose the localization
+            OA_reference: sites
+            OA_component: site_bassin
+            OA_exportHeader:
+              OA_title:
+                fr: site
+                en: site
+              OA_description:
+                fr: le site
+                en: the site
+        OA_timeScope:
+          OA_component: date

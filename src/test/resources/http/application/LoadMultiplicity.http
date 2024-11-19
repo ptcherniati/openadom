@@ -1,0 +1,632 @@
+### login
+
+POST localhost:8081/api/v1/login?login=poussin&password=xxxx
+Content-Type: application/json
+
+{}
+
+### Load Application
+POST localhost:8081/api/v1/applications/multiplicity
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="element-name"
+Content-Type: text/plain
+
+L'application couteau suisse
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="multiplicity.yaml"
+Content-Type: application/json
+
+< ../../data/multiplicity/multiplicity.yaml
+--WebAppBoundary--
+
+### add reference1
+POST localhost:8081/api/v1/applications/multiplicity/references/reference1
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="reference1.csv"
+Content-Type: application/json
+
+< ../../data/multiplicity/references/reference1.csv
+--WebAppBoundary--
+
+### add reference2
+POST localhost:8081/api/v1/applications/multiplicity/references/reference2
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="reference2.csv"
+Content-Type: application/json
+
+< ../../data/multiplicity/references/reference2.csv
+--WebAppBoundary--
+
+### add data
+POST localhost:8081/api/v1/applications/multiplicity/data/bugs
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="bugs.csv"
+Content-Type: application/json
+
+< ../../data/multiplicity/data/bugs.csv
+--WebAppBoundary--
+
+### get data all
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json
+
+### get data with select
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json?
+    downloadDatasetQuery=
+    {"offset":0,"limit":10,"componentSelects":[],"componentFilters":[{"componentKey":"references","filters":["toto__toto1"]}],"componentOrderBy":[],"authorizationDescriptions":[]}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### get data by date
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json?
+    downloadDatasetQuery=
+	{"offset":0,"limit":10,"componentSelects":[],"componentFilters":[{"componentKey":"references","filters":["toto__toto1"]},{"componentKey":"date","filters":["23/01/2002"]}],"componentOrderBy":[],"authorizationDescriptions":[]}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### get data dates as array
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json?
+    downloadDatasetQuery=
+	{"offset":0,"limit":10,"componentSelects":[],"componentFilters":[{"componentKey":"dates","filters":["24/01/2002"]}],"componentOrderBy":[],"authorizationDescriptions":[]}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### get data by bug and date by interval
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json?
+    downloadDatasetQuery=
+	{"offset":0,"limit":10,"componentSelects":[],"componentFilters":[{"componentKey":"date","intervalsValues":[{"from":1719784800000,"to":1719871200000}]}],"componentOrderBy":[],"authorizationDescriptions":[]}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### get data for bug and date by interval for array
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json?
+    downloadDatasetQuery=
+	{"offset":0,"limit":10,"componentSelects":[],"componentFilters":[{"componentKey":"dates","intervalsValues":[{"from":"23/01/2002","to":"24/01/2002"}]}],"componentOrderBy":[],"authorizationDescriptions":[]}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### get data by bug and numeric by interval
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json?
+    downloadDatasetQuery=
+	{"offset":0,"limit":10,"componentSelects":[],"componentFilters":[{"componentKey":"date","filters":[1011783600000]},{"componentKey":"duration","intervalsValues":[{"from":2,"to":4}]}],"componentOrderBy":[],"authorizationDescriptions":[]}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+### get data by bug and numeric by interval for array
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json?
+    downloadDatasetQuery=
+	{"offset":0,"limit":10,"componentSelects":[],"componentFilters":[{"componentKey":"date","filters":[1011783600000]},{"componentKey":"duration","intervalsValues":[{"from":2,"to":4}]},{"componentKey":"durations","intervalsValues":[{"from":2,"to":4}]}],"componentOrderBy":[],"authorizationDescriptions":[]}
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+%}
+
+
+### get data with all select, filter, order by
+GET http://localhost:8081/api/v1/applications/multiplicity/data/bugs/json?
+    downloadDatasetQuery=
+    {
+        "componentSelects": [
+            {
+            "variable": "bug",
+            "component": "no"
+            },
+            {
+            "variable": "bug",
+            "component": "nos"
+            },
+            {
+            "variable": "bug",
+            "component": "date"
+            },
+            {
+            "variable": "bug",
+            "component": "dates"
+            },
+            {
+            "variable": "bug",
+            "component": "projet"
+            },
+            {
+            "variable": "bug",
+            "component": "projets"
+            },
+            {
+            "variable": "bug",
+            "component": "fichier"
+            },
+            {
+            "variable": "bug",
+            "component": "fichiers"
+            },
+            {
+            "variable": "bug",
+            "component": "duration"
+            },
+            {
+            "variable": "bug",
+            "component": "durations"
+            },
+            {
+            "variable": "bug",
+            "component": "reference"
+            },
+            {
+            "variable": "bug",
+            "component": "references"
+            }
+        ],
+        "componentFilters": [
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "no"
+               },
+               "filter": "1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "no"
+               },
+               "intervalValues": {
+                  "from": "0",
+                  "to": "4"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "nos"
+               },
+               "filter": "1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "nos"
+               },
+               "intervalValues": {
+                  "from": "0",
+                  "to": "4"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "date"
+               },
+               "filter": "23/01/2002"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "date"
+               },
+               "intervalValues": {
+                  "from": "23/01/2002",
+                  "to": "24/01/2002"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "dates"
+               },
+               "filter": "23/01/2002"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "dates"
+               },
+               "intervalValues": {
+                  "from": "23/01/2002",
+                  "to": "24/01/2002"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "projet"
+               },
+               "filter": "1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "projet"
+               },
+               "intervalValues": {
+                  "from": "1",
+                  "to": "2"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "projets"
+               },
+               "filter": "1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "projets"
+               },
+               "intervalValues": {
+                  "from": "1",
+                  "to": "2"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "duration"
+               },
+               "filter": "3.20"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "duration"
+               },
+               "intervalValues": {
+                  "from": "3",
+                  "to": "4"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "durations"
+               },
+               "filter": "3.20"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "durations"
+               },
+               "intervalValues": {
+                  "from": "3",
+                  "to": "4"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "reference"
+               },
+               "filter": "toto__toto1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "references"
+               },
+               "filter": "toto__toto1"
+            }
+        ],
+        "componentOrderBy": [
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "no"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "nos"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "date"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "dates"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "projet"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "projets"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "fichier"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "fichiers"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "duration"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "durations"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "reference"
+              }
+            },
+            {
+               "componentKey": {
+                "variable": "bug",
+                "component": "references"}}
+        ]
+   }
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.test("test no", function() {
+        client.assert(response.body.rows[0].values.bug.no == 1, "no = 1");
+    });
+    client.test("test date", function() {
+        client.assert(response.body.rows[0].values.bug.date == 'date:2002-01-23T00:00:00:dd/MM/yyyy', "date = 'date:2002-01-23T00:00:00:dd/MM/yyyy'");
+    });
+    client.test("test duration", function() {
+        client.assert(response.body.rows[0].values.bug.duration == 3.2, "duration = 3.2");
+    });
+    client.test("test reference", function() {
+        client.assert(response.body.rows[0].values.bug.reference == 'toto__toto1', "reference = 'toto__toto1'");
+    });
+    client.test("test fichier", function() {
+        client.assert(response.body.rows[0].values.bug.fichier == 'file1', "fichier = 'file1");
+    });
+    client.test("test nos", function() {
+        client.assert(response.body.rows[0].values.bug.nos == 1, "bad nos");
+    });
+    client.test("test dates", function() {
+        client.assert(response.body.rows[0].values.bug.dates.every((val, index) => val === [
+            'date:2002-01-23T00:00:00:dd/MM/yyyy',
+            'date:2002-01-24T00:00:00:dd/MM/yyyy'
+        ][index]) , "bad dates");
+    });
+    client.test("test durations", function() {
+        client.assert(response.body.rows[0].values.bug.durations.every((val, index) => val === [
+            3.2,
+            5.4
+        ][index]) , "bad duration");
+    });
+    client.test("test reference", function() {
+        client.assert(response.body.rows[0].values.bug.references.every((val, index) => val === [
+            "toto__toto1",
+            "tutu__tutu1"
+        ][index]) , "bad reference");
+    });
+    client.test("test fichiers", function() {
+        client.assert(response.body.rows[0].values.bug.fichiers.every((val, index) => val === [
+            "file1",
+            "file2"
+        ][index]) , "bad fichiers");
+    });
+%}
+
+### get data with all select, filter, order by
+DELETE http://localhost:8081/api/v1/applications/multiplicity/data/bugs?
+    downloadDatasetQuery=
+    {
+        "componentFilters": [
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "no"
+               },
+               "filter": "1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "no"
+               },
+               "intervalValues": {
+                  "from": "0",
+                  "to": "4"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "nos"
+               },
+               "filter": "1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "nos"
+               },
+               "intervalValues": {
+                  "from": "0",
+                  "to": "4"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "date"
+               },
+               "filter": "23/01/2002"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "date"
+               },
+               "intervalValues": {
+                  "from": "23/01/2002",
+                  "to": "24/01/2002"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "dates"
+               },
+               "filter": "23/01/2002"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "dates"
+               },
+               "intervalValues": {
+                  "from": "23/01/2002",
+                  "to": "24/01/2002"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "projet"
+               },
+               "filter": "1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "projet"
+               },
+               "intervalValues": {
+                  "from": "1",
+                  "to": "2"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "projets"
+               },
+               "filter": "1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "projets"
+               },
+               "intervalValues": {
+                  "from": "1",
+                  "to": "2"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "duration"
+               },
+               "filter": "3.20"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "duration"
+               },
+               "intervalValues": {
+                  "from": "3",
+                  "to": "4"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "durations"
+               },
+               "filter": "3.20"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "durations"
+               },
+               "intervalValues": {
+                  "from": "3",
+                  "to": "4"
+               }
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "reference"
+               },
+               "filter": "toto__toto1"
+            },
+            {
+               "componentKey": {
+                  "variable": "bug",
+                  "component": "references"
+               },
+               "filter": "toto__toto1"
+            }
+        ]
+   }
+
+> {%
+    client.test("Request executed successfully", function() {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+    client.test("test no", function() {
+        client.assert(response.body.length == 36, "response is not an uuid");
+    });
+%}
+
