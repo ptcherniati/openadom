@@ -1,8 +1,10 @@
 package fr.inra.oresing.rest.model.application;
 
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,7 +28,7 @@ public record ApplicationResult(
         Map<String, AdditionalFile> additionalFiles,
         ApplicationResult.RightsRequest rightsRequest,
         Configuration configuration,
-        Boolean isAdministrator,
+        fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult isAdministrator,
         Map<String,Set<String>> dependantNodesByDataName
 ) {
 

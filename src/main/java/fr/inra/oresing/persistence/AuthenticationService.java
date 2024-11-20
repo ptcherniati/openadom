@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.mail.EmailService;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.rest.CreateUserRequest;
+import fr.inra.oresing.rest.model.authorization.CurrentUserRolesResult;
 import fr.inra.oresing.rest.CreateUserResult;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.domain.exceptions.authentication.authentication.NotopenAdomAdminException;
@@ -68,7 +69,6 @@ public class AuthenticationService {
 
     /**
      * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
-     *
      */
     public OreSiRoleToAccessDatabase setRoleForClient() {
         final OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClient().role();
@@ -78,7 +78,6 @@ public class AuthenticationService {
 
     /**
      * Prend le role du openAdomAdmin qui a le droit de tout faire
-     *
      */
     public OreSiopenAdomAdminRole setRoleAdmin() {
         setRole(OreSiRole.openAdomAdmin());
@@ -88,7 +87,6 @@ public class AuthenticationService {
     /**
      * Prend le role du user passe en parametre, les requetes suivant ne pourra
      * pas faire des choses que l'utilisateur n'a pas le droit de faire
-     *
      */
     OreSiRoleToAccessDatabase setRole(final OreSiRoleToAccessDatabase roleToAccessDatabase) {
         db.setRole(roleToAccessDatabase);
@@ -128,7 +126,12 @@ public class AuthenticationService {
         final Predicate<OreSiUser> checkPassword = user -> BCrypt.verifyer()
                 .verify(password.toCharArray(), user.getPassword().toCharArray())
                 .verified;
-        CurrentUserRoles currentUserRoles = getCurrentUserRoles(getByIdOrLogin(login).getId().toString());
+        CurrentUserRoles currentUserRoles = Optional.ofNullable(login)
+                .map(this::getByIdOrLogin)
+                .map(OreSiUser::getId)
+                .map(UUID::toString)
+                .map(this::getCurrentUserRoles)
+                .orElse(null);
         LoginAdminResult loginAdminResult = userRepository.findByLogin(login)
                 .filter(checkPassword)
                 .map(user -> toLoginResult(user, currentUserRoles))
@@ -190,7 +193,7 @@ public class AuthenticationService {
                 oreSiUser.getLogin(),
                 oreSiUser.getEmail(),
                 oreSiUser.getAccountstate().name(),
-                currentUserRoles,
+                CurrentUserRolesResult.of(currentUserRoles),
                 oreSiUser.getAuthorizations(),
                 oreSiUser.getChartes()
         );
@@ -484,14 +487,15 @@ public class AuthenticationService {
         return rolesForRole.memberOf().contains(role.getAsSqlRole());
     }
 
-    public CurrentUserRoles getCurrentUserRoles(){
+    public CurrentUserRoles getCurrentUserRoles() {
         return userRepository.getRolesForCurrentUser();
     }
-    public CurrentUserRoles getCurrentUserRoles(String userIdOrRoleName){
+
+    public CurrentUserRoles getCurrentUserRoles(String userIdOrRoleName) {
         Optional<OreSiUser> oreSiUser = Optional.ofNullable(userIdOrRoleName)
                 .flatMap(userRepository::findByLoginOrId);
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser(userIdOrRoleName);
-        if(oreSiUser.isPresent()) {
+        if (oreSiUser.isPresent()) {
             rolesForCurrentUser = rolesForCurrentUser.withUSer(oreSiUser.get());
         }
         return rolesForCurrentUser;
@@ -502,7 +506,7 @@ public class AuthenticationService {
     }
 
     public List<LoginApplicationResult> getApplicationAuthorizations(Application application) {
-        Function<Map<String, Timestamp>, Timestamp> getCharteTimestamp = chartes->chartes.get(application.getId().toString());
+        Function<Map<String, Timestamp>, Timestamp> getCharteTimestamp = chartes -> chartes.get(application.getId().toString());
         CurrentUserRoles currentUserRolesForCurrentUser = getCurrentUserRoles();
         if (currentUserRolesForCurrentUser.applicationManagerOf(application)) {
             return userRepository.findAll().stream()
@@ -558,14 +562,14 @@ public class AuthenticationService {
                     .filter(oreSiUser -> OreSiUser.OreSiUserStates.active == oreSiUser.getAccountstate())
                     .map(user -> {
                         OreSiUserRole userRole = getUserRole(user.getId());
-                        return toLoginResult(user,getCurrentUserRoles(userRole.getAsSqlRole()));
+                        return toLoginResult(user, getCurrentUserRoles(userRole.getAsSqlRole()));
                     })
                     .collect(Collectors.toList());
         } else if (currentUserRoles.isApplicationCreator()) {
             return userRepository.findAll().stream()
                     .map(user -> {
                         OreSiUserRole userRole = getUserRole(user.getId());
-                        return toLoginResult(user,getCurrentUserRoles(userRole.getAsSqlRole()));
+                        return toLoginResult(user, getCurrentUserRoles(userRole.getAsSqlRole()));
                     })
                     .collect(Collectors.toList());
         } else {
@@ -574,7 +578,16 @@ public class AuthenticationService {
     }
 
     public OreSiUser getByIdOrLogin(final String userIdOrLogin) {
-        return userRepository.findByLogin(userIdOrLogin).orElseGet(() -> userRepository.findById(UUID.fromString(userIdOrLogin)));
+        return userRepository.findByLogin(userIdOrLogin)
+                .orElseGet(() -> {
+                    UUID id = null;
+                    try {
+                        id = UUID.fromString(userIdOrLogin);
+                    } catch (Exception e) {
+                        return null;
+                    }
+                    return userRepository.findById(id);
+                });
     }
 
     @Transactional

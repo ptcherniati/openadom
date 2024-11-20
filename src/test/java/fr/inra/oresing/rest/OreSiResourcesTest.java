@@ -963,8 +963,8 @@ public class OreSiResourcesTest {
             Assert.assertEquals(1,
                     Arrays.stream(getApplicationsFlux(authCookie, "ALL"))
                             .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class)))
-                            .filter(s -> JsonPath.parse(s).read("$.result.data", List.class).contains("sites"))
-                            .filter(s -> !JsonPath.parse(s).read("$.result.data", List.class).contains("type de fichiers"))
+                            .filter(s -> JsonPath.parse(s).read("$.result.application.data", List.class).contains("sites"))
+                            .filter(s -> !JsonPath.parse(s).read("$.result.application.data", List.class).contains("type de fichiers"))
                             .count()
             );
             mockMvc.perform(get("/api/v1/applications/monsore")

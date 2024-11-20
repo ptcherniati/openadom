@@ -30,6 +30,7 @@ import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
 import fr.inra.oresing.domain.groovy.GroovyContextHelper;
+import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
@@ -45,6 +46,7 @@ import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exception.AdditionalFileParamsParsingResult;
 import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFileParamsSearchException;
+import fr.inra.oresing.rest.model.application.ApplicationLightResult;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
@@ -226,7 +228,7 @@ public class OreSiService {
         final String nameOrId = application.getId().toString();
         Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizations = withDatatypes || withReferenceType ? getAuthorizationsDatatypesRights(nameOrId, datatypeComponents.keySet()) : new HashMap<>();
         final Configuration configuration = withConfiguration ? application.getConfiguration() : null;
-        final Boolean isAdministrator = isAdmnistrator(application);
+        CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
         final ApplicationResult applicationResult = new ApplicationResult(
                 application.getId().toString(),
                 Optional.ofNullable(application).map(Application::getName).orElseThrow(IllegalArgumentException::new),
@@ -247,7 +249,7 @@ public class OreSiService {
                 additionalFilesWithFields,
                 rightsRequest,
                 configuration,
-                isAdministrator,
+                CurrentApplicationUserRolesResult.of(currentUserRoles, application.getId()),
                 application.findDependantNodesByDataName());
         return applicationResult;
     }
@@ -691,6 +693,7 @@ public class OreSiService {
         final Stream<Application> applicationForAdmin = repository.application().findAllStream();
         final AtomicLong progres = new AtomicLong(0);
         progression.fluxSink().next(new ReactiveTypeProgress(progres.get()));
+        CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
         applicationForAdmin
                 .map(application -> applicationForUser.stream()
                         .filter(app -> app.getId().equals(application.getId()))
@@ -698,6 +701,7 @@ public class OreSiService {
                         .orElse(application.applicationAccordingToRights())
                 )
                 .map(application -> application.filterFieldsAndHidden(filters))
+                .map(application -> ApplicationLightResult.of(application,currentUserRoles))
                 .forEach(application -> {
                     progression.fluxSink().next(new ReactiveTypeResult(application));
                     final double prog = progres.incrementAndGet() / ((double) applicationForUser.size());
@@ -938,11 +942,6 @@ public class OreSiService {
         authenticationService.setRoleForClient();
         UUID store = repository.getRepository(application).rightsRequestRepository().store(rightsRequest);
         return store;
-    }
-
-    public Boolean isAdmnistrator(final Application application) {
-        UUID requestUserId = request.getRequestUserId();
-        return authorizationService.isApplicationCreator(application, requestUserId);
     }
 
     public void getCharte(final OutputStream out, final HttpServletResponse response, final String nameOrId, final AdditionalFilesInfos additionalFilesInfos) throws IOException {
