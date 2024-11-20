@@ -128,7 +128,7 @@ public class AuthenticationService {
         final Predicate<OreSiUser> checkPassword = user -> BCrypt.verifyer()
                 .verify(password.toCharArray(), user.getPassword().toCharArray())
                 .verified;
-        CurrentUserRoles currentUserRoles = getCurrentUserRoles();
+        CurrentUserRoles currentUserRoles = getCurrentUserRoles(getByIdOrLogin(login).getId().toString());
         LoginAdminResult loginAdminResult = userRepository.findByLogin(login)
                 .filter(checkPassword)
                 .map(user -> toLoginResult(user, currentUserRoles))
