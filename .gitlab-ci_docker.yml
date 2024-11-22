@@ -24,9 +24,12 @@ development:
     - IMAGE_NAME_WITH_COMMIT_ID="$IMAGE_NAME-$CI_COMMIT_SHORT_SHA"
     - echo "Docker Image Name         = $IMAGE_NAME "
     - echo "Docker Image Name With ID = $IMAGE_NAME_WITH_COMMIT_ID"
+    - echo "Building Docker image     = $IMAGE_NAME"
     - docker build -f docker/Dockerfile -t $IMAGE_NAME .
+    - echo  "Pushing Docker image to registry = $IMAGE_NAME"
     - docker push $IMAGE_NAME 
     - docker tag  $IMAGE_NAME $IMAGE_NAME_WITH_COMMIT_ID
+    - echo  "Pushing tagged Docker image to registry = $IMAGE_NAME_WITH_COMMIT_ID"
     - docker push $IMAGE_NAME_WITH_COMMIT_ID
   rules:
     # Trigger on 'develop' branch automatically, disable for 'main' and tags, manual for others
@@ -51,9 +54,12 @@ preprod:
     - IMAGE_NAME_WITH_COMMIT_ID="$IMAGE_NAME-$CI_COMMIT_SHORT_SHA"
     - echo "Docker Image Name         = $IMAGE_NAME "
     - echo "Docker Image Name With ID = $IMAGE_NAME_WITH_COMMIT_ID"
+    - echo "Building Docker image     = $IMAGE_NAME"
     - docker build -f docker/Dockerfile -t $IMAGE_NAME .
+     echo  "Pushing Docker image to registry = $IMAGE_NAME"
     - docker push $IMAGE_NAME 
     - docker tag  $IMAGE_NAME $IMAGE_NAME_WITH_COMMIT_ID
+    - echo  "Pushing tagged Docker image to registry = $IMAGE_NAME_WITH_COMMIT_ID"
     - docker push $IMAGE_NAME_WITH_COMMIT_ID
   rules:
     # Automatically trigger for 'main' branch
@@ -84,9 +90,9 @@ production:
         # Validate tag format with grep
         if echo "$CI_COMMIT_TAG" | grep -qE "^[0-9]+(\.[0-9]+){0,2}$" && ! echo "$CI_COMMIT_TAG" | grep -q "\.$"; then
           echo  "Tag format is valid = $CI_COMMIT_TAG"
-          echo  "Building Docker image..."
+          echo  "Building Docker image = $OPENADOM_DOCK_REG:$CI_COMMIT_TAG"
           docker build -f docker/Dockerfile -t $OPENADOM_DOCK_REG:$CI_COMMIT_TAG .
-          echo  "Pushing Docker image to registry..."
+          echo  "Pushing Docker image to registry : $OPENADOM_DOCK_REG:$CI_COMMIT_TAG"
           docker push $OPENADOM_DOCK_REG:$CI_COMMIT_TAG
         else
           echo "Invalid tag format = $CI_COMMIT_TAG"
