@@ -701,7 +701,7 @@ public class OreSiService {
                         .orElse(application.applicationAccordingToRights())
                 )
                 .map(application -> application.filterFieldsAndHidden(filters))
-                .map(application -> ApplicationLightResult.of(application,currentUserRoles))
+                .map(application -> ApplicationLightResult.of(application, currentUserRoles))
                 .forEach(application -> {
                     progression.fluxSink().next(new ReactiveTypeResult(application));
                     final double prog = progres.incrementAndGet() / ((double) applicationForUser.size());

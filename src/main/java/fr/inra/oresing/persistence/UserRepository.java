@@ -111,7 +111,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                       SELECT r.oid, r.rolname, m.member, m.roleid
                       FROM pg_roles r
                       JOIN pg_auth_members m ON r.oid = m.roleid
-                      WHERE r.rolname = ANY(:rolenames)
+                      WHERE r.rolname = ANY(:roleNames)
                     UNION ALL
                       SELECT r.oid, r.rolname, m.member, m.roleid
                       FROM pg_roles r

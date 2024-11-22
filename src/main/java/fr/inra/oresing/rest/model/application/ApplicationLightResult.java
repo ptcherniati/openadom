@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.model.application;
 
+import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.Node;
@@ -15,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.sql.Timestamp;
+import java.time.Instant;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -28,7 +30,11 @@ public record ApplicationLightResult(
 ) {
 
     public static ApplicationLightResult of(Application application, CurrentUserRoles currentUserRoles) {
-        Timestamp charteSignedAt = currentUserRoles.user().getChartes().get(application.getId());
+        Timestamp charteSignedAt = Optional.ofNullable(currentUserRoles)
+                .map(CurrentUserRoles::user)
+                .map(OreSiUser::getChartes)
+                .map(chartes->chartes.get(application.getId()))
+                .orElse(null);
         Timestamp lastChartes = application.getLastChartes();
         return new ApplicationLightResult(
                 application,
