@@ -56,7 +56,7 @@ preprod:
     - echo "Docker Image Name With ID = $IMAGE_NAME_WITH_COMMIT_ID"
     - echo "Building Docker image     = $IMAGE_NAME"
     - docker build -f docker/Dockerfile -t $IMAGE_NAME .
-     echo  "Pushing Docker image to registry = $IMAGE_NAME"
+    - echo  "Pushing Docker image to registry = $IMAGE_NAME"
     - docker push $IMAGE_NAME 
     - docker tag  $IMAGE_NAME $IMAGE_NAME_WITH_COMMIT_ID
     - echo  "Pushing tagged Docker image to registry = $IMAGE_NAME_WITH_COMMIT_ID"
