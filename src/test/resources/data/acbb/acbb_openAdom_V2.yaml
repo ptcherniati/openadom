@@ -695,7 +695,35 @@ OA_data:
                 }
         OA_components:   #optional
           - flx_fc_gf_value #optional
-
+    OA_submission:   #optional
+      OA_strategy: OA_VERSIONING  #optional
+      OA_submissionScope:   #mandatory
+        OA_referenceScopes:   #optional
+          -   #optional
+            OA_component: sit_key  #mandatory
+            OA_reference: tr_sites_sit  #optional
+            OA_i18n:   #mandatory
+              OA_title:   #optional
+                fr: Site
+                en: Site
+              OA_description:   #optional
+                fr: Référentiel des Sites
+                en: Site repository
+            OA_exportHeader:   #mandatory
+              OA_title:   #optional
+                fr: Site
+                en: Site
+              OA_description:   #optional
+                fr: Référentiel des Sites
+                en: Site repository
+        OA_timeScope:   #optional
+          OA_component: flx_date  #mandatory
+      OA_fileName:   #optional
+        OA_filePattern: (.*)_(.*)_(.*).csv  #mandatory
+        OA_matchPatternScopes:   #optional
+          - sit_key  #optional
+          - __START_DATE__  #optional
+          - __END_DATE__  #optional
     OA_computedComponents:
       flx_date:
         OA_exportHeader:
