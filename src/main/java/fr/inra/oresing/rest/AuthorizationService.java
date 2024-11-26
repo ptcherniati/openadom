@@ -556,7 +556,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .toList();
     }
 
-    private Map<String, List<GetGrantableResult.ReferenceScope>> getAuthorizationScopes(final Application application, final MenuType menuType) {
+    public Map<String, List<GetGrantableResult.ReferenceScope>> getAuthorizationScopes(final Application application, final MenuType menuType) {
         Map<ReferenceScope.Context, List<ReferenceScope.TreeNode>> nodesByContext =
                 repository.getRepository(application).data()
                         .getNodesForMenu(menuType)
