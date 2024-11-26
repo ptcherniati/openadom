@@ -18,6 +18,7 @@ import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
+import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQueryOnlyMetadata;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
@@ -41,6 +42,7 @@ import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFileParamsSearchException;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
+import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import fr.inra.oresing.rest.model.data.*;
 import fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery;
 import fr.inra.oresing.rest.model.reference.GetReferenceResult;
@@ -918,14 +920,15 @@ public class OreSiResources {
                                 )
                         )
                         .orElseGet(LinkedHashMap::new);
-
+        Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = service.getAuthorizationScopes(application, MenuType.submission);
 
         return ResponseEntity.ok(new GetDataResult(
                 variables,
                 dataRowResults,
                 totalRows,
                 checkedFormatcomponents,
-                referenceTypeForReferencingColumns));
+                referenceTypeForReferencingColumns,
+                referenceScopes));
     }
 
     /**

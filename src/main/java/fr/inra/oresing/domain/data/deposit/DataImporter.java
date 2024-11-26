@@ -473,6 +473,9 @@ public class DataImporter {
 
     private fr.inra.oresing.domain.Authorization getLineAuthorization(DataDatum referenceDatum, long lineNumber, ReportErrors errors) {
         final Authorization authorization = dataImporterContext.getAuthorization();
+        if(authorization==null){
+            return new fr.inra.oresing.domain.Authorization();
+        }
 
         BinaryFileDataset binaryFileDataset = Optional.ofNullable(dataImporterContext.getPublishContextBuilder())
                 .map(PublishContext.PublishContextBuilder::build)

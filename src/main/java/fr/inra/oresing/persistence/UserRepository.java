@@ -111,7 +111,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                       SELECT r.oid, r.rolname, m.member, m.roleid
                       FROM pg_roles r
                       JOIN pg_auth_members m ON r.oid = m.roleid
-                      WHERE r.rolname = ANY(:rolenames)
+                      WHERE r.rolname = ANY(:roleNames)
                     UNION ALL
                       SELECT r.oid, r.rolname, m.member, m.roleid
                       FROM pg_roles r
@@ -164,7 +164,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                     WHERE m_1.member = t_1.grpid
                 )
                 SELECT COALESCE(:rolename, CURRENT_USER) currentuser,r.rolname AS usrname,t.issuper issuper,
-                       array_agg(m.rolname) memberof
+                       array_agg(DISTINCT m.rolname) memberof
                 FROM membership_tree t, pg_roles r, pg_roles m
                 WHERE t.grpid = m.oid AND t.userid = r.oid
                 AND COALESCE(:rolename, CURRENT_USER)=r.rolname

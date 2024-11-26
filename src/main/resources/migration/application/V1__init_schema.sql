@@ -157,18 +157,21 @@ with recursive d(key, "data") as (
                        treetype,
                        key,
                        authorizationscope.component,
-                       Coalesce(("configuration" #> array['i18n', 'data', key, 'components']  #>> array[authorizationscope.component,'exportheader', 'fr'] ),authorizationscope.component) exportheader_fr,
-                       Coalesce(("configuration" #> array['i18n', 'data', key, 'components']  #>> array[authorizationscope.component,'exportheader', 'en'] ),authorizationscope.component) exportheader_en,
-                       authorizationscope.data reference,
+                       Coalesce(("configuration" #> array['i18n', 'data', key, 'components']  #>> array[authorizationscope.component,'exportheader', 'title', 'fr'] ),authorizationscope.component) exportheader_fr,
+                       Coalesce(("configuration" #> array['i18n', 'data', key, 'components']  #>> array[authorizationscope.component,'exportheader', 'title', 'en'] ),authorizationscope.component) exportheader_en,
+                        CASE
+                        WHEN treetype = 'authorization' then authorizationscope.data
+                        WHEN treetype = 'submission' then authorizationscope.reference
+                        end  reference,
                        "configuration"
                    from
                        d,
                        jsonb_to_recordset(
                            CASE
                                WHEN treetype = 'authorization' then "configuration"#> array['datadescription', key, 'authorization', 'authorizationscope']
-                               WHEN treetype = 'submission' then "configuration"#> array['datadescription', key, 'authorization', 'authorizationscope']
+                               WHEN treetype = 'submission' then "configuration"#> array['datadescription', key, 'submission', 'submissionscope', 'referencescopes']
                                end
-                       ) as authorizationscope(component text, "data" text)
+                       ) as authorizationscope(component text, reference text, "data" text)
                ),
                nodes as (
                    select
@@ -196,8 +199,8 @@ with recursive d(key, "data") as (
                             'value', node[2],
                             'node_key', rv2.hierarchicalkey,
                             'node_NK', rv2.naturalkey,
-                            'fr', coalesce(rv2.refvalues ->> '__display___display_fr',rv2.refvalues ->> '__display___display_default') ,
-                            'en', coalesce(rv2.refvalues ->> '__display___display_en',rv2.refvalues ->> '__display___display_default')
+                            'fr', coalesce(rv2.refvalues ->> '__display_fr',rv2.refvalues ->> '__display_default') ,
+                            'en', coalesce(rv2.refvalues ->> '__display_en',rv2.refvalues ->> '__display_default')
                         )
                            )::node node
                    from

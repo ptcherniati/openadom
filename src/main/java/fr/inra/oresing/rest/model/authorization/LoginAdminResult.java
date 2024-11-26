@@ -16,12 +16,12 @@ public record LoginAdminResult(UUID id,
                                boolean openAdomAdmin,
                                Set<String> authorizations,
                                Map<String, Timestamp> chartes,
-                               CurrentUserRoles currentUserRoles) {
+                               CurrentUserRolesResult currentUserRoles) {
     public LoginAdminResult(UUID id,
                             String login,
                             String email,
                             String state,
-                            CurrentUserRoles currentUserRoles,
+                            CurrentUserRolesResult currentUserRoles,
                             Set<String> authorizations,
                             Map<String, Timestamp> chartes) {
         this(id,
