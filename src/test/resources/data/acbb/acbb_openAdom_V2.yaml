@@ -10,7 +10,7 @@ OA_application:
       en: "Agroecosystems, Biogeochemical Cycles and Biodiversity"
   OA_comment: "L'application ACBB V2"
   OA_name: acbb_openadom_v2
-  OA_version: 1.0.4
+  OA_version: 1.0.8
 OA_data:
   tr_agroecosystemes_agr:
     OA_i18n:
@@ -21,7 +21,7 @@ OA_data:
         fr: Les agroécosystèmes représentent des regroupements par type de traitement
         en: Agroecosystems represent groupings by type of treatment
     OA_i18nDisplayPattern:   #mandatory
-      OA_title:   #optional
+      OA_title:   
         fr: "{agr_agroecosystem_fr}"
         en: "{agr_agroecosystem_en}"
     OA_naturalKey: [agr_agroecosystem_key]
@@ -34,14 +34,14 @@ OA_data:
             en: key
       agr_agroecosystem_fr:
         OA_importHeader: Agroécosystème_fr
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Agroécosysteme
       agr_agroecosystem_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en: Agroecosystem
@@ -67,7 +67,7 @@ OA_data:
         fr: sites d'etudes
         en: study sites
     OA_i18nDisplayPattern:   #mandatory
-      OA_title:   #optional
+      OA_title:   
         fr: "{sit_site_fr}"
         en: "{sit_site_en}"
     OA_naturalKey: [sit_site_key]
@@ -100,15 +100,15 @@ OA_data:
             en: key
         OA_importHeader: nom du site_key
       sit_site_fr:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Site
         OA_importHeader: nom du site_fr
       sit_site_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en: Site
@@ -208,15 +208,15 @@ OA_data:
             en: key
         OA_importHeader: code_key
       unit_code_fr:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Code de l'unité
         OA_importHeader: code_fr
       unit_code_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en: Unit code
@@ -228,15 +228,15 @@ OA_data:
             en: key name
         OA_importHeader: nom_key
       unit_nom_fr:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Nom
         OA_importHeader: nom_fr
       unit_nom_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en: Name
@@ -264,29 +264,29 @@ OA_data:
             en: code
         OA_importHeader: code
       mod_nom_fr:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Nom
         OA_importHeader: nom_fr
       mod_nom_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en: Name
         OA_importHeader: nom_en
       mod_description_fr:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Description
         OA_importHeader: description_fr
       mod_description_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en: Description
@@ -346,8 +346,8 @@ OA_data:
           OA_params:
             OA_pattern: dd/MM/yyyy
       vdt_date_fin:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Date de fin
@@ -358,15 +358,15 @@ OA_data:
           OA_params:
             OA_pattern: dd/MM/yyyy
       vdt_commentaire_fr:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Commentaire
         OA_importHeader: commentaire_fr
       vdt_commentaire_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en: Comment
@@ -393,10 +393,10 @@ OA_data:
         fr: les sites sont divisés en parcelles sur lesquelles on applique un traitement. Il peut y avoir des blocs de répétitions de parcelles
         en: Sites are divided into plots on which a treatment is applied. There may be blocks of plot repetitions
     OA_i18nDisplayPattern:   #mandatory
-      OA_title:   #optional
+      OA_title:   
         fr: "{par_parcelle_fr}"
         en: "{par_parcelle_en}"
-      OA_description:   #optional
+      OA_description:   
         fr: "{par_commentaire_fr}"
         en: "{par_commentaire_en}"
     OA_basicComponents:
@@ -428,15 +428,15 @@ OA_data:
         OA_tags: [__HIDDEN__]
         OA_importHeader: nom de la parcelle_key
       par_parcelle_fr:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: nom de la parcelle_fr
         OA_importHeader: nom de la parcelle_fr
       par_parcelle_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en : Plot name
@@ -448,23 +448,23 @@ OA_data:
             en: Surface
         OA_importHeader: surface
       par_date_creation:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Date de création
             en: Create date
         OA_importHeader: date de création
       par_commentaire_fr:
-        OA_langRestrictions:   #optional
-          - fr  #optional
+        OA_langRestrictions:   
+          - fr  
         OA_exportHeader:
           OA_title:
             fr: Commentaire
         OA_importHeader: commentaire_fr
       par_commentaire_en:
-        OA_langRestrictions:   #optional
-          - en  #optional
+        OA_langRestrictions:   
+          - en  
         OA_exportHeader:
           OA_title:
             en: Comment
@@ -472,8 +472,8 @@ OA_data:
   t_flux_tours_flx:
     OA_tags: [__DATA__]
     OA_allowUnexpectedColumns: true
-    OA_dataHeaderLine: 8  #optional
-    OA_dataFirstLine: 12  #optional
+    OA_dataHeaderLine: 8  
+    OA_dataFirstLine: 12  
     OA_i18n:
       OA_title:
         fr: Données des tours à flux
@@ -508,7 +508,7 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
+        OA_components:   
           - flx_co2_value
       check_h2o_value:
         OA_i18n:
@@ -533,8 +533,8 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
-          - flx_h2o_value #optional
+        OA_components:   
+          - flx_h2o_value 
       check_zl_value:
         OA_i18n:
           fr: vérifie l'intervale de valeurs pour l'ZL'
@@ -558,8 +558,8 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
-          - flx_zl_value #optional
+        OA_components:   
+          - flx_zl_value 
       check_fc_value:
         OA_i18n:
           fr: vérifie l'intervale de valeurs pour FC'
@@ -583,8 +583,8 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
-          - flx_zl_value #optional
+        OA_components:   
+          - flx_zl_value 
       check_h_value:
         OA_i18n:
           fr: vérifie l'intervale de valeurs pour l'H'
@@ -608,8 +608,8 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
-          - flx_h_value #optional
+        OA_components:   
+          - flx_h_value 
       check_le_value:
         OA_i18n:
           fr: vérifie l'intervale de valeurs pour l'LE'
@@ -633,8 +633,8 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
-          - flx_le_value #optional
+        OA_components:   
+          - flx_le_value 
       check_t_value:
         OA_i18n:
           fr: vérifie l'intervale de valeurs pour l'T'
@@ -658,8 +658,8 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
-          - flx_t_value #optional
+        OA_components:   
+          - flx_t_value 
       check_u_value:
         OA_i18n:
           fr: vérifie l'intervale de valeurs pour l'U*'
@@ -683,8 +683,8 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
-          - flx_u_value #optional
+        OA_components:   
+          - flx_u_value 
       check_fc_gf_value:
         OA_i18n:
           fr: vérifie l'intervale de valeurs pour l'FC_GF'
@@ -708,37 +708,37 @@ OA_data:
                     isValid = isValid && (maxValue!=null || value<=maxValue); 
                     return isValid
                 }
-        OA_components:   #optional
-          - flx_fc_gf_value #optional
-    OA_submission:   #optional
-      OA_strategy: OA_VERSIONING  #optional
+        OA_components:   
+          - flx_fc_gf_value 
+    OA_submission:   
+      OA_strategy: OA_VERSIONING  
       OA_submissionScope:   #mandatory
-        OA_referenceScopes:   #optional
-          -   #optional
+        OA_referenceScopes:   
+          -   
             OA_component: sit_key  #mandatory
-            OA_reference: tr_sites_sit  #optional
+            OA_reference: tr_sites_sit  
             OA_i18n:   #mandatory
-              OA_title:   #optional
+              OA_title:   
                 fr: Site
                 en: Site
-              OA_description:   #optional
+              OA_description:   
                 fr: Référentiel des Sites
                 en: Site repository
             OA_exportHeader:   #mandatory
-              OA_title:   #optional
+              OA_title:   
                 fr: Site
                 en: Site
-              OA_description:   #optional
+              OA_description:   
                 fr: Référentiel des Sites
                 en: Site repository
-        OA_timeScope:   #optional
+        OA_timeScope:   
           OA_component: flx_date  #mandatory
-      OA_fileName:   #optional
+      OA_fileName:   
         OA_filePattern: (.*)_(.*)_(.*).csv  #mandatory
-        OA_matchPatternScopes:   #optional
-          - sit_key  #optional
-          - __START_DATE__  #optional
-          - __END_DATE__  #optional
+        OA_matchPatternScopes:   
+          - sit_key  
+          - __START_DATE__  
+          - __END_DATE__  
     OA_computedComponents:
       flx_date:
         OA_exportHeader:
@@ -865,21 +865,21 @@ OA_data:
       flx_site_name:
         OA_tags: [ __HIDDEN__ ]
         OA_required: true
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 1  #optional
-          OA_columnNumber: 2  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 1  
+          OA_columnNumber: 2  
       flx_parcelle_name:
         OA_tags: [ __HIDDEN__ ]
         OA_required: true
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 1  #optional
-          OA_columnNumber: 3  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 1  
+          OA_columnNumber: 3  
       flx_start_day:
         OA_tags: [ __HIDDEN__ ]
         OA_required: true
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 3  #optional
-          OA_columnNumber: 2  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 3  
+          OA_columnNumber: 2  
         OA_checker:
           OA_name: OA_date
           OA_params:
@@ -887,15 +887,15 @@ OA_data:
       flx_start_time:
         OA_tags: [ __HIDDEN__ ]
         OA_required: true
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 3  #optional
-          OA_columnNumber: 3  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 3  
+          OA_columnNumber: 3  
       flx_end_day:
         OA_tags: [ __HIDDEN__ ]
         OA_required: true
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 4  #optional
-          OA_columnNumber: 2  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 4  
+          OA_columnNumber: 2  
         OA_checker:
           OA_name: OA_date
           OA_params:
@@ -903,107 +903,107 @@ OA_data:
       flx_end_time:
         OA_tags: [ __HIDDEN__ ]
         OA_required: true
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 4  #optional
-          OA_columnNumber: 3  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 4  
+          OA_columnNumber: 3  
         OA_checker:
           OA_name: OA_date
           OA_params:
             OA_pattern: HH:mm:ss
       flx_comment:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 5  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 5  
           OA_columnNumber: 2
       flx_co2_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 3
       flx_co2_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 3
       flx_h2o_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 4
       flx_h2o_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 4
       flx_zl_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 5
       flx_zl_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 5
       flx_fc_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 6
       flx_fc_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 6
       flx_h_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 8
       flx_h_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 8
       flx_le_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 10
       flx_le_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 10
       flx_t_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 12
       flx_t_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 12
       flx_u_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 14
       flx_u_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 14
       flx_lc_gf_min:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 10  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 10  
           OA_columnNumber: 15
       flx_lc_gf_max:
         OA_tags: [ __HIDDEN__ ]
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 11  #optional
+        OA_importHeaderTarget:   
+          OA_rowNumber: 11  
           OA_columnNumber: 15
     OA_basicComponents:
       flx_day:
@@ -1170,3 +1170,197 @@ OA_data:
         OA_required: false
         OA_checker:
           OA_name: OA_float
+  t_swc_swc:
+    OA_tags: [__DATA__]
+    OA_allowUnexpectedColumns: false
+    OA_dataHeaderLine: 7  
+    OA_dataFirstLine: 10  
+    OA_i18n:
+      OA_title:
+        fr: Données d'humidité volumique du sol
+        en: Soil water concentration
+      OA_description:
+        fr: Données issues des capteurs d'humidité volumique du sol
+        en: Data from soil moisture volume sensors
+    OA_naturalKey:
+      - par_parcelle
+      - swc_date
+    OA_constantComponents:
+      swc_site_name:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   
+          OA_rowNumber: 2
+          OA_columnNumber: 2
+      swc_start_day:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   
+          OA_rowNumber: 3  
+          OA_columnNumber: 2  
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      swc_start_time:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   
+          OA_rowNumber: 3  
+          OA_columnNumber: 3  
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: HH:mm:ss
+      swc_end_day:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   
+          OA_rowNumber: 4  
+          OA_columnNumber: 2  
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      swc_end_time:
+        OA_tags: [ __HIDDEN__ ]
+        OA_required: true
+        OA_importHeaderTarget:   
+          OA_rowNumber: 4  
+          OA_columnNumber: 3  
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: HH:mm:ss
+      swc_comment:
+        OA_tags: [ __HIDDEN__ ]
+        OA_importHeaderTarget:   
+          OA_rowNumber: 5  
+          OA_columnNumber: 2
+    OA_basicComponents:
+      par_parcelle:
+        OA_tags: [__HIDDEN__ ]
+        OA_importHeader:  Nom parcelle
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_parcelles_par
+      swc_treatment_name:
+        OA_tags: [__HIDDEN__ ]
+        OA_importHeader:  Nom traitement
+      swc_day:
+        OA_importHeader:  Date
+        OA_tags: [__ORDER_1__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Date
+            en: Day
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      swc_time:
+        OA_importHeader: Time
+        OA_tags: [__ORDER_2__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Heure
+            en: time
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: HH:mm
+    OA_computedComponents:
+      swc_date:
+        OA_exportHeader:
+          OA_title:
+            fr: Date
+            en: Date
+        OA_tags: [ __HIDDEN__]
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy HH:mm
+        OA_computation:
+          OA_expression: >
+            return (String)datum.swc_day +" " +(String)datum.swc_time
+      sit_key:
+        OA_tags: [ __ORDER_3__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Site
+            en: Site
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_sites_sit
+        OA_withNaturalKeyComponents:
+          - swc_site_name
+      vdt_treatment:
+        OA_tags: [ __ORDER_4__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: Traitement
+            en: Treatment
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_version_de_traitement_vdt
+        OA_withNaturalKeyComponents:
+          - swc_site_name
+          - swc_treatment_name
+    OA_patternComponents:
+      swc_value:
+        OA_patternForComponents: "SWC_(.*)_(.*)"
+        OA_required: false
+        OA_exportHeader:
+          OA_title:
+            fr: "valeur"
+            en: "value"
+          OA_description:
+            fr: "valeur"
+            en: "value"
+        OA_componentQualifiers:
+          - swc_repetition:
+              OA_exportHeader:
+                OA_title:
+                  fr: "répétition"
+                  en: "repetition"
+                OA_description:
+                  fr: "répétition de la variable"
+                  en: "variable repetition"
+              OA_tags: [__ORDER_1__]
+              OA_checker:
+                OA_name: OA_integer
+          - swc_profondeur:
+              OA_exportHeader:
+                OA_title:
+                  fr: "profondeur"
+                  en: "depth"
+                OA_description:
+                  fr: "profondeur de la mesure"
+                  en: "depth of measurement"
+              OA_tags: [__ORDER_2__]
+              OA_checker:
+                OA_name: OA_float
+        OA_componentAdjacents:
+          - swc_quality_class:
+              OA_importHeaderPattern: "qc" 
+              OA_exportHeader: 
+                OA_title: 
+                  fr: Indice de qualité
+                  en: Quality class
+                OA_description: 
+                  fr: 0 pour une valeur valide ; 2 pour une valeur incorrecte
+                  en: 0 for valid value; 2 for invalid value
+              OA_required: false 
+              OA_mandatory: false 
+              OA_checker: 
+                OA_name: OA_integer 
+                OA_params: 
+                  OA_max: 2 
+                  OA_min: 0 
+                  OA_multiplicity: ONE

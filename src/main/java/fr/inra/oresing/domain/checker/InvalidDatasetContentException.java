@@ -97,17 +97,20 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
             throw forEmptyHeader(headerLine);
         }
         final ImmutableSet<String> actualColumnsAsSet = actualColumns.elementSet();
-        final Boolean givenColumnIsUnexpected = !(allowUnexpectedColumns || expectedColumns.containsAll(actualColumnsAsSet));
+        boolean areAllBasicColumns = expectedColumns.containsAll(actualColumnsAsSet);
+        final Boolean givenColumnIsUnexpected = !(allowUnexpectedColumns || areAllBasicColumns);
         final Boolean mandatoryColumnIsMissing = !actualColumnsAsSet.containsAll(mandatoryColumns);
-        if (givenColumnIsUnexpected || mandatoryColumnIsMissing) {
-            if(!mandatoryColumnIsMissing && patternColumnFactory!=null) {
+        if (!areAllBasicColumns || mandatoryColumnIsMissing) {
+            if (!mandatoryColumnIsMissing && patternColumnFactory != null) {
                 List<ContextHeader> notOrdinaryColumns = headersForRow.stream()
                         .filter(column -> !expectedColumns.contains(column))
                         .map(columnHeader -> new ContextHeader(columnHeader, headersForRow))
                         .toList();
-                if(patternColumnFactory.test(notOrdinaryColumns)){
+                if (patternColumnFactory.test(notOrdinaryColumns)) {
                     return headersForRow;
                 }
+            } else if (!givenColumnIsUnexpected) {
+                return headersForRow;
             }
 
             throw forInvalidHeaders(expectedColumns, mandatoryColumns, actualColumnsAsSet, headerLine);
