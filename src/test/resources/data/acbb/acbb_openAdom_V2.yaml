@@ -10,7 +10,7 @@ OA_application:
       en: "Agroecosystems, Biogeochemical Cycles and Biodiversity"
   OA_comment: "L'application ACBB V2"
   OA_name: acbb_openadom_v2
-  OA_version: 1.0.2
+  OA_version: 1.0.4
 OA_data:
   tr_agroecosystemes_agr:
     OA_i18n:
@@ -20,6 +20,10 @@ OA_data:
       OA_description:
         fr: Les agroécosystèmes représentent des regroupements par type de traitement
         en: Agroecosystems represent groupings by type of treatment
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "{agr_agroecosystem_fr}"
+        en: "{agr_agroecosystem_en}"
     OA_naturalKey: [agr_agroecosystem_key]
     OA_basicComponents:
       agr_agroecosystem_key:
@@ -62,6 +66,10 @@ OA_data:
       OA_description:
         fr: sites d'etudes
         en: study sites
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "{sit_site_fr}"
+        en: "{sit_site_en}"
     OA_naturalKey: [sit_site_key]
     OA_validations:
       sit_checkDateMiseEnService:
@@ -384,6 +392,13 @@ OA_data:
       OA_description:
         fr: les sites sont divisés en parcelles sur lesquelles on applique un traitement. Il peut y avoir des blocs de répétitions de parcelles
         en: Sites are divided into plots on which a treatment is applied. There may be blocks of plot repetitions
+    OA_i18nDisplayPattern:   #mandatory
+      OA_title:   #optional
+        fr: "{par_parcelle_fr}"
+        en: "{par_parcelle_en}"
+      OA_description:   #optional
+        fr: "{par_commentaire_fr}"
+        en: "{par_commentaire_en}"
     OA_basicComponents:
       sit_site:
         OA_exportHeader:

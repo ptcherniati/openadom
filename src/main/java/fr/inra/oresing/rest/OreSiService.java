@@ -21,6 +21,7 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
+import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
@@ -1311,5 +1312,9 @@ public class OreSiService {
 
     public DataRepositoryWithBuffer getNewDataRepositoryWithBuffer(Application application) {
         return new DataRepositoryWithBuffer(application, repository.getRepository(application).data());
+    }
+
+    public Map<String, List<GetGrantableResult.ReferenceScope>> getAuthorizationScopes(Application application, MenuType menuType) {
+        return authorizationService.getAuthorizationScopes(application, menuType);
     }
 }
