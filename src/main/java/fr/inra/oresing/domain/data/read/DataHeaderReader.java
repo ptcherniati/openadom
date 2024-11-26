@@ -56,7 +56,7 @@ public record DataHeaderReader(DataDatum constantValues,
         for (int lineNumber = 1; lineNumber < headerLine; lineNumber++) {
             final CSVRecord row = linesIterator.next();
             final ImmutableSet<ConstantComponent> constantDescriptions = perRowNumberConstants.get(lineNumber);
-            preHeaderRows.add(row.stream().toList());
+            preHeaderRows.add(row.stream().map(String::trim).toList());
             constantDescriptions.forEach(constant -> {
                 final int columnNumber = ((FileColumnConstantHeader) constant.constantImportHeader()).columnNumber();
                 final String valueInFile = row.size() >= columnNumber ? row.get(columnNumber - 1) : "" .trim();
@@ -116,7 +116,7 @@ public record DataHeaderReader(DataDatum constantValues,
         for (int lineNumber = headerLine + 1; lineNumber < firstRowLine; lineNumber++) {
             final CSVRecord row = linesIterator.next();
             final ImmutableSet<ConstantComponent> constantDescriptions = perRowNumberConstants.get(lineNumber);
-            postHeaderRows.add(row.stream().toList());
+            postHeaderRows.add(row.stream().map(String::trim).toList());
             constantDescriptions.forEach(constant -> {
                 final ColumnConstantHeader columnConstantHeader = (ColumnConstantHeader) constant.constantImportHeader();
                 final int columnNumber = switch (columnConstantHeader) {

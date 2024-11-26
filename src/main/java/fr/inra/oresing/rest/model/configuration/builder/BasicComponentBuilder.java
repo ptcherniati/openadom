@@ -90,11 +90,11 @@ public record BasicComponentBuilder(RootBuilder rootBuilder) {
                 importHeader = componentNodeValue
                         .get(ConfigurationSchemaNode.OA_IMPORT_HEADER)
                         .findPath(ConfigurationSchemaNode.OA_HEADER_NAME)
-                        .asText(componentKey);
+                        .asText(componentKey).trim();
             } else {
                 importHeader = componentNodeValue
                         .findPath(ConfigurationSchemaNode.OA_IMPORT_HEADER)
-                        .asText(componentKey);
+                        .asText(componentKey).trim();
             }
             final Parsing<String> exportHeaderParsing = rootBuilder.addExportHeaders(key, i18n, componentEntry, ConfigurationSchemaNode.OA_BASIC_COMPONENTS);
             String exportHeaderName = null;
