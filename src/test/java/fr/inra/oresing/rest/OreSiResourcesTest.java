@@ -2689,6 +2689,21 @@ public class OreSiResourcesTest {
 
             final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx")
                             .file(file)
+                            .param("params","""
+                    {
+                        "fileid":null,
+                        "binaryfiledataset":{
+                            "datatype":"t_flux_tours_flx",
+                            "requiredAuthorizations":{
+                               "tr_sites_sit":["laqueuille"]
+                            },
+                            "from":"2003-12-31 23:00:00",
+                            "to":"2004-12-31 23:00:00",
+                            "comment":null
+                        },
+                        "topublish":true}"""
+
+                            )
                             .cookie(authCookie))
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
