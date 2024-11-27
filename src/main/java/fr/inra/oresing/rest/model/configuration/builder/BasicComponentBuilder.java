@@ -27,7 +27,6 @@ public record BasicComponentBuilder(RootBuilder rootBuilder) {
         while (fields.hasNext()) {
             final Map.Entry<String, JsonNode> componentEntry = fields.next();
             final JsonNode componentNodeValue = componentEntry.getValue();
-            final JsonNode defaultValueNode = componentNodeValue.findPath(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
             final String componentKey = componentEntry.getKey();
             final boolean required = componentNodeValue.findPath(ConfigurationSchemaNode.OA_REQUIRED).asBoolean(false);
             final Parsing<CheckerDescription> checkerDescriptionParsing = rootBuilder.getCheckerDescriptionBuilder()
@@ -45,33 +44,39 @@ public record BasicComponentBuilder(RootBuilder rootBuilder) {
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
                     .map(CheckerDescription::multiplicity)
                     .orElse(Multiplicity.ONE);
-            final Parsing<ComputationChecker> defaultValueParsing = rootBuilder.getComputationBuilder().build(
-                    i18n,
-                    required, multiplicity,
-                    NodeSchemaValidator.joinPath(
-                            componentPath,
-                            ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
-                            componentKey,
-                            ConfigurationSchemaNode.OA_DEFAULT_VALUE
-                    ),
-                    defaultValueNode
-            );
-            i18n = defaultValueParsing.i18n();
-            if (defaultValueParsing.result().getReferences() != null) {
-                for (final String reference : defaultValueParsing.result().getReferences()) {
-                    if (!rootBuilder.getListDataKeys().contains(reference)) {
-                        rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
-                                        "referenceName", reference,
-                                        "allDataNames", rootBuilder.getListDataKeys()),
-                                NodeSchemaValidator.joinPath(
-                                        componentPath,
-                                        ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
-                                        componentKey,
-                                        ConfigurationSchemaNode.OA_DEFAULT_VALUE,
-                                        ConfigurationSchemaNode.OA_REFERENCES
-                                ));
+            final Parsing<ComputationChecker> defaultValueParsing;
+            final JsonNode defaultValueNode = componentNodeValue.get(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
+            if(defaultValueNode!=null) {
+                defaultValueParsing = rootBuilder.getComputationBuilder().build(
+                        i18n,
+                        required, multiplicity,
+                        NodeSchemaValidator.joinPath(
+                                componentPath,
+                                ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
+                                componentKey,
+                                ConfigurationSchemaNode.OA_DEFAULT_VALUE
+                        ),
+                        defaultValueNode
+                );
+                i18n = defaultValueParsing.i18n();
+                if (defaultValueParsing.result().getReferences() != null) {
+                    for (final String reference : defaultValueParsing.result().getReferences()) {
+                        if (!rootBuilder.getListDataKeys().contains(reference)) {
+                            rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
+                                            "referenceName", reference,
+                                            "allDataNames", rootBuilder.getListDataKeys()),
+                                    NodeSchemaValidator.joinPath(
+                                            componentPath,
+                                            ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
+                                            componentKey,
+                                            ConfigurationSchemaNode.OA_DEFAULT_VALUE,
+                                            ConfigurationSchemaNode.OA_REFERENCES
+                                    ));
+                        }
                     }
                 }
+            }else{
+                defaultValueParsing = new Parsing<>(i18n, null);
             }
             final Set<Tag> oaTags = TagsBuilder.validateDomainTagNames(
                     componentNodeValue,

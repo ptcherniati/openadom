@@ -86,7 +86,12 @@ public abstract class Column implements Comparable<Column> {
                                                                final TransformationConfiguration defaultValue) {
         Column column = null;
         if (multiplicity == Multiplicity.ONE) {
-            column = new OneValueStaticColumn(referenceColumn, headerForColumn, presenceConstraint, ComputedValueUsage.NOT_COMPUTED) {
+            column = new OneValueStaticColumn(
+                    referenceColumn,
+                    headerForColumn,
+                    presenceConstraint,
+                    ComputedValueUsage.NOT_COMPUTED
+            ) {
                 @Override
                 public String getExpectedHeader() {
                     return Optional.ofNullable(headerForColumn)
@@ -99,7 +104,12 @@ public abstract class Column implements Comparable<Column> {
                 }
             };
         } else if (multiplicity == Multiplicity.MANY) {
-            column = new ManyValuesStaticColumn(referenceColumn, headerForColumn, presenceConstraint, ComputedValueUsage.NOT_COMPUTED) {
+            column = new ManyValuesStaticColumn(
+                    referenceColumn,
+                    headerForColumn,
+                    presenceConstraint,
+                    ComputedValueUsage.NOT_COMPUTED
+            ) {
                 @Override
                 public String getExpectedHeader() {
                     return Optional.ofNullable(headerForColumn)

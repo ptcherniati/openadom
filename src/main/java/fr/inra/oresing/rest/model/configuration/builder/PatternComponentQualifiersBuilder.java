@@ -9,7 +9,10 @@ import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.PatternComponentQualifiers;
 import fr.inra.oresing.domain.application.configuration.Tag;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
+import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
+import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
+import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.Map;
 import java.util.Optional;
@@ -45,6 +48,7 @@ public record PatternComponentQualifiersBuilder(RootBuilder rootBuilder) {
                                 label,
                                 ConfigurationSchemaNode.OA_TAGS),
                         rootBuilder);
+
                 final boolean required = patternComponentNode.findPath(ConfigurationSchemaNode.OA_REQUIRED).asBoolean(false);
 
                 final Parsing<String> exportHeaderParsing = rootBuilder.addExportHeaders(dataKey, i18n, patternColumnComponentNode, ConfigurationSchemaNode.OA_PATTERN_COMPONENTS);
@@ -60,9 +64,44 @@ public record PatternComponentQualifiersBuilder(RootBuilder rootBuilder) {
                                 componentNodeValue.get(ConfigurationSchemaNode.OA_CHECKER),
                                 label);
                 i18n = checkerDescriptionParsing.i18n();
+                final JsonNode defaultValueNode = componentNodeValue.get(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
+                final Parsing<ComputationChecker> defaultValueParsing;
+                if (defaultValueNode != null) {
+                    defaultValueParsing = rootBuilder.getComputationBuilder().build(
+                            i18n,
+                            required, Multiplicity.ONE,
+                            NodeSchemaValidator.joinPath(
+                                    componentPath,
+                                    ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
+                                    componentKey,
+                                    ConfigurationSchemaNode.OA_DEFAULT_VALUE
+                            ),
+                            defaultValueNode
+                    );
+                    i18n = defaultValueParsing.i18n();
+                    if (defaultValueParsing.result().getReferences() != null) {
+                        for (final String reference : defaultValueParsing.result().getReferences()) {
+                            if (!rootBuilder.getListDataKeys().contains(reference)) {
+                                rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
+                                                "referenceName", reference,
+                                                "allDataNames", rootBuilder.getListDataKeys()),
+                                        NodeSchemaValidator.joinPath(
+                                                componentPath,
+                                                ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
+                                                componentKey,
+                                                ConfigurationSchemaNode.OA_DEFAULT_VALUE,
+                                                ConfigurationSchemaNode.OA_REFERENCES
+                                        ));
+                            }
+                        }
+                    }
+                } else {
+                    defaultValueParsing = new Parsing<>(i18n, null);
+                }
                 final PatternComponentQualifiers patternColumnComponent = new PatternComponentQualifiers(
                         ComponentDescription.ComponentDescriptionType.PatternComponentQualifiers,
                         label,
+                        defaultValueParsing.result(),
                         oaTags,
                         label,
                         rootBuilder().getLangRestrictions(componentPath, componentNodeValue),
@@ -72,7 +111,7 @@ public record PatternComponentQualifiersBuilder(RootBuilder rootBuilder) {
                 );
                 patternColumnComponentBuilder.put(label, patternColumnComponent);
                 componentDescriptionBuilder.put(
-                        Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentKey,label),
+                        Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentKey, label),
                         patternColumnComponent
                 );
             }

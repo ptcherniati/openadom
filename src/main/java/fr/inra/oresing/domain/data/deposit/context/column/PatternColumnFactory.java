@@ -1,6 +1,7 @@
 package fr.inra.oresing.domain.data.deposit.context.column;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
@@ -10,10 +11,12 @@ import fr.inra.oresing.domain.application.configuration.PatternComponentAdjacent
 import fr.inra.oresing.domain.application.configuration.PatternComponentQualifiers;
 import fr.inra.oresing.domain.application.configuration.PatternComponent;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
+import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
+import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import lombok.Getter;
@@ -198,16 +201,39 @@ public class PatternColumnFactory {
                             final ComponentPresenceConstraint mandatoryForComponentComponent = Optional.ofNullable(patternColumnComponent)
                                     .map(ComponentDescription::mandatory)
                                     .orElse(ComponentPresenceConstraint.MANDATORY);
-                            final String constantValue = matcher.group(patternNumber);
+                            final String constantValue = Optional.ofNullable(matcher.group(patternNumber))
+                                    .filter(match ->
+                                            !Strings.isNullOrEmpty(match) ||
+                                                    patternColumnComponent.defaultValue() == null ||
+                                                    patternColumnComponent.defaultValue().expression() == null)
+                                    .orElse(
+                                            Optional.of(patternColumnComponent)
+                                                    .map(PatternComponentQualifiers::defaultValue)
+                                                    .map(ComputationChecker::expression)
+                                                    .filter(Predicate.not(Strings::isNullOrEmpty))
+                                                    .map(expression -> StringGroovyExpression.forExpression(
+                                                            expression, Set.of()
+                                                            )
+                                                            .evaluate(Map.of())
+                                                    )
+                                                    .orElse("")
+                                    );
+
+
                             final DataColumn dataColumn = new DataColumn(componentComponentKey);
-                            qualifierColumns.add(Column.staticColumnDescriptionToColumn(
+                            Column patternQualifierColumn = Column.staticColumnDescriptionToColumn(
                                     new DataColumn(componentComponentKey),
                                     componentComponentKey,
                                     mandatoryForComponentComponent,
                                     multiplicityForComponentComponent,
                                     dataRepository,
                                     defaultValue
-                            ));
+                            );
+                            qualifierColumns.add(patternQualifierColumn);
+                            String s = Optional.ofNullable(constantValue)
+                                    .filter(column -> patternQualifierColumn.getComputedValueUsage() != ComputedValueUsage.NOT_COMPUTED)
+                                    .orElse(null);
+                            patternQualifierColumn.getComputedValueUsage();
 
                             switch (multiplicityForComponentComponent) {
                                 case Multiplicity.MANY -> {

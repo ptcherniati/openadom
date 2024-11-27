@@ -10,7 +10,7 @@ OA_application:
       en: "Agroecosystems, Biogeochemical Cycles and Biodiversity"
   OA_comment: "L'application ACBB V2"
   OA_name: acbb_openadom_v2
-  OA_version: 1.0.8
+  OA_version: 1.0.5
 OA_data:
   tr_agroecosystemes_agr:
     OA_i18n:
@@ -241,6 +241,68 @@ OA_data:
           OA_title:
             en: Name
         OA_importHeader: nom_en
+  tr_variables_var:
+    OA_i18n:
+      OA_title:
+        fr: référence aux variables
+        en: reference to variables
+      OA_description:
+        fr: variables du domaine
+        en: domain variables
+    OA_naturalKey: [var_key]
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{var_display} ({var_description_fr})" # {sit_code} sera remplacé par les valeur du composant sit_code et {sit_label_fr} par les valeurs du composant sit_label_fr. Ex: O108 (mélange). Encadrement obligatoire par des quotes.
+        en: "{var_display} ({var_description_en})"
+    OA_basicComponents:
+      var_key:
+        OA_exportHeader:
+          OA_title:
+            fr: key
+            en: key
+        OA_importHeader: nom de la variable_key
+      var_nom_fr:
+        OA_langRestrictions:
+          - fr
+        OA_exportHeader:
+          OA_title:
+            fr: Nom de la variable
+        OA_importHeader: nom de la variable_fr
+      var_nom_en:
+        OA_langRestrictions:
+          - en
+        OA_exportHeader:
+          OA_title:
+            en: Variable name
+        OA_importHeader: nom de la variable_en
+      var_display:
+        OA_exportHeader:
+          OA_title:
+            fr: Affichage de la variable
+            en: Variable display
+        OA_importHeader: affichage de la variable
+      var_description_fr:
+        OA_langRestrictions:
+          - fr
+        OA_exportHeader:
+          OA_title:
+            fr: Description
+        OA_importHeader: définition_fr
+      var_description_en:
+        OA_langRestrictions:
+          - en
+        OA_exportHeader:
+          OA_title:
+            en: Description
+        OA_importHeader: définition_en
+      var_isQualitative:
+        OA_exportHeader:
+          OA_title:
+            fr: Qualitative
+            en: Qualitative
+        OA_importHeader: is qualitative
+        OA_checker:
+          OA_name: OA_boolean
   tr_modalites_mod:
     OA_i18n:
       OA_title:
@@ -1314,7 +1376,7 @@ OA_data:
           - swc_treatment_name
     OA_patternComponents:
       swc_value:
-        OA_patternForComponents: "SWC_(.*)_(.*)"
+        OA_patternForComponents: "SWC(@?)_(.*)_(.*)"
         OA_required: false
         OA_exportHeader:
           OA_title:
@@ -1324,6 +1386,22 @@ OA_data:
             fr: "valeur"
             en: "value"
         OA_componentQualifiers:
+          - swc_variable:
+              OA_exportHeader:
+                OA_title:
+                  fr: "Humidité volumique du sol"
+                  en: "Soil water concentration"
+                OA_description:
+                  fr: "variable mesurée"
+                  en: "mesured variable"
+              OA_tags: [__ORDER_1__]
+              OA_defaultValue:
+                OA_expression: "'humidite_volumique_du_sol'"  #optional
+              OA_checker:
+                OA_name: OA_reference
+                OA_params:
+                  OA_reference:
+                    OA_name: tr_variables_var
           - swc_repetition:
               OA_exportHeader:
                 OA_title:
@@ -1332,7 +1410,7 @@ OA_data:
                 OA_description:
                   fr: "répétition de la variable"
                   en: "variable repetition"
-              OA_tags: [__ORDER_1__]
+              OA_tags: [__ORDER_2__]
               OA_checker:
                 OA_name: OA_integer
           - swc_profondeur:
@@ -1343,12 +1421,13 @@ OA_data:
                 OA_description:
                   fr: "profondeur de la mesure"
                   en: "depth of measurement"
-              OA_tags: [__ORDER_2__]
+              OA_tags: [__ORDER_3__]
               OA_checker:
                 OA_name: OA_float
         OA_componentAdjacents:
           - swc_quality_class:
-              OA_importHeaderPattern: "qc" 
+              OA_importHeaderPattern: "qc"
+              OA_tags: [__ORDER_4__]
               OA_exportHeader: 
                 OA_title: 
                   fr: Indice de qualité
