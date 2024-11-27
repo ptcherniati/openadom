@@ -13,16 +13,7 @@
       "colonne_homonyme_entre_referentiels" : {
         "type" : "BasicComponent",
         "componentKey" : "colonne_homonyme_entre_referentiels",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -42,16 +33,7 @@
       "esp_definition_en" : {
         "type" : "BasicComponent",
         "componentKey" : "esp_definition_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -98,16 +80,7 @@
       "esp_nom" : {
         "type" : "BasicComponent",
         "componentKey" : "esp_nom",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "DOMAIN_TAG",
           "tagName" : "test"
@@ -127,16 +100,7 @@
       "esp_definition_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "esp_definition_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -176,16 +140,7 @@
       "nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -225,16 +180,7 @@
       "nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -254,16 +200,7 @@
       "nom_en" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -283,16 +220,7 @@
       "definition_en" : {
         "type" : "BasicComponent",
         "componentKey" : "definition_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -312,16 +240,7 @@
       "is_qualitative" : {
         "type" : "BasicComponent",
         "componentKey" : "is_qualitative",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -341,16 +260,7 @@
       "nom_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -370,16 +280,7 @@
       "definition_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "definition_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -419,16 +320,7 @@
       "tze_nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "tze_nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -448,16 +340,7 @@
       "tze_nom_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "tze_nom_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -477,16 +360,7 @@
       "tze_definition_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "tze_definition_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -506,16 +380,7 @@
       "tze_nom_en" : {
         "type" : "BasicComponent",
         "componentKey" : "tze_nom_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -535,16 +400,7 @@
       "tze_definition_en" : {
         "type" : "BasicComponent",
         "componentKey" : "tze_definition_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -584,16 +440,7 @@
       "site" : {
         "type" : "BasicComponent",
         "componentKey" : "site",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -613,16 +460,7 @@
       "theme" : {
         "type" : "BasicComponent",
         "componentKey" : "theme",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -642,16 +480,7 @@
       "projet" : {
         "type" : "BasicComponent",
         "componentKey" : "projet",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -679,16 +508,7 @@
       "datatype" : {
         "type" : "BasicComponent",
         "componentKey" : "datatype",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -794,16 +614,7 @@
       "variable" : {
         "type" : "BasicComponent",
         "componentKey" : "variable",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -823,16 +634,7 @@
       "datatype" : {
         "type" : "BasicComponent",
         "componentKey" : "datatype",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -852,16 +654,7 @@
       "unite" : {
         "type" : "BasicComponent",
         "componentKey" : "unite",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -963,16 +756,7 @@
       "tze_type_nom" : {
         "type" : "BasicComponent",
         "componentKey" : "tze_type_nom",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1000,16 +784,7 @@
       "zet_description_en" : {
         "type" : "BasicComponent",
         "componentKey" : "zet_description_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1029,16 +804,7 @@
       "zet_nom_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "zet_nom_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1058,16 +824,7 @@
       "zet_nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "zet_nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1087,16 +844,7 @@
       "zet_nom_en" : {
         "type" : "BasicComponent",
         "componentKey" : "zet_nom_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1116,16 +864,7 @@
       "zet_description_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "zet_description_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1145,16 +884,7 @@
       "zet_chemin_parent" : {
         "type" : "BasicComponent",
         "componentKey" : "zet_chemin_parent",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1207,16 +937,7 @@
       "plo_name" : {
         "type" : "BasicComponent",
         "componentKey" : "plo_name",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1256,16 +977,7 @@
       "nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1285,16 +997,7 @@
       "nom_en" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1314,16 +1017,7 @@
       "nom_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1343,16 +1037,7 @@
       "description_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "description_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1372,16 +1057,7 @@
       "description_en" : {
         "type" : "BasicComponent",
         "componentKey" : "description_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1418,16 +1094,7 @@
       "tel_date" : {
         "type" : "BasicComponent",
         "componentKey" : "tel_date",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1455,16 +1122,7 @@
       "tel_flag" : {
         "type" : "BasicComponent",
         "componentKey" : "tel_flag",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1492,6 +1150,7 @@
       "tel_value::tel_value_variable" : {
         "type" : "PatternComponentQualifiers",
         "componentKey" : "tel_value_variable",
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1593,6 +1252,7 @@
           "tel_value_variable" : {
             "type" : "PatternComponentQualifiers",
             "componentKey" : "tel_value_variable",
+            "defaultValue" : null,
             "tags" : [ {
               "tagDefinition" : "NO_TAG",
               "tagName" : "no_tag"
@@ -1610,6 +1270,7 @@
           "tel_value_qualifier" : {
             "type" : "PatternComponentQualifiers",
             "componentKey" : "tel_value_qualifier",
+            "defaultValue" : null,
             "tags" : [ {
               "tagDefinition" : "NO_TAG",
               "tagName" : "no_tag"
@@ -1627,6 +1288,7 @@
           "tel_value_resolution" : {
             "type" : "PatternComponentQualifiers",
             "componentKey" : "tel_value_resolution",
+            "defaultValue" : null,
             "tags" : [ {
               "tagDefinition" : "NO_TAG",
               "tagName" : "no_tag"
@@ -1728,16 +1390,7 @@
       "tel_pixel_count_20m" : {
         "type" : "BasicComponent",
         "componentKey" : "tel_pixel_count_20m",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "HIDDEN_TAG"
         } ],
@@ -1756,6 +1409,7 @@
       "tel_value::tel_value_resolution" : {
         "type" : "PatternComponentQualifiers",
         "componentKey" : "tel_value_resolution",
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1773,16 +1427,7 @@
       "tel_pixel_count_10m" : {
         "type" : "BasicComponent",
         "componentKey" : "tel_pixel_count_10m",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "HIDDEN_TAG"
         } ],
@@ -1801,6 +1446,7 @@
       "tel_value::tel_value_qualifier" : {
         "type" : "PatternComponentQualifiers",
         "componentKey" : "tel_value_qualifier",
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1818,16 +1464,7 @@
       "tel_variable" : {
         "type" : "BasicComponent",
         "componentKey" : "tel_variable",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1917,16 +1554,7 @@
       "code_en" : {
         "type" : "BasicComponent",
         "componentKey" : "code_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1946,16 +1574,7 @@
       "nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -1975,16 +1594,7 @@
       "nom_en" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2004,16 +1614,7 @@
       "nom_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2033,16 +1634,7 @@
       "code_key" : {
         "type" : "BasicComponent",
         "componentKey" : "code_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2062,16 +1654,7 @@
       "code_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "code_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2117,16 +1700,7 @@
       "nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2146,16 +1720,7 @@
       "nom_en" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2175,16 +1740,7 @@
       "definition_en" : {
         "type" : "BasicComponent",
         "componentKey" : "definition_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2204,16 +1760,7 @@
       "nom_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2233,16 +1780,7 @@
       "colonne_homonyme_entre_referentiels" : {
         "type" : "BasicComponent",
         "componentKey" : "colonne_homonyme_entre_referentiels",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2262,16 +1800,7 @@
       "definition_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "definition_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2311,16 +1840,7 @@
       "nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2360,16 +1880,7 @@
       "nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2389,16 +1900,7 @@
       "nom_en" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2418,16 +1920,7 @@
       "valeur_en" : {
         "type" : "BasicComponent",
         "componentKey" : "valeur_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2447,16 +1940,7 @@
       "nom_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2476,16 +1960,7 @@
       "valeur_key" : {
         "type" : "BasicComponent",
         "componentKey" : "valeur_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2505,16 +1980,7 @@
       "valeur_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "valeur_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2553,16 +2019,7 @@
       "nom_key" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2582,16 +2039,7 @@
       "nom_en" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2611,16 +2059,7 @@
       "nom_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "nom_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2640,16 +2079,7 @@
       "description_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "description_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2669,16 +2099,7 @@
       "description_en" : {
         "type" : "BasicComponent",
         "componentKey" : "description_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2715,16 +2136,7 @@
       "fla_name" : {
         "type" : "BasicComponent",
         "componentKey" : "fla_name",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2775,16 +2187,7 @@
       "date" : {
         "type" : "BasicComponent",
         "componentKey" : "date",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "ORDER_TAG",
           "tagOrder" : 1
@@ -2850,16 +2253,7 @@
       "bassin" : {
         "type" : "BasicComponent",
         "componentKey" : "bassin",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -2916,16 +2310,7 @@
       "projet" : {
         "type" : "BasicComponent",
         "componentKey" : "projet",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "ORDER_TAG",
           "tagOrder" : 2
@@ -2956,16 +2341,7 @@
       "espece" : {
         "type" : "BasicComponent",
         "componentKey" : "espece",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3030,16 +2406,7 @@
       "plateforme" : {
         "type" : "BasicComponent",
         "componentKey" : "plateforme",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3059,16 +2426,7 @@
       "color_value" : {
         "type" : "BasicComponent",
         "componentKey" : "color_value",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3248,16 +2606,7 @@
       "date" : {
         "type" : "BasicComponent",
         "componentKey" : "date",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : true,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3285,16 +2634,7 @@
       "definition_en" : {
         "type" : "BasicComponent",
         "componentKey" : "definition_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3314,16 +2654,7 @@
       "site" : {
         "type" : "BasicComponent",
         "componentKey" : "site",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3343,16 +2674,7 @@
       "propriete_en" : {
         "type" : "BasicComponent",
         "componentKey" : "propriete_en",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3372,16 +2694,7 @@
       "type_associe" : {
         "type" : "BasicComponent",
         "componentKey" : "type_associe",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3401,16 +2714,7 @@
       "propriete_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "propriete_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3430,16 +2734,7 @@
       "is_qualitative" : {
         "type" : "BasicComponent",
         "componentKey" : "is_qualitative",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3459,16 +2754,7 @@
       "ordre_affichage" : {
         "type" : "BasicComponent",
         "componentKey" : "ordre_affichage",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3488,16 +2774,7 @@
       "propriete_key" : {
         "type" : "BasicComponent",
         "componentKey" : "propriete_key",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3517,16 +2794,7 @@
       "definition_fr" : {
         "type" : "BasicComponent",
         "componentKey" : "definition_fr",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3546,16 +2814,7 @@
       "is_float_value" : {
         "type" : "BasicComponent",
         "componentKey" : "is_float_value",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3649,16 +2908,7 @@
       "taxon_superieur" : {
         "type" : "BasicComponent",
         "componentKey" : "taxon_superieur",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3686,16 +2936,7 @@
       "sandre_superieur" : {
         "type" : "BasicComponent",
         "componentKey" : "sandre_superieur",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3715,16 +2956,7 @@
       "incertitude" : {
         "type" : "BasicComponent",
         "componentKey" : "incertitude",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3744,16 +2976,7 @@
       "notes" : {
         "type" : "BasicComponent",
         "componentKey" : "notes",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3773,16 +2996,7 @@
       "sandre_taxon" : {
         "type" : "BasicComponent",
         "componentKey" : "sandre_taxon",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3802,16 +3016,7 @@
       "annee" : {
         "type" : "BasicComponent",
         "componentKey" : "annee",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3831,16 +3036,7 @@
       "nom" : {
         "type" : "BasicComponent",
         "componentKey" : "nom",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3860,16 +3056,7 @@
       "auteur" : {
         "type" : "BasicComponent",
         "componentKey" : "auteur",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3889,16 +3076,7 @@
       "bourrelly" : {
         "type" : "BasicComponent",
         "componentKey" : "bourrelly",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3918,16 +3096,7 @@
       "sandre" : {
         "type" : "BasicComponent",
         "componentKey" : "sandre",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3947,16 +3116,7 @@
       "reference_description" : {
         "type" : "BasicComponent",
         "componentKey" : "reference_description",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -3976,16 +3136,7 @@
       "synonyme_ancien" : {
         "type" : "BasicComponent",
         "componentKey" : "synonyme_ancien",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -4005,16 +3156,7 @@
       "references_taxon" : {
         "type" : "BasicComponent",
         "componentKey" : "references_taxon",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -4034,16 +3176,7 @@
       "synonyme_recent" : {
         "type" : "BasicComponent",
         "componentKey" : "synonyme_recent",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -4063,16 +3196,7 @@
       "theme" : {
         "type" : "BasicComponent",
         "componentKey" : "theme",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
@@ -4122,16 +3246,7 @@
       "niveau_taxon" : {
         "type" : "BasicComponent",
         "componentKey" : "niveau_taxon",
-        "defaultValue" : {
-          "type" : "ComputationChecker",
-          "multiplicity" : "ONE",
-          "required" : false,
-          "expression" : "return \"\";",
-          "references" : null,
-          "exceptionMessages" : [ ],
-          "codify" : false,
-          "data" : null
-        },
+        "defaultValue" : null,
         "tags" : [ {
           "tagDefinition" : "NO_TAG",
           "tagName" : "no_tag"
