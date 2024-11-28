@@ -239,6 +239,7 @@ public class OreSiService {
                 application.findApplicationDescription()
                         .map(ApplicationDescription::comment)
                         .orElse(""),
+                application.getConfigFile(),
                 application.findInternationalizations()
                         .orElseGet(Internationalizations::new),
 

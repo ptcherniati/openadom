@@ -20,6 +20,7 @@ public record ApplicationResult(
         String name,
         String title,
         String comment,
+        UUID configFile,
         Internationalizations internationalization,
         Map<String, StandardDataDescription> data,
         Map<String, Node> references,
