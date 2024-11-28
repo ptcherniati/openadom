@@ -1178,6 +1178,9 @@ public class OreSiService {
             log.error("Erreur générale lors de la création du bundle", e);
             referentielsEnErreur.add("ERREUR_GENERALE");
         }
+        finally {
+            zipOutputStream.close();
+        }
 
         return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
     }
