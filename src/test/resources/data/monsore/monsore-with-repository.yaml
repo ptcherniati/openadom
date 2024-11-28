@@ -13,20 +13,20 @@ OA_application:
   OA_version: 3.0.1
 OA_tags:
   context:
-    fr: contexte
-    en: context
+    fr: "Contexte"
+    en: "Context"
   data:
-    fr: données
-    en: data
+    fr: "Donnée"
+    en: "Data"
   test:
-    fr: test
-    en: test
+    fr: "Test"
+    en: "Test"
   unit:
-    fr: unité
-    en: unit
+    fr: "Unité"
+    en: "Unit"
   temporal:
-    fr: temporalité
-    en: temporality
+    fr: "Temporalité"
+    en: "Temporality"
 OA_rightsRequest:
   OA_i18n:
     OA_title:
