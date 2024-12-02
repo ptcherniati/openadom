@@ -21,6 +21,7 @@ import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResul
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQueryOnlyMetadata;
+import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
 import fr.inra.oresing.domain.exceptions.authentication.authentication.NotApplicationCanDeleteRightsException;
@@ -1090,8 +1091,8 @@ public class OreSiResources {
             downloadDatasetQuery.setApplication(application);
             downloadDatasetQuery.setDataName(dataType);
             final Locale locale = Optional.ofNullable(downloadDatasetQuery)
-                    .map(DownloadDatasetQuery::getLocale)
-                    .map(Locale::new)
+                    .map(DownloadDatasetQuery::getOutPut)
+                    .map(OutPut::locale)
                     .orElseGet(OreSiResources::getDefaultLocale);
             fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildDownloadDatasetQuery = DownloadDatasetQuery.build(downloadDatasetQuery);
             if (onlyMetadata) {

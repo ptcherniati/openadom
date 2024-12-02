@@ -2,8 +2,6 @@ package fr.inra.oresing.rest.model.data.query;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.application.configuration.PatternComponent;
-import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.data.read.query.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,7 +19,7 @@ import java.util.stream.Collectors;
 public class DownloadDatasetQuery {
     Application application;
     String dataName;
-    String locale;
+    OutPut outPut;
     Long offset;
     Long limit;
     Set<String> rowIds;
@@ -84,8 +82,8 @@ public class DownloadDatasetQuery {
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
-                            Optional.ofNullable(downloadDatasetQuery.getLocale())
-                                    .map(Locale::of)
+                            Optional.ofNullable(downloadDatasetQuery.getOutPut())
+                                    .map(OutPut::locale)
                                     .orElse(Locale.FRENCH),
                             downloadDatasetQuery.getOffset(),
                             downloadDatasetQuery.getLimit()
@@ -109,8 +107,8 @@ public class DownloadDatasetQuery {
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
-                            Optional.ofNullable(downloadDatasetQuery.getLocale())
-                                    .map(Locale::of)
+                            Optional.ofNullable(downloadDatasetQuery.getOutPut())
+                                    .map(OutPut::locale)
                                     .orElse(Locale.FRENCH),
                             downloadDatasetQuery.getOffset(),
                             downloadDatasetQuery.getLimit()
@@ -137,8 +135,8 @@ public class DownloadDatasetQuery {
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
-                            Optional.ofNullable(downloadDatasetQuery.getLocale())
-                                    .map(Locale::of)
+                            Optional.ofNullable(downloadDatasetQuery.getOutPut())
+                                    .map(OutPut::locale)
                                     .orElse(Locale.FRENCH),
                             downloadDatasetQuery.getOffset(),
                             downloadDatasetQuery.getLimit()
@@ -164,8 +162,8 @@ public class DownloadDatasetQuery {
                 downloadDatasetQuery.getApplication(),
                 downloadDatasetQuery.dataName,
                 new OutPut(
-                        Optional.ofNullable(downloadDatasetQuery.getLocale())
-                                .map(Locale::of)
+                        Optional.ofNullable(downloadDatasetQuery.getOutPut())
+                                .map(OutPut::locale)
                                 .orElse(Locale.FRENCH),
                         downloadDatasetQuery.getOffset(),
                         downloadDatasetQuery.getLimit()
