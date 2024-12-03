@@ -338,6 +338,9 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
             final DataDatum transformedReferenceDatum = transformer().transform(referenceDatum, context);
             DataColumn column = (DataColumn) target();
             FieldType valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
+            /*TODO #313 Philippe
+                cas d'un __value__ ici dans un pattern la valeur est MapType mais la valeur à tester est le __VALUE__
+             */
             CheckerValidationCheckResult validationCheckResults = Optional.ofNullable(valuesToCheck)
                     .map(Object::toString)
                     .map(this::checkRequiredThenCheck)
