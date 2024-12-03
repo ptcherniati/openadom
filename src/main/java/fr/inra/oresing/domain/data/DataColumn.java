@@ -6,8 +6,9 @@ import java.util.Locale;
 
 public record DataColumn(String column) implements CheckerTarget, SomethingToBeStoredAsJsonInDatabase<String> {
 
-    public static final String DISPLAY_NAME = "display_%s";
-    public static final String DISPLAY_DESCRIPTION = "display_description_%s";
+    public static final String DISPLAY = "__display_";
+    public static final String DISPLAY_NAME = "%s%%s".formatted(DataColumn.DISPLAY);
+    public static final String DISPLAY_DESCRIPTION = "%sdescription_%%s".formatted(DataColumn.DISPLAY);
 
     public static DataColumn forDisplayName(final Locale locale) {
         return forDisplayName(locale.toLanguageTag());

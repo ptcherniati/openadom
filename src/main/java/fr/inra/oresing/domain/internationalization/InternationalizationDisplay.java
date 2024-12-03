@@ -1,5 +1,8 @@
 package fr.inra.oresing.domain.internationalization;
 
+import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.ApplicationDescription;
+import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.DataColumn;
@@ -28,43 +31,56 @@ public class InternationalizationDisplay {
     public static DataDatum getDisplaysName(final DataImporterContext dataImporterContext, final DataDatum refValues) {
         Optional<InternationalizationTitle> displayPattern = dataImporterContext.getDisplayPattern();
         final DataDatum displaysName = new DataDatum();
+        Locale defaultLanguage = Optional.ofNullable(dataImporterContext.getApplication())
+                .map(Application::getConfiguration)
+                .map(Configuration::applicationDescription)
+                .map(ApplicationDescription::defaultLanguage)
+                .orElse(Locale.FRENCH);
         displayPattern
                 .ifPresent(patterns -> {
                     patterns.getTitle().entrySet()
-                            .forEach(stringEntry -> {
-                                displaysName.put(DataColumn.forDisplayName(stringEntry.getKey()),
-                                        new DataColumnSingleValue(
-                                                StringType.getStringTypeFromStringValue(
-                                                parsePattern(stringEntry.getValue()).stream()
-                                                .map(patternSection -> {
-                                                            String internationalizedPattern = patternSection.text;
-                                                            if (!Strings.isNullOrEmpty(patternSection.variable)) {
-                                                                String referencedColumn = patternSection.variable;
-                                                                internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, stringEntry.getKey().getDisplayName());                                                            }
-                                                            return internationalizedPattern;
-                                                        }
-                                                )
-                                                .collect(Collectors.joining()))
-                                        )
+                            .forEach(entryByLocale -> {
+                                DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
+                                        StringType.getStringTypeFromStringValue(
+                                                parsePattern(entryByLocale.getValue()).stream()
+                                                        .map(patternSection -> {
+                                                                    String internationalizedPattern = patternSection.text;
+                                                                    if (!Strings.isNullOrEmpty(patternSection.variable)) {
+                                                                        String referencedColumn = patternSection.variable;
+                                                                        internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, entryByLocale.getKey().getDisplayName());
+                                                                    }
+                                                                    return internationalizedPattern;
+                                                                }
+                                                        )
+                                                        .collect(Collectors.joining()))
                                 );
+                                displaysName.put(DataColumn.forDisplayName(entryByLocale.getKey()),
+                                        displayForLocale
+                                );
+                                if (entryByLocale.getKey().equals(defaultLanguage)) {
+                                    displaysName.put(DataColumn.forDisplayName("default"), displayForLocale);
+                                }
                             });
                 });
-        String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
-                .stream()
-                .map(columnName ->
-                        refValues.values().entrySet()
-                                .stream()
-                                .filter(entry -> entry.getKey().column().equals(columnName))
-                                .map(Map.Entry::getValue)
-                                .map(DataColumnValue::toJsonForFrontend)
-                                .map(Object::toString)
-                                .findFirst()
-                                .orElse("")
+        if (!displaysName.contains(DataColumn.forDisplayName("default"))) {
+            String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
+                    .stream()
+                    .map(columnName ->
+                            refValues.values().entrySet()
+                                    .stream()
+                                    .filter(entry -> entry.getKey().column().equals(columnName))
+                                    .map(Map.Entry::getValue)
+                                    .map(DataColumnValue::toJsonForFrontend)
+                                    .map(Object::toString)
+                                    .findFirst()
+                                    .orElse("")
 
-                )
-                .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                    )
+                    .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
 
-        displaysName.put(DataColumn.forDisplayName("default"), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(defaultDisplay)));
+            displaysName.put(DataColumn.forDisplayName("default"), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(defaultDisplay)));
+
+        }
         return displaysName;
     }
 
@@ -72,63 +88,75 @@ public class InternationalizationDisplay {
         Optional<InternationalizationTitle> displayPattern = dataImporterContext.getDisplayPattern();
         final String refType = dataImporterContext.getRefType();
         final DataDatum displaysDescription = new DataDatum();
+        Locale defaultLanguage = Optional.ofNullable(dataImporterContext.getApplication())
+                .map(Application::getConfiguration)
+                .map(Configuration::applicationDescription)
+                .map(ApplicationDescription::defaultLanguage)
+                .orElse(Locale.FRENCH);
         displayPattern
                 .ifPresent(patterns -> {
                     patterns.getDescription().entrySet()
-                            .forEach(stringEntry -> {
-                                displaysDescription.put(DataColumn.forDisplayDescription(stringEntry.getKey()),
-                                        new DataColumnSingleValue(
-                                                StringType.getStringTypeFromStringValue(
-                                                parsePattern(stringEntry.getValue()).stream()
-                                                .map(patternSection -> {
-                                                            String internationalizedPattern = patternSection.text;
-                                                            if (!Strings.isNullOrEmpty(patternSection.variable)) {
-                                                                String referencedColumn = patternSection.variable;
-                                                                internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, stringEntry.getKey().getDisplayName());                                                            }
-                                                            return internationalizedPattern;
-                                                        }
-                                                )
-                                                .collect(Collectors.joining()))
-                                        )
+                            .forEach(entryByLocale -> {
+                                DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
+                                        StringType.getStringTypeFromStringValue(
+                                                parsePattern(entryByLocale.getValue()).stream()
+                                                        .map(patternSection -> {
+                                                                    String internationalizedPattern = patternSection.text;
+                                                                    if (!Strings.isNullOrEmpty(patternSection.variable)) {
+                                                                        String referencedColumn = patternSection.variable;
+                                                                        internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, entryByLocale.getKey().getDisplayName());
+                                                                    }
+                                                                    return internationalizedPattern;
+                                                                }
+                                                        )
+                                                        .collect(Collectors.joining()))
                                 );
+                                displaysDescription.put(DataColumn.forDisplayDescription(entryByLocale.getKey()),
+                                        displayForLocale
+                                );
+                                if (entryByLocale.getKey().equals(defaultLanguage)) {
+                                    displaysDescription.put(DataColumn.forDisplayName("default"), displayForLocale);
+                                }
                             });
                 });
-        String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
-                .stream()
-                .map(columnName ->
-                        refValues.values().entrySet()
-                                .stream()
-                                .filter(entry -> entry.getKey().column().equals(columnName))
-                                .map(Map.Entry::getValue)
-                                .map(DataColumnValue::toJsonForFrontend)
-                                .map(Object::toString)
-                                .findFirst()
-                                .orElse("")
+        if (!displaysDescription.contains(DataColumn.forDisplayName("default"))) {
+            String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
+                    .stream()
+                    .map(columnName ->
+                            refValues.values().entrySet()
+                                    .stream()
+                                    .filter(entry -> entry.getKey().column().equals(columnName))
+                                    .map(Map.Entry::getValue)
+                                    .map(DataColumnValue::toJsonForFrontend)
+                                    .map(Object::toString)
+                                    .findFirst()
+                                    .orElse("")
 
-                )
-                .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                    )
+                    .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+        }
         return displaysDescription;
     }
 
     public static List<String> getPatternColumns(final String pattern) {
         return getPatternSplitStream(pattern)
                 .map(k -> k.length > 1 ? k[1] : "")
-                .filter(k-> !Strings.isNullOrEmpty(k))
+                .filter(k -> !Strings.isNullOrEmpty(k))
                 .collect(Collectors.toList());
     }
 
     public static List<PatternSection> parsePattern(final String pattern) {
         return getPatternSplitStream(pattern)
-                .map(section->new PatternSection(section))
+                .map(section -> new PatternSection(section))
                 .collect(Collectors.toList());
     }
 
     private static Stream<String[]> getPatternSplitStream(final String pattern) {
         return Stream.of(pattern.split("}"))
-                            .map(s -> s.split("\\{"));
+                .map(s -> s.split("\\{"));
     }
 
-    public static class PatternSection{
+    public static class PatternSection {
         final String text;
         final String variable;
 

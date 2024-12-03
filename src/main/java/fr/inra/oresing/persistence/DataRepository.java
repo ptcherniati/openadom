@@ -7,7 +7,9 @@ import com.google.common.collect.Iterators;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
+import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataValue;
+import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
@@ -261,18 +263,36 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     public Map<String, Map<String, String>> findDisplayByNaturalKey(final String refType) {
-        final String query = "select 'java.util.Map' as \"@class\" , jsonb_build_object(naturalkey, jsonb_agg(display)) json\n" +
-                "           from " + getTable().getSqlIdentifier() + ",\n" +
-                "lateral\n" +
-                "(select  jsonb_build_object(\n" +
-                "                  replace(\n" +
-                "                      replace(jsonb_path_query(refvalues, '$.keyvalue()?(@.key like_regex \"__display.*\").key')::text, '__display_',''),\n" +
-                "                      '\"',''),\n" +
-                "                          trim('\"' FROM jsonb_path_query(refvalues, '$.keyvalue()?(@.key like_regex \"__display.*\").value')::text)\n" +
-                "                  ) as display\n" +
-                "    )displays\n" +
-                "where ReferenceType = :refType\n" +
-                "group by naturalkey";
+        final String query = """
+                
+                SELECT 
+                    'java.util.Map' AS "@class" , 
+                    jsonb_build_object(
+                        naturalkey, 
+                        jsonb_agg(display)) json
+               FROM %2$s,
+                LATERAL
+                (SELECT  jsonb_build_object(
+                                  replace(
+                                      replace(
+                                           jsonb_path_query(
+                                               refvalues, 
+                                               '$.keyvalue()?(@.key like_regex "%1$s.*").key'
+                                           )::text, 
+                                           '%1$s',
+                                           ''
+                                      ),
+                                      '"',''),
+                                       TRIM('"' FROM 
+                                           jsonb_path_query(
+                                               refvalues, 
+                                               '$.keyvalue()?(@.key like_regex "%1$s.*").value'
+                                           )::text)
+                                  ) AS display
+                    )displays
+                WHERE referencetype = :refType
+                GROUP BY naturalkey"""
+                .formatted(DataColumn.DISPLAY,  getTable().getSqlIdentifier());
         final Map<String, Map<String, String>> displayForNaturalKey = new HashMap<>();
         final List result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("refType", refType), getJsonRowMapper());
         for (final Object o : result) {
