@@ -22,6 +22,7 @@ import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.context.column.OneValueStaticPatternColumn;
 import fr.inra.oresing.domain.data.deposit.validation.*;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.PatternValidationCheckResult;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.DataHeaderReader;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -161,26 +162,32 @@ public class DataImporter {
             Optional.ofNullable(validationCheckResults)
                     .filter(ValidationCheckResult::isSuccess)
                     .ifPresent(validationCheckResult -> {
-                        final DataColumn dataColumn = (DataColumn) validationCheckResult.target();
-                        final DataColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(dataColumn);
-                        DataColumnValue valueToStoreInDatabase =
-                                validationCheckResults.transform(
-                                        lineChecker,
-                                        referenceColumnRawValue,
-                                        dataColumn,
-                                        refsLinkedTo);
-                        List<DataColumn> patternOfColumn = Arrays.stream(dataColumn.column().split(Column.COLUMN_IN_COLUMN_SEPARATOR))
-                                .map(DataColumn::new)
-                                .toList();
-                        DataColumn firstPatternOfColumn = patternOfColumn.get(0);
-                        DataColumnValue columnValue = referenceDatum.get(firstPatternOfColumn);
-                        if (columnValue instanceof DataColumnPatternValue dataColumnPatternValue) {
-                            DataColumn secondPatternOfColumn = patternOfColumn.get(1);
-                            dataColumnPatternValue.values().put(secondPatternOfColumn, valueToStoreInDatabase);
-                            valueToStoreInDatabase = columnValue;
-                        }
-                        referenceDatum.put(firstPatternOfColumn, valueToStoreInDatabase);
-                    });
+                                final DataColumn dataColumn = (DataColumn) validationCheckResult.target();
+                                final DataColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(dataColumn);
+                                DataColumnValue valueToStoreInDatabase =
+                                        validationCheckResults.transform(
+                                                lineChecker,
+                                                referenceColumnRawValue,
+                                                dataColumn,
+                                                refsLinkedTo);
+                                List<DataColumn> patternOfColumn = Arrays.stream(dataColumn.column().split(Column.COLUMN_IN_COLUMN_SEPARATOR))
+                                        .map(DataColumn::new)
+                                        .toList();
+                                DataColumn firstPatternOfColumn = patternOfColumn.get(0);
+                                DataColumnValue columnValue = referenceDatum.get(firstPatternOfColumn);
+                                if (columnValue instanceof DataColumnPatternValue dataColumnPatternValue) {
+                                    if (patternOfColumn.size() > 1) {
+                                        DataColumn secondPatternOfColumn = patternOfColumn.get(1);
+                                        dataColumnPatternValue.values().put(secondPatternOfColumn, valueToStoreInDatabase);
+                                        valueToStoreInDatabase = columnValue;
+                                    } else {
+                                        firstPatternOfColumn = new DataColumn(Column.__VALUE__);
+                                        valueToStoreInDatabase = new DataColumnSingleValue(((PatternValidationCheckResult) validationCheckResults).value().getColumnValue());
+                                    }
+                                }
+                                referenceDatum.put(firstPatternOfColumn, valueToStoreInDatabase);
+                            }
+                    );
 
             Optional.ofNullable(validationCheckResults)
                     .filter(validationCheckResult -> !validationCheckResult.isSuccess())
@@ -473,7 +480,7 @@ public class DataImporter {
 
     private fr.inra.oresing.domain.Authorization getLineAuthorization(DataDatum referenceDatum, long lineNumber, ReportErrors errors) {
         final Authorization authorization = dataImporterContext.getAuthorization();
-        if(authorization==null){
+        if (authorization == null) {
             return new fr.inra.oresing.domain.Authorization();
         }
 
