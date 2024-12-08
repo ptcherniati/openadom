@@ -6,19 +6,19 @@ import java.util.Locale;
 import java.util.Set;
 
 public record DownloadDatasetQueryOnlyMetadata(
-        boolean hasPatternDefinition,
         Application application,
         String dataName,
-        Locale locale
+        Locale locale,
+        boolean horizontalDisplay
 ) implements DownloadDatasetQuery {
 
 
     public static DownloadDatasetQuery of(DownloadDatasetQuery downloadDatasetQuery) {
         return new DownloadDatasetQueryOnlyMetadata(
-                downloadDatasetQuery.hasPatternDefinition(),
                 downloadDatasetQuery.application(),
                 downloadDatasetQuery.dataName(),
-                downloadDatasetQuery.outPut().locale());
+                downloadDatasetQuery.outPut().locale(),
+                downloadDatasetQuery.horizontalDisplay());
     }
 
     @Override

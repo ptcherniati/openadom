@@ -484,23 +484,24 @@ public class OreSiService {
     }
 
     public Mono<List<DownloadDatasetQueryByRowId>> getDownloadDatasetQueriesAsync(
-            boolean hasPatternDefinition,
+            long patternDefinitionCount,
             Application application,
             Locale locale,
             DataRepository dataRepository,
-            Set<UUID> uuidsFromData) {
+            Set<UUID> uuidsFromData,
+            boolean horizontalDisplay) {
         return Flux.fromStream(dataRepository.getLinkedReferenceValuesStream(uuidsFromData))
                 .map(dataValuesByDataType -> {
                     String dataType = dataValuesByDataType.getDataType();
                     Set<DataRowIds> ids = dataValuesByDataType.getIds();
                     return new DownloadDatasetQueryByRowId(
-                            hasPatternDefinition,
                             application,
                             dataType,
                             new OutPut(locale, 0L, null),
                             new HashSet<>(),
                             new HashSet<>(),
-                            ids
+                            ids,
+                            horizontalDisplay
                     );
                 })
                 .collectList();
@@ -520,11 +521,13 @@ public class OreSiService {
 
 
         getDownloadDatasetQueriesAsync(
-                downloadDatasetQuery.hasPatternDefinition(),
+                downloadDatasetQuery.patternDefinitionCount(),
                 application,
                 downloadDatasetQuery.outPut().locale(),
                 dataRepository,
-                uuiDsfromData.uuidsfromData())
+                uuiDsfromData.uuidsfromData(),
+                downloadDatasetQuery.horizontalDisplay()
+        )
                 .subscribe(downloadDatasetQueries -> {
                     for (DownloadDatasetQueryByRowId downloadDatasetQueryByRowId : downloadDatasetQueries) {
                         try {
@@ -780,8 +783,16 @@ public class OreSiService {
         return new GetAdditionalFilesResult(grantableUsers, additionalFilesInfos.getFiletype(), additionalBinaryFileResults, description, fileNamesForFiletype);
     }
 
-    public void getDataCsvStream(final OutputStream outputStream, final String applicationNameOrId, final String ReferenceType, Locale language) {
-        dataService.getDataCsvStream(outputStream, applicationNameOrId, ReferenceType, language);
+    public void getDataCsvStream(final OutputStream outputStream,
+                                 final String applicationNameOrId,
+                                 final String ReferenceType,
+                                 Locale language,
+                                 boolean horizontalDisplay) {
+        dataService.getDataCsvStream(outputStream,
+                applicationNameOrId,
+                ReferenceType,
+                language,
+                horizontalDisplay);
     }
 
     public Application validateConfiguration(final ReactiveProgression.CreateApplicationProgression fluxSink, final MultipartFile file) {
@@ -1177,8 +1188,7 @@ public class OreSiService {
         } catch (Exception e) {
             log.error("Erreur générale lors de la création du bundle", e);
             referentielsEnErreur.add("ERREUR_GENERALE");
-        }
-        finally {
+        } finally {
             zipOutputStream.close();
         }
 

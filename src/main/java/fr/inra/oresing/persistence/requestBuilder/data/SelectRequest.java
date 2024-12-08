@@ -19,13 +19,16 @@ record SelectRequest(
         SelectRequestLimit limit
 ) {
     SqlRequest build() {
-        String select = Optional.ofNullable(selectRequestRequest()).map(SelectRequestRequest::build).orElse("")
-                        .formatted(
-                            Optional.ofNullable(orderBy()).map(SelectRequestOrderBy::build).orElse(""), //$1%s
-                            Optional.ofNullable(offset()).map(SelectRequestOffset::build).orElse(""),//$2%s
-                            Optional.ofNullable(limit()).map(SelectRequestLimit::build).orElse("")//$3%s
+        String select = Optional
+                .ofNullable(selectRequestRequest())
+                .map(request -> request.build(downloadDatasetQuery().horizontalDisplay()))
+                .orElse("")
+                .formatted(
+                        Optional.ofNullable(orderBy()).map(SelectRequestOrderBy::build).orElse(""), //$1%s
+                        Optional.ofNullable(offset()).map(SelectRequestOffset::build).orElse(""),//$2%s
+                        Optional.ofNullable(limit()).map(SelectRequestLimit::build).orElse("")//$3%s
 
-                        );
+                );
         return new SqlRequest(
                 select,
                 parameterSource()
@@ -33,7 +36,7 @@ record SelectRequest(
     }
 
     record SelectRequestRequest(
-            boolean hasPatternDefinition,
+            long patternDefinitionCount,
             String dataName,
             List<BuildRemoveSqlSelectNotInValues> buildRemoveSqlSelectNotInValues,
             String from,
@@ -69,47 +72,47 @@ record SelectRequest(
                 """;
 
         static final String TEMPLATE_WITH_NO_PATTERNS_DEFINITION = """
-                SELECT 
-                    'fr.inra.oresing.persistence.DataRows' AS "@class",
-                    jsonb_build_object(
-                      'rowNumber', row_number() over (),
-                      'totalRows', count(*) over (),
-                      'rowId', ARRAY[id],
-                      'naturalKey', naturalkey,
-                      'hierarchicalKey', hierarchicalkey,
-                      'patternColumnName', ARRAY[patterncolumnname],
-                      'values', ARRAY[refvalues] ,
-                      'refsLinkedTo', ARRAY[refsLinkedTo],
-                       'allPatternColumnNames',ARRAY[patterncolumnname]
-					) AS   "json"
-                	FROM %3$s.referencevalue rs
-                    WHERE
-                            rs.referencetype = '%4$s'%5$s
-                            
-                %%1$s --order by 
-                %%2$s --offset
-                %%3$s --limit
+                           SELECT 
+                               'fr.inra.oresing.persistence.DataRows' AS "@class",
+                               jsonb_build_object(
+                                 'rowNumber', row_number() over (),
+                                 'totalRows', count(*) over (),
+                                 'rowId', ARRAY[id],
+                                 'naturalKey', naturalkey,
+                                 'hierarchicalKey', hierarchicalkey,
+                                 'patternColumnName', ARRAY[patterncolumnname],
+                                 'values', ARRAY[refvalues] ,
+                                 'refsLinkedTo', ARRAY[refsLinkedTo],
+                                  'allPatternColumnNames',ARRAY[patterncolumnname]
+                ) AS   "json"
+                           	FROM %3$s.referencevalue rs
+                               WHERE
+                                       rs.referencetype = '%4$s'%5$s
+                
+                           %%1$s --order by 
+                           %%2$s --offset
+                           %%3$s --limit
                 """;
 
-        public String build() {
-            return (hasPatternDefinition()? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
+        public String build(boolean horizontalDisplay) {
+            return ((patternDefinitionCount() > 1 || (patternDefinitionCount()==1 && horizontalDisplay))? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
                     .formatted(
-                    buildRemoveSqlSelectNotInValues.stream()
-                            .map(BuildRemoveSqlSelectNotInValues::valuePathToHide)
-                            .distinct()
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.joining("")),
-                    buildRemoveSqlSelectNotInValues.stream()
-                            .map(BuildRemoveSqlSelectNotInValues::refsLinkedToPathToHide)
-                            .distinct()
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.joining("")),
-                    from,
-                    dataName(),
-                    Optional.ofNullable(requestWhereInSelect())
-                            .map(SelectRequestWhere::build)
-                            .orElse("")
-            );
+                            buildRemoveSqlSelectNotInValues.stream()
+                                    .map(BuildRemoveSqlSelectNotInValues::valuePathToHide)
+                                    .distinct()
+                                    .filter(Objects::nonNull)
+                                    .collect(Collectors.joining("")),
+                            buildRemoveSqlSelectNotInValues.stream()
+                                    .map(BuildRemoveSqlSelectNotInValues::refsLinkedToPathToHide)
+                                    .distinct()
+                                    .filter(Objects::nonNull)
+                                    .collect(Collectors.joining("")),
+                            from,
+                            dataName(),
+                            Optional.ofNullable(requestWhereInSelect())
+                                    .map(SelectRequestWhere::build)
+                                    .orElse("")
+                    );
         }
     }
 
@@ -154,8 +157,7 @@ record SelectRequest(
                             .map(vckob -> {
                                         final String cast = switch (vckob.sqlType()) {
                                             case final ComponentBooleanType componentBooleanType -> "BOOL";
-                                            case final ComponentDateType componentDateType ->
-                                                    "COMPOSITE_DATE::TIMESTAMP";
+                                            case final ComponentDateType componentDateType -> "COMPOSITE_DATE::TIMESTAMP";
                                             case final ComponentNumericType componentNumericType -> "NUMERIC";
                                             case final ComponentReferenceType componentReferenceType -> "LTREE";
                                             case final ComponentTextType componentTextType -> "TEXT";
@@ -169,7 +171,7 @@ record SelectRequest(
                                     }
                             )
                             .collect(Collectors.joining(
-                                    ",\n", "ORDER BY ","")
+                                    ",\n", "ORDER BY ", "")
                             ) :
                     "";
         }

@@ -472,7 +472,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public Flux<DataRows> findAllByDataTypeFlux(final DownloadDatasetQuery downloadDatasetQuery) {
         final Stream result;
         final SqlRequest sqlRequest = DataRequestBuilder.buildSelectRequest(downloadDatasetQuery);
-        result = getNamedParameterJdbcTemplate().queryForStream(sqlRequest.sql(), sqlRequest.parameterSource(), new JsonRowMapper<DataRows>());
+            result = getNamedParameterJdbcTemplate().queryForStream(sqlRequest.sql(), sqlRequest.parameterSource(), new JsonRowMapper<DataRows>());
 
         return Flux.<DataRows>fromStream(result.toList().stream());//Flux.<DataRows>fromStream(result.toList().stream());
     }

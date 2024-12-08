@@ -6,13 +6,13 @@ import fr.inra.oresing.domain.application.Application;
 import java.util.*;
 
 public record DownloadDatasetQueryAdvancedSearch(
-        boolean hasPatternDefinition,
         Application application,
         String dataName,
         OutPut outPut,
         Set<String> componentSelects,
         Set<ComponentFilters> componentFilters,
-        Set<ComponentOrderBy> componentOrderBy
+        Set<ComponentOrderBy> componentOrderBy,
+        boolean horizontalDisplay
 ) implements DownloadDatasetQuery {
 
     public enum FieldType {

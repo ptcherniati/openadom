@@ -511,19 +511,13 @@ public class DataService {
             final OutputStream outputStream,
             final String applicationNameOrId,
             final String dataName,
-            Locale language) {
+            Locale language,
+            boolean horizontalDisplay) {
         final Application application = applicationService.getApplication(applicationNameOrId);
         if (application.getConfiguration().getHiddenData().contains(dataName)) {
             return;
         }
         DownloadDatasetQueryNoFilter downloadDatasetQuery = new DownloadDatasetQueryNoFilter(
-                application.findData(dataName)
-                        .map(StandardDataDescription::componentDescriptions)
-                        .map(components->components.values().stream()
-                                .filter(PatternComponent.class::isInstance)
-                                .count()>1
-                        )
-                        .orElse(false),
                 application,
                 dataName,
                 new OutPut(
@@ -533,7 +527,8 @@ public class DataService {
                         -1L
                 ),
                 Set.of(),
-                Set.of()
+                Set.of(),
+                horizontalDisplay
         );
         final Flux<DataRow> datas = findDataFlux(downloadDatasetQuery);
         Optional<StandardDataDescription> data = downloadDatasetQuery.application()

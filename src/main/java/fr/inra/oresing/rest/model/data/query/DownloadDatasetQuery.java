@@ -32,6 +32,7 @@ public class DownloadDatasetQuery {
     Set<ComponentOrderBy> componentOrderBy;
 
     Set<AuthorizationDescription> authorizationDescriptions;
+    boolean horizontalDisplay;
 
     public DownloadDatasetQuery() {
         super();
@@ -62,8 +63,8 @@ public class DownloadDatasetQuery {
 
     }
 
-    public boolean hasPatternDefinition() {
-        return application.hasPatternDefinition(dataName);
+    public long patternDefinitionCount() {
+        return application.patternDefinitionCount(dataName);
     }
 
     ;
@@ -78,7 +79,6 @@ public class DownloadDatasetQuery {
             final DownloadDatasetQuery downloadDatasetQuery) {
         if (CollectionUtils.isNotEmpty(downloadDatasetQuery.naturalKeys)) {
             return new DownloadDatasetQueryByNaturalKey(
-                    downloadDatasetQuery.hasPatternDefinition(),
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
@@ -98,12 +98,12 @@ public class DownloadDatasetQuery {
                                     ))
                                     .collect(Collectors.toSet())
                             ).orElse(null),
-                    downloadDatasetQuery.naturalKeys
+                    downloadDatasetQuery.naturalKeys,
+                    downloadDatasetQuery.isHorizontalDisplay()
             );
         }
         if (CollectionUtils.isNotEmpty(downloadDatasetQuery.rowIds)) {
             return new DownloadDatasetQueryByRowId(
-                    downloadDatasetQuery.hasPatternDefinition(),
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
@@ -126,12 +126,12 @@ public class DownloadDatasetQuery {
                     downloadDatasetQuery.rowIds.stream()
                             .map(UUID::fromString)
                             .map(DataRowIds::new)
-                            .collect(Collectors.toSet())
+                            .collect(Collectors.toSet()),
+                    downloadDatasetQuery.isHorizontalDisplay()
             );
         }
         if (CollectionUtils.isNotEmpty(downloadDatasetQuery.componentFilters)) {
             return new DownloadDatasetQueryAdvancedSearch(
-                    downloadDatasetQuery.hasPatternDefinition(),
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
@@ -154,11 +154,11 @@ public class DownloadDatasetQuery {
                                             downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
                                     ))
                                     .collect(Collectors.toSet())
-                            ).orElse(null)
+                            ).orElse(null),
+                    downloadDatasetQuery.isHorizontalDisplay()
             );
         }
         return new DownloadDatasetQueryNoFilter(
-                downloadDatasetQuery.hasPatternDefinition(),
                 downloadDatasetQuery.getApplication(),
                 downloadDatasetQuery.dataName,
                 new OutPut(
@@ -176,7 +176,8 @@ public class DownloadDatasetQuery {
                                         downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
                                 ))
                                 .collect(Collectors.toSet())
-                        ).orElse(null)
+                        ).orElse(null),
+                downloadDatasetQuery.isHorizontalDisplay()
         );
 
     }

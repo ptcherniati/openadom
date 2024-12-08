@@ -262,10 +262,11 @@ public record StandardDataDescription(
                 .orElseGet(constantValue::component);
     }
 
-    public boolean hasPatternDefinition() {
+    public long patternDefinitionCount() {
         return componentDescriptions()
                 .values().stream()
-                .anyMatch(PatternComponent.class::isInstance);
+                .filter(PatternComponent.class::isInstance)
+                .count();
     }
 
     record ConstantValue(String component, int lineNumber, int rowNumber) {

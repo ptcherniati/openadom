@@ -437,7 +437,7 @@ public class OreSiResources {
         Locale language = OreSiResources.getDefaultLocale();
 
         final StreamingResponseBody streamResponseBody = out -> {
-            service.getDataCsvStream(out, nameOrId, refType, language);
+            service.getDataCsvStream(out, nameOrId, refType, language, false);
 
         };
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
@@ -825,12 +825,12 @@ public class OreSiResources {
                 .map(Locale::new)
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
-        final List<DataRow> list = onlyMetadata ? List.of() : service.findData(downloadDatasetQuery);
+        final List<DataRow> data = onlyMetadata ? List.of() : service.findData(downloadDatasetQuery);
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
         Predicate<String> isNotVariable = variable -> variable.startsWith("_");
-        final ImmutableSet<String> variables = list.stream()
+        final ImmutableSet<String> variables = data.stream()
                 .limit(1)
                 .map(DataRow::getValues)
                 .map(Map::keySet)
@@ -849,9 +849,9 @@ public class OreSiResources {
                             .equals(a) ? -1 : 1;
                 })
                 .collect(ImmutableSet.toImmutableSet());
-        final Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
+        final Long totalRows = data.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
         final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = service.getCheckedFormatComponents(nameOrId, dataName);
-        Set<String> listOfDataIds = list.stream()
+        Set<String> listOfDataIds = data.stream()
                 .map(DataRow::getRowId)
                 .flatMap(List::stream)
                 .collect(Collectors.toSet());
@@ -865,7 +865,7 @@ public class OreSiResources {
                 ((ReferenceType) referenceLineChecker.fieldTypeForOne()).getReferenceValues().entrySet().stream()
                         .filter(e -> requiredreferencesValues.containsKey(e.getKey().naturalKey()))
                         .forEach(e ->
-                                list.stream()
+                                data.stream()
                                         .limit(1)
                                         .forEach(dataRow -> {
                                             final Map<String, RefsLinkedToValue> refsLinkedToValues = dataRow.getRefsLinkedTo().get(((ReferenceType) referenceLineChecker.fieldTypeForOne()).getRefType());
@@ -898,7 +898,7 @@ public class OreSiResources {
         }
         DataRepositoryWithBuffer dataRepositoryWithBuffer = service.getNewDataRepositoryWithBuffer(application);
 
-        final List<DataRowResult> dataRowResults = list.stream()
+        final List<DataRowResult> dataRowResults = data.stream()
                 .map(dataRow -> DataRowResult.of(
                         dataRow,
                         variables,
@@ -924,6 +924,7 @@ public class OreSiResources {
         Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = service.getAuthorizationScopes(application, MenuType.submission);
 
         return ResponseEntity.ok(new GetDataResult(
+                downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
                 totalRows,

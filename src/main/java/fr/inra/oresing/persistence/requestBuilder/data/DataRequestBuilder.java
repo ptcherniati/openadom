@@ -386,7 +386,7 @@ public class DataRequestBuilder {
                 downloadDatasetQuery,
                 paramSource,
                 new SelectRequest.SelectRequestRequest(
-                        downloadDatasetQuery.hasPatternDefinition(),
+                        downloadDatasetQuery.patternDefinitionCount(),
                         downloadDatasetQuery.dataName(),
                         buildRemoveSqlSelectNotInValues,
                         schema.getSqlIdentifier(),
