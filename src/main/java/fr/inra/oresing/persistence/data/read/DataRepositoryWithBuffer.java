@@ -36,7 +36,9 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
     @Override
     public Map<String, Map<String, String>> findDisplayByReferenceType(String referenceType) {
         return getDataFromFileOrRepository(fileWithPrefix(referenceType, PREFIX_FOR_DISPLAY),
-                stream -> stream.collect(Collectors.groupingBy(
+                stream -> stream
+                        .filter(parts->parts.length>3)
+                        .collect(Collectors.groupingBy(
                         parts -> parts[1],
                         Collectors.toMap(parts -> parts[2], parts -> parts[3])
                 ))

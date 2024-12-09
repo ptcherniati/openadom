@@ -3,7 +3,9 @@ package fr.inra.oresing.rest.model.data;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.NullType;
+import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
+import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import org.apache.commons.collections.keyvalue.DefaultMapEntry;
@@ -26,7 +28,7 @@ public record DataRowResult(List<String> rowId, String naturalKey, String hierar
         final Map<String, Object> rows = new HashMap<>();
         for (final Map.Entry<String, FieldType> componentEntry : dataRow.getValues().entrySet()) {
             final String component = componentEntry.getKey();
-            if (variables.contains(component)) {
+            if (variables.contains(component) || componentEntry.getKey().startsWith(DataColumn.DISPLAY)) {
                 rows
                         .put(component, Optional.ofNullable(componentEntry)
                                 .map(Map.Entry::getValue)

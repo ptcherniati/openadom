@@ -393,15 +393,15 @@ public class OreSiResourcesTest {
                     .andExpect(result -> {
                         final List<String> expected = """
                                 "tze_type_nom";"zet_chemin_parent";"zet_description_en";"zet_nom_en";"zet_nom_key"
-                                "bassin_versant";"";"Watershed Nivelle";"Nivelle";"nivelle"
-                                "bassin_versant";"";"Oir catchment";"Oir";"oir"
-                                "bassin_versant";"";"Watershed Scarff";"Scarff";"scarff"
-                                "plateforme";"nivelle";"";"P1";"p1"
-                                "plateforme";"oir";"";"P1";"p1"
-                                "plateforme";"oir__p1";"";"A";"a"
-                                "plateforme";"oir__p1";"";"B";"b"
-                                "plateforme";"oir";"";"P2";"p2"
-                                "plateforme";"scarff";"";"P1";"p1\""""
+                                "Watershed";"";"Watershed Nivelle";"Nivelle";"nivelle"
+                                "Watershed";"";"Oir catchment";"Oir";"oir"
+                                "Watershed";"";"Watershed Scarff";"Scarff";"scarff"
+                                "Platform";"- Nivelle";"";"P1";"p1"
+                                "Platform";"- Oir";"";"P1";"p1"
+                                "Platform";"oir - P1";"";"A";"a"
+                                "Platform";"oir - P1";"";"B";"b"
+                                "Platform";"- Oir";"";"P2";"p2"
+                                "Platform";"- Scarff";"";"P1";"p1\""""
                                 .lines().collect(Collectors.toCollection(LinkedList::new));
                         final List<String> actual = new String(result.getResponse().getContentAsByteArray())
                                 .lines().collect(Collectors.toCollection(LinkedList::new));
