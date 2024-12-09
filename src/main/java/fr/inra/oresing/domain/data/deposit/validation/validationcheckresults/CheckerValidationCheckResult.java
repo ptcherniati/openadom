@@ -13,7 +13,7 @@ import java.util.Set;
 import java.util.UUID;
 
 public sealed interface CheckerValidationCheckResult<T extends FieldType> extends ValidationCheckResult
-        permits DefaultManyValidationCheckResult, GroovyValidationCheckResult, BooleanValidationCheckResult, DateValidationCheckResult, DefaultCheckerValidationCheckResult, FloatValidationCheckResult, IntegerValidationCheckResult, ReferenceValidationCheckResult, StringValidationCheckResult {
+        permits BooleanValidationCheckResult, DateValidationCheckResult, DefaultCheckerValidationCheckResult, DefaultManyValidationCheckResult, FloatValidationCheckResult, GroovyValidationCheckResult, IntegerValidationCheckResult, PatternValidationCheckResult, ReferenceValidationCheckResult, StringValidationCheckResult {
     T value();
 
     default DataColumnValue transform(final LineChecker lineChecker, final DataColumnValue referenceColumnRawValue, final DataColumn dataColumn, final Map<String, Map<String, Set<UUID>>> refsLinkedTo) {

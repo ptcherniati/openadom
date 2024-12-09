@@ -339,8 +339,9 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
             DataColumn column = (DataColumn) target();
             FieldType valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
             CheckerValidationCheckResult validationCheckResults = Optional.ofNullable(valuesToCheck)
-                    .map(Object::toString)
+                    .map(FieldType::toStringForComponentValue)
                     .map(this::checkRequiredThenCheck)
+                    .map(valuesToCheck::postTreatment)
                     .orElseThrow(() -> new NotImplementedException("I don't know"));
             return validationCheckResults;
         }

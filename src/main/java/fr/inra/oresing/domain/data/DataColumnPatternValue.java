@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -11,17 +12,24 @@ import java.util.stream.Collectors;
 public record DataColumnPatternValue(
         Map<DataColumn, DataColumnValue> values) implements DataColumnValue<Map<String, Object>, Map<String, Object>> {
 
+    public DataColumnPatternValue(FieldType valuesToCheck) {
+        this(switch (valuesToCheck) {
+            case PatternType patternType -> patternType.getValue();
+            case null, default -> new HashMap<>();
+        });
+    }
+
     @Override
-    public MapType getValuesToCheck() {
+    public PatternType getValuesToCheck() {
         Map<String, FieldType> valuesToCheck = values().entrySet()
                 .stream().collect(Collectors.toMap(e -> e.getKey().column(), e -> e.getValue().getValuesToCheck()));
-        return new MapType<String, FieldType>(valuesToCheck);
+        return new PatternType<String, FieldType>(valuesToCheck);
     }
 
     @Override
     public DataColumnPatternValue transform(final Function<FieldType, FieldType> transformation) {
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
-        return new DataColumnPatternValue(null);
+        return new DataColumnPatternValue((FieldType) null);
     }
 
     @Override
@@ -38,14 +46,14 @@ public record DataColumnPatternValue(
 
     @Override
     public Map<String, Object> toJsonForDatabase() {
-        return  toStringStringMap();
+        return toStringStringMap();
     }
 
     private Map<String, Object> toStringStringMap() {
         final Map<String, Object> jsonForDatabase = values.entrySet().stream()
-                .collect(Collectors.toMap(entry -> entry.getKey().column(), entry-> {
+                .collect(Collectors.toMap(entry -> entry.getKey().column(), entry -> {
                     Object value = entry.getValue().toJsonForDatabase();
-                    return switch (value){
+                    return switch (value) {
                         case IntegerType integerType -> integerType.getValue();
                         case BooleanType booleanType -> booleanType.getValue();
                         case FloatType floatType -> floatType.getValue();
@@ -54,5 +62,9 @@ public record DataColumnPatternValue(
                     };
                 }));
         return jsonForDatabase;
+    }
+
+    public void put(DataColumn secondPatternOfColumn, DataColumnValue valueToStoreInDatabase) {
+        values().put(secondPatternOfColumn, valueToStoreInDatabase);
     }
 }
