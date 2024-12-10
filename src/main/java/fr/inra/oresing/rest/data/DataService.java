@@ -495,6 +495,7 @@ public class DataService {
             return Flux.empty();
         }
         dataRepository = getDataRepository(downloadDatasetQuery);
+        authenticationService.setRoleForClient();
         return dataRepository.findAllByDataTypeFlux(downloadDatasetQuery)
                 .map(dataRows -> DataRow.of(downloadDatasetQuery.application().findData(downloadDatasetQuery.dataName()), dataRows));
     }
