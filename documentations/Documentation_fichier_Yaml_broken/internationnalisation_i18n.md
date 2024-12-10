@@ -25,7 +25,7 @@ Illustration du contenu du fichier configuration pour le noeud i18n :
 
 ### 2.1. éléments indépendants des référentiels et types de données d'un SI
 
-Certains éléments indépendants des référentiels et des types de données peuvent être concernés par un titre et ou une decription qui peuvent être internationalisés.
+Certains éléments indépendants des référentiels et des types de données peuvent être concernés par un titre et ou une description qui peuvent être internationalisés.
 
 **le titre de l'application et sa description**
 
