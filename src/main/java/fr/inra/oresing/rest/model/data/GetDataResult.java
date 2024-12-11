@@ -14,6 +14,7 @@ import java.util.Set;
 
 
 public record GetDataResult(
+        long patternDefinitionCount,
         Set<String> variables,
         List<DataRowResult> rows,
         //Long totalRows,

@@ -19,7 +19,10 @@ record SelectRequest(
         SelectRequestLimit limit
 ) {
     SqlRequest build() {
-        String select = Optional.ofNullable(selectRequestRequest()).map(SelectRequestRequest::build).orElse("")
+        String select = Optional
+                .ofNullable(selectRequestRequest())
+                .map(request -> request.build(downloadDatasetQuery().horizontalDisplay()))
+                .orElse("")
                         .formatted(
                             Optional.ofNullable(orderBy()).map(SelectRequestOrderBy::build).orElse(""), //$1%s
                             Optional.ofNullable(offset()).map(SelectRequestOffset::build).orElse(""),//$2%s
@@ -33,7 +36,7 @@ record SelectRequest(
     }
 
     record SelectRequestRequest(
-            boolean hasPatternDefinition,
+            long patternDefinitionCount,
             String dataName,
             List<BuildRemoveSqlSelectNotInValues> buildRemoveSqlSelectNotInValues,
             String from,
@@ -91,8 +94,8 @@ record SelectRequest(
                 %%3$s --limit
                 """;
 
-        public String build() {
-            return (hasPatternDefinition()? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
+        public String build(boolean horizontalDisplay) {
+            return ((patternDefinitionCount() > 1 || (patternDefinitionCount()==1 && horizontalDisplay))? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
                     .formatted(
                     buildRemoveSqlSelectNotInValues.stream()
                             .map(BuildRemoveSqlSelectNotInValues::valuePathToHide)
@@ -154,8 +157,7 @@ record SelectRequest(
                             .map(vckob -> {
                                         final String cast = switch (vckob.sqlType()) {
                                             case final ComponentBooleanType componentBooleanType -> "BOOL";
-                                            case final ComponentDateType componentDateType ->
-                                                    "COMPOSITE_DATE::TIMESTAMP";
+                                            case final ComponentDateType componentDateType -> "COMPOSITE_DATE::TIMESTAMP";
                                             case final ComponentNumericType componentNumericType -> "NUMERIC";
                                             case final ComponentReferenceType componentReferenceType -> "LTREE";
                                             case final ComponentTextType componentTextType -> "TEXT";

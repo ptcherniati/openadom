@@ -261,9 +261,9 @@ public class Application extends OreSiEntity {
                 ));
     }
 
-    public boolean hasPatternDefinition(String dataName) {
+    public long patternDefinitionCount(String dataName) {
         return findData(dataName)
-                .map(StandardDataDescription::hasPatternDefinition)
-                .orElse(false);
+                .map(StandardDataDescription::patternDefinitionCount)
+                .orElse(0L);
     }
 }
