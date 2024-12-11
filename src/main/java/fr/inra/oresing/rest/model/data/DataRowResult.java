@@ -14,10 +14,17 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public record DataRowResult(List<String> rowId, String naturalKey, String hierarchicalKey, Map<String, Object> values,
-                            Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo, Long totalRows, Long rowNumber,
-                            Map<Object, Object> displaysForRow,
-                            List<String> allPatternColumnName) {
+public record DataRowResult(
+        List<String> rowId,
+        String naturalKey,
+        String hierarchicalKey,
+        Map<String, Object> values,
+        Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
+        //Long totalRows,
+        //Long rowNumber,
+        Map<Object, Object> displaysForRow,
+        List<String> allPatternColumnName
+) {
 
     public static final String DEFAULT = "default";
 
@@ -58,8 +65,8 @@ public record DataRowResult(List<String> rowId, String naturalKey, String hierar
                 dataRow.getHierarchicalKey().getSql(),
                 rows,
                 dataRow.getRefsLinkedTo(),
-                dataRow.getTotalRows(),
-                dataRow.getRowNumber(),
+                //dataRow.getTotalRows(),
+                //dataRow.getRowNumber(),
                 displaysForRow,
                 dataRow.getAllPatternColumnNames());
     }

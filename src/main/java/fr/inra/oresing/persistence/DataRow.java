@@ -21,8 +21,8 @@ public class DataRow {
     Ltree hierarchicalKey;
     Map<String, FieldType> values;
     Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo;
-    Long totalRows;
-    Long rowNumber;
+    //Long totalRows;
+    //Long rowNumber;
     List<String> allPatternColumnNames;
 
 
@@ -76,8 +76,8 @@ public class DataRow {
                 dataRows.getHierarchicalKey(),
                 values,
                 refsLinkedTo,
-                dataRows.getTotalRows(),
-                dataRows.getRowNumber(),
+                //dataRows.getTotalRows(),
+                //dataRows.getRowNumber(),
                 dataRows.getAllPatternColumnNames()
         );
     }

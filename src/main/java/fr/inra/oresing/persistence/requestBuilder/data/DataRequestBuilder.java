@@ -302,7 +302,6 @@ public class DataRequestBuilder {
                         new SelectRequestWhereInSelect(() -> filter)
                 );
             }
-            case DownloadDatasetQueryOnlyMetadata downloadDatasetQueryOnlyMetadata -> throw new IllegalArgumentException("no request with onlyMetadata");
         };
 
     }
@@ -346,7 +345,6 @@ public class DataRequestBuilder {
                         new SelectRequestWhereInSelect(() -> filter)
                 );
             }
-            case DownloadDatasetQueryOnlyMetadata downloadDatasetQueryOnlyMetadata -> throw new IllegalArgumentException("no request with onlyMetadata");
         };
     }
 

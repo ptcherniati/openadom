@@ -20,7 +20,6 @@ import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
-import fr.inra.oresing.domain.data.read.query.DownloadDatasetQueryOnlyMetadata;
 import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
@@ -814,18 +813,19 @@ public class OreSiResources {
                     description = "An object for reduce, filter and order result"
             )
             @RequestParam(value = "downloadDatasetQuery", required = false) final String params,
-            @RequestParam(defaultValue = "false") boolean onlyMetadata) {
+            @RequestParam(defaultValue = "false") boolean loadExample) {
 
         Application application = applicationService.getApplication(nameOrId);
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
-                deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, onlyMetadata);
+                deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, loadExample);
 
         final Locale locale = Optional.ofNullable(downloadDatasetQuery)
                 .map(fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery::getLanguage)
                 .map(Locale::new)
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
-        final List<DataRow> list = onlyMetadata ? List.of() : service.findData(downloadDatasetQuery);
+
+        final List<DataRow> list = service.findData(downloadDatasetQuery);
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
@@ -849,7 +849,7 @@ public class OreSiResources {
                             .equals(a) ? -1 : 1;
                 })
                 .collect(ImmutableSet.toImmutableSet());
-        final Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
+        //final Long totalRows = list.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
         final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = service.getCheckedFormatComponents(nameOrId, dataName);
         Set<String> listOfDataIds = list.stream()
                 .map(DataRow::getRowId)
@@ -926,7 +926,7 @@ public class OreSiResources {
         return ResponseEntity.ok(new GetDataResult(
                 variables,
                 dataRowResults,
-                totalRows,
+                //totalRows,
                 checkedFormatcomponents,
                 referenceTypeForReferencingColumns,
                 referenceScopes));
@@ -1084,9 +1084,12 @@ public class OreSiResources {
     }
 
     private fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery deserialiseParamDownloadDatasetQuery(
-            final String params, final String applicationNameOrID, final String dataType, boolean onlyMetadata) {
+            final String params, final String applicationNameOrID, final String dataType, boolean loadExample) {
         try {
             final DownloadDatasetQuery downloadDatasetQuery = params != null ? new JsonRowMapper<DownloadDatasetQuery>().toObject(params, DownloadDatasetQuery.class) : new DownloadDatasetQuery();
+            if(loadExample){
+                downloadDatasetQuery.setLimit(100L);
+            }
             final Application application = applicationService.getApplication(applicationNameOrID);
             downloadDatasetQuery.setApplication(application);
             downloadDatasetQuery.setDataName(dataType);
@@ -1095,9 +1098,6 @@ public class OreSiResources {
                     .map(OutPut::locale)
                     .orElseGet(OreSiResources::getDefaultLocale);
             fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildDownloadDatasetQuery = DownloadDatasetQuery.build(downloadDatasetQuery);
-            if (onlyMetadata) {
-                return DownloadDatasetQueryOnlyMetadata.of(buildDownloadDatasetQuery);
-            }
             return buildDownloadDatasetQuery;
         } catch (final Exception e) {
             throw new BadDownloadDatasetQuery(e.getMessage());

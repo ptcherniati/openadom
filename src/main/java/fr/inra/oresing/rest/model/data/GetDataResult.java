@@ -13,8 +13,12 @@ import java.util.Optional;
 import java.util.Set;
 
 
-public record GetDataResult(Set<String> variables, List<DataRowResult> rows, Long totalRows,
-                            Map<String, Map<String, fr.inra.oresing.rest.model.data.LineCheckerResult>> checkedFormatComponents,
-                            Map<String, String> referenceTypeForReferencingColumns,
-                            Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes) {
+public record GetDataResult(
+        Set<String> variables,
+        List<DataRowResult> rows,
+        //Long totalRows,
+        Map<String, Map<String, fr.inra.oresing.rest.model.data.LineCheckerResult>> checkedFormatComponents,
+        Map<String, String> referenceTypeForReferencingColumns,
+        Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes
+) {
 }

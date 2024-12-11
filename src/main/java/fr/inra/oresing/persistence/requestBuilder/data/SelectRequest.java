@@ -52,8 +52,8 @@ record SelectRequest(
                 SELECT
                           'fr.inra.oresing.persistence.DataRows' AS "@class",
                           jsonb_build_object(
-                              'rowNumber', row_number() over (),
-                              'totalRows', count(*) over (),
+                              --'rowNumber', row_number() over (),
+                              --'totalRows', count(*) over (),
                               'rowId', array_agg(id),
                               'naturalKey', naturalkey,
                               'hierarchicalKey', hierarchicalkey,
@@ -72,8 +72,8 @@ record SelectRequest(
                 SELECT 
                     'fr.inra.oresing.persistence.DataRows' AS "@class",
                     jsonb_build_object(
-                      'rowNumber', row_number() over (),
-                      'totalRows', count(*) over (),
+                      --'rowNumber', row_number() over (),
+                      --'totalRows', count(*) over (),
                       'rowId', ARRAY[id],
                       'naturalKey', naturalkey,
                       'hierarchicalKey', hierarchicalkey,
