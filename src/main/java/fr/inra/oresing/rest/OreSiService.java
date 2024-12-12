@@ -13,6 +13,9 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManager;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationReader;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.chart.Chart;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
@@ -650,6 +653,9 @@ public class OreSiService {
     }
 
     public List<DataRow> findData(final DownloadDatasetQuery downloadDatasetQuery) {
+        ApplicationReader applicationReader = authorizationService
+                .getPrivilegeAssessorForApplication(DATA_READ, downloadDatasetQuery.application())
+                .forDataRead(downloadDatasetQuery.dataName());
         return dataService.findDataFlux(downloadDatasetQuery).collectList().block();
     }
 
