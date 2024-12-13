@@ -588,7 +588,7 @@ dataTypes:
             checker:
               name: Reference
               params:
-                refType: especes
+                refType: OA_data.yaml
       Couleur des individus:
         components:
           value:

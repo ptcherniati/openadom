@@ -301,7 +301,7 @@ OA_data:
           OA_name: OA_reference
           OA_params:
             OA_reference:
-              OA_name: especes
+              OA_name: OA_data.yaml
       is_float_value:
       ordre_affichage:
     OA_validations:

@@ -1,0 +1,78 @@
+OA_tags: [ data ]
+OA_validations:
+  variableRef:
+    OA_i18n:
+      fr: référence à la variable
+    OA_checker:
+      OA_name: OA_reference
+      OA_params:
+        OA_reference:
+          OA_name: variables
+    OA_components: [ variable ]
+  uniteRef:
+    OA_i18n:
+      fr: référence à l'unité'
+    OA_checker:
+      OA_name: OA_reference
+      OA_params:
+        OA_reference:
+          OA_name: unites
+    OA_components: [ unite ]
+  checkDatatype:
+    OA_i18n:
+      fr: test
+    OA_components: [ datatype ]
+    OA_checker:
+      OA_name: OA_groovyExpression
+      OA_params:
+        OA_groovy:
+          OA_expression: >
+            String datatype = datum.datatype; 
+            def data = application.getConfiguration().i18n().data ;
+            if(data==null){
+                return false;
+            };
+            def i18n = data
+                    .collect{ it->it.value.i18n};
+            if(i18n==null){
+                return false;
+            };
+            def title = i18n 
+                    .collect{ it->it.title};
+            if(title==null){
+                return false;
+            };
+            def french = title
+                    .collect { it->it.get(java.util.Locale.FRENCH)};
+            return french 
+                    .find{it->datatype.equals(fr.inra.oresing.domain.application.configuration.Ltree.fromUnescapedString(it.toString()).sql)}!=null;
+OA_naturalKey:
+  - datatype
+  - variable
+OA_i18n:
+  OA_title:
+    fr: Variables et unités par type de données
+    en: Variables and units by data type
+  OA_description:
+    fr: Liste de jointure des variables et unités par type de données
+    en: Variables and units by data type join list
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: >-
+      nom du type de données : {datatype}, nom de la variable
+      : {variable}, : nom de l'unité {unite}
+    en: >-
+      datatype name : {datatype}, variable name : {variable}, : unit name {unite}
+  OA_description:
+    fr: >-
+      Jointure des nom du type de données : {datatype}, nom de la variable
+      : {variable}, : nom de l'unité {unite}
+    en: >-
+      Join ondatatype name : {datatype}, variable name : {variable}, : unit name {unite}
+OA_basicComponents:
+  datatype:
+    OA_importHeader: nom du type de données
+  variable:
+    OA_importHeader: nom de la variable
+  unite:
+    OA_importHeader: nom de l'unité

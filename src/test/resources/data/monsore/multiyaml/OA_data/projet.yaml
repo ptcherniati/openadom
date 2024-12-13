@@ -1,0 +1,48 @@
+OA_tags: [ context, data, test ]
+OA_i18n:
+  OA_title:
+    fr: Projet
+    en: Project
+  OA_description:
+    fr: Liste des projets du système d'information
+    en: List of information system projects
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: "{nom_fr}"
+    en: "{nom_en}"
+  OA_description:
+    fr: "{definition_fr}"
+    en: "{definition_en}"
+OA_naturalKey:
+  - nom_key
+OA_basicComponents:
+  nom_key: null
+  nom_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "Nom"
+      OA_description:
+        fr: "Nom du projet"
+    OA_langRestrictions: [fr]
+  nom_en:
+    OA_exportHeader:
+      OA_title:
+        en: "Name"
+      OA_description:
+        en: "Project name"
+    OA_langRestrictions: [en]
+  definition_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "définition"
+      OA_description:
+        fr: "définition du projet"
+    OA_langRestrictions: [fr]
+  definition_en:
+    OA_exportHeader:
+      OA_title:
+        en: "definition"
+      OA_description:
+        en: "project definition"
+    OA_langRestrictions: [en]
+  colonne_homonyme_entre_referentiels: null

@@ -1,6 +1,6 @@
 with espece as (select distinct(naturalkey) as espece
                 from monsore.referencevalue
-                where referencetype='especes'),
+                where referencetype='OA_data.yaml'),
      couleur as (select array_agg(distinct naturalkey) couleur
                  from monsore.referencevalue
                  where referencetype='valeurs_qualitatives'

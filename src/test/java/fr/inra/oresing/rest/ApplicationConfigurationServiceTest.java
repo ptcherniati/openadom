@@ -189,7 +189,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(3, errors.size());
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.BAD_TAGS_PATTERNS.getMessage(), validationError.getMessage());
-                    assertEquals("OA_data > especes", validationError.getParam("path"));
+                    assertEquals("OA_data > OA_data.yaml", validationError.getParam("path"));
                     assertEquals(Set.of("__HIDDEN__", "__REFERENCE__", "test", "context", "no-tag", "__DATA__", "__ORDER_([0-9]*)__"), validationError.getParam(("acceptedTagPatterns")));
                 });
     }
@@ -225,7 +225,7 @@ public class ApplicationConfigurationServiceTest {
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_basicComponents > tze_type_nom > OA_checker > OA_params > OA_reference > OA_name", validationError.getParam(("path")));
-                    final Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
+                    final Set<String> expected = Arrays.stream(new String[]{"OA_data.yaml", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
                     final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
@@ -331,7 +331,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(1, errors.size() );
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.INVALID_NATURAL_KEY.getMessage(), validationError.getMessage());
-                    assertEquals("OA_data > especes", validationError.getParam(("path")));
+                    assertEquals("OA_data > OA_data.yaml", validationError.getParam(("path")));
                     assertEquals(Set.of("espNom"), validationError.getParam("invalidNaturalKeyElements"));
                     final Set<String> expected = Arrays.stream(new String[]{"esp_nom", "esp_definition_fr", "esp_definition_en", "colonne_homonyme_entre_referentiels", "my_computed_column"})
                             .collect(Collectors.toCollection(TreeSet::new));
@@ -757,7 +757,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(3, errors.size());
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.NOT_EXPECTED_DOMAIN_TAGS.getMessage(), validationError.getMessage());
-                    assertEquals("OA_data > especes", validationError.getParam("path"));
+                    assertEquals("OA_data > OA_data.yaml", validationError.getParam("path"));
                     assertEquals(Set.of("contxet"), validationError.getParam("notExpectedDomainTags"));
                     assertEquals(Set.of("test", "context"), validationError.getParam("expectedDomainTags"));
                 });
@@ -784,7 +784,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(2, errors.size() );
                     ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
-                    Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
+                    Set<String> expected = Arrays.stream(new String[]{"OA_data.yaml", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
                     Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
@@ -793,7 +793,7 @@ public class ApplicationConfigurationServiceTest {
 
                     validationError = errors.get(1);
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
-                    Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
+                    Arrays.stream(new String[]{"OA_data.yaml", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
                     new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
@@ -823,7 +823,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(2, errors.size());
                     ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
-                    Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
+                    Set<String> expected = Arrays.stream(new String[]{"OA_data.yaml", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
                     Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
@@ -832,7 +832,7 @@ public class ApplicationConfigurationServiceTest {
 
                     validationError = errors.get(1);
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
-                    Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
+                    Arrays.stream(new String[]{"OA_data.yaml", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
                     given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
@@ -854,7 +854,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(1, errors.size() );
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
-                    final Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
+                    final Set<String> expected = Arrays.stream(new String[]{"OA_data.yaml", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
                     final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
@@ -1050,7 +1050,7 @@ public class ApplicationConfigurationServiceTest {
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_dynamicComponents > proprieteDeTaxon > OA_reference", validationError.getParam(("path")));
-                    final Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
+                    final Set<String> expected = Arrays.stream(new String[]{"OA_data.yaml", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
                     final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
@@ -1074,7 +1074,7 @@ public class ApplicationConfigurationServiceTest {
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_basicComponents > tze_type_nom > OA_checker > OA_params > OA_reference > OA_name", validationError.getParam(("path")));
-                    final Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
+                    final Set<String> expected = Arrays.stream(new String[]{"OA_data.yaml", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
                     final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
@@ -1176,7 +1176,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(1, errors.size() );
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
-                    assertEquals("OA_data > especes > OA_computedComponents > my_computed_column > OA_exportHeader > OA_title > en > frrr", validationError.getParam("path"));
+                    assertEquals("OA_data > OA_data.yaml > OA_computedComponents > my_computed_column > OA_exportHeader > OA_title > en > frrr", validationError.getParam("path"));
                 });
     }
 
@@ -1189,7 +1189,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(1, errors.size() );
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
-                    assertEquals("OA_data > especes > OA_i18n > OA_title > en > frrr", validationError.getParam("path"));
+                    assertEquals("OA_data > OA_data.yaml > OA_i18n > OA_title > en > frrr", validationError.getParam("path"));
                 });
     }
 
@@ -1202,7 +1202,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(1, errors.size() );
                     final ValidationError validationError = errors.get(0);
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
-                    assertEquals("OA_data > especes > OA_i18nDisplayPattern > OA_title > en > frrr", validationError.getParam("path"));
+                    assertEquals("OA_data > OA_data.yaml > OA_i18nDisplayPattern > OA_title > en > frrr", validationError.getParam("path"));
                 });
     }
 

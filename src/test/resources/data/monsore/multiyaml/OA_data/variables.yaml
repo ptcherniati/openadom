@@ -1,0 +1,49 @@
+OA_tags: [ data ]
+OA_naturalKey:
+  - nom_key
+OA_i18n:
+  OA_title:
+    fr: Variables
+    en: Variables
+  OA_description:
+    fr: Liste des variables
+    en: Variables list
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: "{nom_fr}"
+    en: "{nom_en}"
+  OA_description:
+    fr: "{definition_fr}"
+    en: "{definition_en}"
+OA_basicComponents:
+  nom_key: null
+  nom_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "nom"
+      OA_description:
+        fr: "Le nom de la variable"
+    OA_langRestrictions: [fr]
+  nom_en:
+    OA_exportHeader:
+      OA_title:
+        en: "name"
+      OA_description:
+        en: "Variable name"
+    OA_langRestrictions: [en]
+  definition_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "définition"
+      OA_description:
+        fr: "La définition de la variable"
+    OA_langRestrictions: [fr]
+  definition_en:
+    OA_exportHeader:
+      OA_title:
+        en: "definition"
+      OA_description:
+        en: "Variable definition"
+    OA_langRestrictions: [en]
+  is_qualitative:
+    OA_importHeader: isQualitative
