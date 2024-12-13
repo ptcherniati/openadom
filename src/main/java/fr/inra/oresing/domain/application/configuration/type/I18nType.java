@@ -17,6 +17,25 @@ public record I18nType(SectionBuilder sectionBuilder,
                         Locale.availableLocales()
                                 .map(Locale::getLanguage)
                                 .filter(Predicate.not(String::isEmpty))
+                                .sorted((a,b)-> {
+                                    if (a.equals(b)) {
+                                      return 0;
+                                    }
+                                    if (a.equals(Locale.FRENCH.getLanguage())) {
+                                        return -1;
+                                    }
+                                    if (b.equals(Locale.FRENCH.getLanguage())) {
+                                        return 1;
+                                    }
+                                    if (a.equals(Locale.ENGLISH.getLanguage())) {
+                                        return -1;
+                                    }
+                                    if (b.equals(Locale.ENGLISH.getLanguage())) {
+                                        return 1;
+                                    }
+                                    return a.compareTo(b);
+                                })
+                                .distinct()
                                 .map(locale -> new LabelDescription(
                                         locale,
                                         StringType.EMPTY_INSTANCE()
