@@ -18,6 +18,18 @@ import java.util.stream.Collectors;
 public class AuthorizationInput {
     LocalDateTimeRange timeScope = LocalDateTimeRange.always();
     private Map<String, List<Ltree>> requiredAuthorizations = new HashMap<>();
+
+    public void setOperationTypes(Set<OperationType> operationTypes) {
+
+        if(operationTypes.contains(OperationType.publication)){
+            operationTypes.add(OperationType.depot);
+        }
+        if(operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)){
+            operationTypes.add(OperationType.extraction);
+        }
+        this.operationTypes = operationTypes;
+    }
+
     Set<OperationType> operationTypes = new HashSet<>();
 
     public AuthorizationInput(Map<String, List<Ltree>> requiredAuthorizations,
@@ -25,6 +37,14 @@ public class AuthorizationInput {
                               Set<OperationType> operationTypes) {
         this.requiredAuthorizations = requiredAuthorizations;
         this.timeScope = timeScope;
+
+        if(operationTypes.contains(OperationType.publication)){
+            operationTypes.add(OperationType.depot);
+            operationTypes.add(OperationType.delete);
+        }
+        if(operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)){
+            operationTypes.add(OperationType.extraction);
+        }
         this.operationTypes = operationTypes;
     }
 

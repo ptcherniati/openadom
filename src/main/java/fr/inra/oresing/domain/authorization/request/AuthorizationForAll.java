@@ -17,6 +17,9 @@ public record AuthorizationForAll(Map<String, Set<OperationType>> authorizationF
                                     if(e.getValue().contains(OperationType.publication)){
                                         e.getValue().add(OperationType.depot);
                                     }
+                                    if(e.getValue().contains(OperationType.depot) || e.getValue().contains(OperationType.delete)){
+                                        e.getValue().add(OperationType.extraction);
+                                    }
                                     return e.getValue();
                                 }
                         )
