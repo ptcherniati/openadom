@@ -37,7 +37,7 @@ public class AuthorizationInput {
                               Set<OperationType> operationTypes) {
         this.requiredAuthorizations = requiredAuthorizations;
         this.timeScope = timeScope;
-
+        operationTypes = new HashSet<>(operationTypes);
         if(operationTypes.contains(OperationType.publication)){
             operationTypes.add(OperationType.depot);
             operationTypes.add(OperationType.delete);

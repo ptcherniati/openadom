@@ -25,10 +25,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_en" : {
         "type" : "BasicComponent",
@@ -45,10 +45,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_fr" : {
         "type" : "BasicComponent",
@@ -65,10 +65,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "description_fr" : {
         "type" : "BasicComponent",
@@ -85,10 +85,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "description_en" : {
         "type" : "BasicComponent",
@@ -105,10 +105,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -145,10 +145,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "esp_definition_en" : {
         "type" : "BasicComponent",
@@ -165,10 +165,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "my_computed_column" : {
         "type" : "ComputedComponent",
@@ -192,10 +192,10 @@
           "data" : null
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : true,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : true
+        "chartDescription" : null,
+        "reference" : false
       },
       "esp_nom" : {
         "type" : "BasicComponent",
@@ -212,10 +212,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "esp_definition_fr" : {
         "type" : "BasicComponent",
@@ -232,10 +232,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -272,10 +272,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_en" : {
         "type" : "BasicComponent",
@@ -292,10 +292,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "definition_en" : {
         "type" : "BasicComponent",
@@ -312,10 +312,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "is_qualitative" : {
         "type" : "BasicComponent",
@@ -332,10 +332,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_fr" : {
         "type" : "BasicComponent",
@@ -352,10 +352,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "definition_fr" : {
         "type" : "BasicComponent",
@@ -372,10 +372,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -412,10 +412,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "tze_nom_fr" : {
         "type" : "BasicComponent",
@@ -432,10 +432,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "tze_definition_fr" : {
         "type" : "BasicComponent",
@@ -452,10 +452,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "tze_nom_en" : {
         "type" : "BasicComponent",
@@ -472,10 +472,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "tze_definition_en" : {
         "type" : "BasicComponent",
@@ -492,10 +492,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -532,10 +532,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "theme" : {
         "type" : "BasicComponent",
@@ -552,10 +552,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "projet" : {
         "type" : "BasicComponent",
@@ -572,10 +572,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "datatype" : {
         "type" : "BasicComponent",
@@ -592,10 +592,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -714,10 +714,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_key" : {
         "type" : "BasicComponent",
@@ -734,10 +734,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_en" : {
         "type" : "BasicComponent",
@@ -754,10 +754,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_fr" : {
         "type" : "BasicComponent",
@@ -774,10 +774,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "code_key" : {
         "type" : "BasicComponent",
@@ -794,10 +794,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "code_fr" : {
         "type" : "BasicComponent",
@@ -814,10 +814,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -860,10 +860,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_en" : {
         "type" : "BasicComponent",
@@ -880,10 +880,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "definition_en" : {
         "type" : "BasicComponent",
@@ -900,10 +900,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_fr" : {
         "type" : "BasicComponent",
@@ -920,10 +920,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "colonne_homonyme_entre_referentiels" : {
         "type" : "BasicComponent",
@@ -940,10 +940,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "definition_fr" : {
         "type" : "BasicComponent",
@@ -960,10 +960,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -1000,10 +1000,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_en" : {
         "type" : "BasicComponent",
@@ -1020,10 +1020,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "valeur_en" : {
         "type" : "BasicComponent",
@@ -1040,10 +1040,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_fr" : {
         "type" : "BasicComponent",
@@ -1060,10 +1060,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "valeur_key" : {
         "type" : "BasicComponent",
@@ -1080,10 +1080,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "valeur_fr" : {
         "type" : "BasicComponent",
@@ -1100,10 +1100,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -1139,10 +1139,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_en" : {
         "type" : "BasicComponent",
@@ -1159,10 +1159,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "nom_fr" : {
         "type" : "BasicComponent",
@@ -1179,10 +1179,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "description_fr" : {
         "type" : "BasicComponent",
@@ -1199,10 +1199,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "description_en" : {
         "type" : "BasicComponent",
@@ -1219,10 +1219,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -1259,10 +1259,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "datatype" : {
         "type" : "BasicComponent",
@@ -1279,10 +1279,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "unite" : {
         "type" : "BasicComponent",
@@ -1299,10 +1299,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       }
     },
     "submission" : null,
@@ -1423,10 +1423,10 @@
           "duration" : null
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "site" : {
         "type" : "BasicComponent",
@@ -1451,10 +1451,10 @@
           "isParent" : false
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "sites",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       },
       "individusNumber_unit" : {
         "type" : "ComputedComponent",
@@ -1487,10 +1487,10 @@
           "data" : null
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "unites",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       },
       "projet" : {
         "type" : "BasicComponent",
@@ -1518,10 +1518,10 @@
           "isParent" : false
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "projet",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       },
       "espece" : {
         "type" : "BasicComponent",
@@ -1546,10 +1546,10 @@
           "isParent" : false
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "especes",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       },
       "chemin" : {
         "type" : "ComputedComponent",
@@ -1582,10 +1582,10 @@
           "data" : null
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "sites",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       },
       "plateforme" : {
         "type" : "BasicComponent",
@@ -1602,10 +1602,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "color_value" : {
         "type" : "BasicComponent",
@@ -1630,10 +1630,10 @@
           "isParent" : false
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "valeurs_qualitatives",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       },
       "individusNumbervalue" : {
         "type" : "BasicComponent",
@@ -1659,10 +1659,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "color_unit" : {
         "type" : "ComputedComponent",
@@ -1695,10 +1695,10 @@
           "data" : null
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "unites",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       }
     },
     "submission" : {
@@ -1821,10 +1821,10 @@
           "isParent" : true
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "type_de_sites",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       },
       "zet_description_en" : {
         "type" : "BasicComponent",
@@ -1841,10 +1841,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "zet_nom_fr" : {
         "type" : "BasicComponent",
@@ -1861,10 +1861,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "zet_nom_key" : {
         "type" : "BasicComponent",
@@ -1881,10 +1881,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "zet_nom_en" : {
         "type" : "BasicComponent",
@@ -1901,10 +1901,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "zet_description_fr" : {
         "type" : "BasicComponent",
@@ -1921,10 +1921,10 @@
         "mandatory" : "OPTIONAL",
         "checker" : null,
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "reference" : false,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : false
       },
       "zet_chemin_parent" : {
         "type" : "BasicComponent",
@@ -1949,10 +1949,10 @@
           "isParent" : true
         },
         "submissionAuthorizationScope" : null,
-        "chartDescription" : null,
+        "hidden" : false,
         "referenceCheckerType" : "sites",
-        "reference" : true,
-        "hidden" : false
+        "chartDescription" : null,
+        "reference" : true
       }
     },
     "submission" : null,
