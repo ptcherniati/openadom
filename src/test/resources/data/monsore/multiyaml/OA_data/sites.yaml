@@ -1,0 +1,64 @@
+OA_tags: [ context ]
+OA_naturalKey:
+  - zet_chemin_parent
+  - zet_nom_key
+OA_i18n:
+  OA_title:
+    fr: Site
+    en: Site
+  OA_description:
+    fr: Liste des sites du système d'information
+    en: Sites list
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: "{zet_chemin_parent} - {zet_nom_fr} "
+    en: "{zet_chemin_parent} - {zet_nom_fr}"
+  OA_description:
+    fr: "{zet_description_fr}"
+    en: "{zet_description_en}"
+OA_basicComponents:
+  tze_type_nom:
+    OA_required: true
+    OA_checker:
+      OA_name: OA_reference
+      OA_params:
+        OA_reference:
+          OA_name: type_de_sites
+          OA_isParent: true
+  zet_nom_key: null
+  zet_nom_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "Nom du site"
+      OA_description:
+        fr: "Le nom du site"
+    OA_langRestrictions: [fr]
+  zet_nom_en:
+    OA_exportHeader:
+      OA_title:
+        en: "Site name"
+      OA_description:
+        en: "The site name"
+    OA_langRestrictions: [en]
+  zet_description_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "définition"
+      OA_description:
+        fr: "La definition du site"
+    OA_langRestrictions: [fr]
+  zet_description_en:
+    OA_exportHeader:
+      OA_title:
+        en: "definition"
+      OA_description:
+        en: "site definition"
+    OA_langRestrictions: [en]
+  zet_chemin_parent:
+    OA_required: false
+    OA_checker:
+      OA_name: OA_reference
+      OA_params:
+        OA_reference:
+          OA_name: sites
+          OA_isRecursive: true

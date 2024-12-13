@@ -793,8 +793,8 @@ public class OreSiService {
     public Application validateConfiguration(final ReactiveProgression.CreateApplicationProgression fluxSink, final MultipartFile file) {
         try {
             final Application application;
-            if (Objects.requireNonNull(file.getOriginalFilename()).matches(".zip")) {
-                application = ApplicationConfigurationService.unzipConfiguration(file);
+            if (file.getOriginalFilename().matches(".*\\.zip")) {
+                application = ApplicationConfigurationService.unzipConfiguration(file, fluxSink);
             } else {
                 application = ApplicationConfigurationService.parseConfigurationBytes(null, fluxSink, FileBomResolver.of(file.getInputStream()));
             }

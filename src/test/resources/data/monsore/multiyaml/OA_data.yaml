@@ -1,0 +1,142 @@
+especes:
+  OA_tags: [ context, data, test,  __DATA__, __ORDER_2__ ]
+  OA_i18n:
+    OA_title:
+      fr: Piégeage en Montée
+      en: Trap in ascent
+    OA_description:
+      fr: Données de pêche par piégeage en Montée
+      en: Upstream trapping fishing data
+  OA_naturalKey:
+    - projet
+    - site
+    - plateforme
+    - date
+    - espece
+  OA_dataHeaderLine: 4
+  OA_dataFirstLine: 5
+  OA_basicComponents:
+    projet:
+      OA_tags: [ test, __ORDER_2__ ]
+      OA_checker:
+        OA_name: OA_reference
+        OA_params:
+          OA_reference:
+            OA_name: projet
+    site:
+      OA_importHeader: site
+      OA_checker:
+        OA_name: OA_reference
+        OA_params:
+          OA_reference:
+            OA_name: sites
+    plateforme:
+    date:
+      OA_tags: [ temporal, __ORDER_1__ ]
+      OA_required: true
+      OA_checker:
+        OA_name: OA_date
+        OA_params:
+          OA_pattern: dd/MM/yyyy
+    espece:
+      OA_checker:
+        OA_name: OA_reference
+        OA_params:
+          OA_reference:
+            OA_name: especes
+    color_value:
+      OA_importHeader: "Couleur des individus"
+      OA_exportHeader:
+        OA_title:
+          fr: Couleur des individus
+          en: United colors
+      OA_checker:
+        OA_name: OA_reference
+        OA_params:
+          OA_reference:
+            OA_name: valeurs_qualitatives
+    individusNumbervalue:
+      OA_importHeader: "Nombre d'individus"
+      OA_exportHeader:
+        OA_title:
+          fr: Nombre d'individus
+          en: Number of individuals
+      OA_defaultValue:
+        OA_expression: return 0
+  OA_computedComponents:
+    chemin: #optional
+      OA_withNaturalKeyComponents:   #optional
+        - site  #optional
+        - plateforme  #optional
+      OA_checker:
+        OA_name: OA_reference
+        OA_params:
+          OA_reference:
+            OA_name: sites
+      OA_exportHeader:   #optional
+        OA_title:
+          fr: Chemin
+          en: Path
+        OA_description:
+          fr: Données calculant le chemin complet du site
+          en: Data calculating the full path of the site
+    color_unit:
+      OA_computation:
+        OA_expression: "'sans_unite'"
+      OA_checker:
+        OA_name: OA_reference
+        OA_params:
+          OA_reference:
+            OA_name: unites
+    individusNumber_unit:
+      OA_computation:
+        OA_expression: "'sans_unite'"
+      OA_required: true
+      OA_checker:
+        OA_name: OA_reference
+        OA_params:
+          OA_reference:
+            OA_name: unites
+  OA_validations:
+    unitOfColor:
+      OA_i18n:
+        fr: vérifie l'unité de la couleur des individus
+      OA_checker:
+        OA_name: OA_groovyExpression
+        OA_params:
+          OA_groovy:
+            OA_expression: >
+              String datatype = "piegeage_en_montee"; 
+              String variable = "Couleur des individus"; 
+              String codeVariable = "couleur_des_individus"; 
+              String component = "unit"; 
+              return
+              referencesValues.site_theme_datatype
+              .findAll{it.datatype.equals(datatype)}
+              .find{it.variable.equals(codeVariable)}
+              .unite.equals((String)datum.variable.component)
+            OA_references:
+              - variables_et_unites_par_types_de_donnees
+    unitOfIndividus:
+      OA_i18n:
+        fr: vérifie l'unité du nombre d'individus
+      OA_required: true
+      OA_checker:
+        OA_name: OA_groovyExpression
+        OA_params:
+          OA_groovy:
+            OA_expression: >
+              String datatype = "piegeage_en_montee"; 
+              String variable = "Nombre d'individus"; 
+              String codeVariable = "nombre_d_individus"; String component = "unit"; 
+              return referencesValues.get("variables_et_unites_par_types_de_donnees")
+              .findAll{it.get("nom du type de données").equals(datatype)}
+              .find{it.get("nom de la variable").equals(codeVariable)}
+              .get("nom de l'unité").equals((String)datum.variable.component);
+            OA_references:
+              - variables_et_unites_par_types_de_donnees
+  OA_authorizations:
+    OA_authorizationScope:
+      - projet
+      - chemin
+    OA_timeScope: date

@@ -1,0 +1,47 @@
+OA_tags: [ context ]
+OA_naturalKey:
+  - tze_nom_key
+OA_i18n:
+  OA_title:
+    fr: Types de sites
+    en: Sites types
+  OA_description:
+    fr: Liste des types de sites
+    en: Sites types list
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: "{tze_nom_fr}"
+    en: "{tze_nom_en}"
+  OA_description:
+    fr: "{tze_definition_fr}"
+    en: "{tze_definition_en}"
+OA_basicComponents:
+  tze_nom_key: null
+  tze_nom_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "nom"
+      OA_description:
+        fr: "La nom du type de sites"
+    OA_langRestrictions: [fr]
+  tze_nom_en:
+    OA_exportHeader:
+      OA_title:
+        en: "name"
+      OA_description:
+        en: "Site type name"
+    OA_langRestrictions: [en]
+  tze_definition_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "définition"
+      OA_description:
+        fr: "La definition du type de site"
+    OA_langRestrictions: [fr]
+  tze_definition_en:
+    OA_exportHeader:
+      OA_title:
+        en: "definition"
+      OA_description:
+        en: "Site type definition"
+    OA_langRestrictions: [en]

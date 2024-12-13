@@ -1,0 +1,47 @@
+OA_tags: [ context ]
+OA_naturalKey:
+  - nom_key
+OA_i18n:
+  OA_title:
+    fr: Thème
+    en: Thematic
+  OA_description:
+    fr: Liste des thèmes
+    en: Thematic list
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: "{nom_fr}"
+    en: "{nom_en}"
+  OA_description:
+    fr: "{description_fr}"
+    en: "{description_en}"
+OA_basicComponents:
+  nom_key: null
+  nom_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "nom"
+      OA_description:
+        fr: "Le nom du thème"
+    OA_langRestrictions: [fr]
+  nom_en:
+    OA_exportHeader:
+      OA_title:
+        en: "name"
+      OA_description:
+        en: "Site name"
+    OA_langRestrictions: [en]
+  description_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "définition"
+      OA_description:
+        fr: "La definition du thème"
+    OA_langRestrictions: [fr]
+  description_en:
+    OA_exportHeader:
+      OA_title:
+        en: "definition"
+      OA_description:
+        en: "Thematic definition"
+    OA_langRestrictions: [en]

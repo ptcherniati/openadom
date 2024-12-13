@@ -1,0 +1,93 @@
+OA_tags: [ context ]
+OA_i18n:
+  OA_title:
+    fr: Types de données par site et projet
+    en: Data types by site and project
+  OA_description:
+    fr: Table de jointure des sites theme et datatypes
+    en: Join table of theme sites and datatypes
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: >-
+      nom du projet: {projet}, nom du site : {site}, nom du
+      thème : {theme}, nom du type de données : {datatype}
+    en: >-
+      projet name: {projet}, site name : {site}, theme name :
+      {theme}, data type name : {datatype}
+  OA_description:
+    fr: >-
+      Jointure nom du projet: {projet}, nom du site : {site}, nom du
+      thème : {theme}, nom du type de données : {datatype}
+    en: >-
+      Join on projet name: {projet}, site name : {site}, theme name :
+      {theme}, data type name : {datatype}
+OA_validations:
+  projetRef:
+    OA_i18n:
+      fr: référence au projet
+    OA_checker:
+      OA_name: OA_reference
+      OA_params:
+        OA_reference:
+          OA_name: projet
+    OA_components: [ projet ]
+  sitesRef:
+    OA_i18n:
+      fr: référence au site
+    OA_checker:
+      OA_name: OA_reference
+      OA_params:
+        OA_reference:
+          OA_name: sites
+    OA_components: [ site ]
+  themesRef:
+    OA_i18n:
+      fr: référence au theme
+    OA_checker:
+      OA_name: OA_reference
+      OA_params:
+        OA_reference:
+          OA_name: themes
+    OA_components: [ theme ]
+  checkDatatype:
+    OA_i18n:
+      fr: test
+    OA_components: [ datatype ]
+    OA_checker:
+      OA_name: OA_groovyExpression
+      OA_params:
+        OA_groovy:
+          OA_expression: >
+            String datatype = datum.datatype; 
+            def data = application.getConfiguration().i18n().data ;
+            if(data==null){
+                return false;
+            };
+            def i18n = data
+                    .collect{ it->it.value.i18n};
+            if(i18n==null){
+                return false;
+            };
+            def title = i18n 
+                    .collect{ it->it.title};
+            if(title==null){
+                return false;
+            };
+            def french = title
+                    .collect { it->it.get(java.util.Locale.FRENCH)};
+            return french 
+                    .find{it->datatype.equals(fr.inra.oresing.domain.application.configuration.Ltree.fromUnescapedString(it.toString()).sql)}!=null;
+OA_naturalKey:
+  - projet
+  - site
+  - theme
+  - datatype
+OA_basicComponents:
+  projet:
+    OA_importHeader: nom du projet
+  site:
+    OA_importHeader: nom du site
+  theme:
+    OA_importHeader: nom du thème
+  datatype:
+    OA_importHeader: nom du type de données

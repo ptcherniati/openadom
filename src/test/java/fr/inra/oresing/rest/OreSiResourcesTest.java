@@ -306,7 +306,7 @@ public class OreSiResourcesTest {
         Assertions.assertEquals("Fichier de test de l'application brokenADOM version initiale", applicationResult.comment());
         Assertions.assertEquals("monsoresimple", applicationResult.name());
         Assert.assertEquals(
-                new TreeSet<>(Set.of("themes", "especes", "site_theme_datatype", "variables", "type_de_sites", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers", "variables_et_unites_par_types_de_donnees")),
+                new TreeSet<>(Set.of("themes", "OA_data.yaml", "site_theme_datatype", "variables", "type_de_sites", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers", "variables_et_unites_par_types_de_donnees")),
                 new TreeSet<>(applicationResult.references().keySet())
         );
         Assert.assertEquals(Set.of("pem"), ((LinkedHashMap) applicationResult.dataTypes()).keySet());
@@ -641,7 +641,7 @@ public class OreSiResourcesTest {
                             .andExpect(request().asyncStarted())
                             .andReturn()))
                     .andExpect(testZip(List.of("pem.csv",
-                            "reference/especes.csv",
+                            "reference/OA_data.yaml.csv",
                             "reference/type_de_sites.csv",
                             "reference/unites.csv",
                             "reference/projet.csv",
@@ -1622,7 +1622,7 @@ public class OreSiResourcesTest {
                     })
                     .andExpect(testZip(List.of(
                             "pem.csv",
-                            "references/especes.csv",
+                            "references/OA_data.yaml.csv",
                             "references/type_de_sites.csv",
                             "references/unites.csv",
                             "references/projet.csv",
@@ -3338,7 +3338,7 @@ on test le dépôt d'un fichier récursif
                     Assertions.assertTrue(() -> entryNames.contains("projet/projet.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("themes/themes.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("unites/unites.csv"));
-                    Assertions.assertTrue(() -> entryNames.contains("especes/especes.csv"));
+                    Assertions.assertTrue(() -> entryNames.contains("OA_data.yaml/OA_data.yaml.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("variables/variables.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("type_de_sites/type_de_sites.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("type_de_fichiers/type_de_fichiers.csv"));

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 @Component
@@ -25,9 +26,12 @@ public class ApplicationConfigurationService {
             .add(CheckerEnum.OA_groovyExpression)
             .build();
 
-    static Application unzipConfiguration(final MultipartFile file) {
-        return null;
-    }
+    static Application unzipConfiguration(final MultipartFile file, ReactiveProgression.CreateApplicationProgression fluxSink) throws IOException {
+        InputStream inputStream = MultiYaml.parseConfigurationBytes(file);
+        return ApplicationConfigurationService.parseConfigurationBytes(null,
+                fluxSink,
+                FileBomResolver.of(inputStream));
+}
 
     static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(final
                                                                                                                     String comment,
