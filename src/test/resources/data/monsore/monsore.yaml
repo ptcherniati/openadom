@@ -851,7 +851,7 @@ OA_data:
           OA_name: OA_reference
           OA_params:
             OA_reference:
-              OA_name: OA_data.yaml
+              OA_name: especes
       color_value:
         OA_importHeader: "Couleur des individus"
         OA_exportHeader:

@@ -18,7 +18,7 @@ class BuilderNodeTest {
     final Map<String, BuilderNode> builderNodes = Arrays.stream(new JsonRowMapper<BuilderNode>().readValue("""
             [
               {
-                "nodeName": "OA_data.yaml",
+                "nodeName": "especes",
                 "parent": null,
                 "children": [],
                 "depends": [
@@ -128,7 +128,7 @@ class BuilderNodeTest {
                 "children": [],
                 "depends": [
                   "sites",
-                  "OA_data.yaml",
+                  "especes",
                   "valeurs_qualitative",
                   "unites"
                 ],
@@ -151,7 +151,7 @@ class BuilderNodeTest {
     public void TestBuildAllDepends() {
         final List<BuilderNode> withAllDepends = builderNodes.values().stream().map(node -> node.withAllDepends(builderNodes.values())).toList();
         Assertions.assertArrayEquals(
-                List.of("sites", "OA_data.yaml", "valeurs_qualitative", "unites", "type_de_sites", "variables").toArray(),
+                List.of("sites", "especes", "valeurs_qualitative", "unites", "type_de_sites", "variables").toArray(),
                 withAllDepends.stream()
                         .filter(n -> "pem".equals(n.nodeName()))
                         .findFirst()

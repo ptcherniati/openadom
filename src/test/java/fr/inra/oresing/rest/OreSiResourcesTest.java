@@ -306,7 +306,7 @@ public class OreSiResourcesTest {
         Assertions.assertEquals("Fichier de test de l'application brokenADOM version initiale", applicationResult.comment());
         Assertions.assertEquals("monsoresimple", applicationResult.name());
         Assert.assertEquals(
-                new TreeSet<>(Set.of("themes", "OA_data.yaml", "site_theme_datatype", "variables", "type_de_sites", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers", "variables_et_unites_par_types_de_donnees")),
+                new TreeSet<>(Set.of("themes", "especes", "site_theme_datatype", "variables", "type_de_sites", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers", "variables_et_unites_par_types_de_donnees")),
                 new TreeSet<>(applicationResult.references().keySet())
         );
         Assert.assertEquals(Set.of("pem"), ((LinkedHashMap) applicationResult.dataTypes()).keySet());
@@ -378,6 +378,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isOk())
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                     //.andExpect(jsonPath("$.totalRows", is(9)))
+                    .andExpect(jsonPath("$.rows", hasSize(9)))
                     .andReturn().getResponse().getContentAsString();
 
             mockMvc.perform(
@@ -641,7 +642,7 @@ public class OreSiResourcesTest {
                             .andExpect(request().asyncStarted())
                             .andReturn()))
                     .andExpect(testZip(List.of("pem.csv",
-                            "reference/OA_data.yaml.csv",
+                            "reference/especes.csv",
                             "reference/type_de_sites.csv",
                             "reference/unites.csv",
                             "reference/projet.csv",
@@ -794,7 +795,6 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.rows").isArray())
                 .andExpect(jsonPath("$.rows", hasSize(272)))
                 //.andExpect(jsonPath("$.rows.value").value(list))
-                .andExpect(jsonPath("$.totalRows", Is.is(272)))
                 .andExpect(jsonPath("$.rows[*].values.date.value", hasSize(272)))
                 .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'].unit", hasSize(272)))
                 .andExpect(jsonPath("$.rows[*].values['Couleur des individus'].unit", hasSize(272)))
@@ -1456,7 +1456,7 @@ public class OreSiResourcesTest {
 
         ResultActions typeDeFichiers = mockMvc.perform(get("/api/v1/applications/monsore/data/{refType}/json", "type_de_fichiers")
                         .cookie(authCookie))
-                .andExpect(jsonPath("$.totalRows", equalTo(-1)));
+                .andExpect(jsonPath("$.rows",hasSize(0)));
 
         Exception dataTest = mockMvc.perform(get("/api/v1/applications/monsore/data/{dataType}/json", "test")
                         .cookie(authCookie))
@@ -1549,7 +1549,7 @@ public class OreSiResourcesTest {
                         }
                     })
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.totalRows").value(-1))
+                    .andExpect(jsonPath("$.rows", hasSize(0)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
 
@@ -1602,8 +1602,8 @@ public class OreSiResourcesTest {
             response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
-                    //.andExpect(jsonPath("$.totalRows").value(34))
-                    .andExpect(jsonPath("$.rows[*]", hasSize(34)))
+                    .andExpect(jsonPath("$.rows", hasSize(34)))
+                    //.andExpect(jsonPath("$.rows[*]", hasSize(34)))
                     .andExpect(jsonPath("$.rows[*].values[? (@.chemin == 'oir__p1' && @.projet == 'projet_manche')]", hasSize(34)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
@@ -1622,7 +1622,7 @@ public class OreSiResourcesTest {
                     })
                     .andExpect(testZip(List.of(
                             "pem.csv",
-                            "references/OA_data.yaml.csv",
+                            "references/especes.csv",
                             "references/type_de_sites.csv",
                             "references/unites.csv",
                             "references/projet.csv",
@@ -2795,7 +2795,8 @@ public class OreSiResourcesTest {
                 })
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.totalRows", Is.is(103)))
+                .andExpect(jsonPath("$.rows", hasSize(103)))
+                //.andExpect(jsonPath("$.totalRows", Is.is(103)))
                 .andReturn().getResponse().getContentAsString();
 
         final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/tr_parcelles_par/csv")
@@ -3036,8 +3037,8 @@ on test le dépôt d'un fichier récursif
             String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
-                    )))
+                    .andExpect(jsonPath("$.rows", hasSize(4)))
+                    //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
         }
@@ -3058,8 +3059,8 @@ on test le dépôt d'un fichier récursif
             String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
-                    )))
+                    .andExpect(jsonPath("$.rows", hasSize(4)))
+                    //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
         }
@@ -3083,8 +3084,8 @@ on test le dépôt d'un fichier récursif
             String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json")
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4
-                    )))
+                    .andExpect(jsonPath("$.rows", hasSize(4)))
+                    //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(response);
         }
@@ -3338,7 +3339,7 @@ on test le dépôt d'un fichier récursif
                     Assertions.assertTrue(() -> entryNames.contains("projet/projet.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("themes/themes.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("unites/unites.csv"));
-                    Assertions.assertTrue(() -> entryNames.contains("OA_data.yaml/OA_data.yaml.csv"));
+                    Assertions.assertTrue(() -> entryNames.contains("especes/especes.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("variables/variables.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("type_de_sites/type_de_sites.csv"));
                     Assertions.assertTrue(() -> entryNames.contains("type_de_fichiers/type_de_fichiers.csv"));
