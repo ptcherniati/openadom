@@ -4,10 +4,9 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdministratorForSystemException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
-import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
+import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.List;
 import java.util.Set;
 
 public sealed interface PrivilegeAssessorBuilder<PrivilegeAssessorState>
@@ -31,11 +30,13 @@ public sealed interface PrivilegeAssessorBuilder<PrivilegeAssessorState>
     public static PrivilegeAssessorDomainForApplication<PrivilegeAssessorStateApplicationDomain> forApplication(
             AuthorizationsForApplicationUser authorizations,
             PrivilegeApplicationDomain privilegeDomain,
-            Application application) {
+            Application application,
+            GetGrantableResult grantable) {
         return new PrivilegeAssessorDomainForApplication(
                 authorizations,
                 privilegeDomain,
-                application);
+                application,
+                grantable);
     }
 
 

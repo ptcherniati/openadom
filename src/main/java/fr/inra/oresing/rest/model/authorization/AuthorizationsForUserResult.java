@@ -28,7 +28,11 @@ public record AuthorizationsForUserResult(Map<String, Map<Roles, Boolean>> autho
         UPLOAD,
         DOWNLOAD,
         READ,
-        PUBLICATION, ANY, DELETE
+        PUBLICATION,
+        ANY,
+        APPLICATION_USER,
+        ACTIVE_APPLICATION_USER,
+        DELETE
     }
 
 }

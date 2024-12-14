@@ -8,4 +8,5 @@ public enum PrivilegeApplicationDomain {
     ADDITIONAL_FILE_MANAGEMENT,
     AUTHORIZATION_MANAGEMENT,
     RIGHTS_REQUEST_MANAGEMENT,
+    DATA_ACCESS,
 }

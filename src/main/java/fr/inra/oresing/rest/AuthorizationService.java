@@ -993,8 +993,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
         boolean isApplicationManager = currentUserRoles.applicationManagerOf(application);
         boolean isUserManager = currentUserRoles.userManagerOf(application);
+        currentUserRoles.applicationRoles().get(application.getId());
         AuthorizationsResult authorizationsForUserAndPublic = getAuthorizationsForUserAndPublic(application.getName(), currentUser.getLogin());
         return new AuthorizationsForApplicationUser(
+                currentUserRoles.applicationRoles().get(application.getId()),
                 application,
                 isApplicationManager,
                 isUserManager,
@@ -1024,10 +1026,18 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
             Application application
     ) {
         AuthorizationsForApplicationUser authorizations = getAuthorizationsForApplicationUser(application);
+        GetGrantableResult grantable = getGrantable(
+                application.getName(),
+                getAuthorizationsForUserAndPublic(
+                        application.getName(),
+                        authenticationService.getCurrentUserRoles().userLogin()
+                )
+        );
         return PrivilegeAssessorBuilder.forApplication(
                 authorizations,
                 privilegeDomain,
-                application
+                application,
+                grantable
         );
     }
 }

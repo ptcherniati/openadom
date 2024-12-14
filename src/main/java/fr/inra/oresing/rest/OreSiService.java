@@ -13,7 +13,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManager;
+import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForApplication;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationReader;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
@@ -37,7 +37,6 @@ import fr.inra.oresing.domain.groovy.GroovyContextHelper;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
-import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.domain.services.file.BinaryFileService;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
@@ -230,7 +229,9 @@ public class OreSiService {
                 .collect(Collectors.toMap(node -> node.nodeName(), Function.identity()));
 
         final String nameOrId = application.getId().toString();
-        Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizations = withDatatypes || withReferenceType ? getAuthorizationsDatatypesRights(nameOrId, datatypeComponents.keySet()) : new HashMap<>();
+        HashSet<String> dataNames = new HashSet<>(datatypeComponents.keySet());
+        dataNames.addAll(referenceComponents.keySet());
+        Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizations = withDatatypes || withReferenceType ? getAuthorizationsDataRights(application, dataNames) : new HashMap<>();
         final Configuration configuration = withConfiguration ? application.getConfiguration() : null;
         CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
         final ApplicationResult applicationResult = new ApplicationResult(
@@ -702,6 +703,9 @@ public class OreSiService {
         final AtomicLong progres = new AtomicLong(0);
         progression.fluxSink().next(new ReactiveTypeProgress(progres.get()));
         CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
+        Function<Application, List<ApplicationResult.DataSynthesis>> getDatynthesis = (application)->
+            dataService.getReferenceSynthesis(application);
+
         applicationForAdmin
                 .map(application -> applicationForUser.stream()
                         .filter(app -> app.getId().equals(application.getId()))
@@ -709,7 +713,7 @@ public class OreSiService {
                         .orElse(application.applicationAccordingToRights())
                 )
                 .map(application -> application.filterFieldsAndHidden(filters))
-                .map(application -> ApplicationLightResult.of(application, currentUserRoles))
+                .map(application -> ApplicationLightResult.of(application, currentUserRoles, getDatynthesis.apply(application)))
                 .forEach(application -> {
                     progression.fluxSink().next(new ReactiveTypeResult(application));
                     final double prog = progres.incrementAndGet() / ((double) applicationForUser.size());
@@ -718,34 +722,23 @@ public class OreSiService {
         progression.complete();
     }
 
-    public Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDatatypesRights(final String nameOrId, final Set<String> datatypes) {
-        return datatypes.stream().map(dty -> getAuthorizationsDatatypesRights(nameOrId, dty, request.getRequestUserId().toString())).collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+    public Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDataRights(
+            final Application application,
+            final Set<String> datatypes) {
+        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = authorizationService.getPrivilegeAssessorForApplication(DATA_ACCESS, application);
+        return datatypes.stream()
+                .map(dty -> getAuthorizationsDataRights(application, dty, request.getRequestUserId().toString(), privilegeAssessorForApplication))
+                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
     }
 
-    private Map.Entry<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDatatypesRights(
-            final String nameOrId,
-            final String datatype,
-            final String userId) {
-        AuthorizationsResult authorizationsForUser = authorizationService.getAuthorizationsForUserAndPublic(nameOrId, userId);
-        final Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new EnumMap<>(AuthorizationsForUserResult.Roles.class);
-
-        Set<OperationType> rolesSetted = Optional.ofNullable(authorizationsForUser.userAuthorization())
-                .map(map -> map.get(datatype))
-                .map(authList -> authList.stream()
-                        .flatMap(auth -> auth.operationTypes().stream())
-                        .collect(Collectors.toSet()))
-                .orElseGet(Set::of);
-
-        Boolean isAdministrator = authorizationsForUser.applicationManager();
-        roleForDatatype.put(AuthorizationsForUserResult.Roles.UPLOAD, isAdministrator || rolesSetted.contains(OperationType.depot) || rolesSetted.contains(OperationType.publication));
-        roleForDatatype.put(AuthorizationsForUserResult.Roles.DELETE, isAdministrator || rolesSetted.contains(OperationType.delete));
-        roleForDatatype.put(AuthorizationsForUserResult.Roles.DOWNLOAD, isAdministrator || rolesSetted.contains(OperationType.extraction) || rolesSetted.contains(OperationType.publication));
-        roleForDatatype.put(AuthorizationsForUserResult.Roles.READ, isAdministrator || rolesSetted.contains(OperationType.extraction) || rolesSetted.contains(OperationType.publication));
-        roleForDatatype.put(AuthorizationsForUserResult.Roles.PUBLICATION, isAdministrator || rolesSetted.contains(OperationType.publication));
-        roleForDatatype.put(AuthorizationsForUserResult.Roles.ANY, isAdministrator || !rolesSetted.isEmpty());
-
-        new AuthorizationsForUserResult(Map.of(datatype, roleForDatatype), nameOrId, isAdministrator, userId);
-        return new AbstractMap.SimpleEntry<>(datatype, roleForDatatype);
+    private Map.Entry<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDataRights(
+            final Application application,
+            final String dataName,
+            final String userId,
+            PrivilegeAssessorDomainForApplication privilegeAssessorForApplication) {
+        final Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = privilegeAssessorForApplication
+                .getAuthorizationsForUser(dataName);
+        return new AbstractMap.SimpleEntry<>(dataName, roleForDatatype);
     }
 
     public List<List<String>> getDataColumn(final Application application, final String refType, final String column) {
