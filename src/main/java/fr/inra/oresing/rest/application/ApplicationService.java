@@ -33,7 +33,9 @@ public class ApplicationService {
             return getApplicationRepository().findApplication(nameOrId);
         } catch (final NoSuchApplicationException e) {
             authenticationService.setRoleAdmin();
-            return getApplicationRepository().findApplication(nameOrId).applicationAccordingToRights();
+            return getApplicationRepository()
+                    .findApplication(nameOrId)
+                    .applicationAccordingToRights();
         }
     }
 
