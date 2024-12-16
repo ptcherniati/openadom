@@ -57,7 +57,6 @@ public class VersioningService {
         Set<BinaryFile> filesToStore = new HashSet<>();
         State state = getStoreFile(application, dataName, params, file==null?null:file.getOriginalFilename())
                 .loadOrCreateFile(file, binaryFileRepository(application), binaryFileService);
-        final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(dataService.getReferenceSynthesis(application)).orElseGet(List::of);
         if (state instanceof UnPublishedVersions unPublishedVersions) {
             FileOrUUID fileOrUUID = unPublishedVersions
                     .unPublishVersions(filesToStore, dataRepository(application), binaryFileRepository(application), synthesisService)
@@ -74,8 +73,10 @@ public class VersioningService {
                 binaryFile.markAsPublished(fileOrUUID.topublish());
                 dataId = binaryFileRepository(application).store(binaryFile);
             }
+            final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(dataService.getReferenceSynthesis(application)).orElseGet(List::of);
             return DataVersioningResult.of(nameOrId, dataName, dataId, dataSynthesis);
         }
+        final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(dataService.getReferenceSynthesis(application)).orElseGet(List::of);
         return DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
 
     }
