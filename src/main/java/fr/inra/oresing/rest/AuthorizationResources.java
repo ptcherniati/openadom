@@ -311,6 +311,11 @@ public class AuthorizationResources {
             @PathVariable("nameOrId") final String applicationNameOrId,
             @PathVariable("authorizationId") final UUID authorizationId) {
         Application application = authorizationService.getApplication(applicationNameOrId);
+        authorizationService.getPrivilegeAssessorForApplication(
+                PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT,
+                application
+        )
+                .forDeleteAuthorization();
         UUID revokeId = authorizationService.revoke(applicationNameOrId, new AuthorizationRequest(
                 authorizationId,
                 "",

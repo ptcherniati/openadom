@@ -195,9 +195,9 @@ public class UpdateRolesOnManagement {
         authorizationRepository = repository.getRepository(application).authorization();
         final UUID authorizationId = revokeAuthorizationRequest.authorizationId();
         final OreSiAuthorization oreSiAuthorization = authorizationRepository.findById(authorizationId);
+        authenticationService.setRoleAdmin();
         dropPolicies(OreSiRightOnApplicationRole.managementRole(application, revokeAuthorizationRequest.authorizationId()));
         final OreSiRightOnApplicationRole oreSiRightOnApplicationRole = OreSiRightOnApplicationRole.managementRole(application, authorizationId);
-        authenticationService.setRoleAdmin();
         oreSiAuthorization.getOreSiUsers().stream()
                 .map(authenticationService::getUserRole)
                 .forEach(user -> db.removeUserInRole(user, oreSiRightOnApplicationRole));

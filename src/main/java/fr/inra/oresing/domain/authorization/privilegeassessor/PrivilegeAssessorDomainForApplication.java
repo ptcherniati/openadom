@@ -86,4 +86,11 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
         roleForDatatype.put(AuthorizationsForUserResult.Roles.ANY, isAdministrator || !rolesSetted.isEmpty());
         return roleForDatatype;
     }
+
+    public ApplicationAdminUser forDeleteAuthorization() {
+        if(!authorizations().isApplicationManager()) {
+            throw new NotApplicationManagerRightsException(application.getName());
+        }
+        return  new ApplicationAdminUser(application());
+    }
 }

@@ -337,7 +337,9 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     @Transactional
     public UUID revoke(final String applicationNameOrid, final AuthorizationRequest revokeAuthorizationRequest) {
         Application application = getApplication(applicationNameOrid);
+        authenticationService.setRoleAdmin();
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
+        authenticationService.setRoleForClient();
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
 
         if (!isApplicationCreator) {
@@ -945,6 +947,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         Optional.ofNullable(createAuthorizationRequest)
                 .map(CreateAuthorizationRequest::authorizationForAll)
                 .map(authorizations -> authorizations.keySet())
+                .map(application::findDependentNodes)
                 .ifPresent(dependantsNodes::addAll);
         return createAuthorizationRequest.addDependantAuthorizations(dependantsNodes);
 

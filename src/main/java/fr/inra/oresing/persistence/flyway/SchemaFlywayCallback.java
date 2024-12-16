@@ -11,8 +11,10 @@ import org.flywaydb.core.api.callback.Context;
 import org.flywaydb.core.api.callback.Event;
 
 import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,24 +54,60 @@ public class SchemaFlywayCallback implements Callback {
 
     @Override
     public boolean supports(Event event, Context context) {
-        return (creator!= null && event == Event.BEFORE_MIGRATE) || event == Event.AFTER_EACH_MIGRATE;
+        return (creator!= null && event == Event.BEFORE_MIGRATE) || event == Event.AFTER_EACH_MIGRATE || event == Event.AFTER_MIGRATE;
     }
 
     @Override
     public boolean canHandleInTransaction(Event event, Context context) {
         return event == Event.BEFORE_MIGRATE || event == Event.AFTER_EACH_MIGRATE;
     }
-
-    @Override
     public void handle(Event event, Context context) {
         if (event.equals(Event.BEFORE_MIGRATE)) {
             beforeMigrate(context);
+        }
+        if (event.equals(Event.AFTER_MIGRATE)) {
+            changeOwner(context);
         }
         if (event.equals(Event.AFTER_EACH_MIGRATE)) {
             afterEachMigrate(context);
         }
 
     }
+
+    private void changeOwner(Context context) {
+        try (Statement statement = context.getConnection().createStatement()) {
+            // Changer le propriétaire du schéma
+            statement.execute("ALTER SCHEMA %s OWNER TO \"%s\""
+                    .formatted(sqlSchemaForApplication.getName(), applicationManagerOnApplicationRole.getAsSqlRole()));
+
+            // Changer le propriétaire des tables
+            ResultSet rs = statement.executeQuery(
+                    "SELECT tablename FROM pg_tables WHERE schemaname = '%s'"
+                            .formatted(sqlSchemaForApplication.getName())
+            );
+            List<String> tableNames = new ArrayList<>();
+            while (rs.next()) {
+                String tableName = rs.getString("tablename");
+                if(tableName.equals("flyway_schema_history")) {
+                    continue;
+                }
+                tableNames.add(tableName);
+            }
+            for (String tableName : tableNames) {
+                statement.execute("ALTER TABLE %s.%s OWNER TO \"%s\""
+                        .formatted(sqlSchemaForApplication.getName(), tableName, userManagerOnApplicationRole.getAsSqlRole()));
+
+            };
+
+            // Accorder les privilèges nécessaires
+            statement.execute("GRANT USAGE ON SCHEMA %s TO \"%s\""
+                    .formatted(sqlSchemaForApplication.getName(), applicationCreator.getAsSqlRole()));
+
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private void afterEachMigrate(Context context) {
         final Connection connection = context.getConnection();
@@ -88,7 +126,6 @@ public class SchemaFlywayCallback implements Callback {
         try (Statement statement = context.getConnection().createStatement()) {
             configureRoles(statement, applicationManagerOnApplicationRole, userManagerOnApplicationRole, readerOnApplicationRole, writerOnApplicationRole, sqlSchemaForApplication, applicationCreator);
             createSchema(statement, sqlSchemaForApplication, applicationManagerOnApplicationRole);
-
             setPrivilegesForApplicationManagerToExecuteUpdate(statement, sqlSchemaForApplication, userManagerOnApplicationRole);
             setPrivilegesForUserManagerToAccesSchema(statement, sqlSchemaForApplication, userManagerOnApplicationRole);
             setRoleUserManager(statement, applicationManagerOnApplicationRole);
