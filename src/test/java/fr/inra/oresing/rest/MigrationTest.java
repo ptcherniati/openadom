@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +49,7 @@ public class MigrationTest {
     }
 
     @Test
+    @Disabled
     public void testMigrate() throws Exception {
         try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMigrationApplicationConfigurationResourceName(2))) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);

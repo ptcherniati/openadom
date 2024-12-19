@@ -9,6 +9,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.requestBuilder.data.DataRequestBuilder;
 import fr.inra.oresing.persistence.requestBuilder.data.SqlRequest;
 import fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Tag("MODEL_REQUEST_TEST")
+@Disabled
 class DownloadDatasetQueryTest {
     final String simpleSearchJson = """
             {

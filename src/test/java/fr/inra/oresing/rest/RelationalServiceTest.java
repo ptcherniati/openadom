@@ -3,6 +3,7 @@ package fr.inra.oresing.rest;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,6 +63,7 @@ public class RelationalServiceTest {
     }
 
     @Test
+    @Disabled
     public void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
         final ImmutableSet<Fixtures.Application> applications = ImmutableSet

@@ -60,7 +60,7 @@
     <properties>
 
         <projectId>si-ore-ng</projectId>
-
+        <env.CI_PROJECT_ID>13383</env.CI_PROJECT_ID>
         <!-- license to use  -->
         <license.licenseName>lgpl_v3</license.licenseName>
 
@@ -86,6 +86,7 @@
         <!--Database infos -->
 
 
+        <java.version>21</java.version>
     </properties>
 
     <dependencies>
@@ -318,6 +319,25 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.10</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
                 <artifactId>git-commit-id-maven-plugin</artifactId>

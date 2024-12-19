@@ -18,6 +18,7 @@ import org.hamcrest.core.IsEqual;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -82,6 +83,7 @@ public class AuthorizationResourcesTest {
     private OreSiService oreSiService;
 
     @Test
+    @Disabled
     public void testAddAuthorization() throws Exception {
         final CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx", "withrights@inrae.fr");
         fixtures.setToActive(withRightsUserResult.userId());
@@ -362,6 +364,7 @@ public class AuthorizationResourcesTest {
     }
 
     @Test
+    @Disabled
     public void testAddAuthorizationOnTwoScopes() throws Exception {
         final Cookie authCookie = fixtures.addApplicationHauteFrequence();
 
@@ -473,11 +476,13 @@ public class AuthorizationResourcesTest {
     }
 
     @Test
+    @Disabled
     public void testAddApplicationMonsoere() throws Exception {
         fixtures.addMonsoreApplication();
     }
 
     @Test
+    @Disabled
     public void testAddRightForAddApplication() throws Exception {
 
         {

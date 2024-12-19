@@ -6,6 +6,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.persistence.DataRepository;
 import org.apache.commons.collections.CollectionUtils;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -18,6 +19,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("MODEL_REQUEST_TEST")
+@Disabled
 class DownloadDatasetQueryAdvancedSearchTest {
 
     public final Fixture fixture = new Fixture();

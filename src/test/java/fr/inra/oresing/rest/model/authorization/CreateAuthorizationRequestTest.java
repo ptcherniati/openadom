@@ -19,7 +19,7 @@ import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestEr
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
-import org.junit.Ignore;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.mockito.internal.matchers.Any;

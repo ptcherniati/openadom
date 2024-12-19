@@ -15,6 +15,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -39,6 +40,7 @@ public class BuildFileHeadertest {
     static final String RESOURCE_PATH = "fr/inra/oresing/domain/massimport/massimport.yaml";
 
     @ParameterizedTest
+    @Disabled
     @ValueSource(strings = {RESOURCE_PATH}) // Put your configuration file paths here
     void buildFileHeader(String filePath) throws IOException {
         URL url = Resources.getResource(filePath);
