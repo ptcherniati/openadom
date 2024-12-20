@@ -67,14 +67,13 @@ public class PatternColumnFactory {
         DataDatum adjacentComponents = this.getExpectedPatternColumn(patternComponentName)
                 .buildAdjacentComponents(patternValueForHeader.adjacentCellContent());
         final DataDatum qualifierComponents = patternColumn.qualifierComponents();
-        DataDatum datum = ((OneValueStaticPatternColumn) patternColumn.column())
+        return ((OneValueStaticPatternColumn) patternColumn.column())
                 .buildValue(
                         patternColumn.column.getExpectedHeader(),
                         patternValueForHeader.cellContent(),
                         qualifierComponents,
                         adjacentComponents,
                         patternValueForHeader.refsLinkedTo());
-        return datum;
     }
 
     public DataDatum toAdjacentDatum(final DataImporter.PatternValueForHeader patternValueForHeader) {
@@ -87,13 +86,12 @@ public class PatternColumnFactory {
     private PatternDescription.RapportForPatterns test(final ContextHeader potentialPatternColumn, final Map<String, PatternColumn> patternColumnData) {
         final Predicate<PatternDescription> matches = p -> p.matches.test(potentialPatternColumn.columnHeader());
         final Function<PatternDescription, PatternDescription.RapportForPatterns> toRapport = p -> p.toRapport(dataRepository, potentialPatternColumn, patternColumnData);
-        final PatternDescription.RapportForPatterns rapports = patternComponentDescriptions.stream()
+        return patternComponentDescriptions.stream()
                 .filter(matches)
                 .map(toRapport)
                 .filter(PatternDescription.MatchingPattern.class::isInstance)
                 .findFirst()
                 .orElse(new PatternDescription.ExceptionPattern(potentialPatternColumn.columnHeader()));
-        return rapports;
     }
 
     public boolean test(final List<ContextHeader> potentialPatternColumns) {
@@ -106,9 +104,7 @@ public class PatternColumnFactory {
                         atomicLong.set(((OneValueStaticPatternColumn) matchingPattern.column()).getAdjacentColumnsSize());
                         yield true;
                     }
-                    case PatternDescription.ExceptionPattern exceptionPattern -> {
-                        yield atomicLong.decrementAndGet() < 0;
-                    }
+                    case PatternDescription.ExceptionPattern exceptionPattern -> atomicLong.decrementAndGet() < 0;
                 })
                 .toList();
         final boolean rapportWithNoErrors = rapports.stream()
@@ -189,9 +185,7 @@ public class PatternColumnFactory {
                 final List<Column> qualifierColumns = new LinkedList<>();
                 final List<Column> adjacentColumns = new LinkedList<>();
                 patternComponentDescriptions()
-                        .patternComponentQualifiers().entrySet()
-                        .forEach(patternColumnComponentEntry -> {
-                            final PatternComponentQualifiers patternColumnComponent = patternColumnComponentEntry.getValue();
+                        .patternComponentQualifiers().forEach((key1, patternColumnComponent) -> {
                             final String componentComponentKey = patternColumnComponent.componentKey();
                             final int patternNumber = patternColumnComponent.patternNumber();
                             final Multiplicity multiplicityForComponentComponent = Optional.ofNullable(patternColumnComponent)
@@ -212,9 +206,9 @@ public class PatternColumnFactory {
                                                     .map(ComputationChecker::expression)
                                                     .filter(Predicate.not(Strings::isNullOrEmpty))
                                                     .map(expression -> StringGroovyExpression.forExpression(
-                                                            expression, Set.of()
-                                                            )
-                                                            .evaluate(Map.of())
+                                                                            expression, Set.of()
+                                                                    )
+                                                                    .evaluate(Map.of())
                                                     )
                                                     .orElse("")
                                     );
@@ -233,7 +227,6 @@ public class PatternColumnFactory {
                             String s = Optional.ofNullable(constantValue)
                                     .filter(column -> patternQualifierColumn.getComputedValueUsage() != ComputedValueUsage.NOT_COMPUTED)
                                     .orElse(null);
-                            patternQualifierColumn.getComputedValueUsage();
 
                             switch (multiplicityForComponentComponent) {
                                 case Multiplicity.MANY -> {

@@ -18,7 +18,7 @@ class ConstantImportHeaderExampleBuilder {
                                                              final int columnNumber,
                                                              final String columnName,
                                                              CollectionType.ArrayType<StringType> langRestriction) {
-        return new ConstantImportHeaderType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+        return new ConstantImportHeaderType(new LinkedHashMap<>() {{
             put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_ROW_NUMBER, new IntegerType(rowNumber));
             if (columnName == null) {
                 put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_COLUMN_NUMBER, new IntegerType(columnNumber));

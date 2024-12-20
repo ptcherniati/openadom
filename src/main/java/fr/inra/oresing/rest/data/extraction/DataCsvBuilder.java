@@ -29,19 +29,15 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class DataCsvBuilder {
     private static final Logger log = LoggerFactory.getLogger(DataCsvBuilder.class);
-    private final BiFunction<String, String, DataImporterContext> buildReferenceImporterContext;
     private DownloadDatasetQuery downloadDatasetQuery;
 
     private DataRepositoryWithBuffer dataRepositoryWithBuffer;
-    private AdditionalFileRepository additionalFileRepository;
 
-    private DataService referenceService;
     private Flux<DataRow> datas;
     private OutputStream outputStream;
     private Locale locale;
@@ -49,14 +45,13 @@ public class DataCsvBuilder {
 
     public DataCsvBuilder(final BiFunction<String, String, DataImporterContext> buildReferenceImporterContext) {
         super();
-        this.buildReferenceImporterContext = buildReferenceImporterContext;
     }
 
     public static DataCsvBuilder getDataCsvBuilder(final BiFunction<String, String, DataImporterContext> referenceImporterContextBuilder) {
         return new DataCsvBuilder(referenceImporterContextBuilder);
     }
 
-    private void addLineToZip(CSVWriter writer, List<String> rowAsRecord) throws IOException {
+    private void addLineToZip(CSVWriter writer, List<String> rowAsRecord) {
         try {
             writer.writeNext(rowAsRecord.toArray(new String[]{}));
         } catch (Exception e) {
@@ -65,21 +60,18 @@ public class DataCsvBuilder {
     }
 
     private static DataRow addRefsLinkedTo(DataRow dataRow, UUIDsfromData uuidsfromData) {
-        dataRow.getRefsLinkedTo().entrySet()
+        dataRow.refsLinkedTo().entrySet()
                 .stream().forEach(uuidsfromData::addRefsLinkedTo);
         return dataRow;
     }
 
     private static Comparator<ComponentOrderBy> getComparator(StandardDataDescription dataDescription) {
-        return new Comparator<ComponentOrderBy>() {
-            @Override
-            public int compare(ComponentOrderBy o1, ComponentOrderBy o2) {
-                /*Optional.ofNullable(o1)
-                        .map(ComponentOrderBy::componentKey)
-                        .map(componentKey->dataDescription.componentDescriptions().get(componentKey))
-                        .map(ComponentDescription::tags)*/
-                return 0;
-            }
+        return (o1, o2) -> {
+            /*Optional.ofNullable(o1)
+                    .map(ComponentOrderBy::componentKey)
+                    .map(componentKey->dataDescription.componentDescriptions().get(componentKey))
+                    .map(ComponentDescription::tags)*/
+            return 0;
         };
     }
 
@@ -97,12 +89,10 @@ public class DataCsvBuilder {
 
     public DataCsvBuilder onRepositories(DataRepositoryWithBuffer DataRepositoryWithBuffer, AdditionalFileRepository additionalFileRepository) {
         this.dataRepositoryWithBuffer = DataRepositoryWithBuffer;
-        this.additionalFileRepository = additionalFileRepository;
         return this;
     }
 
     public DataCsvBuilder withReferenceService(final DataService referenceService) {
-        this.referenceService = referenceService;
         return this;
     }
 
@@ -116,9 +106,11 @@ public class DataCsvBuilder {
                 .findData(downloadDatasetQuery.dataName());
         final StandardDataDescription dataDescription = data
                 .orElseThrow(() -> new IllegalStateException("can't find application %s".formatted(downloadDatasetQuery.dataName())));
-        final CSVFormat csvFormat = CSVFormat.EXCEL
-                .withDelimiter(dataDescription.separator())
-                .withSkipHeaderRecord();
+        final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.EXCEL)
+                .setDelimiter(dataDescription.separator())
+                .setSkipHeaderRecord(true)
+                .build();
+
         ZipEntry zipEntry = new ZipEntry(String.format(fileNamePattern, downloadDatasetQuery.dataName()));
         if (outputStream instanceof ZipOutputStream zipOutputStream) {
             zipOutputStream.putNextEntry(zipEntry);
@@ -188,12 +180,19 @@ public class DataCsvBuilder {
                     .map(title->title.get(Locale.of(downloadDatasetQuery.getLanguage()))
             ).orElse(componentName);
             Comparator<ComponentOrderByForExport> comparator = ComponentOrderByForExport.getComparator(dataDescription);
-            DataCsvHeaderWriter dataCsvHeaderWriter = new DataCsvHeaderWriter(writer, comparator, getInternationalizedHeader, dataRepositoryWithBuffer, dataDescription, internationalizedSortedColumns);
+            DataCsvHeaderWriter dataCsvHeaderWriter = new DataCsvHeaderWriter(
+                    writer,
+                    comparator,
+                    getInternationalizedHeader,
+                    dataRepositoryWithBuffer,
+                    dataDescription,
+                    internationalizedSortedColumns
+            );
             DataCsvRowBuilder dataCsvRowBuilder = new DataCsvRowBuilder(language, dataRepositoryWithBuffer, dataDescription);
             datas
                     .map(dataCsvHeaderWriter::writeHeader)
                     .map(dataRow -> addRefsLinkedTo(dataRow, uuiDsfromData))
-                    .map(dataRow -> dataCsvRowBuilder.getCsvRow(dataRow.getValues(), dataCsvHeaderWriter.orderedColumns()))
+                    .map(dataRow -> dataCsvRowBuilder.getCsvRow(dataRow.values(), dataCsvHeaderWriter.orderedColumns()))
                     .doOnNext(csvRow -> {
                         try {
                             writer.writeNext(csvRow.toArray(new String[0]));

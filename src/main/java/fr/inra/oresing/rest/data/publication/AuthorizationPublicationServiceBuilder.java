@@ -19,13 +19,13 @@ import java.util.function.Predicate;
 
 public class AuthorizationPublicationServiceBuilder {
 
-    public static final AuthorizationForUserBuilder BUILDER(ReportErrors errors,
-                                                            final Application application,
-                                                            final String dataName,
-                                                            String fileName,
-                                                            String params,
-                                                            Function<Map<String, List<Ltree>>, Map<String, List<Ltree>>> requiredAuthorizationResolver,
-                                                            Function<UUID, Optional<BinaryFile>> resolveFileById) {
+    public static AuthorizationForUserBuilder BUILDER(ReportErrors errors,
+                                                      final Application application,
+                                                      final String dataName,
+                                                      String fileName,
+                                                      String params,
+                                                      Function<Map<String, List<Ltree>>, Map<String, List<Ltree>>> requiredAuthorizationResolver,
+                                                      Function<UUID, Optional<BinaryFile>> resolveFileById) {
         AuthorizationPublicationService builder = new AuthorizationPublicationService(
                 errors,
                 application,
@@ -83,7 +83,7 @@ public class AuthorizationPublicationServiceBuilder {
                         .map(Optional::get)
                         .map(BinaryFile::getParams)
                         .map(fileOrUUID::withParams)
-                        .orElseThrow(() -> new IllegalArgumentException());
+                        .orElseThrow(IllegalArgumentException::new);
             }
             return fileOrUUID;
         } catch (final IOException e) {

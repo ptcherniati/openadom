@@ -12,11 +12,11 @@ public record DataType(SectionBuilder sectionBuilder, Map<String, ConfigurationS
     public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withMandatorySections(
-                        new LabelDescription(ConfigurationSchemaNode.OA_NATURAL_KEY, new CollectionType.ArrayType<StringType>(List.of(), true, false, StringType.EMPTY_INSTANCE())))
+                        new LabelDescription(ConfigurationSchemaNode.OA_NATURAL_KEY, new CollectionType.ArrayType<>(List.of(), true, false, StringType.EMPTY_INSTANCE())))
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_ALLOW_UNEXPECTED_COLUMNS, new BooleanType(true)),
                         new LabelDescription(ConfigurationSchemaNode.OA_SEPARATOR, StringType.EMPTY_INSTANCE()),
-                        new LabelDescription(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE())),
+                        new LabelDescription(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE())),
                         new LabelDescription(ConfigurationSchemaNode.OA_I_18_N
 , TitleType
                                 .EMPTY_INSTANCE()),

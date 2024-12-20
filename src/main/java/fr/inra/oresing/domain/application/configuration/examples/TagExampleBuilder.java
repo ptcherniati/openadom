@@ -9,7 +9,7 @@ import java.util.List;
 
 class TagExampleBuilder {
     protected static CollectionType.MapType<TagType> buildTagSchema() {
-        return new CollectionType.MapType<TagType>(new LinkedHashMap<String, TagType>() {{
+        return new CollectionType.MapType<>(new LinkedHashMap<>() {{
             put("data", new TagType(I18nExampleBuilder.buildI18n("données", "data")));
             put("context", new TagType(I18nExampleBuilder.buildI18n("contexte", "context")));
         }},

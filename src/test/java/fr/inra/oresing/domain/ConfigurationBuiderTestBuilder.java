@@ -27,16 +27,14 @@ public record ConfigurationBuiderTestBuilder<T>(T result, List<ValidationError> 
                     results.add(doWithconfiguration.apply(configuration));
                     fluxSink.complete();
                 })
-                .flatMap(reactiveResult -> {
-                    return switch (reactiveResult) {
-                        case final ReactiveTypeError re -> Mono.just(re);
-                        default -> Mono.empty();
-                    };
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
                 })
                 .map(ReactiveTypeError::result)
                 .map(ValidationError.class::cast)
                 .collectList()
                 .block();
-        return new ConfigurationBuiderTestBuilder<>(results==null?null: results.get(0), errors);
+        return new ConfigurationBuiderTestBuilder<>(results==null?null: results.getFirst(), errors);
     }
 }

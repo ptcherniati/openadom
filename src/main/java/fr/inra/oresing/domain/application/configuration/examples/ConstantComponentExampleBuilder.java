@@ -38,7 +38,7 @@ class ConstantComponentExampleBuilder {
             final ConstantImportHeaderType constantImportHeaderType
     ) {
         return new ConstantComponentType(
-                new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+                new LinkedHashMap<>() {{
                     put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeaderType);
                     put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
                     put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_TARGET, constantImportHeaderType);
@@ -55,12 +55,12 @@ class ConstantComponentExampleBuilder {
             final CheckerType checker,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required, false));
         if (importHeader != null) children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER, new StringType(importHeader));
         if (CollectionUtils.isNotEmpty(tags)) {
             final List<StringType> tagsArray = tags.stream().map(StringType::new).toList();
-            children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(tagsArray, false, false, StringType.EMPTY_INSTANCE()));
+            children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(tagsArray, false, false, StringType.EMPTY_INSTANCE()));
         }
         if (exportHeader != null) {
             children.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);

@@ -11,11 +11,11 @@ import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.FloatValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import org.apache.logging.log4j.util.Supplier;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static fr.inra.oresing.domain.checker.type.FloatType.IntervalFoatErrors.LOWER_THAN_MIN;
 

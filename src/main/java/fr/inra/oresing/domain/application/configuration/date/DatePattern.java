@@ -24,7 +24,7 @@ public record DatePattern<T extends TemporalAccessor>(String pattern, DateTimeFo
         if(pattern.equals(YYYY)){
             return (DatePattern<T>) new DatePattern<>(YYYY, DateTimeFormatter.ofPattern(YYYY),LocalDate.class);
         }
-        if (pattern == null || pattern == "null") {
+        if (pattern == null || pattern.equals("null")) {
             throw new SiOreConfigurationFormatException(ConfigurationException.MISSING_PATTERN_FOR_CHECKER_DATE, Map.of());
         }
         DateTimeFormatter dateTimeFormatter = null;
@@ -58,7 +58,7 @@ public record DatePattern<T extends TemporalAccessor>(String pattern, DateTimeFo
                 }
             }
         }
-        return new DatePattern<T>(pattern, dateTimeFormatter, type);
+        return new DatePattern<>(pattern, dateTimeFormatter, type);
     }
     public T format(final String dateToFormat){
         if(Strings.isNullOrEmpty(dateToFormat)){

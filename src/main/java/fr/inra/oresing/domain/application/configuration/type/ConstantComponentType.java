@@ -19,12 +19,12 @@ public record ConstantComponentType(SectionBuilder sectionBuilder,
                         new LabelDescription(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_TARGET, ConstantImportHeaderType.EMPTY_INSTANCE())
                 )
                 .withOptionalSections(
-                        new LabelDescription(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE())),
+                        new LabelDescription(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE())),
                         new LabelDescription(ConfigurationSchemaNode.OA_EXPORT_HEADER, TitleType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(false)),
                         new LabelDescription(ConfigurationSchemaNode.OA_CHECKER, CheckerType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_DEFAULT_VALUE, DefaultValueType.EMPTY_INSTANCE()),
-                        new LabelDescription(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
+                        new LabelDescription(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
                 );
     }
 

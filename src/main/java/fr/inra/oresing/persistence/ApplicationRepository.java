@@ -55,7 +55,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
     }
 
     public Optional<Application> tryFindApplication(final String nameOrId) {
-        final Optional<Application> result = getNamedParameterJdbcTemplate()
+        return getNamedParameterJdbcTemplate()
                 .query(
                         SELECT_APPLICATION,
                         new MapSqlParameterSource(
@@ -63,7 +63,6 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
                         getJsonRowMapper()
                 ).stream()
                 .findFirst();
-        return result;
     }
 
     public Optional<Application> tryFindApplication(final UUID id) {

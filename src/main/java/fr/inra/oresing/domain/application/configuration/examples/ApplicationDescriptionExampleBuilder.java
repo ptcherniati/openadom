@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 
 class ApplicationDescriptionExampleBuilder {
     protected static ApplicationDescriptionType buildApplicationDesriptionSchema() {
-        return new ApplicationDescriptionType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+        return new ApplicationDescriptionType(new LinkedHashMap<>() {{
             put(ConfigurationSchemaNode.OA_NAME, StringExampleBuilder.MONSORE);
             put(ConfigurationSchemaNode.OA_VERSION, StringExampleBuilder.INITIAL_VERSION);
             put(ConfigurationSchemaNode.OA_COMMENT, StringExampleBuilder.COMMENT);

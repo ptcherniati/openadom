@@ -705,7 +705,7 @@
   },
   "rightsrequest" : {
     "fields" : {
-      "nom" : {
+      "end_date" : {
         "title" : {
           "en" : "Name of research organization",
           "fr" : "Nom de l'organisme de recherche"
@@ -713,6 +713,36 @@
         "description" : {
           "en" : "Enter the name of your research organization",
           "fr" : "Renseignez ke nom de votre organisme de recherche"
+        }
+      },
+      "projet" : {
+        "title" : {
+          "en" : "Project",
+          "fr" : "Projet"
+        },
+        "description" : {
+          "en" : "Project repository",
+          "fr" : "Référentiel des projet"
+        }
+      },
+      "nom" : {
+        "title" : {
+          "en" : "Name",
+          "fr" : "Nom"
+        },
+        "description" : {
+          "en" : "Name",
+          "fr" : "Nom"
+        }
+      },
+      "start_date" : {
+        "title" : {
+          "en" : "Start Date",
+          "fr" : "Date de début"
+        },
+        "description" : {
+          "en" : "The start date in dd/MM/yyyy format",
+          "fr" : "La date de début au format dd/MM/yyyy"
         }
       }
     },

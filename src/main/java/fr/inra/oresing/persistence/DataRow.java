@@ -13,19 +13,12 @@ import lombok.Value;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Value
-public class DataRow {
-    List<String> rowId;
-    List<String> patternColumnName;
-    Ltree naturalKey;
-    Ltree hierarchicalKey;
-    Map<String, FieldType> values;
-    Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo;
-    //Long totalRows;
-    //Long rowNumber;
-    List<String> allPatternColumnNames;
-
-
+/**
+ * @param allPatternColumnNames Long totalRows;Long rowNumber;
+ */
+public record DataRow(List<String> rowId, List<String> patternColumnName, Ltree naturalKey, Ltree hierarchicalKey,
+                      Map<String, FieldType> values, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
+                      List<String> allPatternColumnNames) {
     public static DataRow of(Optional<StandardDataDescription> application, DataRows dataRows) {
         List<String> patternComponentKeys = application
                 .map(StandardDataDescription::componentDescriptions)
@@ -33,8 +26,7 @@ public class DataRow {
                         .filter(component -> component.getValue() instanceof PatternComponent)
                         .map(Map.Entry::getKey)
                 ).toList();
-        Map<String, FieldType> values = new HashMap<>();
-        values.putAll(dataRows.getValues().getFirst());
+        Map<String, FieldType> values = new HashMap<>(dataRows.getValues().getFirst());
         Map<String, ListType> listTypeMap = patternComponentKeys.stream()
                 .map(componentKey -> {
 
@@ -68,7 +60,6 @@ public class DataRow {
                 }
             }
         }
-        ;
         return new DataRow(
                 dataRows.getRowId(),
                 dataRows.getPatternColumnName(),

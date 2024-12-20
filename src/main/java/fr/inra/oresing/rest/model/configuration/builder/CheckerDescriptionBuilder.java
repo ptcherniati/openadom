@@ -3,8 +3,6 @@ package fr.inra.oresing.rest.model.configuration.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
-import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
-import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.checker.*;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.type.CheckerEnum;
@@ -69,7 +67,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
 
         Parsing<Set<String>> exceptionMessagesParsing = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS))
                 .map(exceptionsNode -> buildMessagesExceptions(localI18n, dataKey, componentKey, path, exceptionsNode))
-                .orElse(new Parsing<Set<String>>(localI18n, Set.of()));
+                .orElse(new Parsing<>(localI18n, Set.of()));
         i18n = exceptionMessagesParsing.i18n();
         final Multiplicity multiplicity = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_MULTIPLICITY))
                 .map(multi -> rootBuilder.getMapper().convertValue(multi, Multiplicity.class))
@@ -115,7 +113,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                         .map(j -> j.get(ConfigurationSchemaNode.OA_IS_PARENT))
                         .map(JsonNode::asBoolean)
                         .orElse(false);
-                final Boolean isrecursive = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_REFERENCE))
+                final boolean isrecursive = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_REFERENCE))
                         .map(j -> j.get(ConfigurationSchemaNode.OA_IS_RECURSIVE))
                         .map(JsonNode::asBoolean)
                         .orElse(isParent && reference.equals(dataKey));
@@ -155,7 +153,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                         .map(JsonNode::asText);
                 final Optional<String> duration = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_DURATION))
                         .map(JsonNode::asText);
-                final String durationRegex = "^(?!.*(second|minute|hour|day|week|month|year).*\1)\\d+\s+(?:second|minute|hour|day|week|month|year)s?(?: +\\d+\s+(?:second|minute|hour|day|week|month|year)s?)*$";
+                final String durationRegex = "^(?!.*(second|minute|hour|day|week|month|year).*\1)\\d+ +(?:second|minute|hour|day|week|month|year)s?(?: +\\d+ +(?:second|minute|hour|day|week|month|year)s?)*$";
                 if (!duration.isEmpty() && !duration.get().toLowerCase().matches(durationRegex)) {
                     rootBuilder.buildError(ConfigurationException.INVALID_DURATION_CHECKER_DATE, Map.of(
                                     "declaredDuration", duration.get()),
@@ -284,10 +282,10 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
         if (dataKey != null) {
             rootBuilder.getCheckers().computeIfAbsent(
                             checkerDescription.type(),
-                            k -> new HashMap<String, Map<String, List<CheckerDescription>>>()
+                            k -> new HashMap<>()
                     )
-                    .computeIfAbsent(dataKey, k -> new HashMap<String, List<CheckerDescription>>())
-                    .computeIfAbsent(componentKey, k -> new ArrayList<CheckerDescription>())
+                    .computeIfAbsent(dataKey, k -> new HashMap<>())
+                    .computeIfAbsent(componentKey, k -> new ArrayList<>())
                     .add(checkerDescription);
         }
         return new Parsing<>(i18n, checkerDescription);
@@ -332,6 +330,6 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                 exceptionMessages.add(key);
             }
         }
-        return new Parsing<Set<String>>(i18n, exceptionMessages);
+        return new Parsing<>(i18n, exceptionMessages);
     }
 }

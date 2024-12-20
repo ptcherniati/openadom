@@ -19,7 +19,7 @@ class AuthorizationExampleBuilder {
             List<StringType> authorizationsScope,
             StringType timeScope) {
         return new AuthorizationType(
-                new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+                new LinkedHashMap<>() {{
                     put(ConfigurationSchemaNode.OA_AUTHORIZATION_SCOPES, new CollectionType.ArrayType(
                             authorizationsScope,
                             false,

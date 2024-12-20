@@ -141,7 +141,7 @@ public record ValidationsBuilder(RootBuilder rootBuilder) {
 
 
     private Set<Tag> buildTags(String key, JsonNode componentNodeValue, String componentKey) {
-        final Set<Tag> oaTags = TagsBuilder.validateDomainTagNames(
+        return TagsBuilder.validateDomainTagNames(
                 componentNodeValue,
                 NodeSchemaValidator.joinPath(
                         ConfigurationSchemaNode.OA_DATA,
@@ -151,7 +151,6 @@ public record ValidationsBuilder(RootBuilder rootBuilder) {
                         ConfigurationSchemaNode.OA_TAGS
                 ),
                 rootBuilder);
-        return oaTags;
     }
 
 

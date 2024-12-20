@@ -34,12 +34,12 @@ class PatternComponentAdjacentExampleBuilder {
             final TitleType exportHeader,
             final List<String> tags,
             final CheckerType checker) {
-        return new PatternComponentAdjacentType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+        return new PatternComponentAdjacentType(new LinkedHashMap<>() {{
             put(ConfigurationSchemaNode.OA_IMPORT_HEADER_PATTERN, new StringType(importHeaderPattern));
             put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);
             put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
             put(ConfigurationSchemaNode.OA_MANDATORY, new BooleanType(mandatory));
-            put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(TagExampleBuilder.buildTagArray(tags), false, false, StringType.EMPTY_INSTANCE()));
+            put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(TagExampleBuilder.buildTagArray(tags), false, false, StringType.EMPTY_INSTANCE()));
             put(ConfigurationSchemaNode.OA_CHECKER, checker);
         }}
         );
@@ -53,12 +53,12 @@ class PatternComponentAdjacentExampleBuilder {
             final CheckerType checker,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required, false));
         if (importHeader != null) children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER, new StringType(importHeader));
         if (CollectionUtils.isNotEmpty(tags)) {
             final List<StringType> tagsArray = tags.stream().map(StringType::new).toList();
-            children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(tagsArray, false, false, StringType.EMPTY_INSTANCE()));
+            children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(tagsArray, false, false, StringType.EMPTY_INSTANCE()));
         }
         if (exportHeader != null) {
             children.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);

@@ -11,7 +11,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 class SubmissionTest {
-    Submission submission = new Submission(
+    final Submission submission = new Submission(
             SubmissionType.OA_VERSIONING,
             new Submission.SubmissionFileNameParsing(
                     "(.*)_(.*)_(.*)_(.*).csv",
@@ -34,22 +34,22 @@ class SubmissionTest {
                     )
             )
     );
-    BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
+    final BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
 
     @Test
     @Disabled
     void parseFileName() {
         submission.parseFileName("leProjet_leSite_01-01-1984_05-01-1984.csv", binaryFileDataset);
-        assertEquals(Ltree.fromSql("leProjet"),binaryFileDataset.getRequiredAuthorizations().get("projet"));
-        assertEquals(Ltree.fromSql("leSite"),binaryFileDataset.getRequiredAuthorizations().get("chemin"));
-        assertEquals("{},ISO resolved to 1984-01-01",binaryFileDataset.getFrom().toString());
-        assertEquals("{},ISO resolved to 1984-01-05",binaryFileDataset.getTo().toString());
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("chemin").contains(Ltree.fromSql("leSite")));
+        assertTrue(binaryFileDataset.getFrom().toString().contains("{},ISO resolved to 1984-01-01"));
+        assertTrue(binaryFileDataset.getTo().toString().contains("{},ISO resolved to 1984-01-05"));
         //do nothing if already done
         submission.parseFileName("leProjet2_leSite2_01-01-1985_05-01-1985.csv", binaryFileDataset);
-        assertEquals(Ltree.fromSql("leProjet"),binaryFileDataset.getRequiredAuthorizations().get("projet"));
-        assertEquals(Ltree.fromSql("leSite"),binaryFileDataset.getRequiredAuthorizations().get("chemin"));
-        assertEquals("{},ISO resolved to 1984-01-01",binaryFileDataset.getFrom().toString());
-        assertEquals("{},ISO resolved to 1984-01-05",binaryFileDataset.getTo().toString());
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("chemin").contains(Ltree.fromSql("leSite")));
+        assertTrue(binaryFileDataset.getFrom().toString().contains("{},ISO resolved to 1984-01-01"));
+        assertTrue(binaryFileDataset.getTo().toString().contains("{},ISO resolved to 1984-01-05"));
 
     }
     @Test

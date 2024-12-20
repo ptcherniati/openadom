@@ -11,11 +11,9 @@ import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForApplication;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationReader;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.chart.Chart;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
@@ -86,7 +84,6 @@ import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
@@ -159,15 +156,7 @@ public class OreSiService {
                     progression,
                     application,
                     configurationFile,
-                    createOrModifySchema -> {
-                        try {
-                            return initApplication(createOrModifySchema);
-                        } catch (SQLException e) {
-                            throw new RuntimeException(e);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
+                    this::initApplication);
         } catch (final OreSiTechnicalException | IOException e) {
             if ("fr.inra.oresing.domain.authorization.privilegeassessor.exception"
                     .equals(e.getClass().getPackage().getName())) {
@@ -193,7 +182,7 @@ public class OreSiService {
 
     public ApplicationResult buildOpenAdom(final Application application, final String[] filter) {
         final List<ApplicationInformation> filters = Arrays.stream(filter)
-                .map(s -> ApplicationInformation.valueOf(s))
+                .map(ApplicationInformation::valueOf)
                 .toList();
         final boolean withDatatypes = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.DATATYPE);
         final boolean withReferenceType = filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.REFERENCETYPE);
@@ -214,19 +203,15 @@ public class OreSiService {
                                 k -> new ApplicationResult.AdditionalFile(k.getValue().formFields().keySet())
                         )
                 );
-        final Map<String, StandardDataDescription> referenceComponents = Maps.filterValues(application.getConfiguration().dataDescription(), cd -> {
-            return cd.tags().contains(Tag.ReferenceTag.INSTANCE()) || !cd.tags().contains(Tag.DataTag.INSTANCE());
-        });
-        final Map<String, StandardDataDescription> datatypeComponents = Maps.filterValues(application.getConfiguration().dataDescription(), cd -> {
-            return cd.tags().contains(Tag.DataTag.INSTANCE());
-        });
+        final Map<String, StandardDataDescription> referenceComponents = Maps.filterValues(application.getConfiguration().dataDescription(), cd -> cd.tags().contains(Tag.ReferenceTag.INSTANCE()) || !cd.tags().contains(Tag.DataTag.INSTANCE()));
+        final Map<String, StandardDataDescription> datatypeComponents = Maps.filterValues(application.getConfiguration().dataDescription(), cd -> cd.tags().contains(Tag.DataTag.INSTANCE()));
 
         final Map<String, Node> referencesNodes = application.getConfiguration().hierarchicalNodes().stream()
                 .filter(node -> referenceComponents.containsKey(node.nodeName()))
-                .collect(Collectors.toMap(node -> node.nodeName(), Function.identity()));
+                .collect(Collectors.toMap(Node::nodeName, Function.identity()));
         final Map<String, Node> datatypesNodes = application.getConfiguration().hierarchicalNodes().stream()
                 .filter(node -> datatypeComponents.containsKey(node.nodeName()))
-                .collect(Collectors.toMap(node -> node.nodeName(), Function.identity()));
+                .collect(Collectors.toMap(Node::nodeName, Function.identity()));
 
         final String nameOrId = application.getId().toString();
         HashSet<String> dataNames = new HashSet<>(datatypeComponents.keySet());
@@ -234,7 +219,8 @@ public class OreSiService {
         Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> authorizations = withDatatypes || withReferenceType ? getAuthorizationsDataRights(application, dataNames) : new HashMap<>();
         final Configuration configuration = withConfiguration ? application.getConfiguration() : null;
         CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
-        final ApplicationResult applicationResult = new ApplicationResult(
+        //referenceSynthesis,
+        return new ApplicationResult(
                 application.getId().toString(),
                 Optional.ofNullable(application).map(Application::getName).orElseThrow(IllegalArgumentException::new),
                 application.findApplicationDescription()
@@ -257,7 +243,6 @@ public class OreSiService {
                 configuration,
                 CurrentApplicationUserRolesResult.of(currentUserRoles, application.getId()),
                 application.findDependantNodesByDataName());
-        return applicationResult;
     }
 
     private OreSiUser getCurrentUser() {
@@ -265,7 +250,7 @@ public class OreSiService {
     }
 
     @Transactional
-    public Application initApplication(final Application application) throws SQLException, IOException {
+    public Application initApplication(final Application application) {
         MigrateService migrateService = beanFactory.getBean(MigrateService.class);
         migrateService.setApplication(application);
         authenticationService.resetRole();
@@ -431,7 +416,7 @@ public class OreSiService {
         progressionForConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForConfiguration.incrementAndPush(i -> i + .02);
         final ReactiveProgression.ChangeOrCreateApplicationProgression progressionForParsingConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForConfiguration.withSubLabel("parsingConfiguration");
         if (Objects.requireNonNull(configurationFile.getOriginalFilename()).matches(".*\\.zip")) {
-            InputStream multiYAmlInput = new MultiYaml().parseConfigurationBytes(configurationFile);
+            InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile);
             progressionForParsingConfiguration.pushMessage("forMulti", Map.of("applicationName", applicationName));
             application = ApplicationConfigurationService.parseConfigurationBytes(comment, progressionForConfiguration, FileBomResolver.of(multiYAmlInput));
         } else {
@@ -496,8 +481,8 @@ public class OreSiService {
             boolean horizontalDisplay) {
         return Flux.fromStream(dataRepository.getLinkedReferenceValuesStream(uuidsFromData))
                 .map(dataValuesByDataType -> {
-                    String dataType = dataValuesByDataType.getDataType();
-                    Set<DataRowIds> ids = dataValuesByDataType.getIds();
+                    String dataType = dataValuesByDataType.dataType();
+                    Set<DataRowIds> ids = dataValuesByDataType.ids();
                     return new DownloadDatasetQueryByRowId(
                             application,
                             dataType,
@@ -625,7 +610,7 @@ public class OreSiService {
                                             final DataColumn dataColumn = (DataColumn) c.target();
                                             return dataColumn.toHumanReadableString();
                                         },
-                                        c -> DefaultLineCheckerResult.fromLineChecker(c))
+                                        DefaultLineCheckerResult::fromLineChecker)
                         )
                 );
     }
@@ -694,8 +679,7 @@ public class OreSiService {
     public List<UUID> deleteData(final DownloadDatasetQuery downloadDatasetQuery) {
         authenticationService.setRoleForClient();
         final Application application = downloadDatasetQuery.application();
-        final List<UUID> data = repository.getRepository(application).data().delete(downloadDatasetQuery);
-        return data;
+        return repository.getRepository(application).data().delete(downloadDatasetQuery);
     }
 
     public void getApplications(ReactiveProgression.GetApplicationProgression progression, final List<ApplicationInformation> filters) {
@@ -706,8 +690,8 @@ public class OreSiService {
         final AtomicLong progres = new AtomicLong(0);
         progression.fluxSink().next(new ReactiveTypeProgress(progres.get()));
         CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
-        Function<Application, List<ApplicationResult.DataSynthesis>> getDatynthesis = (application)->
-            dataService.getReferenceSynthesis(application);
+        Function<Application, List<ApplicationResult.DataSynthesis>> getDatynthesis = (application) ->
+                dataService.getReferenceSynthesis(application);
 
         applicationForAdmin
                 .map(application -> applicationForUser.stream()
@@ -731,7 +715,7 @@ public class OreSiService {
         PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = authorizationService.getPrivilegeAssessorForApplication(DATA_ACCESS, application);
         return datatypes.stream()
                 .map(dty -> getAuthorizationsDataRights(application, dty, request.getRequestUserId().toString(), privilegeAssessorForApplication))
-                .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private Map.Entry<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDataRights(
@@ -910,7 +894,7 @@ public class OreSiService {
             final AdditionalBinaryFile additionalBinaryFile,
             final Application application) {
         Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
-        authorizationService.authorizationsToParsedAuthorizations(
+        AuthorizationService.authorizationsToParsedAuthorizations(
                 additionalBinaryFile.getAssociates(),
                 authorizationsParsed);
         return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsParsed);
@@ -952,8 +936,7 @@ public class OreSiService {
         rightsRequest.setUser(rightsRequest.getUser() == null ? request.getRequestUserId() : rightsRequest.getUser());
         rightsRequest.getRightsRequest().setOreSiUsers(Set.of(rightsRequest.getUser()));
         authenticationService.setRoleForClient();
-        UUID store = repository.getRepository(application).rightsRequestRepository().store(rightsRequest);
-        return store;
+        return repository.getRepository(application).rightsRequestRepository().store(rightsRequest);
     }
 
     public void getCharte(final OutputStream out, final HttpServletResponse response, final String nameOrId, final AdditionalFilesInfos additionalFilesInfos) throws IOException {
@@ -1013,10 +996,9 @@ public class OreSiService {
         BadAdditionalFileParamsSearchException.check(additionalFileParamsParsingResult);
         final AdditionalFileSearchHelper additionalFileSearchHelper = additionalFileParamsParsingResult.getResult();
         try {
-            final List<UUID> deletedAdditionalBinaryFiles = repository
+            return repository
                     .getRepository(application).additionalBinaryFile()
                     .deleteByCriteria(additionalFileSearchHelper);
-            return deletedAdditionalBinaryFiles;
         } catch (final DataIntegrityViolationException e) {
             return null;
         }
@@ -1042,8 +1024,7 @@ public class OreSiService {
             }
 
         }
-        AdditionalFileParamsParsingResult build = builder.build(application, additionalFilesInfos);
-        return build;
+        return builder.build(application, additionalFilesInfos);
     }
 
     @Transactional()
@@ -1122,7 +1103,7 @@ public class OreSiService {
         locale = Optional.of(locale)
                 .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
 
-        try {
+        try (zipOutputStream) {
             // Écrire le fichier Groovy
             String groovyScriptFileName = "OpenAdomClient.groovy";
             writeFileToZip(zipOutputStream, groovyScriptFileName, Resources.getResource(Client.class, groovyScriptFileName));
@@ -1180,15 +1161,13 @@ public class OreSiService {
                         fichiersGeneres.computeIfAbsent(reference, k -> new ArrayList<>()).add(dataCsvFilePath);
                     }
                 } catch (Exception e) {
-                    log.error("Erreur lors du traitement du référentiel " + reference, e);
+                    log.error("Erreur lors du traitement du référentiel {}", reference, e);
                     referentielsEnErreur.add(reference);
                 }
             }
         } catch (Exception e) {
             log.error("Erreur générale lors de la création du bundle", e);
             referentielsEnErreur.add("ERREUR_GENERALE");
-        } finally {
-            zipOutputStream.close();
         }
 
         return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
@@ -1222,7 +1201,6 @@ public class OreSiService {
                     String dataName = Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(locale, downloadDatasetQuery.dataName()))
                             .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(fileSenderInternationalisation.getDefaultLanguage(), downloadDatasetQuery.dataName()))
                                     .orElse(downloadDatasetQuery.dataName()));
-                    ;
                     String subject = fileSenderInternationalisation.subjectPattern();
                     String message = fileSenderInternationalisation.messagePattern();
                     String internationnalizedDataName = fileSenderInternationalisation.getInternationnalizedDataName(

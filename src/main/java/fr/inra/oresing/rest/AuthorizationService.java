@@ -84,21 +84,20 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
 
     private static void removeAuthorizationAdditionalFilesThatCantBeModified(final Map.Entry<OperationAdditionalFileType, List<String>> authByTypeEntry, final Set<String> authorizationListForCurrentUser) {
         List<String> collect = authByTypeEntry.getValue().stream()
-                .filter(reference -> authorizationListForCurrentUser.contains(reference))
+                .filter(authorizationListForCurrentUser::contains)
                 .collect(Collectors.toList());
         authByTypeEntry.setValue(collect);
     }
 
     private static void addStoredAuthorizationReferencesThatCantBeModified(final OreSiReferenceAuthorization entity, final Set<String> authorizationListForCurrentUser, final Map<OperationReferenceType, List<String>> modifiedAuthorizations) {
         Optional.ofNullable(entity)
-                .map(e -> e.getReferences())
-                .ifPresent(a -> a.entrySet()
-                        .forEach(authByTypeEntry -> {
-                            List<String> collect = authByTypeEntry.getValue().stream()
+                .map(OreSiReferenceAuthorization::getReferences)
+                .ifPresent(a -> a.forEach((key, value) -> {
+                            List<String> collect = value.stream()
                                     .filter(authorizationListForCurrentUser::contains)
                                     .toList();
                             modifiedAuthorizations
-                                    .computeIfAbsent(authByTypeEntry.getKey(), k -> new LinkedList<>())
+                                    .computeIfAbsent(key, k -> new LinkedList<>())
                                     .addAll(collect);
                         })
                 );
@@ -106,14 +105,13 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
 
     private static void addStoredAuthorizationAdditionalFilesThatCantBeModified(final OreSiAdditionalFileAuthorization entity, final Set<String> authorizationListForCurrentUser, final Map<OperationAdditionalFileType, List<String>> modifiedAuthorizations) {
         Optional.ofNullable(entity)
-                .map(e -> e.getAdditionalFiles())
-                .ifPresent(a -> a.entrySet()
-                        .forEach(authByTypeEntry -> {
-                            List<String> collect = authByTypeEntry.getValue().stream()
+                .map(OreSiAdditionalFileAuthorization::getAdditionalFiles)
+                .ifPresent(a -> a.forEach((key, value) -> {
+                            List<String> collect = value.stream()
                                     .filter(authorizationListForCurrentUser::contains)
                                     .toList();
                             modifiedAuthorizations
-                                    .computeIfAbsent(authByTypeEntry.getKey(), k -> new LinkedList<>())
+                                    .computeIfAbsent(key, k -> new LinkedList<>())
                                     .addAll(collect);
                         })
                 );
@@ -176,7 +174,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                         .entrySet()
                         .stream()
                         .collect(Collectors.toMap(
-                                columDescription -> columDescription.getKey(),
+                                Map.Entry::getKey,
                                 columDescription -> new GetGrantableResult.ColumnDescription(
                                         columDescription.getValue().display(),
                                         columDescription.getValue().title(),
@@ -266,8 +264,6 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
             return Optional.ofNullable(previous()).map(OreSiAuthorization::getOreSiUsers).orElseGet(Set::of);
         }
     }
-
-    ;
 
     @Transactional
     public Authorizations addAuthorization(final Application application,
@@ -455,7 +451,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         Map<OperationAdditionalFileType, List<String>> userAdditionalFiles = authorizationsForUser.authorizationResults();
         boolean isAdministrator = authorizationsForUser.isAdministrator();
         Map<OperationAdditionalFileType, List<String>> additionalfiles = oreSiAuthorization.getAdditionalFiles().entrySet().stream()
-                .filter(operationReferenceTypeListEntry -> isAdministrator || userAdditionalFiles.containsKey(OperationReferenceType.admin))
+                .filter(operationReferenceTypeListEntry -> isAdministrator || userAdditionalFiles.containsKey(OperationAdditionalFileType.admin))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         return new GetAuthorizationAdditionalFilesResult(
                 oreSiAuthorization.getId(),
@@ -479,7 +475,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .stream()
                 .map(datatype -> new AbstractMap.SimpleEntry<String, List<GetGrantableResult.ReferenceScope>>(
                         datatype,
-                        new LinkedList<GetGrantableResult.ReferenceScope>()))
+                        new LinkedList<>()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         referenceScopes.putAll(getAuthorizationScopes(application, MenuType.authorization));
         Map<String, SortedMap<String, GetGrantableResult.ColumnDescription>> columnDescriptions = application.getData().stream()
@@ -495,10 +491,9 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
 
     public ImmutableSortedSet<GetGrantableResult.User> getGrantableUsers() {
         final List<OreSiUser> allUsers = userRepository.findAll();
-        final ImmutableSortedSet<GetGrantableResult.User> users = allUsers.stream()
+        return allUsers.stream()
                 .map(oreSiUserEntity -> new GetGrantableResult.User(oreSiUserEntity.getId(), oreSiUserEntity.getLogin()))
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.User::label)));
-        return users;
     }
 
     public ImmutableSortedSet<ApplicationUserResult> getGrantableUsers(Application application) {
@@ -506,7 +501,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         Map<String, List<String>> administratorRoles = userRepository.getRolesGrantedToRoles(
                 ApplicationUserResult.getApplicationRoles(application)
         );
-        final ImmutableSortedSet<ApplicationUserResult> users = allUsers.stream()
+        return allUsers.stream()
                 .map(user-> ApplicationUserResult.of(
                         application.getId(),
                         user,
@@ -514,7 +509,6 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                         application.getLastChartes()))
                 .filter(ApplicationUserResult::isApplicationUser)
                 .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(ApplicationUserResult::label)));
-        return users;
     }
 
     private Map<ReferenceScope.Context, List<ReferenceScope.TreeNode>> buildNodeTree(Object o) {
@@ -527,13 +521,11 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         return referenceScopeBykey
                 .stream()
                 .filter(ReferenceScope.NodeDescription::isRoot)
-                .map(node -> {
-                            return new ReferenceScope.TreeNode(
-                                    node.node_nk(),
-                                    node,
-                                    findChildren(node, referenceScopeBykey)
-                            );
-                        }
+                .map(node -> new ReferenceScope.TreeNode(
+                        node.node_nk(),
+                        node,
+                        findChildren(node, referenceScopeBykey)
+                )
                 )
                 .filter(ReferenceScope.TreeNode::containsContextNode)
                 .toList();
@@ -825,23 +817,23 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         List<OreSiAdditionalFileAuthorization> publicAuthorizations = authorizationRepository.findPublicAuthorizations();
         final long offset = Optional.ofNullable(params)
                 .map(map -> map.get("offset"))
-                .map(l -> l.isEmpty() ? "0" : l.get(0))
-                .map(os -> Long.parseLong(os))
+                .map(l -> l.isEmpty() ? "0" : l.getFirst())
+                .map(Long::parseLong)
                 .orElse(0L);
         final long limit = Optional.ofNullable(params)
-                .map(map -> map.get("limit")).filter(l -> !l.isEmpty()).map(l -> Long.parseLong(l.get(0))).orElse(Long.MAX_VALUE);
+                .map(map -> map.get("limit")).filter(l -> !l.isEmpty()).map(l -> Long.parseLong(l.getFirst())).orElse(Long.MAX_VALUE);
         final String user = Optional.ofNullable(params)
                 .map(map -> map.get("userId"))
-                .map(l -> l.isEmpty() ? null : l.get(0))
+                .map(l -> l.isEmpty() ? null : l.getFirst())
                 .filter(s -> !"null".equals(s))
                 .orElse(null);
         final String authorizationId = Optional.ofNullable(params)
                 .map(map -> map.get("authorizationId"))
-                .map(l -> l.isEmpty() ? null : l.get(0))
+                .map(l -> l.isEmpty() ? null : l.getFirst())
                 .filter(s -> !"null".equals(s))
                 .orElse(null);
 
-        final ImmutableSet<GetAuthorizationAdditionalFilesResult> authorizations = authorizationRepository.findAll().stream()
+        return authorizationRepository.findAll().stream()
                 .skip(offset)
                 .limit(limit)
                 .filter(oreSiReferenceAuthorization ->
@@ -850,7 +842,6 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 )
                 .map(oreSiAuthorization -> toGetAdditionalFilesAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
                 .collect(ImmutableSet.toImmutableSet());
-        return authorizations;
     }
 
     @Transactional
@@ -869,9 +860,9 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         }
 
         Set<String> authorizationListForCurrentUser = authorizationsForCurrentUser.stream()
-                .map(oreSiAuthorization -> oreSiAuthorization.getAdditionalFiles())
-                .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationReferenceType.admin))
-                .map(operationTypeListMap -> operationTypeListMap.get(OperationReferenceType.admin))
+                .map(OreSiAdditionalFileAuthorization::getAdditionalFiles)
+                .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationAdditionalFileType.admin))
+                .map(operationTypeListMap -> operationTypeListMap.get(OperationAdditionalFileType.admin))
                 .flatMap(List::stream)
                 .collect(Collectors.toSet());
 
@@ -909,17 +900,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         final List<String> attributes = new ArrayList<>(application.getConfiguration().requiredAuthorizationsAttributes());
 
         authorizations
-                .forEach(authorizationList -> {
-                    authorizationList.getAdditionalFiles().entrySet()
-                            .forEach(entry -> {
-                                OperationAdditionalFileType key = entry.getKey();
-                                entry.getValue().
-                                        forEach(authorizationResult -> authorizationMap
-                                                .computeIfAbsent(key, k -> new LinkedList<>())
-                                                .add(authorizationResult));
-
-                            });
-                });
+                .forEach(authorizationList -> authorizationList.getAdditionalFiles().forEach((key, value) -> value.
+                        forEach(authorizationResult -> authorizationMap
+                                .computeIfAbsent(key, k -> new LinkedList<>())
+                                .add(authorizationResult))));
         return new AuthorizationsAdditionalFilesResult(authorizationMap, application.getName(), isAdministrator);
     }
 
@@ -946,7 +930,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .orElseGet(HashSet::new);
         Optional.ofNullable(createAuthorizationRequest)
                 .map(CreateAuthorizationRequest::authorizationForAll)
-                .map(authorizations -> authorizations.keySet())
+                .map(Map::keySet)
                 .map(application::findDependentNodes)
                 .ifPresent(dependantsNodes::addAll);
         return createAuthorizationRequest.addDependantAuthorizations(dependantsNodes);
@@ -996,10 +980,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
         boolean isApplicationManager = currentUserRoles.applicationManagerOf(application);
         boolean isUserManager = currentUserRoles.userManagerOf(application);
-        currentUserRoles.applicationRoles().get(application.getId());
+        currentUserRoles.applicationRoles().get(application.getId().toString());
         AuthorizationsResult authorizationsForUserAndPublic = getAuthorizationsForUserAndPublic(application.getName(), currentUser.getLogin());
         return new AuthorizationsForApplicationUser(
-                currentUserRoles.applicationRoles().get(application.getId()),
+                currentUserRoles.applicationRoles().get(application.getId().toString()),
                 application,
                 isApplicationManager,
                 isUserManager,

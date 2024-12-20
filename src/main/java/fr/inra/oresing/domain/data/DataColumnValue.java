@@ -17,14 +17,11 @@ public interface DataColumnValue<T, F> extends SomethingToBeStoredAsJsonInDataba
 
     /**
      * L'ensemble des valeurs pour lesquelles il faut appliquer les checkers
-     * @return
      */
     FieldType getValuesToCheck();
 
     /**
      * Une copie de l'objet mais après avoir appliqué une transformation sur toutes les valeurs contenues.
-     * @param transformation
-     * @return
      */
     DataColumnValue<T, F> transform(Function<FieldType, FieldType> transformation);
 

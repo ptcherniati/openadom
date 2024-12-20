@@ -47,7 +47,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         try {
             final BinaryFileDataset binaryFileDataset = params != null ? new ObjectMapper().readValue(params, BinaryFileDataset.class) : null;
             final Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(binaryFileDataset);
-            if (binaryFileDatasetOpt.map(binaryFileDataset1 -> binaryFileDataset1.getDatatype()).isEmpty()) {
+            if (binaryFileDatasetOpt.map(BinaryFileDataset::getDatatype).isEmpty()) {
                 binaryFileDatasetOpt.ifPresent(binaryFileDataset1 -> binaryFileDataset1.setDatatype(dataName));
             }
             return binaryFileDataset;
@@ -69,20 +69,17 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         binaryFile.setFileData(file.getBytes());
         final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, request.getRequestUserId(),LocalDateTime.now().toString(),binaryFileDataset);
         binaryFile.setParams(binaryFileInfos);
-        final UUID fileId = getBinaryFileRepository(application).store(binaryFile);
-        return fileId;
+        return getBinaryFileRepository(application).store(binaryFile);
     }
 
     public Optional<BinaryFile> getFile(final String applicationNameOrID, final UUID id) {
         authenticationService.setRoleForClient();
-        final Optional<BinaryFile> optionalBinaryFile = getBinaryFileRepository(applicationNameOrID).tryFindById(id);
-        return optionalBinaryFile;
+        return getBinaryFileRepository(applicationNameOrID).tryFindById(id);
     }
 
     public Optional<BinaryFile> getFileWithData(final String applicationNameOrID, final UUID id) {
         authenticationService.setRoleForClient();
-        final Optional<BinaryFile> optionalBinaryFile = getBinaryFileRepository(applicationNameOrID).tryFindByIdWithData(id);
-        return optionalBinaryFile;
+        return getBinaryFileRepository(applicationNameOrID).tryFindByIdWithData(id);
     }
 
     private BinaryFileRepository getBinaryFileRepository(Application application) {

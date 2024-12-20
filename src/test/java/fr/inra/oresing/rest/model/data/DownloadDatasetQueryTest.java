@@ -272,9 +272,7 @@ class DownloadDatasetQueryTest {
             Optional.ofNullable(dataTypeEntry.getValue())
                     .map(StandardDataDescription::submission)
                     .map(Submission::submissionScope)
-                    .ifPresent(authorization-> {
-                requiredAuthorizationsAttributesBuilder.addAll(authorization.componentNames());
-            });
+                    .ifPresent(authorization-> requiredAuthorizationsAttributesBuilder.addAll(authorization.componentNames()));
         }
         configuration.requiredAuthorizationsAttributes().clear();
         configuration.requiredAuthorizationsAttributes().addAll(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
@@ -284,8 +282,7 @@ class DownloadDatasetQueryTest {
         application.setName("monsores");
         downloadDatasetQuerySearch.setApplication(application);
         downloadDatasetQuerySearch.setDataName("pem");
-        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery build = DownloadDatasetQuery.build(downloadDatasetQuerySearch);
-        return build;
+        return DownloadDatasetQuery.build(downloadDatasetQuerySearch);
     }
 
 }

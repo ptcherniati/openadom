@@ -5,13 +5,10 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.IllegalRoleToBeGranted;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.IllegalUserToBeGranted;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public record ApplicationAdminUser(Application application) implements ApplicationManager {
     @Override

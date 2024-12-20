@@ -16,8 +16,8 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Che
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import lombok.Getter;
-import lombok.Setter;
-import org.apache.logging.log4j.util.Supplier;
+
+import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.*;
@@ -155,7 +155,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
                                      final DataColumnValue referenceColumnRawValue,
                                      final DataColumn referenceColumn,
                                      final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-        DataColumnValue dataColumnValue = Optional.ofNullable(value)
+        return Optional.ofNullable(value)
                 .map(ltree -> {
                     refsLinkedTo
                             .computeIfAbsent(
@@ -172,7 +172,6 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
                     };
                 })
                 .orElse(referenceColumnRawValue);
-        return dataColumnValue;
     }
 
 

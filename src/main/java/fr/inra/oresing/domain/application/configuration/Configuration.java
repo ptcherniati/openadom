@@ -39,17 +39,16 @@ public record Configuration(Version version, Set<Tag> tags,
     }
 
     public Configuration configurationAccordingToRights() {
-        final Configuration configurationforNotAuthorized = new Configuration(
-                version(),
-                tags(),
-                i18n(),
-                applicationDescription(),
+        return new Configuration(
+                this.version(),
+                this.tags(),
+                this.i18n(),
+                this.applicationDescription(),
                 componentDescriptionAccordingToRights(),
-                rightsRequest(),
-                additionalFiles(),
-                hierarchicalNodes, requiredAuthorizationsAttributes()
+                this.rightsRequest(),
+                this.additionalFiles(),
+                hierarchicalNodes, this.requiredAuthorizationsAttributes()
         );
-        return configurationforNotAuthorized;
     }
 
     public LinkedHashMap<String, StandardDataDescription> componentDescriptionAccordingToRights() {
@@ -72,7 +71,7 @@ public record Configuration(Version version, Set<Tag> tags,
                 .map(node -> node.findNode(refType))
                 .filter(Objects::nonNull)
                 .findFirst()
-                .map(node -> new HierarchicalNode(node));
+                .map(HierarchicalNode::new);
     }
 
     public Set<String> getHiddenComponentsForData(final String dataName) {
@@ -112,10 +111,8 @@ public record Configuration(Version version, Set<Tag> tags,
 
     public Map<String, Submission.SubmissionScope> findSubmission() {
         Map<String, Submission.SubmissionScope> submissions = new HashMap<>();
-        dataDescription().forEach((dataName, dataDescription) -> {
-            dataDescription.findSubmissionScope()
-                    .ifPresent(authorizations -> submissions.put(dataName, authorizations));
-        });
+        dataDescription().forEach((dataName, dataDescription) -> dataDescription.findSubmissionScope()
+                .ifPresent(authorizations -> submissions.put(dataName, authorizations)));
         return submissions;
     }
 
@@ -173,7 +170,7 @@ public record Configuration(Version version, Set<Tag> tags,
                 .collect(Collectors.toSet());
         boolean haveNoDefinedOrder = componentDescriptions.stream()
                 .allMatch(Predicate.not(ComponentDescription::hasOrderTag));
-        Function<String, ComponentType> getTypeForComponentKey = componentName -> dataDescription.getTypeForComponentKey(componentName);
+        Function<String, ComponentType> getTypeForComponentKey = dataDescription::getTypeForComponentKey;
         return haveNoDefinedOrder ?
                 getSortedColumnsWithKeyThenAlphabeticOrder(dataname, getTypeForComponentKey, locale, componentDescriptions, dataDescription.naturalKey()) :
                 getSortedColumnsWithOrderThenAlphabeticOrder(dataname, getTypeForComponentKey, locale, componentDescriptions)
@@ -223,8 +220,8 @@ public record Configuration(Version version, Set<Tag> tags,
                 .map(stringInternationalizationComponentMap -> stringInternationalizationComponentMap.get(componentName))
                 .map(InternationalizationComponent::getExportHeader);
         return localizedExportHeaders
-                .map(exportHeaderI18n->exportHeaderI18n.getDescription())
-                .map(localizationMap -> localizationMap.get(locale))
+                .map(InternationalizationTitle::getDescription)
+                .map(localizationMap -> localizationMap.get(Locale.of(locale)))
                 .orElse(null);
 
     }
@@ -239,9 +236,9 @@ public record Configuration(Version version, Set<Tag> tags,
                 .map(stringInternationalizationComponentMap -> stringInternationalizationComponentMap.get(componentName))
                 .map(InternationalizationComponent::getExportHeader);
         return localizedExportHeaders
-                .map(exportHeaderI18n->exportHeaderI18n.getTitle())
-                .map(localizationMap -> localizationMap.get(locale))
-                .orElse(localizedExportHeaders.map(localizationMap -> localizationMap.getTitle().get(applicationDescription().defaultLanguage().getLanguage())).orElse(componentName));
+                .map(InternationalizationTitle::getTitle)
+                .map(localizationMap -> localizationMap.get(Locale.of(locale)))
+                .orElse(localizedExportHeaders.map(localizationMap -> localizationMap.getTitle().get(applicationDescription().defaultLanguage())).orElse(componentName));
 
     }
 

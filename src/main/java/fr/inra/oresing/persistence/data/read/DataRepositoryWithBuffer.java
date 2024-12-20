@@ -67,7 +67,9 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
         String referenceType = scopeEntry.getKey();
         List<String> availableKeys = new ArrayList<>();
 
-        List<Ltree> result = scopeEntry.getValue().stream()
+        // Collecter toutes les clés disponibles
+
+        return scopeEntry.getValue().stream()
                 .map(keyForScope -> {
                     String hierarchicalKey = getDataFromFileOrRepository(
                             fileWithPrefix(referenceType, PREFIX_FOR_HIERARCHICAL),
@@ -90,8 +92,6 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
                     return Ltree.fromSql(hierarchicalKey);
                 })
                 .toList();
-
-        return result;
     }
 
     @Override
@@ -122,7 +122,7 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
             while(parentName!=null){
                 parents.add(parentName);
                 parentName = application().findParentNode(parentName).map(Node::nodeName).orElse(null);
-            };
+            }
 
 
             Map<String, String> data = repository.findHierarchicalKeysByKeyForReferenceTypes(parents);

@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.OreSiUser;
-import lombok.Value;
 
 import java.sql.Timestamp;
 import java.util.Map;

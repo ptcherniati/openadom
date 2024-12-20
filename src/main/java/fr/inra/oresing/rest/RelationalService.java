@@ -37,7 +37,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
     @Value("${viewStrategy:DISABLED}")
     private ViewStrategy viewStrategy;
 
-    public static final Predicate<String> getIsValidIdentifierPattern(int min, int max) {
+    public static Predicate<String> getIsValidIdentifierPattern(int min, int max) {
         int min1 = min > 0 ? min : 1;
         int max1 = max < 64 ? max : 63;
         return Pattern.compile(String.format(IDENTIFIER_PATTERN, min1 - 1, max1 - 1)).asMatchPredicate();
@@ -315,9 +315,9 @@ public class RelationalService implements InitializingBean, DisposableBean {
     @Override
     public void destroy() {
         log.info("""
-                                
+                
                 \u001B[32mextinction des feux good night\u001B[0m
-                                
+                
                 """);
         //dropsViews();
     }

@@ -21,11 +21,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class AuthorizationIndexTest {
 
     private AuthorizationIndex authorizationIndex;
-    private Application application;
 
     @BeforeEach
     void setUp() {
-        application = Mockito.mock(Application.class);
+        Application application = Mockito.mock(Application.class);
         Mockito.when(application.getName()).thenReturn("monsore");
         Mockito.when(application.getConfiguration().dataDescription()).thenReturn(
                 Map.of("pem", mockStandardDataDescription("pem"))

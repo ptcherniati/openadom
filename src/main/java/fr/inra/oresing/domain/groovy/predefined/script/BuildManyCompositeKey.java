@@ -2,8 +2,6 @@ package fr.inra.oresing.domain.groovy.predefined.script;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.checker.type.DateType;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import groovy.lang.Closure;
 
 import java.util.ArrayList;

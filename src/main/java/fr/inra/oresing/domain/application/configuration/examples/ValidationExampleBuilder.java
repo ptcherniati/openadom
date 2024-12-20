@@ -53,11 +53,11 @@ class ValidationExampleBuilder {
     }
 
     static ValidationType buildValidation(final I18nType i18n, final boolean required, final CheckerType checker, final List<String> columns) {
-        return new ValidationType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+        return new ValidationType(new LinkedHashMap<>() {{
             put(ConfigurationSchemaNode.OA_I_18_N, i18n);
             put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
             put(ConfigurationSchemaNode.OA_CHECKER, checker);
-            put(ConfigurationSchemaNode.OA_COMPONENTS, new CollectionType.ArrayType<StringType>(columns.stream().map(StringType::new).collect(Collectors.toCollection(LinkedList::new)), false, false, StringType.EMPTY_INSTANCE()));
+            put(ConfigurationSchemaNode.OA_COMPONENTS, new CollectionType.ArrayType<>(columns.stream().map(StringType::new).collect(Collectors.toCollection(LinkedList::new)), false, false, StringType.EMPTY_INSTANCE()));
         }});
     }
 }

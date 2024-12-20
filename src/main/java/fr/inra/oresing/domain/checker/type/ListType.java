@@ -101,13 +101,8 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
 
     @Override
     public String toString() {
-        Optional.ofNullable(value)
-                .map(fts -> fts.stream()
-                        .map(s -> s.toString())
-                        .collect(Collectors.joining(",")))
-                .orElse(null);
         return value.stream()
-                .map(s -> s.toString())
+                .map(Object::toString)
                 .collect(Collectors.joining(","));
     }
 
@@ -117,7 +112,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
         for (final FT ft : value) {
             ft.serializeAddArray(arrayNode);
         }
-        node.put(key, arrayNode);
+        node.set(key, arrayNode);
     }
 
     @Override
@@ -160,7 +155,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     }
 
     public static ListType<StringType> ofStringType() {
-        return new ListType<StringType>(new StringType(""));
+        return new ListType<>(new StringType(""));
     }
 
     public void add(final FT value) {

@@ -22,9 +22,9 @@ class BasicComponentExampleBuilder {
         public static final BasicComponentType TYPE_DE_SITES_DEFINITION_FR = buildBasicComponents(null, BooleanExampleBuilder.FALSE, FRENCH_TYPE_SITE_DESCRIPTION, TitleExampleBuilder.TYPE_SITES_DEFINITION_FR, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR);
         public static final BasicComponentType TYPE_DE_SITES_DEFINITION_EN = buildBasicComponents(null, BooleanExampleBuilder.FALSE, ENGLISH_TYPE_SITE_DESCRIPTION, TitleExampleBuilder.TYPE_SITES_DEFINITION_EN, null, null, I18nExampleBuilder.LANG_RESTRICTION_EN);
         public static final BasicComponentType PROJET_KEY = buildBasicComponents(null, BooleanExampleBuilder.FALSE, NOM_CODIQUE_DU_PROJET, null, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR_EN);
-        public static final BasicComponentType PROJET_FR = buildBasicComponents(null, BooleanExampleBuilder.FALSE, NOM_DU_PROJET_EN_FRANÇAIS, TitleExampleBuilder.PROJET_NOM_FR, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR);
+        public static final BasicComponentType PROJET_FR = buildBasicComponents(null, BooleanExampleBuilder.FALSE, NOM_DU_PROJET_EN_FRANCAIS, TitleExampleBuilder.PROJET_NOM_FR, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR);
         public static final BasicComponentType PROJET_EN = buildBasicComponents(null, BooleanExampleBuilder.FALSE, ENGLISH_PROJECT_NAME, TitleExampleBuilder.PROJET_NOM_EN, null, null, I18nExampleBuilder.LANG_RESTRICTION_EN);
-        public static final BasicComponentType PROJET_DEFINITION_FR = buildBasicComponents(null, BooleanExampleBuilder.FALSE, DÉFINITION_DU_PROJET_EN_FRANÇAIS, TitleExampleBuilder.PROJET_DEFINITION_FR, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR);
+        public static final BasicComponentType PROJET_DEFINITION_FR = buildBasicComponents(null, BooleanExampleBuilder.FALSE, DEFINITION_DU_PROJET_EN_FRANCAIS, TitleExampleBuilder.PROJET_DEFINITION_FR, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR);
         public static final BasicComponentType PROJET_DEFINITION_EN = buildBasicComponents(null, BooleanExampleBuilder.FALSE, ENGLISH_PROJECT_DEFINITION, TitleExampleBuilder.PROJET_DEFINITION_EN, null, null, I18nExampleBuilder.LANG_RESTRICTION_EN);
         protected static final BasicComponentType ESPECES_DEFINITION_FR = buildBasicComponents(null, BooleanExampleBuilder.FALSE, SPECIES_DEFINITION_FR, null, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR);
         protected static final BasicComponentType ESPECES_DEFINITION_EN = buildBasicComponents(null, BooleanExampleBuilder.FALSE, ENGLISH_SPECIES_DEFINITION, null, null, null, I18nExampleBuilder.LANG_RESTRICTION_EN);
@@ -49,11 +49,11 @@ class BasicComponentExampleBuilder {
                                                              DefaultValueType defaultValue,
                                                              CollectionType.ArrayType<StringType> langRestriction
     ) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_REQUIRED, required);
         if (importHeader != null) children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER, importHeader);
         if (CollectionUtils.isNotEmpty(tags)) {
-            children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(tags, false, false, StringType.EMPTY_INSTANCE()));
+            children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(tags, false, false, StringType.EMPTY_INSTANCE()));
         }
         if (defaultValue != null) {
             children.put(ConfigurationSchemaNode.OA_DEFAULT_VALUE, defaultValue);

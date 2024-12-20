@@ -3,25 +3,22 @@ package fr.inra.oresing.rest.model.configuration.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.configuration.AdditionalFileDescription;
-import fr.inra.oresing.domain.application.configuration.AdditionalFileField;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.FieldDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationAdditionalFile;
-import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public record AdditionalFilesBuilder(RootBuilder rootBuilder) {
 
     Parsing<Map<String, AdditionalFileDescription>> buildAdditionalFiles(final JsonNode oaAdditionalFiles, I18n i18n) {
         I18n i18n1 = i18n;
         final Iterator<Map.Entry<String, JsonNode>> fieldsIterator = oaAdditionalFiles.fields();
-        final ImmutableMap.Builder<String, AdditionalFileDescription> builder = new ImmutableMap.Builder<String, AdditionalFileDescription>();
+        final ImmutableMap.Builder<String, AdditionalFileDescription> builder = new ImmutableMap.Builder<>();
         while (fieldsIterator.hasNext()) {
             final Map.Entry<String, JsonNode> additionalTypeEntry = fieldsIterator.next();
             final String additionalType = additionalTypeEntry.getKey();
@@ -48,7 +45,7 @@ public record AdditionalFilesBuilder(RootBuilder rootBuilder) {
                                                 ConfigurationSchemaNode.OA_FORM_FIELDS),
                                         NodeSchemaValidator.joinI18nPath(Internationalizations.ADDITIONAL_FILES, additionalType)
                                         ))
-                        .orElse(new Parsing<ImmutableMap<String, FieldDescription>>(i18n1, null));
+                        .orElse(new Parsing<>(i18n1, null));
                 builder.put(additionalType, new AdditionalFileDescription(oaFormat.result()));
                 i18n1 = oaFormat.i18n();
             } catch (final IllegalArgumentException illegalArgumentException) {
@@ -61,6 +58,6 @@ public record AdditionalFilesBuilder(RootBuilder rootBuilder) {
                         ));
             }
         }
-        return new Parsing<Map<String, AdditionalFileDescription>>(i18n1, builder.build());
+        return new Parsing<>(i18n1, builder.build());
     }
 }

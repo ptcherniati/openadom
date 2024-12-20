@@ -37,13 +37,13 @@ public record PublishContext(
     public static class PublishContextBuilder {
         final FileOrUUID fileOrUUID;
         private final Function<String, List<DataValue>> getDatavaluesByReference;
-        Application application;
-        String dataName;
+        final Application application;
+        final String dataName;
         List<List<String>> preHeaderRow;
         List<List<String>> postHeaderRow;
         List<String> headerRow;
         RowInfos rowInfos;
-        Map<String, List<DataValue>> dataValuesByReference = new HashMap<>();
+        final Map<String, List<DataValue>> dataValuesByReference = new HashMap<>();
 
         public PublishContextBuilder(Application application, String dataName, final FileOrUUID fileOrUUID, Function<String, List<DataValue>> getDatavaluesByReference) {
             super();

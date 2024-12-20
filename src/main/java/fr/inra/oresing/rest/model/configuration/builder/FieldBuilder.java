@@ -20,7 +20,7 @@ public record FieldBuilder(RootBuilder rootBuilder) {
             final Iterator<Map.Entry<String, JsonNode>> iterator,
             final String path,
             final String i18nPath) {
-        final ImmutableMap.Builder<String, FD> fields = new ImmutableMap.Builder<String, FD>();
+        final ImmutableMap.Builder<String, FD> fields = new ImmutableMap.Builder<>();
         int index = 0;
         while (iterator.hasNext()) {
             final Map.Entry<String, JsonNode> entry = iterator.next();

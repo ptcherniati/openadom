@@ -30,7 +30,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 
@@ -55,7 +54,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @org.junit.jupiter.api.Tag("SUITE")
 public class ApplicationConfigurationServiceTest {
 
-    public static final Map<String, List<ReactiveResult>> errors = new HashMap<String, List<ReactiveResult>>();
+    public static final Map<String, List<ReactiveResult>> errors = new HashMap<>();
     protected TestConfigurationBuilder CONFIGURATION_INSTANCE;
     @Autowired
     private Fixtures fixtures;
@@ -82,9 +81,7 @@ public class ApplicationConfigurationServiceTest {
     public void multiplesErrors() {
         CONFIGURATION_INSTANCE.builder("testReturnMultiplesErrors")
                 .withReplace("  sites:", "  site:")
-                .test(errors -> {
-                    assertTrue(errors.size() > 1);
-                });
+                .test(errors -> assertTrue(errors.size() > 1));
     }
 
     @BeforeEach
@@ -103,9 +100,7 @@ public class ApplicationConfigurationServiceTest {
                     Fixtures.getHauteFrequenceApplicationConfigurationResourceName(),
                     Fixtures.getValidationApplicationConfigurationResourceName()
                     //fixtures.getProApplicationConfigurationResourceName()
-            ).forEach(resource -> {
-                parseConfigurationFromResource(resource);
-            });
+            ).forEach(this::parseConfigurationFromResource);
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(new ReactiveProgression.DefaultCounter(0L), fluxSink, new ReactiveProgression.CreateApplicationProgressionMessagesLabel());
 //TODO
     /*        assertFalse(service.parseConfigurationBytes(progression, "vers: 0".getBytes(StandardCharsets.UTF_8)).isValid());
@@ -121,7 +116,7 @@ public class ApplicationConfigurationServiceTest {
 
             final Application errors;
             try (final InputStream in = getClass().getResourceAsStream(resource)) {
-                errors = service.parseConfigurationBytes("test", progression, FileBomResolver.of(in));
+                errors = ApplicationConfigurationService.parseConfigurationBytes("test", progression, FileBomResolver.of(in));
                 //TODO
                 //assertTrue(() -> errors.isEmpty(), resource + " doit être reconnu comme un fichier valide");
             } catch (final IOException e) {
@@ -141,7 +136,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_application:""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNSUPPORTED_OPENADOM_VERSION.getMessage(), validationError.getMessage());
                     assertEquals(ConfigurationSchemaNode.OA_VERSION, validationError.getParam("path"));
                     assertEquals("2", validationError.getParam("actualVersion"));
@@ -157,7 +152,7 @@ public class ApplicationConfigurationServiceTest {
                         context-:""")
                 .test(errors -> {
                     assertEquals(11, errors.size());
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.BAD_DOMAIN_TAG_PATTERN.getMessage(), validationError.getMessage());
                     assertEquals(ConfigurationSchemaNode.OA_TAGS, validationError.getParam("path"));
                     assertEquals(Tag.DomainTag.DOMAIN_PATTERN, validationError.getParam("domainTagPattern"));
@@ -172,7 +167,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_name: F4KE app!cat°""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNSUPPORTED_NAME_APPLICATION.getMessage(), validationError.getMessage());
                     assertEquals(ConfigurationSchemaNode.OA_APPLICATION, validationError.getParam("path"));
                     assertEquals("F4KE app!cat°", validationError.getParam("nameApplication"));
@@ -187,7 +182,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_tags: [ context_ ]""")
                 .test(errors -> {
                     assertEquals(3, errors.size());
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.BAD_TAGS_PATTERNS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > especes", validationError.getParam("path"));
                     assertEquals(Set.of("__HIDDEN__", "__REFERENCE__", "test", "context", "no-tag", "__DATA__", "__ORDER_([0-9]*)__"), validationError.getParam(("acceptedTagPatterns")));
@@ -202,7 +197,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_tags: [ test_, context ]""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.BAD_TAGS_PATTERNS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_dynamicComponents > proprieteDeTaxon > OA_tags", validationError.getParam("path"));
                     assertEquals(Set.of("__HIDDEN__", "__REFERENCE__", "test", "context", "no-tag", "__DATA__", "__ORDER_([0-9]*)__"), validationError.getParam(("acceptedTagPatterns")));
@@ -212,22 +207,26 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testBadReferenceNameForChecker() {
         CONFIGURATION_INSTANCE.builder("testMissingReferenceNameForChecker")
-                .withReplace("          OA_params:\n" +
-                                "            OA_reference:\n" +
-                                "              OA_name: type_de_sites\n" +
-                                "              OA_isParent: true",
-                        "          OA_params:\n" +
-                                "            OA_reference:\n" +
-                                "              OA_name: toto\n" +
-                                "              OA_isParent: true")
+                .withReplace("""
+                                          OA_params:
+                                            OA_reference:
+                                              OA_name: type_de_sites
+                                              OA_isParent: true\
+                                """,
+                        """
+                                          OA_params:
+                                            OA_reference:
+                                              OA_name: toto
+                                              OA_isParent: true\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_basicComponents > tze_type_nom > OA_checker > OA_params > OA_reference > OA_name", validationError.getParam(("path")));
                     final Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
-                    final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
+                    final Set<String> given = new TreeSet<>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
                 });
     }
@@ -240,7 +239,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_version: -2""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.BAD_VERSION_PATTERN.getMessage(), validationError.getMessage());
                     assertEquals("-2", validationError.getParam("givenVersion"));
                     assertEquals(ConfigurationSchemaNode.OA_APPLICATION, validationError.getParam("path"));
@@ -253,7 +252,7 @@ public class ApplicationConfigurationServiceTest {
                 .builder("testEmptyFile", "emptyConfigurationFile.yaml")
                 .test(errors -> {
                             assertEquals(1, errors.size() );
-                            final ValidationError validationError = errors.get(0);
+                            final ValidationError validationError = errors.getFirst();
                             assertEquals(ConfigurationException.EMPTY_FILE.getMessage(), validationError.getMessage());
                             assertEquals("emptyFile", ConfigurationException.EMPTY_FILE.getMessage());
                         }
@@ -265,12 +264,14 @@ public class ApplicationConfigurationServiceTest {
         CONFIGURATION_INSTANCE.builder("testInvalidDurationForCheckerDate")
                 .withReplace("          OA_name: OA_date\n" +
                                 "          OA_params:",
-                        "          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_duration: 1 Yearss")
+                        """
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_duration: 1 Yearss\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size());
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.INVALID_DURATION_CHECKER_DATE.getMessage(), validationError.getMessage());
                     assertEquals("1 Yearss", validationError.getParam("declaredDuration"));
                     assertEquals("OA_data > pem > OA_basicComponents > date > OA_checker > OA_params", validationError.getParam(("path")));
@@ -280,17 +281,21 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testInvalidMinForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testInvalidMinMaxForCheckerDate")
-                .withReplace("          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_pattern: dd/MM/yyyy",
-                        "          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_pattern: dd/MM/yyyy\n" +
-                                "            OA_min: 12/31/1980\n" +
-                                "            OA_max: 31/12/2024")
+                .withReplace("""
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_pattern: dd/MM/yyyy\
+                                """,
+                        """
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_pattern: dd/MM/yyyy
+                                            OA_min: 12/31/1980
+                                            OA_max: 31/12/2024\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.INVALID_MIN_MAX_FOR_CHECKER_DATE.getMessage(), validationError.getMessage());
                     assertEquals("12/31/1980", validationError.getParam("declaredMinValue"));
                     assertEquals("31/12/2024", validationError.getParam("declaredMaxValue"));
@@ -302,17 +307,21 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testInvalidMaxForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testInvalidMinMaxForCheckerDate")
-                .withReplace("          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_pattern: dd/MM/yyyy",
-                        "          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_pattern: dd/MM/yyyy\n" +
-                                "            OA_min: 31/12/1980\n" +
-                                "            OA_max: 12/31/2024")
+                .withReplace("""
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_pattern: dd/MM/yyyy\
+                                """,
+                        """
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_pattern: dd/MM/yyyy
+                                            OA_min: 31/12/1980
+                                            OA_max: 12/31/2024\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.INVALID_MIN_MAX_FOR_CHECKER_DATE.getMessage(), validationError.getMessage());
                     assertEquals("31/12/1980", validationError.getParam("declaredMinValue"));
                     assertEquals("12/31/2024", validationError.getParam("declaredMaxValue"));
@@ -329,7 +338,7 @@ public class ApplicationConfigurationServiceTest {
                         - espNom""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.INVALID_NATURAL_KEY.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > especes", validationError.getParam(("path")));
                     assertEquals(Set.of("espNom"), validationError.getParam("invalidNaturalKeyElements"));
@@ -343,15 +352,19 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testInvalidPatternForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testInvalidPatternForCheckerDate")
-                .withReplace("          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_pattern: dd/MM/yyyy",
-                        "          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_pattern: bb/MM/yyyy")
+                .withReplace("""
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_pattern: dd/MM/yyyy\
+                                """,
+                        """
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_pattern: bb/MM/yyyy\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.INVALID_PATTERN_FOR_CHECKER_DATE.getMessage(), validationError.getMessage());
                     assertEquals("bb/MM/yyyy", validationError.getParam("badPattern"));
                     assertEquals("OA_data > pem > OA_basicComponents > date > OA_checker > OA_params > OA_pattern", validationError.getParam(("path")));
@@ -368,7 +381,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_application:""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_VERSION_APPLICATION.getMessage(), validationError.getMessage());
                     assertEquals(ConfigurationSchemaNode.OA_VERSION, validationError.getParam("path"));
                     assertEquals(Configuration.OPEN_ADOM_VERSION_PATTERN, validationError.getParam("expectedVersion"));
@@ -378,17 +391,21 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testMissingCheckerName() {
         CONFIGURATION_INSTANCE.builder("testMissingNameChecker")
-                .withReplace("      tze_type_nom:\n" +
-                                "        OA_required: true\n" +
-                                "        OA_checker:\n" +
-                                "          OA_name: OA_reference",
-                        "      tze_type_nom:\n" +
-                                "        OA_required: true\n" +
-                                "        OA_checker:\n" +
-                                "          OA_name:")
+                .withReplace("""
+                                      tze_type_nom:
+                                        OA_required: true
+                                        OA_checker:
+                                          OA_name: OA_reference\
+                                """,
+                        """
+                                      tze_type_nom:
+                                        OA_required: true
+                                        OA_checker:
+                                          OA_name:\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_CHECKER_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_basicComponents > tze_type_nom", validationError.getParam(("path")));
                     final Set<String> expected = Arrays.stream(new String[]{"OA_reference", "OA_boolean", "OA_date", "OA_integer", "OA_float", "OA_string", "OA_groovyExpression"})
@@ -405,7 +422,7 @@ public class ApplicationConfigurationServiceTest {
                         "")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_ANY_MANDATORIES_SECTIONS.getMessage(), validationError.getMessage());
                     final Set<String> expectedComponents = Arrays.stream(new String[]{"OA_columnName", "OA_columnNumber"})
                             .collect(Collectors.toCollection(TreeSet::new));
@@ -424,7 +441,7 @@ public class ApplicationConfigurationServiceTest {
                         "          OA_component: ")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_REQUIRED_VALUE.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_submission > OA_submissionScope > OA_timeScope > OA_component", validationError.getParam(("path")));
                 });
@@ -438,7 +455,7 @@ public class ApplicationConfigurationServiceTest {
                         "")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_MANDATORIES_SECTIONS.getMessage(), validationError.getMessage());
                     final Set<String> expectedComponents = Arrays.stream(new String[]{"OA_component", "OA_reference"})
                             .collect(Collectors.toSet());
@@ -457,7 +474,7 @@ public class ApplicationConfigurationServiceTest {
                                 "            OA_component:")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_REQUIRED_VALUE.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_submission > OA_submissionScope > OA_referenceScopes > 0 > OA_component", validationError.getParam(("path")));
                 });
@@ -470,7 +487,7 @@ public class ApplicationConfigurationServiceTest {
                         "        OA_components: [  ]")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_COMPONENT_FOR_COMPONENT_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_validations > reference > OA_components", validationError.getParam("path"));
                     final List<String> expectedComponents = Arrays.stream(new String[]{"site_bassin", "date", "tel_experimental_site", "site", "bassin", "projet", "espece", "ordre_affichage", "chemin", "tel_experimental_network", "plateforme", "is_float_value", "tel_value"})
@@ -486,7 +503,7 @@ public class ApplicationConfigurationServiceTest {
                         "        OA_components:")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_REQUIRED_VALUE.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_validations > reference > OA_components", validationError.getParam("path"));
                 });
@@ -500,7 +517,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_name:""")
                 .test(errors -> {
                     assertEquals(1, errors.size());
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_REQUIRED_VALUE.getMessage(), validationError.getMessage());
                     assertEquals("OA_application > OA_name", validationError.getParam("path"));
                 });
@@ -514,7 +531,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_version: 'deux'""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.BAD_VERSION_PATTERN.getMessage(), validationError.getMessage());
                     assertEquals("deux", validationError.getParam("givenVersion"));
                     assertEquals(ConfigurationSchemaNode.OA_APPLICATION, validationError.getParam("path"));
@@ -524,15 +541,19 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testMissingPatternForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testMissingPatternForCheckerDate")
-                .withReplace("          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_pattern: dd/MM/yyyy",
-                        "          OA_name: OA_date\n" +
-                                "          OA_params:\n" +
-                                "            OA_pattern:")
+                .withReplace("""
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_pattern: dd/MM/yyyy\
+                                """,
+                        """
+                                          OA_name: OA_date
+                                          OA_params:
+                                            OA_pattern:\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_REQUIRED_VALUE.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_basicComponents > date > OA_checker > OA_params > OA_pattern", validationError.getParam(("path")));
                 });
@@ -545,7 +566,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_version: 2.0.1""", "")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_VERSION_APPLICATION.getMessage(), validationError.getMessage());
                     assertEquals(Configuration.OPEN_ADOM_VERSION_PATTERN, validationError.getParams().get("actualVersion"));
                 });
@@ -554,17 +575,21 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testMissingRequiredValueForChecker() {
         CONFIGURATION_INSTANCE.builder("testMissingRequiredValueForChecker")
-                .withReplace("          OA_params:\n" +
-                                "            OA_reference:\n" +
-                                "              OA_name: type_de_sites\n" +
-                                "              OA_isParent: true",
-                        "          OA_params:\n" +
-                                "            OA_reference:\n" +
-                                "              OA_name:\n" +
-                                "              OA_isParent: true")
+                .withReplace("""
+                                          OA_params:
+                                            OA_reference:
+                                              OA_name: type_de_sites
+                                              OA_isParent: true\
+                                """,
+                        """
+                                          OA_params:
+                                            OA_reference:
+                                              OA_name:
+                                              OA_isParent: true\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_REQUIRED_VALUE.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_basicComponents > tze_type_nom > OA_checker > OA_params > OA_reference > OA_name", validationError.getParam(("path")));
                 });
@@ -577,7 +602,7 @@ public class ApplicationConfigurationServiceTest {
                         " OA_reference:")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_REQUIRED_VALUE.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_dynamicComponents > proprieteDeTaxon > OA_reference", validationError.getParam(("path")));
                 });
@@ -590,7 +615,7 @@ public class ApplicationConfigurationServiceTest {
                         "")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_MANDATORIES_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_constantComponents > tel_experimental_network > OA_importHeaderTarget > OA_columnNumber", validationError.getParam("path"));
                 });
@@ -604,7 +629,7 @@ public class ApplicationConfigurationServiceTest {
                         "            OA_component: projet")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_MANDATORIES_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals(Set.of(ConfigurationSchemaNode.OA_REFERENCE), validationError.getParam("missingMandatoriesSections"));
                     assertEquals("OA_data > pem > OA_submission > OA_submissionScope > OA_referenceScopes > 0 > OA_exportHeader > OA_component > OA_i18n", validationError.getParam(("path")));
@@ -620,7 +645,7 @@ public class ApplicationConfigurationServiceTest {
                                 "            OA_component: projet")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MISSING_REQUIRED_VALUE.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_submission > OA_submissionScope > OA_referenceScopes > 0 > OA_reference", validationError.getParam(("path")));
                 });
@@ -635,7 +660,7 @@ public class ApplicationConfigurationServiceTest {
                         "          OA_columnNumber: -1")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.NEGATIVE_CONSTANT_IMPORT_HEADER_COLUMN_NUMBER.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_constantComponents > tel_experimental_network > OA_importHeaderTarget > OA_columnNumber", validationError.getParam("path"));
                 });
@@ -650,7 +675,7 @@ public class ApplicationConfigurationServiceTest {
                         "          OA_columnNumber: -1")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.NEGATIVE_CONSTANT_IMPORT_HEADER_COLUMN_NUMBER.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_constantComponents > tel_experimental_site > OA_importHeaderTarget > OA_columnNumber", validationError.getParam("path"));
                 });
@@ -663,7 +688,7 @@ public class ApplicationConfigurationServiceTest {
                         "OA_rowNumber: -1")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.NEGATIVE_CONSTANT_IMPORT_HEADER_ROW_NUMBER.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_constantComponents > tel_experimental_network > OA_importHeaderTarget > OA_rowNumber", validationError.getParam("path"));
                 });
@@ -676,7 +701,7 @@ public class ApplicationConfigurationServiceTest {
                         "OA_columnNumber: 0")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.NEGATIVE_CONSTANT_IMPORT_HEADER_COLUMN_NUMBER.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_constantComponents > tel_experimental_network > OA_importHeaderTarget > OA_columnNumber", validationError.getParam("path"));
                 });
@@ -691,7 +716,7 @@ public class ApplicationConfigurationServiceTest {
                                 "        OA_tags: [ testz ]")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.NOT_EXPECTED_DOMAIN_TAGS.getMessage(), validationError.getMessage());
                     assertEquals(Set.of("testz"), validationError.getParam("notExpectedDomainTags"));
                     assertEquals(Set.of("test", "context"), validationError.getParam("expectedDomainTags"));
@@ -706,7 +731,7 @@ public class ApplicationConfigurationServiceTest {
                         "OA_rowNumber: 8")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.BAD_CONSTANT_IMPORT_HEADER_ROW_NUMBER.getMessage(), validationError.getMessage());
                     assertEquals(8, validationError.getParam("givenRowNumber"));
                     assertEquals(7, validationError.getParam("firstRowLine"));
@@ -722,7 +747,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_tags: [ testz, __ORDER_2__ ]""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.NOT_EXPECTED_DOMAIN_TAGS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_basicComponents > projet > OA_tags", validationError.getParam(("path")));
                     assertEquals(Set.of("testz"), validationError.getParam("notExpectedDomainTags"));
@@ -739,7 +764,7 @@ public class ApplicationConfigurationServiceTest {
                                 "        OA_tags: [ contextt, __HIDDEN__ ]")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.NOT_EXPECTED_DOMAIN_TAGS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_computedComponents > site_bassin > OA_tags", validationError.getParam(("path")));
                     assertEquals(Set.of("contextt"), validationError.getParam("notExpectedDomainTags"));
@@ -755,7 +780,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_tags: [ contxet ]""")
                 .test(errors -> {
                     assertEquals(3, errors.size());
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.NOT_EXPECTED_DOMAIN_TAGS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > especes", validationError.getParam("path"));
                     assertEquals(Set.of("contxet"), validationError.getParam("notExpectedDomainTags"));
@@ -766,27 +791,31 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testUnExpectedReferencesForComputation() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedReferencesForComputation")
-                .withReplace("          OA_expression: >\n" +
-                             "            return references.sites\n" +
-                             "                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}\n" +
-                             "                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}\n" +
-                             "                    .getHierarchicalKey();\n" +
-                             "          OA_references:\n" +
-                             "            - sites",
-                        "          OA_expression: >\n" +
-                        "            return references.sites\n" +
-                        "                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}\n" +
-                        "                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}\n" +
-                        "                    .getHierarchicalKey();\n" +
-                        "          OA_references:\n" +
-                        "            - site")
+                .withReplace("""
+                                          OA_expression: >
+                                            return references.sites
+                                                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}
+                                                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}
+                                                    .getHierarchicalKey();
+                                          OA_references:
+                                            - sites\
+                                """,
+                        """
+                                          OA_expression: >
+                                            return references.sites
+                                                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}
+                                                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}
+                                                    .getHierarchicalKey();
+                                          OA_references:
+                                            - site\
+                                """)
                 .test(errors -> {
                     assertEquals(2, errors.size() );
-                    ValidationError validationError = errors.get(0);
+                    ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
-                    Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
+                    Set<String> given = new TreeSet<>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
                     assertEquals("site", validationError.getParam("referenceName"));
                     assertEquals("OA_data > pem > OA_basicComponents > chemin > OA_defaultValue > OA_references", validationError.getParam(("path")));
@@ -805,27 +834,31 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testUnExpectedReferencesForDefaultValueInBasicComponents() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedReferencesForDefaultValue")
-                .withReplace("          OA_expression: >\n" +
-                             "            return references.sites\n" +
-                             "                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}\n" +
-                             "                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}\n" +
-                             "                    .getHierarchicalKey();\n" +
-                             "          OA_references:\n" +
-                             "            - sites",
-                        "          OA_expression: >\n" +
-                        "            return references.sites\n" +
-                        "                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}\n" +
-                        "                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}\n" +
-                        "                    .getHierarchicalKey();\n" +
-                        "          OA_references:\n" +
-                        "            - site")
+                .withReplace("""
+                                          OA_expression: >
+                                            return references.sites
+                                                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}
+                                                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}
+                                                    .getHierarchicalKey();
+                                          OA_references:
+                                            - sites\
+                                """,
+                        """
+                                          OA_expression: >
+                                            return references.sites
+                                                    .findAll(){it.refValues.zet_chemin_parent.equals((String)datum.site.bassin)}
+                                                    .find{it.refValues.zet_nom_key.equals((String)datum.site.plateforme)}
+                                                    .getHierarchicalKey();
+                                          OA_references:
+                                            - site\
+                                """)
                 .test(errors -> {
                     assertEquals(2, errors.size());
-                    ValidationError validationError = errors.get(0);
+                    ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
-                    Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
+                    Set<String> given = new TreeSet<>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
                     assertEquals("site", validationError.getParam("referenceName"));
                     assertEquals("OA_data > pem > OA_basicComponents > chemin > OA_defaultValue > OA_references", validationError.getParam(("path")));
@@ -834,7 +867,7 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
-                    given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
+                    given = new TreeSet<>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
                     assertEquals("site", validationError.getParam("referenceName"));
                     assertEquals("OA_data > pem > OA_constantComponents > tel_experimental_site > OA_defaultValue > OA_references", validationError.getParam(("path")));
@@ -844,19 +877,21 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testUnExpectedReferencesForDefaultValueInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedReferencesForDefaultValueInConstantComponents")
-                .withReplace("OA_references:\n" +
-                                "            - sites\n" +
-                                "        OA_exportHeader:",
-                        "OA_references:\n" +
-                                "            - site\n" +
-                                "        OA_exportHeader:")
+                .withReplace("""
+                                OA_references:
+                                            - sites
+                                        OA_exportHeader:""",
+                        """
+                                OA_references:
+                                            - site
+                                        OA_exportHeader:""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     final Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
-                    final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
+                    final Set<String> given = new TreeSet<>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
                     assertEquals("site", validationError.getParam("referenceName"));
                     assertEquals("OA_data > pem > OA_constantComponents > tel_experimental_site > OA_defaultValue > OA_references", validationError.getParam("path"));
@@ -872,7 +907,7 @@ public class ApplicationConfigurationServiceTest {
                         "            OA_component: projet")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals("projet", validationError.getParam("submissionReference"));
                     assertEquals("proj", validationError.getParam("componentReference"));
                     assertEquals("OA_data > pem > OA_submission > OA_submissionScope > OA_referenceScopes > 2", validationError.getParam(("path")));
@@ -887,7 +922,7 @@ public class ApplicationConfigurationServiceTest {
                         __HIDDEN__:""")
                 .test(errors -> {
                     assertEquals(7, errors.size());
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.ILLEGAL_DOMAIN_TAG_PATTERN.getMessage(), validationError.getMessage());
                     assertEquals(ConfigurationSchemaNode.OA_TAGS, validationError.getParam("path"));
                     assertEquals(Set.of("HiddenTag[tagDefinition=HIDDEN_TAG]"), validationError.getParam("reservedTagNames"));
@@ -904,7 +939,7 @@ public class ApplicationConfigurationServiceTest {
                         OA_unexpectedTag: 1""")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals(Set.of("OA_unexpectedTag"), validationError.getParams().get("unexpectedSections"));
                 });
@@ -913,17 +948,21 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testUnknownCheckerName() {
         CONFIGURATION_INSTANCE.builder("testUnknownCheckerName")
-                .withReplace("      tze_type_nom:\n" +
-                                "        OA_required: true\n" +
-                                "        OA_checker:\n" +
-                                "          OA_name: OA_reference",
-                        "      tze_type_nom:\n" +
-                                "        OA_required: true\n" +
-                                "        OA_checker:\n" +
-                                "          OA_name: reference")
+                .withReplace("""
+                                      tze_type_nom:
+                                        OA_required: true
+                                        OA_checker:
+                                          OA_name: OA_reference\
+                                """,
+                        """
+                                      tze_type_nom:
+                                        OA_required: true
+                                        OA_checker:
+                                          OA_name: reference\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_CHECKER_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_basicComponents > tze_type_nom", validationError.getParam(("path")));
                     final Set<String> expected = Arrays.stream(new String[]{"OA_reference", "OA_boolean", "OA_date", "OA_integer", "OA_float", "OA_string", "OA_groovyExpression"})
@@ -941,7 +980,7 @@ public class ApplicationConfigurationServiceTest {
                         "OA_component: proj")
                 .test(errors -> {
                     assertEquals(2, errors.size());
-                    ValidationError validationError = errors.get(0);
+                    ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_COMPONENT_FOR_COMPONENT_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_submission > OA_submissionScope > OA_referenceScopes > 2 > OA_component", validationError.getParam(("path")));
                     assertEquals("proj", validationError.getParam(("unknownComponent")));
@@ -968,7 +1007,7 @@ public class ApplicationConfigurationServiceTest {
                         "        OA_components: [ sites ]")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_COMPONENT_FOR_COMPONENT_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_validations > reference > OA_components", validationError.getParam(("path")));
                     assertEquals("sites", validationError.getParam(("unknownComponent")));
@@ -988,7 +1027,7 @@ public class ApplicationConfigurationServiceTest {
                                 "          OA_component: dates")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_COMPONENT_FOR_COMPONENT_NAME.getMessage(), validationError.getMessage());
                     assertEquals("dates", validationError.getParam("unknownComponent"));
                     final List<String> expected = Arrays.stream(new String[]{"date"})
@@ -1002,15 +1041,19 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testUnknownNameAuthorizationScopeInFileNameInSubmission() {
         CONFIGURATION_INSTANCE.builder("testUnknownNameAuthorizationScopeInFileNameSubmission")
-                .withReplace("        OA_matchPatternScopes:\n" +
-                                "          - projet\n" +
-                                "          - site_bassin",
-                        "        OA_matchPatternScopes:\n" +
-                                "          - projet\n" +
-                                "          - site_bassine")
+                .withReplace("""
+                                        OA_matchPatternScopes:
+                                          - projet
+                                          - site_bassin\
+                                """,
+                        """
+                                        OA_matchPatternScopes:
+                                          - projet
+                                          - site_bassine\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_NAME_REFERENCE_SCOPE.getMessage(), validationError.getMessage());
                     assertEquals("site_bassine", validationError.getParam("unknownAuthorizationScope"));
                     final Set<String> expected = Arrays.stream(new String[]{"site_bassin", "projet"})
@@ -1028,13 +1071,13 @@ public class ApplicationConfigurationServiceTest {
                         "OA_referenceComponentToLookForHeader: nom_key")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_COLUMN_TO_LOOK_FOR_HEADER.getMessage(), validationError.getMessage());
                     assertEquals("type_de_sites", validationError.getParam("referenceName"));
                     assertEquals("nom_key", validationError.getParam("columnNameReference"));
                     final Set<String> expected = Arrays.stream(new String[]{"tze_nom_key", "tze_nom_fr", "tze_nom_en", "tze_definition_fr", "tze_definition_en"})
                             .collect(Collectors.toCollection(TreeSet::new));
-                    final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("listColumnsNameReference"));
+                    final Set<String> given = new TreeSet<>((Collection<? extends String>) validationError.getParam("listColumnsNameReference"));
                     assertEquals(expected, given);
                     assertEquals("OA_data > sites > OA_dynamicComponents > proprieteDeTaxon > OA_referenceComponentToLookForHeader", validationError.getParam("path"));
                 });
@@ -1047,12 +1090,12 @@ public class ApplicationConfigurationServiceTest {
                         " OA_reference: type_de_site")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_dynamicComponents > proprieteDeTaxon > OA_reference", validationError.getParam(("path")));
                     final Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
-                    final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
+                    final Set<String> given = new TreeSet<>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
                     assertEquals("type_de_site", validationError.getParam("referenceName"));
                 });
@@ -1061,22 +1104,26 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testUnknownReferenceNameForChecker() {
         CONFIGURATION_INSTANCE.builder("testUnknownReferenceNameForChecker")
-                .withReplace("          OA_params:\n" +
-                                "            OA_reference:\n" +
-                                "              OA_name: type_de_sites\n" +
-                                "              OA_isParent: true",
-                        "          OA_params:\n" +
-                                "            OA_reference:\n" +
-                                "              OA_name: tr_type_de_sites\n" +
-                                "              OA_isParent: true")
+                .withReplace("""
+                                          OA_params:
+                                            OA_reference:
+                                              OA_name: type_de_sites
+                                              OA_isParent: true\
+                                """,
+                        """
+                                          OA_params:
+                                            OA_reference:
+                                              OA_name: tr_type_de_sites
+                                              OA_isParent: true\
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNKNOWN_REFERENCE_NAME.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_basicComponents > tze_type_nom > OA_checker > OA_params > OA_reference > OA_name", validationError.getParam(("path")));
                     final Set<String> expected = Arrays.stream(new String[]{"especes", "type_de_sites", "sites", "pem", "projet"})
                             .collect(Collectors.toCollection(TreeSet::new));
-                    final Set<String> given = new TreeSet<String>((Collection<? extends String>) validationError.getParam("allDataNames"));
+                    final Set<String> given = new TreeSet<>((Collection<? extends String>) validationError.getParam("allDataNames"));
                     assertEquals(expected, given);
                     assertEquals("tr_type_de_sites", validationError.getParam("referenceName"));
                 });
@@ -1089,7 +1136,7 @@ public class ApplicationConfigurationServiceTest {
                         "OA_strategy: OA_VERSIONINGY")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.BAD_ENUM_SECTION_TYPE.getMessage(), validationError.getMessage());
                     assertEquals("OA_VERSIONINGY", validationError.getParam("givenValue"));
                     final Set<String> expected = Arrays.stream(new String[]{"OA_INSERTION", "OA_VERSIONING"})
@@ -1109,7 +1156,7 @@ public class ApplicationConfigurationServiceTest {
                                 "    frrr: test")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNSUPORTED_I18N_KEY_LANGUAGE.getMessage(), validationError.getMessage());
                     assertEquals("OA_tags > test", validationError.getParam("path"));
                 });
@@ -1122,7 +1169,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: Application pour de faux")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_application > OA_i18n > OA_title > en > frrr", validationError.getParam("path"));
                 });
@@ -1135,7 +1182,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: Projets")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_submission > OA_submissionScope > OA_referenceScopes > 0 > OA_i18n > OA_title > en > frrr", validationError.getParam("path"));
                 });
@@ -1148,7 +1195,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: projet")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_submission > OA_submissionScope > OA_referenceScopes > 1 > OA_exportHeader > OA_title > en > frrr", validationError.getParam("path"));
                 });
@@ -1161,7 +1208,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: Type de Sites")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > sites > OA_dynamicComponents > proprieteDeTaxon > OA_exportHeader > OA_title > en > frrr", validationError.getParam("path"));
                 });
@@ -1174,7 +1221,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: \"colonne calculée\"")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > especes > OA_computedComponents > my_computed_column > OA_exportHeader > OA_title > en > frrr", validationError.getParam("path"));
                 });
@@ -1187,7 +1234,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: Espèces")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > especes > OA_i18n > OA_title > en > frrr", validationError.getParam("path"));
                 });
@@ -1200,7 +1247,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: \"{esp_nom}\"")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > especes > OA_i18nDisplayPattern > OA_title > en > frrr", validationError.getParam("path"));
                 });
@@ -1213,7 +1260,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: \"nom du réseau expérimental\"")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_constantComponents > tel_experimental_network > OA_exportHeader > OA_description > en > frrr", validationError.getParam("path"));
                 });
@@ -1226,7 +1273,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: Vous pouvez demander")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_rightsRequest > OA_i18n > OA_description > en > frrr", validationError.getParam("path"));
                 });
@@ -1239,7 +1286,7 @@ public class ApplicationConfigurationServiceTest {
                         "frrr: les reference")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.UNEXPECTED_SECTIONS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > pem > OA_validations > reference > OA_i18n > frrr", validationError.getParam("path"));
                 });
@@ -1252,7 +1299,7 @@ public class ApplicationConfigurationServiceTest {
                         "OA_headerName: \"zet_chemin_parent\"")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.DUPLICATED_COMPONENT_HEADER.getMessage(), validationError.getMessage());
                     assertIterableEquals(
                             List.of("zet_nom_key", "zet_chemin_parent"),
@@ -1271,7 +1318,7 @@ public class ApplicationConfigurationServiceTest {
                         "tel_experimental_site")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.DUPLICATED_COMPONENT_NAME.getMessage(), validationError.getMessage());
                     assertIterableEquals(
                             List.of("OA_data > pem > OA_constantComponents > tel_experimental_site", "OA_data > pem > OA_patternComponents > tel_experimental_site"),
@@ -1288,7 +1335,7 @@ public class ApplicationConfigurationServiceTest {
                         "tel_date")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.DUPLICATED_COMPONENT_HEADER_IN_PATTERN_COMPONENT.getMessage(), validationError.getMessage());
                     assertEquals("tel_date",  validationError.getParam("qualifierName"));
                     assertEquals("pem",  validationError.getParam("data"));
@@ -1311,7 +1358,7 @@ public class ApplicationConfigurationServiceTest {
                         "sites")
                 .test(errors -> {
                     assertEquals(1, errors.size() );
-                    final ValidationError validationError = errors.get(0);
+                    final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.DUPLICATE_KEY.getMessage(), validationError.getMessage());
                 });
     }
@@ -1319,9 +1366,7 @@ public class ApplicationConfigurationServiceTest {
     @Test
     public void testValidConfiguration() {
         CONFIGURATION_INSTANCE.builder("testValidConfiguration")
-                .test(errors -> {
-                    assertTrue(errors.isEmpty());
-                });
+                .test(errors -> assertTrue(errors.isEmpty()));
     }
 
 
@@ -1364,20 +1409,21 @@ public class ApplicationConfigurationServiceTest {
 
                 final Object test = buildFluxRequestJDJson(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(new ReactiveProgression.DefaultCounter(0L), fluxSink, new ReactiveProgression.CreateApplicationProgressionMessagesLabel());
-                    final Application application = service.parseConfigurationBytes("test", progression, FileBomResolver.of(wrongYaml));
+                    try {
+                        final Application application = ApplicationConfigurationService.parseConfigurationBytes("test", progression, FileBomResolver.of(wrongYaml));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
                     fluxSink.complete();
                 })
-                        .flatMap(reactiveResult -> {
-                            return switch (reactiveResult) {
-                                case final ReactiveTypeError re -> {
-                                    errors
-                                            .computeIfAbsent(methodName, k -> new LinkedList())
-                                            .add(re);
-                                    yield Flux.just((ValidationError) re.result());
-                                }
-                                default -> Flux.empty();
-                            };
-
+                        .flatMap(reactiveResult -> switch (reactiveResult) {
+                            case final ReactiveTypeError re -> {
+                                errors
+                                        .computeIfAbsent(methodName, k -> new LinkedList())
+                                        .add(re);
+                                yield Flux.just((ValidationError) re.result());
+                            }
+                            default -> Flux.empty();
                         })
                         .collectList()
                         .map(fe -> {
@@ -1397,8 +1443,6 @@ public class ApplicationConfigurationServiceTest {
                 throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
             } catch (final BadApplicationConfigurationException e) {
                 //errors.put(methodName, e);
-            } catch (final Exception e) {
-                throw e;
             }
         }
 

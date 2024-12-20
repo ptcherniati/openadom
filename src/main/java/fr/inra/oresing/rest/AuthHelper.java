@@ -21,7 +21,6 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
-import java.security.Key;
 import java.util.Date;
 import java.util.Map;
 import java.util.Optional;
@@ -66,8 +65,8 @@ public class AuthHelper {
         final String json = Jwts.parser()
                 .verifyWith(key)
                 .build()
-                .parseClaimsJws(token)
-                .getBody()
+                .parseSignedClaims(token)
+                .getPayload()
                 .getSubject();
         final OreSiUserRequestClient requestClient;
         try {
@@ -105,9 +104,9 @@ public class AuthHelper {
         }
         final Date issuedAt = new Date();
         final String token = Jwts.builder()
-                .setSubject(json)
-                .setIssuedAt(issuedAt)
-                .setExpiration(DateUtils.addSeconds(issuedAt, jwtExpiration))
+                .subject(json)
+                .issuedAt(issuedAt)
+                .expiration(DateUtils.addSeconds(issuedAt, jwtExpiration))
                 .signWith(key)
                 .compact();
         final Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);

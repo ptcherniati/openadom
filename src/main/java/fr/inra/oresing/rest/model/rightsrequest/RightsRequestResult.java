@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.model.rightsrequest;
 
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
-import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import lombok.Value;
 

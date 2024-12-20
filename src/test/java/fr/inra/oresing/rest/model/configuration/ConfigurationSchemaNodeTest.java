@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.model.configuration;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.application.configuration.examples.RootExampleBuilder;
 import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -18,7 +19,7 @@ class ConfigurationSchemaNodeTest {
                 .replace("   \" \"   "," + \" \" + ");
         final String exampleOfFile = RootExampleBuilder.buildRootSchema().buildExample(0);
         System.out.println(exampleOfFile);
-        Assert.assertEquals(expectedSchema, exampleOfFile);
+        Assertions.assertEquals(expectedSchema, exampleOfFile);
     }
 
 }

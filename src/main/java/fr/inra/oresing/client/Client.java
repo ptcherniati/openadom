@@ -89,7 +89,7 @@ public class Client {
                         switch (cookieStore.getCookies().size()) {
                             case 0 -> fail("authentification échouée : pas de cookie d’authentification retourné");
                             case 1 -> {
-                                if (cookieStore.getCookies().get(0).getName().equals("si-ore-jwt")) {
+                                if (cookieStore.getCookies().getFirst().getName().equals("si-ore-jwt")) {
                                     log("authentification OK");
                                 } else {
                                     fail("authentification échouée : pas de cookie d’authentification retourné");
@@ -115,7 +115,7 @@ public class Client {
                     switch (response.getCode()) {
                         case HttpURLConnection.HTTP_OK -> parseJsonInResponseBody(
                                 response,
-                                new TypeReference<List<String>>() {
+                                new TypeReference<>() {
                                 }
                         );
                         case HttpURLConnection.HTTP_UNAUTHORIZED ->
@@ -177,12 +177,11 @@ public class Client {
 
     private ClientConfiguration readConfiguration() throws IOException {
         File configurationFile = new File("openAdom-client-configuration.json");
-        ClientConfiguration clientConfiguration = new ObjectMapper()
+        return new ObjectMapper()
                 .readValue(
                         configurationFile,
                         ClientConfiguration.class
                 );
-        return clientConfiguration;
     }
 
     private List<Command> newCommands(List<String> data/*, List<String> dataTypes*/) {
@@ -192,8 +191,7 @@ public class Client {
         /*List<Command> dataCommands = dataTypes.stream()
                 .flatMap(dataType -> getUploadDataCommands(dataType).stream())
                 .toList();*/
-        List<Command> commands = new LinkedList<>();
-        commands.addAll(dataCommands);
+        List<Command> commands = new LinkedList<>(dataCommands);
         //commands.addAll(dataCommands);
         return commands;
     }
@@ -271,7 +269,7 @@ public class Client {
 
             private List<Map<String, Object>> parseJsonInResponseBodyForErrorMessagesAndParams(ClassicHttpResponse response) {
                 try (InputStream inputStream = response.getEntity().getContent()) {
-                    List<Map<String, Object>> responseBody = new ObjectMapper().readValue(inputStream, new TypeReference<List<Map<String, Object>>>() {
+                    List<Map<String, Object>> responseBody = new ObjectMapper().readValue(inputStream, new TypeReference<>() {
                     });
 
                     return responseBody.stream()
@@ -302,9 +300,7 @@ public class Client {
                                     logError("->>>>>>>>>>");
                                     logError(map.get("message").toString());
                                     ((Map<String, Object>) map.get("messageParams")).entrySet().stream()
-                                            .forEach(entry -> {
-                                                logError("%s : %s".formatted(entry.getKey(), entry.getValue()));
-                                            });
+                                            .forEach(entry -> logError("%s : %s".formatted(entry.getKey(), entry.getValue())));
                                 });
                     }
                     default -> fail(
@@ -366,7 +362,7 @@ public class Client {
     }
 
     enum ValidationLevel {
-        SUCCESS, WARN, ERROR;
+        SUCCESS, WARN, ERROR
     }
 
     enum ValidationMessage {
@@ -424,7 +420,7 @@ public class Client {
     /**
      * Le contenu du fichier de configuration du client.
      *
-     * @param instanceUrl     l’adresse du serveur au format "http://hote:port"
+     * @param instanceUrl     l’adresse du serveur au format "<a href="http://hote:port">...</a>"
      * @param applicationName le nom de l’application
      */
     private record ClientConfiguration(URI instanceUrl, String applicationName) {

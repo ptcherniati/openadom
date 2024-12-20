@@ -144,7 +144,7 @@ class BuilderNodeTest {
 
     @Test
     public void TestInstance() {
-        Assert.assertEquals(13, builderNodes.size());
+        Assertions.assertEquals(13, builderNodes.size());
     }
 
     @Test
@@ -171,7 +171,7 @@ class BuilderNodeTest {
     @Test
     public void TestGetGetNodeLeaves() {
         final List<BuilderNode> nodeLeaves = BuilderNode.getNodeLeaves(builderNodes.values());
-        Assert.assertEquals(8, nodeLeaves.size());
+        Assertions.assertEquals(8, nodeLeaves.size());
         Assertions.assertArrayEquals(List.of("variables", "valeurs_qualitative", "sites", "themes", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers").toArray(), nodeLeaves.stream().map(BuilderNode::nodeName).toArray());
     }
     @Test

@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.data.deposit.validation.validationcheckresults;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.checker.CheckerTarget;
-import fr.inra.oresing.domain.checker.type.BooleanType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
 

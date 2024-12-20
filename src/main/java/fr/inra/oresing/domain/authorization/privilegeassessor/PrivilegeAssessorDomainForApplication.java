@@ -70,12 +70,11 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
                 .map(map -> map.get(dataName))
                 .map(AuthorizationParsed::operationTypes)
                 .ifPresent(operationTypes ->
-                        operationTypes.stream()
-                                .forEach(rolesSetted::add)
+                        rolesSetted.addAll(operationTypes)
                 );
 
 
-        Boolean isAdministrator = authorizations().isApplicationManager() || authorizations().isUserManager();
+        boolean isAdministrator = authorizations().isApplicationManager() || authorizations().isUserManager();
         roleForDatatype.put(AuthorizationsForUserResult.Roles.UPLOAD, isAdministrator || rolesSetted.contains(OperationType.depot) || rolesSetted.contains(OperationType.publication));
         roleForDatatype.put(AuthorizationsForUserResult.Roles.DELETE, isAdministrator || rolesSetted.contains(OperationType.delete));
         roleForDatatype.put(AuthorizationsForUserResult.Roles.DOWNLOAD, isAdministrator || rolesSetted.contains(OperationType.extraction) || rolesSetted.contains(OperationType.publication) || rolesSetted.contains(OperationType.delete));

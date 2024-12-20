@@ -3,10 +3,7 @@ package fr.inra.oresing.domain.groovy.exception;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class GroovyException extends OreSiTechnicalException {
     public static final String DEFAULT_MESSAGE = "BAD_VALUE_FOR_EXPRESSION";

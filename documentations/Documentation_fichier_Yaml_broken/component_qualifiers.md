@@ -220,7 +220,7 @@ La configuration peut être de la forme suivante en utilisant une section OA_adj
                   en: "standard deviation"
               OA_checker:
                 OA_name: OA_float
-          - OA_name: unit
+          - OA_name: 
               OA_importHeaderPattern: "unité_($0)" # recherche d'une colonne "unité..." à droite (par convention) de la première colonne rencontrée qui n'est pas "ecart-type..." (ne correspond pas aux autres éventuels OA_ajacentComponentQualifiers) et à gauche de la deuxième colonne trouvée et qui n'est pas "ecart-type..." (ne correspond pas autres éventuels OA_ajacentComponentQualifiers).
               OA_required: false
               OA_mandatory: false
@@ -284,7 +284,7 @@ Pour avoir le même stockage en base et la même sortie qu'avec l'exemple préce
                   en: "standard deviation"
               OA_checker:
                 OA_name: OA_float
-          - OA_name: unit
+          - OA_name: 
               OA_importHeaderPattern: "unité_$0" # recherche d'une colonne "unité_var_x" n'importe où
               OA_required: false
               OA_mandatory: false

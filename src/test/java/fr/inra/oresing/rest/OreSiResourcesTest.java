@@ -193,7 +193,8 @@ public class OreSiResourcesTest {
     @Tag("SUITE")
     public void services_model() throws Exception {
         final String services_model = mockMvc.perform(get("/api-docs")
-                        .accept(MediaType.APPLICATION_JSON_UTF8_VALUE))
+                        .accept(MediaType.APPLICATION_JSON_VALUE)
+                )
                 .andExpect(status().is2xxSuccessful())
                 .andReturn()
                 .getResponse()
@@ -206,7 +207,9 @@ public class OreSiResourcesTest {
     public void createUser() throws Exception {
         try {
             final OreSiUser user = authenticationService.getByIdOrLogin("lambda");
-            lambdaUser = CreateUserResult.of(user);
+            lambdaUser = Optional.ofNullable(user)
+                    .map(CreateUserResult::of)
+                    .orElseThrow();
         } catch (final Exception e) {
             lambdaUser = createUserIfNotExists("lambda", "xxxxxxxx", "lambda@inrae.fr");
 
@@ -244,6 +247,7 @@ public class OreSiResourcesTest {
                         UPDATE public.oresiuser SET accountstate = 'active' WHERE id = :id
                         """, Map.of("id", userId));
     }
+
 
     @Test
     @Tag("OTHERS_TEST")
@@ -288,7 +292,7 @@ public class OreSiResourcesTest {
             final MvcResult resultApplication = fixtures.loadApplication(configuration, monsoreCookie, "monsoresimple", "");
             appId = fixtures.getIdFromApplicationResult(resultApplication);
         } catch (final Throwable e) {
-            e.printStackTrace();
+            log.error(e.getMessage(), e);
             throw new RuntimeException(e);
         }
 
@@ -306,11 +310,8 @@ public class OreSiResourcesTest {
 
         Assertions.assertEquals("Fichier de test de l'application brokenADOM version initiale", applicationResult.comment());
         Assertions.assertEquals("monsoresimple", applicationResult.name());
-        Assert.assertEquals(
-                new TreeSet<>(Set.of("themes", "especes", "site_theme_datatype", "variables", "type_de_sites", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers", "variables_et_unites_par_types_de_donnees")),
-                new TreeSet<>(applicationResult.references().keySet())
-        );
-        Assert.assertEquals(Set.of("pem"), ((LinkedHashMap) applicationResult.dataTypes()).keySet());
+        Assertions.assertEquals(new TreeSet<>(Set.of("themes", "especes", "site_theme_datatype", "variables", "type_de_sites", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers", "variables_et_unites_par_types_de_donnees")), new TreeSet<>(applicationResult.references().keySet()));
+        Assertions.assertEquals(Set.of("pem"), ((LinkedHashMap) applicationResult.dataTypes()).keySet());
 
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : Fixtures.getMonsoreReferentielEspecestoTrimFiles().entrySet()) {
@@ -394,7 +395,7 @@ public class OreSiResourcesTest {
                     .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_OCTET_STREAM))
                     .andExpect(result -> {
                         final List<String> expected = """
-                                "tze_type_nom";"zet_chemin_parent";"zet_description_en";"zet_nom_en";"zet_nom_key"
+                                "tze_type_nom";"zet_chemin_parent";"definition";"Site name";"zet_nom_key"
                                 "Watershed";"";"Watershed Nivelle";"Nivelle";"nivelle"
                                 "Watershed";"";"Oir catchment";"Oir";"oir"
                                 "Watershed";"";"Watershed Scarff";"Scarff";"scarff"
@@ -568,7 +569,7 @@ public class OreSiResourcesTest {
         log.debug(StringUtils.abbreviate(response, 50));
 
         {
-            final String expectedJson = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.json")), Charsets.UTF_8);
+            final String expectedJson = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.json")), StandardCharsets.UTF_8);
             final JSONArray jsonArray = new JSONArray(expectedJson);
             final List<String> list = new ArrayList<>();
 
@@ -619,7 +620,7 @@ public class OreSiResourcesTest {
                   ]
                 }""";
         {
-            Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.json")), Charsets.UTF_8);
+            Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.json")), StandardCharsets.UTF_8);
             final String actualJson = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
                             .cookie(monsoreCookie)
                             .accept(MediaType.APPLICATION_JSON))
@@ -635,7 +636,7 @@ public class OreSiResourcesTest {
 
         // restitution de data csv
         {
-            final String expectedCsv = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.csv")), Charsets.UTF_8);
+            final String expectedCsv = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.csv")), StandardCharsets.UTF_8);
             mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/zip")
                                     .cookie(monsoreCookie)
                                     .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
@@ -962,13 +963,11 @@ public class OreSiResourcesTest {
 
             registerFile("ui/cypress/fixtures/applications/ore/monsore/createMonsore.txt", responseForCreatemonsoere);
             registerFile("ui/cypress/fixtures/applications/ore/monsore/changeMonsore.txt", responseForChangemonsoere);
-            Assert.assertEquals(1,
-                    Arrays.stream(getApplicationsFlux(authCookie, "ALL"))
-                            .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class)))
-                            .filter(s -> JsonPath.parse(s).read("$.result.application.data", List.class).contains("sites"))
-                            .filter(s -> !JsonPath.parse(s).read("$.result.application.data", List.class).contains("type de fichiers"))
-                            .count()
-            );
+            Assertions.assertEquals(1, Arrays.stream(getApplicationsFlux(authCookie, "ALL"))
+                    .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class)))
+                    .filter(s -> JsonPath.parse(s).read("$.result.application.data", List.class).contains("sites"))
+                    .filter(s -> !JsonPath.parse(s).read("$.result.application.data", List.class).contains("type de fichiers"))
+                    .count());
             mockMvc.perform(get("/api/v1/applications/monsore")
                             .cookie(authCookie)
                             .param("filter", "ALL"))
@@ -1219,14 +1218,14 @@ public class OreSiResourcesTest {
                         .param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1)))
                         .cookie(withRigthsCookie))
                 .andReturn().getResponse().getContentAsString();
-        Assert.assertTrue(deletedIds.contains(ids.get(1)));
+        Assertions.assertTrue(deletedIds.contains(ids.get(1)));
 
         //suppression par id
         deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
                         .param("_row_id_", ids.get(1))
                         .cookie(withRigthsCookie))
                 .andReturn().getResponse().getContentAsString();
-        Assert.assertTrue(deletedIds.contains(""));
+        Assertions.assertTrue(deletedIds.contains(""));
 
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : Fixtures.getMonsoreReferentielFiles().entrySet()) {
@@ -1458,7 +1457,7 @@ public class OreSiResourcesTest {
 
         ResultActions typeDeFichiers = mockMvc.perform(get("/api/v1/applications/monsore/data/{refType}/json", "type_de_fichiers")
                         .cookie(authCookie))
-                .andExpect(jsonPath("$.rows",hasSize(0)));
+                .andExpect(jsonPath("$.rows", hasSize(0)));
 
         Exception dataTest = mockMvc.perform(get("/api/v1/applications/monsore/data/{dataType}/json", "test")
                         .cookie(authCookie))
@@ -1468,7 +1467,7 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.params.application", equalTo("monsore")))
                 .andReturn()
                 .getResolvedException();
-        Assert.assertTrue(dataTest instanceof SiOreIllegalArgumentException);
+        Assertions.assertTrue(dataTest instanceof SiOreIllegalArgumentException);
         // ajout de data
         final String projet = "manche";
         final String plateforme = "plateforme";
@@ -1503,7 +1502,7 @@ public class OreSiResourcesTest {
             } catch (ServletException servletException) {
                 SiOreAuthorizationRequestException cause = (SiOreAuthorizationRequestException) servletException.getCause();
                 AuthorizationRequestException requestException = cause.getException();
-                Assert.assertEquals(AuthorizationRequestException.MISSING_REQUIRED_AUTHORIZATION, requestException);
+                Assertions.assertEquals(AuthorizationRequestException.MISSING_REQUIRED_AUTHORIZATION, requestException);
                 ((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").get(0).getSql().equals("projet_manche");
             }
 
@@ -1518,7 +1517,6 @@ public class OreSiResourcesTest {
 
             //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
             for (int i = 0; i < 3; i++) {
-                MockMultipartFile refFile1 = refFile;
                 response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
                                 .file(refFile)
                                 .param("params", Fixtures.getPemRepositoryParams(projet, plateforme, site, false))
@@ -1647,7 +1645,7 @@ public class OreSiResourcesTest {
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        Assert.assertEquals(response, fileUUID);
+        Assertions.assertEquals(response, fileUUID);
         log.debug(StringUtils.abbreviate(response, 50));
         try {
             publishOrDepublish(withRigthsCookie, "manche", "plateforme", "nivelle", 34, true, 1, true);
@@ -2179,7 +2177,7 @@ public class OreSiResourcesTest {
             final BadApplicationConfigurationException exception = (BadApplicationConfigurationException)
                     fixtures.loadApplicationWithError(configuration, authCookie, "progressive");
             assert exception != null;
-            Assert.fail("refaire le test san configuration parding result");
+            Assertions.fail("refaire le test san configuration parding result");
             //ValidationCheckResult validationCheckResult = exception.getConfigurationParsingResult().validationCheckResults()
             //        .get(0);
             //Assertions.assertEquals("authorizationScopeMissingReferenceCheckerForAuthorizationScope", validationCheckResult.message());
@@ -2698,19 +2696,19 @@ public class OreSiResourcesTest {
 
             final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx")
                             .file(file)
-                            .param("params","""
-                    {
-                        "fileid":null,
-                        "binaryfiledataset":{
-                            "datatype":"t_flux_tours_flx",
-                            "requiredAuthorizations":{
-                               "tr_sites_sit":["laqueuille"]
-                            },
-                            "from":"2003-12-31 23:00:00",
-                            "to":"2004-12-31 23:00:00",
-                            "comment":null
-                        },
-                        "topublish":true}"""
+                            .param("params", """
+                                    {
+                                        "fileid":null,
+                                        "binaryfiledataset":{
+                                            "datatype":"t_flux_tours_flx",
+                                            "requiredAuthorizations":{
+                                               "tr_sites_sit":["laqueuille"]
+                                            },
+                                            "from":"2003-12-31 23:00:00",
+                                            "to":"2004-12-31 23:00:00",
+                                            "comment":null
+                                        },
+                                        "topublish":true}"""
 
                             )
                             .cookie(authCookie))
@@ -2728,7 +2726,7 @@ public class OreSiResourcesTest {
 
         // restitution de data json
         {
-//            String expectedJson = Resources.toString(getClass().getResource("/data/acbb_openadom_v2/compare/export.json"), Charsets.UTF_8);
+//            String expectedJson = Resources.toString(getClass().getResource("/data/acbb_openadom_v2/compare/export.json"), StandardCharsets.UTF_8);
             final String actualJson = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json")
                             .cookie(authCookie)
                             .accept(MediaType.APPLICATION_JSON))
@@ -2906,7 +2904,7 @@ public class OreSiResourcesTest {
                             .file(refFile)
                             .cookie(authCookie));
             //fail();
-        } catch (final NestedServletException e) {
+        } catch (final ServletException e) {
             Assertions.assertInstanceOf(InvalidDatasetContentException.class, e.getCause());
             InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
             List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();
@@ -2979,7 +2977,7 @@ on test le dépôt d'un fichier récursif
                             .file(refFile)
                             .cookie(authCookie));
             //fail();
-        } catch (final NestedServletException e) {
+        } catch (final ServletException e) {
             Assertions.assertInstanceOf(InvalidDatasetContentException.class, e.getCause());
             InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
             List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();
@@ -3011,7 +3009,7 @@ on test le dépôt d'un fichier récursif
                             .file(refFile)
                             .cookie(authCookie));
             //fail();
-        } catch (final NestedServletException e) {
+        } catch (final ServletException e) {
             Assertions.assertInstanceOf(InvalidDatasetContentException.class, e.getCause());
             InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
             List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();

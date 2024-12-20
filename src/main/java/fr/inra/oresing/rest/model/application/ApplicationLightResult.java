@@ -20,7 +20,7 @@ public record ApplicationLightResult(
         Timestamp charteSignedAt = Optional.ofNullable(currentUserRoles)
                 .map(CurrentUserRoles::user)
                 .map(OreSiUser::getChartes)
-                .map(chartes->chartes.get(application.getId()))
+                .map(chartes->chartes.get(application.getId().toString()))
                 .orElse(null);
         Timestamp lastChartes = application.getLastChartes();
         return new ApplicationLightResult(

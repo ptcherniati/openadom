@@ -4,7 +4,6 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
 import fr.inra.oresing.domain.repository.synthesis.SynthesisRepository;
 import fr.inra.oresing.persistence.ApplicationRepository;
-import fr.inra.oresing.persistence.DataSynthesisRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +24,7 @@ public class SynthesisService implements fr.inra.oresing.domain.services.synthes
     OreSiRepository repository;
 
 
-    @Transactional(readOnly = false)
+    @Transactional()
     public Map<String, List<OreSiSynthesis>> buildSynthesis(String nameOrId, String dataType, String component) {
         Application application = applicationRepository.findApplication(nameOrId);
         final SynthesisRepository synthesisRepository = synthesisRepositoru(application);

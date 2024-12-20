@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 
 import java.time.format.DateTimeFormatter;
@@ -99,7 +98,7 @@ public sealed interface CheckerDescription permits
         GroovyExpressionChecker,
         IntegerChecker,
         ReferenceChecker,
-        StringChecker;
+        StringChecker
     }
 
     record ReferenceValueDecorator(DataValue decorated) {

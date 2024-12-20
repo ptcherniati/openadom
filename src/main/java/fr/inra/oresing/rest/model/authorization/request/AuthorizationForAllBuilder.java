@@ -8,7 +8,7 @@ import java.util.*;
 public class AuthorizationForAllBuilder {
 
     public static final String AUTHORIZATION_FOR_ALL = "authorizationForAll";
-    AuthorizationRequestBuilder authorizationRequestBuilder;
+    final AuthorizationRequestBuilder authorizationRequestBuilder;
 
     public AuthorizationForAllBuilder(final AuthorizationRequestBuilder authorizationRequestBuilder) {
         this.authorizationRequestBuilder = authorizationRequestBuilder;

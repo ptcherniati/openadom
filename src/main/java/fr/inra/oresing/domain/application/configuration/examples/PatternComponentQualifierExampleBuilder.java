@@ -25,10 +25,10 @@ class PatternComponentQualifierExampleBuilder {
             final TitleType exportHeader,
             final List<String> tags,
             final CheckerType checker) {
-        return new PatternComponentQualifierType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+        return new PatternComponentQualifierType(new LinkedHashMap<>() {{
             put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);
             put(ConfigurationSchemaNode.OA_REQUIRED, BooleanExampleBuilder.TRUE);
-            put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(TagExampleBuilder.buildTagArray(tags), false, false, StringType.EMPTY_INSTANCE()));
+            put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(TagExampleBuilder.buildTagArray(tags), false, false, StringType.EMPTY_INSTANCE()));
             put(ConfigurationSchemaNode.OA_CHECKER, checker);
         }}
         );
@@ -42,12 +42,12 @@ class PatternComponentQualifierExampleBuilder {
             final CheckerType checker,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required, false));
         if (importHeader != null) children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER, new StringType(importHeader));
         if (CollectionUtils.isNotEmpty(tags)) {
             final List<StringType> tagsArray = tags.stream().map(StringType::new).toList();
-            children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(tagsArray, false, false, StringType.EMPTY_INSTANCE()));
+            children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(tagsArray, false, false, StringType.EMPTY_INSTANCE()));
         }
         if (exportHeader != null) {
             children.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);

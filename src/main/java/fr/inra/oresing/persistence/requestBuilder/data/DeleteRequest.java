@@ -1,11 +1,9 @@
 package fr.inra.oresing.persistence.requestBuilder.data;
 
-import com.google.common.base.Joiner;
 import fr.inra.oresing.domain.data.read.query.*;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;

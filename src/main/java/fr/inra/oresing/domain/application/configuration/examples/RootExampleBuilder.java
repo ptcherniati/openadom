@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 
 public class RootExampleBuilder {
     public static RootType buildRootSchema() {
-        final RootType rootSchema = new RootType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+        return new RootType(new LinkedHashMap<>() {{
             put(ConfigurationSchemaNode.OA_VERSION, StringExampleBuilder.OPENADOM_VERSION);
             put(ConfigurationSchemaNode.OA_APPLICATION, ApplicationDescriptionExampleBuilder.buildApplicationDesriptionSchema());
             put(ConfigurationSchemaNode.OA_TAGS, TagExampleBuilder.buildTagSchema());
@@ -16,6 +16,5 @@ public class RootExampleBuilder {
             put(ConfigurationSchemaNode.OA_RIGHTS_REQUEST, RightRequestExampleBuilder.buildRightRequestSchema());
             put(ConfigurationSchemaNode.OA_ADDITIONAL_FILES, CollectionExampleBuilder.ADITIONNAL_FILES);
         }});
-        return rootSchema;
     }
 }

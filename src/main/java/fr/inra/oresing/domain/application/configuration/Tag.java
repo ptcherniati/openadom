@@ -52,7 +52,7 @@ public sealed interface Tag {
                     .map(Validation::params)
                     .filter(MapUtils::isNotEmpty)
                     .map(map -> (Set<String>) map.get("domainTags"))
-                    .ifPresent(domainTags -> acceptedTagPatterns.addAll(domainTags));
+                    .ifPresent(acceptedTagPatterns::addAll);
             validation.buildError(ConfigurationException.BAD_TAGS_PATTERNS, Map.of("acceptedTagPatterns", acceptedTagPatterns));
             return buildTags(Set.of(), validation);
 
@@ -132,7 +132,7 @@ public sealed interface Tag {
 
     record DataTag(TagDefinitions tagDefinition) implements DefinedTag {
         public static final String DATA_PATTERN = "__DATA__";
-        public final static Predicate<String> DATA_TAG = w -> DATA_PATTERN.equals(w);
+        public final static Predicate<String> DATA_TAG = DATA_PATTERN::equals;
 
         public DataTag() {
             this(TagDefinitions.DATA_TAG);
@@ -150,7 +150,7 @@ public sealed interface Tag {
 
     record ReferenceTag(TagDefinitions tagDefinition) implements DefinedTag {
         public static final String REFERENCE_PATTERN = "__REFERENCE__";
-        public final static Predicate<String> REFFERENCE_TAG = w -> REFERENCE_PATTERN.equals(w);
+        public final static Predicate<String> REFFERENCE_TAG = REFERENCE_PATTERN::equals;
 
         public ReferenceTag() {
             this(TagDefinitions.REFFERENCE_TAG);
@@ -168,7 +168,7 @@ public sealed interface Tag {
     record HiddenTag(TagDefinitions tagDefinition) implements DefinedTag {
         public static final Predicate<Collection<Tag>> HAS_HIDDEN_TAG_PREDICATE = tags-> tags.stream().anyMatch(Tag.HiddenTag.class::isInstance);
         public static final String HIDDEN_PATTERN = "__HIDDEN__";
-        public final static Predicate<String> HIDDEN_TAG = w -> HIDDEN_PATTERN.equals(w);
+        public final static Predicate<String> HIDDEN_TAG = HIDDEN_PATTERN::equals;
 
         public HiddenTag() {
             this(TagDefinitions.HIDDEN_TAG);
@@ -185,7 +185,7 @@ public sealed interface Tag {
 
     record NoTag(TagDefinitions tagDefinition, String tagName) implements DefinedTag {
         public static final String NO_TAG_PATTERN = "no-tag";
-        public final static Predicate<String> NO_TAG = w -> NO_TAG_PATTERN.equals(w);
+        public final static Predicate<String> NO_TAG = NO_TAG_PATTERN::equals;
 
         public static NoTag INSTANCE() {
             return new NoTag(TagDefinitions.NO_TAG, "no_tag");
@@ -198,9 +198,7 @@ public sealed interface Tag {
 
     record OrderTag(TagDefinitions tagDefinition, int tagOrder) implements DefinedTag {
         public final static Pattern ORDER_TAG_PATTERN = Pattern.compile("__ORDER_([0-9]*)__");
-        public final static Predicate<String> ORDER_TAG = w -> {
-            return ORDER_TAG_PATTERN.matcher(w).matches();
-        };
+        public final static Predicate<String> ORDER_TAG = w -> ORDER_TAG_PATTERN.matcher(w).matches();
         public static final OrderTag ORDER_TAG_NOUGHT = new OrderTag(0);
         public static final OrderTag ORDER_TAG_ONE = new OrderTag(1);
         public static final OrderTag ORDER_TAG_TWO = new OrderTag(2);

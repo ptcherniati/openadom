@@ -14,8 +14,8 @@ class BooleanCheckerExampleBuilder {
     protected static final BooleanCheckerType BOOLEAN_CHECKER_TYPE= buildBooleanChecker(Multiplicity.ONE);
 
     protected static BooleanCheckerType buildBooleanChecker(final Multiplicity multiplicity) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
-        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<>();
         final EnumType oaMultiplicity = EnumExampleBuilder.buildMultiplicityType(multiplicity);
         params.put(ConfigurationSchemaNode.OA_MULTIPLICITY, oaMultiplicity);
         children.put(ConfigurationSchemaNode.OA_PARAMS, new BooleanCheckerParamsType(params));

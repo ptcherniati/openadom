@@ -50,8 +50,7 @@ public class AuthenticationService {
 
     private static String generateVerificationKey(final OreSiUser oreSiUser) {
         final String s = oreSiUser.getEmail() + oreSiUser.getPassword() + oreSiUser.getCreationDate().toString();
-        final String validationKey = (Math.abs(s.hashCode() * 15621646) + "454996856456").substring(0, 10);
-        return validationKey;
+        return (Math.abs(s.hashCode() * 15621646) + "454996856456").substring(0, 10);
     }
 
     private static String getCollectAuthorizationForUser(final OreSiUser oreSiUser) {
@@ -96,13 +95,7 @@ public class AuthenticationService {
     /**
      * verifie que l'utilisateur existe et que son mot de passe est le bon
      *
-     * @param login
-     * @param password
      * @return l'objet OreSiUser contenant les informations sur l'utilisateur identifié
-     * @throws JsonProcessingException
-     * @throws AuthenticationFailure
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
      */
     @Transactional
     public LoginAdminResult login(final String login, final String password) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
@@ -132,14 +125,13 @@ public class AuthenticationService {
                 .map(UUID::toString)
                 .map(this::getCurrentUserRoles)
                 .orElse(null);
-        LoginAdminResult loginAdminResult = userRepository.findByLogin(login)
+        return userRepository.findByLogin(login)
                 .filter(checkPassword)
                 .map(user -> toLoginResult(user, currentUserRoles))
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
-        return loginAdminResult;
     }
 
-    public OreSiUser sendEmailValidation(final String loginOrEmail, final String password) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException {
+    public OreSiUser sendEmailValidation(final String loginOrEmail, final String password) throws AuthenticationFailure {
         OreSiUser oreSiUser = userRepository.findByLoginOrEmail(loginOrEmail)
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, (LoginAdminResult) null));
         String verificationKey = generateVerificationKey(oreSiUser);
@@ -147,7 +139,7 @@ public class AuthenticationService {
         return oreSiUser;
     }
 
-    public OreSiUser sendEmailValidation(final Optional<OreSiUser> loginResult, final EmailService.MESSAGES messages) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    public OreSiUser sendEmailValidation(final Optional<OreSiUser> loginResult, final EmailService.MESSAGES messages) throws AuthenticationFailure, JsonProcessingException {
         setRoleAdmin();
         final Date updateDate = new Date();
         final OreSiUser oreSiUser = loginResult
@@ -202,11 +194,7 @@ public class AuthenticationService {
     /**
      * Permet de créer un nouvel utilisateur
      *
-     * @param login
-     * @param password
-     * @param email
      * @return l'objet OreSiUser qui vient d'être créé
-     * @throws AuthenticationFailure
      */
     @Transactional
     public CreateUserResult createUser(final String login, final String password, final String email) throws AuthenticationFailure {
@@ -255,12 +243,7 @@ public class AuthenticationService {
         OreSiUser oreSiUser = getOreSiUser(userId);
         final OreSiUserRole roleToModify = getUserRole(userId);
         final OreSiopenAdomAdminRole roleToRevoke = OreSiRole.openAdomAdmin();
-        db.removeUserInRole(roleToModify, new OreSiRoleToBeGranted() {
-            @Override
-            public String getAsSqlRole() {
-                return OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole();
-            }
-        });
+        db.removeUserInRole(roleToModify, () -> OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole());
         return userRepository.findById(userId);
     }
 
@@ -270,12 +253,7 @@ public class AuthenticationService {
         OreSiUser oreSiUser = getOreSiUser(userId);
         final OreSiUserRole roleToModify = getUserRole(userId);
         final OreSiopenAdomAdminRole roleToAdd = OreSiRole.openAdomAdmin();
-        db.addUserInRole(roleToModify, new OreSiRoleToBeGranted() {
-            @Override
-            public String getAsSqlRole() {
-                return OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole();
-            }
-        });
+        db.addUserInRole(roleToModify, () -> OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole());
         return userRepository.findById(userId);
     }
 
@@ -293,12 +271,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                () -> userId.toString(),
                 expression,
                 null
         );
@@ -330,12 +303,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                () -> userId.toString(),
                 expression,
                 null
         );
@@ -358,12 +326,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                () -> userId.toString(),
                 expression,
                 null
         );
@@ -387,12 +350,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                () -> userId.toString(),
                 expression,
                 null
         );
@@ -419,12 +377,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                () -> userId.toString(),
                 expression,
                 null
         );
@@ -447,12 +400,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                () -> userId.toString(),
                 expression,
                 null
         );
@@ -514,7 +462,6 @@ public class AuthenticationService {
                     .map(oreSiUser -> {
                         Optional<Timestamp> timestampOpt = Optional.ofNullable(oreSiUser.getChartes())
                                 .map(getCharteTimestamp);
-                        ;
                         CurrentUserRoles currentUserRoles = getCurrentUserRoles(oreSiUser.getId().toString());
                         return new LoginApplicationResult(
                                 application.getName(),

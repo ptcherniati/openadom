@@ -2,6 +2,7 @@ package fr.inra.oresing.domain.filesenderclient;
 
 import fr.inra.oresing.domain.application.configuration.ApplicationDescription;
 import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
 
@@ -46,14 +47,14 @@ implements FileSenderInternationalisation{
         return Optional.ofNullable(downloadDatasetQuery().application().getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
-                .map(i18napplication -> i18napplication.getTitle().get(locale.getLanguage()))
+                .map(i18napplication -> i18napplication.getTitle().get(Locale.of(locale.getLanguage())))
                 .orElse(null);
     }
     public String getInternationnalizedApplicationDescription(Locale locale) {
         return Optional.ofNullable(downloadDatasetQuery().application().getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
-                .map(i18napplication -> i18napplication.getDescription().get(locale.getLanguage()))
+                .map(i18napplication -> i18napplication.getDescription().get(Locale.of(locale.getLanguage())))
                 .orElse(null);
     }
 
@@ -62,8 +63,8 @@ implements FileSenderInternationalisation{
                 .map(Configuration::i18n)
                 .map(Internationalizations::getData)
                 .map(data -> data.get(dataName))
-                .map(internationalizationData -> internationalizationData.getI18n())
-                .map(i18nData -> i18nData.getTitle().get(locale.getLanguage()))
+                .map(InternationalizationData::getI18n)
+                .map(i18nData -> i18nData.getTitle().get(Locale.of(locale.getLanguage())))
                 .orElse(dataName);
     }
 
@@ -72,8 +73,8 @@ implements FileSenderInternationalisation{
                 .map(Configuration::i18n)
                 .map(Internationalizations::getData)
                 .map(data -> data.get(dataName))
-                .map(internationalizationData -> internationalizationData.getI18n())
-                .map(i18nData -> i18nData.getDescription().get(locale.getLanguage()))
+                .map(InternationalizationData::getI18n)
+                .map(i18nData -> i18nData.getDescription().get(Locale.of(locale.getLanguage())))
                 .orElse(dataName);
     }
 

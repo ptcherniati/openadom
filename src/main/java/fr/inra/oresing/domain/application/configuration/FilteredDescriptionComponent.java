@@ -22,16 +22,6 @@ public record FilteredDescriptionComponent(ComponentDescriptionType type,
     }
 
     @Override
-    public boolean required() {
-        return false;
-    }
-
-    @Override
-    public ComponentPresenceConstraint mandatory() {
-        return ComponentPresenceConstraint.OPTIONAL;
-    }
-
-    @Override
     public CheckerDescription checker() {
         return null;
     }

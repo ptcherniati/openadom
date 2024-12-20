@@ -45,7 +45,7 @@ public record I18n(Map i18n) {
         }
         if (i18n != null) {
             for (final Object key : i18n.keySet()) {
-                final Locale locale = new Locale(key.toString());
+                final Locale locale = Locale.of(key.toString());
                 if (StringUtils.isAllLowerCase(key.toString()) &&
                         (key.toString().length() != 2)) {
                     locale.getUnicodeLocaleType(key.toString());

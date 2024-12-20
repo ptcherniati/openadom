@@ -61,7 +61,6 @@ public class RootBuilder {
     private final AdditionalFilesBuilder additionalFilesBuilder = new AdditionalFilesBuilder(this);
 
     private final SubmissionComponentResolver submissionComponentResolver = new SubmissionComponentResolver(this);
-    private final DocumentContext documentContext;
     private final DataAndComponentTestDoublon dataAndComponentTestDoublon = new DataAndComponentTestDoublon(this);
     @Getter
     Set<Tag> domainTags = Set.of();
@@ -77,7 +76,6 @@ public class RootBuilder {
         super();
         this.progression = progression;
         this.rootNode = rootNode;
-        this.documentContext = documentContext;
     }
 
     static ComponentPresenceConstraint isMandatory(final JsonNode node) {
@@ -151,7 +149,7 @@ public class RootBuilder {
         if (hasErrors) {
             return null;
         }
-        final Configuration configuration = new Configuration(
+        return new Configuration(
                 version,
                 tags.result(),
                 internationalizations,
@@ -162,7 +160,6 @@ public class RootBuilder {
                 hierarchicalNodes,
                 SubmissionComponentResolver.build(getListDataKeys())
         );
-        return configuration;
     }
 
     @Nullable
@@ -231,7 +228,7 @@ public class RootBuilder {
                     );
                 }
             }
-            return new Parsing<String>(i18n, Optional.ofNullable(exportHeaderNode.get(OA_HEADER_NAME)).map(JsonNode::asText).orElse(componentEntry.getKey()));
+            return new Parsing<>(i18n, Optional.ofNullable(exportHeaderNode.get(OA_HEADER_NAME)).map(JsonNode::asText).orElse(componentEntry.getKey()));
         }
         return null;
     }
@@ -253,7 +250,7 @@ public class RootBuilder {
             i18n = component.i18n();
             result.put(key, component.result());
         }
-        return new Parsing<Map<String, StandardDataDescription>>(i18n, result);
+        return new Parsing<>(i18n, result);
     }
 
     ReactiveProgression.Progression getProgression() {

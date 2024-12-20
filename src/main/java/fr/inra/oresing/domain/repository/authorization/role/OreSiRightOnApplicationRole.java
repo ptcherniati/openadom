@@ -50,9 +50,6 @@ public record OreSiRightOnApplicationRole(
 
     /**
      * créé un role permettant pour poser des policies
-     * @param application
-     * @param uuid
-     * @return
      */
     public static OreSiRightOnApplicationRole managementRole(final Application application, final UUID uuid) {
         return new OreSiRightOnApplicationRole(application.getId(), String.format("mgt_%s", uuid.toString().substring(0, 8)),

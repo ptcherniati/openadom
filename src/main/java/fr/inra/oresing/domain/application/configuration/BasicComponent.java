@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.application.configuration;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;

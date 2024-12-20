@@ -105,7 +105,7 @@ public record Submission(
             LinkedList<String> scopes = new LinkedList<>(authorizationScopes);
             Matcher m = r.matcher(pattern());
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
 
             int groupCount = 0;
             while (m.find()) {

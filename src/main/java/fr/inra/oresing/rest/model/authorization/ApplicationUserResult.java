@@ -21,7 +21,7 @@ public record ApplicationUserResult(
         boolean isActiveApplicationUser
 ) {
 
-    public static final List<String> getApplicationRoles(Application application) {
+    public static List<String> getApplicationRoles(Application application) {
         return List.of(
                 OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole(),
                 OreSiRightOnApplicationRole.userAdminOn(application).getAsSqlRole()
@@ -30,10 +30,10 @@ public record ApplicationUserResult(
 
     public static ApplicationUserResult of(UUID applicationId, OreSiUser oreSiUser,
                                            Map<String, List<String>> administratorRoles, Timestamp charteTimestamp) {
-        Boolean isApplicationManager = administratorRoles.entrySet().stream()
+        boolean isApplicationManager = administratorRoles.entrySet().stream()
                 .filter(entry -> entry.getKey().endsWith(OreSiRightOnApplicationRole.APPLICATION_MANAGER))
                 .anyMatch(entry -> entry.getValue().contains(oreSiUser.getId().toString()));
-        Boolean isUserManager = isApplicationManager|| administratorRoles.entrySet().stream()
+        boolean isUserManager = isApplicationManager|| administratorRoles.entrySet().stream()
                 .filter(entry -> entry.getKey().endsWith(OreSiRightOnApplicationRole.USER_MANAGER))
                 .anyMatch(entry -> entry.getValue().contains(oreSiUser.getId().toString()));
         Optional<Timestamp> charteTimeStampOpt = Optional.ofNullable(oreSiUser)
@@ -42,7 +42,7 @@ public record ApplicationUserResult(
                 .map(chartes -> chartes.get(applicationId.toString()));
         boolean isApplicationUser = isUserManager|| charteTimeStampOpt.isPresent();
         boolean isActiveApplicationUser = charteTimeStampOpt.stream().anyMatch(
-                timestamp -> charteTimestamp == null ? true : timestamp.after(charteTimestamp));
+                timestamp -> charteTimestamp == null || timestamp.after(charteTimestamp));
         return new ApplicationUserResult(
                 applicationId,
                 oreSiUser.getId(),

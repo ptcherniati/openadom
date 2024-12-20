@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.checker;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;

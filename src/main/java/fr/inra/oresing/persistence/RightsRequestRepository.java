@@ -34,32 +34,47 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
 
     public Optional<RightsRequest> tryFindByIdWithData(final UUID id) {
         Preconditions.checkArgument(id != null);
-        final String query = String.format("SELECT '%s' as \"@class\", to_jsonb(t) as json " +
-                "FROM (select *  \n" +
-                " from %s  WHERE id = :id) t", getEntityClass().getName(), getTable().getSqlIdentifier());
-        final Optional<RightsRequest> result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("id", id), getJsonRowMapper()).stream().findFirst();
-        return result;
+
+        final String query = String.format("""
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
+                        FROM (
+                            SELECT *
+                            FROM %2$s
+                            WHERE id = :id
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier()
+        );
+
+        return getNamedParameterJdbcTemplate().query(
+                query,
+                new MapSqlParameterSource("id", id),
+                getJsonRowMapper()
+        ).stream().findFirst();
     }
-    public List<RightsRequest> findAllByWhereClause(final String whereClause, final SqlParameterSource sqlParameterSource){
-        return find(whereClause,sqlParameterSource);
+
+    public List<RightsRequest> findAllByWhereClause(final String whereClause, final SqlParameterSource sqlParameterSource) {
+        return find(whereClause, sqlParameterSource);
     }
 
     protected List<RightsRequest> find(final String whereClause, SqlParameterSource sqlParameterSource) {
-        SqlParameterSource sqlParameterSource1 = sqlParameterSource;
-        if(sqlParameterSource1 ==null){
-            sqlParameterSource1 = new MapSqlParameterSource();
-        }
-        String sql = """
-                SELECT '%s' as "@class",  to_jsonb(t) as json\s
-                FROM (select * \s
-                from %s\s""";
-        if (whereClause != null && !"()".equals(whereClause)) {
-            sql += " WHERE " + whereClause;
-        }
-        sql += ") t";
-        final String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
-        final List<RightsRequest> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource1, getJsonRowMapper());
-        return result;
+        SqlParameterSource finalSqlParameterSource = sqlParameterSource != null ? sqlParameterSource : new MapSqlParameterSource();
+
+        String sql = String.format("""
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
+                        FROM (
+                            SELECT * 
+                            FROM %2$s
+                            %3$s
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier(),
+                (whereClause != null && !"()".equals(whereClause)) ? "WHERE " + whereClause : ""
+        );
+
+        return getNamedParameterJdbcTemplate().query(sql, finalSqlParameterSource, getJsonRowMapper());
     }
 
     @Override
@@ -69,26 +84,32 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + " AS t (id,creationdate,updatedate,\n" +
-                "application,\"user\", comment, rightsRequestForm, rightsRequest, setted)\n" +
-                "select id,\n" +
-                "COALESCE(creationdate,now()),\n" +
-                "COALESCE(updatedate,now()),\n" +
-                "application,\n" +
-                "\"user\",\n" +
-                "comment,\n" +
-                "rightsRequestForm,\n" +
-                "rightsRequest,\n" +
-                "COALESCE(setted,false)\n" +
-                "FROM json_populate_recordset(NULL::"+getTable().getSqlIdentifier()+", \n" +
-                ":json::json) \n" +
-                "ON CONFLICT (id)\n" +
-                "DO UPDATE\n" +
-                "set updatedate=current_timestamp,\n" +
-                "rightsRequestForm=EXCLUDED.rightsRequestForm,\n" +
-                "rightsRequest=EXCLUDED.rightsRequest,\n" +
-                "setted=EXCLUDED.setted\n" +
-                "returning id;";
+        return String.format("""
+                        INSERT INTO %1$s AS t (
+                            id, creationdate, updatedate, application, "user", comment, 
+                            rightsRequestForm, rightsRequest, setted
+                        )
+                        SELECT 
+                            id,
+                            COALESCE(creationdate, now()),
+                            COALESCE(updatedate, now()),
+                            application,
+                            "user",
+                            comment,
+                            rightsRequestForm,
+                            rightsRequest,
+                            COALESCE(setted, false)
+                        FROM json_populate_recordset(NULL::%1$s, :json::json) 
+                        ON CONFLICT (id)
+                        DO UPDATE SET 
+                            updatedate = current_timestamp,
+                            rightsRequestForm = EXCLUDED.rightsRequestForm,
+                            rightsRequest = EXCLUDED.rightsRequest,
+                            setted = EXCLUDED.setted
+                        RETURNING id
+                        """,
+                getTable().getSqlIdentifier()
+        );
     }
 
     @Override
@@ -97,12 +118,24 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
     }
 
     public List<RightsRequest> findByCriteria(final RightsRequestSearchHelper rightsrequestSearchHelper) {
-        final String sql = """
-                SELECT '%s' as "@class",  to_jsonb(t) as json\s
-                FROM (select * \s
-                from %s\s""";
-        String query = rightsrequestSearchHelper.buildRequest(sql, ") t");
-        query = String.format(query, getEntityClass().getName(), getTable().getSqlIdentifier());
-        return getNamedParameterJdbcTemplate().query(query, rightsrequestSearchHelper.getParamSource(), getJsonRowMapper());
+        String sql = String.format("""
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
+                        FROM (
+                            SELECT * 
+                            FROM %2$s
+                            %3$s
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier(),
+                rightsrequestSearchHelper.buildRequest("", "")
+        );
+
+        return getNamedParameterJdbcTemplate().query(
+                sql,
+                rightsrequestSearchHelper.getParamSource(),
+                getJsonRowMapper()
+        );
     }
+
 }

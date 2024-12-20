@@ -12,8 +12,8 @@ class StringCheckerExampleBuilder {
     protected static final StringCheckerType ESPECE = buildStringChecker("SPE_.*", Multiplicity.ONE);
     protected static final CheckerType ALL = buildStringChecker(".*", Multiplicity.ONE);
     protected static StringCheckerType buildStringChecker(final String pattern, final Multiplicity multiplicity) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
-        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<>();
         final StringType oaPattern = Optional.ofNullable(pattern)
                 .map(StringType::new)
                 .orElse(new StringType(".*"));

@@ -115,6 +115,7 @@ OA_rightsRequest:
           fr: "Nom de votre organisation"
           en: "Name of your organization"
       OA_required: false
+      OA_checker:
         OA_name: OA_reference
         OA_params:
           OA_reference:

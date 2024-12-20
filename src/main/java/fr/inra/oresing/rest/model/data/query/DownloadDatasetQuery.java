@@ -67,8 +67,6 @@ public class DownloadDatasetQuery {
         return application.patternDefinitionCount(dataName);
     }
 
-    ;
-
     public DownloadDatasetQuery(final Application application, final String dataType) {
         super();
         this.application = application;

@@ -27,7 +27,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -98,18 +97,38 @@ public class TestReferencesErrors {
 
     @Transactional
     void addRoleAdmin(final CreateUserResult dbUserResult) {
-        namedParameterJdbcTemplate.update("grant \"openAdomAdmin\" to \"" + dbUserResult.userId().toString() + "\" WITH INHERIT TRUE", Map.of());
+        String sql = """
+                GRANT "openAdomAdmin" TO "%1$s" WITH INHERIT TRUE
+                """;
+
+        namedParameterJdbcTemplate.update(
+                String.format(sql, dbUserResult.userId().toString()),
+                Map.of()
+        );
     }
 
     @Transactional
     void setToActive(final UUID userId) {
-        namedParameterJdbcTemplate.update("update public.OreSiUser set accountstate = 'active' where id = :id", Map.of("id", userId));
+        String sql = """
+                UPDATE public.oresiuser 
+                SET accountstate = 'active' 
+                WHERE id = :id
+                """;
+
+        namedParameterJdbcTemplate.update(sql, Map.of("id", userId));
     }
 
     @Transactional
     void setToActive(final String login) {
-        namedParameterJdbcTemplate.update("update public.OreSiUser set accountstate = 'active' where login = :login", Map.of("login", login));
+        String sql = """
+                UPDATE public.oresiuser 
+                SET accountstate = 'active' 
+                WHERE login = :login
+                """;
+
+        namedParameterJdbcTemplate.update(sql, Map.of("login", login));
     }
+
 
     @Test
     @Disabled

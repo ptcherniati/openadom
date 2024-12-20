@@ -14,7 +14,6 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Def
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DateValidationCheckResult;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Supplier;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -26,6 +25,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -105,8 +105,7 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
             final String dateString = matcher.group(1);
             final String pattern = matcher.group(2);
             final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(pattern);
-            final DateType dateType = new DateType(pattern, LocalDateTime.parse(dateString, dateFormatter), dateFormatter, clone);
-            return dateType;
+            return new DateType(pattern, LocalDateTime.parse(dateString, dateFormatter), dateFormatter, clone);
         }
         return new DateType();
     }

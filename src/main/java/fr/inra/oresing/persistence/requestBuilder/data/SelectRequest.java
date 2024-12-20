@@ -68,11 +68,11 @@ record SelectRequest(
                     FROM rs
                     JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
                     GROUP BY naturalkey, hierarchicalkey
-                    %%1$s --order by 
+                    %%1$s --order by
                 """;
 
         static final String TEMPLATE_WITH_NO_PATTERNS_DEFINITION = """
-                SELECT 
+                SELECT
                     'fr.inra.oresing.persistence.DataRows' AS "@class",
                     jsonb_build_object(
                       --'rowNumber', row_number() over (),
@@ -88,11 +88,11 @@ record SelectRequest(
                 	FROM %3$s.referencevalue rs
                     WHERE
                             rs.referencetype = '%4$s'%5$s
-                            
-                %%1$s --order by 
+     
+                %%1$s --order by
                 %%2$s --offset
                 %%3$s --limit
-                """;
+     """;
 
         public String build(boolean horizontalDisplay) {
             return ((patternDefinitionCount() > 1 || (patternDefinitionCount()==1 && horizontalDisplay))? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
@@ -145,7 +145,7 @@ record SelectRequest(
 
             return (outPut().limit() != null && outPut().limit() >= 0) ?
                     """
-                            LIMIT  %d  """.formatted(outPut().limit()) :
+                            LIMIT  %d""".formatted(outPut().limit()) :
                     "";
         }
     }

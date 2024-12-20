@@ -46,36 +46,28 @@ public class AdditionalFileSearchHelper {
         final List<String> where = new LinkedList<>();
         Optional.ofNullable(additionalFilesInfos.getUuids())
                 .filter(uuids -> !CollectionUtils.isEmpty(uuids))
-                .ifPresent(list -> {
-                    where.add(list.stream()
-                            .map(this::addArgumentAndReturnSubstitution)
-                            .collect(Collectors.joining(",", " (\nid in (", ")\n) "))
-                    );
-                });
+                .ifPresent(list -> where.add(list.stream()
+                        .map(this::addArgumentAndReturnSubstitution)
+                        .collect(Collectors.joining(",", " (\nid in (", ")\n) "))
+                ));
         Optional.ofNullable(additionalFilesInfos.getFileNames())
                 .filter(fileNames -> !CollectionUtils.isEmpty(fileNames))
-                .ifPresent(list -> {
-                    where.add(list.stream()
-                            .map(this::addArgumentAndReturnSubstitution)
-                            .collect(Collectors.joining(",", " (\nfilename in (", ")\n) "))
-                    );
-                });
+                .ifPresent(list -> where.add(list.stream()
+                        .map(this::addArgumentAndReturnSubstitution)
+                        .collect(Collectors.joining(",", " (\nfilename in (", ")\n) "))
+                ));
         Optional.ofNullable(additionalFilesInfos.getAuthorizations())
                 .filter(authorizations -> !CollectionUtils.isEmpty(authorizations))
-                .ifPresent(list -> {
-                    where.add(list.stream()
-                            .map(this::addArgumentAndReturnSubstitution)
-                            .collect(Collectors.joining(",", " (\nassociate @> ARRAY[", "]\n) "))
-                    );
-                });
+                .ifPresent(list -> where.add(list.stream()
+                        .map(this::addArgumentAndReturnSubstitution)
+                        .collect(Collectors.joining(",", " (\nassociate @> ARRAY[", "]\n) "))
+                ));
         Optional.ofNullable(additionalFilesInfos.getAdditionalFilesInfos())
                 .filter(additionalFileInfos -> !CollectionUtils.isEmpty(additionalFileInfos))
-                .ifPresent(list -> {
-                    where.add(list.entrySet().stream()
-                            .map(this::whereForAdditionalFileName)
-                            .collect(Collectors.joining(" or ", "(", ")"))
-                    );
-                });
+                .ifPresent(list -> where.add(list.entrySet().stream()
+                        .map(this::whereForAdditionalFileName)
+                        .collect(Collectors.joining(" or ", "(", ")"))
+                ));
 
         String byFileType = Optional.ofNullable(additionalFilesInfos.getFiletype())
                 .map(this::addArgumentAndReturnSubstitution)
@@ -98,7 +90,7 @@ public class AdditionalFileSearchHelper {
                     .map(filters -> filters.stream()
                             .map(filter -> whereForField(filter, additionalFileDescription.formFields().get(filter.field)))
                             .collect(Collectors.joining(" and ", "(", ")")))
-                    .ifPresent(whereElement -> where.add(whereElement));
+                    .ifPresent(where::add);
         }
         return CollectionUtils.isEmpty(where) ? "" : where.stream()
                 .filter(Objects::nonNull).collect(Collectors

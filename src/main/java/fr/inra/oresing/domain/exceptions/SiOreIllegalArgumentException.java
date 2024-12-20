@@ -1,7 +1,6 @@
 package fr.inra.oresing.domain.exceptions;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.google.common.base.Preconditions;
 import fr.inra.oresing.domain.application.Application;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
@@ -24,7 +23,7 @@ SiOreIllegalArgumentException extends IllegalArgumentException{
     public static final String MISSING_DATA = "missingData";
     String message;
     Map<String, Object> params;
-    public static final void testExistsData(Application application, String dataName){
+    public static void testExistsData(Application application, String dataName){
         if(application.getConfiguration().dataDescription().containsKey(dataName)){
             return;
         }
@@ -36,19 +35,19 @@ SiOreIllegalArgumentException extends IllegalArgumentException{
                 )
         );
     }
-    public static final SiOreIllegalArgumentException noRightOnTable(String table){
+    public static SiOreIllegalArgumentException noRightOnTable(String table){
         return new SiOreIllegalArgumentException(NO_RIGHT_ON_TABLE, Map.of(TABLE, table));
     }
-    public static final SiOreIllegalArgumentException noRightOnTableForPublishOrUnpublish(String table){
+    public static SiOreIllegalArgumentException noRightOnTableForPublishOrUnpublish(String table){
         return new SiOreIllegalArgumentException(NO_RIGHT_ON_TABLE_FOR_PUBLISH_OR_UNPUBLISH, Map.of(TABLE, table));
     }
-    public static final SiOreIllegalArgumentException noRightOnTableForDeposit(String table){
+    public static SiOreIllegalArgumentException noRightOnTableForDeposit(String table){
         return new SiOreIllegalArgumentException(NO_RIGHT_ON_TABLE_FOR_DEPOSIT, Map.of(TABLE, table));
     }
-    public static final SiOreIllegalArgumentException noRightOnTableForDelete(String table){
+    public static SiOreIllegalArgumentException noRightOnTableForDelete(String table){
         return new SiOreIllegalArgumentException(NO_RIGHT_ON_TABLE_FOR_DELETE, Map.of(TABLE, table));
     }
-    public static final SiOreIllegalArgumentException noRightOnTableForDelete(SiOreIllegalArgumentException illegalArgumentException){
+    public static SiOreIllegalArgumentException noRightOnTableForDelete(SiOreIllegalArgumentException illegalArgumentException){
         return noRightOnTableForDelete(Optional.ofNullable(illegalArgumentException.getParams())
                 .map(map->map.get(SiOreIllegalArgumentException.TABLE))
                 .filter(String.class::isInstance)
@@ -56,7 +55,7 @@ SiOreIllegalArgumentException extends IllegalArgumentException{
                 .orElse(NOT_GIVEN)
         );
     }
-    public static final SiOreIllegalArgumentException noRightOnTableForPublishOrUnpublish(SiOreIllegalArgumentException illegalArgumentException){
+    public static SiOreIllegalArgumentException noRightOnTableForPublishOrUnpublish(SiOreIllegalArgumentException illegalArgumentException){
         return noRightOnTableForPublishOrUnpublish(Optional.ofNullable(illegalArgumentException.getParams())
                 .map(map->map.get(SiOreIllegalArgumentException.TABLE))
                 .filter(String.class::isInstance)
@@ -64,7 +63,7 @@ SiOreIllegalArgumentException extends IllegalArgumentException{
                 .orElse(NOT_GIVEN)
         );
     }
-    public static final SiOreIllegalArgumentException noRightOnTableForDeposit(SiOreIllegalArgumentException illegalArgumentException){
+    public static SiOreIllegalArgumentException noRightOnTableForDeposit(SiOreIllegalArgumentException illegalArgumentException){
         return noRightOnTableForDeposit(Optional.ofNullable(illegalArgumentException.getParams())
                 .map(map->map.get(SiOreIllegalArgumentException.TABLE))
                 .filter(String.class::isInstance)

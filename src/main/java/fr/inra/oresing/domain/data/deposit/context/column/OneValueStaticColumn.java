@@ -5,8 +5,6 @@ import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
 
 import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 
 public abstract class OneValueStaticColumn extends Column {
 

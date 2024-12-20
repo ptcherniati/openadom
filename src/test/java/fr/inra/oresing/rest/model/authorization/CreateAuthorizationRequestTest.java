@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.model.authorization;
 
 import com.google.common.io.Resources;
-import fr.inra.oresing.domain.Authorization;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
@@ -11,18 +10,13 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
-import fr.inra.oresing.rest.AuthorizationService;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
-import org.hamcrest.Matchers;
 import org.junit.Assert;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
-import org.mockito.internal.matchers.Any;
 
 import java.io.IOException;
 import java.net.URL;
@@ -63,9 +57,9 @@ class CreateAuthorizationRequestTest {
                 )
         );
         final CreateAuthorizationRequest createAuthorizationRequest = new JsonRowMapper<CreateAuthorizationRequest>().readValue(CreateAuthorizationRequestTest.createAuthorization, CreateAuthorizationRequest.class);
-        Assert.assertEquals("e7570009-35fb-489d-ad3b-5bb335e7c5d5", createAuthorizationRequest.uuid().toString());
-        Assert.assertEquals("une submissionScope sur le référentiel monsore", createAuthorizationRequest.name());
-        Assert.assertEquals(Set.of(UUID.fromString("f7570009-38fb-489d-ad3b-5bb335e7c5d5")).toArray(), createAuthorizationRequest.usersId().toArray());
+        Assertions.assertEquals("e7570009-35fb-489d-ad3b-5bb335e7c5d5", createAuthorizationRequest.uuid().toString());
+        Assertions.assertEquals("une submissionScope sur le référentiel monsore", createAuthorizationRequest.name());
+        Assertions.assertArrayEquals(Set.of(UUID.fromString("f7570009-38fb-489d-ad3b-5bb335e7c5d5")).toArray(), createAuthorizationRequest.usersId().toArray());
         final Map<String, Set<OperationType>> authorizationForAll = createAuthorizationRequest.authorizationForAll();
         Assertions.assertIterableEquals(
                 new HashSet<>() {{
@@ -84,7 +78,7 @@ class CreateAuthorizationRequestTest {
         assert pem.getOperationTypes().contains(OperationType.depot);
         Assertions.assertIterableEquals(List.of(Ltree.fromSql("projet_atlantique"), Ltree.fromSql("projet_manche")),
                 pem.getRequiredAuthorizations().get("projet"));
-        Assert.assertEquals("[\"2024-03-29 00:00:00\",\"2024-03-29 00:00:00\")", pem.getTimeScope().toSqlExpression());
+        Assertions.assertEquals("[\"2024-03-29 00:00:00\",\"2024-03-29 00:00:00\")", pem.getTimeScope().toSqlExpression());
     }
 
     @Test
@@ -125,25 +119,22 @@ class CreateAuthorizationRequestTest {
                 errors
         );
         AuthorizationRequest authorizationRequest = authorizationRequestBuilder.build(createAuthorizationRequest, dataRepositoryWithBuffer);
-        Assert.assertEquals(0, errors.size());
-        Assert.assertEquals(applicationId, authorizationRequest.applicationId());
-        Assert.assertEquals(authorizationId, authorizationRequest.authorizationId());
-        Assert.assertEquals(Set.copyOf(userIds), authorizationRequest.userId());
-        Assert.assertEquals(name, authorizationRequest.name());
-        Assert.assertEquals(
-                new ArrayList<String>() {{
-                    this.add("type_de_sites");
-                    this.add("sites");
-                }},
-                authorizationRequest.authorizationForAll().authorizationForAll().get(OperationType.extraction)
-        );
+        Assertions.assertEquals(0, errors.size());
+        Assertions.assertEquals(applicationId, authorizationRequest.applicationId());
+        Assertions.assertEquals(authorizationId, authorizationRequest.authorizationId());
+        Assertions.assertEquals(Set.copyOf(userIds), authorizationRequest.userId());
+        Assertions.assertEquals(name, authorizationRequest.name());
+        Assertions.assertEquals(new ArrayList<String>() {{
+            this.add("type_de_sites");
+            this.add("sites");
+        }}, authorizationRequest.authorizationForAll().authorizationForAll().get(OperationType.extraction));
         AuthorizationWithRestriction authorizationsWithRestriction = authorizationRequest.authorizationWithRestriction();
         final AuthorizationForScope authorization1 = null /*authorizationsWithRestriction.authorizationForScope().get("pem").get(OperationType.depot).get(0)*/;
-        Assert.assertEquals(null, authorization1.timeScope());
-        Assert.assertEquals(Ltree.fromSql("projet_atlantique"), authorization1.authorizationScope().get("projet"));
+        Assertions.assertEquals(null, authorization1.timeScope());
+        Assertions.assertEquals(Ltree.fromSql("projet_atlantique"), authorization1.authorizationScope().get("projet"));
         final AuthorizationForScope authorization2 = null /*authorizationsWithRestriction.authorizationForScope().get("pem").get(OperationType.depot).get(1)*/;
-        Assert.assertEquals("[\"2024-03-29 00:00:00\",\"2024-03-29 00:00:00\")", authorization2.timeScope().toSqlExpression());
-        Assert.assertEquals(Ltree.fromSql("projet_manche"), authorization2.authorizationScope().get("projet"));
+        Assertions.assertEquals("[\"2024-03-29 00:00:00\",\"2024-03-29 00:00:00\")", authorization2.timeScope().toSqlExpression());
+        Assertions.assertEquals(Ltree.fromSql("projet_manche"), authorization2.authorizationScope().get("projet"));
         Mockito.when(application.findData("sites")).thenReturn(Optional.empty());
         /*authorizationRequest = createAuthorizationRequest.toAuthorizationRequest(
                 application,
@@ -151,14 +142,12 @@ class CreateAuthorizationRequestTest {
                 null,
                 errors
         )*/
-        ;
-        Assert.assertEquals("""
+        Assertions.assertEquals("""
                         {
                           "error" : "badReferences",
                           "params" : {
                             "badReferences" : [ "sites" ]
                           }
-                        }""",
-                errors.get(0).getAuthorizationRequestString());
+                        }""", errors.getFirst().getAuthorizationRequestString());
     }
 }

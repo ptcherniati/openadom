@@ -41,9 +41,7 @@ public class PoolExecutorService implements AsyncConfigurer {
         try {
             final Future<R> submit = getAsyncExecutor().submit(() -> from.parallelStream().collect(collector));
             return submit.get();
-        } catch (final ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (final InterruptedException e) {
+        } catch (final ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }
@@ -52,9 +50,7 @@ public class PoolExecutorService implements AsyncConfigurer {
         try {
             final Future<R> submit = POOL.submit(() -> from.parallel().collect(collector));
             return submit.get();
-        } catch (final ExecutionException e) {
-            throw new RuntimeException(e);
-        } catch (final InterruptedException e) {
+        } catch (final ExecutionException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }

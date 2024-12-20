@@ -17,9 +17,9 @@ class StringExampleBuilder {
     public static final StringType FRENCH_TYPE_SITE_DESCRIPTION = new StringType("Description du type de site en français");
     public static final StringType ENGLISH_TYPE_SITE_DESCRIPTION = new StringType("English type site description");
     public static final StringType NOM_CODIQUE_DU_PROJET = new StringType("Nom codique du projet");
-    public static final StringType NOM_DU_PROJET_EN_FRANÇAIS = new StringType("Nom du projet en français");
+    public static final StringType NOM_DU_PROJET_EN_FRANCAIS = new StringType("Nom du projet en français");
     public static final StringType ENGLISH_PROJECT_NAME = new StringType("English project name");
-    public static final StringType DÉFINITION_DU_PROJET_EN_FRANÇAIS = new StringType("Définition du projet en français");
+    public static final StringType DEFINITION_DU_PROJET_EN_FRANCAIS = new StringType("Définition du projet en français");
     public static final StringType ENGLISH_PROJECT_DEFINITION = new StringType("English project definition");
     public static final StringType SPECIES_DEFINITION_FR = new StringType("Défintion de l'espèce en français");
     public static final StringType ENGLISH_SPECIES_DEFINITION = new StringType("English species definition");

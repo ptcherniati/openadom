@@ -16,8 +16,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Exception levée si un jeu de données est incorrect (aussi bien entêtes que contenu)
@@ -98,8 +96,8 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         }
         final ImmutableSet<String> actualColumnsAsSet = actualColumns.elementSet();
         boolean areAllBasicColumns = expectedColumns.containsAll(actualColumnsAsSet);
-        final Boolean givenColumnIsUnexpected = !(allowUnexpectedColumns || areAllBasicColumns);
-        final Boolean mandatoryColumnIsMissing = !actualColumnsAsSet.containsAll(mandatoryColumns);
+        final boolean givenColumnIsUnexpected = !(allowUnexpectedColumns || areAllBasicColumns);
+        final boolean mandatoryColumnIsMissing = !actualColumnsAsSet.containsAll(mandatoryColumns);
         if (!areAllBasicColumns || mandatoryColumnIsMissing) {
             if (!mandatoryColumnIsMissing && patternColumnFactory != null) {
                 List<ContextHeader> notOrdinaryColumns = headersForRow.stream()

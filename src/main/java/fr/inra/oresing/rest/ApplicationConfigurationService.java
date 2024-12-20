@@ -57,8 +57,7 @@ public class ApplicationConfigurationService {
                 progression1.complete();
                 return null;
             }
-            final Application application = getConfigurationParsingResultForSyntacticallyValidYaml(progressionForCheckSyntax, configuration);
-            return application;
+            return getConfigurationParsingResultForSyntacticallyValidYaml(progressionForCheckSyntax, configuration);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

@@ -6,8 +6,6 @@ import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.ArrayList;
-import java.util.List;
 
 public class JacksonErrorParser {
 
@@ -64,7 +62,6 @@ public class JacksonErrorParser {
     private static String extractDuplicateKeys(String errorMessage) {
         // Logique pour extraire les clés dupliquées du message d'erreur
         // Exemple de message : "duplicate field 'vcat_label_fr'"
-        String key = errorMessage.substring(errorMessage.indexOf("'") + 1, errorMessage.lastIndexOf("'"));
-        return key;
+        return errorMessage.substring(errorMessage.indexOf("'") + 1, errorMessage.lastIndexOf("'"));
     }
 }

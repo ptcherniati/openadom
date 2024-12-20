@@ -85,24 +85,18 @@ class ConfigurationBuilderTest {
                         throw new RuntimeException(e);
                     }
                 })
-                .flatMap(reactiveResult -> {
-                    return switch (reactiveResult) {
-                        case final ReactiveTypeError re -> Mono.just(re);
-                        default -> Mono.empty();
-                    };
-
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
                 })
                 .map(ReactiveTypeError::result)
                 .map(ValidationError.class::cast)
                 .collectList()
                 .block();
-        Assert.assertTrue(
-                errors.stream()
-                        .map(ValidationError::getValidationErrorString)
-                        .toList()
-                        .toString(),
-                CollectionUtils.isEmpty(errors)
-        );
+        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
+                .map(ValidationError::getValidationErrorString)
+                .toList()
+                .toString());
 
     }
 
@@ -119,24 +113,18 @@ class ConfigurationBuilderTest {
                         throw new RuntimeException(e);
                     }
                 })
-                .flatMap(reactiveResult -> {
-                    return switch (reactiveResult) {
-                        case final ReactiveTypeError re -> Mono.just(re);
-                        default -> Mono.empty();
-                    };
-
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
                 })
                 .map(ReactiveTypeError::result)
                 .map(ValidationError.class::cast)
                 .collectList()
                 .block();
-        Assert.assertTrue(
-                errors.stream()
-                        .map(ValidationError::getValidationErrorString)
-                        .toList()
-                        .toString(),
-                CollectionUtils.isEmpty(errors)
-        );
+        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
+                .map(ValidationError::getValidationErrorString)
+                .toList()
+                .toString());
     }
 
     private boolean throwErrors(final List<ValidationError> errors) {
@@ -158,23 +146,18 @@ class ConfigurationBuilderTest {
                         throw new RuntimeException(e);
                     }
                 })
-                .flatMap(reactiveResult -> {
-                    return switch (reactiveResult) {
-                        case final ReactiveTypeError re -> Mono.just(re);
-                        default -> Mono.empty();
-                    };
-
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
                 })
                 .map(ReactiveTypeError::result)
                 .map(ValidationError.class::cast)
                 .collectList()
                 .block();
-        Assert.assertTrue(
-                errors.stream()
-                        .map(ValidationError::getValidationErrorString)
-                        .toList()
-                        .toString(),
-                CollectionUtils.isEmpty(errors));
+        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
+                .map(ValidationError::getValidationErrorString)
+                .toList()
+                .toString());
     }
 
     private void testHierarchicalNodes(SortedSet<Node> nodes) throws JsonProcessingException {
@@ -195,23 +178,18 @@ class ConfigurationBuilderTest {
                         throw new RuntimeException(e);
                     }
                 })
-                .flatMap(reactiveResult -> {
-                    return switch (reactiveResult) {
-                        case final ReactiveTypeError re -> Mono.just(re);
-                        default -> Mono.empty();
-                    };
-
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
                 })
                 .map(ReactiveTypeError::result)
                 .map(ValidationError.class::cast)
                 .collectList()
                 .block();
-        Assert.assertTrue(
-                errors.stream()
-                        .map(ValidationError::getValidationErrorString)
-                        .toList()
-                        .toString(),
-                CollectionUtils.isEmpty(errors));
+        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
+                .map(ValidationError::getValidationErrorString)
+                .toList()
+                .toString());
     }
 
 
@@ -240,12 +218,11 @@ class ConfigurationBuilderTest {
     }
 
     private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
-        Assert.assertEquals(new ObjectMapper()
+        assertEquals(new ObjectMapper()
                         .registerModule(new JavaTimeModule())
                         .writer()
                         .withDefaultPrettyPrinter()
-                        .writeValueAsString(dataDescriptionMap)
-                , DATA_RESULT);
+                        .writeValueAsString(dataDescriptionMap), DATA_RESULT);
     }
 
     private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {

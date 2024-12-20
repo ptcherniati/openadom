@@ -2,9 +2,7 @@ package fr.inra.oresing.rest.data.publication;
 
 import com.google.common.base.Preconditions;
 import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.domain.authentication.service.AuthenticationService;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
@@ -40,19 +38,9 @@ public record CheckRights(
             Preconditions.checkArgument(!(binaryFile().getFileData().length == 0), "le CSV téléversé pour le référentiel " + dataName() + " est vide");
             UUID fileId = binaryFileRepository.store(binaryFile());
             return FileOrUUID.from(params(), fileId);
-        }else {
+        } else {
             return FileOrUUID.from(params(), null);
         }
 
-    }
-
-
-    public List<BinaryFile> getFilesOnRepository(
-            AuthenticationService authenticationService,
-            fr.inra.oresing.persistence.BinaryFileRepository binaryFileRepository,
-            BinaryFileDataset fileDatasetID,
-            boolean overlap) {
-        authenticationService.setRoleForClient();
-        return binaryFileRepository.findByBinaryFileDataset(builder().dataName, fileDatasetID, overlap);
     }
 }

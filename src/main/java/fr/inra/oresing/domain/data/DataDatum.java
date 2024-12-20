@@ -170,8 +170,6 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     /**
      * Étant donné une colonne, l'ensemble des valeurs qui doivent être subir transformation et computationChecker
      *
-     * @param column
-     * @return
      */
     public FieldType getValuesToCheck(final DataColumn column) {
         return get(column).getValuesToCheck();
@@ -181,7 +179,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     public Map<String, FieldType> toJsonForFrontend() {
         final Map<String, FieldType> map = new LinkedHashMap<>();
         for (final Map.Entry<DataColumn, DataColumnValue> entry : values.entrySet()) {
-            if (entry.getValue() instanceof final DataColumnIndexedValue r && r.values() instanceof final Map<Ltree, String> m) {
+            if (entry.getValue() instanceof DataColumnIndexedValue(Map<Ltree, String> values1) && values1 instanceof final Map<Ltree, String> m) {
                 final Map<String, FieldType> mapOfTypes = new HashMap<>();
                 for (final Map.Entry<Ltree, String> entryForMap : m.entrySet()) {
                     mapOfTypes.put(entryForMap.getKey().getSql(), StringType.getStringTypeFromStringValue(entryForMap.getValue()));
@@ -201,7 +199,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     public DataDatum filterHidden(final Set<String> hiddenComponents) {
         return new DataDatum(
                 values.entrySet().stream()
-                        .filter(entry -> !hiddenComponents.contains(entry.getKey()))
+                        .filter(entry -> !hiddenComponents.contains(entry.getKey().column()))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
         );
     }

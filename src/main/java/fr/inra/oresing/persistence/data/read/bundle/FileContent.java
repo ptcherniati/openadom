@@ -3,7 +3,7 @@ package fr.inra.oresing.persistence.data.read.bundle;
 public record FileContent(String fileName, String fileContent) {
     public static final String EXPORT_REGISTER_DATA_CSV_SQL = """
             WITH data_config AS (
-              SELECT 
+              SELECT
                 configuration #> ARRAY['datadescription', '%1$s', 'naturalkey'] AS naturalkey,
                 configuration #> ARRAY['datadescription', '%1$s', 'componentdescriptions'] AS components,
                 configuration #> ARRAY['datadescription', '%1$s', 'separator'] AS separator,
@@ -13,7 +13,7 @@ public record FileContent(String fileName, String fileContent) {
               WHERE name = '%2$s'
             ),
             file_contents AS (
-              SELECT 
+              SELECT
                 rv.binaryfile,
                 bf.updatedate,
                 convert_from(decode(encode(bf.filedata, 'escape'), 'base64'), 'UTF8') AS content
@@ -23,7 +23,7 @@ public record FileContent(String fileName, String fileContent) {
               ORDER BY bf.updatedate
             ),
             parsed_files AS (
-              SELECT 
+              SELECT
                 fc.updatedate,
                 (
                   SELECT string_agg(
@@ -50,7 +50,7 @@ public record FileContent(String fileName, String fileContent) {
               WHERE line != ''
             ),
             processed_files AS (
-              SELECT 
+              SELECT
                 pf.updatedate,
                 pf.key_values,
                 pf.line,
@@ -65,12 +65,12 @@ public record FileContent(String fileName, String fileContent) {
                  OR pf.row_num < dc.firstrowline
                  OR pf.row_num >= dc.firstrowline
             )
-            SELECT 
-              format('%3$s.csv', '%1$s') fileName, 
+            SELECT
+              format('%3$s.csv', '%1$s') fileName,
               COALESCE(
                 (SELECT line FROM processed_files WHERE row_num = headerline LIMIT 1),
                 ''
-              ) || E'\\n' || 
+              ) || E'\\n' ||
               string_agg(
                 CASE WHEN row_num != headerline THEN line ELSE '' END,
                 E'\\n'

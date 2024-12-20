@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.exception;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import lombok.Getter;
 
-import java.util.List;
 import java.util.Set;
 
 @Getter

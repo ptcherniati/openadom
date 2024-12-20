@@ -30,7 +30,7 @@ public class ReportErrors extends LinkedList<CsvRowValidationCheckResult> {
     private boolean test(final CsvRowValidationCheckResult csvRowValidationCheckResult) {
         final String str = jsonRowMapper.toJson(csvRowValidationCheckResult);
         length += str.codePointCount(0, str.length());
-        return isOverload() ? false : super.add(csvRowValidationCheckResult);
+        return isOverload() && super.add(csvRowValidationCheckResult);
     }
 
     @Override
@@ -40,10 +40,10 @@ public class ReportErrors extends LinkedList<CsvRowValidationCheckResult> {
     }
 
     public boolean canRegisterErrors() {
-        return size() < 50 && !isOverload();
+        return size() < 50 && isOverload();
     }
 
     private boolean isOverload() {
-        return length > 1000000;
+        return length <= 1000000;
     }
 }

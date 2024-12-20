@@ -12,9 +12,9 @@ public class SubmissionTimeScopeTypeExampleBuilder {
 
     private static SubmissionTimeScopeType builTimeScope() {
         return new SubmissionTimeScopeType(
-            new HashMap<String, ConfigurationSchemaNodeType>(new HashMap<>(){{
+                new HashMap<>(new HashMap<>() {{
                     put(ConfigurationSchemaNode.OA_COMPONENT, new StringType("dat_date_heure", true));
-            }} )
+                }})
         );
     }
 }

@@ -105,11 +105,11 @@ class GroovyCheckerExampleBuilder {
     );
 
     protected static GroovyCheckerType buildGroovyChecker(final String expression, Map<String, I18nType> exceptionMessages, final Multiplicity multiplicity) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
-        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<>();
         final EnumType oaMultiplicity = EnumExampleBuilder.buildMultiplicityType(multiplicity);
         params.put(ConfigurationSchemaNode.OA_MULTIPLICITY, oaMultiplicity);
-        params.put(ConfigurationSchemaNode.OA_GROOVY, new GroovyExpressionType(Map.of(ConfigurationSchemaNode.OA_EXPRESSION, new StringType(expression), ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS, new CollectionType.MapType<I18nType>(exceptionMessages, false, false, I18nType.EMPTY_INSTANCE()))));
+        params.put(ConfigurationSchemaNode.OA_GROOVY, new GroovyExpressionType(Map.of(ConfigurationSchemaNode.OA_EXPRESSION, new StringType(expression), ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS, new CollectionType.MapType<>(exceptionMessages, false, false, I18nType.EMPTY_INSTANCE()))));
         children.put(ConfigurationSchemaNode.OA_PARAMS, new GroovyCheckerParamsType(params));
         return new GroovyCheckerType(children);
     }

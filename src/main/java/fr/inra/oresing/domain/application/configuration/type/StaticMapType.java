@@ -17,9 +17,9 @@ public class StaticMapType {
         this.type = type;
     }
 
-    public static final StaticMapType AUTHORIZATION_SCOPE() {
+    public static StaticMapType AUTHORIZATION_SCOPE() {
         return new StaticMapType(
-                new CollectionType.MapType<IntegerType>(
+                new CollectionType.MapType<>(
                         Map.of(),
                         false,
                         false,
@@ -28,9 +28,9 @@ public class StaticMapType {
         );
     }
 
-    public static final StaticMapType I18N() {
+    public static StaticMapType I18N() {
         return new StaticMapType(
-                new CollectionType.MapType<I18nType>(
+                new CollectionType.MapType<>(
                         Map.of(),
                         false,
                         false,
@@ -38,18 +38,18 @@ public class StaticMapType {
                 )
         );
     }
-    public static final StaticMapType AUTHORIZATION_SCOPES() {
+    public static StaticMapType AUTHORIZATION_SCOPES() {
         return new StaticMapType(
-                new CollectionType.ArrayType<StringType>(List.of(), false, false,
+                new CollectionType.ArrayType<>(List.of(), false, false,
                         StringType.EMPTY_INSTANCE())
         );
     }
 
 
 
-    public static final StaticMapType FILE_MATCH_PATTERN_SCOPES() {
+    public static StaticMapType FILE_MATCH_PATTERN_SCOPES() {
         return new StaticMapType(
-                new CollectionType.ArrayType<StringType>(
+                new CollectionType.ArrayType<>(
                         List.of(),
                         false,
                         false,
@@ -58,82 +58,82 @@ public class StaticMapType {
         );
     }
 
-    public static final StaticMapType REFERENCE_SCOPES() {
+    public static StaticMapType REFERENCE_SCOPES() {
         return new StaticMapType(
-                new CollectionType.ArrayType<ReferenceScopeType>(List.of(), false, false,
+                new CollectionType.ArrayType<>(List.of(), false, false,
                         ReferenceScopeType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType REFERENCE_SCOPES_FOR_FILE() {
+    public static StaticMapType REFERENCE_SCOPES_FOR_FILE() {
         return new StaticMapType(
-                new CollectionType.ArrayType<StringType>(List.of(), false, false,
+                new CollectionType.ArrayType<>(List.of(), false, false,
                         StringType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType VALIDATIONS() {
+    public static StaticMapType VALIDATIONS() {
         return new StaticMapType(
-                new CollectionType.MapType<ValidationType>(Map.of(), false, false,
+                new CollectionType.MapType<>(Map.of(), false, false,
                         ValidationType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType FORMATS() {
+    public static StaticMapType FORMATS() {
         return new StaticMapType(
-                new CollectionType.MapType<FormatType>(Map.of(), false, false, FormatType.EMPTY_INSTANCE())
+                new CollectionType.MapType<>(Map.of(), false, false, FormatType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType ADDITIONAL_FILES() {
+    public static StaticMapType ADDITIONAL_FILES() {
         return new StaticMapType(
-                new CollectionType.MapType<AdditionalFileType>(Map.of(), false, false, AdditionalFileType.EMPTY_INSTANCE())
+                new CollectionType.MapType<>(Map.of(), false, false, AdditionalFileType.EMPTY_INSTANCE())
         );
     }
-    public static final StaticMapType BASIC_COMPONENTS() {
-        return new StaticMapType(new CollectionType.MapType<BasicComponentType>(Map.of(), false, false, BasicComponentType.EMPTY_INSTANCE())
+    public static StaticMapType BASIC_COMPONENTS() {
+        return new StaticMapType(new CollectionType.MapType<>(Map.of(), false, false, BasicComponentType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType COMPUTED_COMPONENTS() {
+    public static StaticMapType COMPUTED_COMPONENTS() {
         return new StaticMapType(
-                new CollectionType.MapType<ComputedComponentType>(Map.of(), false, false, ComputedComponentType.EMPTY_INSTANCE())
+                new CollectionType.MapType<>(Map.of(), false, false, ComputedComponentType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType CONSTANT_COMPONENTS() {
+    public static StaticMapType CONSTANT_COMPONENTS() {
         return new StaticMapType(
-                new CollectionType.MapType<ConstantComponentType>(Map.of(), false, false, ConstantComponentType.EMPTY_INSTANCE())
+                new CollectionType.MapType<>(Map.of(), false, false, ConstantComponentType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType DYNAMIC_COMPONENTS() {
+    public static StaticMapType DYNAMIC_COMPONENTS() {
         return new StaticMapType(
-                new CollectionType.MapType<DynamicComponentType>(Map.of(), false, false, DynamicComponentType.EMPTY_INSTANCE())
+                new CollectionType.MapType<>(Map.of(), false, false, DynamicComponentType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType PATTERN_COMPONENTS_QUALIFIERS() {
+    public static StaticMapType PATTERN_COMPONENTS_QUALIFIERS() {
         return new StaticMapType(
                 new CollectionType.ArrayType<>(List.of(), false, false, PatternComponentQualifierType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType PATTERN_COMPONENTS_ADJACENT() {
+    public static StaticMapType PATTERN_COMPONENTS_ADJACENT() {
         return new StaticMapType(
                 new CollectionType.ArrayType<>(List.of(), false, false, PatternComponentAdjacentType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType PATTERN_COMPONENTS() {
+    public static StaticMapType PATTERN_COMPONENTS() {
         return new StaticMapType(
-                new CollectionType.MapType<PatternComponentType>(Map.of(), false, false, PatternComponentType.EMPTY_INSTANCE())
+                new CollectionType.MapType<>(Map.of(), false, false, PatternComponentType.EMPTY_INSTANCE())
         );
     }
 
-    public static final StaticMapType DATA() {
+    public static StaticMapType DATA() {
         return new StaticMapType(
-                new CollectionType.MapType<DataType>(
+                new CollectionType.MapType<>(
                         Map.of(),
                         false,
                         false,

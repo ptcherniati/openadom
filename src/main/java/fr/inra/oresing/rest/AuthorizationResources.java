@@ -13,7 +13,6 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeAppl
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.exceptions.authentication.authentication.NotApplicationCanManageReferenceRightsException;
-import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.AuthenticationService;
@@ -253,7 +252,7 @@ public class AuthorizationResources {
                 authorizationsForCurrentUser,
                 errors
         );
-        if (errors.size() > 0) {
+        if (!errors.isEmpty()) {
             final String uri = UriUtils.encodePath("/applications/authorization/null", Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", "null"));
 
@@ -486,7 +485,7 @@ public class AuthorizationResources {
                     .forAdministrationManagement()
                     .canManagerRightForRole(roleForUser);
             if (!CollectionUtils.isEmpty(applicationPattern)) {
-                user.getAuthorizations().removeAll(applicationPattern);
+                applicationPattern.forEach(user.getAuthorizations()::remove);
                 user = userRepository.update(user);
             }
             if(user.getAuthorizations().isEmpty()) {

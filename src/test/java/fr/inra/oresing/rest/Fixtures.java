@@ -2,7 +2,6 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
@@ -30,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -80,7 +80,7 @@ public class Fixtures {
     }
 
     public String getIdFromApplicationResult(final MvcResult result) throws UnsupportedEncodingException {
-        return (String) getResults(result).get(0).result();
+        return (String) getResults(result).getFirst().result();
 
     }
 
@@ -115,14 +115,11 @@ public class Fixtures {
                         Collectors.groupingBy(
                                 m -> ReactiveType.valueOf((String) m.get("type")),
                                 Collectors.collectingAndThen(Collectors.toList(),
-                                        list -> list.stream().map(el -> {
-                                            final ReactiveResult rr = switch (ReactiveType.valueOf((String) el.get("type"))) {
-                                                case REACTIVE_RESULT -> new ReactiveTypeResult(el.get("result"));
-                                                case REACTIVE_INFO -> new ReactiveTypeInfo(el.get("result"));
-                                                case REACTIVE_ERROR -> new ReactiveTypeError(el.get("result"));
-                                                case REACTIVE_PROGRESS -> new ReactiveTypeProgress(el.get("result"));
-                                            };
-                                            return rr;
+                                        list -> list.stream().map(el -> switch (ReactiveType.valueOf((String) el.get("type"))) {
+                                            case REACTIVE_RESULT -> new ReactiveTypeResult(el.get("result"));
+                                            case REACTIVE_INFO -> new ReactiveTypeInfo(el.get("result"));
+                                            case REACTIVE_ERROR -> new ReactiveTypeError(el.get("result"));
+                                            case REACTIVE_PROGRESS -> new ReactiveTypeProgress(el.get("result"));
                                         }).collect(Collectors.toList())))
                 );
     }
@@ -629,10 +626,10 @@ public class Fixtures {
         final String resourceName = "/data/acbb/SWC.csv";
         if (truncated) {
             try {
-                final String collect = Resources.asCharSource(Objects.requireNonNull(getClass().getResource(resourceName)), Charsets.UTF_8).lines()
+                final String collect = Resources.asCharSource(Objects.requireNonNull(getClass().getResource(resourceName)), StandardCharsets.UTF_8).lines()
                         .limit(100)
                         .collect(Collectors.joining("\n"));
-                return IOUtils.toInputStream(collect, Charsets.UTF_8);
+                return IOUtils.toInputStream(collect, StandardCharsets.UTF_8);
             } catch (final IOException e) {
                 throw new OreSiTechnicalException("ne devrait pas arriver", e);
             }
@@ -665,18 +662,32 @@ public class Fixtures {
                     .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
         }
         return cookie;
-    }
-
-    @Transactional
+    }@Transactional
     void addRoleAdmin(final CreateUserResult dbUserResult) {
-        namedParameterJdbcTemplate.update("grant \"openAdomAdmin\" to \"" + dbUserResult.userId().toString() + "\" WITH INHERIT TRUE", Map.of());
-    }
+        String sql = """
+        GRANT "openAdomAdmin" TO :userId WITH INHERIT TRUE
+        """;
 
+        namedParameterJdbcTemplate.update(
+                sql,
+                Map.of("userId", dbUserResult.userId().toString())
+        );
+    }
 
     @Transactional
     void setToActive(final UUID userId) {
-        namedParameterJdbcTemplate.update("update public.OreSiUser set accountstate = 'active' where id = :id", Map.of("id", userId));
+        String sql = """
+        UPDATE public.OreSiUser 
+        SET accountstate = 'active' 
+        WHERE id = :id
+        """;
+
+        namedParameterJdbcTemplate.update(
+                sql,
+                Map.of("id", userId)
+        );
     }
+
 
     public Cookie addApplicationCreatorUser(final String applicationPattern) throws Exception {
         if (cookie == null) {
@@ -692,8 +703,7 @@ public class Fixtures {
             cookie = response.getCookie(AuthHelper.JWT_COOKIE_NAME);
         }
         final String aPassword = "xxxxxxxx";
-        final String aLogin = applicationPattern;
-        final CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword, aLogin + "@inrae.fr");
+        final CreateUserResult createUserResult = authenticationService.createUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
         setToActive(createUserResult.userId());
         UUID userId = createUserResult.userId();
         final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
@@ -708,11 +718,10 @@ public class Fixtures {
         OreSiUser user = userRepository.findById(userId);
         assertTrue(user.getAuthorizations().contains(applicationPattern));
         setToActive(createUserResult.userId());
-        final Cookie applicationCreator = mockMvc.perform(post("/api/v1/login")
-                        .param("login", aLogin)
+        return mockMvc.perform(post("/api/v1/login")
+                        .param("login", applicationPattern)
                         .param("password", aPassword))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-        return applicationCreator;
     }
 
     public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {

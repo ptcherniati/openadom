@@ -14,7 +14,7 @@ public record DataColumnIndexedValue(
 
     @Override
     public MapType getValuesToCheck() {
-        return new MapType<Ltree, String>(values);
+        return new MapType<>(values);
     }
 
     @Override
@@ -38,12 +38,11 @@ public record DataColumnIndexedValue(
     @Override
     public MapType<String, String> toJsonForDatabase() {
         final Map<String, String> map = toStringStringMap();
-        return new MapType<String, String>(map);
+        return new MapType<>(map);
     }
 
     private Map<String, String> toStringStringMap() {
-        final Map<String, String> jsonForDatabase = values.entrySet().stream()
+        return values.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().getSql(), Map.Entry::getValue));
-        return jsonForDatabase;
     }
 }

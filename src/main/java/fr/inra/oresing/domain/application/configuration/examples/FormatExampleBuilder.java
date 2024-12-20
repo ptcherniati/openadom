@@ -30,7 +30,7 @@ class FormatExampleBuilder {
     );
 
     protected static FormatType buildFormFieldsSchema(final TitleType title, final boolean required, final CheckerType checker) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_I_18_N, title);
         if (required) {
             children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(true));

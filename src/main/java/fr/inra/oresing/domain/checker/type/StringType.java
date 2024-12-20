@@ -11,7 +11,7 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Che
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Supplier;
+import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.*;

@@ -6,7 +6,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.sql.Timestamp;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Optional;
 
 public sealed interface WithFormatForFilterDate extends WithFormat, ComponentFilterSimpleSearch permits ComponentFiltersByDate, ComponentFiltersByDateTime, ComponentFiltersByTime {
     List<String> filters();

@@ -91,22 +91,18 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                 lineTransformer
         );
         return switch (checker().multiplicity()) {
-            case ONE -> {
-                yield Set.of(new LineChecker.OneChecker<>(
-                        fieldType,
-                        target,
-                        lineTransformer,
-                        checker()
-                ));
-            }
-            case MANY -> {
-                yield Set.of(new LineChecker.ManyChecker<>(
-                        new ListType<>(fieldType),
-                        target,
-                        lineTransformer,
-                        checker()
-                ));
-            }
+            case ONE -> Set.of(new LineChecker.OneChecker<>(
+                    fieldType,
+                    target,
+                    lineTransformer,
+                    checker()
+            ));
+            case MANY -> Set.of(new LineChecker.ManyChecker<>(
+                    new ListType<>(fieldType),
+                    target,
+                    lineTransformer,
+                    checker()
+            ));
         };
     }
 
@@ -145,7 +141,7 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                 .map(ComponentDescription::checker)
                 .filter(ReferenceChecker.class::isInstance)
                 .map(ReferenceChecker.class::cast)
-                .filter(checker -> checker.refType() != dataname)
+                .filter(checker -> !checker.refType().equals(dataname))
                 .map(ReferenceChecker::isParent)
                 .orElse(false);
     }
@@ -156,19 +152,13 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                 .isPresent();
     }
 
-    ;
-
     default String buildImportHeaderForComponent() {
         return null;
     }
 
-    ;
-
     default String buildImportDataExempleForComponent() {
         return null;
     }
-
-    ;
 
     default boolean hasOrderTag() {
         return componentOrder() < 9999;

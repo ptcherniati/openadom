@@ -25,7 +25,7 @@ public class AdditionalFileService {
     @Autowired
     private AuthenticationService authenticationService;
 
-    private GroovyContextHelper groovyContextHelper = new GroovyContextHelper();
+    private final GroovyContextHelper groovyContextHelper = new GroovyContextHelper();
 
     @Autowired
     private OreSiRepository repo;

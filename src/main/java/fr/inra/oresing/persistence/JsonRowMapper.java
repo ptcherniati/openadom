@@ -7,6 +7,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -20,7 +21,6 @@ import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.type.AbstractType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.DataDatum;
-import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
@@ -52,20 +52,16 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
     private ObjectMapper jsonMapper;
 
     public JsonRowMapper() {
-        this(new ObjectMapper());
-    }
-
-    public JsonRowMapper(ObjectMapper jsonMapper) {
-        this.jsonMapper = jsonMapper;
-        // there is no case in SQL, but in java we love camelCase :p
-        jsonMapper.enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
+        this.jsonMapper = JsonMapper.builder()
+                .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
                 .enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
                 .enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING)
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .registerModule(new JavaTimeModule())
-                .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE)
-        ;
+                .addModule(new JavaTimeModule())
+                .propertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE)
+                .build();
+
 
         SimpleModule module = new SimpleModule()
                 .addDeserializer(Ltree.class, new JsonDeserializer<>() {
@@ -114,13 +110,10 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                             case DATA_TAG -> Tag.DataTag.INSTANCE();
                             case REFFERENCE_TAG -> Tag.ReferenceTag.INSTANCE();
                             case HIDDEN_TAG -> Tag.HiddenTag.INSTANCE();
-                            case ORDER_TAG -> {
-                                yield Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
-                            }
-                            case DOMAIN_TAG -> {
-                                yield Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
-
-                            }
+                            case ORDER_TAG ->
+                                    Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
+                            case DOMAIN_TAG ->
+                                    Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
                             case null -> Tag.NoTag.INSTANCE();
                         };
                     }
@@ -283,13 +276,18 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         jsonMapper.registerModule(module);
         jsonMapper.addHandler(new DeserializationProblemHandler() {
             @Override
-            public Object handleUnexpectedToken(DeserializationContext ctxt, Class<?> targetType, JsonToken t, JsonParser p, String failureMsg) throws IOException {
-                if (String.class == targetType && (JsonToken.START_ARRAY == t || JsonToken.START_OBJECT == t)) {
+            public Object handleUnexpectedToken(DeserializationContext ctxt,
+                                                JavaType targetType,
+                                                JsonToken t,
+                                                JsonParser p,
+                                                String failureMsg) throws IOException {
+                if (String.class == targetType.getRawClass() && (JsonToken.START_ARRAY == t || JsonToken.START_OBJECT == t)) {
                     return null;
                 }
                 return super.handleUnexpectedToken(ctxt, targetType, t, p, failureMsg);
             }
         });
+
     }
 
     Set<OperationType> extractOperationTypes(final ArrayNode operationTypeNode) {
@@ -307,13 +305,14 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         final Map<String, Object> map = jsonMapper.convertValue(authorizationScopeNode, Map.class);
         return map.entrySet().stream()
                 .collect(Collectors.toMap(
-                        entry -> entry.getKey(),
+                        Map.Entry::getKey,
                         entry -> ((List<String>) entry.getValue()).stream().map(Object::toString).map(Ltree::fromSql).toList()
                 ));
     }
 
     public void disableInsensitiveProperties() {
-        jsonMapper = jsonMapper.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
+        jsonMapper = jsonMapper.setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE);
+
     }
 
     public <C> C toObject(String json, Class<C> clazz) throws JsonProcessingException {
@@ -325,8 +324,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         try {
             Class<T> type = (Class<T>) Class.forName(rs.getString("@class"));
             String json = rs.getString("json");
-            T result = jsonMapper.readValue(json, type);
-            return result;
+            return jsonMapper.readValue(json, type);
         } catch (JsonProcessingException eee) {
             throw new SiOreIllegalArgumentException(
                     "sqlConvertException",

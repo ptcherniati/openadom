@@ -7,7 +7,7 @@ public record Chart (
         String gap,
         String title
 ){
-        public static String VAR_SQL_TEMPLATE = """
+        public static final String VAR_SQL_TEMPLATE = """
                 (
                 \t   Array['%1$s'],-- aggrégation
                 \t   Array['%2$s'], -- value
@@ -15,7 +15,7 @@ public record Chart (
                 \t   '%4$s'::interval -- gap
                    )
                 """;
-        public static String VAR_SQL_DEFAULT_TEMPLATE = """
+        public static final String VAR_SQL_DEFAULT_TEMPLATE = """
                  (
                 \t   '%s' -- dataname
                    )
@@ -23,22 +23,20 @@ public record Chart (
 
 
     public static String toSQL(String dataName) {
-        String sql = String.format(
+        return String.format(
                 VAR_SQL_DEFAULT_TEMPLATE,
                 dataName
         );
-        return sql;
     }
 
     public String toSQL(String componentName, String dataName) {
-        String sql = String.format(
+        return String.format(
                 VAR_SQL_TEMPLATE,
-                aggregationComponent(),
-                value(),
+                this.aggregationComponent(),
+                this.value(),
                 dataName,
-                gap() == null ? "0" : gap
+                this.gap() == null ? "0" : gap
         );
-        return sql;
     }
 
 }

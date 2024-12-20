@@ -3,25 +3,18 @@ package fr.inra.oresing.rest.model.authorization.request;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.application.configuration.Authorization;
-import fr.inra.oresing.domain.application.configuration.AuthorizationScopeComponentData;
-import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.model.authorization.AuthorizationInput;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class AuthorizationWithRestrictionBuilder {
-  AuthorizationRequestBuilder authorizationRequestBuilder;
+  final AuthorizationRequestBuilder authorizationRequestBuilder;
 
   public AuthorizationWithRestrictionBuilder(final AuthorizationRequestBuilder authorizationRequestBuilder) {
     this.authorizationRequestBuilder = authorizationRequestBuilder;

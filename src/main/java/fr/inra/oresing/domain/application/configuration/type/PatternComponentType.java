@@ -20,12 +20,12 @@ public record PatternComponentType(SectionBuilder sectionBuilder,
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_COMPONENT_QUALIFIERS, StaticMapType.PATTERN_COMPONENTS_QUALIFIERS().type),
                         new LabelDescription(ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS, StaticMapType.PATTERN_COMPONENTS_ADJACENT().type),
-                        new LabelDescription(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE())),
+                        new LabelDescription(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE())),
                         new LabelDescription(ConfigurationSchemaNode.OA_EXPORT_HEADER, TitleType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(false)),
                         new LabelDescription(ConfigurationSchemaNode.OA_CHECKER, CheckerType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_DEFAULT_VALUE, DefaultValueType.EMPTY_INSTANCE()),
-                        new LabelDescription(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
+                        new LabelDescription(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
                 );
     }
 

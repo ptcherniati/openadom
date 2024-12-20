@@ -16,7 +16,7 @@ public record HierarchicalDependancesBuilder(
         Set<Tag> domainTags
 
 ) {
-    public static final HierarchicalDependancesBuilder of(
+    public static HierarchicalDependancesBuilder of(
             Map<CheckerDescription.CheckerDescriptionType, Map<String, Map<String, List<CheckerDescription>>>> checkers,
             Map<String, StandardDataDescription> data,
             Set<Tag> domaintags
@@ -36,7 +36,7 @@ public record HierarchicalDependancesBuilder(
 
         final Map<String, Integer> orders = data.entrySet().stream()
                 .collect(Collectors.toMap(
-                        entry -> entry.getKey(),
+                        Map.Entry::getKey,
                         entry -> entry.getValue().getOrder()
                 ));
         return new HierarchicalDependancesBuilder(
@@ -60,7 +60,7 @@ public record HierarchicalDependancesBuilder(
                         final Boolean isParent = checker.isParent() && !checker.isRecursive();
                         final String refType = checker.refType();
                         final String componentKey = checker.componentKey();
-                        final Boolean isRecursive = checker.isRecursive() || (checker.isParent() && dataName.equals(refType));
+                        final boolean isRecursive = checker.isRecursive() || (checker.isParent() && dataName.equals(refType));
                         if (dataName.equals(refType)) {
                             nodes.put(refType, nodes.containsKey(refType)?
                                     nodes.get(refType).withComponentKeyAndRecursive(componentKey):
@@ -96,7 +96,7 @@ public record HierarchicalDependancesBuilder(
                 orders,
                 data.keySet().stream()
                         .map(name -> new BuilderNode(name, null, null, null,  new LinkedList<>(), new LinkedList<>(), orders.get(name), false))
-                        .collect(Collectors.toMap(k -> k.nodeName(), Function.identity())),
+                        .collect(Collectors.toMap(BuilderNode::nodeName, Function.identity())),
                 domainTags
         );
     }

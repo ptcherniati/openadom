@@ -21,7 +21,6 @@ import java.util.Optional;
 
 public class SchemaFlywayCallback implements Callback {
     private final Application application;
-    private final AuthenticationService authenticationService;
     private final OreSiUserRole creator;
     private final Map<String, MigrateService.ActionToDoAfterMigration> callBackFunction;
     private final SqlSchemaForApplication sqlSchemaForApplication;
@@ -40,7 +39,6 @@ public class SchemaFlywayCallback implements Callback {
             Map<String, MigrateService.ActionToDoAfterMigration> callBackFunction) {
         this.application = application;
         this.currentDatabase = currentDatabase;
-        this.authenticationService = authenticationService;
         this.creator = creator;
         this.callBackFunction = callBackFunction;
         this.applicationCreator = OreSiRole.applicationCreator();
@@ -97,7 +95,7 @@ public class SchemaFlywayCallback implements Callback {
                 statement.execute("ALTER TABLE %s.%s OWNER TO \"%s\""
                         .formatted(sqlSchemaForApplication.getName(), tableName, userManagerOnApplicationRole.getAsSqlRole()));
 
-            };
+            }
 
             // Accorder les privilèges nécessaires
             statement.execute("GRANT USAGE ON SCHEMA %s TO \"%s\""

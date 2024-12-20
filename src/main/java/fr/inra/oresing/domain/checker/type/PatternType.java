@@ -13,7 +13,7 @@ import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.PatternValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import org.apache.logging.log4j.util.Supplier;
+import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -94,18 +94,17 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
         final ObjectNode mapNode = mapper.createObjectNode();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
             switch (kvEntry.getValue()) {
-                case null -> mapNode.put((String) kvEntry.getKey(), NullNode.getInstance());
+                case null -> mapNode.set((String) kvEntry.getKey(), NullNode.getInstance());
                 case Integer integer -> mapNode.put((String) kvEntry.getKey(), integer);
                 case IntegerType integerType -> mapNode.put((String) kvEntry.getKey(), integerType.getValue());
                 case Float floating -> mapNode.put((String) kvEntry.getKey(), floating);
                 case FloatType floatType -> mapNode.put((String) kvEntry.getKey(), floatType.getValue());
                 case Boolean bool -> mapNode.put((String) kvEntry.getKey(), bool);
                 case BooleanType booleanType -> mapNode.put((String) kvEntry.getKey(), booleanType.getValue());
-                case NullType fieldType -> mapNode.put((String) kvEntry.getKey(), NullNode.getInstance());
+                case NullType fieldType -> mapNode.set((String) kvEntry.getKey(), NullNode.getInstance());
                 case FieldType fieldType -> mapNode.put((String) kvEntry.getKey(), fieldType.toString());
                 default -> mapNode.put((String) kvEntry.getKey(), kvEntry.getValue().toString());
             }
-            ;
         }
         gen.writeFieldName(key);
         mapper.writeValue(gen, mapNode);
@@ -115,9 +114,9 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
     public void serialize(final ObjectNode node, final ObjectMapper mapper, final String key) {
         final ObjectNode mapNode = mapper.createObjectNode();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
-            mapNode.put((String) kvEntry.getKey(), kvEntry.getValue() instanceof JsonNode ? (JsonNode) kvEntry.getValue() : new TextNode(kvEntry.getValue().toString()));
+            mapNode.set((String) kvEntry.getKey(), kvEntry.getValue() instanceof JsonNode ? (JsonNode) kvEntry.getValue() : new TextNode(kvEntry.getValue().toString()));
         }
-        node.put(key, mapNode);
+        node.set(key, mapNode);
 
     }
 
@@ -126,7 +125,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
         final ObjectMapper mapper = new ObjectMapper();
         final ObjectNode mapNode = mapper.createObjectNode();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
-            mapNode.put((String) kvEntry.getKey(), (JsonNode) kvEntry.getValue());
+            mapNode.set((String) kvEntry.getKey(), (JsonNode) kvEntry.getValue());
         }
         arrayNode.add(mapNode);
     }

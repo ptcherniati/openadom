@@ -25,7 +25,6 @@ public class DataColumnSingleValue implements DataColumnValue<FieldType, FieldTy
 
     /**
      * Un {@link DataColumnSingleValue} vide (valeur non renseignée ?)
-     * @return
      */
     public static DataColumnSingleValue empty() {
         return EMPTY;

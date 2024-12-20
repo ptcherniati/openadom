@@ -33,7 +33,7 @@ public record PatternComponentQualifiersBuilder(RootBuilder rootBuilder) {
                 .orElse(new ArrayNode(JsonNodeFactory.instance));
         if (!componentsArrayNode.isEmpty()) {
             int componentNumber = 0;
-            final ImmutableMap.Builder<String, PatternComponentQualifiers> patternColumnComponentBuilder = new ImmutableMap.Builder<String, PatternComponentQualifiers>();
+            final ImmutableMap.Builder<String, PatternComponentQualifiers> patternColumnComponentBuilder = new ImmutableMap.Builder<>();
             for (final JsonNode node : componentsArrayNode) {
                 ++componentNumber;
                 final Map.Entry<String, JsonNode> patternColumnComponentNode = node.fields().next();

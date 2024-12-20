@@ -13,7 +13,7 @@ import java.util.*;
 public abstract class OneValueStaticPatternColumn extends Column {
 
     private final Multiplicity multiplicity;
-    private TransformationConfiguration defaultValue;
+    private final TransformationConfiguration defaultValue;
 
     public String getHeaderInFile() {
         return headerInFile;
@@ -59,10 +59,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
                 .filter(adjacentColumn -> adjacentColumn.getReferenceColumn().column().equals(patternOfColumn.get(1)))
                 .filter(Objects::nonNull)
                 .findFirst();
-        if (matchingAdjacentColumn.isPresent()) {
-            return matchingAdjacentColumn.get();
-        }
-        return null;
+        return matchingAdjacentColumn.orElse(null);
     }
 
     public OneValueStaticPatternColumn(

@@ -20,7 +20,7 @@ public sealed abstract class AbstractType<T> implements FieldType<T> permits Ref
                 List<FieldType> collect = (List<FieldType>) list.stream()
                         .map(AbstractType::readObject)
                         .collect(Collectors.toList());
-                FieldType innerFieldType = collect.size() > 0 ? collect.get(0) : StringType.getStringTypeFromStringValue("");
+                FieldType innerFieldType = !collect.isEmpty() ? collect.getFirst() : StringType.getStringTypeFromStringValue("");
                 ListType<FieldType> listType = new ListType<>(innerFieldType);
                 listType.value = collect;
                 yield listType;

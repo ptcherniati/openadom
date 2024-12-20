@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 public sealed interface LineChecker<FT extends FieldType> permits LineChecker.ManyChecker, LineChecker.OneChecker {
 
 
-    public static Set<LineChecker> toLineChecker(
+    static Set<LineChecker> toLineChecker(
             DataRepository referenceValueRepository,
             PublishContext.PublishContextBuilder publishContextBuilder,
             TransformationConfiguration transformation,
@@ -56,22 +56,18 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
                 lineTransformer
         );
         return switch (checker.multiplicity()) {
-            case ONE -> {
-                yield Set.of(new LineChecker.OneChecker<>(
-                        fieldType,
-                        target,
-                        lineTransformer,
-                        checker
-                ));
-            }
-            case MANY -> {
-                yield Set.of(new LineChecker.ManyChecker<>(
-                        new ListType<>(fieldType),
-                        target,
-                        lineTransformer,
-                        checker
-                ));
-            }
+            case ONE -> Set.of(new OneChecker<>(
+                    fieldType,
+                    target,
+                    lineTransformer,
+                    checker
+            ));
+            case MANY -> Set.of(new ManyChecker<>(
+                    new ListType<>(fieldType),
+                    target,
+                    lineTransformer,
+                    checker
+            ));
         };
     }
 
@@ -263,8 +259,7 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
                     final DataDatum datumAfterOneMoreTransformation = lineTransformer.transform(datumAfterLastTransformation, context);
                     transformations.add(datumAfterOneMoreTransformation);
                 });
-                final DataDatum datumAfterFullTransformation = transformations.getLast();
-                return datumAfterFullTransformation;
+                return transformations.getLast();
             }
         }
     }
@@ -302,11 +297,9 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
                                 return (CheckerValidationCheckResult) new DefaultManyValidationCheckResult(validationCheckResults, column);
                             }
                     )
-                    .orElseGet(() -> {
-                        return DefaultCheckerValidationCheckResult.error("noValueToCheck", ImmutableMap.of(
-                                "column", column.column()
-                        ), null);
-                    });
+                    .orElseGet(() -> DefaultCheckerValidationCheckResult.error("noValueToCheck", ImmutableMap.of(
+                            "column", column.column()
+                    ), null));
         }
 
         @Override
@@ -338,12 +331,11 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
             final DataDatum transformedReferenceDatum = transformer().transform(referenceDatum, context);
             DataColumn column = (DataColumn) target();
             FieldType valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
-            CheckerValidationCheckResult validationCheckResults = Optional.ofNullable(valuesToCheck)
+            return Optional.ofNullable(valuesToCheck)
                     .map(FieldType::toStringForComponentValue)
                     .map(this::checkRequiredThenCheck)
                     .map(valuesToCheck::postTreatment)
                     .orElseThrow(() -> new NotImplementedException("I don't know"));
-            return validationCheckResults;
         }
 
         public LineChecker copy() {

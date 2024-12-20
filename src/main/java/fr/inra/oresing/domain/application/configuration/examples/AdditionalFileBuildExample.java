@@ -21,10 +21,10 @@ class AdditionalFileBuildExample {
 
     protected static AdditionalFileType buildAdditionalFileSchema(final TitleType title) {
         return new AdditionalFileType(
-                new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+                new LinkedHashMap<>() {{
                     put(ConfigurationSchemaNode.OA_I_18_N, title);
-                    put(ConfigurationSchemaNode.OA_FORM_FIELDS, new CollectionType.MapType<FormatType>(
-                            new LinkedHashMap<String, FormatType>() {{
+                    put(ConfigurationSchemaNode.OA_FORM_FIELDS, new CollectionType.MapType<>(
+                            new LinkedHashMap<>() {{
                                 put("nom", FormatExampleBuilder.NOM);
                                 put("projet", FormatExampleBuilder.PROJET);
                             }},

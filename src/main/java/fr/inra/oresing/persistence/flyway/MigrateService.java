@@ -106,14 +106,14 @@ public class MigrateService {
                 return rs.getString(1);
             }
         } catch (SQLException e) {
-            new IllegalStateException("Impossible d'obtenir l'utilisateur actuel de la base de données");
+            throw new IllegalStateException("Impossible d'obtenir l'utilisateur actuel de la base de données");
         }
         throw new IllegalStateException("Impossible d'obtenir l'utilisateur actuel de la base de données");
     }
 
     public Flyway getFlyway(OreSiUserRole creator) {
         final SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-        final Flyway flyway = Flyway.configure()
+        return Flyway.configure()
                 .dataSource(dataSource)
                 .placeholders(Map.of(
                         "applicationSchema", sqlSchemaForApplication.getSqlIdentifier(),
@@ -130,7 +130,6 @@ public class MigrateService {
                                 creator,
                                 callBackFunction))
                 .load();
-        return flyway;
     }
 
     public void updateSchema() {

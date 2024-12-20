@@ -18,7 +18,7 @@ public class MultiYamlTest {
     public void testYaml() throws IOException {
         try (InputStream fileInputStream = getClass().getResourceAsStream("/data/monsore/multiyaml.zip")) {
             final MultipartFile multipartFile = new MockMultipartFile("monzip", fileInputStream);
-            byte[] bytes = new MultiYaml().parseConfigurationBytes(multipartFile).readAllBytes();
+            byte[] bytes = MultiYaml.parseConfigurationBytes(multipartFile).readAllBytes();
             Object configuration = new YAMLMapper().readValue(bytes, Object.class);
             assertNotNull(configuration);
             assertNotNull(((Map) configuration).get(ConfigurationSchemaNode.OA_DATA));

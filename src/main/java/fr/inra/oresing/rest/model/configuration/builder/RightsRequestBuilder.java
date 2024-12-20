@@ -40,7 +40,7 @@ public record RightsRequestBuilder(RootBuilder rootBuilder) {
                 .map(JsonNode::fields)
                 .map(entryIterator -> rootBuilder.getFieldBuilder()
                         .build(ConfigurationSchemaNode.OA_RIGHTS_REQUEST, FieldDescription.FieldDescriptionType.RightsRequestField, i18n, entryIterator, "rightsrequest.fields", Internationalizations.RIGHT_REQUEST))
-                .orElse(new Parsing<ImmutableMap<String, FieldDescription>>(localI18n, null));
-        return new Parsing<RightRequestDescription>(oaFormat.i18n(), new RightRequestDescription(oaFormat.result()));
+                .orElse(new Parsing<>(localI18n, null));
+        return new Parsing<>(oaFormat.i18n(), new RightRequestDescription(oaFormat.result()));
     }
 }

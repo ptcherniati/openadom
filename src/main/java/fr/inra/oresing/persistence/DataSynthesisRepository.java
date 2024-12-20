@@ -264,20 +264,18 @@ getTable().getSqlIdentifier()
     public List<OreSiSynthesis> selectSynthesisDatatype(final UUID applicationId, final String dataType) {
         Preconditions.checkArgument(applicationId != null && !Strings.isNullOrEmpty(dataType));
         final String query = String.format(SELECT_SYNTHESIS_BY_APPLICATION_AND_DATATYPE, getEntityClass().getName(), getTable().getSqlIdentifier());
-        final List<OreSiSynthesis> result = getNamedParameterJdbcTemplate().query(query,
+        return getNamedParameterJdbcTemplate().query(query,
                 new MapSqlParameterSource(ImmutableMap.of("application", applicationId, "datatype", dataType)),
                 getJsonRowMapper());
-        return result;
     }
 
     public List<OreSiSynthesis> selectSynthesisDatatypeAndVariable(final UUID applicationId, final String dataType, final String variable) {
         Preconditions.checkArgument(applicationId != null && !Strings.isNullOrEmpty(dataType) && !Strings.isNullOrEmpty(variable));
         final String query = String.format(SELECT_SYNTHESIS_BY_APPLICATION_DATATYPE_AND_VARIABLE, getEntityClass().getName(), getTable().getSqlIdentifier());
 
-        final List<OreSiSynthesis> result = getNamedParameterJdbcTemplate().query(query,
+        return getNamedParameterJdbcTemplate().query(query,
                 new MapSqlParameterSource(ImmutableMap.of("application", applicationId, "datatype", dataType, "variable", variable)),
                 getJsonRowMapper());
-        return result;
     }
 
     @Override

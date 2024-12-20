@@ -22,7 +22,7 @@ class DynamicComponentsExampleBuilder {
             final StringType columnToLookup,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        return new DynamicComponentType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {
+        return new DynamicComponentType(new LinkedHashMap<>() {
             {
                 put(ConfigurationSchemaNode.OA_HEADER_PREFIX, prefix);
                 put(ConfigurationSchemaNode.OA_REFERENCE, reference);

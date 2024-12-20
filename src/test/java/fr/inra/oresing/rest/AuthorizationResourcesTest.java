@@ -31,7 +31,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
@@ -124,11 +123,12 @@ public class AuthorizationResourcesTest {
 
         final Cookie authCookie = fixtures.addApplicationAcbb(null);
         String token = Jwts.parser()
-                .setSigningKey(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
+                .verifyWith(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
                 .build()
-                .parseClaimsJws(authCookie.getValue())
-                .getBody()
-                .getSubject();
+                .parseSignedClaims(authCookie.getValue())
+                .getPayload()
+                .getSubject()
+                ;
         String authId = JsonPath.parse(token).read("$.requestClient.id");
         {
             assertEquals(1, Arrays.stream(getApplicationsFlux(authCookie, "ALL")
@@ -535,8 +535,8 @@ public class AuthorizationResourcesTest {
 
                 try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-                    final List<ReactiveTypeError> errors = fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorCookies, "monsore", ""));
-                    Map validationCheckResult = (((LinkedHashMap) errors.get(0).result()));
+                    final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorCookies, "monsore", ""));
+                    Map validationCheckResult = (((LinkedHashMap) errors.getFirst().result()));
                     fail();
                 } catch (final Throwable e) {
                     switch (e) {
@@ -584,7 +584,7 @@ public class AuthorizationResourcesTest {
                 //on ne peut déposer monsore
                 try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-                    final List<ReactiveTypeError> errors = fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorCookies, "monsore", ""));
+                    final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorCookies, "monsore", ""));
                     fail();
                 } catch (final Throwable e) {
                     switch (e) {
@@ -604,8 +604,16 @@ public class AuthorizationResourcesTest {
 
     @Transactional
     void addRoleAdmin(final CreateUserResult dbUserResult) {
-        namedParameterJdbcTemplate.update("grant \"openAdomAdmin\" to \"" + dbUserResult.userId().toString() + "\" WITH INHERIT TRUE", Map.of());
+        String sql = """
+        GRANT "openAdomAdmin" TO :userId WITH INHERIT TRUE
+        """;
+
+        namedParameterJdbcTemplate.update(
+                sql,
+                Map.of("userId", dbUserResult.userId().toString())
+        );
     }
+
 
     private String[] getApplicationsFlux(final Cookie cookie, final String... filter) throws Exception {
         return mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications")

@@ -13,7 +13,7 @@ public sealed interface PrivilegeAssessorBuilder<PrivilegeAssessorState>
         permits PrivilegeAssessorDomain {
 
 
-    public static PrivilegeAssessorDomainForSystem<PrivilegeAssessorStateDomain.PrivilegeAssessorStateSystemDomain> forSystem(
+    static PrivilegeAssessorDomainForSystem<PrivilegeAssessorStateDomain.PrivilegeAssessorStateSystemDomain> forSystem(
             AuthorizationsForSystemUser authorizations,
             PrivilegeSystemDomain privilegeDomain) {
         boolean isOpenAdomAdmin = authorizations.currentUserRoles().isOpenAdomAdmin();
@@ -27,7 +27,7 @@ public sealed interface PrivilegeAssessorBuilder<PrivilegeAssessorState>
         );
     }
 
-    public static PrivilegeAssessorDomainForApplication<PrivilegeAssessorStateApplicationDomain> forApplication(
+    static PrivilegeAssessorDomainForApplication<PrivilegeAssessorStateApplicationDomain> forApplication(
             AuthorizationsForApplicationUser authorizations,
             PrivilegeApplicationDomain privilegeDomain,
             Application application,

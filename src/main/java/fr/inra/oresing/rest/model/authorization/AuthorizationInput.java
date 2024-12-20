@@ -49,8 +49,7 @@ public class AuthorizationInput {
     }
 
     public void setTimeScope(final Map<String, LocalDate> dates) {
-        final LocalDateTimeRange timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
-        this.timeScope = timeScope;
+        this.timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
     }
 
     public AuthorizationInput() {
@@ -100,8 +99,7 @@ public class AuthorizationInput {
     }*/
 
     public void setIntervalDates(Map<String, LocalDate> dates) {
-        LocalDateTimeRange timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
-        this.timeScope = timeScope;
+        this.timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
     }
 
     /*public String toSQL(List<String> requiredAuthorizationsAttributes) {

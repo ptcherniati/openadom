@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.application.configuration.type;
 
-import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 

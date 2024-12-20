@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.persistence.DataRows;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
-import fr.inra.oresing.persistence.DataRow;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;

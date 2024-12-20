@@ -4,7 +4,6 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import groovy.lang.Closure;
 
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * Fournisseur de constantes pour l'échappement des étiquettes.

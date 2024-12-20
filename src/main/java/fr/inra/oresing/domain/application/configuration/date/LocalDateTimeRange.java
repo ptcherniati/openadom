@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -339,8 +338,7 @@ public class LocalDateTimeRange {
         } else {
             upperBoundString = ")";
         }
-        final String sqlExpression = lowerBoundString + "," + upperBoundString;
-        return sqlExpression;
+        return lowerBoundString + "," + upperBoundString;
     }
 
     interface StringToLocalDateTimeRangeConverter {

@@ -169,8 +169,7 @@ public class SqlService {
     public boolean hasRole(final OreSiRole role) {
         final String sql = "SELECT pg_has_role('%s', 'MEMBER')"
                 .formatted(role.getAsSqlRole());
-        final boolean hasRole = Boolean.TRUE.equals(namedParameterJdbcTemplate.queryForObject(sql, EmptySqlParameterSource.INSTANCE, Boolean.class));
-        return hasRole;
+        return Boolean.TRUE.equals(namedParameterJdbcTemplate.queryForObject(sql, EmptySqlParameterSource.INSTANCE, Boolean.class));
     }
 
     private void execute(final String sql) {

@@ -13,7 +13,6 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.util.EntityUtils;
-import org.apache.ivy.plugins.repository.file.FileRepository;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
@@ -66,11 +65,11 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
     private static CookieStore cookieStore;
 
     @PostConstruct
-    public void init() throws Exception {
+    public void init() {
         cookieStore = new BasicCookieStore();
     }
 
-    private int getUploadChunkSize() throws Exception {
+    private int getUploadChunkSize() {
         try {
             JSONObject info = call("get", "/info", new HashMap<>(), null, null, new HashMap<>());
             return info.getInt("upload_chunk_size");
@@ -126,7 +125,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
             long offset = 0;
             while ((bytesRead = inputStream.read(buffer)) != -1) {
                 byte[] chunk = Arrays.copyOf(buffer, bytesRead);
-                System.out.println(chunk);
                 putChunk(file, chunk, offset);
                 offset += bytesRead;
             }
@@ -178,8 +176,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         Map<String, String> params = new HashMap<>();
         params.put("remote_user", userId);
 
-        JSONObject post = call("post", "/transfer", params, content, null, new HashMap<>());
-        return post;
+        return call("post", "/transfer", params, content, null, new HashMap<>());
     }
 
 
@@ -239,23 +236,13 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         log.info("URL: %s%n Signature: %s".formatted(url, signature));
 
         try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build()) {
-            HttpRequestBase request;
-            switch (method.toLowerCase()) {
-                case "get":
-                    request = new HttpGet(url);
-                    break;
-                case "post":
-                    request = new HttpPost(url);
-                    break;
-                case "put":
-                    request = new HttpPut(url);
-                    break;
-                case "delete":
-                    request = new HttpDelete(url);
-                    break;
-                default:
-                    throw new IllegalArgumentException("Méthode HTTP non supportée: " + method);
-            }
+            HttpRequestBase request = switch (method.toLowerCase()) {
+                case "get" -> new HttpGet(url);
+                case "post" -> new HttpPost(url);
+                case "put" -> new HttpPut(url);
+                case "delete" -> new HttpDelete(url);
+                default -> throw new IllegalArgumentException("Méthode HTTP non supportée: " + method);
+            };
 
             request.setHeader("Accept", "application/json");
             request.setHeader("Content-Type", headers.getOrDefault("Content-Type", "application/json"));
@@ -311,7 +298,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
     }
 
     private String generateSignature(String method, String path, Map<String, String> params,
-                                     JSONObject content, byte[] rawContent) throws NoSuchAlgorithmException, InvalidKeyException, IOException {
+                                     JSONObject content, byte[] rawContent) throws NoSuchAlgorithmException, InvalidKeyException {
         //RestTemplate restTemplate = new RestTemplateBuilder().build();
         var charset = StandardCharsets.UTF_8;
 

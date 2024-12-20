@@ -12,7 +12,6 @@ import org.apache.commons.collections4.MapUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public record DataBuilder(RootBuilder rootBuilder) {
 
@@ -92,7 +91,7 @@ public record DataBuilder(RootBuilder rootBuilder) {
                     )
             );
         }
-        final ImmutableMap.Builder<String, ComponentDescription> componentDescriptionBuilder = new ImmutableMap.Builder<String, ComponentDescription>();
+        final ImmutableMap.Builder<String, ComponentDescription> componentDescriptionBuilder = new ImmutableMap.Builder<>();
         i18n = rootBuilder.getBasicComponentBuilder().build(path, componentDescriptionBuilder, dataKey, i18n, jsonNode);
         i18n = rootBuilder.getComputedComponentBuilder().build(path, componentDescriptionBuilder, dataKey, i18n, jsonNode);
         i18n = rootBuilder.getDynamicComponentsBuilder().build(path, componentDescriptionBuilder, dataKey, i18n, jsonNode);
@@ -108,21 +107,19 @@ public record DataBuilder(RootBuilder rootBuilder) {
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (MapUtils.isNotEmpty(duplicatedImportHeader)){
             duplicatedImportHeader.entrySet().stream()
-                    .forEach(entry -> {
-                        rootBuilder.buildError(ConfigurationException.DUPLICATED_COMPONENT_HEADER,
-                                Map.of(
-                                        "data", dataKey,
-                                        "duplicatedHeader", entry.getKey(),
-                                        "duplicatedImportHeader", entry.getValue().stream().map(Map.Entry::getKey).toList()
-                                ),
-                                NodeSchemaValidator.joinPath(
-                                        ConfigurationSchemaNode.OA_DATA,
-                                        dataKey
-                                )
-                        );
-                    });
+                    .forEach(entry -> rootBuilder.buildError(ConfigurationException.DUPLICATED_COMPONENT_HEADER,
+                            Map.of(
+                                    "data", dataKey,
+                                    "duplicatedHeader", entry.getKey(),
+                                    "duplicatedImportHeader", entry.getValue().stream().map(Map.Entry::getKey).toList()
+                            ),
+                            NodeSchemaValidator.joinPath(
+                                    ConfigurationSchemaNode.OA_DATA,
+                                    dataKey
+                            )
+                    ));
         }
-        final ImmutableMap.Builder<String, ValidationDescription> validationBuilder = new ImmutableMap.Builder<String, ValidationDescription>();
+        final ImmutableMap.Builder<String, ValidationDescription> validationBuilder = new ImmutableMap.Builder<>();
         i18n = rootBuilder.getValidationsBuilder().build(path, validationBuilder, dataKey, i18n, jsonNode, componentDescriptions);
         ImmutableMap<String, ValidationDescription> validations = validationBuilder.build();
         Map<CheckerDescription.CheckerDescriptionType, List<String>> componentValidationsByType = getComponentValidationsByType(validations);
@@ -141,7 +138,7 @@ public record DataBuilder(RootBuilder rootBuilder) {
         i18n = submissionParsing.i18n();
         Authorization authorization = rootBuilder().getAuthorizationBuilder().build(path, dataKey, jsonNode, componentDescriptions, componentValidationsByType);
         final char separator = Optional.ofNullable(jsonNode.get(ConfigurationSchemaNode.OA_SEPARATOR)).map(JsonNode::asText).map(t -> t.charAt(0)).orElse(';');
-        final LinkedHashSet<String> expectedComponentsLabel = new LinkedHashSet<String>(componentDescriptions.keySet());
+        final LinkedHashSet<String> expectedComponentsLabel = new LinkedHashSet<>(componentDescriptions.keySet());
         final LinkedHashSet<String> naturalKeys = Optional.ofNullable(jsonNode.get(ConfigurationSchemaNode.OA_NATURAL_KEY))
                 .map(node -> rootBuilder.getMapper().convertValue(node, LinkedHashSet.class))
                 .orElse(expectedComponentsLabel);
@@ -154,7 +151,7 @@ public record DataBuilder(RootBuilder rootBuilder) {
                             "expectedComponentLabel", expectedComponentsLabel)
                     , path);
         }
-        return new Parsing<StandardDataDescription>(
+        return new Parsing<>(
                 i18n,
                 new StandardDataDescription(
                         separator,
@@ -179,7 +176,7 @@ public record DataBuilder(RootBuilder rootBuilder) {
                     String componentName = componentCheckerEntry.getKey();
                     CheckerDescription.CheckerDescriptionType checkerType = componentCheckerEntry.getValue().type();
                     componentValidationByType
-                            .computeIfAbsent(checkerType, k -> new ArrayList<String>())
+                            .computeIfAbsent(checkerType, k -> new ArrayList<>())
                             .add(componentName);
                 }
             }

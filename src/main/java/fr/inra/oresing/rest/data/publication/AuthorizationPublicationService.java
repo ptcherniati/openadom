@@ -23,14 +23,14 @@ import java.util.function.Predicate;
 public class AuthorizationPublicationService {
     protected final ReportErrors errors;
     protected BinaryFile binaryFile;
-    protected StandardDataDescription dataDescription;
-    protected Application application;
+    protected final StandardDataDescription dataDescription;
+    protected final Application application;
 
     public String getDataName() {
         return this.dataName;
     }
 
-    protected String dataName;
+    protected final String dataName;
     protected AuthorizationsResult authorizationsForPublic;
     protected AuthorizationsResult authorizationsForUser;
     protected FileOrUUID params;
@@ -63,9 +63,7 @@ public class AuthorizationPublicationService {
                         params.binaryfiledataset() :
                         BinaryFileDataset.EMPTY_INSTANCE()
                 )
-                .ifPresent(binaryFileDataset -> {
-                    binaryFileDataset.setDatatype(dataName);
-                });
+                .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataName));
         return params;
     }
 

@@ -5,9 +5,6 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import org.apache.logging.log4j.util.Strings;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 public record ReferenceScope(Map<Context, MenuNode> menuNodes) {
     public ReferenceScope() {

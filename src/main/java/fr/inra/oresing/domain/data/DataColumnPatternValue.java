@@ -23,7 +23,7 @@ public record DataColumnPatternValue(
     public PatternType getValuesToCheck() {
         Map<String, FieldType> valuesToCheck = values().entrySet()
                 .stream().collect(Collectors.toMap(e -> e.getKey().column(), e -> e.getValue().getValuesToCheck()));
-        return new PatternType<String, FieldType>(valuesToCheck);
+        return new PatternType<>(valuesToCheck);
     }
 
     @Override
@@ -50,7 +50,7 @@ public record DataColumnPatternValue(
     }
 
     private Map<String, Object> toStringStringMap() {
-        final Map<String, Object> jsonForDatabase = values.entrySet().stream()
+        return values.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().column(), entry -> {
                     Object value = entry.getValue().toJsonForDatabase();
                     return switch (value) {
@@ -61,7 +61,6 @@ public record DataColumnPatternValue(
                         default -> value;
                     };
                 }));
-        return jsonForDatabase;
     }
 
     public void put(DataColumn secondPatternOfColumn, DataColumnValue valueToStoreInDatabase) {

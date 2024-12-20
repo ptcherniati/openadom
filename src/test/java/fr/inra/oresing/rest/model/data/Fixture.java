@@ -29,9 +29,7 @@ public class Fixture {
             Optional.ofNullable(dataTypeEntry.getValue())
                     .map(StandardDataDescription::submission)
                     .map(Submission::submissionScope)
-                    .ifPresent(authorization -> {
-                requiredAuthorizationsAttributesBuilder.addAll(authorization.componentNames());
-            });
+                    .ifPresent(authorization -> requiredAuthorizationsAttributesBuilder.addAll(authorization.componentNames()));
         }
         configuration.requiredAuthorizationsAttributes().clear();
         configuration.requiredAuthorizationsAttributes()

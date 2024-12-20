@@ -17,7 +17,7 @@ class SumissionTypeExampleBuilder {
             final SubmissionScopeType submissionScope,
             final FileNameType columnToLookup
     ) {
-        return new SubmissionType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {
+        return new SubmissionType(new LinkedHashMap<>() {
             {
                 put(ConfigurationSchemaNode.OA_STRATEGY, strategy);
                 put(ConfigurationSchemaNode.OA_SUBMISSION_SCOPE, submissionScope

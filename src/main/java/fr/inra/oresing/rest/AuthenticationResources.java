@@ -3,14 +3,12 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -62,7 +60,7 @@ public class AuthenticationResources {
         final CreateUserResult createUserResult = authenticationService.createUser(login, password, email);
         try {
             authenticationService.sendEmailValidation(login, password);
-        } catch (final AuthenticationFailure | NoSuchAlgorithmException | InvalidKeySpecException e) {
+        } catch (final AuthenticationFailure e) {
             switch (OreSiResources.getDefaultLocale().getLanguage()) {
                 case "fr"-> throw new RuntimeException("Erreur lors de l'envoi de la mise à jour de validation");
                 case "en"-> throw new RuntimeException("Error sending validation update");

@@ -10,7 +10,6 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 
-import java.io.IOException;
 import java.util.*;
 
 @org.junit.jupiter.api.Tag("SUITE")
@@ -20,7 +19,7 @@ class ConfigurationTest {
     public static final JsonRowMapper<StandardDataDescription> mapper = new JsonRowMapper<>();
     public static JsonNode dataDescriptionNode;
     public static StandardDataDescription dataDescription;
-    Configuration configuration = Mockito.mock(Configuration.class);
+    final Configuration configuration = Mockito.mock(Configuration.class);
 
     @BeforeEach
     public void buildContext() throws JsonProcessingException {
@@ -157,7 +156,7 @@ class ConfigurationTest {
         ObjectNode componentsNode = (ObjectNode) dataDescriptionNode.get("componentDescriptions");
         componentDefinitions.stream()
                 .map(this::buildComponentNode)
-                .forEach(component -> componentsNode.put(
+                .forEach(component -> componentsNode.set(
                         component.get("componentkey").asText(),
                         component)
                 );
@@ -165,7 +164,7 @@ class ConfigurationTest {
     }
 
     @Test
-    void getSortedColumnsWithKeyThenAlphabeticOrderTest() throws IOException {
+    void getSortedColumnsWithKeyThenAlphabeticOrderTest() {
         Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns = configuration.getInternationalizedSortedColumns("component", "fr", new LinkedList<>());
         Assertions.assertIterableEquals(
                 new LinkedHashSet<>(Arrays.asList("first", "second", "third")),
@@ -174,7 +173,7 @@ class ConfigurationTest {
     }
 
     @Test
-    void getSortedColumnsWithKeyThenAlphabeticOrderAddNoOrderCommponentTest() throws IOException {
+    void getSortedColumnsWithKeyThenAlphabeticOrderAddNoOrderCommponentTest() {
         addComponents(List.of(
                 new ComponentDefinition("sixth", "6", null),
                 new ComponentDefinition("fourth", "4", null),
@@ -188,7 +187,7 @@ class ConfigurationTest {
     }
 
     @Test
-    void getSortedColumnsWithOrderThenAlphabeticOrderTest() throws IOException {
+    void getSortedColumnsWithOrderThenAlphabeticOrderTest() {
         addComponents(List.of(
                 new ComponentDefinition("sixth", "6", 1),
                 new ComponentDefinition("fourth", "4", 2),
@@ -202,7 +201,7 @@ class ConfigurationTest {
     }
 
     @Test
-    void getSortedColumnsWithLabelOrderUsingOrder() throws IOException {
+    void getSortedColumnsWithLabelOrderUsingOrder() {
         addComponents(List.of(
                 new ComponentDefinition("first", "1", 1),
                 new ComponentDefinition("second", "2", 1),
@@ -219,7 +218,7 @@ class ConfigurationTest {
     }
 
     @Test
-    void getSortedColumnsWithLabelOrderUsingOrderAndToBeSortedFirst() throws IOException {
+    void getSortedColumnsWithLabelOrderUsingOrderAndToBeSortedFirst() {
         addComponents(List.of(
                 new ComponentDefinition("first", "1", 1),
                 new ComponentDefinition("second", "2", 1),
@@ -228,7 +227,7 @@ class ConfigurationTest {
                 new ComponentDefinition("fifth", "5", 3),
                 new ComponentDefinition("sixth", "6", 3)//order 3 then alphabetical
         ));
-        Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns = configuration.getInternationalizedSortedColumns("component", "fr", new LinkedList<String>(List.of("sixth")));
+        Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns = configuration.getInternationalizedSortedColumns("component", "fr", new LinkedList<>(List.of("sixth")));
         Assertions.assertIterableEquals(
                 new LinkedHashSet<>(Arrays.asList("sixth", "first", "second", "third", "fourth", "fifth")),
                 internationalizedSortedColumns.keySet()

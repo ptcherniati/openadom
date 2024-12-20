@@ -26,7 +26,7 @@ public record ComponentFiltersByDateTime(String componentKey, String format, Lis
         filters = filters.stream().map(filter -> {
             if (filter.matches("[0-9]*")) {
                 ZoneId zone = ZoneId.of("UTC");
-                LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.valueOf(filter)), zone);
+                LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(Long.parseLong(filter)), zone);
                 filter = localDateTime.format(DateTimeFormatter.ofPattern(format));
             }
             return filter;

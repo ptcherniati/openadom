@@ -12,7 +12,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.util.Strings;
 
 import javax.annotation.Nullable;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -64,7 +63,7 @@ public class NodeSchemaValidator {
             parentSchema1 = testCheckerSection(node, path);
         } else if (null == parentSchema1.sectionBuilder())
             throw new IllegalArgumentException("schema is not described for %s".formatted(path));
-        Set<String> labels = new HashSet<String>();
+        Set<String> labels = new HashSet<>();
         node.fieldNames().forEachRemaining(labels::add);
         if (testNodeLabels(parentSchema1, path, labels)) return new AtomicBoolean(false);
         return testChildrenNodeSchema(parentSchema1, path, node, new AtomicBoolean(true));
@@ -207,58 +206,42 @@ public class NodeSchemaValidator {
                                     }
                                     yield null;
                                 }
-                                case final NullNode nullNode ->  {
-                                    yield addErrorForExpectingValue(path, arrayType, childLabel);
-                                }
-                                case null ->  {
-                                    yield addErrorForExpectingValue(path, arrayType, childLabel);
-                                }
-                                default-> {
-                                    yield addErrorForBadArrayValue(path, childLabel);
-                                }
+                                case final NullNode nullNode -> addErrorForExpectingValue(path, arrayType, childLabel);
+                                case null -> addErrorForExpectingValue(path, arrayType, childLabel);
+                                default-> addErrorForBadArrayValue(path, childLabel);
                             };
                         }
-                        case CollectionType.ArrayType arrayType -> {
-                            yield switch (childNode.get(childLabel)){
-                                case final ArrayNode arrayNode -> {
-                                    AtomicInteger index = new AtomicInteger(0);
-                                    for (final JsonNode jsonElement : childNode.get(childLabel)) {
-                                        List<String> componentsForIteration = List.of(ConfigurationSchemaNode.OA_COMPONENTS, ConfigurationSchemaNode.OA_COMPONENT_QUALIFIERS, ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS);
-                                        if (componentsForIteration.contains(childLabel)) {
-                                            jsonElement.fields().forEachRemaining(nodeEntry -> {
-                                                areChildrenValid
-                                                        .compareAndSet(false,
-                                                                testSchema(
-                                                                        arrayType.type(),
-                                                                        nodeEntry.getValue(),
-                                                                        joinPath(List.of(path, childLabel, Integer.toString(index.getAndIncrement()), nodeEntry.getKey()))
-                                                                ).get()
-                                                        );
-                                            });
-                                            yield null;
-                                        }
-                                        areChildrenValid
+                        case CollectionType.ArrayType arrayType -> switch (childNode.get(childLabel)){
+                            case final ArrayNode arrayNode -> {
+                                AtomicInteger index = new AtomicInteger(0);
+                                for (final JsonNode jsonElement : childNode.get(childLabel)) {
+                                    List<String> componentsForIteration = List.of(ConfigurationSchemaNode.OA_COMPONENTS, ConfigurationSchemaNode.OA_COMPONENT_QUALIFIERS, ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS);
+                                    if (componentsForIteration.contains(childLabel)) {
+                                        jsonElement.fields().forEachRemaining(nodeEntry -> areChildrenValid
                                                 .compareAndSet(false,
                                                         testSchema(
                                                                 arrayType.type(),
-                                                                jsonElement,
-                                                                joinPath(List.of(path, childLabel, Integer.toString(index.getAndIncrement())))
+                                                                nodeEntry.getValue(),
+                                                                joinPath(List.of(path, childLabel, Integer.toString(index.getAndIncrement()), nodeEntry.getKey()))
                                                         ).get()
-                                                );
+                                                ));
+                                        yield null;
                                     }
-                                    yield null;
+                                    areChildrenValid
+                                            .compareAndSet(false,
+                                                    testSchema(
+                                                            arrayType.type(),
+                                                            jsonElement,
+                                                            joinPath(List.of(path, childLabel, Integer.toString(index.getAndIncrement())))
+                                                    ).get()
+                                            );
                                 }
-                                case final NullNode nullNode ->  {
-                                    yield addErrorForExpectingValue(path, arrayType, childLabel);
-                                }
-                                case null ->  {
-                                    yield addErrorForExpectingValue(path, arrayType, childLabel);
-                                }
-                                default-> {
-                                    yield addErrorForBadArrayValue(path, childLabel);
-                                }
-                            };
-                        }
+                                yield null;
+                            }
+                            case final NullNode nullNode -> addErrorForExpectingValue(path, arrayType, childLabel);
+                            case null -> addErrorForExpectingValue(path, arrayType, childLabel);
+                            default-> addErrorForBadArrayValue(path, childLabel);
+                        };
                         case CollectionType.MapType mapType when mapType.type() == null -> mapType;
                         case CollectionType.MapType mapType -> {
                             List<String> identificateurs = new LinkedList<>();
@@ -266,16 +249,14 @@ public class NodeSchemaValidator {
                             if(!ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS.equals(childLabel)) {
                                 testIdentificateurs(identificateurs, path);
                             }
-                            identificateurs.forEach(label -> {
-                                areChildrenValid
-                                        .compareAndSet(false,
-                                                testSchema(
-                                                        mapType.type(),
-                                                        childNode.findPath(childLabel).get(label),
-                                                        joinPath(List.of(path, childLabel, label))
-                                                ).get()
-                                        );
-                            });
+                            identificateurs.forEach(label -> areChildrenValid
+                                    .compareAndSet(false,
+                                            testSchema(
+                                                    mapType.type(),
+                                                    childNode.findPath(childLabel).get(label),
+                                                    joinPath(List.of(path, childLabel, label))
+                                            ).get()
+                                    ));
                             yield null;
                         }
                         case ApplicationType applicationType -> applicationType;
@@ -332,7 +313,7 @@ public class NodeSchemaValidator {
     }
 
     private boolean testNodeLabels(ConfigurationSchemaNodeType rootSchema, String path, Set<String> labels) {
-        List<SiOreConfigurationFormatException> configurationFormatExceptions = new LinkedList<SiOreConfigurationFormatException>();
+        List<SiOreConfigurationFormatException> configurationFormatExceptions = new LinkedList<>();
         Consumer<SiOreConfigurationFormatException> buildLabelsErrors = e ->
                 rootBuilder.buildError(e.getException(), e.getParams(), joinPath(path, labels));
         try {

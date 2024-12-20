@@ -5,9 +5,7 @@ import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
-import fr.inra.oresing.domain.authorization.request.AuthorizationForReferenceScopeAndTimeScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
-import fr.inra.oresing.domain.authorization.request.AuthorizationForTimeScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
@@ -22,9 +20,7 @@ public class UpdateRolesOnManagement {
     final AuthenticationService authenticationService;
     private final OreSiRepository repository;
     private Set<UUID> previousUsers;
-    private Set<UUID> newUsers;
     private OreSiAuthorization modifiedAuthorization;
-    private boolean hasRepository;
     private Application application;
     private AuthorizationRepository authorizationRepository;
 
@@ -37,15 +33,14 @@ public class UpdateRolesOnManagement {
 
     public void init(final Set<UUID> previousUsers, final OreSiAuthorization modifiedAuthorization) {
         this.previousUsers = previousUsers;
-        newUsers = modifiedAuthorization.getOreSiUsers();
+        Set<UUID> newUsers = modifiedAuthorization.getOreSiUsers();
         this.modifiedAuthorization = modifiedAuthorization;
         application = repository.application().findApplication(modifiedAuthorization.getApplication());
-        hasRepository =
-                modifiedAuthorization.getAuthorizations().keySet()
-                        .stream().anyMatch(dataName -> application.findSubmission(dataName)
-                                .map(Submission::strategy)
-                                .map(SubmissionType.OA_VERSIONING::equals)
-                                .isPresent());
+        boolean hasRepository = modifiedAuthorization.getAuthorizations().keySet()
+                .stream().anyMatch(dataName -> application.findSubmission(dataName)
+                        .map(Submission::strategy)
+                        .map(SubmissionType.OA_VERSIONING::equals)
+                        .isPresent());
         authorizationRepository = repository.getRepository(application).authorization();
 
     }

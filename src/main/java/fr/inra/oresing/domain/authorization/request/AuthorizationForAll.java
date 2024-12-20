@@ -2,10 +2,8 @@ package fr.inra.oresing.domain.authorization.request;
 
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 public record AuthorizationForAll(Map<String, Set<OperationType>> authorizationForAll) {

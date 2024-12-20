@@ -9,7 +9,6 @@ import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 public record AuthorizationForUserBuilder(

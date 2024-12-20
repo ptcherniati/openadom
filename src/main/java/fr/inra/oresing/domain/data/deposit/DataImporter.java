@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.data.deposit;
 
-import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.*;
@@ -37,6 +36,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -99,8 +99,8 @@ public class DataImporter {
                     .entrySet()
                     .stream()
                     .flatMap(entry -> {
-                        if (entry.getValue() instanceof DataColumnPatternValue dcv) {
-                            return dcv.values().keySet().stream()
+                        if (entry.getValue() instanceof DataColumnPatternValue(Map<DataColumn, DataColumnValue> values)) {
+                            return values.keySet().stream()
                                     .map(dataColumn -> dataColumn.column().equals(Column.__VALUE__) ?
                                             entry.getKey() :
                                             new DataColumn(
@@ -112,10 +112,8 @@ public class DataImporter {
                                     );
                         }
                         return Stream.of(entry.getKey());
-                    }).noneMatch(column -> {
-                        return column.equals(lineChecker.target()) ||
-                                column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]);
-                    });
+                    }).noneMatch(column -> column.equals(lineChecker.target()) ||
+                            column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
             if (matchingTarget) {
                 continue;
             }
@@ -175,10 +173,12 @@ public class DataImporter {
                                         .toList();
                                 DataColumn firstPatternOfColumn = patternOfColumn.get(0);
                                 DataColumnValue columnValue = referenceDatum.get(firstPatternOfColumn);
-                                if (columnValue instanceof DataColumnPatternValue dataColumnPatternValue) {
+                                if (columnValue instanceof DataColumnPatternValue(
+                                        Map<DataColumn, DataColumnValue> values
+                                )) {
                                     if (patternOfColumn.size() > 1) {
                                         DataColumn secondPatternOfColumn = patternOfColumn.get(1);
-                                        dataColumnPatternValue.values().put(secondPatternOfColumn, valueToStoreInDatabase);
+                                        values.put(secondPatternOfColumn, valueToStoreInDatabase);
                                         valueToStoreInDatabase = columnValue;
                                     } else {
                                         firstPatternOfColumn = new DataColumn(Column.__VALUE__);
@@ -194,20 +194,18 @@ public class DataImporter {
                     .map(validationCheckResult -> validationCheckResult.getValidations().stream().filter(ValidationCheckResult::isError).toList())
                     .ifPresent(vcrs -> vcrs.stream()
                             .map(vcr -> new CsvRowValidationCheckResult(vcr, rowWithReferenceDatum.lineNumber()))
-                            .forEach(checkerErrors -> allCheckerErrorsBuilder.add(checkerErrors))
+                            .forEach(allCheckerErrorsBuilder::add)
                     );
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
-        final ReferenceDatumAfterChecking referenceDatumAfterChecking =
-                new ReferenceDatumAfterChecking(
-                        rowWithReferenceDatum.lineNumber(),
-                        rowWithReferenceDatum.patternColumnName(),
-                        rowWithReferenceDatum.referenceDatum(),
-                        referenceDatum,
-                        ImmutableMap.copyOf(refsLinkedTo),
-                        allCheckerErrorsBuilder.build()
-                );
-        return referenceDatumAfterChecking;
+        return new ReferenceDatumAfterChecking(
+                rowWithReferenceDatum.lineNumber(),
+                rowWithReferenceDatum.patternColumnName(),
+                rowWithReferenceDatum.referenceDatum(),
+                referenceDatum,
+                ImmutableMap.copyOf(refsLinkedTo),
+                allCheckerErrorsBuilder.build()
+        );
     }
 
     public String getDisplayNamesByReferenceAndNaturalKey(final String referencedColumn, final String naturalKey, final String locale) {
@@ -222,9 +220,10 @@ public class DataImporter {
      *
      */
     public void doImport(final InputStream csv, final UUID fileId) throws IOException {
-        final CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(dataImporterContext.getCsvSeparator())
-                .withSkipHeaderRecord();
+        final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+                .setDelimiter(dataImporterContext.getCsvSeparator())
+                .setSkipHeaderRecord(true)
+                .build();
 
         SetMultimap<Ltree, Long> encounteredHierarchicalKeysForConflictDetection = HashMultimap.create();
         Consumer<KeysAndReferenceDatumAfterChecking> storeHierarchicalKeyForConflictDetection = keysAndReferenceDatumAfterChecking -> {
@@ -234,7 +233,7 @@ public class DataImporter {
         };
         ReportErrors allErrors = new ReportErrors(dataImporterContext.getJsonRowMapper());
 
-        final CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
+        final CSVParser csvParser = CSVParser.parse(csv, StandardCharsets.UTF_8, csvFormat);
         final Iterator<CSVRecord> linesIterator = csvParser.iterator();
         final DataHeaderReader dataHeaderReader = new DataHeaderReader(
                 dataImporterContext,
@@ -265,8 +264,7 @@ public class DataImporter {
                 .peek(storeHierarchicalKeyForConflictDetection)
                 .filter(keysAndReferenceDatumAfterChecking -> {
                     final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
-                    final boolean canSave = encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
-                    return canSave;
+                    return encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                 })
                 .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
         if (dataImporterContext.isRecursive()) {
@@ -300,9 +298,7 @@ public class DataImporter {
                     switch (lineChecker) {
                         case final LineChecker.ManyChecker manyChecker -> {
                             manyChecker.value().getValue()
-                                    .forEach(o -> {
-                                        ((ReferenceType) o).setReferenceValues(referencesValues);
-                                    });
+                                    .forEach(o -> ((ReferenceType) o).setReferenceValues(referencesValues));
                             referenceType.setReferenceValues(referencesValues);
                         }
                         case final LineChecker.OneChecker oneChecker -> {
@@ -314,8 +310,7 @@ public class DataImporter {
             }
             linecheckersBuilder.add(lineChecker);
         }
-        final ImmutableSet<LineChecker> transformedLineCheckers = linecheckersBuilder.build();
-        return transformedLineCheckers;
+        return linecheckersBuilder.build();
     }
 
     private RowWithReferenceDatum computeComputedColumns(final RowWithReferenceDatum rowWithReferenceDatum) {
@@ -344,11 +339,10 @@ public class DataImporter {
      * Étant donné les clé hiérarchiques qu'on a rencontré (normalement une seule par ligne), vérifie s'il y a des doublons et calcul des erreurs le cas échéant
      */
     private Set<CsvRowValidationCheckResult> getHierarchicalKeysConflictErrors(final SetMultimap<Ltree, Long> hierarchicalKeys) {
-        final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = hierarchicalKeys.asMap().entrySet().stream()
+        return hierarchicalKeys.asMap().entrySet().stream()
                 .filter(entry -> {
                     final Collection<Long> lineNumbers = entry.getValue();
-                    final boolean hierarchicalKeyConflictDetected = lineNumbers.size() > 1;
-                    return hierarchicalKeyConflictDetected;
+                    return lineNumbers.size() > 1;
                 })
                 .flatMap(entry -> {
                     final Ltree conflictingHierarchicalKey = entry.getKey();
@@ -374,10 +368,9 @@ public class DataImporter {
                                         .map(validationCheckResult1 -> new CsvRowValidationCheckResult((DuplicationLineValidationCheckResult) validationCheckResult, conflictingLineNumber))
                                         .collect(Collectors.toList());
                             })
-                            .flatMap(l -> l.stream());
+                            .flatMap(Collection::stream);
                 })
                 .collect(Collectors.toSet());
-        return hierarchicalKeysConflictErrors;
     }
 
     /**
@@ -585,19 +578,6 @@ public class DataImporter {
     }
 
 
-    private void checkrequiredAuthorizationsInDatasetRange(Map<String, Ltree> requiredAuthorizations, ReportErrors errors, BinaryFileDataset binaryFileDataset, long rowNumber) {
-        if (binaryFileDataset == null) {
-            return;
-        }
-        binaryFileDataset.getRequiredAuthorizations().entrySet().forEach(entry -> {
-            if (!requiredAuthorizations.get(entry.getKey()).equals(entry.getValue())) {
-                errors.add(new CsvRowValidationCheckResult(DefaultValidationCheckResult.error("badAuthorizationScopeForRepository", ImmutableMap.of("authorization", entry.getKey(), "expectedValue", entry.getValue(), "givenValue", requiredAuthorizations.get(entry.getKey())), null), rowNumber));
-            }
-        });
-
-    }
-
-
     void storeAll(final Stream<DataValue> referenceValueStream) {
         try {
             storeAll.accept(referenceValueStream);
@@ -627,8 +607,7 @@ public class DataImporter {
                 final String parentColumn = parentNode.get().node().componentKey();
                 if (referenceDatum.contains(new DataColumn(parentColumn))) {
                     final DataColumnValue referenceParentColumn = referenceDatum.get(new DataColumn(parentColumn));
-                    final Ltree hierarchicalFromNatural = getHierarchicalNodeFromNatural(((DataColumnSingleValue) referenceParentColumn).getValue().getValue().toString(), parentReference);
-                    return hierarchicalFromNatural;
+                    return getHierarchicalNodeFromNatural(((DataColumnSingleValue) referenceParentColumn).getValue().getValue().toString(), parentReference);
                 }
             }
             return null;
@@ -671,7 +650,7 @@ public class DataImporter {
          * When we have the hierarchical key, we can recover the natural key as the leaf of the ltree.
          * In this case you must remove the reference to the data type "[^\\.][a-z][a-z]*K"
          */
-        public static Function<Ltree, Ltree> fromNaturalKey = nk -> Ltree.fromSql(nk.getSql().replaceAll("[^\\.][a-z][a-z]*K", ""));
+        public static final Function<Ltree, Ltree> fromNaturalKey = nk -> Ltree.fromSql(nk.getSql().replaceAll("[^\\.][a-z][a-z]*K", ""));
 
         public WithRecursion(final DataImporterContext dataImporterContext) {
             this(dataImporterContext, new HashMap<>(), new HashMap<>());
@@ -785,11 +764,10 @@ public class DataImporter {
             final LineChecker lineChecker = dataImporterContext().getReferenceLineChecker();
             final ReferenceType referenceType = (ReferenceType) lineChecker.fieldTypeForOne();
             ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> beforePreloadReferenceUuids = referenceType.getReferenceValues();
-            beforePreloadReferenceUuids.entrySet()
-                    .forEach(entry -> {
-                        final UUID uuid = entry.getValue().stream().findFirst().orElse(null);
-                        afterPreloadReferenceUuids().putIfAbsent(entry.getKey(), uuid);
-                    });
+            beforePreloadReferenceUuids.forEach((key, value) -> {
+                final UUID uuid = value.stream().findFirst().orElse(null);
+                afterPreloadReferenceUuids().putIfAbsent(key, uuid);
+            });
             final ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
             final List<RowWithReferenceDatum> collect = streamBeforePreloading
                     .peek(rowWithReferenceDatum -> {
@@ -802,16 +780,12 @@ public class DataImporter {
                         }
                         DataColumnValue parentDataColumnValue = referenceDatum.get(columnToLookForParentKey);
                         switch (parentDataColumnValue) {
-                            case DataColumnMultipleValue dataColumnMultipleValue -> {
-                                ((Collection<? extends FieldType>) dataColumnMultipleValue.getValues().getValue())
-                                        .stream()
-                                        .map(FieldType::getValue)
-                                        .map(Object::toString)
-                                        .flatMap(multi -> Arrays.stream(multi.split(",")))
-                                        .forEach(parentKey -> {
-                                            testIfMissingParentKey(rowWithReferenceDatum, parentKey, naturalKey, missingParentReferences);
-                                        });
-                            }
+                            case DataColumnMultipleValue dataColumnMultipleValue -> ((Collection<? extends FieldType>) dataColumnMultipleValue.getValues().getValue())
+                                    .stream()
+                                    .map(FieldType::getValue)
+                                    .map(Object::toString)
+                                    .flatMap(multi -> Arrays.stream(multi.split(",")))
+                                    .forEach(parentKey -> testIfMissingParentKey(rowWithReferenceDatum, parentKey, naturalKey, missingParentReferences));
                             case DataColumnSingleValue dataColumnSingleValue -> {
                                 final String parentKey = dataColumnSingleValue.getValue().toString();
                                 testIfMissingParentKey(rowWithReferenceDatum, parentKey, naturalKey, missingParentReferences);
@@ -864,7 +838,7 @@ public class DataImporter {
                     DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(parentKey, parentKey);
                     if (afterPreloadReferenceUuids().keySet().stream()
                             .map(DataValue.LineIdentityColumnName::naturalKey)
-                            .noneMatch(nk -> naturalKey.naturalKey().equals(key))) {
+                            .noneMatch(nk -> naturalKey.naturalKey().equals(key.naturalKey()))) {
                         afterPreloadReferenceUuids().putIfAbsent(key, uuid);//TODO
                     }
                     missingParentReferences.put(parentKey, rowWithReferenceDatum.lineNumber());
@@ -938,8 +912,7 @@ public class DataImporter {
                     .map(Ltree::escapeToLabel)
                     .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
             Preconditions.checkState(!naturalKeyAsString.isEmpty(), ExceptionMessage.NULL_NATURAL_KEY.toMessage(), referenceDatumAfterChecking.lineNumber(), String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
-            Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-            return naturalKey;
+            return Ltree.fromSql(naturalKeyAsString);
         }
 
         @Override

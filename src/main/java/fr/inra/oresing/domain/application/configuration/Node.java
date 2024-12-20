@@ -1,8 +1,5 @@
 package fr.inra.oresing.domain.application.configuration;
 
-import com.google.common.base.Strings;
-import fr.inra.oresing.domain.data.menu.ReferenceScope;
-
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;

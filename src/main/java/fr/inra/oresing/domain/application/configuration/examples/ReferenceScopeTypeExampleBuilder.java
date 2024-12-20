@@ -5,8 +5,6 @@ import fr.inra.oresing.domain.application.configuration.type.CollectionType;
 import fr.inra.oresing.domain.application.configuration.type.ReferenceScopeType;
 import fr.inra.oresing.domain.application.configuration.type.StringType;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -23,7 +21,7 @@ public class ReferenceScopeTypeExampleBuilder {
     );
 
     private static CollectionType.ArrayType<ReferenceScopeType> buildReferenceScopes(List<ReferenceScopeType> referenceScopeTypes) {
-        return new CollectionType.ArrayType<ReferenceScopeType>(
+        return new CollectionType.ArrayType<>(
                 referenceScopeTypes,
                 false,
                 false,

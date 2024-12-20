@@ -2,11 +2,9 @@ package fr.inra.oresing.rest.model.data;
 
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.persistence.DataRepository;
 import org.apache.commons.collections.CollectionUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -27,7 +25,6 @@ class DownloadDatasetQueryAdvancedSearchTest {
     public static final Set<String> rowIds = Set.of("addf3698-88f2-43f9-8926-0b64a86f3678", "0aef7ed1-1df9-4fbf-a676-1932e87ced9d", "2c527cbe-3ed7-4883-b7d1-8f29eff99eb1");
 
     private fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery downloadDatasetQueryAdvancedSearch;
-    private fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery downloadDatasetQuerySimpleSearch;
 
     @BeforeAll
     public static void init() {
@@ -35,7 +32,7 @@ class DownloadDatasetQueryAdvancedSearchTest {
     }
 
     private static void testFilter(final ComponentFilterSimpleSearch componentFilterSimpleSearch, final String filter) {
-        assertEquals(filter, componentFilterSimpleSearch.filters(), "%s expected".formatted(filter));
+        assertTrue(componentFilterSimpleSearch.filters().contains(filter), "%s expected".formatted(filter));
     }
 
     private static void testcomponent(final ForComponent componentFilters, final String variable, final String componentKey) {
@@ -239,7 +236,7 @@ class DownloadDatasetQueryAdvancedSearchTest {
                   ]
                 }""";
         downloadDatasetQueryAdvancedSearch = Fixture.addApplication((fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery) mapper.toObject(advancedSearchJson, fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery.class));
-        downloadDatasetQuerySimpleSearch = Fixture.addApplication((fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery) mapper.toObject(simpleSearchJson, fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery.class));
+        fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery downloadDatasetQuerySimpleSearch = Fixture.addApplication((fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery) mapper.toObject(simpleSearchJson, fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery.class));
     }
 
     @Test
@@ -284,9 +281,7 @@ class DownloadDatasetQueryAdvancedSearchTest {
         if (!CollectionUtils.isEmpty(componentFilters)) {
             if (componentFilters.stream().allMatch(f -> {
                 switch (f) {
-                    case final NoComponentFilters nocomponentFilters -> {
-                        fail("must be defined");
-                    }
+                    case final NoComponentFilters nocomponentFilters -> fail("must be defined");
                     case final ComponentFilterForInterval componentFilterForInterval -> {
                         switch (componentFilterForInterval) {
                             case ComponentFiltersForIntervalByNumeric componentFiltersForIntervalByNumeric -> {
@@ -305,9 +300,7 @@ class DownloadDatasetQueryAdvancedSearchTest {
                                 testcomponent(componentFiltersForIntervalByDateTime, "Date", "datetime");
                                 testIntervalValue(componentFiltersForIntervalByDateTime.intervalsValues(), "01/01/1984 12:20:45", "01/01/1984 16:21:32");
                             }
-                            case null, default -> {
-                                fail("must be defined");
-                            }
+                            case null, default -> fail("must be defined");
 
 
                         }
@@ -348,9 +341,7 @@ class DownloadDatasetQueryAdvancedSearchTest {
                             case null, default -> fail("must be defined");
                         }
                     }
-                    case null, default -> {
-                        fail("must be defined");
-                    }
+                    case null, default -> fail("must be defined");
                 }
                 return true;
             })) ;
@@ -417,21 +408,19 @@ class DownloadDatasetQueryAdvancedSearchTest {
         } catch (final BadDownloadDatasetQuery e) {
             assertEquals(testError.message, e.getMessage());
             comparemap(testError.params, e.getParams());
-            testError.params.entrySet()
-                    .forEach(entry -> {
-                        assertTrue(e.getParams().containsKey(entry.getKey()), "params must contains %s".formatted(entry.getKey()));
-                        assertEquals(entry.getValue(), e.getParams().get(entry.getKey()), "params %s must be %s".formatted(entry.getKey(), entry.getValue()));
-                    });
+            testError.params.forEach((key, value) -> {
+                assertTrue(e.getParams().containsKey(key), "params must contains %s".formatted(key));
+                assertEquals(value, e.getParams().get(key), "params %s must be %s".formatted(key, value));
+            });
         }
     }
 
     static void comparemap(final Map<String, Object> map1, final Map map2) {
         assertEquals(map1.size(), map2.size());
-        map1.entrySet()
-                .forEach(entry -> {
-                    assertTrue(map2.containsKey(entry.getKey()), "params must contains %s".formatted(entry.getKey()));
-                    assertEquals(entry.getValue(), map2.get(entry.getKey()), "params %s must be %s".formatted(entry.getKey(), entry.getValue()));
-                });
+        map1.forEach((key, value) -> {
+            assertTrue(map2.containsKey(key), "params must contains %s".formatted(key));
+            assertEquals(value, map2.get(key), "params %s must be %s".formatted(key, value));
+        });
     }
 
     private static void testFormat(final WithFormat withFormat, final String format) {

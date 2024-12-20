@@ -114,11 +114,11 @@ class DataExampleBuilder {
             final CollectionType.MapType<ValidationType> validations,
             final SubmissionType submission,
             final AuthorizationType authorization) {
-        return new DataType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
+        return new DataType(new LinkedHashMap<>() {{
             put(ConfigurationSchemaNode.OA_HEADER_LINE, new IntegerType(headerLine));
             put(ConfigurationSchemaNode.OA_FIRST_ROW_LINE, new IntegerType(firstRowLine));
-            put(ConfigurationSchemaNode.OA_NATURAL_KEY, new CollectionType.ArrayType<StringType>(naturalKey.stream().map(StringType::new).toList(), true, false, StringType.EMPTY_INSTANCE()));
-            put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(TagExampleBuilder.buildTagArray(tags), false, false, StringType.EMPTY_INSTANCE()));
+            put(ConfigurationSchemaNode.OA_NATURAL_KEY, new CollectionType.ArrayType<>(naturalKey.stream().map(StringType::new).toList(), true, false, StringType.EMPTY_INSTANCE()));
+            put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(TagExampleBuilder.buildTagArray(tags), false, false, StringType.EMPTY_INSTANCE()));
             put(ConfigurationSchemaNode.OA_I_18_N, title);
             put(ConfigurationSchemaNode.OA_I_18_N_DISPLAY_PATTERN, displayPattern);
             put(ConfigurationSchemaNode.OA_BASIC_COMPONENTS, basicComponents);

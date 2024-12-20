@@ -83,7 +83,7 @@ public class DataService {
         final DataColumn referenceColumnToLookForHeader = new DataColumn(referenceDynamicColumnDescription.referenceColumnToLookForHeader());
         final List<DataValue> allByReferenceType = referenceValueRepository.findAllByReferenceTypeStream(reference)
                 .toList();
-        final ImmutableSet<Column> valuedDynamicColumns = allByReferenceType.stream()
+        return allByReferenceType.stream()
                 .map(referenceValue -> {
                     final DataDatum referenceDatum = referenceValue.getRefValues();
                     final Ltree naturalKey = referenceValue.getNaturalKey();
@@ -113,7 +113,6 @@ public class DataService {
                         }
                     };
                 }).collect(ImmutableSet.toImmutableSet());
-        return valuedDynamicColumns;
     }
 
     @Transactional()
@@ -125,8 +124,6 @@ public class DataService {
             addData(application, dataName, csv, file.params());
         } catch (InvalidDatasetContentException invalidDatasetContentException) {
             throw invalidDatasetContentException;
-        } catch (Exception exception) {
-            throw exception;
         }
         return file.params().fileid();
     }
@@ -175,7 +172,6 @@ public class DataService {
                                 Ltree parentHierarchicalKey = Ltree.fromSql(parentHierarchicalKeyAsString);
                                 parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
                             }
-                            ;
                         });
                     });
                 });
@@ -228,39 +224,37 @@ public class DataService {
                 lineCheckers.stream()
                         .filter(lc -> lc.underlyingType() instanceof ReferenceType)
                         .map(lc -> ((ReferenceType) lc.underlyingType()).getRefType())
-                        .filter(rt -> patternColumnsNames.contains(rt))
+                        .filter(patternColumnsNames::contains)
                         .collect(Collectors.toMap(ref ->
                                         Optional.ofNullable(referenceToColumnName.getOrDefault(ref, null))
-                                                .map(l -> l.get(0))
+                                                .map(l -> l.getFirst())
                                                 .orElse(ref),
                                 ref -> getReferenceValueRepository(application).findDisplayByNaturalKey(ref)));
         Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey =
                 lineCheckers.stream()
                         .filter(lc -> lc.underlyingType() instanceof ReferenceType)
                         .map(lc -> ((ReferenceType) lc.underlyingType()).getRefType())
-                        .filter(rt -> patternColumnsDescription.contains(rt))
+                        .filter(patternColumnsDescription::contains)
                         .collect(Collectors.toMap(ref ->
                                         Optional.ofNullable(referenceToColumnName.getOrDefault(ref, null))
-                                                .map(l -> l.get(0))
+                                                .map(l -> l.getFirst())
                                                 .orElse(ref),
                                 ref -> getReferenceValueRepository(application).findDisplayByNaturalKey(ref)));
         List<ReferenceScope.NodeDescription> nodesForMenu = referenceValueRepository.getNodesForMenu(MenuType.authorization);
-        DataImporterContext referenceImporterContext =
-                new DataImporterContext(
-                        constants,
-                        lineCheckers,
-                        storedReferences,
-                        result.columns(),
-                        result.patternColumnFactory(),
-                        jsonRowMapper,
-                        displayNamesByReferenceAndNaturalKey,
-                        displayDescriptionsByReferenceAndNaturalKey,
-                        allowUnexpectedColumns,
-                        dataName,
-                        publishContextBuilder,
-                        nodesForMenu
-                );
-        return referenceImporterContext;
+        return new DataImporterContext(
+                constants,
+                lineCheckers,
+                storedReferences,
+                result.columns(),
+                result.patternColumnFactory(),
+                jsonRowMapper,
+                displayNamesByReferenceAndNaturalKey,
+                displayDescriptionsByReferenceAndNaturalKey,
+                allowUnexpectedColumns,
+                dataName,
+                publishContextBuilder,
+                nodesForMenu
+        );
     }
 
 
@@ -289,7 +283,7 @@ public class DataService {
                             .map(ComponentDescription::checker)
                             .orElse(null);
                     final Multiplicity multiplicity = Optional.ofNullable(basicComponent.checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
-                    final Column column = Optional.ofNullable(defaultValue)
+                    return Optional.ofNullable(defaultValue)
                             .map(defaultValueConfiguration -> Column.staticColumnDescriptionToColumn(
                                     referenceColumn,
                                     headerForReferenceColumn,
@@ -304,7 +298,6 @@ public class DataService {
                                     multiplicity,
                                     referenceValueRepository,
                                     defaultValue));
-                    return column;
                 }).collect(ImmutableSet.toImmutableSet());
 
         final ImmutableSet<Column> computedColumns = componentDescriptionEntryByComputedType
@@ -383,8 +376,7 @@ public class DataService {
                 .addAll(computedColumns)
                 .addAll(dynamicColumns)
                 .build();
-        BuildColumns result = new BuildColumns(patternColumnFactory, columns);
-        return result;
+        return new BuildColumns(patternColumnFactory, columns);
     }
 
     private Column computedColumnDescriptionToColumn(final DataRepository referenceValueRepository,
@@ -419,11 +411,10 @@ public class DataService {
                         .putAll(referenceDatum.getEvaluationContext())
                         .build();
                 final Set<String> evaluate = computationExpression.evaluate(evaluationContext);
-                final Optional<DataColumnValue> computedValue = Optional.ofNullable(evaluate)
+                return Optional.ofNullable(evaluate)
                         .map(l -> l.stream().map(StringType::getStringTypeFromStringValue)
                                 .collect(Collectors.toCollection(LinkedList<FieldType>::new)))
                         .map(DataColumnMultipleValue::new);
-                return computedValue;
             }
         };
     }
@@ -445,11 +436,10 @@ public class DataService {
                         .putAll(referenceDatum.getEvaluationContext())
                         .build();
                 final String evaluate = computationExpression.evaluate(evaluationContext);
-                final Optional<DataColumnValue> computedValue = Optional.ofNullable(evaluate)
+                return Optional.ofNullable(evaluate)
                         .map(s -> StringUtils.isEmpty(s) ? "" : s)
                         .map(StringType::getStringTypeFromStringValue)
                         .map(DataColumnSingleValue::new);
-                return computedValue;
             }
         };
     }
@@ -460,8 +450,7 @@ public class DataService {
             return Map.of();
         }
         final Set<String> configurationReferences = groovyDataInjectionConfiguration.getReferences();
-        final ImmutableMap<String, Object> contextForExpression = GroovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, null);
-        return contextForExpression;
+        return GroovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, null);
     }
 
     public List<DataValue> findReferenceAccordingToRights(final Application application, final String refType, final MultiValueMap<String, String> params) {
@@ -482,8 +471,7 @@ public class DataService {
 
     public List<UUID> deleteDataAccordingToRights(final Application application, final String refType, final MultiValueMap<String, String> params) {
         authenticationService.setRoleForClient();
-        final List<UUID> list = getReferenceValueRepository(application).deleteReferenceType(refType, params);
-        return list;
+        return getReferenceValueRepository(application).deleteReferenceType(refType, params);
     }
 
     public Flux<DataRow> findDataFlux(final DownloadDatasetQuery downloadDatasetQuery) {
@@ -537,12 +525,9 @@ public class DataService {
         final StandardDataDescription dataDescription = data
                 .orElseThrow(() -> new IllegalStateException("can't find application %s".formatted(downloadDatasetQuery.dataName())));
         final AtomicLong counter = new AtomicLong();
-
-        DataCsvBuilder.getDataCsvBuilder((appOrName, referenceType) ->
-                        getDataImporterContext(application, referenceType, null)
-                )
-                .withDownloadDatasetQuery(downloadDatasetQuery
-                )
+        DataCsvBuilder
+                .getDataCsvBuilder((appOrName, referenceType) -> getDataImporterContext(application, referenceType, null))
+                .withDownloadDatasetQuery(downloadDatasetQuery)
                 .withReferenceService(this)
                 .withOutputStream(outputStream)
                 .onRepositories(new DataRepositoryWithBuffer(application, dataRepository), null)
