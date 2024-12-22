@@ -55,13 +55,6 @@ include:
     path: .
 # - local: .gitlab_build_doc2.yml
 
-sast:
-  stage: test
-  script:
-    - /analyzer run
-  artifacts:
-    reports:
-      sast: gl-sast-report.json
 
 maven_test_configuration_build:
   image: maven:3.9.4-amazoncorretto-21
