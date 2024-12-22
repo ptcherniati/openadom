@@ -46,8 +46,6 @@ maven_build:
     - if: $CI_JOB_MANUAL!= "true"
 
 include:
-  - template: Jobs/SAST.gitlab-ci.yml
-    path: .
   # - local: .gitlab_test_mvn.yml
   # - local: .gitlab_test_ui.yml
   # - local: .gitlab_package.yml
