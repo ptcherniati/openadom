@@ -8,10 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -293,11 +290,11 @@ public class LocalDateTimeRange {
     }
 
     public static LocalDateTimeRange parse(final LocalDateTime value, final DateType dateType) {
-        return CONVERTER_PER_PATTERNS.get(dateType.pattern).toLocalDateTimeRange(value, dateType);
+        return Objects.requireNonNull(CONVERTER_PER_PATTERNS.get(dateType.pattern)).toLocalDateTimeRange(value, dateType);
     }
 
     public static LocalDateTimeRange parse(final String value, final DateType dateType) {
-        return CONVERTER_PER_PATTERNS.get(dateType.pattern).toLocalDateTimeRange(value, dateType);
+        return Objects.requireNonNull(CONVERTER_PER_PATTERNS.get(dateType.pattern)).toLocalDateTimeRange(value, dateType);
     }
 
     private static LocalDateTime parseBound(final String boundString) {

@@ -58,7 +58,7 @@ public record ValidationsBuilder(RootBuilder rootBuilder) {
 
     private I18n buildCheckersForColumn(I18n i18n, String componentPath, String key, Set<String> columns, boolean required, String componentKey, JsonNode componentNodeValue, List<String> listComponentKey, Map<String, CheckerDescription> checkers) {
         AtomicReference<I18n> atomicReferenceI18n = new AtomicReference<>(i18n);
-        columns.stream().forEach(column -> {
+        columns.forEach(column -> {
             Parsing<CheckerDescription> checkerDescriptionParsing = rootBuilder
                     .getCheckerDescriptionBuilder()
                     .build(
@@ -71,7 +71,7 @@ public record ValidationsBuilder(RootBuilder rootBuilder) {
                             key
                     );
 
-            atomicReferenceI18n.set(checkerDescriptionParsing.i18n());
+            atomicReferenceI18n.set(Objects.requireNonNull(checkerDescriptionParsing).i18n());
             if (!listComponentKey.contains(column)) {
                 rootBuilder.buildError(ConfigurationException.UNKNOWN_COMPONENT_FOR_COMPONENT_NAME, Map.of(
                                 "unknownComponent", column,
@@ -98,7 +98,7 @@ public record ValidationsBuilder(RootBuilder rootBuilder) {
                         componentNodeValue.get(ConfigurationSchemaNode.OA_CHECKER),
                         key);
 
-        i18n = checkerDescriptionParsing.i18n();
+        i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
         if (!(checkerDescriptionParsing.result() instanceof GroovyExpressionChecker)) {
             rootBuilder.buildError(ConfigurationException.MISSING_COMPONENT_FOR_COMPONENT_NAME, Map.of(
                             "knownComponents", listComponentKey),
@@ -122,7 +122,7 @@ public record ValidationsBuilder(RootBuilder rootBuilder) {
                         "%2$s > OA_validations > %2$s > OA_validations".formatted(componentPath, componentKey),
                         componentNodeValue.get(ConfigurationSchemaNode.OA_CHECKER),
                         key);
-        i18n = checkerDescriptionParsing.i18n();
+        i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
         if (!(checkerDescriptionParsing.result() instanceof GroovyExpressionChecker)) {
 
             rootBuilder.buildError(ConfigurationException.MISSING_COLUMN_NAME_VALIDATION, Map.of(

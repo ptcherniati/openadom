@@ -27,7 +27,7 @@ public record Node(
                                 node.nodeName(),
                                 node.componentKey(),
                                 node.columnToLookUpForRecursive(),
-                                Optional.ofNullable(node).map(BuilderNode::parent).map(BuilderNode::nodeName).orElse(null),
+                                Optional.of(node).map(BuilderNode::parent).map(BuilderNode::nodeName).orElse(null),
                                 new TreeSet<>(),
                                 node.depends(),
                                 node.order(),
@@ -51,7 +51,7 @@ public record Node(
                         node.nodeName(),
                         node.componentKey(),
                         node.columnToLookUpForRecursive(),
-                        Optional.ofNullable(node)
+                        Optional.of(node)
                                 .map(BuilderNode::parent)
                                 .map(BuilderNode::nodeName)
                                 .orElse(null),
@@ -75,7 +75,7 @@ public record Node(
                                     .orElseThrow(() -> new IllegalArgumentException(parentName));
                         }
                         Node finalParent = parent;
-                        nodeEntry.getValue().stream()
+                        nodeEntry.getValue()
                                 .forEach(child -> finalParent.children().add(child));
                         notBuildedNodes = notBuildedNodes.stream()
                                 .filter(node -> !node.nodeName().equals(parentName))
@@ -116,7 +116,7 @@ public record Node(
                         builderNode.nodeName(),
                         builderNode.componentKey(),
                         builderNode.columnToLookUpForRecursive(),
-                        Optional.ofNullable(builderNode)
+                        Optional.of(builderNode)
                                 .map(BuilderNode::parent)
                                 .map(BuilderNode::nodeName)
                                 .orElse(null),

@@ -116,7 +116,7 @@ public record StandardDataDescription(
 
     public Boolean isHidden() {
         return Optional.ofNullable(tags())
-                .map(tags -> tags.stream().anyMatch(tag -> Tag.HiddenTag.INSTANCE() == tag))
+                .map(tags -> tags.stream().anyMatch(tag -> Tag.HiddenTag.instance().equals(tag)))
                 .orElse(false);
     }
 
@@ -174,7 +174,7 @@ public record StandardDataDescription(
 
     public void buildEmptyFile(OutputStream output) throws IOException {
         CSVFormat customFormat = CSVFormat.Builder.create()
-                .setDelimiter(Optional.ofNullable(separator()).orElse(';'))
+                .setDelimiter(Optional.of(separator()).orElse(';'))
                 .build();
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(output);
         CSVPrinter csvPrinter = new CSVPrinter(outputStreamWriter, customFormat);

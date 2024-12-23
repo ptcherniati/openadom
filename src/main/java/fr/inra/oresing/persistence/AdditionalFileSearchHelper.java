@@ -86,15 +86,15 @@ public class AdditionalFileSearchHelper {
         final List<String> where = new LinkedList<>();
         where.add("fileType=" + addArgumentAndReturnSubstitution(additionalFileName));
         if (!CollectionUtils.isEmpty(fieldFilters)) {
-            Optional.ofNullable(fieldFilters)
+            Optional.of(fieldFilters)
                     .map(filters -> filters.stream()
                             .map(filter -> whereForField(filter, additionalFileDescription.formFields().get(filter.field)))
                             .collect(Collectors.joining(" and ", "(", ")")))
                     .ifPresent(where::add);
         }
-        return CollectionUtils.isEmpty(where) ? "" : where.stream()
-                .filter(Objects::nonNull).collect(Collectors
-                        .joining(" and ", "(", ")"));
+        return where.stream()
+                        .filter(Objects::nonNull).collect(Collectors
+                                .joining(" and ", "(", ")"));
     }
 
     private String whereForField(final AdditionalFilesInfos.FieldFilters filter, final FieldDescription additionalFileFieldFormat) {

@@ -7,10 +7,7 @@ import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequest
 import fr.inra.oresing.domain.file.FileOrUUID;
 import org.apache.commons.collections4.MapUtils;
 
-import java.util.AbstractMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,7 +25,7 @@ public record ParamsResolver(AuthorizationPublicationService builder) implements
                 .binaryfiledataset()
                 .getRequiredAuthorizations();
         Map<String, List<Ltree>> missingRequiredAuthorizations = requiredAuthorizations.keySet().stream()
-                .filter(ref -> resolvedRequiredAuthorizations.get(ref) == null)
+                .filter(ref -> Objects.requireNonNull(resolvedRequiredAuthorizations).get(ref) == null)
                 .map(ref-> new AbstractMap.SimpleEntry<>(ref, requiredAuthorizations.get(ref)))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if(MapUtils.isNotEmpty(missingRequiredAuthorizations)){

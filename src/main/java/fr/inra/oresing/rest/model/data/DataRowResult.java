@@ -36,7 +36,7 @@ public record DataRowResult(
             final String component = componentEntry.getKey();
             if (variables.contains(component) || componentEntry.getKey().startsWith(DataColumn.DISPLAY)) {
                 rows
-                        .put(component, Optional.ofNullable(componentEntry)
+                        .put(component, Optional.of(componentEntry)
                                 .map(Map.Entry::getValue)
                                 .map(FieldType::toJsonForFrontend)
                                 .orElse(NullType.INSTANCE));

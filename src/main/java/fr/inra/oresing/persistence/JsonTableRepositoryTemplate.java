@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.OreSiEntity;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -131,7 +130,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
     public Optional<T> tryFindById(final UUID id) {
         Preconditions.checkArgument(id != null);
         final String query = String.format("SELECT '%s' as \"@class\", to_jsonb(t) as json FROM %s t WHERE id = :id", getEntityClass().getName(), getTable().getSqlIdentifier());
-        return (Optional<T>) namedParameterJdbcTemplate.query(query, new MapSqlParameterSource("id", id), jsonRowMapper).stream().findFirst();
+        return namedParameterJdbcTemplate.query(query, new MapSqlParameterSource("id", id), jsonRowMapper).stream().findFirst();
     }
 
     protected abstract Class<T> getEntityClass();
@@ -153,7 +152,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
             sql += " WHERE " + whereClause;
         }
         final String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
-        return (List<T>) namedParameterJdbcTemplate.query(query, sqlParameterSource, jsonRowMapper);
+        return namedParameterJdbcTemplate.query(query, sqlParameterSource, jsonRowMapper);
     }
 
     protected Stream<T> findStream(final String whereClause, final SqlParameterSource sqlParameterSource) {
@@ -162,7 +161,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
             sql += " WHERE " + whereClause;
         }
         final String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
-        return (Stream<T>) namedParameterJdbcTemplate.queryForStream(query, sqlParameterSource, jsonRowMapper);
+        return namedParameterJdbcTemplate.queryForStream(query, sqlParameterSource, jsonRowMapper);
     }
 
     public void flush() {

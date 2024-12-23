@@ -64,215 +64,25 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
 
 
         SimpleModule module = new SimpleModule()
-                .addDeserializer(Ltree.class, new JsonDeserializer<>() {
-                    @Override
-                    public Ltree deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        return Ltree.fromSqlWithoutCheck(p.getText());
-                    }
-                })
-                .addDeserializer(LocalDateTimeRange.class, new JsonDeserializer<>() {
-                    @Override
-                    public LocalDateTimeRange deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        return LocalDateTimeRange.parseSql(p.getText());
-                    }
-                })
-                .addDeserializer(FieldDescription.class, new JsonDeserializer<>() {
-                    @Override
-                    public FieldDescription deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        JsonNode node = p.readValueAsTree();
-                        FieldDescription.FieldDescriptionType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(FieldDescription.FieldDescriptionType::valueOf).orElse(FieldDescription.FieldDescriptionType.RightsRequestField);
-
-                        return switch (type) {
-                            case RightsRequestField -> jsonMapper.convertValue(node, RightsRequestField.class);
-                            case AdditionalFileField -> jsonMapper.convertValue(node, AdditionalFileField.class);
-                        };
-                    }
-                })
-                .addDeserializer(Depends.class, new JsonDeserializer<>() {
-                    @Override
-                    public Depends deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        JsonNode node = p.readValueAsTree();
-                        Depends.DependsType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(Depends.DependsType::valueOf).orElse(Depends.DependsType.DependsReferences);
-                        return switch (type) {
-                            case DependsParent -> jsonMapper.convertValue(node, DependsParent.class);
-                            case DependsRecursive -> jsonMapper.convertValue(node, DependsRecursive.class);
-                            case DependsReferences -> jsonMapper.convertValue(node, DependsReferences.class);
-                        };
-                    }
-                })
-                .addDeserializer(Tag.class, new JsonDeserializer<>() {
-                    @Override
-                    public Tag deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        JsonNode node = p.readValueAsTree();
-                        Tag.TagDefinitions type = Optional.ofNullable(node.get("tagdefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
-                        return switch (type) {
-                            case NO_TAG -> node.isTextual() ? Tag.buildTag(node.asText()) : Tag.NoTag.INSTANCE();
-                            case DATA_TAG -> Tag.DataTag.INSTANCE();
-                            case REFFERENCE_TAG -> Tag.ReferenceTag.INSTANCE();
-                            case HIDDEN_TAG -> Tag.HiddenTag.INSTANCE();
-                            case ORDER_TAG ->
-                                    Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
-                            case DOMAIN_TAG ->
-                                    Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
-                            case null -> Tag.NoTag.INSTANCE();
-                        };
-                    }
-                })
-                .addDeserializer(CheckerDescription.class, new JsonDeserializer<>() {
-                    @Override
-                    public CheckerDescription deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        JsonNode node = p.readValueAsTree();
-                        CheckerDescription.CheckerDescriptionType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(CheckerDescription.CheckerDescriptionType::valueOf).orElse(CheckerDescription.CheckerDescriptionType.StringChecker);
-                        return switch (type) {
-                            case ReferenceChecker -> jsonMapper.convertValue(node, ReferenceChecker.class);
-                            case BooleanChecker -> jsonMapper.convertValue(node, BooleanChecker.class);
-                            case ComputationChecker -> jsonMapper.convertValue(node, ComputationChecker.class);
-                            case DateChecker -> jsonMapper.convertValue(node, DateChecker.class);
-                            case FloatChecker -> jsonMapper.convertValue(node, FloatChecker.class);
-                            case GroovyExpressionChecker ->
-                                    jsonMapper.convertValue(node, GroovyExpressionChecker.class);
-                            case IntegerChecker -> jsonMapper.convertValue(node, IntegerChecker.class);
-                            case StringChecker -> jsonMapper.convertValue(node, StringChecker.class);
-                        };
-                    }
-                })
-                .addDeserializer(ComponentDescription.class, new JsonDeserializer<>() {
-                    @Override
-                    public ComponentDescription deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        JsonNode node = p.readValueAsTree();
-                        ComponentDescription.ComponentDescriptionType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(ComponentDescription.ComponentDescriptionType::valueOf).orElse(ComponentDescription.ComponentDescriptionType.BasicComponent);
-                        return switch (type) {
-                            case AuthorizationScopeComponent ->
-                                    jsonMapper.convertValue(node, ReferenceScopeComponent.class);
-                            case TagsDescription -> jsonMapper.convertValue(node, FilteredDescriptionComponent.class);
-                            case ComputedComponent -> jsonMapper.convertValue(node, ComputedComponent.class);
-                            case DynamicComponent -> jsonMapper.convertValue(node, DynamicComponent.class);
-                            case BasicComponent -> jsonMapper.convertValue(node, BasicComponent.class);
-                            case ConstantComponent -> jsonMapper.convertValue(node, ConstantComponent.class);
-                            case PatternComponent -> jsonMapper.convertValue(node, PatternComponent.class);
-                            case PatternComponentQualifiers ->
-                                    jsonMapper.convertValue(node, PatternComponentQualifiers.class);
-                            case PatternComponentAdjacents ->
-                                    jsonMapper.convertValue(node, PatternComponentAdjacents.class);
-                        };
-                    }
-                })
-                .addDeserializer(ConstantImport.class, new JsonDeserializer<>() {
-                    @Override
-                    public ConstantImport deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        JsonNode node = p.readValueAsTree();
-                        ConstantImportHeader.ConstantImportHeaderType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(ConstantImportHeader.ConstantImportHeaderType::valueOf).orElse(ConstantImportHeader.ConstantImportHeaderType.FileConstantHeader);
-                        return switch (type) {
-                            case MissingConstantImportHeader -> null;
-                            case FileConstantHeader -> jsonMapper.convertValue(node, FileColumnConstantHeader.class);
-                            case ColumnConstantHeaderByColumnNumber ->
-                                    jsonMapper.convertValue(node, ColumnConstantHeaderByColumnNumber.class);
-                            case ColumnConstantHeaderByHeaderName ->
-                                    jsonMapper.convertValue(node, ColumnConstantHeaderByHeaderName.class);
-                            case SubmissionComponent -> jsonMapper.convertValue(node, SubmissionConstantHeader.class);
-                        };
-                    }
-                })
-                .addDeserializer(AuthorizationForScope.class, new JsonDeserializer<>() {
-                    @Override
-                    public AuthorizationForScope deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        JsonNode node = p.getCodec().readTree(p);
-                        if (null == node || node.isEmpty()) {
-                            return new AuthorizationNoRestriction(Set.of());
-                        }
-                        final ArrayNode operationTypesNode = (ArrayNode) node.get("operationtypes");
-                        final JsonNode timeScope = node.get("timescope");
-                        final JsonNode authorizationScope = node.get("authorizationscope");
-                        Set<OperationType> operationTypes = extractOperationTypes(operationTypesNode);
-                        if (null == authorizationScope) {
-                            return new AuthorizationForTimeScope(operationTypes, extractLocalDateTimeRange(timeScope));
-                        }
-                        if (null == timeScope) {
-                            return new AuthorizationForReferenceScope(operationTypes, extractAuthorizationScope(authorizationScope));
-                        }
-
-                        return new AuthorizationForReferenceScopeAndTimeScope(
-                                operationTypes,
-                                extractAuthorizationScope(authorizationScope),
-                                extractLocalDateTimeRange(timeScope)
-                        );
-                    }
-                })
-                .addDeserializer(TemporalAccessor.class, new JsonDeserializer<>() {
-                    @Override
-                    public TemporalAccessor deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        JsonNode node = p.readValueAsTree();
-                        try {
-                            return jsonMapper.convertValue(node, LocalDateTime.class);
-                        } catch (Exception e) {
-                            try {
-                                return jsonMapper.convertValue(node, LocalTime.class);
-                            } catch (Exception ee) {
-                                return jsonMapper.convertValue(node, LocalDate.class);
-                            }
-                        }
-                    }
-                })
-                .addDeserializer(DataDatum.class, new JsonDeserializer<>() {
-                    @Override
-                    public DataDatum deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        Map map = p.readValueAs(Map.class);
-                        return DataDatum.fromDatabaseJson(map);
-                    }
-                })
-                .addDeserializer(FieldType.class, new JsonDeserializer<>() {
-                    @Override
-                    public FieldType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                        return AbstractType.readObject(p.readValueAs(Object.class));
-                    }
-                })
-                .addSerializer(LocalDateTimeRange.class, new JsonSerializer<>() {
-                    @Override
-                    public void serialize(LocalDateTimeRange value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                        gen.writeString(value.toSqlExpression());
-                    }
-                })
-                .addSerializer(ValidationError.class, new JsonSerializer<>() {
-                    @Override
-                    public void serialize(ValidationError value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                        gen.writeObject(value.toJsonObject());
-                    }
-                })
-                .addSerializer(InvalidDatasetContentException.class, new JsonSerializer<>() {
-                    @Override
-                    public void serialize(InvalidDatasetContentException value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                        gen.writeObject(value);
-                    }
-                })
-                .addSerializer(Ltree.class, new JsonSerializer<>() {
-                    @Override
-                    public void serialize(Ltree value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                        gen.writeString(value.getSql());
-                    }
-                })
-                .addSerializer(DataDatum.class, new JsonSerializer<>() {
-                    @Override
-                    public void serialize(DataDatum value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                        ImmutableMap<String, FieldType> jsonForDatabase = value.toJsonForDatabase();
-                        gen.writeStartObject();
-                        for (Map.Entry<String, FieldType> fieldType : jsonForDatabase.entrySet()) {
-                            fieldType.getValue().serialize(gen, fieldType.getKey());
-                        }
-                        gen.writeEndObject();
-                    }
-                })
-                .addSerializer(FieldType.class, new JsonSerializer<>() {
-                    @Override
-                    public void serialize(FieldType value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                        value.serialize(gen);
-                    }
-                })
-                .addSerializer(StringGroovyExpression.class, new JsonSerializer<>() {
-                    @Override
-                    public void serialize(StringGroovyExpression value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                        gen.writeString(value.toString());
-                    }
-                });
+                .addDeserializer(Ltree.class, getLtreeDeserializer())
+                .addDeserializer(LocalDateTimeRange.class, getLocalDateTimeRangeJsonDeserializer())
+                .addDeserializer(FieldDescription.class, getFieldDescriptionJsonDeserializer())
+                .addDeserializer(Depends.class, getDependsJsonDeserializer())
+                .addDeserializer(Tag.class, getTagJsonDeserializer())
+                .addDeserializer(CheckerDescription.class, getDescriptionJsonDeserializer())
+                .addDeserializer(ComponentDescription.class, getComponentDescriptionJsonDeserializer())
+                .addDeserializer(ConstantImport.class, getImportJsonDeserializer())
+                .addDeserializer(AuthorizationForScope.class, getAuthorizationForScopeJsonDeserializer())
+                .addDeserializer(TemporalAccessor.class, getTemporalAccessorJsonDeserializer())
+                .addDeserializer(DataDatum.class, getDataDatumJsonDeserializer())
+                .addDeserializer(FieldType.class, getFieldTypeJsonDeserializer())
+                .addSerializer(LocalDateTimeRange.class, getLocalDateTimeRangeJsonSerializer())
+                .addSerializer(ValidationError.class, getValidationErrorJsonSerializer())
+                .addSerializer(InvalidDatasetContentException.class, getInvalidDatasetContentExceptionJsonSerializer())
+                .addSerializer(Ltree.class, getLtreeJsonSerializer())
+                .addSerializer(DataDatum.class, getDataDatumJsonSerializer())
+                .addSerializer(FieldType.class, getFieldTypeJsonSerializer())
+                .addSerializer(StringGroovyExpression.class, getStringGroovyExpressionJsonSerializer());
         jsonMapper.registerModule(module);
         jsonMapper.addHandler(new DeserializationProblemHandler() {
             @Override
@@ -288,6 +98,267 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
             }
         });
 
+    }
+
+    private static JsonSerializer<StringGroovyExpression> getStringGroovyExpressionJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(StringGroovyExpression value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeString(value.toString());
+            }
+        };
+    }
+
+    private static JsonSerializer<FieldType> getFieldTypeJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(FieldType value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                value.serialize(gen);
+            }
+        };
+    }
+
+    private static JsonSerializer<DataDatum> getDataDatumJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(DataDatum value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                ImmutableMap<String, FieldType> jsonForDatabase = value.toJsonForDatabase();
+                gen.writeStartObject();
+                for (Map.Entry<String, FieldType> fieldType : jsonForDatabase.entrySet()) {
+                    fieldType.getValue().serialize(gen, fieldType.getKey());
+                }
+                gen.writeEndObject();
+            }
+        };
+    }
+
+    private static JsonSerializer<Ltree> getLtreeJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(Ltree value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeString(value.getSql());
+            }
+        };
+    }
+
+    private static JsonSerializer<InvalidDatasetContentException> getInvalidDatasetContentExceptionJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(InvalidDatasetContentException value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeObject(value);
+            }
+        };
+    }
+
+    private static JsonSerializer<ValidationError> getValidationErrorJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(ValidationError value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeObject(value.toJsonObject());
+            }
+        };
+    }
+
+    private static JsonSerializer<LocalDateTimeRange> getLocalDateTimeRangeJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(LocalDateTimeRange value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeString(value.toSqlExpression());
+            }
+        };
+    }
+
+    private static JsonDeserializer<FieldType> getFieldTypeJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public FieldType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return AbstractType.readObject(p.readValueAs(Object.class));
+            }
+        };
+    }
+
+    private static JsonDeserializer<DataDatum> getDataDatumJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public DataDatum deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                Map map = p.readValueAs(Map.class);
+                return DataDatum.fromDatabaseJson(map);
+            }
+        };
+    }
+
+    private JsonDeserializer<TemporalAccessor> getTemporalAccessorJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public TemporalAccessor deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                try {
+                    return jsonMapper.convertValue(node, LocalDateTime.class);
+                } catch (Exception e) {
+                    try {
+                        return jsonMapper.convertValue(node, LocalTime.class);
+                    } catch (Exception ee) {
+                        return jsonMapper.convertValue(node, LocalDate.class);
+                    }
+                }
+            }
+        };
+    }
+
+    private JsonDeserializer<AuthorizationForScope> getAuthorizationForScopeJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public AuthorizationForScope deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.getCodec().readTree(p);
+                if (null == node || node.isEmpty()) {
+                    return new AuthorizationNoRestriction(Set.of());
+                }
+                final ArrayNode operationTypesNode = (ArrayNode) node.get("operationtypes");
+                final JsonNode timeScope = node.get("timescope");
+                final JsonNode authorizationScope = node.get("authorizationscope");
+                Set<OperationType> operationTypes = extractOperationTypes(operationTypesNode);
+                if (null == authorizationScope) {
+                    return new AuthorizationForTimeScope(operationTypes, extractLocalDateTimeRange(timeScope));
+                }
+                if (null == timeScope) {
+                    return new AuthorizationForReferenceScope(operationTypes, extractAuthorizationScope(authorizationScope));
+                }
+
+                return new AuthorizationForReferenceScopeAndTimeScope(
+                        operationTypes,
+                        extractAuthorizationScope(authorizationScope),
+                        extractLocalDateTimeRange(timeScope)
+                );
+            }
+        };
+    }
+
+    private JsonDeserializer<ConstantImport> getImportJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public ConstantImport deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                ConstantImportHeader.ConstantImportHeaderType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(ConstantImportHeader.ConstantImportHeaderType::valueOf).orElse(ConstantImportHeader.ConstantImportHeaderType.FileConstantHeader);
+                return switch (type) {
+                    case MissingConstantImportHeader -> null;
+                    case FileConstantHeader -> jsonMapper.convertValue(node, FileColumnConstantHeader.class);
+                    case ColumnConstantHeaderByColumnNumber ->
+                            jsonMapper.convertValue(node, ColumnConstantHeaderByColumnNumber.class);
+                    case ColumnConstantHeaderByHeaderName ->
+                            jsonMapper.convertValue(node, ColumnConstantHeaderByHeaderName.class);
+                    case SubmissionComponent -> jsonMapper.convertValue(node, SubmissionConstantHeader.class);
+                };
+            }
+        };
+    }
+
+    private JsonDeserializer<ComponentDescription> getComponentDescriptionJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public ComponentDescription deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                ComponentDescription.ComponentDescriptionType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(ComponentDescription.ComponentDescriptionType::valueOf).orElse(ComponentDescription.ComponentDescriptionType.BasicComponent);
+                return switch (type) {
+                    case AuthorizationScopeComponent -> jsonMapper.convertValue(node, ReferenceScopeComponent.class);
+                    case TagsDescription -> jsonMapper.convertValue(node, FilteredDescriptionComponent.class);
+                    case ComputedComponent -> jsonMapper.convertValue(node, ComputedComponent.class);
+                    case DynamicComponent -> jsonMapper.convertValue(node, DynamicComponent.class);
+                    case BasicComponent -> jsonMapper.convertValue(node, BasicComponent.class);
+                    case ConstantComponent -> jsonMapper.convertValue(node, ConstantComponent.class);
+                    case PatternComponent -> jsonMapper.convertValue(node, PatternComponent.class);
+                    case PatternComponentQualifiers -> jsonMapper.convertValue(node, PatternComponentQualifiers.class);
+                    case PatternComponentAdjacents -> jsonMapper.convertValue(node, PatternComponentAdjacents.class);
+                };
+            }
+        };
+    }
+
+    private JsonDeserializer<CheckerDescription> getDescriptionJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public CheckerDescription deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                CheckerDescription.CheckerDescriptionType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(CheckerDescription.CheckerDescriptionType::valueOf).orElse(CheckerDescription.CheckerDescriptionType.StringChecker);
+                return switch (type) {
+                    case ReferenceChecker -> jsonMapper.convertValue(node, ReferenceChecker.class);
+                    case BooleanChecker -> jsonMapper.convertValue(node, BooleanChecker.class);
+                    case ComputationChecker -> jsonMapper.convertValue(node, ComputationChecker.class);
+                    case DateChecker -> jsonMapper.convertValue(node, DateChecker.class);
+                    case FloatChecker -> jsonMapper.convertValue(node, FloatChecker.class);
+                    case GroovyExpressionChecker -> jsonMapper.convertValue(node, GroovyExpressionChecker.class);
+                    case IntegerChecker -> jsonMapper.convertValue(node, IntegerChecker.class);
+                    case StringChecker -> jsonMapper.convertValue(node, StringChecker.class);
+                };
+            }
+        };
+    }
+
+    private static JsonDeserializer<Tag> getTagJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public Tag deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                Tag.TagDefinitions type = Optional.ofNullable(node.get("tagdefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
+                return switch (type) {
+                    case NO_TAG -> node.isTextual() ? Tag.buildTag(node.asText()) : Tag.NoTag.instance();
+                    case DATA_TAG -> Tag.DataTag.instance();
+                    case REFFERENCE_TAG -> Tag.ReferenceTag.instance();
+                    case HIDDEN_TAG -> Tag.HiddenTag.instance();
+                    case ORDER_TAG ->
+                            Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
+                    case DOMAIN_TAG ->
+                            Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
+                };
+            }
+        };
+    }
+
+    private JsonDeserializer<Depends> getDependsJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public Depends deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                Depends.DependsType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(Depends.DependsType::valueOf).orElse(Depends.DependsType.DependsReferences);
+                return switch (type) {
+                    case DependsParent -> jsonMapper.convertValue(node, DependsParent.class);
+                    case DependsRecursive -> jsonMapper.convertValue(node, DependsRecursive.class);
+                    case DependsReferences -> jsonMapper.convertValue(node, DependsReferences.class);
+                };
+            }
+        };
+    }
+
+    private JsonDeserializer<FieldDescription> getFieldDescriptionJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public FieldDescription deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                FieldDescription.FieldDescriptionType type = Optional.ofNullable(node.get("type")).map(JsonNode::asText).map(FieldDescription.FieldDescriptionType::valueOf).orElse(FieldDescription.FieldDescriptionType.RightsRequestField);
+
+                return switch (type) {
+                    case RightsRequestField -> jsonMapper.convertValue(node, RightsRequestField.class);
+                    case AdditionalFileField -> jsonMapper.convertValue(node, AdditionalFileField.class);
+                };
+            }
+        };
+    }
+
+    private static JsonDeserializer<LocalDateTimeRange> getLocalDateTimeRangeJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public LocalDateTimeRange deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return LocalDateTimeRange.parseSql(p.getText());
+            }
+        };
+    }
+
+    private static JsonDeserializer<Ltree> getLtreeDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public Ltree deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return Ltree.fromSqlWithoutCheck(p.getText());
+            }
+        };
     }
 
     Set<OperationType> extractOperationTypes(final ArrayNode operationTypeNode) {

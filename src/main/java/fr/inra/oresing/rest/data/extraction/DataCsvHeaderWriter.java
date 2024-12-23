@@ -5,8 +5,6 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.data.DataColumn;
-import fr.inra.oresing.domain.data.DataColumnValue;
-import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
@@ -67,7 +65,7 @@ public record DataCsvHeaderWriter(
                 .map(Configuration.InternationalizedSortedColumn::header)
                 .map(getInternationalizedHeader())
                 .orElse(null);
-        return exportHeader==null?Stream.of(internationalizedSortedColumn.header()):Stream.of(exportHeader);
+        return exportHeader==null?Stream.of(Objects.requireNonNull(internationalizedSortedColumn).header()):Stream.of(exportHeader);
 
     }
 
@@ -114,15 +112,13 @@ public record DataCsvHeaderWriter(
                 .filter(columnName -> columnName.matches(patternComponent.patternForComponents()))
                 .map(columnName -> {
                     List<ComponentOrderBy> qualifierColumns = new LinkedList<>();
-                    patternComponent.patternComponentAdjacents().entrySet()
-                            .stream()
-                            .forEach(qualifiersEntry -> qualifierColumns.add(
-                                    new ComponentOrderBy(
-                                            qualifiersEntry.getValue().exportHeaderName(),
-                                            DataRepository.Order.ASC,
-                                            dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), qualifiersEntry.getValue().componentKey())
-                                    )
-                            ));
+                    patternComponent.patternComponentAdjacents().forEach((key, value) -> qualifierColumns.add(
+                            new ComponentOrderBy(
+                                    value.exportHeaderName(),
+                                    DataRepository.Order.ASC,
+                                    dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
+                            )
+                    ));
                     return new ComponentPatternOrderBy(
                             patternComponent.componentKey(),
                             columnName,
@@ -139,15 +135,13 @@ public record DataCsvHeaderWriter(
         String referenceColumnToLookForHeader = dynamicComponent.referenceColumnToLookForHeader();
         ComponentType typeForComponentKey = dataDescription().getTypeForComponentKey(componentKey);
         Map<String, ComponentOrderBy> dynamicColumns = dataRepositoryWithBuffer().repository().findAllByReferenceTypeStream(referenceName)
-                .sorted(Comparator.comparing(dataValue -> ((DataValue) dataValue).getNaturalKey().getSql()))
+                .sorted(Comparator.comparing(dataValue -> dataValue.getNaturalKey().getSql()))
                 .collect(Collectors.toMap(
-                        dataValue -> ((DataValue) dataValue).getNaturalKey().getSql(),
+                        dataValue -> dataValue.getNaturalKey().getSql(),
                         dataValue -> new ComponentOrderBy(
-                                (
-                                        (DataColumnValue) ((DataValue) dataValue)
-                                                .getRefValues()
-                                                .get(new DataColumn(referenceColumnToLookForHeader))
-                                )
+                                dataValue
+                                        .getRefValues()
+                                        .get(new DataColumn(referenceColumnToLookForHeader))
                                         .getValuesToCheck().toString(),
                                 DataRepository.Order.ASC,
                                 typeForComponentKey

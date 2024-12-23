@@ -53,12 +53,12 @@ public record DownloadDatasetQuerySimpleSearchQueryBuilder(DownloadDatasetQueryS
                 .map(List::getFirst)
                 .filter(filterValidData)
                 .map(toSql)
-                .filter(Objects::nonNull)
+                .filter(obj1 -> true)
                 .forEach(where::add);
-        Optional.ofNullable(authorizationDescription)
+        Optional.of(authorizationDescription)
                 .map(AuthorizationDescription::timeScope)
                 .map(this::toSql)
-                .filter(Objects::nonNull)
+                .filter(obj -> true)
                 .ifPresent(where::add);
         return where.stream()
                 .collect(Collectors.joining("\n\t\t\t\t AND \n\t\t\t\t\t", "\t\t\t(\n\t\t\t\t\t", "\n\t\t\t)"));

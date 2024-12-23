@@ -15,7 +15,6 @@ import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
 import org.json.JSONObject;
-import org.junit.Assert;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Flux;
@@ -26,8 +25,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @org.junit.jupiter.api.Tag("SUITE")
 class ConfigurationBuilderTest {
@@ -79,7 +77,7 @@ class ConfigurationBuilderTest {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(CONFIGURATION.getBytes(), progression, "une application de test");
                     try {
-                        testConfiguration(configuration);
+                        testConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
                         throw new RuntimeException(e);
@@ -107,7 +105,7 @@ class ConfigurationBuilderTest {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(SCHEMA.getBytes(), progression, "une application de test");
                     try {
-                        testExampleConfiguration(configuration);
+                        testExampleConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
                         throw new RuntimeException(e);
@@ -138,7 +136,7 @@ class ConfigurationBuilderTest {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION.getBytes(), progression, "un commentaire");
-                    assertTrue(configuration != null);
+                    assertNotNull(configuration);
                     try{
                     testHierarchicalNodes( configuration.hierarchicalNodes());
                         fluxSink.complete();
@@ -172,7 +170,7 @@ class ConfigurationBuilderTest {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(MONSORE_CONFIGURATION.getBytes(), progression, "un commentaire");
                     try {
-                        testMonsoreConfiguration(configuration);
+                        testMonsoreConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
                         throw new RuntimeException(e);

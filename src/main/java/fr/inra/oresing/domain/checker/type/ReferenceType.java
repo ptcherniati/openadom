@@ -65,14 +65,14 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
 
     final Supplier<ReferenceType> clone;
 
-    public ReferenceType(final CheckerTarget target, final String refType, final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues, final LineChecker.Transformer transformer) {
+    public ReferenceType(final CheckerTarget target, final String refType, final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues, final LineChecker.Transformer transformer, DataValue.LineIdentityColumnName lineIdentityColumnName) {
         super();
-        this.lineIdentityColumnName = lineIdentityColumnName;
         this.target = target;
         this.refType = refType;
         this.referenceValues = referenceValues;
         this.transformer = transformer;
-        clone = () -> new ReferenceType(target, refType, referenceValues, transformer);
+        this.lineIdentityColumnName = lineIdentityColumnName;
+        clone = () -> new ReferenceType(target, refType, referenceValues, transformer, this.lineIdentityColumnName);
     }
 
     @Override
@@ -137,7 +137,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
             gen.writeNull();
             return;
         }
-        gen.writeString(Optional.ofNullable(value).map(Ltree::getSql).orElse(""));
+        gen.writeString(Optional.of(value).map(Ltree::getSql).orElse(""));
     }
 
     @Override

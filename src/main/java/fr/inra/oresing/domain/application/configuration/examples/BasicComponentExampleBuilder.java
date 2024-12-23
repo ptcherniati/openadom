@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class BasicComponentExampleBuilder {
+class  BasicComponentExampleBuilder {
         public static final BasicComponentType SITES_KEY = buildBasicComponents(null, BooleanExampleBuilder.FALSE, NOM_CODIQUE_DU_SITE, null, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR_EN);
         public static final BasicComponentType SITES_FR = buildBasicComponents(null, BooleanExampleBuilder.FALSE, FRENCH_SITE_NAME, TitleExampleBuilder.SITES_NOM_FR, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR);
         public static final BasicComponentType SITES_EN = buildBasicComponents(null, BooleanExampleBuilder.FALSE, ENGLISH_SITE_NAME, TitleExampleBuilder.SITES_NOM_EN, null, null, I18nExampleBuilder.LANG_RESTRICTION_EN);

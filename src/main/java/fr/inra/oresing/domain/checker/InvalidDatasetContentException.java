@@ -16,6 +16,8 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Exception levée si un jeu de données est incorrect (aussi bien entêtes que contenu)
@@ -70,6 +72,12 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         ));
     }
 
+    public static InvalidDatasetContentException forMissingMandatoryColumns(final Set<String> missingMandatoryColumns, final int headerLine) {
+        return newInvalidDatasetContentException(headerLine, "missingMandatoryColumns", ImmutableMap.of(
+                "missingMandatoryColumns", missingMandatoryColumns
+        ));
+    }
+
     public static InvalidDatasetContentException forDuplicatedHeaders(final int headerLine, final ImmutableSet<String> duplicatedHeaders) {
         return newInvalidDatasetContentException(headerLine, "duplicatedHeaders", ImmutableMap.of(
                 "duplicatedHeaders", duplicatedHeaders
@@ -107,12 +115,25 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
                 if (patternColumnFactory.test(notOrdinaryColumns)) {
                     return headersForRow;
                 }
+            } else if (mandatoryColumnIsMissing) {
+                Set<String> missingMandatoryColumns = mandatoryColumns.stream()
+                        .filter(Predicate.not(actualColumns::contains))
+                        .collect(Collectors.toUnmodifiableSet());
+                throw forMissingMandatoryColumns(missingMandatoryColumns, headerLine);
             } else if (!givenColumnIsUnexpected) {
+                final ImmutableSet<String> duplicatedHeaders = actualColumns.entrySet().stream()
+                        .filter(column -> column.getCount() > 1)
+                        .map(Multiset.Entry::getElement)
+                        .collect(ImmutableSet.toImmutableSet());
+                if (!duplicatedHeaders.isEmpty()) {
+                    throw forDuplicatedHeaders(headerLine, duplicatedHeaders);
+                }
                 return headersForRow;
             }
 
             throw forInvalidHeaders(expectedColumns, mandatoryColumns, actualColumnsAsSet, headerLine);
         }
+
         final ImmutableSet<String> duplicatedHeaders = actualColumns.entrySet().stream()
                 .filter(column -> column.getCount() > 1)
                 .map(Multiset.Entry::getElement)

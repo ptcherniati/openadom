@@ -81,7 +81,7 @@ public record Configuration(Version version, Set<Tag> tags,
                 .map(Map::values)
                 .map(values -> values.stream()
                         .filter(c -> c.tags() != null)
-                        .filter(c -> c.tags().contains(Tag.HiddenTag.INSTANCE()))
+                        .filter(c -> c.tags().contains(Tag.HiddenTag.instance()))
                         .map(ComponentDescription::componentKey)
                         .collect(Collectors.toSet()))
                 .orElseGet(Set::of
@@ -91,7 +91,7 @@ public record Configuration(Version version, Set<Tag> tags,
     public Set<String> getHiddenData() {
         return dataDescription().entrySet().stream()
                 .filter(entry -> entry.getValue().tags() != null)
-                .filter(entry -> entry.getValue().tags().contains(Tag.HiddenTag.INSTANCE()))
+                .filter(entry -> entry.getValue().tags().contains(Tag.HiddenTag.instance()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
@@ -144,7 +144,7 @@ public record Configuration(Version version, Set<Tag> tags,
             String dataname,
             String locale,
             LinkedList<String> elementsToBeSortedInFirst) {
-        StandardDataDescription dataDescription = findData(dataname).orElseThrow(() -> new IllegalArgumentException("no dataDescription for %".formatted(dataname)));
+        StandardDataDescription dataDescription = findData(dataname).orElseThrow(() -> new IllegalArgumentException("no dataDescription for %s".formatted(dataname)));
         Comparator<Map.Entry<String, InternationalizedSortedColumn>> comparator = (aEntry, bEntry) -> {
             InternationalizedSortedColumn a = aEntry.getValue();
             InternationalizedSortedColumn b = bEntry.getValue();
@@ -238,7 +238,7 @@ public record Configuration(Version version, Set<Tag> tags,
         return localizedExportHeaders
                 .map(InternationalizationTitle::getTitle)
                 .map(localizationMap -> localizationMap.get(Locale.of(locale)))
-                .orElse(localizedExportHeaders.map(localizationMap -> localizationMap.getTitle().get(applicationDescription().defaultLanguage())).orElse(componentName));
+                .orElse(localizedExportHeaders.map(localizationMap -> Objects.requireNonNull(localizationMap.getTitle()).get(applicationDescription().defaultLanguage())).orElse(componentName));
 
     }
 

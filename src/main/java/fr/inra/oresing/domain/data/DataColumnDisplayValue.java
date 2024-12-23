@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.Value;
 
 import java.util.Map;
 import java.util.function.Function;

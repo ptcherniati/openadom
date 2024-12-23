@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.IllegalU
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public record ApplicationReader(Application application) implements ApplicationUser {
@@ -21,7 +22,7 @@ public record ApplicationReader(Application application) implements ApplicationU
                 .map(OreSiUser::getChartes)
                 .map(chartes -> chartes.get(application().getId().toString()))
                 .isEmpty()) {
-            throw new IllegalUserToBeGranted(user, application().getName());
+            throw new IllegalUserToBeGranted(Objects.requireNonNull(user), application().getName());
         }
         OreSiRightOnApplicationRole userManager = OreSiRightOnApplicationRole.userAdminOn(application());
         OreSiRightOnApplicationRole applicationManager = OreSiRightOnApplicationRole.adminOn(application());

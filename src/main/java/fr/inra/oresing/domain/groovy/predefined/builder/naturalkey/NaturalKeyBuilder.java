@@ -22,7 +22,7 @@ public record NaturalKeyBuilder(
     public NaturalKeyBuilder(Map<String, Object> context) {
         this(
                 (Map<String, Object>) (context.containsKey(DATUM) ? context.get(DATUM) : new HashMap<>()),
-                (Map<String, List<GroovyDecorator>>) (context.containsKey(REFERENCES) ? ((Map<String, List<GroovyDecorator>>) context.get(REFERENCES)) : new HashMap<>()),
+                context.containsKey(REFERENCES) ? ((Map<String, List<GroovyDecorator>>) context.get(REFERENCES)) : new HashMap<>(),
                 new ArrayList<>()
         );
     }

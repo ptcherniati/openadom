@@ -26,9 +26,9 @@ public class Duration {
     }
 
     LocalDateTimeRange getLocalDateTimeRange(final LocalDateTime date){
-        return LocalDateTimeRange.between(LocalDateTime.from(date), date.plus(amount, temporalUnit));
+        return LocalDateTimeRange.between(date, date.plus(amount, temporalUnit));
     }
     LocalDateTimeRange getLocalDateTimeRange(final LocalDate date){
-        return LocalDateTimeRange.between(LocalDateTime.from(date.atStartOfDay()), date.atStartOfDay().plus(amount,temporalUnit));
+        return LocalDateTimeRange.between(date.atStartOfDay(), date.atStartOfDay().plus(amount,temporalUnit));
     }
 }

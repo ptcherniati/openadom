@@ -270,9 +270,11 @@ class TitleExampleBuilder {
             I18nType title,
             I18nType description
     ) {
-        return new TitleType(new LinkedHashMap<>() {{
-            put(ConfigurationSchemaNode.OA_TITLE, title);
-            put(ConfigurationSchemaNode.OA_DESCRIPTION, description);
-        }});
+        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+        map.put(ConfigurationSchemaNode.OA_TITLE, title);
+        map.put(ConfigurationSchemaNode.OA_DESCRIPTION, description);
+
+        return new TitleType(map);
     }
+
 }

@@ -106,18 +106,17 @@ public record DataBuilder(RootBuilder rootBuilder) {
                 .filter(entry->!(entry.getValue().stream().allMatch(value-> (value.getValue() instanceof PatternComponentQualifiers) || (value.getValue() instanceof PatternComponentAdjacents))))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (MapUtils.isNotEmpty(duplicatedImportHeader)){
-            duplicatedImportHeader.entrySet().stream()
-                    .forEach(entry -> rootBuilder.buildError(ConfigurationException.DUPLICATED_COMPONENT_HEADER,
-                            Map.of(
-                                    "data", dataKey,
-                                    "duplicatedHeader", entry.getKey(),
-                                    "duplicatedImportHeader", entry.getValue().stream().map(Map.Entry::getKey).toList()
-                            ),
-                            NodeSchemaValidator.joinPath(
-                                    ConfigurationSchemaNode.OA_DATA,
-                                    dataKey
-                            )
-                    ));
+            duplicatedImportHeader.forEach((key, value) -> rootBuilder.buildError(ConfigurationException.DUPLICATED_COMPONENT_HEADER,
+                    Map.of(
+                            "data", dataKey,
+                            "duplicatedHeader", key,
+                            "duplicatedImportHeader", value.stream().map(Map.Entry::getKey).toList()
+                    ),
+                    NodeSchemaValidator.joinPath(
+                            ConfigurationSchemaNode.OA_DATA,
+                            dataKey
+                    )
+            ));
         }
         final ImmutableMap.Builder<String, ValidationDescription> validationBuilder = new ImmutableMap.Builder<>();
         i18n = rootBuilder.getValidationsBuilder().build(path, validationBuilder, dataKey, i18n, jsonNode, componentDescriptions);
@@ -127,7 +126,7 @@ public record DataBuilder(RootBuilder rootBuilder) {
         final Parsing<Submission> submissionParsing = rootBuilder.getSubmissionBuilder().buildSubmission(i18n, dataKey, jsonNode, localComponentDescription);
         if(
                 tags.stream().noneMatch(Tag.DataTag.class::isInstance) &&
-                Optional.ofNullable(submissionParsing).map(Parsing::result).map(Submission::strategy).filter(SubmissionType.OA_VERSIONING::equals).isPresent()
+                Optional.of(submissionParsing).map(Parsing::result).map(Submission::strategy).filter(SubmissionType.OA_VERSIONING::equals).isPresent()
                 ){
             rootBuilder.buildError(ConfigurationException.UNEXPECTED_SUBMISSION,
                     Map.of()

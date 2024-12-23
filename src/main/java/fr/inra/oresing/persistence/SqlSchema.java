@@ -9,7 +9,7 @@ public interface SqlSchema extends WithSqlIdentifier {
         return new SqlSchemaForApplication(application);
     }
 
-    static OreSiSqlSchema main() {
+    static OreSiSqlSchema mainSchema() {
         return OreSiSqlSchema.MAIN;
     }
 

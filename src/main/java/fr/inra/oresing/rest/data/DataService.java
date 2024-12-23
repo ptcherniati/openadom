@@ -65,8 +65,6 @@ import java.util.zip.ZipOutputStream;
 @Component
 @Transactional(readOnly = true)
 public class DataService {
-
-    private final GroovyContextHelper groovyContextHelper = new GroovyContextHelper();
     @Autowired
     private ApplicationService applicationService;
     @Autowired
@@ -155,7 +153,7 @@ public class DataService {
                 .collect(ImmutableList.toImmutableList());
         ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
         ImmutableSortedSet<String> includedReferences = sortedReferenceTypes.headSet(lowestLevelReference, true);
-        Optional.ofNullable(compositeReferenceDescription.node())
+        Optional.of(compositeReferenceDescription.node())
                 //.filter(node -> includedReferences.contains(node.nodeName()))
                 .ifPresent(compositeReferenceComponentDescription -> {
                     String reference = compositeReferenceComponentDescription.nodeName();
@@ -206,18 +204,18 @@ public class DataService {
         final Set<String> patternColumnsNames = Optional.ofNullable(constants.displayPattern())
                 .map(InternationalizationTitle::getTitle)
                 .map(Map::values)
-                .map(m -> m.stream().collect(Collectors.toSet()))
+                .map(HashSet::new)
                 .orElseGet(HashSet::new);
         final Set<String> patternColumnsDescription = Optional.ofNullable(constants.displayPattern())
                 .map(InternationalizationTitle::getDescription)
                 .map(Map::values)
-                .map(m -> m.stream().collect(Collectors.toSet()))
+                .map(HashSet::new)
                 .orElseGet(HashSet::new);
         Map<String, List<String>> referenceToColumnName = lineCheckers.stream()
                 .filter(lc -> lc.underlyingType() instanceof ReferenceType)
                 .collect(Collectors.groupingBy(
                                 lc -> ((ReferenceType) lc.underlyingType()).getRefType(),
-                                Collectors.mapping(ReferenceType -> ((DataColumn) ReferenceType.target()).column(), Collectors.toList())
+                                Collectors.mapping(ReferenceType -> ReferenceType.target().column(), Collectors.toList())
                         )
                 );
         Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey =
@@ -227,7 +225,7 @@ public class DataService {
                         .filter(patternColumnsNames::contains)
                         .collect(Collectors.toMap(ref ->
                                         Optional.ofNullable(referenceToColumnName.getOrDefault(ref, null))
-                                                .map(l -> l.getFirst())
+                                                .map(List::getFirst)
                                                 .orElse(ref),
                                 ref -> getReferenceValueRepository(application).findDisplayByNaturalKey(ref)));
         Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey =
@@ -237,7 +235,7 @@ public class DataService {
                         .filter(patternColumnsDescription::contains)
                         .collect(Collectors.toMap(ref ->
                                         Optional.ofNullable(referenceToColumnName.getOrDefault(ref, null))
-                                                .map(l -> l.getFirst())
+                                                .map(List::getFirst)
                                                 .orElse(ref),
                                 ref -> getReferenceValueRepository(application).findDisplayByNaturalKey(ref)));
         List<ReferenceScope.NodeDescription> nodesForMenu = referenceValueRepository.getNodesForMenu(MenuType.authorization);
@@ -265,21 +263,21 @@ public class DataService {
                         new LinkedList<>()
                 ).stream()
                 .map(entry -> {
-                    final ComponentDescription basicComponent = (BasicComponent) entry.getValue();
+                    final ComponentDescription basicComponent = entry.getValue();
                     final TransformationConfiguration defaultValue = Optional
                             .ofNullable(basicComponent.defaultValue())
                             .orElse(null);
                     final DataColumn referenceColumn = new DataColumn(entry.getKey());
-                    final String headerForReferenceColumn = Optional.ofNullable(basicComponent)
+                    final String headerForReferenceColumn = Optional.of(basicComponent)
                             .map(ComponentDescription::importHeader)
                             .orElse(entry.getKey());
-                    final ComponentPresenceConstraint mandatory = Optional.ofNullable(basicComponent)
+                    final ComponentPresenceConstraint mandatory = Optional.of(basicComponent)
                             .map(ComponentDescription::mandatory)
                             .orElse(ComponentPresenceConstraint.MANDATORY);
-                    final Set<? extends Tag> tags = Optional.ofNullable(basicComponent)
+                    final Set<? extends Tag> tags = Optional.of(basicComponent)
                             .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.INSTANCE()));
-                    final CheckerDescription checker = Optional.ofNullable(basicComponent)
+                            .orElse(Set.of(Tag.NoTag.instance()));
+                    final CheckerDescription checker = Optional.of(basicComponent)
                             .map(ComponentDescription::checker)
                             .orElse(null);
                     final Multiplicity multiplicity = Optional.ofNullable(basicComponent.checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
@@ -318,7 +316,7 @@ public class DataService {
                             .orElse(ComponentPresenceConstraint.MANDATORY);
                     final Set<? extends Tag> tags = Optional.ofNullable(computedComponent)
                             .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.INSTANCE()));
+                            .orElse(Set.of(Tag.NoTag.instance()));
                     final CheckerDescription checker = Optional.ofNullable(computedComponent)
                             .map(ComputedComponent::computationChecker)
                             .orElse(null);
@@ -331,7 +329,7 @@ public class DataService {
                                     tags,
                                     checker,
                                     headerForReferenceColumn,
-                                    computedComponent.transformation());
+                                    Objects.requireNonNull(computedComponent).transformation());
                     return computedColumnDescriptionToColumn(referenceValueRepository, referenceColumn, multiplicity, referenceStaticComputedColumnDescription);
                 }).collect(ImmutableSet.toImmutableSet());
 
@@ -347,8 +345,8 @@ public class DataService {
                             .orElse(ComponentPresenceConstraint.MANDATORY);
                     final Set<? extends Tag> tags = Optional.ofNullable(dynamicComponent)
                             .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.INSTANCE()));
-                    final Multiplicity multiplicity = Optional.ofNullable(dynamicComponent.checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
+                            .orElse(Set.of(Tag.NoTag.instance()));
+                    final Multiplicity multiplicity = Optional.ofNullable(Objects.requireNonNull(dynamicComponent).checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
                     final ReferenceDynamicColumnDescription referenceDynamicColumnDescription =
                             new ReferenceDynamicColumnDescription(
                                     mandatory,

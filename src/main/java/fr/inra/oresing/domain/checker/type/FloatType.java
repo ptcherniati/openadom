@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
@@ -67,7 +66,7 @@ public non-sealed class FloatType implements FieldType<Float> {
     @Override
     public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         FloatValidationCheckResult validationCheckResult;
-        final CheckerTarget target = lineChecker.target();
+        final DataColumn target = lineChecker.target();
         try {
             this.value = Float.parseFloat(value.replaceAll(",", "."));
             if (min != null && this.value.compareTo(min) < 0) {
@@ -90,7 +89,7 @@ public non-sealed class FloatType implements FieldType<Float> {
                     target,
                     target.getInternationalizedKey(intervalFoatErrors.errorMessage),
                     ImmutableMap.of(
-                            "component", ((DataColumn) target).column(),
+                            "component", target.column(),
                             "value", value,
                             "bound", intervalFoatErrors.getBound.apply(this)
                     )

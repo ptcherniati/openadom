@@ -578,7 +578,7 @@ public class RelationalService implements InitializingBean, DisposableBean {
 
         String toRecordDefinitionForRef() {
             return """
-                    "%1$s" UUID[]"""
+                    "%1$s" UUID%2$s"""
                     .formatted(
                             name().replace("[, ]", "''"),
                             sqlType().multiplicity()

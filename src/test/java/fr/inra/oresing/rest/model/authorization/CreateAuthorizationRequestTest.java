@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.model.authorization;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
@@ -14,7 +15,6 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
-import org.junit.Assert;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 
@@ -23,6 +23,8 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 class CreateAuthorizationRequestTest {
     static String createAuthorization;
@@ -61,16 +63,15 @@ class CreateAuthorizationRequestTest {
         Assertions.assertEquals("une submissionScope sur le référentiel monsore", createAuthorizationRequest.name());
         Assertions.assertArrayEquals(Set.of(UUID.fromString("f7570009-38fb-489d-ad3b-5bb335e7c5d5")).toArray(), createAuthorizationRequest.usersId().toArray());
         final Map<String, Set<OperationType>> authorizationForAll = createAuthorizationRequest.authorizationForAll();
+        HashSet<Object> expected = new HashSet<>();
+        expected.add(OperationType.extraction);
+
         Assertions.assertIterableEquals(
-                new HashSet<>() {{
-                    this.add(OperationType.extraction);
-                }},
+                expected,
                 authorizationForAll.get("type_de_sites")
         );
         Assertions.assertIterableEquals(
-                new HashSet<>() {{
-                    this.add(OperationType.extraction);
-                }},
+                expected,
                 authorizationForAll.get("sites")
         );
         final Map<String, AuthorizationInput> authorizationsWithRestriction = createAuthorizationRequest.authorizationsWithRestriction();
@@ -83,7 +84,6 @@ class CreateAuthorizationRequestTest {
 
     @Test
     @Tag("SUITE")
-    @Disabled
     void toAuthorizationRequestTest() throws IOException {
         List<AuthorizationRequestError> errors = new ArrayList<>();
         Application application = Mockito.mock(Application.class);
@@ -124,30 +124,68 @@ class CreateAuthorizationRequestTest {
         Assertions.assertEquals(authorizationId, authorizationRequest.authorizationId());
         Assertions.assertEquals(Set.copyOf(userIds), authorizationRequest.userId());
         Assertions.assertEquals(name, authorizationRequest.name());
-        Assertions.assertEquals(new ArrayList<String>() {{
-            this.add("type_de_sites");
-            this.add("sites");
-        }}, authorizationRequest.authorizationForAll().authorizationForAll().get(OperationType.extraction));
+        Assertions.assertEquals("""
+                type_de_sites
+                sites""", authorizationRequest.authorizationForAll().authorizationForAll()
+                .entrySet().stream()
+                .filter(entry -> entry.getValue().contains(OperationType.extraction))
+                .map(Map.Entry::getKey)
+                .collect(Collectors.joining("\n")));
+
         AuthorizationWithRestriction authorizationsWithRestriction = authorizationRequest.authorizationWithRestriction();
-        final AuthorizationForScope authorization1 = null /*authorizationsWithRestriction.authorizationForScope().get("pem").get(OperationType.depot).get(0)*/;
-        Assertions.assertEquals(null, authorization1.timeScope());
-        Assertions.assertEquals(Ltree.fromSql("projet_atlantique"), authorization1.authorizationScope().get("projet"));
-        final AuthorizationForScope authorization2 = null /*authorizationsWithRestriction.authorizationForScope().get("pem").get(OperationType.depot).get(1)*/;
-        Assertions.assertEquals("[\"2024-03-29 00:00:00\",\"2024-03-29 00:00:00\")", authorization2.timeScope().toSqlExpression());
-        Assertions.assertEquals(Ltree.fromSql("projet_manche"), authorization2.authorizationScope().get("projet"));
+        Assertions.assertTrue(authorizationsWithRestriction.authorizationForScope()
+                .get("pem")
+                .operationTypes().contains(OperationType.depot));
+        Assertions.assertEquals(
+                "projet_atlantique",
+                authorizationsWithRestriction.authorizationForScope().get("pem")
+                        .authorizationScope()
+                        .get("projet")
+                        .get(0)
+                        .getSql()
+        );
+        Assertions.assertEquals("[\"2024-03-29 00:00:00\",\"2024-03-29 00:00:00\")", authorizationsWithRestriction.authorizationForScope().get("pem").timeScope().toSqlExpression());
+        Assertions.assertEquals(Ltree.fromSql("projet_manche"), authorizationsWithRestriction.authorizationForScope().get("pem").authorizationScope().get("projet").get(1));
         Mockito.when(application.findData("sites")).thenReturn(Optional.empty());
-        /*authorizationRequest = createAuthorizationRequest.toAuthorizationRequest(
+        authorizationRequest = new AuthorizationRequestBuilder(
                 application,
                 userIds,
                 null,
                 errors
-        )*/
-        Assertions.assertEquals("""
-                        {
-                          "error" : "badReferences",
-                          "params" : {
-                            "badReferences" : [ "sites" ]
+        )
+                .build(createAuthorizationRequest, dataRepositoryWithBuffer);
+        /*Assertions.assertEquals("""
+                {
+                  "authorizationId" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",
+                  "name" : "une submissionScope sur le référentiel monsore",
+                  "description" : null,
+                  "applicationId" : "41e8f1dd-4b3c-4bc7-9013-1309b4714d9d",
+                  "userId" : [ "f7570009-38fb-489d-ad3b-5bb335e7c5d5" ],
+                  "authorizationForAll" : {
+                    "authorizationForAll" : {
+                      "type_de_sites" : [ "extraction" ],
+                      "sites" : [ "extraction" ]
+                    }
+                  },
+                  "authorizationWithRestriction" : {
+                    "authorizationForScope" : {
+                      "pem" : {
+                        "operationTypes" : [ "extraction", "depot" ],
+                        "authorizationScope" : {
+                          "projet" : [ {
+                            "sql" : "projet_atlantique"
+                          }, {
+                            "sql" : "projet_manche"
+                          } ]
+                        },
+                        "timeScope" : {
+                          "range" : {
+                            "empty" : true
                           }
-                        }""", errors.getFirst().getAuthorizationRequestString());
+                        }
+                      }
+                    }
+                  }
+                }""", new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest));*/
     }
 }

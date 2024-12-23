@@ -62,10 +62,10 @@ public record HierarchicalDependancesBuilder(
                         final String componentKey = checker.componentKey();
                         final boolean isRecursive = checker.isRecursive() || (checker.isParent() && dataName.equals(refType));
                         if (dataName.equals(refType)) {
-                            nodes.put(refType, nodes.containsKey(refType)?
-                                    nodes.get(refType).withComponentKeyAndRecursive(componentKey):
+                            Objects.requireNonNull(nodes.put(refType, nodes.containsKey(refType) ?
+                                    nodes.get(refType).withComponentKeyAndRecursive(componentKey) :
                                     new BuilderNode(refType, componentKey, componentKey, null, new LinkedList<>(), new LinkedList<>(), orderTags.get(refType), isRecursive)
-                            ).withComponentKeyAndRecursive(componentKey);
+                            )).withComponentKeyAndRecursive(componentKey);
                         } else {
                             ParentChildRelation relation = new ParentChildRelation(
                                     nodes.containsKey(refType)?

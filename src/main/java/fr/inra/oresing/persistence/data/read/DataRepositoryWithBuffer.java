@@ -134,11 +134,10 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
     }
 
     private Stream<String[]> validateAndProcessStream(Stream<String[]> stream, int minLength) {
-        return stream.map(parts -> {
+        return stream.peek(parts -> {
             if (parts.length < minLength) {
                 throw new IllegalArgumentException("Format de ligne invalide : " + String.join("\t", parts));
             }
-            return parts;
         });
     }
 

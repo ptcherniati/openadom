@@ -37,7 +37,7 @@ public sealed interface CheckerDescription permits
             case final ReferenceChecker referenceChecker -> {
                 final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys = repository.getDataIdPerKeys(referenceChecker.refType());
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = getUUidByNaturalKey(referenceIdPerKeys);
-                yield new ReferenceType(target, referenceChecker.refType(), referenceValues, transformer);
+                yield new ReferenceType(target, referenceChecker.refType(), referenceValues, transformer, null);
             }
             case final DateChecker dateChecker ->
                     new DateType(dateChecker.pattern(), DateTimeFormatter.ofPattern(dateChecker.pattern()), dateChecker.duration(), dateChecker.min(), dateChecker.max());

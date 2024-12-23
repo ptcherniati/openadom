@@ -57,7 +57,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
         }
         Optional<Column> matchingAdjacentColumn = adjacentColumns.stream()
                 .filter(adjacentColumn -> adjacentColumn.getReferenceColumn().column().equals(patternOfColumn.get(1)))
-                .filter(Objects::nonNull)
+                .filter(obj -> true)
                 .findFirst();
         return matchingAdjacentColumn.orElse(null);
     }

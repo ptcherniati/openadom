@@ -2,13 +2,13 @@ package fr.inra.oresing.domain.application.configuration.date;
 
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.Objects;
 
 @org.junit.jupiter.api.Tag("SUITE")
 class DatePatternTest {
@@ -21,7 +21,7 @@ class DatePatternTest {
         final DatePattern<LocalDate> localDateDatePattern = DatePattern.of("dd/MM/yyyy");
         Assertions.assertNotNull(localDateDatePattern);
         final LocalDate localDate = localDateDatePattern.format(DATE);
-        final String dateFormatted = localDateDatePattern.formatter().format(localDate);
+        final String dateFormatted = localDateDatePattern.formatter().format(Objects.requireNonNull(localDate));
         Assertions.assertEquals(DATE, dateFormatted);
     }
 
@@ -40,7 +40,7 @@ class DatePatternTest {
         final DatePattern<LocalTime> localTimeDatePattern = DatePattern.of("HH:mm:ss");
         Assertions.assertNotNull(localTimeDatePattern);
         final LocalTime localDate = localTimeDatePattern.format(TIME);
-        final String dateFormatted = localTimeDatePattern.formatter().format(localDate);
+        final String dateFormatted = localTimeDatePattern.formatter().format(Objects.requireNonNull(localDate));
         Assertions.assertEquals(TIME, dateFormatted);
     }
 
@@ -49,7 +49,7 @@ class DatePatternTest {
         final DatePattern<LocalDateTime> localTimeDatePattern = DatePattern.of("dd/MM/yyyy HH:mm:ss");
         Assertions.assertNotNull(localTimeDatePattern);
         final LocalDateTime localDate = localTimeDatePattern.format(DATETIME);
-        final String dateFormatted = localTimeDatePattern.formatter().format(localDate);
+        final String dateFormatted = localTimeDatePattern.formatter().format(Objects.requireNonNull(localDate));
         Assertions.assertEquals(DATETIME, dateFormatted);
     }
 

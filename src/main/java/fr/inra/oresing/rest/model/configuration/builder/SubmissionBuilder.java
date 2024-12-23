@@ -251,7 +251,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
                 .flatMap(Set::stream)
                 .toList().contains(authorizationScopeReference)) {
             rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
-                            "referenceName", authorizationScopeReference,
+                            "referenceName", Objects.requireNonNull(authorizationScopeReference),
                             "allDataNames", rootBuilder.getListDataKeys()),
                     NodeSchemaValidator.joinPath(
                             ConfigurationSchemaNode.OA_DATA,

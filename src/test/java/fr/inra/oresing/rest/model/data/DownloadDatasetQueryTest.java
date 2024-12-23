@@ -205,13 +205,13 @@ class DownloadDatasetQueryTest {
                     "variable": "site",
                     "component": "plateforme"
                   },
-                  "order": "ASC",
-                  "type": null,
                   "format": null
                 }
+                  "order": "ASC",
+                  "type": null,
               ]
             }""";
-    final Resource yaml = new ClassPathResource("data/monsore/monsore-with-repository.yaml");
+    final Resource yaml = new ClassPathResource("data/configuration/data.result.monsore.json");
 
     @Test
     public void BuildSQLBySimpleSearchByRequest() {

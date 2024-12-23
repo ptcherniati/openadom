@@ -2,7 +2,6 @@ package fr.inra.oresing;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

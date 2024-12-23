@@ -59,7 +59,7 @@ public record ComputedComponentBuilder(RootBuilder rootBuilder) {
                     componentNodeValue.findPath(ConfigurationSchemaNode.OA_CHECKER),
                     dataKey
             );
-            i18n = checkerDescriptionParsing.i18n();
+            i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
                     .map(CheckerDescription::multiplicity)
                     .orElse(Multiplicity.ONE);
@@ -107,7 +107,6 @@ public record ComputedComponentBuilder(RootBuilder rootBuilder) {
                         componentKey,
                         ConfigurationSchemaNode.OA_COMPUTATION),
                 computationNode);
-        i18n = computationCheckerParsing.i18n();
         if (computationCheckerParsing.result().getReferences() != null) {
             for (final String reference : computationCheckerParsing.result().getReferences()) {
                 if (!rootBuilder.getListDataKeys().contains(reference)) {

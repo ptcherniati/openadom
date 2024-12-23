@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.application;
 
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.Version;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;

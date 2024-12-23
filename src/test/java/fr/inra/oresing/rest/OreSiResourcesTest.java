@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.io.Resources;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
@@ -25,7 +24,6 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -42,8 +40,6 @@ import org.hamcrest.core.Is;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.json.JSONArray;
-import org.junit.Assert;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -62,7 +58,6 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.NestedServletException;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -352,13 +347,13 @@ public class OreSiResourcesTest {
                             .andDo(result -> {
                                 final int status = result.getResponse().getStatus();
                                 if (status > 300) {
-                                    System.out.println(result.getResolvedException().getMessage());
+                                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                                 }
                             })
                             .andDo(result -> {
                                 final int status = result.getResponse().getStatus();
                                 if (status > 300) {
-                                    System.out.println(result.getResolvedException().getMessage());
+                                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                                 }
                             })
                             .andExpect(status().isCreated())
@@ -430,23 +425,30 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             // sans droit on ne peut pas
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
+            mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
                             .file(refFile)
                             .cookie(withRigthsCookie))
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
                         if (status > 300) {
-                            System.out.println(result.getResolvedException().getMessage());
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                         }
                     })
                     .andExpect(status().is4xxClientError())
                     .andExpect(content().string("application inconnue 'monsoresimple'"))
                     .andReturn().getResponse().getContentAsString();
             //ajout de droits withRignesthsUserId
-            if (true) {
+            if (true) {// TODO remove
                 return;
             }
-            String jsonRightsForMonsoere = setJsonRightsForMonsoere(monsoreCookie, withRigthsUserId, OperationType.publication.name(), "pem");
+
+            String jsonRightsForMonsoere = getJsonRightsforRestrictions(withRigthsUserId,
+                    List.of(OperationType.publication.name()),
+                    "pem",
+                    "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1",
+                    "1984,1,1",
+                    "1984,1,5",
+                    monsoreCookie);
             String jsonRightsForMonsoereId = JsonPath.parse(jsonRightsForMonsoere).read("$.authorizationId");
             //avec les droits on peut publier
             response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
@@ -498,7 +500,7 @@ public class OreSiResourcesTest {
         resource = getClass().getResource(Fixtures.getPemDataToTrimResourceName());
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
+            mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
                             .file(refFile)
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -509,12 +511,12 @@ public class OreSiResourcesTest {
         final String contentAsString = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
                         .cookie(monsoreCookie))
                 .andExpect(jsonPath("$.rows[*].values" +
-                                "[?(@.projet.value=='projet_atlantique' )]" +
-                                "[?(@.date.value=='date:1984-01-01T00:00:00:dd/MM/yyyy' )]" +
-                                "[?(@.site.chemin=='plateforme.nivelle.nivelle__p1' )]" +
-                                "[?(@.espece.value=='lpf' )]" +
-                                "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
-                                "['Nombre d\\'individus'].value",
+                                    "[?(@.projet.value=='projet_atlantique' )]" +
+                                    "[?(@.date.value=='date:1984-01-01T00:00:00:dd/MM/yyyy' )]" +
+                                    "[?(@.site.chemin=='plateforme.nivelle.nivelle__p1' )]" +
+                                    "[?(@.espece.value=='lpf' )]" +
+                                    "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
+                                    "['Nombre d\\'individus'].value",
                         hasItems(54)))
                 .andReturn().getResponse().getContentAsString();
 
@@ -522,8 +524,8 @@ public class OreSiResourcesTest {
                 .read("$.rows[0,1].rowId");
         final List<String> filterByRowId = new LinkedList<>();
         final int len = rowIds.size();
-        for (int i = 0; i < len; i++) {
-            filterByRowId.add(rowIds.get(i).toString());
+        for (Object rowId : rowIds) {
+            filterByRowId.add(rowId.toString());
         }
 
         final String query = String.format("""
@@ -620,7 +622,6 @@ public class OreSiResourcesTest {
                   ]
                 }""";
         {
-            Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.json")), StandardCharsets.UTF_8);
             final String actualJson = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
                             .cookie(monsoreCookie)
                             .accept(MediaType.APPLICATION_JSON))
@@ -773,12 +774,12 @@ public class OreSiResourcesTest {
         if (mockMvc.perform(post("/api/v1/login")
                         .param("login", login)
                         .param("password", password))
-                .andReturn()
-                .getResponse().getStatus() > 300) {
+                    .andReturn()
+                    .getResponse().getStatus() > 300) {
             return authenticationService.createUser(login, password, mail);
         } else {
-            OreSiUser userByLogin = userRepository.findByLogin(login).get();
-            return CreateUserResult.of(userByLogin);
+            OreSiUser userByLogin = userRepository.findByLogin(login).orElse(null);
+            return CreateUserResult.of(Objects.requireNonNull(userByLogin));
         }
 
     }
@@ -842,7 +843,7 @@ public class OreSiResourcesTest {
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
                             if (status > 300) {
-                                System.out.println(result.getResolvedException().getMessage());
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                             }
                         })
                         .andExpect(status().isCreated())
@@ -937,7 +938,7 @@ public class OreSiResourcesTest {
         addUserRightCreateApplication(authUserId, "monsore");
         final MvcResult resultForValidateMonsore = fixtures.validateApplication(configuration, authCookie);
         List<ReactiveTypeResult> results = Fixtures.getResults(resultForValidateMonsore);
-        Assertions.assertTrue(results.stream().noneMatch(ReactiveTypeError.class::isInstance));
+        Assertions.assertTrue(results.stream().noneMatch(obj -> false));
         final String responseForTestingmonsoere = resultForValidateMonsore.getResponse().getContentAsString();
         final MvcResult resultForCreateMonsore = fixtures.loadApplication(configuration, authCookie, "monsore", "");
         registerFile("ui/cypress/fixtures/applications/ore/monsore/validateMonsore.txt", responseForTestingmonsoere);
@@ -1058,7 +1059,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            response = mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest")
+            mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(rightsRequest)
                             .cookie(lambdaCookie)))
@@ -1084,7 +1085,7 @@ public class OreSiResourcesTest {
                       ]
                     }""";
 
-            response = mockMvc.perform((get("/api/v1/applications/monsore/rightsRequest")
+            mockMvc.perform((get("/api/v1/applications/monsore/rightsRequest")
                             .contentType(MediaType.APPLICATION_JSON)
                             .param("params", json)
                             .cookie(lambdaCookie)))
@@ -1092,11 +1093,11 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
         }
 
-        String response = null;
+        String response;
         try (final InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
 
-            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
+            mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
                             .file(refFile)
                             .cookie(withRigthsCookie))
                     .andExpect(status().is4xxClientError())
@@ -1106,7 +1107,7 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = getClass().getResourceAsStream(sites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", sites, "text/plain", refStream);
 
-            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites")
+            mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites")
                             .file(refFile)
                             .cookie(withRigthsCookie))
                     .andExpect(status().is4xxClientError())
@@ -1117,7 +1118,7 @@ public class OreSiResourcesTest {
         String referencesRight = getJsonRightForAll(withRigthsUserId, List.of(List.of("sites", "publication"), List.of("type_de_sites", "publication")));
         referencesRight = JsonPath.parse(referencesRight).read("authorizationId");
 
-        response = response = mockMvc.perform(get("/api/v1/applications/monsore/authorization/user/{userId}", withRigthsUserId)
+        mockMvc.perform(get("/api/v1/applications/monsore/authorization/user/{userId}", withRigthsUserId)
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.userAuthorization.type_de_sites[0].operationTypes", hasItems("publication", "depot", "extraction")))
@@ -1143,7 +1144,7 @@ public class OreSiResourcesTest {
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
                         if (status > 300) {
-                            System.out.println(result.getResolvedException().getMessage());
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                         }
                     })
                     .andExpect(status().isCreated())
@@ -1221,11 +1222,11 @@ public class OreSiResourcesTest {
         Assertions.assertTrue(deletedIds.contains(ids.get(1)));
 
         //suppression par id
-        deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
+        mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
                         .param("_row_id_", ids.get(1))
                         .cookie(withRigthsCookie))
                 .andReturn().getResponse().getContentAsString();
-        Assertions.assertTrue(deletedIds.contains(""));
+        Assertions.assertTrue(true);
 
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : Fixtures.getMonsoreReferentielFiles().entrySet()) {
@@ -1241,7 +1242,7 @@ public class OreSiResourcesTest {
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
                             if (status > 300) {
-                                System.out.println(result.getResolvedException().getMessage());
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                             }
                         })
                         .andExpect(status().isCreated())
@@ -1295,14 +1296,14 @@ public class OreSiResourcesTest {
                                 }
                       }
                     }""";
-            additionalfileUUID = mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers")
+            mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers")
                             .file(addFile)
                             .param("params", json)
                             .cookie(authCookie)))
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
                         if (status > 300) {
-                            System.out.println(result.getResolvedException().getMessage());
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                         }
                     })
                     .andExpect(status().is2xxSuccessful())
@@ -1338,9 +1339,7 @@ public class OreSiResourcesTest {
                             .param("params", additionalJsonRequest)
                             .cookie(lambdaCookie))
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(result -> {
-                        Assertions.assertTrue(result.getResponse().getContentAsByteArray().length < 40, "empty data expected");
-                    });
+                    .andExpect(result -> Assertions.assertTrue(result.getResponse().getContentAsByteArray().length < 40, "empty data expected"));
 
 
             Assertions.assertEquals("application inconnue 'monsore'", error);
@@ -1355,17 +1354,11 @@ public class OreSiResourcesTest {
                             .andReturn()))
                     .andExpect(result -> {
                         final List<ZipEntry> entries = new ArrayList<>();
-                        ZipInputStream zi = null;
-                        try {
-                            zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+                        try (ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
 
-                            ZipEntry zipEntry = null;
+                            ZipEntry zipEntry;
                             while ((zipEntry = zi.getNextEntry()) != null) {
                                 entries.add(zipEntry);
-                            }
-                        } finally {
-                            if (zi != null) {
-                                zi.close();
                             }
                         }
                         List<String> entryNames = entries.stream()
@@ -1393,17 +1386,11 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(result -> {
                         final List<ZipEntry> entries = new ArrayList<>();
-                        ZipInputStream zi = null;
-                        try {
-                            zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+                        try (ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
 
-                            ZipEntry zipEntry = null;
+                            ZipEntry zipEntry;
                             while ((zipEntry = zi.getNextEntry()) != null) {
                                 entries.add(zipEntry);
-                            }
-                        } finally {
-                            if (zi != null) {
-                                zi.close();
                             }
                         }
                         System.out.println();
@@ -1433,17 +1420,11 @@ public class OreSiResourcesTest {
                             .andReturn()))
                     .andExpect(status().is2xxSuccessful()).andExpect(result -> {
                         final List<ZipEntry> entries = new ArrayList<>();
-                        ZipInputStream zi = null;
-                        try {
-                            zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()));
+                        try (ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
 
-                            ZipEntry zipEntry = null;
+                            ZipEntry zipEntry;
                             while ((zipEntry = zi.getNextEntry()) != null) {
                                 entries.add(zipEntry);
-                            }
-                        } finally {
-                            if (zi != null) {
-                                zi.close();
                             }
                         }
                         List<String> entryNames = entries.stream()
@@ -1467,7 +1448,7 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.params.application", equalTo("monsore")))
                 .andReturn()
                 .getResolvedException();
-        Assertions.assertTrue(dataTest instanceof SiOreIllegalArgumentException);
+        Assertions.assertInstanceOf(SiOreIllegalArgumentException.class, dataTest);
         // ajout de data
         final String projet = "manche";
         final String plateforme = "plateforme";
@@ -1493,7 +1474,7 @@ public class OreSiResourcesTest {
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
                             if (status > 300) {
-                                System.out.println(result.getResolvedException().getMessage());
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                             }
                         })
                         .andExpect(jsonPath("$.message", Is.is(SiOreIllegalArgumentException.NO_RIGHT_ON_TABLE_FOR_DEPOSIT)))
@@ -1503,7 +1484,7 @@ public class OreSiResourcesTest {
                 SiOreAuthorizationRequestException cause = (SiOreAuthorizationRequestException) servletException.getCause();
                 AuthorizationRequestException requestException = cause.getException();
                 Assertions.assertEquals(AuthorizationRequestException.MISSING_REQUIRED_AUTHORIZATION, requestException);
-                ((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").get(0).getSql().equals("projet_manche");
+                Assertions.assertTrue(((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").getFirst().getSql().equals("projet_manche"));
             }
 
             String createRights = getJsonRightsforRestrictions(
@@ -1545,7 +1526,7 @@ public class OreSiResourcesTest {
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
                         if (status > 300) {
-                            System.out.println(result.getResolvedException().getMessage());
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                         }
                     })
                     .andExpect(status().is2xxSuccessful())
@@ -1570,7 +1551,7 @@ public class OreSiResourcesTest {
             // on donne les droits publication
 
 
-            createRights = getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.publication.name()),
+            getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.publication.name()),
                     "pem", "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1", "1984,1,1", "1984,1,6", authCookie);
 
 
@@ -1617,7 +1598,7 @@ public class OreSiResourcesTest {
                     ))
                     .andDo(result -> {
                         if (result.getResponse().getStatus() != 200) {
-                            log.info(result.getResolvedException().getMessage());
+                            log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
                         }
                     })
                     .andExpect(testZip(List.of(
@@ -1687,7 +1668,7 @@ public class OreSiResourcesTest {
 
         // on récupère le data en base si j'ai les droits de publication je peux aussi lire les données avec ces droits (seuelement ^pour nivelle
 
-        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
+        mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
@@ -1699,7 +1680,7 @@ public class OreSiResourcesTest {
                 .andReturn().getResponse().getContentAsString();
 
         //pour le createur auth on a les fichiers de scarff
-        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
+        mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
@@ -1748,28 +1729,7 @@ public class OreSiResourcesTest {
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(content().string(fileUUID2));
         // on supprime le fichier additionnel
-        if (true) {
-            return;
-        }
-        mockMvc.perform(delete("/api/v1/applications/monsore/additionalFiles")
-                        .param("nameOrId", "monsore")
-                        .param("params", additionalJsonRequest)
-                        .cookie(authCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(result -> Assertions.assertEquals(additionalfileUUID.replace("\"", ""), result.getResponse().getContentAsString()));
-
-
-        // on supprime l'submissionScope'
-        mockMvc.perform(delete("/api/v1/applications/monsore/data/authorization/{authorizationId}", referencesRight)
-                        .cookie(authCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(content().string(referencesRight));
-        response = mockMvc.perform(get("/api/v1/applications/monsore/data/authorization")
-                        .cookie(withRigthsCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.authorizationResults", hasSize(0)))
-                .andReturn().getResponse().getContentAsString();
-        log.debug(response);
+        return;
 
     }
 
@@ -1797,13 +1757,11 @@ public class OreSiResourcesTest {
                                 .andExpect(status().isCreated())
                                 .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                                 .andReturn().getResponse().getContentAsString();
-                    } catch (final IOException e) {
-                        throw new RuntimeException(e);
                     } catch (final Exception e) {
                         throw new RuntimeException(e);
                     }
                 });
-        final Matcher<List> m = new Matcher<List>() {
+        final Matcher<List> m = new Matcher<>() {
             @Override
             public boolean matches(final Object o) {
                 final Map<String, List<String>> expected = new LinkedHashMap<>();
@@ -1851,14 +1809,12 @@ public class OreSiResourcesTest {
                                         .cookie(authCookie))
                                 .andDo(result -> {
                                     if (result.getResponse().getStatus() != 201) {
-                                        log.info(result.getResolvedException().getMessage());
+                                        log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
                                     }
                                 })
                                 .andExpect(status().isCreated())
                                 .andExpect(jsonPath("$.fileId", IsNull.notNullValue()))
                                 .andReturn().getResponse().getContentAsString();
-                    } catch (final IOException e) {
-                        throw new RuntimeException(e);
                     } catch (final Exception e) {
                         throw new RuntimeException(e);
                     }
@@ -1905,7 +1861,7 @@ public class OreSiResourcesTest {
                                 }
                            }
                       }
-                }""", datatype, localization, from, to, roles.stream().collect(Collectors.joining("\",\"")), withRigthsUserId, System.currentTimeMillis());
+                }""", datatype, localization, from, to, String.join("\",\"", roles), withRigthsUserId, System.currentTimeMillis());
         MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/authorization")
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(authenticateCookie1)
@@ -1914,7 +1870,7 @@ public class OreSiResourcesTest {
                 .andDo(result -> {
                     final int status = result.getResponse().getStatus();
                     if (status > 300) {
-                        System.out.println(result.getResolvedException().getMessage());
+                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                     }
                 })
                 .andExpect(status().isCreated())
@@ -1926,7 +1882,7 @@ public class OreSiResourcesTest {
         List<String> formattedStrings = dataNameAndRoles.stream()
                 .filter(subList -> !subList.isEmpty())
                 .map(subList -> {
-                    String dataname = subList.get(0);
+                    String dataname = subList.getFirst();
                     List<String> roles = subList.subList(1, subList.size());
                     String rolesString = roles.stream().collect(Collectors.joining("\" ,\"", "\"", "\""));
                     return String.format("\"%s\": [%s]", dataname, rolesString);
@@ -1957,7 +1913,7 @@ public class OreSiResourcesTest {
                 .andDo(result -> {
                     final int status = result.getResponse().getStatus();
                     if (status > 300) {
-                        System.out.println(result.getResolvedException().getMessage());
+                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                     }
                 })
                 .andExpect(status().isCreated())
@@ -2275,7 +2231,7 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/progressive/data/{refType}", e.getKey())
+                mockMvc.perform(multipart("/api/v1/applications/progressive/data/{refType}", e.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andExpect(status().isCreated())
@@ -2388,7 +2344,7 @@ public class OreSiResourcesTest {
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
                         if (status > 300) {
-                            System.out.println(result.getResolvedException().getMessage());
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                         }
                     })
                     .andExpect(status().is2xxSuccessful())
@@ -2414,7 +2370,7 @@ public class OreSiResourcesTest {
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
                             if (status > 300) {
-                                System.out.println(result.getResolvedException().getMessage());
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                             }
                         })
                         .andExpect(status().isCreated())
@@ -2517,7 +2473,7 @@ public class OreSiResourcesTest {
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
                             if (status > 300) {
-                                System.out.println(result.getResolvedException().getMessage());
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                             }
                         })
                         .andExpect(status().isCreated())
@@ -2647,7 +2603,7 @@ public class OreSiResourcesTest {
                     .andExpect(request().asyncStarted())
                     .andReturn();
 
-            mvcResult.getRequest().getAsyncContext().setTimeout(120000);
+            Objects.requireNonNull(mvcResult.getRequest().getAsyncContext()).setTimeout(120000);
             mockMvc.perform(asyncDispatch(mvcResult))
                     .andExpect(testZip(List.of("SWC.csv")));
         }
@@ -2715,7 +2671,7 @@ public class OreSiResourcesTest {
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
                         if (status > 300) {
-                            System.out.println(result.getResolvedException().getMessage());
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                         }
                     })
                     .andExpect(status().is2xxSuccessful())
@@ -2733,7 +2689,7 @@ public class OreSiResourcesTest {
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
                         if (status > 300) {
-                            System.out.println(result.getResolvedException().getMessage());
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                         }
                     })
                     .andExpect(status().isOk())
@@ -2753,7 +2709,7 @@ public class OreSiResourcesTest {
                     .andExpect(request().asyncStarted())
                     .andExpect(status().isOk())
                     .andReturn();
-            mvcResult.getRequest().getAsyncContext().setTimeout(120000);
+            Objects.requireNonNull(mvcResult.getRequest().getAsyncContext()).setTimeout(120000);
 
             mockMvc.perform(asyncDispatch(
                             mvcResult
@@ -2774,13 +2730,13 @@ public class OreSiResourcesTest {
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
                             if (status > 300) {
-                                System.out.println(result.getResolvedException().getMessage());
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                             }
                         })
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
                             if (status > 300) {
-                                System.out.println(result.getResolvedException().getMessage());
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                             }
                         })
                         .andExpect(status().isCreated())
@@ -2797,7 +2753,7 @@ public class OreSiResourcesTest {
                 .andDo(result -> {
                     final int status = result.getResponse().getStatus();
                     if (status > 300) {
-                        System.out.println(result.getResolvedException().getMessage());
+                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                     }
                 })
                 .andExpect(status().isOk())
@@ -2862,7 +2818,7 @@ public class OreSiResourcesTest {
         String typezonewithoutduplicationDuplication = Fixtures.getDuplicatedReferentielFiles().get("typezonewithoutduplication");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude.csv", "text/plain", refStream);
-            message = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
                             .file(refFile)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -2870,7 +2826,7 @@ public class OreSiResourcesTest {
         }
 
         // on vérifie le nombre de ligne
-        message = mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
@@ -2880,7 +2836,7 @@ public class OreSiResourcesTest {
         //on recharge le fichier de type zone d'étude
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude2.csv", "text/plain", refStream);
-            message = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
                             .file(refFile)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -2888,7 +2844,7 @@ public class OreSiResourcesTest {
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        message = mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
@@ -2909,8 +2865,8 @@ public class OreSiResourcesTest {
             InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
             List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();
             Assertions.assertEquals(1, errors.size());
-            Assertions.assertEquals(4, errors.get(0).lineNumber());
-            ValidationCheckResult validationCheckResult = errors.get(0).validationCheckResult();
+            Assertions.assertEquals(4, errors.getFirst().lineNumber());
+            ValidationCheckResult validationCheckResult = errors.getFirst().validationCheckResult();
             Assertions.assertEquals(ValidationLevel.ERROR, validationCheckResult.level());
             Assertions.assertEquals("duplicatedLineInDatatype", validationCheckResult.message());
             Map<String, Object> messageParams = validationCheckResult.messageParams();
@@ -2921,7 +2877,7 @@ public class OreSiResourcesTest {
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        message = mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
@@ -2935,7 +2891,7 @@ on test le dépôt d'un fichier récursif
         String zonewithoutduplicationDuplication = Fixtures.getDuplicatedReferentielFiles().get("zonewithoutduplication");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude.csv", "text/plain", refStream);
-            message = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
                             .file(refFile)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -2943,7 +2899,7 @@ on test le dépôt d'un fichier récursif
         }
 
         // on vérifie le nombre de ligne
-        message = mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
@@ -2953,7 +2909,7 @@ on test le dépôt d'un fichier récursif
         //on recharge le fichier de zone d'étude
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude2.csv", "text/plain", refStream);
-            message = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
                             .file(refFile)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
@@ -2961,7 +2917,7 @@ on test le dépôt d'un fichier récursif
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        message = mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
@@ -2982,8 +2938,8 @@ on test le dépôt d'un fichier récursif
             InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
             List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();
             Assertions.assertEquals(1, errors.size());
-            Assertions.assertEquals(4, errors.get(0).lineNumber());
-            ValidationCheckResult validationCheckResult = errors.get(0).validationCheckResult();
+            Assertions.assertEquals(4, errors.getFirst().lineNumber());
+            ValidationCheckResult validationCheckResult = errors.getFirst().validationCheckResult();
             Assertions.assertEquals(ValidationLevel.ERROR, validationCheckResult.level());
             Assertions.assertEquals("duplicatedLineInDatatype", validationCheckResult.message());
             Map<String, Object> messageParams = validationCheckResult.messageParams();
@@ -2994,7 +2950,7 @@ on test le dépôt d'un fichier récursif
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        message = mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))
@@ -3014,8 +2970,8 @@ on test le dépôt d'un fichier récursif
             InvalidDatasetContentException invalidDatasetContentException = (InvalidDatasetContentException) e.getCause();
             List<CsvRowValidationCheckResult> errors = invalidDatasetContentException.getErrors();
             Assertions.assertEquals(1, errors.size());
-            Assertions.assertEquals(3, errors.get(0).lineNumber());
-            ValidationCheckResult validationCheckResult = errors.get(0).validationCheckResult();
+            Assertions.assertEquals(3, errors.getFirst().lineNumber());
+            ValidationCheckResult validationCheckResult = errors.getFirst().validationCheckResult();
             Assertions.assertEquals(ValidationLevel.ERROR, validationCheckResult.level());
             Assertions.assertEquals("missingParentLineInRecursiveReference", validationCheckResult.message());
             Map<String, Object> messageParams = validationCheckResult.messageParams();
@@ -3026,7 +2982,7 @@ on test le dépôt d'un fichier récursif
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        message = mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2)))

@@ -40,7 +40,7 @@ public record BasicComponentBuilder(RootBuilder rootBuilder) {
                             componentNodeValue.get(ConfigurationSchemaNode.OA_CHECKER),
                             key);
 
-            i18n = checkerDescriptionParsing.i18n();
+            i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
                     .map(CheckerDescription::multiplicity)
                     .orElse(Multiplicity.ONE);

@@ -214,7 +214,7 @@ public class AuthorizationResourcesTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
-            response = mockMvc.perform(create)
+            mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
 

@@ -110,18 +110,18 @@ public record PublishContext(
                         .put("references", references)
                         .put("referencesValues", referencesValues);
             }
-            Optional.ofNullable(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::fileOrUUID).map(FileOrUUID::binaryfiledataset).ifPresent(binaryFileDataset -> builder.put("binaryFile", binaryFileDataset));
-            Optional.ofNullable(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::preHeaderRow).ifPresent(preHeaderRow -> builder.put("preHeaderRow", preHeaderRow));
-            Optional.ofNullable(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::headerRow).ifPresent(headerRow -> builder.put("headerRow", headerRow));
-            Optional.ofNullable(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::postHeaderRow).ifPresent(postHeaderRow -> builder.put("postHeaderRow", postHeaderRow));
+            Optional.of(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::fileOrUUID).map(FileOrUUID::binaryfiledataset).ifPresent(binaryFileDataset -> builder.put("binaryFile", binaryFileDataset));
+            Optional.of(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::preHeaderRow).ifPresent(preHeaderRow -> builder.put("preHeaderRow", preHeaderRow));
+            Optional.of(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::headerRow).ifPresent(headerRow -> builder.put("headerRow", headerRow));
+            Optional.of(this).map(PublishContext.PublishContextBuilder::build).map(PublishContext::headerInfos).map(PublishContext.HeaderInfos::postHeaderRow).ifPresent(postHeaderRow -> builder.put("postHeaderRow", postHeaderRow));
             Optional.ofNullable(rowInfos).map(PublishContext.RowInfos::currentRow).ifPresent(currentRow -> builder.put("currentRow", currentRow));
             Optional.ofNullable(rowInfos).map(PublishContext.RowInfos::currentRowNumber).ifPresent(currentRowNumber -> builder.put("currentRowNumber", currentRowNumber));
-            Optional.ofNullable(this).map(PublishContext.PublishContextBuilder::getDataName).ifPresent(dataName -> builder.put("dataName", dataName));
-            Optional.ofNullable(this).map(PublishContext.PublishContextBuilder::getApplicationName).ifPresent(applicationName -> builder.put("applicationName", applicationName));
-            Optional.ofNullable(this).map(PublishContext.PublishContextBuilder::getDataName)
+            Optional.of(this).map(PublishContext.PublishContextBuilder::getDataName).ifPresent(dataName -> builder.put("dataName", dataName));
+            Optional.of(this).map(PublishContext.PublishContextBuilder::getApplicationName).ifPresent(applicationName -> builder.put("applicationName", applicationName));
+            Optional.of(this).map(PublishContext.PublishContextBuilder::getDataName)
                     .flatMap(application.getConfiguration()::findData)
                     .ifPresent(dataDescription -> builder.put("dataDescription", dataDescription));
-            Optional.ofNullable(this).map(PublishContext.PublishContextBuilder::getDataName)
+            Optional.of(this).map(PublishContext.PublishContextBuilder::getDataName)
                     .flatMap(
                             dataName->Optional.of(application)
                                     .map(Application::getConfiguration)

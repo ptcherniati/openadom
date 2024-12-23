@@ -60,8 +60,7 @@ public class DataCsvBuilder {
     }
 
     private static DataRow addRefsLinkedTo(DataRow dataRow, UUIDsfromData uuidsfromData) {
-        dataRow.refsLinkedTo().entrySet()
-                .stream().forEach(uuidsfromData::addRefsLinkedTo);
+        dataRow.refsLinkedTo().entrySet().forEach(uuidsfromData::addRefsLinkedTo);
         return dataRow;
     }
 
@@ -150,12 +149,12 @@ public class DataCsvBuilder {
                 .map(DownloadDatasetQuery::componentSelects)
                 .orElseGet(ImmutableSet::of);
         if (componentSelects.isEmpty()) {
-            componentSelects = Optional.ofNullable(dataDescription)
+            Optional.ofNullable(dataDescription)
                     .map(StandardDataDescription::componentDescriptions)
                     .map(Map::keySet)
                     .orElseGet(Set::of);
         }
-        Set<ComponentOrderBy> componentsOrderBy = Optional.of(downloadDatasetQuery)
+        Set<ComponentOrderBy> componentsOrderBy = Optional.of(Objects.requireNonNull(downloadDatasetQuery))
                 .map(DownloadDatasetQuery::componentOrderBy)
                 .orElseGet(Set::of);
         LinkedList<String> elementsToBeSortedInFirst = componentsOrderBy

@@ -8,10 +8,7 @@ import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Nullable;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -92,7 +89,7 @@ public class DownloadDatasetQuery {
                             .map(componentOrderBy -> componentOrderBy.stream()
                                     .map(componentOrderBy1 -> ComponentOrderBy.build(
                                             componentOrderBy1,
-                                            downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
+                                            Objects.requireNonNull(downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null))
                                     ))
                                     .collect(Collectors.toSet())
                             ).orElse(null),
@@ -117,7 +114,7 @@ public class DownloadDatasetQuery {
                             .map(componentOrderBy -> componentOrderBy.stream()
                                     .map(componentOrderBy1 -> ComponentOrderBy.build(
                                             componentOrderBy1,
-                                            downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
+                                            Objects.requireNonNull(downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null))
                                     ))
                                     .collect(Collectors.toSet())
                             ).orElse(null),
@@ -149,7 +146,7 @@ public class DownloadDatasetQuery {
                             .map(componentOrderBy -> componentOrderBy.stream()
                                     .map(componentOrderBy1 -> ComponentOrderBy.build(
                                             componentOrderBy1,
-                                            downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
+                                            Objects.requireNonNull(downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null))
                                     ))
                                     .collect(Collectors.toSet())
                             ).orElse(null),
@@ -171,7 +168,7 @@ public class DownloadDatasetQuery {
                         .map(componentOrderBy -> componentOrderBy.stream()
                                 .map(componentOrderBy1 -> ComponentOrderBy.build(
                                         componentOrderBy1,
-                                        downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
+                                        Objects.requireNonNull(downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null))
                                 ))
                                 .collect(Collectors.toSet())
                         ).orElse(null),

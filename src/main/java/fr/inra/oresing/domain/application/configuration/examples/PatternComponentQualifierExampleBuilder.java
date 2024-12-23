@@ -25,14 +25,21 @@ class PatternComponentQualifierExampleBuilder {
             final TitleType exportHeader,
             final List<String> tags,
             final CheckerType checker) {
-        return new PatternComponentQualifierType(new LinkedHashMap<>() {{
-            put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);
-            put(ConfigurationSchemaNode.OA_REQUIRED, BooleanExampleBuilder.TRUE);
-            put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(TagExampleBuilder.buildTagArray(tags), false, false, StringType.EMPTY_INSTANCE()));
-            put(ConfigurationSchemaNode.OA_CHECKER, checker);
-        }}
-        );
+        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+
+        map.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);
+        map.put(ConfigurationSchemaNode.OA_REQUIRED, BooleanExampleBuilder.TRUE);
+        map.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(
+                TagExampleBuilder.buildTagArray(tags),
+                false,
+                false,
+                StringType.EMPTY_INSTANCE()
+        ));
+        map.put(ConfigurationSchemaNode.OA_CHECKER, checker);
+
+        return new PatternComponentQualifierType(map);
     }
+
 
     protected static PatternComponentQualifierType buildBasicComponents(
             final List<String> tags,

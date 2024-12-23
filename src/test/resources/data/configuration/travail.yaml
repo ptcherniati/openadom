@@ -17,7 +17,7 @@ references:
       dty_code:
         OA_importHeader: "datatype_code"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "code_type_données"
             en: "datatype_code"
       dty_name_fr:

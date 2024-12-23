@@ -27,7 +27,7 @@ public record ApplicationLightResult(
                 dataSyntheses,
                 application,
                 CurrentApplicationUserRolesResult.of(
-                        currentUserRoles,
+                        Objects.requireNonNull(currentUserRoles),
                         application.getId()),
                 charteSignedAt != null,
                 charteSignedAt != null && lastChartes.before(charteSignedAt)

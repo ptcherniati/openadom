@@ -5,10 +5,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 
 import java.sql.Timestamp;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 public record ApplicationUserResult(
         UUID applicationId,
@@ -45,7 +42,7 @@ public record ApplicationUserResult(
                 timestamp -> charteTimestamp == null || timestamp.after(charteTimestamp));
         return new ApplicationUserResult(
                 applicationId,
-                oreSiUser.getId(),
+                Objects.requireNonNull(oreSiUser).getId(),
                 oreSiUser.getLogin(),
                 oreSiUser.getEmail(),
                 isApplicationManager,

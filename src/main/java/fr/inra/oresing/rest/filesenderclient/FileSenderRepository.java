@@ -83,9 +83,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
     public String postTransfer(FileInfos fileInfos) throws Exception {
         // Obtenir l'URL de la ressource
         URL resource = fileInfos.fileName().toUri().toURL();
-        if (resource == null) {
-            throw new IllegalArgumentException("Fichier non trouvé!");
-        }
 
         // Convertir l'URL en Path
         Path path = Paths.get(resource.toURI());
@@ -135,7 +132,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         }
     }
 
-    private int getChunkSize() throws Exception {
+    private int getChunkSize() {
         if(uploadChunkSize <0){
             uploadChunkSize = getUploadChunkSize();
         }

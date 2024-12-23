@@ -7,7 +7,7 @@ import java.util.Set;
 
 @Getter
 public class NotApplicationCreatorRightsException extends OreSiTechnicalException {
-    public final static String NO_RIGHT_FOR_APPLICATION_CREATION = "NO_RIGHT_FOR_APPLICATION_CREATION";
+    public static final String NO_RIGHT_FOR_APPLICATION_CREATION = "NO_RIGHT_FOR_APPLICATION_CREATION";
     public String applicationName;
     public final Set<String> applicationRestrictions;
     public NotApplicationCreatorRightsException(final String applicationName) {

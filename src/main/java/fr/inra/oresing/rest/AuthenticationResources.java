@@ -19,6 +19,7 @@ import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -82,7 +83,7 @@ public class AuthenticationResources {
                         .orElse(""),
                 Charset.defaultCharset());
 
-        return ResponseEntity.created(URI.create(uri)).body(CreateUserResult.of(oreSiUser));
+        return ResponseEntity.created(URI.create(uri)).body(CreateUserResult.of(Objects.requireNonNull(oreSiUser)));
     }
 
     @GetMapping(value = "/users/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)

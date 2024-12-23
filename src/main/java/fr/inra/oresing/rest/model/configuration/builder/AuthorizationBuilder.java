@@ -52,7 +52,7 @@ public record AuthorizationBuilder(RootBuilder rootBuilder) {
                 .map(JsonNode::elements)
                 .map(resolveComponentsAsReferenceComponent)
                 .orElse(null);
-        String timescope = Optional.ofNullable(authorizationNode)
+        String timescope = Optional.of(authorizationNode)
                 .map(node -> node.findPath(ConfigurationSchemaNode.OA_TIME_SCOPE))
                 .map(JsonNode::asText)
                 .map(resolveComponentsAsDateComponent)

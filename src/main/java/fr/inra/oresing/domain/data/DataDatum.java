@@ -60,14 +60,14 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
 
     public boolean contains(final DataColumn column) {
         return values.containsKey(column) ||
-                values().entrySet()
-                        .stream()
-                        .filter(entry->entry.getValue() instanceof DataColumnPatternValue)
-                        .flatMap(entry->((DataColumnPatternValue)entry.getValue()).values().keySet().stream()
-                                .map(registerColumn-> Column.__VALUE__.equals(registerColumn.column())?entry.getKey().column():Column.COLUMN_IN_COLUMN_PATTERN.formatted(entry.getKey().column(), registerColumn.column()))
-                        )
-                        .map(DataColumn::new)
-                        .anyMatch(registerColumn->registerColumn.equals(column));
+               values().entrySet()
+                       .stream()
+                       .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
+                       .flatMap(entry -> ((DataColumnPatternValue) entry.getValue()).values().keySet().stream()
+                               .map(registerColumn -> Column.__VALUE__.equals(registerColumn.column()) ? entry.getKey().column() : Column.COLUMN_IN_COLUMN_PATTERN.formatted(entry.getKey().column(), registerColumn.column()))
+                       )
+                       .map(DataColumn::new)
+                       .anyMatch(registerColumn -> registerColumn.equals(column));
     }
 
     public DataColumnValue get(final DataColumn column) {
@@ -77,22 +77,21 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                 column.column(),
                 values.keySet().stream().map(DataColumn::column).collect(Collectors.joining(" - "))
         );
-        return Optional.ofNullable(values)
+        return Optional.of(values)
                 .map(values -> values.get(column))
                 .orElseGet(() -> values().entrySet().stream()
                         .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
-                        .flatMap(entry-> ((DataColumnPatternValue)entry.getValue()).values().entrySet().stream()
-                                .filter(storedColumn->Column.COLUMN_IN_COLUMN_PATTERN.formatted(entry.getKey().column(),storedColumn.getKey().column()).equals(column.column())))
+                        .flatMap(entry -> ((DataColumnPatternValue) entry.getValue()).values().entrySet().stream()
+                                .filter(storedColumn -> Column.COLUMN_IN_COLUMN_PATTERN.formatted(entry.getKey().column(), storedColumn.getKey().column()).equals(column.column())))
                         .map(Map.Entry::getValue)
                         .findFirst()
-                        .orElseThrow(() -> new IllegalArgumentException(Strings.lenientFormat(ExceptionMessage.MISSING_COLUMN.toMessage(), new Object[]{column.column(), values().values().stream()
+                        .orElseThrow(() -> new IllegalArgumentException(Strings.lenientFormat(ExceptionMessage.MISSING_COLUMN.toMessage(), column.column(), values().values().stream()
                                 .filter(DataColumnPatternValue.class::isInstance)
                                 .map(DataColumnPatternValue.class::cast)
                                 .map(DataColumnPatternValue::values)
                                 .map(Map::keySet)
                                 .flatMap(values -> values.stream().map(DataColumn::column))
-                                .collect(Collectors.joining(" - "))
-                        }))));
+                                .collect(Collectors.joining(" - "))))));
     }
 
     @Override
@@ -169,7 +168,6 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
 
     /**
      * Étant donné une colonne, l'ensemble des valeurs qui doivent être subir transformation et computationChecker
-     *
      */
     public FieldType getValuesToCheck(final DataColumn column) {
         return get(column).getValuesToCheck();
@@ -179,7 +177,9 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     public Map<String, FieldType> toJsonForFrontend() {
         final Map<String, FieldType> map = new LinkedHashMap<>();
         for (final Map.Entry<DataColumn, DataColumnValue> entry : values.entrySet()) {
-            if (entry.getValue() instanceof DataColumnIndexedValue(Map<Ltree, String> values1) && values1 instanceof final Map<Ltree, String> m) {
+            if (entry.getValue() instanceof DataColumnIndexedValue(
+                    Map<Ltree, String> values1
+            ) && values1 instanceof final Map<Ltree, String> m) {
                 final Map<String, FieldType> mapOfTypes = new HashMap<>();
                 for (final Map.Entry<Ltree, String> entryForMap : m.entrySet()) {
                     mapOfTypes.put(entryForMap.getKey().getSql(), StringType.getStringTypeFromStringValue(entryForMap.getValue()));

@@ -186,7 +186,7 @@ La configuration peut être de la forme suivante en utilisant une section OA_adj
       variable_value:
         OA_patternForComponents: "(.*)"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "valeur"
             en: "value"
         OA_tags: [__ORDER_2__]  
@@ -251,7 +251,7 @@ Pour avoir le même stockage en base et la même sortie qu'avec l'exemple préce
       variable_value:
         OA_patternForComponents: "(^(?!(ecart-type_|unité_)).*)" # toutes les en-têtes n'ayant pas "ecart-type_" ou "unité_" comme préfixe (donc ici var_a et var_b seulement)
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "valeur"
             en: "value"
         OA_tags: [__ORDER_2__]  
@@ -366,7 +366,7 @@ La configuration est très proche de celle présentée ci-avant, avec la forme s
       variable_value:
         OA_patternForComponents: "(.*)"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "valeur"
             en: "value"
         OA_tags: [__ORDER_2__]  
@@ -457,7 +457,7 @@ Il est proposé d'utiliser OA_importHeaderTarget dans la section OA_adjacentComp
       variable_value:
         OA_patternForComponents: "(.*)"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "valeur"
             en: "value"
         OA_tags: [__ORDER_4__]  
@@ -528,7 +528,7 @@ Ex proposé par Philippe :
         OA_computation:
           OA_expression: "datum.co2_value / (1 - datum.co2_value.humidity)"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "valeur corrigée de CO2"
             en: "corrected CO2 value"
         OA_tags: [__ORDER_8__]
@@ -536,7 +536,7 @@ Ex proposé par Philippe :
         OA_computation:
           OA_expression: "datum.co2_value * datum.co2_conversion_factor"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "valeur convertie"
             en: "converted value"
         OA_tags: [__ORDER_9__]

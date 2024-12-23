@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.model.authorization.request;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
@@ -50,7 +49,7 @@ public class AuthorizationWithRestrictionBuilder {
       return;
     }
     if (authorizationForAllNode.isArray()) {
-      ((ArrayNode) authorizationForAllNode).elements().forEachRemaining(referenceNode -> {
+      authorizationForAllNode.elements().forEachRemaining(referenceNode -> {
         try {
 
         } catch (Exception e) {

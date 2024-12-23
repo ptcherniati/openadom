@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.file.AccumulatorPathVisitor;
 import org.apache.commons.io.file.Counters;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods   .HttpPost;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.cookie.CookieStore;
 import org.apache.hc.client5.http.entity.mime.FileBody;
@@ -58,16 +58,8 @@ public class Client {
         String password;
         boolean interactive = false;
         Scanner scanner = new Scanner(System.in);
-        if (interactive) {
-            System.out.println("Veuillez saisir les informations de connexion à " + instanceUrl);
-            System.out.print("identifiant : ");
-            login = scanner.nextLine();
-            System.out.print("mot de passe : ");
-            password = scanner.nextLine();
-        } else {
-            login = "poussin";
-            password = "xxxx";
-        }
+        login = "poussin";
+        password = "xxxx";
 
         CookieStore cookieStore = new BasicCookieStore();
         UriFactory uriFactory = new UriFactory(instanceUrl, applicationName);
@@ -149,20 +141,6 @@ public class Client {
                     + String.join(System.lineSeparator(), dataTypes));*/
 
             List<Command> commands = newCommands(data);
-
-            if (interactive) {
-                String plan = commands.stream()
-                        .map(Command::getDescription)
-                        .collect(Collectors.joining(System.lineSeparator()));
-                log("Plan :");
-                log(plan);
-                System.out.print("est-ce que le plan convient ? [O/n]");
-                String planIsOkString = scanner.nextLine();
-                boolean planIsOk = Set.of("o", "oui", "").contains(planIsOkString.toLowerCase());
-                if (!planIsOk) {
-                    fail("Abandon");
-                }
-            }
 
             for (Command command : commands) {
                 log("va traiter " + command.getDescription());
@@ -250,6 +228,9 @@ public class Client {
 
     private Command newUploadDataCommand(String dataName, File dataFile) {
         return new Command() {
+
+            public static final String MESSAGE_PARAMS = "messageParams";
+
             @Override
             public String getDescription() {
                 return "Téléversement de %s pour alimenter le référentiel %s".formatted(dataFile, dataName);
@@ -276,7 +257,7 @@ public class Client {
                             .map(record -> {
                                 Map<String, Object> resultMap = new HashMap<>();
                                 resultMap.put("message", ((Map<String, Object>) record.get("validationCheckResult")).get("message").toString());
-                                resultMap.put("messageParams", (Map<String, Object>) ((Map<String, Object>) record.get("validationCheckResult")).get("messageParams"));
+                                resultMap.put(MESSAGE_PARAMS, ((Map<String, Object>) record.get("validationCheckResult")).get(MESSAGE_PARAMS));
                                 return resultMap;
                             })
                             .collect(Collectors.toList());
@@ -295,11 +276,11 @@ public class Client {
                     case HttpURLConnection.HTTP_BAD_REQUEST -> {
                         List<Map<String, Object>> errorMessagesAndParams = parseJsonInResponseBodyForErrorMessagesAndParams(response);
                         logError("Une erreur  est survenue dans le traitement");
-                        errorMessagesAndParams.stream()
+                        errorMessagesAndParams
                                 .forEach(map -> {
                                     logError("->>>>>>>>>>");
                                     logError(map.get("message").toString());
-                                    ((Map<String, Object>) map.get("messageParams")).entrySet().stream()
+                                    ((Map<String, Object>) map.get(MESSAGE_PARAMS)).entrySet()
                                             .forEach(entry -> logError("%s : %s".formatted(entry.getKey(), entry.getValue())));
                                 });
                     }

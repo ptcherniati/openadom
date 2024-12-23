@@ -2,7 +2,6 @@ package fr.inra.oresing.rest.model.configuration;
 
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.application.configuration.examples.RootExampleBuilder;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 

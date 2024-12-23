@@ -127,7 +127,7 @@ class ConfigurationTest {
 
     private JsonNode buildComponentNode(ComponentDefinition componentDefinition) {
         Set<fr.inra.oresing.domain.application.configuration.Tag> tags = componentDefinition.order() == null ?
-                Set.of(fr.inra.oresing.domain.application.configuration.Tag.NoTag.INSTANCE()) :
+                Set.of(fr.inra.oresing.domain.application.configuration.Tag.NoTag.instance()) :
                 Set.of(new fr.inra.oresing.domain.application.configuration.Tag.OrderTag(componentDefinition.order()));
         BasicComponent component = new BasicComponent(
                 ComponentDescription.ComponentDescriptionType.BasicComponent,

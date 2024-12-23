@@ -43,21 +43,19 @@ public record I18n(Map i18n) {
 
             currentLocalization = currentLocalization.computeIfAbsent(labels[i], a -> new HashMap<>());
         }
-        if (i18n != null) {
-            for (final Object key : i18n.keySet()) {
-                final Locale locale = Locale.of(key.toString());
-                if (StringUtils.isAllLowerCase(key.toString()) &&
-                        (key.toString().length() != 2)) {
-                    locale.getUnicodeLocaleType(key.toString());
-                }
+        for (final Object key : i18n.keySet()) {
+            final Locale locale = Locale.of(key.toString());
+            if (StringUtils.isAllLowerCase(key.toString()) &&
+                    (key.toString().length() != 2)) {
+                locale.getUnicodeLocaleType(key.toString());
             }
-            currentLocalization.put(
-                    labels[labels.length - 1],
-                    (Map) i18n.keySet().stream()
-                            .filter(i18n::containsKey)
-                            .filter(k -> !Strings.isNullOrEmpty((String) i18n.get(k)))
-                            .collect(Collectors.toMap(Function.identity(), i18n::get)));
         }
+        currentLocalization.put(
+                labels[labels.length - 1],
+                (Map) i18n.keySet().stream()
+                        .filter(i18n::containsKey)
+                        .filter(k -> !Strings.isNullOrEmpty((String) i18n.get(k)))
+                        .collect(Collectors.toMap(Function.identity(), i18n::get)));
         return new I18n(localizations);
     }
 }

@@ -10,8 +10,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @Value
 @JsonIgnoreProperties({"stackTrace", "detailMassage", "cause", "depth", "suppressedExeceptions"})
-public class
-SiOreConfigurationFormatException extends IllegalArgumentException{
+public class SiOreConfigurationFormatException extends IllegalArgumentException{
     ConfigurationException exception;
     Map<String, Object> params;
 }

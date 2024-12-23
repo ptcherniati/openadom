@@ -35,6 +35,6 @@ public record ConfigurationBuiderTestBuilder<T>(T result, List<ValidationError> 
                 .map(ValidationError.class::cast)
                 .collectList()
                 .block();
-        return new ConfigurationBuiderTestBuilder<>(results==null?null: results.getFirst(), errors);
+        return new ConfigurationBuiderTestBuilder<>(results.getFirst(), errors);
     }
 }

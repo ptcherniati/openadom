@@ -33,9 +33,9 @@ public class AuthorizationRequestBuilder {
     private final Application application;
     final AuthorizationForAllBuilder authorizationForAllBuilder = new AuthorizationForAllBuilder(this);
     final AuthorizationWithRestrictionBuilder authorizationWithRestrictionBuilder = new AuthorizationWithRestrictionBuilder(this);
-    List<AuthorizationRequestError> errors = new ArrayList<>();
-    List<UUID> allUsers = List.of();
-    List<OreSiAuthorization> authorizationsForCurrentUser = List.of();
+    final List<AuthorizationRequestError> errors;
+    final List<UUID> allUsers;
+    final List<OreSiAuthorization> authorizationsForCurrentUser;
 
     public AuthorizationRequestBuilder(Application application,
                                        List<UUID> allUsers,

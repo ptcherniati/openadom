@@ -84,8 +84,8 @@ record SelectRequest(
                       'values', ARRAY[refvalues] ,
                       'refsLinkedTo', ARRAY[refsLinkedTo],
                        'allPatternColumnNames',ARRAY[patterncolumnname]
-					) AS   "json"
-                	FROM %3$s.referencevalue rs
+                    ) AS   "json"
+                    FROM %3$s.referencevalue rs
                     WHERE
                             rs.referencetype = '%4$s'%5$s
      

@@ -24,7 +24,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
         builder().binaryFile = Optional.ofNullable(params()).map(FileOrUUID::fileid)
                 .flatMap(binaryFileRepository::tryFindByIdWithData)
                 .orElseGet(() -> {
-                    UUID fileId = null;
+                    UUID fileId;
                     try {
                         fileId = binaryFileService
                                 .storeFile(
@@ -43,7 +43,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
                         binaryFile.withBinaryFileDataset(params().binaryfiledataset());
                     }
                     binaryFile.setFileData(bytes);
-                    fileId = binaryFileRepository.store(binaryFile);
+                    binaryFileRepository.store(binaryFile);
                     return binaryFile;
                 });
         if(builder().fileMustBeJustStored()){

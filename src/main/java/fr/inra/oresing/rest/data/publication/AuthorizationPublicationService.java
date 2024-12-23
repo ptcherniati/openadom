@@ -89,7 +89,7 @@ public class AuthorizationPublicationService {
             BinaryFileRepository binaryFileRepository,
             SynthesisService synthesisService
     ) {
-        filesToStore.stream()
+        filesToStore
                 .forEach(file -> {
                     dataRepository.removeByFileId(file.getId());
                     file.markAsPublished(false);

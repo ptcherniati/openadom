@@ -3,8 +3,9 @@ OA_application: #obligatoire
   OA_name: ateledectestingrealdata #obligatoire
   OA_defaultLanguage: fr
   OA_i18n:
-    fr: SI AnAEE-fr télédétection - testing realdata
-    en: SI AnAEE-fr remote sensing - testing real data
+    OA_title:
+      fr: SI AnAEE-fr télédétection - testing realdata
+      en: SI AnAEE-fr remote sensing - testing real data
   OA_version: 1.0.2 #obligatoire, version de l'application créée avec OpenADOM
   OA_comment: version 1.0.2 de la config du SI Teledec AnaEE-Fr OpenADOM v2
 OA_tags:
@@ -20,15 +21,16 @@ OA_tags:
 OA_data:
   tr_datatype_dty: # tr_datatype_dty.csv
     OA_i18n:
-      fr: Liste des types de données
-      en: List of datatypes
+      OA_title:
+        fr: Liste des types de données
+        en: List of datatypes
     OA_tags:
       - __REFERENCE__
       - metadata
     OA_naturalKey:
       - dty_code
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         en: "{dty_name_en}"
         fr: "{dty_name_fr}"
     OA_basicComponents:
@@ -37,7 +39,7 @@ OA_data:
         OA_required: true
         OA_tags: [ __ORDER_1__ ]
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "datatype"
       dty_name_fr:
         OA_importHeader: datatype_name_fr
@@ -53,14 +55,15 @@ OA_data:
         OA_tags: [ __ORDER_5__ ]
   tr_file_type_fty: # tr_file_type_fty.csv
     OA_i18n:
-      fr: Liste des référentiel des types de fichiers (tr_file_type_fty.csv)
-      en: List of file type reference (tr_file_type_fty.csv)
+      OA_title:
+        fr: Liste des référentiel des types de fichiers (tr_file_type_fty.csv)
+        en: List of file type reference (tr_file_type_fty.csv)
     OA_tags:
       - __REFERENCE__
     OA_naturalKey:
       - fty_code
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{fty_extension}"
         en: "{fty_extension}"
     OA_basicComponents:
@@ -78,15 +81,16 @@ OA_data:
         OA_tags: [ __ORDER_4__ ]
   tr_metadata_entity_ment: # tr_metadata_entity_ment.csv
     OA_i18n:
-      fr: Liste des entités utilisables dans le référentiel des métadonnées des variables locales (tr_metadata_entity_ment.csv)
-      en: List of entities usable in the metadata reference of the local variable names (tr_metadata_entity_ment.csv)
+      OA_title:
+        fr: Liste des entités utilisables dans le référentiel des métadonnées des variables locales (tr_metadata_entity_ment.csv)
+        en: List of entities usable in the metadata reference of the local variable names (tr_metadata_entity_ment.csv)
     OA_tags:
       - __REFERENCE__
       - metadata
     OA_naturalKey:
       - ment_code
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{ment_name_fr}"
         en: "{ment_name_en}"
     OA_basicComponents:
@@ -104,15 +108,16 @@ OA_data:
         OA_tags: [ __ORDER_4__ ]
   tr_variable_var: # tr_variable_var.csv
     OA_i18n:
-      fr: Liste des noms des colonnes de variables dans les fichiers de données (tr_variable_var.csv)
-      en: List of variable column names of data files (tr_variable_var.csv)
+      OA_title:
+        fr: Liste des noms des colonnes de variables dans les fichiers de données (tr_variable_var.csv)
+        en: List of variable column names of data files (tr_variable_var.csv)
     OA_tags:
       - __REFERENCE__
       - metadata
     OA_naturalKey:
       - var_code
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{var_code}"
         en: "{var_code}"
     OA_basicComponents:
@@ -215,14 +220,15 @@ OA_data:
             OA_reference:
               OA_name: tr_var_metadata_vmet
         OA_exportHeader: #optional
-          OA_i18n: #optional
+          OA_title: #optional
             fr: métadonnées supplémentaires sur la variable
             en: extra variable metadata
         OA_tags: [ __ORDER_19__ ]
   tr_var_metadata_vmet: # tr_var_metadata_vmet.csv
     OA_i18n:
-      fr: Liste des métadonnées supplémentaires des variables(tr_var_metadata_vmet.csv)
-      en: List of extra variable metadata (tr_var_metadata_vmet.csv)
+      OA_title:
+        fr: Liste des métadonnées supplémentaires des variables(tr_var_metadata_vmet.csv)
+        en: List of extra variable metadata (tr_var_metadata_vmet.csv)
     OA_tags:
       - __REFERENCE__
       - metadata
@@ -230,8 +236,8 @@ OA_data:
       - vmet_var_code
       - vmet_ment_code
       - vmet_ment_value
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{vmet_ment_code} : {vmet_ment_value} {vmet_ment_value_unit_code}"
         en: "{vmet_ment_code} : {vmet_ment_value} {vmet_ment_value_unit_code}"
     OA_basicComponents:
@@ -272,13 +278,14 @@ OA_data:
         OA_tags: [ __ORDER_7__ ]
   tr_site_sit: # tr_site_sit.csv
     OA_i18n:
-      fr: Liste des sites d'étude (tr_site_sit.csv)
-      en: List of study sites (tr_site_sit.csv)
+      OA_title:
+        fr: Liste des sites d'étude (tr_site_sit.csv)
+        en: List of study sites (tr_site_sit.csv)
     OA_tags:
       - __REFERENCE__
       - location
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{sit_code}"
         en: "{sit_code}"
     OA_naturalKey:
@@ -310,15 +317,16 @@ OA_data:
         OA_tags: [ __ORDER_8__ ]
   tr_plot_type_pty: # tr_plot_type_pty.csv
     OA_i18n:
-      fr: Liste des types de parcelles expérimentales (tr_plot_type_pty.csv)
-      en: List of experimental plot types (tr_plot_type_pty.csv)
+      OA_title:
+        fr: Liste des types de parcelles expérimentales (tr_plot_type_pty.csv)
+        en: List of experimental plot types (tr_plot_type_pty.csv)
     OA_tags:
       - __REFERENCE__
       - location
     OA_naturalKey:
       - pty_code
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{pty_code}"
         en: "{pty_code}"
     OA_basicComponents:
@@ -342,14 +350,15 @@ OA_data:
         OA_tags: [ __ORDER_6__ ]
   tr_treatment_tre: # tr_treatment_tre.csv
     OA_i18n:
-      fr: Liste des traitements (tr_treatment_tre.csv)
-      en: list of treatments (tr_treatment_tre.csv)
+      OA_title:
+        fr: Liste des traitements (tr_treatment_tre.csv)
+        en: list of treatments (tr_treatment_tre.csv)
     OA_tags:
       - __REFERENCE__
     OA_naturalKey:
       - tre_code
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{tre_code}"
         en: "{tre_code}"
     OA_basicComponents:
@@ -373,15 +382,16 @@ OA_data:
         OA_tags: [ __ORDER_6__ ]
   tr_plot_plo: # tr_plot_plo.csv
     OA_i18n:
-      fr: Liste des parcelles expérimentales (tr_plot_plo.csv)
-      en: List of experimental plots (tr_plot_plo.csv)
+      OA_title:
+        fr: Liste des parcelles expérimentales (tr_plot_plo.csv)
+        en: List of experimental plots (tr_plot_plo.csv)
     OA_tags:
       - __REFERENCE__
       - location
     OA_naturalKey:
       - plo_code
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{plo_code}"
         en: "{plo_code}"
     OA_basicComponents:
@@ -443,14 +453,15 @@ OA_data:
               OA_name: tr_treatment_tre
   tr_flag_fla: # tr_flag_fla.csv 
     OA_i18n:
-      fr: Liste des drapeaux (tr_flag_fla.csv)
-      en: List of flags (tr_flag_fla.csv)
+      OA_title:
+        fr: Liste des drapeaux (tr_flag_fla.csv)
+        en: List of flags (tr_flag_fla.csv)
     OA_tags:
       - __REFERENCE__
     OA_naturalKey:
       - fla_code
-    OA_i18nDisplay:
-      OA_pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{fla_code} ({fla_label_fr})"
         en: "{fla_code} ({fla_label_en})"
     OA_basicComponents:
@@ -465,8 +476,9 @@ OA_data:
         OA_tags: [ __ORDER_3__ ]
   t_teledetection_tel: # solutions avec colonnes organisées verticalement et une colonne meta_info
     OA_i18n:
-      fr: données de télédétection
-      en: remote sensing data
+      OA_title:
+        fr: données de télédétection
+        en: remote sensing data
     OA_tags:
       - __DATA__
     OA_naturalKey:
@@ -475,7 +487,6 @@ OA_data:
       - tel_network
       - tel_date
       - tel_hour
-      - tel_variable
     OA_dataHeaderLine: 11
     OA_dataFirstLine: 12
     OA_basicComponents:
@@ -483,7 +494,7 @@ OA_data:
         OA_tags: [ __ORDER_1__ ]
         OA_importHeader: "Date"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "Date"
             en: "Date"
         OA_required: true
@@ -495,7 +506,7 @@ OA_data:
         OA_tags: [ __ORDER_2__ ]
         OA_importHeader: "Heure"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "Heure"
             en: "Hour"
         OA_required: true
@@ -507,7 +518,7 @@ OA_data:
         OA_tags: [ __ORDER_10__ ]
         OA_importHeader: "quality_flag_code"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "code qualité"
             en: "quality flag"
         OA_required: true
@@ -520,7 +531,7 @@ OA_data:
       tel_network:
         OA_tags: [ __ORDER_3__ ]
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "réseau"
             en: "network"
         OA_required: true
@@ -530,7 +541,7 @@ OA_data:
       tel_site:
         OA_tags: [ __ORDER_4__ ]
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "plateforme (site)"
             en: "platform (site)"
         OA_required: true
@@ -545,7 +556,7 @@ OA_data:
       tel_plot:
         OA_tags: [ __ORDER_5__ ]
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "plot"
             en: "plot"
         OA_required: true
@@ -560,7 +571,7 @@ OA_data:
       tel_treatment:
         OA_tags: [ __ORDER_6__ ]
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "traitement"
             en: "treatment"
         OA_required: true
@@ -596,7 +607,7 @@ OA_data:
             return datum.tel_pixel_count_10m;
             }
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "nombre de pixels"
             en: "pixel count"
         OA_tags: [ __ORDER_7__ ]
@@ -604,17 +615,17 @@ OA_data:
       tel_value:
         OA_patternForComponents: "(.*)"
         OA_exportHeader:
-          OA_i18n:
+          OA_title:
             fr: "valeur"
             en: "value"
         OA_tags: [ __ORDER_9__ ]
         OA_required: false
         OA_checker:
           OA_name: OA_float
-        OA_components:
+        OA_componentQualifiers:
           - tel_variable:
               OA_exportHeader:
-                OA_i18n:
+                OA_title:
                   fr: "index"
                   en: "index"
               OA_tags: [ __ORDER_8__ ]

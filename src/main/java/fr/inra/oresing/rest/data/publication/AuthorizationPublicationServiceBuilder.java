@@ -37,10 +37,9 @@ public class AuthorizationPublicationServiceBuilder {
                                              .map(Submission.SubmissionScope::referenceScopes)
                                              .map(List::size)
                                              .orElse(-1) > 0;
-        boolean hasNoFileId = Optional.ofNullable(builder)
+        boolean hasNoFileId = Optional.of(builder)
                 .map(AuthorizationPublicationService::getParams)
-                .map(FileOrUUID::fileid)
-                .filter(Objects::nonNull)
+                .map(fileOrUUID -> true)
                 .isEmpty();
         if (hasNoFileId && hasSubmissionScope) {
             return new FileNameResolver(builder)
@@ -56,9 +55,7 @@ public class AuthorizationPublicationServiceBuilder {
         }
 
         try {
-            final FileOrUUID fileOrUUID = params != null && !"undefined".equals(params) ?
-                    new ObjectMapper().readValue(params, FileOrUUID.class) :
-                    null;
+            final FileOrUUID fileOrUUID = new ObjectMapper().readValue(params, FileOrUUID.class);
             Optional.ofNullable(fileOrUUID)
                     .map(FileOrUUID::binaryfiledataset)
                     .ifPresent(binaryFileDataset -> {

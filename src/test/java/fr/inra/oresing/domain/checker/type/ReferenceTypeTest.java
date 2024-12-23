@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -53,8 +52,8 @@ class ReferenceTypeTest {
                 dataColumn,
                 "",
                 referenceValues,
-                transformer
-        );
+                transformer,
+                null);
     }
 
 

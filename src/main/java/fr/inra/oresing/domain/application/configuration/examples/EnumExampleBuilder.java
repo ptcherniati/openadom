@@ -8,7 +8,7 @@ import java.util.Optional;
 class EnumExampleBuilder {
     protected static EnumType buildMultiplicityType(Multiplicity multiplicity) {
         Multiplicity multiplicity1 = multiplicity == null ? Multiplicity.ONE : multiplicity;
-        return Optional.ofNullable(multiplicity1)
+        return Optional.of(multiplicity1)
                 .map(Multiplicity::name)
                 .map(name ->
                         new EnumType(

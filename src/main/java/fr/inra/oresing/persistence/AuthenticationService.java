@@ -243,7 +243,7 @@ public class AuthenticationService {
         OreSiUser oreSiUser = getOreSiUser(userId);
         final OreSiUserRole roleToModify = getUserRole(userId);
         final OreSiopenAdomAdminRole roleToRevoke = OreSiRole.openAdomAdmin();
-        db.removeUserInRole(roleToModify, () -> OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole());
+        db.removeUserInRole(roleToModify, OreSiopenAdomAdminRole.openAdomAdmin::getAsSqlRole);
         return userRepository.findById(userId);
     }
 
@@ -253,7 +253,7 @@ public class AuthenticationService {
         OreSiUser oreSiUser = getOreSiUser(userId);
         final OreSiUserRole roleToModify = getUserRole(userId);
         final OreSiopenAdomAdminRole roleToAdd = OreSiRole.openAdomAdmin();
-        db.addUserInRole(roleToModify, () -> OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole());
+        db.addUserInRole(roleToModify, OreSiopenAdomAdminRole.openAdomAdmin::getAsSqlRole);
         return userRepository.findById(userId);
     }
 
@@ -271,7 +271,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                () -> userId.toString(),
+                userId::toString,
                 expression,
                 null
         );
@@ -303,7 +303,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                () -> userId.toString(),
+                userId::toString,
                 expression,
                 null
         );
@@ -326,7 +326,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                () -> userId.toString(),
+                userId::toString,
                 expression,
                 null
         );
@@ -350,7 +350,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                () -> userId.toString(),
+                userId::toString,
                 expression,
                 null
         );
@@ -377,7 +377,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                () -> userId.toString(),
+                userId::toString,
                 expression,
                 null
         );
@@ -400,7 +400,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                () -> userId.toString(),
+                userId::toString,
                 expression,
                 null
         );
@@ -527,7 +527,7 @@ public class AuthenticationService {
     public OreSiUser getByIdOrLogin(final String userIdOrLogin) {
         return userRepository.findByLogin(userIdOrLogin)
                 .orElseGet(() -> {
-                    UUID id = null;
+                    UUID id;
                     try {
                         id = UUID.fromString(userIdOrLogin);
                     } catch (Exception e) {
@@ -592,7 +592,7 @@ public class AuthenticationService {
                 .orElse(new OreSiUser());
     }
 
-    private OreSiUser sendValidationKey(final Optional<OreSiUser> loginResult) throws NoSuchAlgorithmException, InvalidKeySpecException, AuthenticationFailure, JsonProcessingException {
+    private OreSiUser sendValidationKey(final Optional<OreSiUser> loginResult) throws AuthenticationFailure, JsonProcessingException {
         return sendEmailValidation(loginResult, EmailService.MESSAGES.VALIDATION_KEY);
     }
 
@@ -612,7 +612,7 @@ public class AuthenticationService {
         return update;
     }
 
-    private OreSiUser updateAccount(final OreSiUser user, final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    private OreSiUser updateAccount(final OreSiUser user, final CreateUserRequest createUserRequest) throws AuthenticationFailure, JsonProcessingException {
         final String email = Optional.ofNullable(createUserRequest.getEmail())
                 .filter(mail -> !Strings.isNullOrEmpty(mail))
                 .orElse(user.getEmail())

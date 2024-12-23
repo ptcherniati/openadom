@@ -27,7 +27,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
             final String dataKey) {
         if (checkerNode == null || checkerNode.isMissingNode()) {
             if (required) {
-                return new Parsing<>(i18n, new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, required, null));
+                return new Parsing<>(i18n, new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, true, null));
             }
             return new Parsing<>(i18n, null);
         }
@@ -73,10 +73,6 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                 .map(multi -> rootBuilder.getMapper().convertValue(multi, Multiplicity.class))
                 .orElse(Multiplicity.ONE);
         final CheckerDescription checkerDescription = switch (name) {
-            case null -> new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker,
-                    multiplicity,
-                    required,
-                    "");
             case OA_reference -> {
                 String reference = params.findPath(ConfigurationSchemaNode.OA_REFERENCE)
                         .findPath(ConfigurationSchemaNode.OA_NAME)
@@ -124,7 +120,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                         required,
                         reference,
                         isrecursive,
-                        isParent = isParent || isrecursive);
+                        isParent || isrecursive);
             }
             case OA_date -> {
                 final DatePattern<TemporalAccessor> datePattern;
@@ -166,7 +162,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                 }
                 try {
                     final TemporalAccessor minDate = min
-                            .map(datePattern::format)
+                            .map(Objects.requireNonNull(datePattern)::format)
                             .orElse(LocalDateTime.MIN);
                     final TemporalAccessor maxDate = max
                             .map(datePattern::format)
@@ -181,9 +177,9 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                             duration.orElse(null));
                 } catch (final Exception exception) {
                     rootBuilder.buildError(ConfigurationException.INVALID_MIN_MAX_FOR_CHECKER_DATE, Map.of(
-                                    "declaredPattern", datePattern.pattern(),
-                                    "declaredMinValue", min.get().toString(),
-                                    "declaredMaxValue", max.get().toString()),
+                                    "declaredPattern", Objects.requireNonNull(datePattern).pattern(),
+                                    "declaredMinValue", Objects.requireNonNull(min.orElse(null)),
+                                    "declaredMaxValue", Objects.requireNonNull(max.orElse(null))),
                             NodeSchemaValidator.joinPath(
                                     path,
                                     ConfigurationSchemaNode.OA_CHECKER,

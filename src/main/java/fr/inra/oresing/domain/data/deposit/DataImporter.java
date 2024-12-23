@@ -354,7 +354,7 @@ public class DataImporter {
                             .map(conflictingLineNumber -> {
                                 final Set<Long> otherLines = new TreeSet<>(lineNumbers);
                                 otherLines.remove(conflictingLineNumber);
-                                final ValidationCheckResult validationCheckResult =
+                                final DuplicationLineValidationCheckResult validationCheckResult =
                                         new DuplicationLineValidationCheckResult(
                                                 DuplicationLineValidationCheckResult.FileType.REFERENCES,
                                                 dataImporterContext.getRefType(),
@@ -365,7 +365,7 @@ public class DataImporter {
                                                 null
                                         );
                                 return validationCheckResult.getValidations().stream()
-                                        .map(validationCheckResult1 -> new CsvRowValidationCheckResult((DuplicationLineValidationCheckResult) validationCheckResult, conflictingLineNumber))
+                                        .map(validationCheckResult1 -> new CsvRowValidationCheckResult(validationCheckResult, conflictingLineNumber))
                                         .collect(Collectors.toList());
                             })
                             .flatMap(Collection::stream);
@@ -482,27 +482,25 @@ public class DataImporter {
                 .map(PublishContext::fileOrUUID)
                 .map(FileOrUUID::binaryfiledataset)
                 .orElse(null);
-        final boolean haveAuthorizationsDescription = authorization != null;
+        final boolean haveAuthorizationsDescription = true;
 
 
         Map<String, List<Ltree>> requiredAuthorizations = new LinkedHashMap<>();
-        if (haveAuthorizationsDescription) {
-            authorization.authorizationScope().stream()
-                    .map(AuthorizationScopeComponentData::component)
-                    .map(DataColumn::new)
-                    .map(referenceDatum::get)
-                    .map(DataColumnValue::toJsonForDatabase)
-                    .filter(ReferenceType.class::isInstance)
-                    .map(ReferenceType.class::cast)
-                    .forEach(referenceType -> {
-                                List<ReferenceScope.NodeDescription> nodesForMenu = dataImporterContext.getNodesForMenu();
-                                List<Ltree> hierarchyOfHierarchicalkeys = getHierarchyOfHierarchicalkeys(referenceType);
-                                requiredAuthorizations.put(referenceType.getRefType(), hierarchyOfHierarchicalkeys);
-                            }
-                    );
-        }
+        authorization.authorizationScope().stream()
+                .map(AuthorizationScopeComponentData::component)
+                .map(DataColumn::new)
+                .map(referenceDatum::get)
+                .map(DataColumnValue::toJsonForDatabase)
+                .filter(ReferenceType.class::isInstance)
+                .map(ReferenceType.class::cast)
+                .forEach(referenceType -> {
+                            List<ReferenceScope.NodeDescription> nodesForMenu = dataImporterContext.getNodesForMenu();
+                            List<Ltree> hierarchyOfHierarchicalkeys = getHierarchyOfHierarchicalkeys(referenceType);
+                            requiredAuthorizations.put(referenceType.getRefType(), hierarchyOfHierarchicalkeys);
+                        }
+                );
         LocalDateTimeRange timeScope;
-        DateType timeScopeDateLineChecker = haveAuthorizationsDescription && authorization.timeScope() != null ?
+        DateType timeScopeDateLineChecker = authorization.timeScope() != null ?
                 dataImporterContext.getLineCheckers().stream()
                         .filter(dateType -> dateType.target().column().equals(authorization.timeScope()))
                         .map(LineChecker::underlyingType)
@@ -559,19 +557,14 @@ public class DataImporter {
                 null :
                 LocalDate.from(ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getFrom())).atStartOfDay();
         ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
-        builder.put("from", DISPLAY_DATE_FORMATTER_DDMMYYYY.format(from));
+        builder.put("from", DISPLAY_DATE_FORMATTER_DDMMYYYY.format(Objects.requireNonNull(from)));
         LocalDateTime lowerBound = timeScope.getRange().hasLowerBound() ? timeScope.getRange().lowerEndpoint() : LocalDateTime.MIN;
         builder.put("value", DISPLAY_DATE_FORMATTER_DDMMYYYY.format(lowerBound));
-        if (from == null) {
-            dateTimeRange = LocalDateTimeRange.until(LocalDate.from(ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo())).plus(1, ChronoUnit.DAYS).atStartOfDay());
-
-        } else {
-            LocalDateTime to = binaryFileDataset.getTo() == null ?
-                    null :
-                    LocalDate.from(ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo())).plus(1, ChronoUnit.DAYS).atStartOfDay();
-            dateTimeRange = LocalDateTimeRange.between(from, to);
-            builder.put("to", DISPLAY_DATE_FORMATTER_DDMMYYYY.format(to));
-        }
+        LocalDateTime to = binaryFileDataset.getTo() == null ?
+                null :
+                LocalDate.from(ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo())).plus(1, ChronoUnit.DAYS).atStartOfDay();
+        dateTimeRange = LocalDateTimeRange.between(from, to);
+        builder.put("to", DISPLAY_DATE_FORMATTER_DDMMYYYY.format(to));
         if (!dateTimeRange.getRange().encloses(timeScope.getRange())) {
             errors.add(new CsvRowValidationCheckResult(DefaultValidationCheckResult.error("timeRangeOutOfInterval", builder.build(), null), rowNumber));
         }
@@ -833,7 +826,7 @@ public class DataImporter {
             if (!Strings.isNullOrEmpty(parentKeyAsString)) {
                 final Ltree parentKey = Ltree.fromUnescapedString(parentKeyAsString);
                 parentReferenceMap().putIfAbsent(naturalKey, parentKey);
-                if (!afterPreloadReferenceUuids().keySet().stream().map(DataValue.LineIdentityColumnName::naturalKey).anyMatch(nk -> nk.equals(parentKey))) {
+                if (afterPreloadReferenceUuids().keySet().stream().map(DataValue.LineIdentityColumnName::naturalKey).noneMatch(nk -> nk.equals(parentKey))) {
                     UUID uuid = UUID.randomUUID();
                     DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(parentKey, parentKey);
                     if (afterPreloadReferenceUuids().keySet().stream()

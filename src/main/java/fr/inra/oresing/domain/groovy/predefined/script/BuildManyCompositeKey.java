@@ -24,7 +24,7 @@ public record BuildManyCompositeKey() implements ScriptConstantProvider {
                 List<List<String>> valuesList = labels.stream()
                         .map(label -> datum.getOrDefault(label, ""))
                         .map(value -> Arrays.asList(value.split(",")))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 // Trouver la taille maximale des listes de valeurs
                 int maxSize = valuesList.stream()

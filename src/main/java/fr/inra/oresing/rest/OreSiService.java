@@ -31,7 +31,6 @@ import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
-import fr.inra.oresing.domain.groovy.GroovyContextHelper;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
@@ -100,7 +99,6 @@ import java.util.zip.ZipOutputStream;
 public class OreSiService {
 
     public static final String CHARTE = "__charte__";
-    private final GroovyContextHelper groovyContextHelper = new GroovyContextHelper();
     @Value("classpath:charte/default_charte.pdf")
     Resource defaultCharte;
     @Autowired
@@ -149,7 +147,7 @@ public class OreSiService {
 
         final Application application = new Application();
         application.setName(name);
-        ReactiveProgression.CreateApplicationProgression result = null;
+        ReactiveProgression.CreateApplicationProgression result;
         try {
             result = (ReactiveProgression.CreateApplicationProgression) changeApplicationConfiguration(
                     comment,
@@ -203,8 +201,8 @@ public class OreSiService {
                                 k -> new ApplicationResult.AdditionalFile(k.getValue().formFields().keySet())
                         )
                 );
-        final Map<String, StandardDataDescription> referenceComponents = Maps.filterValues(application.getConfiguration().dataDescription(), cd -> cd.tags().contains(Tag.ReferenceTag.INSTANCE()) || !cd.tags().contains(Tag.DataTag.INSTANCE()));
-        final Map<String, StandardDataDescription> datatypeComponents = Maps.filterValues(application.getConfiguration().dataDescription(), cd -> cd.tags().contains(Tag.DataTag.INSTANCE()));
+        final Map<String, StandardDataDescription> referenceComponents = Maps.filterValues(application.getConfiguration().dataDescription(), cd -> cd.tags().contains(Tag.ReferenceTag.instance()) || !cd.tags().contains(Tag.DataTag.instance()));
+        final Map<String, StandardDataDescription> datatypeComponents = Maps.filterValues(application.getConfiguration().dataDescription(), cd -> cd.tags().contains(Tag.DataTag.instance()));
 
         final Map<String, Node> referencesNodes = application.getConfiguration().hierarchicalNodes().stream()
                 .filter(node -> referenceComponents.containsKey(node.nodeName()))
@@ -222,7 +220,7 @@ public class OreSiService {
         //referenceSynthesis,
         return new ApplicationResult(
                 application.getId().toString(),
-                Optional.ofNullable(application).map(Application::getName).orElseThrow(IllegalArgumentException::new),
+                Optional.of(application).map(Application::getName).orElseThrow(IllegalArgumentException::new),
                 application.findApplicationDescription()
                         .map(ApplicationDescription::comment)
                         .orElseGet(String::new),
@@ -443,7 +441,7 @@ public class OreSiService {
         }
         progressionForParsingConfiguration.pushMessage("endparsing", Map.of("applicationName", applicationName));
         String comment1 = configuration.applicationDescription().comment();
-        Optional.ofNullable(applicationName).ifPresent(application::setName);
+        Optional.of(applicationName).ifPresent(application::setName);
         try {
             application = createOrModifySchema.apply(application);
             final UUID confId = binaryFileService.storeFile(application, configurationFile, comment1, null);
@@ -607,7 +605,7 @@ public class OreSiService {
                         .groupingBy(
                                 c -> c.underlyingType().getClass().getSimpleName(),
                                 Collectors.toMap(c -> {
-                                            final DataColumn dataColumn = (DataColumn) c.target();
+                                            final DataColumn dataColumn = c.target();
                                             return dataColumn.toHumanReadableString();
                                         },
                                         DefaultLineCheckerResult::fromLineChecker)
@@ -630,7 +628,7 @@ public class OreSiService {
                                 c -> c.fieldTypeForOne().getClass().getSimpleName(),
                                 Collectors.toMap(
                                         c -> {
-                                            final DataColumn vc = (DataColumn) c.target();
+                                            final DataColumn vc = c.target();
                                             return vc.asString();
                                         },
                                         c -> c)
@@ -781,7 +779,7 @@ public class OreSiService {
     public Application validateConfiguration(final ReactiveProgression.CreateApplicationProgression fluxSink, final MultipartFile file) {
         try {
             final Application application;
-            if (file.getOriginalFilename().matches(".*\\.zip")) {
+            if (Objects.requireNonNull(file.getOriginalFilename()).matches(".*\\.zip")) {
                 application = ApplicationConfigurationService.unzipConfiguration(file, fluxSink);
             } else {
                 application = ApplicationConfigurationService.parseConfigurationBytes(null, fluxSink, FileBomResolver.of(file.getInputStream()));
@@ -838,7 +836,7 @@ public class OreSiService {
                 .map(Configuration::dataDescription)
                 .map(datatypes -> datatypes.get(dataType))
                 .map(StandardDataDescription::tags)
-                .map(tags -> tags.stream().noneMatch(tag -> Tag.HiddenTag.INSTANCE().equals(tag)))
+                .map(tags -> tags.stream().noneMatch(tag -> Tag.HiddenTag.instance().equals(tag)))
                 .orElse(false)) {
             return repository.getRepository(application).synthesisRepository().selectSynthesisDatatype(application.getId(), dataType).stream()
                     .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
@@ -854,7 +852,7 @@ public class OreSiService {
                 .map(StandardDataDescription::componentDescriptions)
                 .map(data -> data.get(componentName))
                 .map(ComponentDescription::tags)
-                .map(tags -> tags.stream().noneMatch(tag -> Tag.HiddenTag.INSTANCE() == tag))
+                .map(tags -> tags.stream().noneMatch(tag -> Tag.HiddenTag.instance().equals(tag)))
                 .orElse(false)) {
             return repository.getRepository(application).synthesisRepository().selectSynthesisDatatypeAndVariable(application.getId(), dataName, componentName).stream()
                     .collect(Collectors.groupingBy(OreSiSynthesis::getVariable));
@@ -914,7 +912,7 @@ public class OreSiService {
         rightsRequest.setComment(createRightsRequestRequest.comment());
         rightsRequest.setSetted(createRightsRequestRequest.setted());
         rightsRequest.setId(rightsRequest.getId() == null ? UUID.randomUUID() : rightsRequest.getId());
-        OreSiAuthorization authorizations = Optional.ofNullable(createRightsRequestRequest)
+        OreSiAuthorization authorizations = Optional.of(createRightsRequestRequest)
                 .map(CreateRightsRequestRequest::rightsRequest)
                 .map(authorization -> {
                     List errors = new ArrayList<>();
@@ -946,7 +944,7 @@ public class OreSiService {
         final AdditionalFileRepository additionalFileRepository = repository.getRepository(nameOrId).additionalBinaryFile();
         authenticationService.setRoleForClient();
         final Stream<AdditionalBinaryFile> additionnalFilesStream = additionalFileRepository
-                .findByCriteriaStream(additionalFileSearchHelper);
+                .findByCriteriaStream(Objects.requireNonNull(additionalFileSearchHelper));
         final Mono<byte[]> mono = Mono.just(additionnalFilesStream)
 
                 .map(Stream::findFirst)
@@ -975,7 +973,7 @@ public class OreSiService {
         final AtomicLong counter = new AtomicLong(0);
         repository
                 .getRepository(application).additionalBinaryFile()
-                .findByCriteriaStream(additionalFileSearchHelper)
+                .findByCriteriaStream(Objects.requireNonNull(additionalFileSearchHelper))
                 .forEach(additionalBinaryFile -> {
                     try {
                         if (counter.incrementAndGet() % 1000 == 0) {
@@ -998,7 +996,7 @@ public class OreSiService {
         try {
             return repository
                     .getRepository(application).additionalBinaryFile()
-                    .deleteByCriteria(additionalFileSearchHelper);
+                    .deleteByCriteria(Objects.requireNonNull(additionalFileSearchHelper));
         } catch (final DataIntegrityViolationException e) {
             return null;
         }
@@ -1092,7 +1090,7 @@ public class OreSiService {
     }
 
     @Transactional(readOnly = true)
-    public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData, Locale locale, ZipOutputStream zipOutputStream) throws IOException {
+    public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData, Locale locale, ZipOutputStream zipOutputStream) {
         Application application = applicationService.getApplication(nameOrId);
         String applicationName = application.getName();
         List<String> referentielsAvecDonnees = new ArrayList<>();

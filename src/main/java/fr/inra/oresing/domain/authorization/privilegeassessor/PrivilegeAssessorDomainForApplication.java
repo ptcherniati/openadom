@@ -61,7 +61,7 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
 
         Set<OperationType> rolesSetted = Optional.ofNullable(authorizations().userAuthorizations())
                 .map(map -> map.get(dataName))
-                .filter(Objects::nonNull)
+                .filter(obj -> true)
                 .map(authList -> authList.stream()
                         .flatMap(auth -> auth.operationTypes().stream())
                         .collect(Collectors.toSet()))
@@ -69,8 +69,7 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
         Optional.ofNullable(authorizations().publicAuthorizations())
                 .map(map -> map.get(dataName))
                 .map(AuthorizationParsed::operationTypes)
-                .ifPresent(operationTypes ->
-                        rolesSetted.addAll(operationTypes)
+                .ifPresent(rolesSetted::addAll
                 );
 
 

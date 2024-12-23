@@ -47,23 +47,21 @@ public class CheckerFactory {
       }
     }
     Map<String, CheckerDescription> validationCheckers = dataDescription.findValidationCheckers();
-    validationCheckers.entrySet().stream()
-            .forEach(entry -> {
-              CheckerDescription checkerDescription = entry.getValue();
-              TransformationConfiguration transformation = null;
-              if (checkerDescription instanceof TransformationConfiguration tc) {
-                                transformation = tc;
-              }
-              checkers.addAll(
-                      LineChecker.toLineChecker(
-                              dataRepository,
-                              publishContextBuilder,
-                              transformation,
-                              entry.getKey(),
-                              checkerDescription
-                      )
-              );
-            });
+    validationCheckers.forEach((key, checkerDescription) -> {
+        TransformationConfiguration transformation = null;
+        if (checkerDescription instanceof TransformationConfiguration tc) {
+            transformation = tc;
+        }
+        checkers.addAll(
+                LineChecker.toLineChecker(
+                        dataRepository,
+                        publishContextBuilder,
+                        transformation,
+                        key,
+                        checkerDescription
+                )
+        );
+    });
     return checkers.build();
   }
 

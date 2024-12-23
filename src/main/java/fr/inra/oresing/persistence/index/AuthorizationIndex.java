@@ -9,7 +9,7 @@ import fr.inra.oresing.domain.authorization.request.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public record AuthorizationIndex(Application application) {
+public record  AuthorizationIndex(Application application) {
     public String createIndexes() {
         StringBuilder sqlBuilder = new StringBuilder();
 
@@ -17,7 +17,7 @@ public record AuthorizationIndex(Application application) {
         sqlBuilder.append(dropIndexes()).append("\n");
 
         // Créer les nouveaux index pour chaque dataname
-        application().getConfiguration().dataDescription().keySet().stream().forEach(dataname -> sqlBuilder.append(createIndex(dataname)).append("\n"));
+        application().getConfiguration().dataDescription().keySet().forEach(dataname -> sqlBuilder.append(createIndex(dataname)).append("\n"));
 
         return sqlBuilder.toString();
     }

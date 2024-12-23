@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
-    Map<K, V> value = new HashMap<>();
+    Map<K, V> value;
     final Supplier<PatternType> clone;
 
     public PatternType(final Map<K, V> map) {

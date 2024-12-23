@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.application.configuration;
 
-import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import org.apache.commons.lang3.NotImplementedException;
 

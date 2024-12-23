@@ -15,6 +15,7 @@ import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -49,7 +50,7 @@ public record PatternComponentQualifiersBuilder(RootBuilder rootBuilder) {
                                 ConfigurationSchemaNode.OA_TAGS),
                         rootBuilder);
 
-                final boolean required = patternComponentNode.findPath(ConfigurationSchemaNode.OA_REQUIRED).asBoolean(false);
+                final boolean required = Objects.requireNonNull(patternComponentNode).findPath(ConfigurationSchemaNode.OA_REQUIRED).asBoolean(false);
 
                 final Parsing<String> exportHeaderParsing = rootBuilder.addExportHeaders(dataKey, i18n, patternColumnComponentNode, ConfigurationSchemaNode.OA_PATTERN_COMPONENTS);
                 if (exportHeaderParsing != null) {
@@ -63,7 +64,7 @@ public record PatternComponentQualifiersBuilder(RootBuilder rootBuilder) {
                                 "%1$s.OA_patternComponents.%2$s.%3$s".formatted(componentPath, componentKey, label),
                                 componentNodeValue.get(ConfigurationSchemaNode.OA_CHECKER),
                                 label);
-                i18n = checkerDescriptionParsing.i18n();
+                i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
                 final JsonNode defaultValueNode = componentNodeValue.get(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
                 final Parsing<ComputationChecker> defaultValueParsing;
                 if (defaultValueNode != null) {

@@ -17,7 +17,7 @@ import java.io.IOException;
 import java.util.*;
 
 public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
-     Map<K,V> value = new HashMap<>();
+     Map<K,V> value;
      final Supplier<MapType> clone;
 
     public MapType(final Map<K,V> map) {

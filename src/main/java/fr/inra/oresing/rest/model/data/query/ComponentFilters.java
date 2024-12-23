@@ -94,7 +94,6 @@ public class ComponentFilters {
                                     .collect(Collectors.toCollection(LinkedList::new)),
                             multiplicity
                     );
-                    default -> throw new IllegalStateException("Unexpected value: " + DatePattern.of(pattern).getFieldType());
                 };
                 case BooleanChecker ignored -> new ComponentFiltersByBoolean(
                         componentFilter.componentKey,
@@ -155,7 +154,6 @@ public class ComponentFilters {
                             componentFilter.getFilters(),
                             multiplicity
                     );
-                    default -> throw new IllegalStateException("Unexpected value: " + DatePattern.of(pattern).getFieldType());
                 };
                 case IntegerChecker ignored -> new ComponentFiltersByNumeric(
                         componentFilter.componentKey,
@@ -172,7 +170,7 @@ public class ComponentFilters {
                         componentFilter.getFilters(),
                         multiplicity
                 );
-                case null, default -> {
+                default -> {
                     if (Optional.ofNullable(componentFilter.isRegExp).orElse(false)) {
                         yield new ComponentFiltersForWordByRegexp(
                                 componentFilter.componentKey,

@@ -4,7 +4,6 @@ import fr.inra.oresing.domain.application.configuration.BuilderNode;
 import fr.inra.oresing.domain.application.configuration.Node;
 import fr.inra.oresing.domain.application.configuration.Validation;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -177,7 +176,23 @@ class BuilderNodeTest {
     @Test
     public void TestBuildOrderedNodes() {
         final SortedSet<Node> orderedNodes = Node.buildNode(builderNodes.values(), new Validation(null, null, null));
-        System.out.println(orderedNodes);
+
+        Assertions.assertEquals(
+                """
+                        projet
+                        themes
+                        type_de_sites
+                        site_theme_datatype
+                        unites
+                        variables
+                        variables_et_unites_par_types_de_donnees
+                        especes
+                        valeurs_qualitative
+                        valeurs_qualitatives
+                        pem
+                        type_de_fichiers""",
+                orderedNodes.stream().map(Node::nodeName).collect(Collectors.joining("\n"))
+        );
     }
 
 

@@ -12,9 +12,6 @@ public record CreateUserResult (
     OreSiUser.OreSiUserStates accountState,
     Map<String, Timestamp> chartes){
 
-    public CreateUserResult {
-    }
-
     public static CreateUserResult of(OreSiUser user){
         return new CreateUserResult(user.getId(), user.getLogin(), user.getEmail(), user.getAccountstate(), user.getChartes());
     }

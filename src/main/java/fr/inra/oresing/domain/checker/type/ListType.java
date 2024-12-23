@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultManyValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import lombok.Getter;
 
@@ -66,16 +65,9 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     @Override
     public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         final FieldType underlyingType = lineChecker.fieldTypeForOne();
-        final List<UUID> uuids = new LinkedList<>();
         final List<ValidationCheckResult> collect = Arrays.stream(value.split(","))
                 .map(v -> underlyingType.check(v, lineChecker))
                 .peek(v -> this.value.add((FT) underlyingType.copy()))
-                .peek(v -> {
-                    if (v instanceof final ReferenceValidationCheckResult rvcr && rvcr!=null){
-                        uuids.addAll(rvcr.matchedReferenceId());
-                    }
-
-                })
                 .collect(Collectors.toList());
         return new DefaultManyValidationCheckResult(collect, lineChecker.target());
     }

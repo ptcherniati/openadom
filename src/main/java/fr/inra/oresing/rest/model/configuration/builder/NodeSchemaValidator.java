@@ -21,8 +21,8 @@ import java.util.stream.Collectors;
 
 public class NodeSchemaValidator {
     public static final String REFERENCE_SCOPES_FOR_FILE = "referenceScopesForFile";
-    final static String PATH_SEPARATOR = " > ";
-    final static String I18N_PATH_SEPARATOR = ".";
+    static final String PATH_SEPARATOR = " > ";
+    static final String I18N_PATH_SEPARATOR = ".";
     final RootBuilder rootBuilder;
 
     public NodeSchemaValidator(RootBuilder rootBuilder) {
@@ -65,14 +65,13 @@ public class NodeSchemaValidator {
             throw new IllegalArgumentException("schema is not described for %s".formatted(path));
         Set<String> labels = new HashSet<>();
         node.fieldNames().forEachRemaining(labels::add);
-        if (testNodeLabels(parentSchema1, path, labels)) return new AtomicBoolean(false);
+        if (testNodeLabels(Objects.requireNonNull(parentSchema1), path, labels)) return new AtomicBoolean(false);
         return testChildrenNodeSchema(parentSchema1, path, node, new AtomicBoolean(true));
     }
 
     private CheckerType testCheckerSection(JsonNode node, String path) {
-        CheckerType checkerType = null;
         try {
-            checkerType = Optional.ofNullable(node)
+            Optional.ofNullable(node)
                     .map(checkerNode -> checkerNode.findPath(ConfigurationSchemaNode.OA_NAME))
                     .map(JsonNode::asText)
                     .map(CheckerFactory::getCheckerTypeForName).
@@ -81,10 +80,7 @@ public class NodeSchemaValidator {
         } catch (SiOreConfigurationFormatException e) {
             rootBuilder.buildError(e.getException(), e.getParams(), path);
         }
-        if (null != checkerType) {
-            return checkerType;
-        }
-        String checkerName = Optional.ofNullable(node)
+        String checkerName = Optional.of(node)
                 .map(checkerNode -> checkerNode.findPath(ConfigurationSchemaNode.OA_NAME))
                 .map(JsonNode::asText)
                 .orElse("");
@@ -200,7 +196,7 @@ public class NodeSchemaValidator {
                                 case final ArrayNode arrayNode ->{
                                     for (final JsonNode jsonElement : arrayNode) {
                                         areChildrenValid.compareAndSet(false,
-                                                testSchema(arrayType.type(),
+                                                testSchema(null,
                                                         jsonElement,
                                                         joinPath(List.of(path, childLabel, Integer.toString(index++)))).get());
                                     }

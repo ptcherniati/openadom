@@ -38,14 +38,21 @@ class ConstantComponentExampleBuilder {
             final ConstantImportHeaderType constantImportHeaderType
     ) {
         return new ConstantComponentType(
-                new LinkedHashMap<>() {{
-                    put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeaderType);
-                    put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
-                    put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_TARGET, constantImportHeaderType);
-
-                }}
+                getChildren(exportHeaderType, required, constantImportHeaderType)
         );
     }
+
+    private static LinkedHashMap<String, ConfigurationSchemaNodeType> getChildren(
+            TitleType exportHeaderType,
+            boolean required,
+            ConstantImportHeaderType constantImportHeaderType) {
+        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
+        children.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeaderType);
+        children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
+        children.put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_TARGET, constantImportHeaderType);
+        return children;
+    }
+
 
     protected static ConstantComponentType buildBasicComponents(
             final List<String> tags,

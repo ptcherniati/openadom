@@ -134,7 +134,7 @@ public abstract class Column implements Comparable<Column> {
                                                                 final List<Column> qualifierColumns,
                                                                 final List<Column> adjacentColumns,
                                                                 final TransformationConfiguration defaultValue) {
-        Column column = null;
+        Column column;
         column = new OneValueStaticPatternColumn(
                 referenceColumn,
                 headerForColumn,

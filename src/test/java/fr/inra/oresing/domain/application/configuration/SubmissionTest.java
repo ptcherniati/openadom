@@ -37,42 +37,39 @@ class SubmissionTest {
     final BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
 
     @Test
-    @Disabled
     void parseFileName() {
         submission.parseFileName("leProjet_leSite_01-01-1984_05-01-1984.csv", binaryFileDataset);
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
-        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("chemin").contains(Ltree.fromSql("leSite")));
-        assertTrue(binaryFileDataset.getFrom().toString().contains("{},ISO resolved to 1984-01-01"));
-        assertTrue(binaryFileDataset.getTo().toString().contains("{},ISO resolved to 1984-01-05"));
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
+        assertTrue(binaryFileDataset.getFrom().equals("1984-01-01 00:00:00"));
+        assertTrue(binaryFileDataset.getTo().equals("1984-01-05 00:00:00"));
         //do nothing if already done
         submission.parseFileName("leProjet2_leSite2_01-01-1985_05-01-1985.csv", binaryFileDataset);
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
-        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("chemin").contains(Ltree.fromSql("leSite")));
-        assertTrue(binaryFileDataset.getFrom().toString().contains("{},ISO resolved to 1984-01-01"));
-        assertTrue(binaryFileDataset.getTo().toString().contains("{},ISO resolved to 1984-01-05"));
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
+        assertTrue(binaryFileDataset.getFrom().equals("1984-01-01 00:00:00"));
+        assertTrue(binaryFileDataset.getTo().equals("1984-01-05 00:00:00"));
 
     }
     @Test
-    @Disabled
     void parseFileNameWithInvalidStartDate() {
         try {
             submission.parseFileName("leProjet_leSite_01-01/1984_05-01-1984.csv", binaryFileDataset);
         }catch (SiOreAuthorizationRequestException e){
             assertEquals(AuthorizationRequestException.BAD_FILE_NAME_START_DATE,e.getException());
-            assertEquals("projet_chemin_dd-MM-yyyy_dd-MM-yyyy.csv",e.getParams().get("fileNameFormat"));
+            assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv",e.getParams().get("fileNameFormat"));
             assertEquals("01-01/1984",e.getParams().get("startDate"));
             assertEquals("dd-MM-yyyy",e.getParams().get("dateformat"));
         }
 
     }
     @Test
-    @Disabled
     void parseFileNameWithInvalidEndDate() {
         try {
             submission.parseFileName("leProjet_leSite_01-01-1984_05-01/1984.csv", binaryFileDataset);
         }catch (SiOreAuthorizationRequestException e){
             assertEquals(AuthorizationRequestException.BAD_FILE_NAME_END_DATE,e.getException());
-            assertEquals("projet_chemin_dd-MM-yyyy_dd-MM-yyyy.csv",e.getParams().get("fileNameFormat"));
+            assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv",e.getParams().get("fileNameFormat"));
             assertEquals("05-01/1984",e.getParams().get("endDate"));
             assertEquals("dd-MM-yyyy",e.getParams().get("dateformat"));
         }

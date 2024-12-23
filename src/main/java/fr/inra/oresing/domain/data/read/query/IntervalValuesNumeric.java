@@ -11,8 +11,8 @@ public record IntervalValuesNumeric(
         String from,
         String to) implements WithIntervalValues {
     public IntervalValuesNumeric {
-        Float fromNumeric = null;
-        Float toNumeric = null;
+        Float fromNumeric;
+        Float toNumeric;
         if (from != null) {
             try {
                 fromNumeric = Float.parseFloat(from);
@@ -25,7 +25,7 @@ public record IntervalValuesNumeric(
                 } catch (final NumberFormatException e) {
                     throw new BadDownloadDatasetQuery(FILTER_BAD_FORMAT_FOR_END_NUMERIC);
                 }
-                if (fromNumeric != null && toNumeric != null && fromNumeric.compareTo(toNumeric) > 0) {
+                if (fromNumeric.compareTo(toNumeric) > 0) {
                     throw new BadDownloadDatasetQuery(FILTER_BAD_FORMAT_BAD_RANGE_FOR_NUMERICS, Map.of("from", from, "to", to));
                 }
             }

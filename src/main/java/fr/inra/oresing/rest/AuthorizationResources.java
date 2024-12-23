@@ -352,7 +352,7 @@ public class AuthorizationResources {
             throw new NotApplicationCanManageReferenceRightsException(application.getName());
         }
         final Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
-        final OreSiAdditionalFileAuthorization oreSiAuthorization = authorizationService.addAdditionalFileAuthorizations(application, authorization, additionalFilesAuthorizationsForCurrentUser, isApplicationCreator);
+        final OreSiAdditionalFileAuthorization oreSiAuthorization = authorizationService.addAdditionalFileAuthorizations(application, authorization, additionalFilesAuthorizationsForCurrentUser, true);
         final UUID authId = oreSiAuthorization.getId();
         if (authorization.getUuid() == null) {
             OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
@@ -426,7 +426,7 @@ public class AuthorizationResources {
                     .canManagerRightForRole(roleForUser);
             if (!CollectionUtils.isEmpty(applicationPattern)) {
                 user.getAuthorizations().addAll(applicationPattern);
-                user = userRepository.update(user);
+                userRepository.update(user);
                 user = authorizationService.addSystemRoleUser(roleForUser);
             }
         } else {

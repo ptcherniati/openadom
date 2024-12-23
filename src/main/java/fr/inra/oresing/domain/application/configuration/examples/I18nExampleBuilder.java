@@ -30,15 +30,16 @@ class I18nExampleBuilder {
     );
 
     protected static I18nType buildI18n(final String fr, final String en) {
+        LinkedHashMap<String, String> children = new LinkedHashMap<>();
+        if (fr != null) {
+            children.put("fr", fr);
+        }
+        if (en != null) {
+            children.put("en", en);
+        }
+
         return new I18nType(
-                new LinkedHashMap<>() {{
-                    if (fr != null) {
-                        put("fr", fr);
-                    }
-                    if (en != null) {
-                        put("en", en);
-                    }
-                }});
+                children);
     }
 
     protected static CollectionType.MapType<I18nType> buildI18nDisplay(final I18nType i18nDisplay) {

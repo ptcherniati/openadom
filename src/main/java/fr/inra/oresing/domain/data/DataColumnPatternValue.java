@@ -6,6 +6,7 @@ import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -57,7 +58,7 @@ public record DataColumnPatternValue(
                         case IntegerType integerType -> integerType.getValue();
                         case BooleanType booleanType -> booleanType.getValue();
                         case FloatType floatType -> floatType.getValue();
-                        case NullType nullType -> null;
+                        case NullType nullType -> Optional.empty();
                         default -> value;
                     };
                 }));

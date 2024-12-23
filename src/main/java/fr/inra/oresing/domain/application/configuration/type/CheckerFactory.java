@@ -17,7 +17,7 @@ public record CheckerFactory() implements CheckerType {
                     )
             );
         }
-        CheckerEnum checkerType = null;
+        CheckerEnum checkerType;
         try {
             checkerType = CheckerEnum.valueOf(checkerName);
         } catch (final Exception e) {
@@ -37,7 +37,6 @@ public record CheckerFactory() implements CheckerType {
             case OA_integer -> IntegerCheckerType.EMPTY_INSTANCE();
             case OA_reference -> ReferenceCheckerType.EMPTY_INSTANCE();
             case OA_string -> StringCheckerType.EMPTY_INSTANCE();
-            case null -> null;
         };
     }
 

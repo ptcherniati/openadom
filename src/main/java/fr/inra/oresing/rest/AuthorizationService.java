@@ -66,19 +66,18 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                         .map(AuthorizationScopeComponentData::data)
                         .collect(Collectors.toSet()))
                 .orElseGet(Set::of);
-
-        if (authByType instanceof AuthorizationNoRestriction) {
-            return; // Pas de vérification nécessaire pour AuthorizationNoRestriction
-        }
-
-        if (authByType instanceof AuthorizationForReferenceScope authForReferenceScope) {
-            Preconditions.checkArgument(labels.containsAll(authForReferenceScope.authorizationScope().keySet()));
-        } else if (authByType instanceof AuthorizationForReferenceScopeAndTimeScope authForReferenceScopeAndTimeScope) {
-            Preconditions.checkArgument(labels.containsAll(authForReferenceScopeAndTimeScope.authorizationScope().keySet()));
-        } else if (authByType instanceof AuthorizationForTimeScope) {
-            // Pas de vérification spécifique pour AuthorizationForTimeScope
-        } else {
-            throw new IllegalArgumentException("Type d'autorisation non reconnu");
+        switch (authByType){
+            case AuthorizationForReferenceScope authorizationForReferenceScope ->
+                    Preconditions.checkArgument(labels.containsAll(authorizationForReferenceScope.authorizationScope().keySet()));
+            case AuthorizationForReferenceScopeAndTimeScope authorizationForReferenceScopeAndTimeScope ->
+                    Preconditions.checkArgument(labels.containsAll(authorizationForReferenceScopeAndTimeScope.authorizationScope().keySet()));
+            case AuthorizationForTimeScope authorizationForTimeScope -> {
+                return;// Pas de vérification nécessaire pour AuthorizationForTimeScope
+            }
+            case AuthorizationNoRestriction authorizationNoRestriction -> {
+                return;// Pas de vérification nécessaire pour AuthorizationNoRestriction
+            }
+            default -> throw new IllegalArgumentException("Type d'autorisation non reconnu");
         }
     }
 
@@ -348,7 +347,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         Map<String, AuthorizationForScope> filteredAuthorizations = oreSiAuthorization.getAuthorizations().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> validateAndGetAuthForScope(entry, isApplicationCreator, authorizationListForCurrentUser, application)
+                        entry -> validateAndGetAuthForScope(entry, true, authorizationListForCurrentUser, application)
                 ));
 
         if (filteredAuthorizations.isEmpty()) {
@@ -537,10 +536,9 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     ) {
         return referenceScopeBykey
                 .stream()
-                .filter(node2 ->
-                        Objects.equals(node.node_nk(), node2.parent_nk()) &&
-                                (Objects.equals(node.node_type(), node2.parent_type()) ||//TODO error type_de_sites
-                                        ("type_de_sites".equals(node.node_type()) && "type_de_sites".equals(node2.parent_type())))
+                .filter(//TODO error type_de_sites
+                        node2 ->
+                                Objects.equals(node.node_nk(), node2.parent_nk()) && Objects.equals(node.node_type(), node2.parent_type())
                 )
                 .map(node2 -> new ReferenceScope.TreeNode(
                         node2.node_nk(),
@@ -579,9 +577,9 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     @Transactional
     public OreSiUserResult deleteApplicationRoleUser(final OreSiRoleForUser roleForUser, Application application) {
         authenticationService.setRoleAdmin();
-        if (OreSiRole.applicationManagerOf(application).getAsSqlRole().toString().contains(roleForUser.role())) {
+        if (OreSiRole.applicationManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
             return deleteApplicationManagerRoleUser(roleForUser, application);
-        } else if (OreSiRole.userManagerOf(application).getAsSqlRole().toString().contains(roleForUser.role())) {
+        } else if (OreSiRole.userManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
             return deleteUserManagerRoleUser(roleForUser, application);
         }
         throw new BadApplicationRoleException("cantDeleteApplicationRole", roleForUser.role(), application);
@@ -659,9 +657,9 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     @Transactional
     public OreSiUserResult addApplicationRoleUser(final OreSiRoleForUser roleForUser, Application application) {
         authenticationService.setRoleAdmin();
-        if (OreSiRole.applicationManagerOf(application).getAsSqlRole().toString().contains(roleForUser.role())) {
+        if (OreSiRole.applicationManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
             return addApplicationManagerRoleUser(roleForUser, application);
-        } else if (OreSiRole.userManagerOf(application).getAsSqlRole().toString().contains(roleForUser.role())) {
+        } else if (OreSiRole.userManagerOf(application).getAsSqlRole().contains(roleForUser.role())) {
             return addUserManagerRoleUser(roleForUser, application);
         }
         throw new BadApplicationRoleException("cantSetApplicationRole", roleForUser.role(), application);
@@ -897,8 +895,6 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         List<OreSiAdditionalFileAuthorization> authorizations = repository.getRepository(application).authorizationAdditionalFiles()
                 .findAuthorizations(UUID.fromString(Optional.ofNullable(rolesForCurrentUser).map(CurrentUserRoles::userLogin).orElse("")), application);
         final Map<OperationAdditionalFileType, List<String>> authorizationMap = new EnumMap<>(OperationAdditionalFileType.class);
-        final List<String> attributes = new ArrayList<>(application.getConfiguration().requiredAuthorizationsAttributes());
-
         authorizations
                 .forEach(authorizationList -> authorizationList.getAdditionalFiles().forEach((key, value) -> value.
                         forEach(authorizationResult -> authorizationMap
@@ -933,7 +929,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .map(Map::keySet)
                 .map(application::findDependentNodes)
                 .ifPresent(dependantsNodes::addAll);
-        return createAuthorizationRequest.addDependantAuthorizations(dependantsNodes);
+        return Objects.requireNonNull(createAuthorizationRequest).addDependantAuthorizations(dependantsNodes);
 
     }
 

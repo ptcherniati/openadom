@@ -11,6 +11,7 @@ import lombok.Setter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 
 public record ApplicationResult(
@@ -33,23 +34,22 @@ public record ApplicationResult(
 ) {
 
     public List<String> getOrderedReferences() {
-        ArrayList orederedReferences = new ArrayList();
-        Consumer<Node> addReferenceRecursively = child -> addReferenceRecursively(child, orederedReferences);
-        references().values().stream()
-                .forEach(addReferenceRecursively);
-        data().keySet()
-                .stream().filter(Predicate.not(orederedReferences::contains))
-                .forEach(orederedReferences::add);
-        return orederedReferences;
-    }
-
-    private void addReferenceRecursively(Node node, ArrayList<String> orederedReferences) {
-        String referenceName = node.nodeName();
-        orederedReferences.add(referenceName);
-        Consumer<Node> addReferenceRecursively = child -> addReferenceRecursively(child, orederedReferences);
-        node.children().stream()
-                .forEach(addReferenceRecursively);
-
+        return configuration().hierarchicalNodes().stream()
+                .sorted((a,b)->{
+                    if(a.depends().contains(b.nodeName())){
+                        return 1;
+                    }
+                    if(b.depends().contains(a.nodeName())){
+                        return -1;
+                    }
+                    int compareOrder = a.order().compareTo(b.order());
+                    if(compareOrder == 0){
+                        return a.nodeName().compareTo(b.nodeName());
+                    }
+                    return compareOrder;
+                })
+                .map(Node::nodeName)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Setter

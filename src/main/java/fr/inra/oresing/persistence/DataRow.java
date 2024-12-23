@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
-import lombok.Value;
 
 import java.util.*;
 import java.util.stream.Collectors;

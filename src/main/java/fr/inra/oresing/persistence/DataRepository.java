@@ -17,7 +17,6 @@ import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
 import fr.inra.oresing.persistence.requestBuilder.data.DataRequestBuilder;
 import fr.inra.oresing.persistence.requestBuilder.data.SqlRequest;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import lombok.Value;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -98,15 +97,15 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     protected String getUpsertQuery() {
         return """
                 INSERT INTO %1$s
-                    (id, patternColumnName,  application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, \"authorization\")
-                SELECT id, patternColumnName, application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, \"authorization\"
+                    (id, patternColumnName,  application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, "authorization")
+                SELECT id, patternColumnName, application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, "authorization"
                 FROM json_populate_recordset(
                     NULL::%2$s,
                     :json::json
                 )
                 ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
                 DO UPDATE SET updateDate=current_timestamp, hierarchicalKey=EXCLUDED.hierarchicalKey, naturalKey=EXCLUDED.naturalKey, refsLinkedTo=EXCLUDED.refsLinkedTo,
-                refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile, \"authorization\"=EXCLUDED.\"authorization\" RETURNING id
+                refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile, "authorization"=EXCLUDED."authorization" RETURNING id
                 """.formatted(getTable().getSqlIdentifier(), getTable().getSqlIdentifier());
     }
 
@@ -134,6 +133,9 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
     public Map<String, List<Ltree>> resolveRequiredAuthorizations(Map<String, List<Ltree>> requiredAuthorizations) {
+        if(requiredAuthorizations.isEmpty()){
+            return Map.of();
+        }
         AtomicInteger counter = new AtomicInteger();
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
 
@@ -168,7 +170,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 params
         );
 
-        return getNamedParameterJdbcTemplate().queryForObject(
+        return getNamedParameterJdbcTemplate().
+                queryForObject(
                 sql,
                 parameterSource,
                 new JsonRowMapper<Map>()
@@ -218,7 +221,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         final int offset = Optional.of(params)
                 .map(m -> m.remove("_offset_"))
                 .filter(l -> !l.isEmpty())
-                .map(l -> l.getFirst())
+                .map(List::getFirst)
                 .map(o -> {
                     try {
                         return Integer.valueOf(o);
@@ -230,7 +233,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         final String limit = Optional.of(params)
                 .map(m -> m.remove("_limit_"))
                 .filter(l -> !l.isEmpty())
-                .map(l -> l.getFirst())
+                .map(List::getFirst)
                 .filter(o -> o.matches("[0-9]*|ALL"))
                 .orElse("ALL");
         String query = """
@@ -471,11 +474,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         );
 
 // Collecter les nouvelles entrées dans une liste séparée
-        List<Map.Entry<String, String>> newEntries = hierarchicalKeyByNaturalKey.values().stream()
+        List<Map.Entry<String, String>> newEntries = Objects.requireNonNull(hierarchicalKeyByNaturalKey).values().stream()
                 .distinct()
                 .filter(hierarchicalKey -> !hierarchicalKeyByNaturalKey.containsKey(hierarchicalKey))
                 .map(hierarchicalKey -> Map.entry(hierarchicalKey, hierarchicalKey))
-                .collect(Collectors.toList());
+                .toList();
 
 // Ajouter les nouvelles entrées à la map
         hierarchicalKeyByNaturalKey.putAll(
@@ -525,7 +528,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         String dataType = jsonNode.get("dataType").asText();
                         Set<UUID> dataValues = getJsonRowMapper().getJsonMapper().convertValue(
                                 jsonNode.get("ids"),
-                                new TypeReference<Set<UUID>>() {
+                                new TypeReference<>() {
                                 }
                         );
 
@@ -578,7 +581,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 params,
                                 (rs, rowNum) -> new FileContent(rs.getString("fileName"), rs.getString("fileContent"))
                         )
-                        .map(FileContent.class::cast)
+                        .map(fileContent -> fileContent)
         );
     }
 

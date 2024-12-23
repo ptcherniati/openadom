@@ -1,4 +1,4 @@
-site;traitement;version;date début;date fin;commentaire_fr;commentaire_en;modalites
+sites;traitement;version;date début;date fin;commentaire_fr;commentaire_en;modalites
 estrees-mons;t1;1;17/03/2010;;version initiale;initial version;FC,GR,R5,WL
 estrees-mons;t2;1;17/03/2010;;version initiale;initial version;FC,GR,R5,WTS
 estrees-mons;t3;1;17/03/2010;;version initiale;initial version;FC,GE,R5,WTS

@@ -196,13 +196,13 @@ public class OreSiResources {
         if (fileId.isEmpty()) {
             throw new SiOreIllegalArgumentException(SiOreIllegalArgumentException.NO_FILE_To_DELETE, Map.of("fileId", id));
         }
-        Boolean canDelete = Optional.ofNullable(storeFile)
+        Boolean canDelete = Optional.of(storeFile)
                 .map(StoreFile::builder)
                 .map(AuthorizationPublicationService::getAuthorizations)
                 .map(AuthorizationForUser::canDelete)
                 .orElse(false);
         if (!canDelete) {
-            String dataName = Optional.ofNullable(storeFile)
+            String dataName = Optional.of(storeFile)
                     .map(StoreFile::builder)
                     .map(AuthorizationPublicationService::getDataName)
                     .orElse("notFoundDataname");
@@ -272,7 +272,7 @@ public class OreSiResources {
 
         final Application application;
         try {
-            application = applicationService.getApplicationOrApplicationAccordingToRights(name);
+            applicationService.getApplicationOrApplicationAccordingToRights(name);
             log.info("Modification de l'application %s".formatted(name));
             return changeConfiguration(name, file, comment);
         } catch (final Exception e) {
@@ -495,7 +495,7 @@ public class OreSiResources {
         final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
 
         final StreamingResponseBody streamResponseBody;
-        if ("__charte__".equals(additionalFilesInfos.getFiletype())) {
+        if ("__charte__".equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
             response.setHeader("Accept-Ranges", "bytes");
             streamResponseBody = out -> service.getCharte(out, response, nameOrId, additionalFilesInfos);
@@ -507,7 +507,7 @@ public class OreSiResources {
                     switch (OreSiResources.getDefaultLocale().getLanguage()) {
                         case "fr" -> log.error("Exception lors de la lecture et du streaming de données ", ioe);
                         case "en" -> log.error("Exception while reading and streaming data  ", ioe);
-                        case null, default -> log.error("Exception while reading and streaming data ", ioe);
+                        default -> log.error("Exception while reading and streaming data ", ioe);
                     }
                 }
             };
@@ -797,7 +797,7 @@ public class OreSiResources {
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
                 deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, loadExample);
 
-        final Locale locale = Optional.ofNullable(downloadDatasetQuery)
+        final Locale locale = Optional.of(downloadDatasetQuery)
                 .map(fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery::getLanguage)
                 .map(Locale::of)
                 .orElseGet(OreSiResources::getDefaultLocale);
@@ -862,7 +862,7 @@ public class OreSiResources {
                                                         .ifPresent(referenceValue -> lineCheckers.put(
                                                                 componentKey,
                                                                 new LineCheckerResultDisplay<>(
-                                                                        (DefaultLineCheckerResult) referenceLineChecker,
+                                                                        referenceLineChecker,
                                                                         referenceValue
                                                                 )));
                                             }
@@ -973,7 +973,7 @@ public class OreSiResources {
         AtomicReference<OreSiUser> user = new AtomicReference<>();
         StreamingResponseBody responseBody = outputStream -> {
             ZipOutputStream zipOutputStream = null;
-            Path tempFile = null;
+            Path tempFile;
             try {
                 user.set(userRepository.findById(request.getRequestClient().id()));
                 tempFile = Files.createTempFile(Paths.get("/tmp"), "data-" + UUID.randomUUID(), ".zip");
@@ -1060,7 +1060,7 @@ public class OreSiResources {
             final Application application = applicationService.getApplication(applicationNameOrID);
             downloadDatasetQuery.setApplication(application);
             downloadDatasetQuery.setDataName(dataType);
-            final Locale locale = Optional.ofNullable(downloadDatasetQuery)
+            final Locale locale = Optional.of(downloadDatasetQuery)
                     .map(DownloadDatasetQuery::getOutPut)
                     .map(OutPut::locale)
                     .orElseGet(OreSiResources::getDefaultLocale);
@@ -1149,7 +1149,7 @@ public class OreSiResources {
 
         StreamingResponseBody responseBody = outputStream -> {
             ZipOutputStream zipOutputStream = null;
-            Path tempFile = null;
+            Path tempFile;
             AtomicReference<OreSiUser> user = new AtomicReference<>();
             try {
                 user.set(userRepository.findById(this.request.getRequestClient().id()));

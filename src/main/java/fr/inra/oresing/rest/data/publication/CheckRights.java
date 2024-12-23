@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.domain.services.file.BinaryFileService;
 
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 

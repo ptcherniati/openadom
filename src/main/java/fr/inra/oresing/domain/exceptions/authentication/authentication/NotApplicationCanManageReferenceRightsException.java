@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 public class NotApplicationCanManageReferenceRightsException extends OreSiTechnicalException {
-    public final static String NO_RIGHT_FOR_MANAGE_REFERENCES_RIGHTS_APPLICATION = "NO_RIGHT_FOR_MANAGE_REFERENCES_RIGHTS_APPLICATION";
+    public static final String NO_RIGHT_FOR_MANAGE_REFERENCES_RIGHTS_APPLICATION = "NO_RIGHT_FOR_MANAGE_REFERENCES_RIGHTS_APPLICATION";
     final String applicationName;
     String dataType;
     final List<String> authorizationsRestrictions;

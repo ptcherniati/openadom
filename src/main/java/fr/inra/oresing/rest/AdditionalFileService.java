@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.groovy.GroovyContextHelper;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.persistence.AdditionalFileRepository;
@@ -24,8 +23,6 @@ public class AdditionalFileService {
 
     @Autowired
     private AuthenticationService authenticationService;
-
-    private final GroovyContextHelper groovyContextHelper = new GroovyContextHelper();
 
     @Autowired
     private OreSiRepository repo;

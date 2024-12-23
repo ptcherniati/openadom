@@ -18,7 +18,7 @@ public class RightsRequestSearchHelper {
     private final AtomicInteger i = new AtomicInteger();
 
     @Getter
-    private MapSqlParameterSource paramSource = new MapSqlParameterSource();
+    private final MapSqlParameterSource paramSource;
 
     private String addArgumentAndReturnSubstitution(final Object value) {
         final int i = this.i.incrementAndGet();

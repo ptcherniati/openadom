@@ -224,7 +224,7 @@ public class Application extends OreSiEntity {
     public boolean isData(String dataName) {
         return findData(dataName)
                 .map(StandardDataDescription::tags)
-                .map(tags -> tags.stream().anyMatch(Tag.DataTag.INSTANCE()::equals))
+                .map(tags -> tags.stream().anyMatch(Tag.DataTag.instance()::equals))
                 .orElse(false);
     }
 

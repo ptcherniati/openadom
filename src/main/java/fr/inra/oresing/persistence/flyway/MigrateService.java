@@ -31,10 +31,6 @@ import java.util.*;
 @Component
 @Slf4j
 public class MigrateService {
-    final Map<String, ActionToDoAfterMigration> callBackFunction =
-            new LinkedHashMap<>() {{
-                put("1", new Migrate1());
-            }};
     @Autowired
     ApplicationRepository applicationRepository;
     @Autowired
@@ -113,6 +109,9 @@ public class MigrateService {
 
     public Flyway getFlyway(OreSiUserRole creator) {
         final SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
+        final Map<String, ActionToDoAfterMigration> callBackFunction = new LinkedHashMap<>();
+        callBackFunction.put("1", new Migrate1());
+
         return Flyway.configure()
                 .dataSource(dataSource)
                 .placeholders(Map.of(
@@ -145,7 +144,7 @@ public class MigrateService {
         if (hasNoAddition) {
             return;
         }
-        Collection<String> newDataIdentifiers = CollectionUtils.<String>removeAll(
+        Collection<String> newDataIdentifiers = CollectionUtils.removeAll(
                 newRequiredAuthorizationAttributes, currentRequiredAuthorizationAttributes
         );
 
@@ -171,7 +170,7 @@ public class MigrateService {
         if (hasNoDeletion) {
             return;
         }
-        Collection<String> removingDataIdentifiers = CollectionUtils.<String>removeAll(newRequiredAuthorizationAttributes, currentRequiredAuthorizationAttributes);
+        Collection<String> removingDataIdentifiers = CollectionUtils.removeAll(newRequiredAuthorizationAttributes, currentRequiredAuthorizationAttributes);
 
         throw new SiOreConfigurationFormatException(
                 ConfigurationException.REMOVING_AUTHORIZATION_SCOPE_ATTRIBUTES_ERROR,
@@ -200,6 +199,10 @@ public class MigrateService {
         public void handle(final Event event, final Context context) {
             final Connection connection = context.getConnection();
             String version = context.getMigrationInfo().getVersion().getVersion();
+
+            final Map<String, ActionToDoAfterMigration> callBackFunction = new LinkedHashMap<>();
+            callBackFunction.put("1", new Migrate1());
+
             Optional.ofNullable(callBackFunction.get(version))
                     .ifPresent(actionToDoAfterMigration -> {
                         try {

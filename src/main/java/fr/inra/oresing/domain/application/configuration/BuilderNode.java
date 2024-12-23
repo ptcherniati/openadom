@@ -5,6 +5,7 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 public record BuilderNode(
@@ -42,7 +43,7 @@ public record BuilderNode(
         List<String> childDepends = depends();
         while (CollectionUtils.isNotEmpty(childDepends)) {
             childDepends = childDepends.stream()
-                    .map(name -> nodes.stream().filter(node -> node.nodeName().equals(name)).findFirst().orElse(null))
+                    .map(name -> nodes.stream().filter(node -> node.nodeName().equals(name)).findFirst().orElse(null)).filter(Objects::nonNull)
                     .map(WithDepends::depends)
                     .flatMap(List::stream)
                     .toList();

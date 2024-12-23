@@ -35,7 +35,7 @@ public non-sealed class StringType implements FieldType<String> {
     public StringType(final String pattern) {
         super();
         this.pattern = pattern;
-        predicate = Optional.ofNullable(pattern).filter(s -> !s.isEmpty() && !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
+        predicate = Optional.ofNullable(pattern).filter(s -> !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
         clone = () -> new StringType(pattern);
     }
 

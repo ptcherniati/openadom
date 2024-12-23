@@ -55,7 +55,6 @@ public class DataImporterContext {
         return columnsWithPatternColumns;
     }
 
-    @Getter
     private ImmutableSet<Column> columnsWithPatternColumns;
     @Getter
     private final PatternColumnFactory patternColumnFactory;
@@ -260,7 +259,7 @@ public class DataImporterContext {
 
     public String getCsvCellContent(final DataDatum referenceDatum, final String header) {
         final Column column = getExpectedColumnsPerHeaders().get(header);
-        return column.getCsvCellContent(referenceDatum);
+        return Objects.requireNonNull(column).getCsvCellContent(referenceDatum);
     }
 
     public Optional<InternationalizationTitle> getDisplayPattern() {

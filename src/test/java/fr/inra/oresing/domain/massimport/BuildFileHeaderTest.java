@@ -15,12 +15,11 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
-public class BuildFileHeadertest {
-    private static final Logger log = LoggerFactory.getLogger(BuildFileHeadertest.class);
+public class BuildFileHeaderTest {
+    private static final Logger log = LoggerFactory.getLogger(BuildFileHeaderTest.class);
     static final String RESOURCE_PATH = "fr/inra/oresing/domain/massimport/massimport.yaml";
 
     @ParameterizedTest
-    @Disabled
     @ValueSource(strings = {RESOURCE_PATH}) // Put your configuration file paths here
     void buildFileHeader(String filePath) throws IOException {
         URL url = Resources.getResource(filePath);
