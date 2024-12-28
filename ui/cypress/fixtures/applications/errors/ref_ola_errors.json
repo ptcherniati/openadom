@@ -1,1 +1,1 @@
-{}
+{"missingMandatoryColumns":"[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"missingMandatoryColumns\",\"messageParams\":{\"missingMandatoryColumns\":[\"Date\"]},\"target\":null},\"lineNumber\":7}]","unexpectedHeaderColumnsInList":"[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"missingMandatoryColumns\",\"messageParams\":{\"missingMandatoryColumns\":[\"Date\"]},\"target\":null},\"lineNumber\":7}]"}
