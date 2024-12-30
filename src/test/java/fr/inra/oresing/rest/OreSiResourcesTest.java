@@ -25,6 +25,7 @@ import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
+import fr.inra.oresing.rest.services.RelationalService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
@@ -1673,10 +1674,10 @@ public class OreSiResourcesTest {
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
 
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(0)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
                 .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='oir__p1')].chemin", hasSize(0)))
-                .andExpect(jsonPath("$.rows.length()").value(34))
-                .andExpect(jsonPath("$.rows[*]", hasSize(34)))
+                .andExpect(jsonPath("$.rows.length()").value(136))
+                .andExpect(jsonPath("$.rows[*]", hasSize(136)))
                 .andReturn().getResponse().getContentAsString();
 
         //pour le createur auth on a les fichiers de scarff

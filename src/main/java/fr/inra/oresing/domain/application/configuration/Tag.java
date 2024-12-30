@@ -31,6 +31,7 @@ public sealed interface Tag {
     }
 
     static LinkedHashSet<Tag> buildTags(final Set<String> tagNames, final Validation validation) {
+        assert validation !=null;
         try {
             if (CollectionUtils.isEmpty(tagNames)) {
                 return new LinkedHashSet<>(Set.of(NoTag.instance()));

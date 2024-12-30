@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
+import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
@@ -13,18 +14,19 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
+import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
+import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,12 +37,15 @@ import java.util.stream.Collectors;
 public class BinaryFileService implements fr.inra.oresing.domain.services.file.BinaryFileService {
     @Autowired
     private OreSiRepository repository;
+
+    private ServiceContainer serviceContainer;
     @Autowired
     private AuthenticationService authenticationService;
     @Autowired
     private OreSiApiRequestContext request;
     @Autowired
     private JsonRowMapper jsonRowMapper;
+
 
 
     public static BinaryFileDataset deserialiseBinaryFileDatasetQuery(final String dataName, final String params) {
@@ -58,7 +63,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
 
     @Override
     @Transactional()
-    public UUID storeFile(final Application application, final MultipartFile file, final String comment, final BinaryFileDataset binaryFileDataset) throws  IOException {
+    public UUID storeFile(final Application application, final MultipartFile file, final String comment, final BinaryFileDataset binaryFileDataset) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
         final BinaryFile binaryFile = new BinaryFile();
@@ -67,16 +72,18 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         binaryFile.setName(file.getOriginalFilename() != null ? file.getOriginalFilename() : "charte.pdf");
         binaryFile.setSize(file.getSize());
         binaryFile.setFileData(file.getBytes());
-        final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, request.getRequestUserId(),LocalDateTime.now().toString(),binaryFileDataset);
+        final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, request.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
         binaryFile.setParams(binaryFileInfos);
         return getBinaryFileRepository(application).store(binaryFile);
     }
 
+    @Override
     public Optional<BinaryFile> getFile(final String applicationNameOrID, final UUID id) {
         authenticationService.setRoleForClient();
         return getBinaryFileRepository(applicationNameOrID).tryFindById(id);
     }
 
+    @Override
     public Optional<BinaryFile> getFileWithData(final String applicationNameOrID, final UUID id) {
         authenticationService.setRoleForClient();
         return getBinaryFileRepository(applicationNameOrID).tryFindByIdWithData(id);
@@ -91,15 +98,16 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     }
 
     @Transactional
+    @Override
     public Optional<UUID> removeFile(Application application, UUID id) {
-        Function<BinaryFile,UUID> deleteBinaryFile = binaryFile ->  getBinaryFileRepository(application).delete(binaryFile.getId())?binaryFile.getId():null;
+        Function<BinaryFile, UUID> deleteBinaryFile = binaryFile -> getBinaryFileRepository(application).delete(binaryFile.getId()) ? binaryFile.getId() : null;
         return getFile(application.getName(), id)
                 .map(deleteBinaryFile);
     }
 
     @Override
     public ReportErrors findPublishedVersion(final String nameOrId, final String dataType, final FileOrUUID params, final Set<BinaryFile> filesToStore, final boolean searchOverlaps) {
-        if (params != null && params.binaryfiledataset()!=null) {
+        if (params != null && params.binaryfiledataset() != null) {
             if (searchOverlaps) {
                 final List<BinaryFile> overlapingFiles = getFilesOnRepository(nameOrId, dataType, params.binaryfiledataset(), true);
                 if (!overlapingFiles.isEmpty()) {
@@ -134,8 +142,24 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         return new ReportErrors(jsonRowMapper);
     }
 
+    @Override
     public List<BinaryFile> getFilesOnRepository(final String nameOrId, final String datatype, final BinaryFileDataset fileDatasetID, final boolean overlap) {
         authenticationService.setRoleForClient();
         return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, fileDatasetID, overlap);
+    }
+
+    @Override
+    public AdditionalBinaryFileResult getAdditionalBinaryFileResult(
+            final AdditionalBinaryFile additionalBinaryFile,
+            final Application application) {
+        Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
+        serviceContainer.authorizationService().authorizationsToParsedAuthorizations(
+                additionalBinaryFile.getAssociates(),
+                authorizationsParsed);
+        return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsParsed);
+    }
+
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
     }
 }

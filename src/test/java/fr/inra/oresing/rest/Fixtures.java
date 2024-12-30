@@ -1234,7 +1234,7 @@ public class Fixtures {
     }
 
     @Getter
-    enum Application {
+    public enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
         //PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),

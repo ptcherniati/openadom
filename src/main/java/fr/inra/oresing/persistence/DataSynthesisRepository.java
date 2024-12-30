@@ -23,7 +23,6 @@ implements SynthesisRepository {
             with
                  vars (agregation, variable, "datatype", gap) as (
                      values  %2$s
-
                  ),
             datas as (
                 select
@@ -33,7 +32,7 @@ implements SynthesisRepository {
                     upper(("authorization").timescope) maxdate,
                     ("authorization").requiredAuthorizations requiredAuthorizations,
                     jsonb_object_agg(datavalues) datavalues
-            \tfrom %1$s."data"
+            \tfrom %1$s."referencevalue"
                 group by application, "datatype", ("authorization").requiredAuthorizations, ("authorization").timescope, rowid
             ) ,
             infos as (
@@ -115,87 +114,86 @@ implements SynthesisRepository {
                              array_agg(tsrange(mindate,maxdate))           )::%1$s.oresisynthesis) as json
             from result
             group by application, "datatype", variable, requiredAuthorizations, aggregation""";
-    public static final String BUILD_GENERIC_SYNTHESIS_SQL = """
-             with
-                vars ( "datatype") as (
+    public static final String BUILD_GENERIC_SYNTHESIS_SQL =
+            """
+                    with
+                        vars ( "datatype") as (
                      values  %2$s
-
-
-                ),
-                datas as (select application,
+                    ),
+                        datas as (select application,
+                                         "referencetype",
+                                         lower(("authorization").timescope)       mindate,
+                                         upper(("authorization").timescope)       maxdate,
+                                         ("authorization").requiredAuthorizations requiredAuthorizations,
+                                         jsonb_object_agg(refvalues)             datavalues
+                                  from %1$s."referencevalue"
+                                  group by application, "referencetype", ("authorization").requiredAuthorizations, ("authorization").timescope,
+                                           hierarchicalkey, linehierarchicalkeypatterncolumnname
+                        ),
+                        infos as (
+                            select application,
+                                   vars."datatype",
+                                   mindate,
+                                   max(maxdate)
+                                   over (partition by "application", vars."datatype",mindate )             maxdate,
+                                   requiredAuthorizations                                                                                                                           requiredAuthorizations,
+                                   dense_rank()
+                                   over (partition by "application", vars."datatype"  order by mindate ) as "range",
+                                   true and ((mindate - lag(maxdate)
+                                                        over (partition by application, vars."datatype" order by mindate, maxdate) <
+                                              maxdate - mindate))                                                                                                                                     as continuous
+                            from datas
+                                     join vars on "datas"."referencetype" = vars."datatype"),
+                        infos_agg as (
+                            select application,
                                    "datatype",
-                                   lower(("authorization").timescope)       mindate,
-                                   upper(("authorization").timescope)       maxdate,
-                                   ("authorization").requiredAuthorizations requiredAuthorizations,
-                                   jsonb_object_agg(datavalues)             datavalues
-            \tfrom %1$s."data"
-                            group by application, "datatype", ("authorization").requiredAuthorizations, ("authorization").timescope,
-                                     rowid
-             ),
-            infos as (
-             select application,
-                    vars."datatype",
-                    mindate,
-                    max(maxdate)
-                    over (partition by "application", vars."datatype",mindate )             maxdate,
-                    requiredAuthorizations                                                                                                                           requiredAuthorizations,
-                    dense_rank()
-                    over (partition by "application", vars."datatype"  order by mindate ) as "range",
-                    true and ((mindate - lag(maxdate)
-                                                     over (partition by application, vars."datatype" order by mindate, maxdate) <
-                                           maxdate - mindate))                                                                                                                                     as continuous
-             from datas
-            join vars on "datas"."datatype" = vars."datatype"),
-            infos_agg as (
-                select application,
-                       "datatype",
-                       requiredAuthorizations,
-                       range,
-                       mindate,
-                       maxdate,
-                       bool_and(continuous) continuous
-
-                from infos
-                group by application, "datatype", requiredAuthorizations, range, mindate, maxdate
-            ),
-                synthesis as (
-                    select application,
-                           "datatype",
-                           requiredAuthorizations,
-                           mindate,
-                           maxdate,
-                           sum(
-                           case
-                               when continuous
-                                   then 0
-                               else 1
-                               end
-                               )
-                           over (partition by application, "datatype", requiredAuthorizations order by mindate) timerange
-                    from infos_agg
-                ),
-                result as (
+                                   requiredAuthorizations,
+                                   range,
+                                   mindate,
+                                   maxdate,
+                                   bool_and(continuous) continuous
+                    
+                            from infos
+                            group by application, "datatype", requiredAuthorizations, range, mindate, maxdate
+                        ),
+                        synthesis as (
+                            select application,
+                                   "datatype",
+                                   requiredAuthorizations,
+                                   mindate,
+                                   maxdate,
+                                   sum(
+                                   case
+                                       when continuous
+                                           then 0
+                                       else 1
+                                       end
+                                      )
+                                   over (partition by application, "datatype", requiredAuthorizations order by mindate) timerange
+                            from infos_agg
+                        ),
+                        result as (
+                            select
+                                application,
+                                "datatype",
+                                '' variable,
+                                requiredAuthorizations,
+                                '' aggregation,
+                                min(mindate) "mindate",
+                                max(maxdate) "maxdate"
+                            from synthesis
+                            group by  application, "datatype", variable, requiredAuthorizations, aggregation, timerange)
                     select
-                        application,
-                        "datatype",
-                        '' variable,
-                        requiredAuthorizations,
-                        '' aggregation,
-                        min(mindate) "mindate",
-                        max(maxdate) "maxdate"
-                    from synthesis
-                    group by  application, "datatype", variable, requiredAuthorizations, aggregation, timerange)
-            select
                     '%3$s' as "@class",
-                to_jsonb((gen_random_uuid(), now(),
-                          application,
-                          "datatype",
-                          variable,
-                          requiredAuthorizations,
-                          aggregation,
-                          array_agg(tsrange(mindate,maxdate))           )::%1$s.oresisynthesis) as json
-            from result
-            group by application, "datatype", variable, requiredAuthorizations, aggregation""";
+                        to_jsonb((gen_random_uuid(), now(),
+                                  application,
+                                  "datatype",
+                                  variable,
+                                  requiredAuthorizations,
+                                  aggregation,
+                                  array_agg(tsrange(mindate,maxdate))           )::%1$s.oresisynthesis) as json
+                    from result
+                    group by application, "datatype", variable, requiredAuthorizations, aggregation""";
     public static final String SELECT_SYNTHESIS_BY_APPLICATION_AND_DATATYPE = "SELECT '%s' as \"@class\", to_jsonb(t) as json FROM (" +
             "select id, updatedate, application, \"datatype\", variable, requiredAuthorizations, aggregation, ranges " +
             "from %s  " +

@@ -78,9 +78,6 @@ public class AuthorizationResourcesTest {
     @Autowired
     private Fixtures fixtures;
 
-    @Autowired
-    private OreSiService oreSiService;
-
     @Test
     @Disabled
     public void testAddAuthorization() throws Exception {

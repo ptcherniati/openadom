@@ -2,19 +2,21 @@ package fr.inra.oresing.rest.data;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
+import com.google.common.io.Resources;
+import fr.inra.oresing.client.Client;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.GroovyDataInjectionConfiguration;
+import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationReader;
 import fr.inra.oresing.domain.checker.CheckerFactory;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
-import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.checker.type.ReferenceType;
-import fr.inra.oresing.domain.checker.type.StringType;
+import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
@@ -23,10 +25,12 @@ import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.column.*;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
+import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
-import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
-import fr.inra.oresing.domain.data.read.query.DownloadDatasetQueryNoFilter;
-import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileOrUUID;
@@ -39,8 +43,12 @@ import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
-import fr.inra.oresing.rest.application.ApplicationService;
+import fr.inra.oresing.rest.filesenderclient.*;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
+import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
+import fr.inra.oresing.rest.model.data.LineCheckerResult;
+import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +59,9 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -61,20 +71,22 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain.DATA_READ;
+
 @Slf4j
 @Component
-@Transactional(readOnly = true)
-public class DataService {
-    @Autowired
-    private ApplicationService applicationService;
-    @Autowired
-    private AuthenticationService authenticationService;
+public class DataService implements ServiceContainerBean {
+    ServiceContainer serviceContainer;
     @Autowired
     private OreSiRepository repo;
     @Autowired
     private JsonRowMapper jsonRowMapper;
 
     private DataRepository dataRepository;
+    @Autowired
+    private OreSiRepository repository;
+    @Autowired
+    private FileRepository fileRepository;
 
     private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription) {
         final String reference = referenceDynamicColumnDescription.reference();
@@ -117,7 +129,7 @@ public class DataService {
     public UUID addData(final Application application,
                         final String dataName,
                         final DataFile file) throws IOException {
-        authenticationService.setRoleForClient();
+        serviceContainer.authenticationService().setRoleForClient();
         try (final InputStream csv = new ByteArrayInputStream(file.data())) {
             addData(application, dataName, csv, file.params());
         } catch (InvalidDatasetContentException invalidDatasetContentException) {
@@ -451,12 +463,18 @@ public class DataService {
         return GroovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, null);
     }
 
+    public List<DataValue> findReference(final String nameOrId, final String refType, final MultiValueMap<String, String> params) {
+        Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
+        return serviceContainer.dataService()
+                .findReferenceAccordingToRights(application, refType, params);
+    }
+
     public List<DataValue> findReferenceAccordingToRights(final Application application, final String refType, final MultiValueMap<String, String> params) {
         if (application.getConfiguration().getHiddenData().contains(refType)) {
             return List.of();
         }
         final Set<String> hiddenComponents = application.getConfiguration().getHiddenComponentsForData(refType);
-        authenticationService.setRoleForClient();
+        serviceContainer.authenticationService().setRoleForClient();
         return getReferenceValueRepository(application)
                 .findAllByReferenceTypeWithReferencingReferencesStream(refType, params)
                 .peek(referenceValue -> referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents)))
@@ -468,7 +486,7 @@ public class DataService {
     }
 
     public List<UUID> deleteDataAccordingToRights(final Application application, final String refType, final MultiValueMap<String, String> params) {
-        authenticationService.setRoleForClient();
+        serviceContainer.authenticationService().setRoleForClient();
         return getReferenceValueRepository(application).deleteReferenceType(refType, params);
     }
 
@@ -481,7 +499,7 @@ public class DataService {
             return Flux.empty();
         }
         dataRepository = getDataRepository(downloadDatasetQuery);
-        authenticationService.setRoleForClient();
+        serviceContainer.authenticationService().setRoleForClient();
         return dataRepository.findAllByDataTypeFlux(downloadDatasetQuery)
                 .map(dataRows -> DataRow.of(downloadDatasetQuery.application().findData(downloadDatasetQuery.dataName()), dataRows));
     }
@@ -500,7 +518,7 @@ public class DataService {
             final String dataName,
             Locale language,
             boolean horizontalDisplay) {
-        final Application application = applicationService.getApplication(applicationNameOrId);
+        final Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
         if (application.getConfiguration().getHiddenData().contains(dataName)) {
             return;
         }
@@ -562,6 +580,400 @@ public class DataService {
                 .block();
     }
 
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
+    }
+
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
+    }
+
+    public Mono<List<DownloadDatasetQueryByRowId>> getDownloadDatasetQueriesAsync(
+            long patternDefinitionCount,
+            Application application,
+            Locale locale,
+            DataRepository dataRepository,
+            Set<UUID> uuidsFromData,
+            boolean horizontalDisplay) {
+        return Flux.fromStream(dataRepository.getLinkedReferenceValuesStream(uuidsFromData))
+                .map(dataValuesByDataType -> {
+                    String dataType = dataValuesByDataType.dataType();
+                    Set<DataRowIds> ids = dataValuesByDataType.ids();
+                    return new DownloadDatasetQueryByRowId(
+                            application,
+                            dataType,
+                            new OutPut(locale, 0L, null),
+                            new HashSet<>(),
+                            new HashSet<>(),
+                            ids,
+                            horizontalDisplay
+                    );
+                })
+                .collectList();
+    }
+    @Transactional(readOnly = true)
+    public void buildDataZip(
+            ZipOutputStream zipOutputStream,
+            DownloadDatasetQuery downloadDatasetQuery) {
+        Application application = downloadDatasetQuery.application();
+        DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
+        DataRepositoryWithBuffer dataRepositoryWithBuffer = new DataRepositoryWithBuffer(application, dataRepository);
+
+        serviceContainer.authenticationService().setRoleForClient();
+
+        UUIDsfromData uuiDsfromData = addDatacsv(zipOutputStream, dataRepositoryWithBuffer, downloadDatasetQuery, "%s.csv");
+
+
+        getDownloadDatasetQueriesAsync(
+                downloadDatasetQuery.patternDefinitionCount(),
+                application,
+                downloadDatasetQuery.outPut().locale(),
+                dataRepository,
+                uuiDsfromData.uuidsfromData(),
+                downloadDatasetQuery.horizontalDisplay()
+        )
+                .subscribe(downloadDatasetQueries -> {
+                    for (DownloadDatasetQueryByRowId downloadDatasetQueryByRowId : downloadDatasetQueries) {
+                        try {
+                            addDatacsv(zipOutputStream, dataRepositoryWithBuffer, downloadDatasetQueryByRowId, "references/%s.csv");
+                        } catch (Exception e) {
+                            throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                        }
+                    }
+                    try {
+                        zipOutputStream.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+        //TODO add additionalFiles
+
+        /*Flux.fromStream(dataRepository.getLinkedReferenceValuesStream(uuiDsfromData.uuidsfromData()))
+                //.filter(dataValuesByDataType -> "tr_metadata_agri_magri".equals(dataValuesByDataType.getDataType()))
+                //.take(10)
+                .doOnNext(dataValuesByDataType -> {
+                    try {
+                        addReferenceEntry(
+                                downloadDatasetQuery.application(),
+                                language,
+                                separator,
+                                dataValuesByDataType,
+                                dataRepositoryWithBuffer,
+                                zipOutputStream);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .doOnError(e -> {
+                    // Gestion des erreurs
+                    throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                })
+                .doOnComplete(() -> {
+                    try {
+                        zipOutputStream.close();
+                    } catch (IOException e) {
+                        throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                    }
+                })
+                .subscribe();*/
+
+        // 3. Construire la liste des fichiers additionnels
+        //AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
+        /*for (String additionalFileType : downloadDatasetQuery.application().getConfiguration().additionalFiles()) {
+            if (!additionalFileType.isEmpty()) {
+                additionalFileRepository.getAssociatedAdditionalFilesStream(uuiDsfromData.getDatasIds())
+                        .forEach(additionalFile -> {
+                            try {
+                                new AdditionalFileSearchHelper().addAdditionalFilesToZip(additionalFile, zipOutputStream, "additionalFiles/");
+                            } catch (final IOException e) {
+                                throw new RuntimeException("Erreur lors de l'ajout des fichiers additionnels", e);
+                            }
+                        });
+            }
+        }*/
+    }
+
+    public UUIDsfromData addDatacsv(
+            final ZipOutputStream zipOutputStream,
+            DataRepositoryWithBuffer dataRepositoryWithBuffer,
+            final DownloadDatasetQuery downloadDatasetQuery,
+            String fileNamePattern) {
+        final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
+        try {
+            DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
+            AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
+            return DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> serviceContainer.dataService().getDataImporterContext(downloadDatasetQuery.application(), referenceType, null))
+                    .withDownloadDatasetQuery(downloadDatasetQuery)
+                    .withReferenceService(serviceContainer.dataService())
+                    .withOutputStream(zipOutputStream)
+                    .onRepositories(dataRepositoryWithBuffer, additionalFileRepository)
+                    .addDatas(datas)
+                    .build(fileNamePattern);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public List<DataRow> findData(final DownloadDatasetQuery downloadDatasetQuery) {
+        ApplicationReader applicationReader = serviceContainer.authorizationService()
+                .getPrivilegeAssessorForApplication(DATA_READ, downloadDatasetQuery.application())
+                .forDataRead(downloadDatasetQuery.dataName());
+        return serviceContainer.dataService().findDataFlux(downloadDatasetQuery).collectList().block();
+    }
+
+    public String sendZipLinkByMail(Path filePath, MessageInformations messageInformations, OreSiUser currentUser) {
+        return switch (messageInformations) {
+            case DownloadDatasetQuery downloadDatasetQuery -> {
+                try {
+                    FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForDownloadDatasetQuery(downloadDatasetQuery);
+                    Locale locale = downloadDatasetQuery.outPut().locale();
+                    String applicationName = Optional.ofNullable(
+                                    fileSenderInternationalisation.getInternationnalizedApplication(locale)
+                            )
+                            .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage()))
+                                    .orElse(downloadDatasetQuery.application().getName()));
+                    String dataName = Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(locale, downloadDatasetQuery.dataName()))
+                            .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(fileSenderInternationalisation.getDefaultLanguage(), downloadDatasetQuery.dataName()))
+                                    .orElse(downloadDatasetQuery.dataName()));
+                    String subject = fileSenderInternationalisation.subjectPattern();
+                    String message = fileSenderInternationalisation.messagePattern();
+                    String internationnalizedDataName = fileSenderInternationalisation.getInternationnalizedDataName(
+                            Locale.of(downloadDatasetQuery.getLanguage()),
+                            dataName
+                    );
+
+                    String messageWithReport = fileSenderInternationalisation.
+                            mailMessagefor(message.formatted(internationnalizedDataName),
+                                    FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID);
+                    FileInfos fileInfos = new FileInfos(
+                            applicationName,
+                            dataName,
+                            filePath,
+                            currentUser.getEmail(),
+                            subject.formatted(applicationName),
+                            messageWithReport);
+                    String downloadUrl = fileRepository.postTransfer(fileInfos);
+                    log.info("Adresse de téléchargement : %s".formatted(downloadUrl));
+                    /*sendUploadZipEmail(
+                            currentUser.getEmail(),
+                            subject.formatted(applicationName),
+                            message.formatted(dataName),
+                            downloadUrl,
+                            fileSenderInternationalisation,
+                            internationnalizedDataName
+                    );*/
+                    yield downloadUrl;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case BuildBundleReport buildBundleReport -> {
+                try {
+                    FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForBuildBundleReport(buildBundleReport);
+                    Locale locale = buildBundleReport.locale();
+
+                    String applicationName = Optional.ofNullable(
+                            fileSenderInternationalisation.getInternationnalizedApplication(locale)
+                    ).orElseGet(() -> Optional.ofNullable(
+                            fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage())
+                    ).orElse(buildBundleReport.applicationName().getName()));
+
+                    String subject = fileSenderInternationalisation.subjectPattern().formatted(applicationName);
+                    String message = fileSenderInternationalisation.messagePattern().formatted(applicationName);
+
+
+                    String emailMessage = fileSenderInternationalisation.mailMessagefor(message, FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID);
+
+                    /*sendUploadZipEmail(
+                            currentUser.getEmail(),
+                            subject,
+                            emailMessage,
+                            FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID,
+                            fileSenderInternationalisation,
+                            applicationName
+                    );*/
+                    FileInfos fileInfos = new FileInfos(
+                            applicationName,
+                            "BulkUploadZIP",
+                            filePath,
+                            currentUser.getEmail(),
+                            subject,
+                            message
+                    );
+                    String downloadUrl = fileRepository.postTransfer(fileInfos);
+                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
+
+                    yield downloadUrl;
+                } catch (Exception e) {
+                    log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                    throw new RuntimeException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                }
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + messageInformations);
+        };
+
+    }
+    @Transactional(readOnly = true)
+    public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData, Locale locale, ZipOutputStream zipOutputStream) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        String applicationName = application.getName();
+        List<String> referentielsAvecDonnees = new ArrayList<>();
+        Map<String, List<String>> fichiersGeneres = new HashMap<>();
+        List<String> referentielsAvecDonneesExemple = new ArrayList<>();
+        List<String> referentielsEnErreur = new ArrayList<>();
+
+        locale = Optional.of(locale)
+                .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
+
+        try (zipOutputStream) {
+            // Écrire le fichier Groovy
+            String groovyScriptFileName = "OpenAdomClient.groovy";
+            writeFileToZip(zipOutputStream, groovyScriptFileName, Resources.getResource(Client.class, groovyScriptFileName));
+            fichiersGeneres.put("Scripts", List.of(groovyScriptFileName));
+
+            // Écrire le fichier de configuration
+            String configFileName = "openAdom-client-configuration.json";
+            String configurationJson = """
+                    {
+                      "instanceUrl": "%s",
+                      "applicationName": "%s"
+                    }
+                    """.formatted(instanceUrl, nameOrId);
+            writeStringToZip(zipOutputStream, configFileName, configurationJson);
+            fichiersGeneres.put("Configuration", List.of(configFileName));
+
+            // Écrire le fichier README
+            String readmeFileName = "LISEZ-MOI.txt";
+            String readmeContent = """
+                    Instructions :
+                    
+                    1. installer Groovy version 4 minimum https://groovy.apache.org/download.html#osinstall
+                    
+                    2. vérifier que Groovy fonctionne en lançant groovy --version
+                    
+                    Exemple de retour correct :
+                    Groovy Version: 4.0.15 JVM: 17.0.8.1 Vendor: Private Build OS: Linux
+                    
+                    3. lancer le script d'import en masse
+                    
+                    groovy %s
+                    """.formatted(groovyScriptFileName);
+            writeStringToZip(zipOutputStream, readmeFileName, readmeContent);
+            fichiersGeneres.put("Documentation", List.of(readmeFileName));
+
+            // Traiter chaque référentiel
+            for (String reference : application.getConfiguration().dataDescription().keySet()) {
+                String fileName = application.getConfiguration().findData(reference)
+                        .map(StandardDataDescription::submission)
+                        .map(Submission::fileNameParsing)
+                        .map(Submission.SubmissionFileNameParsing::createExampleSubmissionFileName)
+                        .orElse("%s.csv".formatted(reference));
+                String dataCsvFilePath = "%1$s/%2$s".formatted(reference, fileName);
+
+                try {
+                    if (withData && serviceContainer.dataService().getDataFromStoredCsvStream(zipOutputStream, application.getName(), reference, application, locale)) {
+                        referentielsAvecDonnees.add(reference);
+                        fichiersGeneres.computeIfAbsent(reference, k -> new ArrayList<>()).add(dataCsvFilePath);
+                    } else {
+                        zipOutputStream.putNextEntry(new ZipEntry(dataCsvFilePath));
+                        application.getConfiguration().dataDescription().get(reference).buildEmptyFile(zipOutputStream);
+                        zipOutputStream.flush();
+                        zipOutputStream.closeEntry();
+                        referentielsAvecDonneesExemple.add(reference);
+                        fichiersGeneres.computeIfAbsent(reference, k -> new ArrayList<>()).add(dataCsvFilePath);
+                    }
+                } catch (Exception e) {
+                    log.error("Erreur lors du traitement du référentiel {}", reference, e);
+                    referentielsEnErreur.add(reference);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur générale lors de la création du bundle", e);
+            referentielsEnErreur.add("ERREUR_GENERALE");
+        }
+
+        return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
+    }
+
+    private void writeFileToZip(ZipOutputStream zipOutputStream, String fileName, URL resourceUrl) throws IOException {
+        zipOutputStream.putNextEntry(new ZipEntry(fileName));
+        byte[] fileBytes = Resources.toByteArray(resourceUrl);
+        zipOutputStream.write(fileBytes);
+        zipOutputStream.closeEntry();
+    }
+
+    private void writeStringToZip(ZipOutputStream zipOutputStream, String fileName, String content) throws IOException {
+        zipOutputStream.putNextEntry(new ZipEntry(fileName));
+        zipOutputStream.write(content.getBytes(StandardCharsets.UTF_8));
+        zipOutputStream.closeEntry();
+    }
+
+
+
+
+
+    @Transactional()
+    public List<UUID> deleteData(final DownloadDatasetQuery downloadDatasetQuery) {
+        serviceContainer.authenticationService().setRoleForClient();
+        final Application application = downloadDatasetQuery.application();
+        return repository.getRepository(application).data().delete(downloadDatasetQuery);
+    }
+
+    public DataRepositoryWithBuffer getNewDataRepositoryWithBuffer(Application application) {
+        return new DataRepositoryWithBuffer(application, repository.getRepository(application).data());
+    }
+
+    public Map<Ltree, List<DataValue>> getReferenceDisplaysById(final Application application, final Set<String> listOfDataIds) {
+        return repository.getRepository(application).data().getReferenceDisplaysById(listOfDataIds);
+    }
+
+
+    public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        return new CheckerFactory(repository.getRepository(application).data()).getCheckers(application, dataName, new PublishContext.PublishContextBuilder(application, dataName, null, r -> List.of())).stream()
+                .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
+                        .groupingBy(
+                                c -> c.underlyingType().getClass().getSimpleName(),
+                                Collectors.toMap(c -> {
+                                            final DataColumn dataColumn = c.target();
+                                            return dataColumn.toHumanReadableString();
+                                        },
+                                        DefaultLineCheckerResult::fromLineChecker)
+                        )
+                );
+    }
+
+
+    @Transactional(readOnly = true)
+    public Map<String, Map<String, LineChecker>> getFormatChecked(final String nameOrId, final String references) {
+        final DataRepository dataRepository = repository.getRepository(serviceContainer.applicationService().getApplication(nameOrId)).data();
+        return new CheckerFactory(dataRepository)
+                .getCheckers(
+                        serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId),
+                        references,
+                        null
+                ).stream()
+                .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
+                        .groupingBy(
+                                c -> c.fieldTypeForOne().getClass().getSimpleName(),
+                                Collectors.toMap(
+                                        c -> {
+                                            final DataColumn vc = c.target();
+                                            return vc.asString();
+                                        },
+                                        c -> c)
+                        )
+                );
+    }
+
+    public List<List<String>> getDataColumn(final Application application, final String refType, final String column) {
+        List<List<String>> list = List.of();
+        if (application.findData(refType)
+                .map(StandardDataDescription::tags)
+                .filter(Tag.HiddenTag.HAS_HIDDEN_TAG_PREDICATE)
+                .isPresent()) {
+            list = repository.getRepository(application).data().findDataColumn(refType, column);
+        }
+        return list;
     }
 }

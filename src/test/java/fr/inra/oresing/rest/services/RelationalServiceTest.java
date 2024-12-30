@@ -1,8 +1,11 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.services;
 
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import fr.inra.oresing.rest.Fixtures;
+import fr.inra.oresing.rest.OreSiResourcesTest;
+import fr.inra.oresing.rest.ViewStrategy;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

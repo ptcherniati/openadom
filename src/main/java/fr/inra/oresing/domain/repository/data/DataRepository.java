@@ -39,4 +39,6 @@ public interface DataRepository {
     List<ReferenceScope.NodeDescription> getNodesForMenu(MenuType menuType);
 
     Flux<FileContent> getStoredData(String dataName, SubmissionType submissionType);
+
+    void flush();
 }

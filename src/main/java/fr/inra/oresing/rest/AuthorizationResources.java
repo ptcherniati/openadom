@@ -15,12 +15,13 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.exceptions.authentication.authentication.NotApplicationCanManageReferenceRightsException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
-import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
-import fr.inra.oresing.rest.application.ApplicationService;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
+import fr.inra.oresing.rest.services.AuthorizationService;
+import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.services.ServiceContainerBean;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -30,6 +31,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -44,14 +46,9 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
-public class AuthorizationResources {
+public class AuthorizationResources implements ServiceContainerBean {
 
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private AuthorizationService authorizationService;
-    @Autowired
-    private ApplicationService applicationService;
+    private ServiceContainer serviceContainer;
     @Autowired
     private UserRepository userRepository;
 
@@ -61,15 +58,16 @@ public class AuthorizationResources {
     @Autowired
     private OreSiRepository repo;
 
+
     @GetMapping(value = "/authorizationForAdmin", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<LoginAdminResult> getAdminAuthorizationsForOpenAdom() {
-        return authenticationService.getAdminAuthorizations();
+        return serviceContainer.authenticationService().getAdminAuthorizations();
     }
 
     @GetMapping(value = "/{nameOrId}/authorizationAdminForApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<LoginApplicationResult> getAdminAuthorizationsForApplication(@PathVariable("nameOrId") final String applicationNameOrId) {
-        Application application = authorizationService.getApplication(applicationNameOrId);
-        return authenticationService.getApplicationAuthorizations(application);
+        Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
+        return serviceContainer.authenticationService().getApplicationAuthorizations(application);
     }
 
     @Operation(
@@ -237,15 +235,17 @@ public class AuthorizationResources {
             @PathVariable(name = "nameOrId") final String nameOrId,
             @RequestBody final CreateAuthorizationRequest createAuthorizationRequest) {
         Application application = repo.application().findApplication(nameOrId);
-        authorizationService.getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT,application)
+        serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT, application)
                 .forAddAuthorization();
         List<AuthorizationRequestError> errors = new ArrayList<>();
-        CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization = authorizationService.createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
+        CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization = serviceContainer.authorizationService()
+                .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
+        serviceContainer.authorizationService().createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-        final List<OreSiAuthorization> authorizationsForCurrentUser = authorizationService.findUserAuthorizationsForApplication(application);
-        AuthorizationRequest authorizationRequest = authorizationService.createAuthorizationRequestToAuthorizationRequest(
+        final List<OreSiAuthorization> authorizationsForCurrentUser = serviceContainer.authorizationService().findUserAuthorizationsForApplication(application);
+        AuthorizationRequest authorizationRequest = serviceContainer.authorizationService().createAuthorizationRequestToAuthorizationRequest(
                 createAuthorizationRequestWithDependantAuthorization,
                 application,
                 userIds,
@@ -257,7 +257,7 @@ public class AuthorizationResources {
             return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", "null"));
 
         }
-        final AuthorizationService.Authorizations oreSiAuthorizations = authorizationService.addAuthorization(
+        final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService().addAuthorization(
                 application,
                 authorizationRequest,
                 authorizationsForCurrentUser,
@@ -265,9 +265,9 @@ public class AuthorizationResources {
         OreSiAuthorization oreSiAuthorization = oreSiAuthorizations.next();
         final UUID authId = oreSiAuthorization.getId();
         if (createAuthorizationRequest.uuid() == null) {
-            final OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorizationRequest, oreSiAuthorization);
+            final OreSiRightOnApplicationRole roleForAuthorization = serviceContainer.authorizationService().createRoleForAuthorization(authorizationRequest, oreSiAuthorization);
         }
-        authorizationService.updateRoleForManagement(oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
+        serviceContainer.authorizationService().updateRoleForManagement(oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
     }
@@ -277,8 +277,8 @@ public class AuthorizationResources {
             @PathVariable("nameOrId") final String applicationNameOrId,
             @PathVariable("authorizationId") final UUID authorizationId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
-        Application application = authorizationService.getApplication(applicationNameOrId);
-        final GetAuthorizationResult getAuthorizationResult = authorizationService.getAuthorization(
+        Application application = serviceContainer.authorizationService().getApplication(applicationNameOrId);
+        final GetAuthorizationResult getAuthorizationResult = serviceContainer.authorizationService().getAuthorization(
                 new AuthorizationRequest(
                         authorizationId,
                         "",
@@ -295,27 +295,27 @@ public class AuthorizationResources {
     @GetMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResults> getAdminAuthorizationsForOpenAdom(@PathVariable("nameOrId") final String applicationNameOrId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
-        final ImmutableSet<GetAuthorizationResult> getAuthorizationResults = authorizationService.getAuthorizations(applicationNameOrId, authorizationsForUser);
+        final ImmutableSet<GetAuthorizationResult> getAuthorizationResults = serviceContainer.authorizationService().getAuthorizations(applicationNameOrId, authorizationsForUser);
         GetAuthorizationResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationResults(getAuthorizationResults, authorizationsForUser);
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
     @GetMapping(value = "/applications/{applicationNameOrId}/authorization/user/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") final String applicationNameOrId, @PathVariable(name = "userLoginOrId") final String userLoginOrId) {
-        return authorizationService.getAuthorizationsForUserAndPublic(applicationNameOrId, userLoginOrId);
+        return serviceContainer.authorizationService().getAuthorizationsForUserAndPublic(applicationNameOrId, userLoginOrId);
     }
 
     @DeleteMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UUID> revokeAuthorization(
             @PathVariable("nameOrId") final String applicationNameOrId,
             @PathVariable("authorizationId") final UUID authorizationId) {
-        Application application = authorizationService.getApplication(applicationNameOrId);
-        authorizationService.getPrivilegeAssessorForApplication(
-                PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT,
-                application
-        )
+        Application application = serviceContainer.authorizationService().getApplication(applicationNameOrId);
+        serviceContainer.authorizationService().getPrivilegeAssessorForApplication(
+                        PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT,
+                        application
+                )
                 .forDeleteAuthorization();
-        UUID revokeId = authorizationService.revoke(applicationNameOrId, new AuthorizationRequest(
+        UUID revokeId = serviceContainer.authorizationService().revoke(applicationNameOrId, new AuthorizationRequest(
                 authorizationId,
                 "",
                 "",
@@ -329,7 +329,7 @@ public class AuthorizationResources {
     @GetMapping(value = "/applications/{applicationNameOrId}/additionalFiles/authorization/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthorizationsAdditionalFilesResult getAdditionalFilesAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") final String applicationNameOrId, @PathVariable(name = "userLoginOrId", required = false) String userLoginOrId) {
         String userLoginOrId1 = userLoginOrId == null || "null".equals(userLoginOrId) ? request.getRequestUserId().toString() : userLoginOrId;
-        return authorizationService.getAdditionalFilesAuthorizationsForUser(applicationNameOrId, userLoginOrId1);
+        return serviceContainer.authorizationService().getAdditionalFilesAuthorizationsForUser(applicationNameOrId, userLoginOrId1);
     }
 
 
@@ -337,7 +337,7 @@ public class AuthorizationResources {
     public ResponseEntity<String> revokeAdditionalFilesAuthorization(
             @PathVariable("applicationNameOrId") final String applicationNameOrId,
             @PathVariable("authorizationId") final String authorizationId) {
-        UUID revokeId = authorizationService.revokeAdditionalFiles(applicationNameOrId, UUID.fromString(authorizationId));
+        UUID revokeId = serviceContainer.authorizationService().revokeAdditionalFiles(applicationNameOrId, UUID.fromString(authorizationId));
         return ResponseEntity.ok(revokeId.toString());
     }
 
@@ -347,17 +347,17 @@ public class AuthorizationResources {
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         Application application = repo.application().findApplication(nameOrId);
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-        final List<OreSiAdditionalFileAuthorization> additionalFilesAuthorizationsForCurrentUser = authorizationService.findUserAdditionalFilesAuthorizationsForApplicationAndDataType(application);
+        final List<OreSiAdditionalFileAuthorization> additionalFilesAuthorizationsForCurrentUser = serviceContainer.authorizationService().findUserAdditionalFilesAuthorizationsForApplicationAndDataType(application);
         if (!isApplicationCreator) {
             throw new NotApplicationCanManageReferenceRightsException(application.getName());
         }
         final Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
-        final OreSiAdditionalFileAuthorization oreSiAuthorization = authorizationService.addAdditionalFileAuthorizations(application, authorization, additionalFilesAuthorizationsForCurrentUser, true);
+        final OreSiAdditionalFileAuthorization oreSiAuthorization = serviceContainer.authorizationService().addAdditionalFileAuthorizations(application, authorization, additionalFilesAuthorizationsForCurrentUser, true);
         final UUID authId = oreSiAuthorization.getId();
         if (authorization.getUuid() == null) {
-            OreSiRightOnApplicationRole roleForAuthorization = authorizationService.createRoleForAuthorization(authorization, oreSiAuthorization);
+            OreSiRightOnApplicationRole roleForAuthorization = serviceContainer.authorizationService().createRoleForAuthorization(authorization, oreSiAuthorization);
         }
-        authorizationService.updateRoleForReferenceManagement(previousUsers, oreSiAuthorization);
+        serviceContainer.authorizationService().updateRoleForReferenceManagement(previousUsers, oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/additionalFiles/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
     }
@@ -368,8 +368,8 @@ public class AuthorizationResources {
             @RequestParam final MultiValueMap<String, String> params
     ) {
         AuthorizationsAdditionalFilesResult authorizationsForUser = getAdditionalFilesAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
-        final ImmutableSet<GetAuthorizationAdditionalFilesResult> getAuthorizationResults = authorizationService.getAdditionalFilesuthorizations(applicationNameOrId, authorizationsForUser, params);
-        final Set<GetGrantableResult.User> users = authorizationService.getGrantableUsers()
+        final ImmutableSet<GetAuthorizationAdditionalFilesResult> getAuthorizationResults = serviceContainer.authorizationService().getAdditionalFilesuthorizations(applicationNameOrId, authorizationsForUser, params);
+        final Set<GetGrantableResult.User> users = serviceContainer.authorizationService().getGrantableUsers()
                 .stream()
                 .filter(user -> !"_public_".equals(user.label()))
                 .collect(Collectors.toSet());
@@ -418,23 +418,23 @@ public class AuthorizationResources {
                     }
             ) @RequestParam(name = "applicationPattern", required = false) final List<String> applicationPattern
     ) throws JsonProcessingException {
-        OreSiUser user = authenticationService.getByIdOrLogin(userIdOrLogin);
+        OreSiUser user = serviceContainer.authenticationService().getByIdOrLogin(userIdOrLogin);
         OreSiRoleForUser roleForUser = new OreSiRoleForUser(user.getId().toString(), role, "");
         if (Strings.isNullOrEmpty(applicationNameOrId)) {
-            authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION)
+            serviceContainer.authorizationService().getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION)
                     .forAdministrationManagement()
                     .canManagerRightForRole(roleForUser);
             if (!CollectionUtils.isEmpty(applicationPattern)) {
                 user.getAuthorizations().addAll(applicationPattern);
                 userRepository.update(user);
-                user = authorizationService.addSystemRoleUser(roleForUser);
+                user = serviceContainer.authorizationService().addSystemRoleUser(roleForUser);
             }
         } else {
-            Application application = applicationService.getApplication(applicationNameOrId);
-            authorizationService.getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, application)
+            Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
+            serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, application)
                     .forManageAdministrator()
                     .canManagerRightOfUserForRole(user, roleForUser);
-            user = authorizationService.addApplicationRoleUser(roleForUser, application);
+            user = serviceContainer.authorizationService().addApplicationRoleUser(roleForUser, application);
         }
         return ResponseEntity.ok(user);
     }
@@ -478,25 +478,25 @@ public class AuthorizationResources {
                     }
             ) @RequestParam(name = "applicationPattern", required = false) final List<String> applicationPattern
     ) throws JsonProcessingException {
-        OreSiUser user = authenticationService.getByIdOrLogin(userIdOrLogin);
+        OreSiUser user = serviceContainer.authenticationService().getByIdOrLogin(userIdOrLogin);
         OreSiRoleForUser roleForUser = new OreSiRoleForUser(user.getId().toString(), role, "");
         if (Strings.isNullOrEmpty(applicationNameOrId)) {
-            authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION)
+            serviceContainer.authorizationService().getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION)
                     .forAdministrationManagement()
                     .canManagerRightForRole(roleForUser);
             if (!CollectionUtils.isEmpty(applicationPattern)) {
                 applicationPattern.forEach(user.getAuthorizations()::remove);
                 user = userRepository.update(user);
             }
-            if(user.getAuthorizations().isEmpty()) {
-                user = authorizationService.deleteSystemRoleUser(roleForUser);
+            if (user.getAuthorizations().isEmpty()) {
+                user = serviceContainer.authorizationService().deleteSystemRoleUser(roleForUser);
             }
         } else {
-            Application application = applicationService.getApplication(applicationNameOrId);
-            authorizationService.getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, application)
+            Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
+            serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, application)
                     .forManageAdministrator()
                     .canManagerRightOfUserForRole(user, roleForUser);
-            user = authorizationService.deleteApplicationRoleUser(roleForUser, application);
+            user = serviceContainer.authorizationService().deleteApplicationRoleUser(roleForUser, application);
         }
         return ResponseEntity.ok(user);
     }
@@ -504,7 +504,11 @@ public class AuthorizationResources {
     @GetMapping(value = "/applications/{nameOrId}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") final String applicationNameOrId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
-        final GetGrantableResult getGrantableResult = authorizationService.getGrantable(applicationNameOrId, authorizationsForUser);
+        final GetGrantableResult getGrantableResult = serviceContainer.authorizationService().getGrantable(applicationNameOrId, authorizationsForUser);
         return ResponseEntity.ok(getGrantableResult);
+    }
+
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
     }
 }

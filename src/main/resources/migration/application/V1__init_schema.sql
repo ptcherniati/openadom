@@ -306,8 +306,8 @@ CREATE TABLE oresisynthesis
     requiredAuthorizations ${applicationSchema}.requiredAuthorizations,
     aggregation            text COLLATE pg_catalog."default",
     ranges                 tsrange[],
-    CONSTRAINT oresisynthesis_pkey PRIMARY KEY (id),
-    CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredAuthorizations, aggregation)
+    CONSTRAINT oresisynthesis_pkey PRIMARY KEY (id)--,
+    --CONSTRAINT synthesis_uk UNIQUE (application, datatype, variable, requiredAuthorizations, aggregation)
 );
 CREATE INDEX by_datatype_index ON oresisynthesis (application, aggregation, datatype);
 CREATE INDEX by_datatype_variable_index ON oresisynthesis (application, aggregation, datatype, variable);

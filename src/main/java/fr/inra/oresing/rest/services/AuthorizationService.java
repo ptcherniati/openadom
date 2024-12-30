@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.services;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
@@ -24,6 +24,9 @@ import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
+import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.UpdateRolesOnAdditionalFilesManagement;
+import fr.inra.oresing.rest.UpdateRolesOnManagement;
 import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
@@ -40,13 +43,13 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain.DATA_ACCESS;
+
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class AuthorizationService implements fr.inra.oresing.domain.services.authorization.AuthorizationService {
+public class AuthorizationService implements ServiceContainerBean, fr.inra.oresing.domain.services.authorization.AuthorizationService {
 
-    @Autowired
-    DataService referenceService;
     @Autowired
     private SqlService db;
     @Autowired
@@ -57,8 +60,6 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     private UserRepository userRepository;
     @Autowired
     private OreSiApiRequestContext request;
-    @Autowired
-    private AdditionalFileService additionalFileService;
 
     private static void testAuthorizationArguments(final Authorization authorizationDescription, final AuthorizationForScope authByType) {
         final Set<String> labels = Optional.ofNullable(authorizationDescription)
@@ -256,6 +257,11 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         UUID currentUserId = request.getRequestClient().id();
         final AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         return authorizationRepository.findAuthorizationsByUserId(currentUserId);
+    }
+
+    @Override
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+
     }
 
     public record Authorizations(OreSiAuthorization previous, OreSiAuthorization next) {
@@ -994,6 +1000,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         Set<String> applicationCreator = currentUser.getAuthorizations();
         return new AuthorizationsForSystemUser(currentUserRoles, applicationCreator);
     }
+    @Override
     public PrivilegeAssessorDomainForSystem getPrivilegeAssessorForSystem(
             PrivilegeSystemDomain privilegeDomain
     ) {
@@ -1004,6 +1011,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         );
     }
 
+    @Override
     public PrivilegeAssessorDomainForApplication getPrivilegeAssessorForApplication(
             PrivilegeApplicationDomain privilegeDomain,
             Application application
@@ -1023,4 +1031,26 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 grantable
         );
     }
+
+
+    public Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDataRights(
+            final Application application,
+            final Set<String> datatypes) {
+        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = getPrivilegeAssessorForApplication(DATA_ACCESS, application);
+        return datatypes.stream()
+                .map(dty -> getAuthorizationsDataRights(application, dty, request.getRequestUserId().toString(), privilegeAssessorForApplication))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    }
+
+
+    public Map.Entry<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDataRights(
+            final Application application,
+            final String dataName,
+            final String userId,
+            PrivilegeAssessorDomainForApplication privilegeAssessorForApplication) {
+        final Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = privilegeAssessorForApplication
+                .getAuthorizationsForUser(dataName);
+        return new AbstractMap.SimpleEntry<>(dataName, roleForDatatype);
+    }
+
 }

@@ -33,9 +33,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
-import fr.inra.oresing.rest.application.ApplicationService;
 import fr.inra.oresing.rest.binaryFile.BinaryFileService;
-import fr.inra.oresing.rest.data.VersioningService;
 import fr.inra.oresing.rest.data.publication.*;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
@@ -56,6 +54,9 @@ import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
+import fr.inra.oresing.rest.services.RelationalService;
+import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.services.ServiceContainerBean;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
@@ -67,6 +68,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -101,8 +103,9 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
-public class OreSiResources {
-    public static Locale getDefaultLocale(){
+public class OreSiResources implements ServiceContainerBean {
+
+    public static Locale getDefaultLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
         String acceptLanguage = request.getHeader("Accept-Language");
 
@@ -120,24 +123,8 @@ public class OreSiResources {
 
     public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
 
+    private ServiceContainer serviceContainer;
 
-    @Autowired
-    private OreSiRepository repo;
-
-    @Autowired
-    private JsonRowMapper jsonRowMapper;
-
-    @Autowired
-    private ApplicationService applicationService;
-
-    @Autowired
-    private VersioningService versioningService;
-
-    @Autowired
-    private BinaryFileService binaryFileService;
-
-    @Autowired
-    private OreSiService service;
     @Autowired
     private UserRepository userRepository;
 
@@ -185,8 +172,8 @@ public class OreSiResources {
     @DeleteMapping(value = "/applications/{name}/file/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> removeFile(@PathVariable("name") final String applicationName,
                                              @PathVariable("id") final UUID id) {
-        Application application = applicationService.getApplication(applicationName);
-        StoreFile storeFile = versioningService.getStoreFile(application,
+        Application application = serviceContainer.applicationService().getApplication(applicationName);
+        StoreFile storeFile = serviceContainer.versioningService().getStoreFile(application,
                 null,
                 """
                         {"fileid": "%s"}""".formatted(id), null);
@@ -208,8 +195,8 @@ public class OreSiResources {
                     .orElse("notFoundDataname");
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
-        DataVersioningResult dataVersioningResult = versioningService.unPublishVersionBeforeDelete(applicationName, id);
-        Optional<UUID> uuid = binaryFileService.removeFile(application, id);
+        DataVersioningResult dataVersioningResult = serviceContainer.versioningService().unPublishVersionBeforeDelete(applicationName, id);
+        Optional<UUID> uuid = serviceContainer.binaryFileService().removeFile(application, id);
         if (uuid.isPresent()) {
             return ResponseEntity.ok(id.toString());
         } else {
@@ -222,13 +209,13 @@ public class OreSiResources {
                                                                  @PathVariable("dataType") final String dataType,
                                                                  @RequestParam("repositoryId") final String repositoryId) {
         final BinaryFileDataset binaryFileDataset = BinaryFileService.deserialiseBinaryFileDatasetQuery(dataType, repositoryId);
-        final List<BinaryFile> files = service.getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false);
+        final List<BinaryFile> files = serviceContainer.binaryFileService().getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false);
         return ResponseEntity.ok(files);
     }
 
     @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getFile(@PathVariable("name") final String name, @PathVariable("id") final UUID id) {
-        final Optional<BinaryFile> optionalBinaryFile = binaryFileService.getFileWithData(name, id);
+        final Optional<BinaryFile> optionalBinaryFile = serviceContainer.binaryFileService().getFileWithData(name, id);
         if (optionalBinaryFile.isPresent()) {
             final BinaryFile binaryFile = optionalBinaryFile.get();
             final HttpHeaders headers = new HttpHeaders();
@@ -247,7 +234,7 @@ public class OreSiResources {
                 .collect(Collectors.toList());
         return buildFluxRequestJDJson(fluxSink -> {
             final ReactiveProgression.GetApplicationProgression progression = new ReactiveProgression.GetApplicationProgression(0L, fluxSink);
-            service.getApplications(progression, filters);
+            serviceContainer.applicationService().getApplications(progression, filters);
         });
     }
 
@@ -255,7 +242,7 @@ public class OreSiResources {
     public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) {
         return buildFluxRequestJDJson(fluxSink -> {
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-            final Application application = service.validateConfiguration(progression, file);
+            final Application application = serviceContainer.applicationService().validateConfiguration(progression, file);
             fluxSink.next(new ReactiveTypeResult(application));
             progression.complete();
         });
@@ -272,7 +259,7 @@ public class OreSiResources {
 
         final Application application;
         try {
-            applicationService.getApplicationOrApplicationAccordingToRights(name);
+            serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(name);
             log.info("Modification de l'application %s".formatted(name));
             return changeConfiguration(name, file, comment);
         } catch (final Exception e) {
@@ -286,7 +273,7 @@ public class OreSiResources {
         return buildFluxRequestJDJson(fluxSink -> {
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
             try {
-                service.createApplication(progression, name, file, comment);
+                serviceContainer.applicationService().createApplication(progression, name, file, comment);
             } catch (Exception technicalException) {
                 fluxSink.error(technicalException);
             }
@@ -295,13 +282,13 @@ public class OreSiResources {
 
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApplicationResult getApplication(@PathVariable("nameOrId") final String nameOrId, @RequestParam(required = false, defaultValue = "") final String[] filter) {
-        final Application application = applicationService.getApplicationOrApplicationAccordingToRights(nameOrId);
-        return service.buildOpenAdom(application, filter);
+        final Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
+        return serviceContainer.applicationService().buildOpenAdom(application, filter);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getConfiguration(@PathVariable("nameOrId") final String nameOrId) {
-        final Application application = applicationService.getApplication(nameOrId);
+        final Application application = serviceContainer.applicationService().getApplication(nameOrId);
         final UUID configFileId = application.getConfigFile();
         return getFile(nameOrId, configFileId);
     }
@@ -316,7 +303,7 @@ public class OreSiResources {
                 fluxSink.error(new IllegalArgumentException("EmptyFile"));
             }
             final ReactiveProgression.ChangeApplicationProgression progression = new ReactiveProgression.ChangeApplicationProgression(0D, fluxSink);
-            final UUID uuid = service.changeApplicationConfiguration(progression, nameOrId, file, comment);
+            final UUID uuid = serviceContainer.applicationService().changeApplicationConfiguration(progression, nameOrId, file, comment);
             progression.fluxSink().next(new ReactiveTypeResult(uuid));
             progression.complete();
         });
@@ -334,7 +321,7 @@ public class OreSiResources {
             @PathVariable("nameOrId") final String nameOrId,
             @RequestParam(value = "params", required = false) final String params) {
         final RightsRequestInfos rightsRequestInfos = deserialiseRightsRequestQuery(params);
-        final GetRightsRequestResult list = service.findRightsRequest(nameOrId, rightsRequestInfos);
+        final GetRightsRequestResult list = serviceContainer.rightsRequestService().findRightsRequest(nameOrId, rightsRequestInfos);
         return ResponseEntity.ok(list);
     }
 
@@ -342,7 +329,7 @@ public class OreSiResources {
     public ResponseEntity<?> createRightsRequest(@PathVariable("nameOrId") final String nameOrId,
                                                  @RequestBody final CreateRightsRequestRequest createRightsRequestRequest) {
         //CreateRightsRequestRequest createRightsRequestRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseRightsRequestOrUUIDQuery(params);
-        final UUID fileUUID = service.createOrUpdate(createRightsRequestRequest, nameOrId);
+        final UUID fileUUID = serviceContainer.rightsRequestService().createOrUpdate(createRightsRequestRequest, nameOrId);
         return ResponseEntity.ok(fileUUID);
 
 
@@ -375,13 +362,14 @@ public class OreSiResources {
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("refType") final String refType,
             @RequestParam final MultiValueMap<String, String> params) {
-        final List<DataValue> list = service.findReference(nameOrId, refType, params);
+        final List<DataValue> list = serviceContainer.dataService().findReference(nameOrId, refType, params);
 
-        final Map<String, Map<String, LineChecker>> checkedFormatColumns = service.getFormatChecked(nameOrId, refType);
+        final Map<String, Map<String, LineChecker>> checkedFormatColumns = serviceContainer.dataService().getFormatChecked(nameOrId, refType);
         Set<String> listOfReferenceIds = list.stream()
                 .map(DataValue::getReferenceType)
                 .collect(Collectors.toSet());
-        final Map<Ltree, List<DataValue>> requiredReferencesValues = service.getReferenceDisplaysById(applicationService.getApplicationOrApplicationAccordingToRights(nameOrId), listOfReferenceIds);
+        final Map<Ltree, List<DataValue>> requiredReferencesValues = serviceContainer.dataService().getReferenceDisplaysById(serviceContainer.applicationService()
+                .getApplicationOrApplicationAccordingToRights(nameOrId), listOfReferenceIds);
         Map<String, LineChecker> referenceLineCheckers = checkedFormatColumns.get(ReferenceType.class.getSimpleName());
         Map<String, String> referenceTypeForReferencingColumns =
                 Optional.ofNullable(checkedFormatColumns.get(ReferenceType.class.getSimpleName()))
@@ -424,7 +412,7 @@ public class OreSiResources {
             @PathVariable("refType") final String refType) {
         Locale language = OreSiResources.getDefaultLocale();
 
-        final StreamingResponseBody streamResponseBody = out -> service.getDataCsvStream(out, nameOrId, refType, language, false);
+        final StreamingResponseBody streamResponseBody = out -> serviceContainer.dataService().getDataCsvStream(out, nameOrId, refType, language, false);
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
         response.setHeader("Content-Disposition", String.format("attachment; filename=%s.csv", refType));
         response.addHeader("Pragma", "no-cache");
@@ -438,8 +426,8 @@ public class OreSiResources {
 
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<List<String>>> listDataForColumn(@PathVariable("nameOrId") final String nameOrId, @PathVariable("refType") final String refType, @PathVariable("column") final String column) {
-        final Application application = applicationService.getApplication(nameOrId);
-        final List<List<String>> result = service.getDataColumn(application, refType, column);
+        final Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        final List<List<String>> result = serviceContainer.dataService().getDataColumn(application, refType, column);
         return ResponseEntity.ok(result);
     }
 
@@ -449,13 +437,13 @@ public class OreSiResources {
             @PathVariable("dataName") final String dataName,
             @RequestParam(value = "file", required = false) final MultipartFile file,
             @RequestParam(value = "params", required = false) final String params) throws IOException {
-        DataVersioningResult dataVersioningResult = versioningService.createData(nameOrId, dataName, file, params);
+        DataVersioningResult dataVersioningResult = serviceContainer.versioningService().createData(nameOrId, dataName, file, params);
         return ResponseEntity.created(URI.create(dataVersioningResult.uri())).body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
     }
 
     @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listData(@PathVariable("nameOrId") final String nameOrId) {
-        final Application application = applicationService.getApplication(nameOrId);
+        final Application application = serviceContainer.applicationService().getApplication(nameOrId);
         List<String> allDataNames = application.getAllDataNames();
 
 
@@ -479,7 +467,7 @@ public class OreSiResources {
             additionalFilesInfos = new AdditionalFilesInfos();
         }
         additionalFilesInfos.setFiletype(additionalFilesInfos.getFiletype() == null ? additionalFileName : additionalFilesInfos.getFiletype());
-        final GetAdditionalFilesResult list = service.findAdditionalFile(nameOrId, additionalFilesInfos);
+        final GetAdditionalFilesResult list = serviceContainer.additionalFileService().findAdditionalFile(nameOrId, additionalFilesInfos);
         return ResponseEntity.ok(list);
     }
 
@@ -498,11 +486,11 @@ public class OreSiResources {
         if ("__charte__".equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
             response.setHeader("Accept-Ranges", "bytes");
-            streamResponseBody = out -> service.getCharte(out, response, nameOrId, additionalFilesInfos);
+            streamResponseBody = out -> serviceContainer.additionalFileService().getCharte(out, response, nameOrId, additionalFilesInfos);
         } else {
             streamResponseBody = out -> {
                 try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(out)) {
-                    service.getAdditionalFilesNamesZipStream(zipOutputStream, nameOrId, additionalFilesInfos);
+                    serviceContainer.additionalFileService().getAdditionalFilesNamesZipStream(zipOutputStream, nameOrId, additionalFilesInfos);
                 } catch (final IOException ioe) {
                     switch (OreSiResources.getDefaultLocale().getLanguage()) {
                         case "fr" -> log.error("Exception lors de la lecture et du streaming de données ", ioe);
@@ -530,7 +518,7 @@ public class OreSiResources {
             @RequestParam(value = "params", required = false) final String params) throws
             BadAdditionalFileParamsSearchException {
         final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
-        final List<UUID> deletedFiles = service.deleteAdditionalFiles(nameOrId, additionalFilesInfos);
+        final List<UUID> deletedFiles = serviceContainer.additionalFileService().deleteAdditionalFiles(nameOrId, additionalFilesInfos);
         if (deletedFiles != null && !deletedFiles.isEmpty()) {
             return ResponseEntity.ok(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(",")));
         } else {
@@ -544,7 +532,7 @@ public class OreSiResources {
                                                      @RequestParam(value = "file", required = false) final MultipartFile file,
                                                      @RequestParam(value = "params") final String params) {
         final CreateAdditionalFileRequest createAdditionalFileRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFileOrUUIDQuery(params);
-        final UUID fileUUID = service.createOrUpdate(createAdditionalFileRequest, additionalFileName, nameOrId, file);
+        final UUID fileUUID = serviceContainer.additionalFileService().createOrUpdate(createAdditionalFileRequest, additionalFileName, nameOrId, file);
         return ResponseEntity.ok(fileUUID);
 
 
@@ -552,7 +540,6 @@ public class OreSiResources {
 
     /**
      * export as JSON
-     *
      */
     @Operation(parameters = @Parameter(
             name = "downloadDatasetQuery",
@@ -793,7 +780,7 @@ public class OreSiResources {
             @RequestParam(value = "downloadDatasetQuery", required = false) final String params,
             @RequestParam(defaultValue = "false") boolean loadExample) {
 
-        Application application = applicationService.getApplication(nameOrId);
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
                 deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, loadExample);
 
@@ -803,7 +790,7 @@ public class OreSiResources {
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
 
-        final List<DataRow> data = service.findData(downloadDatasetQuery);
+        final List<DataRow> data = serviceContainer.dataService().findData(downloadDatasetQuery);
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
@@ -828,12 +815,12 @@ public class OreSiResources {
                 })
                 .collect(ImmutableSet.toImmutableSet());
         //final Long totalRows = data.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
-        final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = service.getCheckedFormatComponents(nameOrId, dataName);
+        final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = serviceContainer.dataService().getCheckedFormatComponents(nameOrId, dataName);
         Set<String> listOfDataIds = data.stream()
                 .map(DataRow::rowId)
                 .flatMap(List::stream)
                 .collect(Collectors.toSet());
-        final Map<Ltree, List<DataValue>> requiredreferencesValues = service.getReferenceDisplaysById(applicationService.getApplication(nameOrId), listOfDataIds);
+        final Map<Ltree, List<DataValue>> requiredreferencesValues = serviceContainer.dataService().getReferenceDisplaysById(serviceContainer.applicationService().getApplication(nameOrId), listOfDataIds);
         Map<String, LineCheckerResult> lineCheckers = checkedFormatcomponents.get(ReferenceType.class.getSimpleName());
         if (MapUtils.isNotEmpty(lineCheckers)) {
             for (final Map.Entry<String, LineCheckerResult> lineCheckerEntry : lineCheckers.entrySet()) {
@@ -872,7 +859,7 @@ public class OreSiResources {
         } else {
             //TODO on est dans le cas ou aucun computationChecker reference n'est décrit : authorizationscope  n'est pas un referentiel
         }
-        DataRepositoryWithBuffer dataRepositoryWithBuffer = service.getNewDataRepositoryWithBuffer(application);
+        DataRepositoryWithBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getNewDataRepositoryWithBuffer(application);
 
         final List<DataRowResult> dataRowResults = data.stream()
                 .map(dataRow -> DataRowResult.of(
@@ -897,7 +884,7 @@ public class OreSiResources {
                                 )
                         )
                         .orElseGet(LinkedHashMap::new);
-        Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = service.getAuthorizationScopes(application, MenuType.submission);
+        Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = serviceContainer.authorizationService().getAuthorizationScopes(application, MenuType.submission);
 
         return ResponseEntity.ok(new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
@@ -911,7 +898,6 @@ public class OreSiResources {
 
     /**
      * export as JSON
-     *
      */
     @DeleteMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> deleteData(
@@ -920,7 +906,7 @@ public class OreSiResources {
             @RequestParam(value = "downloadDatasetQuery", required = false) final String params) {
 
         final ResponseEntity<String> resposeEntity = null;
-        final boolean deleteOnrepositoryApplicationNotAllowed = applicationService.getApplication(nameOrId)
+        final boolean deleteOnrepositoryApplicationNotAllowed = serviceContainer.applicationService().getApplication(nameOrId)
                 .findSubmission(dataType)
                 .map(Submission::strategy)
                 .map(SubmissionType.OA_VERSIONING::equals)
@@ -930,13 +916,13 @@ public class OreSiResources {
         }
 
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataType, false);
-        final List<UUID> deletedData = service.deleteData(downloadDatasetQuery);
+        final List<UUID> deletedData = serviceContainer.dataService().deleteData(downloadDatasetQuery);
         return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(",")));
 
     }
 
     private Set<String> buildOrderedVariables(final String nameOrId, final String dataName) {
-        final Submission.SubmissionScope authorization = applicationService
+        final Submission.SubmissionScope authorization = serviceContainer.applicationService()
                 .getApplication(nameOrId)
                 .findSubmission(dataName)
                 .map(Submission::submissionScope)
@@ -956,7 +942,6 @@ public class OreSiResources {
 
     /**
      * export as CSV
-     *
      */
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> getAllDataZip(
@@ -982,7 +967,7 @@ public class OreSiResources {
                      TeeOutputStream teeOutputStream = new TeeOutputStream(outputStream, fileOutputStream)) {
 
                     zipOutputStream = new KeepAliveZipOutputStream(new BufferedOutputStream(teeOutputStream, 2000));
-                    service.buildDataZip(zipOutputStream, downloadDatasetQuery);
+                    serviceContainer.dataService().buildDataZip(zipOutputStream, downloadDatasetQuery);
                 } catch (IOException e) {
                     log.error("Error writing to one of the outputs", e);
                     // Handle specific output stream errors if necessary
@@ -993,7 +978,7 @@ public class OreSiResources {
                 Path finalTempFile = tempFile;
                 executorService.submit(() -> {
                     try {
-                        service.sendZipLinkByMail(finalTempFile, downloadDatasetQuery, user.get());
+                        serviceContainer.dataService().sendZipLinkByMail(finalTempFile, downloadDatasetQuery, user.get());
                     } catch (Exception e) {
                         log.error("Erreur lors de l'envoi du lien ZIP par e-mail", e);
                     } finally {
@@ -1054,10 +1039,10 @@ public class OreSiResources {
             final String params, final String applicationNameOrID, final String dataType, boolean loadExample) {
         try {
             final DownloadDatasetQuery downloadDatasetQuery = params != null ? new JsonRowMapper<DownloadDatasetQuery>().toObject(params, DownloadDatasetQuery.class) : new DownloadDatasetQuery();
-            if(loadExample){
+            if (loadExample) {
                 downloadDatasetQuery.setLimit(100L);
             }
-            final Application application = applicationService.getApplication(applicationNameOrID);
+            final Application application = serviceContainer.applicationService().getApplication(applicationNameOrID);
             downloadDatasetQuery.setApplication(application);
             downloadDatasetQuery.setDataName(dataType);
             final Locale locale = Optional.of(downloadDatasetQuery)
@@ -1074,12 +1059,12 @@ public class OreSiResources {
     public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                           @PathVariable("dataType") final String dataType) {
         try {
-            final Map<String, List<OreSiSynthesis>> synthesis = service.getSynthesis(nameOrId, dataType);
+            final Map<String, List<OreSiSynthesis>> synthesis = serviceContainer.synthesisService().getSynthesis(nameOrId, dataType);
             final String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s", nameOrId, dataType), Charset.defaultCharset());
             Map<String, List<SynthesisResult>> synthesisResults = synthesis.entrySet()
                     .stream()
                     .collect(Collectors.toMap(
-                            Map.Entry::getKey,
+                                    Map.Entry::getKey,
                                     e -> e.getValue().stream().map(SynthesisResult::new).collect(Collectors.toList())
                             )
                     );
@@ -1095,7 +1080,7 @@ public class OreSiResources {
                                           @PathVariable("dataType") final String dataType,
                                           @PathVariable("variable") final String variable) {
         try {
-            final Map<String, List<OreSiSynthesis>> synthesis = service.getSynthesis(nameOrId, dataType, variable);
+            final Map<String, List<OreSiSynthesis>> synthesis = serviceContainer.synthesisService().getSynthesis(nameOrId, dataType, variable);
             final String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s/%s", nameOrId, dataType, variable), Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(synthesis);
         } catch (final InvalidDatasetContentException e) {
@@ -1109,7 +1094,7 @@ public class OreSiResources {
                                            @PathVariable("dataType") final String dataType,
                                            @PathVariable("variable") final String variable) {
         try {
-            final Map<String, List<OreSiSynthesis>> synthesis = service.buildSynthesis(nameOrId, dataType, variable);
+            final Map<String, List<OreSiSynthesis>> synthesis = serviceContainer.synthesisService().buildSynthesis(nameOrId, dataType, variable);
             final String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s%s", nameOrId, dataType, variable != null ? "/" + variable : ""), Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(synthesis);
         } catch (final InvalidDatasetContentException e) {
@@ -1159,7 +1144,7 @@ public class OreSiResources {
                      TeeOutputStream teeOutputStream = new TeeOutputStream(outputStream, fileOutputStream)) {
 
                     zipOutputStream = new KeepAliveZipOutputStream(new BufferedOutputStream(teeOutputStream, 2000));
-                    BuildBundleReport report = service.writeUploadBundle(instanceUrl, nameOrId, withData, locale, zipOutputStream);
+                    BuildBundleReport report = serviceContainer.dataService().writeUploadBundle(instanceUrl, nameOrId, withData, locale, zipOutputStream);
                     reportRef.set(report);
                 } catch (IOException e) {
                     log.error("Error writing to one of the outputs", e);
@@ -1171,7 +1156,7 @@ public class OreSiResources {
                     Path finalTempFile = tempFile;
                     executorService.submit(() -> {
                         try {
-                            service.sendZipLinkByMail(finalTempFile, reportRef.get(), user.get());
+                            serviceContainer.dataService().sendZipLinkByMail(finalTempFile, reportRef.get(), user.get());
                         } catch (Exception e) {
                             log.error("Erreur lors de l'envoi du lien ZIP par e-mail", e);
                         } finally {
@@ -1207,5 +1192,9 @@ public class OreSiResources {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(responseBody);
+    }
+
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
     }
 }

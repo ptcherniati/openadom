@@ -58,5 +58,4 @@ public record RootType(SectionBuilder sectionBuilder,
                 .replaceAll("\\s*\\n(\\s*\\n)*", "\n")
                 .replaceAll("^\\n", "");
     }
-
 }

@@ -14,6 +14,8 @@ import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.domain.exceptions.authentication.authentication.NotopenAdomAdminException;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.model.authorization.LoginApplicationResult;
+import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.services.ServiceContainerBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -32,9 +34,8 @@ import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
-public class AuthenticationService {
-    @Autowired
-    EmailService emailService;
+public class AuthenticationService implements ServiceContainerBean {
+    private ServiceContainer serviceContainer;
 
     @Autowired
     private UserRepository userRepository;
@@ -73,6 +74,10 @@ public class AuthenticationService {
         final OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClient().role();
         setRole(roleToAccessDatabase);
         return roleToAccessDatabase;
+    }
+
+    public OreSiUser getCurrentUser() {
+        return userRepository.findById(request.getRequestClient().id());
     }
 
     /**
@@ -135,7 +140,7 @@ public class AuthenticationService {
         OreSiUser oreSiUser = userRepository.findByLoginOrEmail(loginOrEmail)
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, (LoginAdminResult) null));
         String verificationKey = generateVerificationKey(oreSiUser);
-        emailService.sendEmailValidation(oreSiUser.getLogin(), oreSiUser.getEmail(), verificationKey, EmailService.MESSAGES.NEW_EMAIL);
+        serviceContainer.emailService().sendEmailValidation(oreSiUser.getLogin(), oreSiUser.getEmail(), verificationKey, EmailService.MESSAGES.NEW_EMAIL);
         return oreSiUser;
     }
 
@@ -149,7 +154,7 @@ public class AuthenticationService {
         final String verificationKey = generateVerificationKey(oreSiUser);
         userRepository.updateNewDate(oreSiUser, updateDate);
         setRoleForClient();
-        emailService.sendEmailValidation(loginResult.get().getLogin(), loginResult.get().getEmail(), verificationKey, messages);
+        serviceContainer.emailService().sendEmailValidation(loginResult.get().getLogin(), loginResult.get().getEmail(), verificationKey, messages);
         return oreSiUser;
     }
 
@@ -645,4 +650,7 @@ public class AuthenticationService {
         return user;
     }
 
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
+    }
 }

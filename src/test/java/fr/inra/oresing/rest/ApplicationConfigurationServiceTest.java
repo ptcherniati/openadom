@@ -12,6 +12,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.reactive.*;
+import fr.inra.oresing.rest.services.ApplicationConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterAll;

@@ -9,15 +9,14 @@ import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
-import fr.inra.oresing.domain.services.authorization.AuthorizationService;
-import fr.inra.oresing.domain.services.synthesis.SynthesisService;
 import fr.inra.oresing.persistence.*;
-import fr.inra.oresing.rest.application.ApplicationService;
-import fr.inra.oresing.rest.binaryFile.BinaryFileService;
 import fr.inra.oresing.rest.data.publication.*;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
+import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,20 +29,8 @@ import java.util.function.Function;
 @Component
 @Transactional(readOnly = true)
 
-public class VersioningService {
-    @Autowired
-    private DataService dataService;
-
-    @Autowired
-    private ApplicationService applicationService;
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private AuthorizationService authorizationService;
-    @Autowired
-    private SynthesisService synthesisService;
-    @Autowired
-    private BinaryFileService binaryFileService;
+public class VersioningService implements ServiceContainerBean {
+    private ServiceContainer serviceContainer;
     @Autowired
     private OreSiRepository repository;
     @Autowired
@@ -53,18 +40,18 @@ public class VersioningService {
 
     @Transactional
     public DataVersioningResult createData(String nameOrId, String dataName, MultipartFile file, String params) throws IOException {
-        Application application = applicationService.getApplication(nameOrId);
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
         Set<BinaryFile> filesToStore = new HashSet<>();
-        State state = getStoreFile(application, dataName, params, file==null?null:file.getOriginalFilename())
-                .loadOrCreateFile(file, binaryFileRepository(application), binaryFileService);
+        State state = getStoreFile(application, dataName, params, file == null ? null : file.getOriginalFilename())
+                .loadOrCreateFile(file, binaryFileRepository(application), serviceContainer.binaryFileService());
         if (state instanceof UnPublishedVersions unPublishedVersions) {
             FileOrUUID fileOrUUID = unPublishedVersions
-                    .unPublishVersions(filesToStore, dataRepository(application), binaryFileRepository(application), synthesisService)
-                    .checkPublicationRights(filesToStore, dataRepository(application), binaryFileService, binaryFileRepository(application));
+                    .unPublishVersions(filesToStore, dataRepository(application), binaryFileRepository(application), serviceContainer.synthesisService())
+                    .checkPublicationRights(filesToStore, dataRepository(application), serviceContainer.binaryFileService(), binaryFileRepository(application));
 
             UUID dataId;
             if (fileOrUUID.topublish()) {
-                dataId = dataService.addData(application, dataName, new DataFile(fileOrUUID, state.binaryFile().getFileData()));
+                dataId = serviceContainer.dataService().addData(application, dataName, new DataFile(fileOrUUID, state.binaryFile().getFileData()));
             } else {
                 dataId = state.binaryFile().getId();
             }
@@ -73,15 +60,15 @@ public class VersioningService {
                 binaryFile.markAsPublished(fileOrUUID.topublish());
                 dataId = binaryFileRepository(application).store(binaryFile);
             }
-            final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(dataService.getReferenceSynthesis(application)).orElseGet(List::of);
+            final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
             return DataVersioningResult.of(nameOrId, dataName, dataId, dataSynthesis);
         }
-        final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(dataService.getReferenceSynthesis(application)).orElseGet(List::of);
+        final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
         return DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
 
     }
 
-    
+
     public StoreFile getStoreFile(Application application, String dataName, String params, String fileName) {
         ReportErrors errors = new ReportErrors(jsonRowMapper);
         Function<Map<String, List<Ltree>>, Map<String, List<Ltree>>> requiredAuthorizationResolver = ra -> dataRepository(application).resolveRequiredAuthorizations(ra);
@@ -95,12 +82,12 @@ public class VersioningService {
                         requiredAuthorizationResolver,
                         resolveFileById
                 )
-                .buildAuthorizationForUserService(userRepository, authorizationService);
+                .buildAuthorizationForUserService(userRepository, serviceContainer.authorizationService());
     }
 
     @Transactional
     public DataVersioningResult unPublishVersionBeforeDelete(String applicationName, UUID id) {
-        Optional<BinaryFile> storedFile = binaryFileService.getFile(applicationName, id);
+        Optional<BinaryFile> storedFile = serviceContainer.binaryFileService().getFile(applicationName, id);
         if (storedFile.isPresent()) {
             Optional<String> dataName = storedFile.map(BinaryFile::getParams).map(BinaryFileInfos::binaryFiledataset).map(BinaryFileDataset::getDatatype);
             if (dataName.isPresent()) {
@@ -137,10 +124,14 @@ public class VersioningService {
             dataRepository(application).removeByFileId(f.getId());
             f.markAsPublished(false);
             binaryFileRepository(application).store(f);
-            synthesisService.buildSynthesis(application.getName(), dataType, null);
+            serviceContainer.synthesisService().buildSynthesis(application.getName(), dataType, null);
         });
         if (dataType != null) {
-            synthesisService.buildSynthesis(application.getName(), dataType, null);
+            serviceContainer.synthesisService().buildSynthesis(application.getName(), dataType, null);
         }
+    }
+
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
     }
 }

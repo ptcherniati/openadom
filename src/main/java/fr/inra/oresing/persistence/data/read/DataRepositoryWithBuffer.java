@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence.data.read;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.Node;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.persistence.DataRepository;
 
@@ -29,7 +30,7 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
             String uniqueId = UUID.randomUUID().toString();
             return Files.createTempDirectory("data_repo_buffer_" + uniqueId);
         } catch (IOException e) {
-            throw new RuntimeException("Impossible de créer le répertoire temporaire", e);
+            throw new OreSiTechnicalException("Impossible de créer le répertoire temporaire", e);
         }
     }
 
@@ -74,7 +75,10 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
                     String hierarchicalKey = getDataFromFileOrRepository(
                             fileWithPrefix(referenceType, PREFIX_FOR_HIERARCHICAL),
                             stream -> stream
-                                    .peek(parts -> availableKeys.add(parts[1])) // Collecter toutes les clés disponibles
+                                    .map(parts -> {
+                                        availableKeys.add(parts[1]);
+                                        return parts;
+                                    }) // Collecter toutes les clés disponibles
                                     .filter(parts -> parts[1].equals(keyForScope.toString()) || parts[2].equals(keyForScope.toString()))
                                     .map(parts -> parts[2])
                                     .findFirst()
@@ -134,10 +138,11 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
     }
 
     private Stream<String[]> validateAndProcessStream(Stream<String[]> stream, int minLength) {
-        return stream.peek(parts -> {
+        return stream.map(parts -> {
             if (parts.length < minLength) {
                 throw new IllegalArgumentException("Format de ligne invalide : " + String.join("\t", parts));
             }
+            return parts;
         });
     }
 
@@ -192,8 +197,8 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
     }
 
     public void cleanup() {
-        try {
-            Files.walk(tempDir)
+        try(Stream<Path> pathStream = Files.walk(tempDir)) {
+            pathStream
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);

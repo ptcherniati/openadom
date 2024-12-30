@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.index.AuthorizationIndex;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
-import fr.inra.oresing.rest.OreSiService;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -33,10 +32,6 @@ import java.util.*;
 public class MigrateService {
     @Autowired
     ApplicationRepository applicationRepository;
-    @Autowired
-    OreSiService oreSiService;
-    @Autowired
-    private OreSiApiRequestContext request;
     @Autowired
     private SqlService db;
     @Autowired

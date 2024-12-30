@@ -1,10 +1,11 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.services;
 
 import com.google.common.collect.Lists;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
+import fr.inra.oresing.rest.ViewStrategy;
 import fr.inra.oresing.rest.exceptions.views.FieldNameTooLongForSqlFieldException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -26,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @Transactional()
-public class RelationalService implements InitializingBean, DisposableBean {
+public class RelationalService implements ServiceContainerBean, InitializingBean, DisposableBean {
     private static final String IDENTIFIER_PATTERN = "[a-z][a-z_0-9]{%d,%d}";
     @Autowired
     private SqlService db;
@@ -344,6 +345,11 @@ public class RelationalService implements InitializingBean, DisposableBean {
                 """.formatted(schema.getSqlIdentifier());
         log.info(formatted);
         db.dropSchema(schema);
+    }
+
+    @Override
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+
     }
 
 

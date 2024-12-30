@@ -4,7 +4,7 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.user.file.UserRepository;
-import fr.inra.oresing.domain.services.authorization.AuthorizationService;
+import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
 

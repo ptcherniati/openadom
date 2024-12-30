@@ -1,5 +1,9 @@
 package fr.inra.oresing.mail;
 
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
+import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
+import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -10,7 +14,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService {
+public class EmailService implements Email,ServiceContainerBean {
     @Value("${spring.mail.from}")
     String mailFrom;
     @Autowired
@@ -24,7 +28,7 @@ public class EmailService {
     private static final String EMAIL_CHANGED_FR ="Vous venez de modifier votre email. %n" +
             "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n" ;
     private static final String EMAIL_CHANGED_EN ="You have just changed your email. %n" +
-            "To validate your e-mail, enter the validation key when connecting.%n\n"  ;
+            "To validate your e-maioresil, enter the validation key when connecting.%n\n"  ;
     private static final String VALIDATION_KEY_SUBJECT ="Clef de validation / Validation key";
     private static final String MAIL_VERIFICATION_TEMPLATE = """
             %2$s%n%nVotre clé de connexion est : %n%1$s
@@ -35,6 +39,7 @@ public class EmailService {
                     "%2$s%n" +
                     "L'équipe d'OpenAdom";
     @Async
+    @Override
     public void sendEmail(final String login, final String to, final String subject, final String message){
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(to);
@@ -44,10 +49,17 @@ public class EmailService {
         mailSender.send(mailMessage);
     }
 
+    @Override
     public void sendEmailValidation(final String login, final String email, final String verificationKey, final MESSAGES messages) {
         String message = String.format(MAIL_VERIFICATION_TEMPLATE, verificationKey, messages.title_fr, messages.title_en);
         sendEmail(login, email, messages.subject, message);
     }
+
+    @Override
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+
+    }
+
     public enum MESSAGES{
 
         NEW_ACCOUNT(NEW_ACCOUNT_SUBJECT,NEW_ACCOUNT_FR,NEW_ACCOUNT_EN),
@@ -64,4 +76,27 @@ public class EmailService {
         final String title_fr;
         final String title_en;
     }
+
+    @Async
+    @Override
+    public void sendUploadZipEmail(
+            final String to,
+            final String subject,
+            final String message,
+            final String downloadUrl,
+            FileSenderInternationalisation fileSenderInternationalisation,
+            String internationnalizedDataName) {
+        final SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(to);
+        mailMessage.setFrom("openadom@inrae.fr");
+        mailMessage.setSubject(subject);
+        mailMessage.setText(
+                String.format(
+                        fileSenderInternationalisation.mailMessagefor(message, FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID),
+                        internationnalizedDataName
+                )
+        );
+        mailSender.send(mailMessage);
+    }
+
 }

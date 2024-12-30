@@ -1,4 +1,4 @@
-package fr.inra.oresing.rest;
+package fr.inra.oresing.rest.services;
 
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.Application;
@@ -6,6 +6,7 @@ import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.type.CheckerEnum;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
+import fr.inra.oresing.rest.MultiYaml;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import lombok.extern.slf4j.Slf4j;
@@ -26,17 +27,17 @@ public class ApplicationConfigurationService {
             .add(CheckerEnum.OA_groovyExpression)
             .build();
 
-    static Application unzipConfiguration(final MultipartFile file, ReactiveProgression.CreateApplicationProgression fluxSink) throws IOException {
+    public static Application unzipConfiguration(final MultipartFile file, ReactiveProgression.CreateApplicationProgression fluxSink) throws IOException {
         InputStream inputStream = MultiYaml.parseConfigurationBytes(file);
         return ApplicationConfigurationService.parseConfigurationBytes(null,
                 fluxSink,
                 FileBomResolver.of(inputStream));
 }
 
-    static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(final
-                                                                                                                    String comment,
-                                                                                                                    P progression,
-                                                                                                                    final FileBomResolver fileBomResolver) {
+    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(final
+                                                                                                                           String comment,
+                                                                                                                           P progression,
+                                                                                                                           final FileBomResolver fileBomResolver) {
         progression.pushMessage("testYamlIsvalid", null);
         try {
             byte[] bytes = fileBomResolver.readAllBytes();
