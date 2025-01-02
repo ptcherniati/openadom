@@ -1,0 +1,119 @@
+project:
+  type: website
+
+website:
+  repo-url: https://forgemia.inra.fr/anaee-dev/openadom/backend/-/tree/develop
+  repo-actions: [edit, source, issue]
+  title: "openadom"
+  description: "Documentation des fichiers de configuration pour OpenADOM"
+  favicon: /img/Logos_OA.svg
+  site-url: https://dev.openadom.fr
+  sidebar:
+    page-navigation: true
+    back-to-top-navigation: true
+    reader-mode: true
+    search: true
+    collapse-level: 1
+    background: primary
+    border: true
+    style: "docked"
+    contents:
+      - section: Introduction
+        contents:
+          - text: Introduction
+            href: fichiers/introduction/1_Introduction.md
+          - text: Fichier d'échange
+            href: fichiers/introduction/1.2..Fichier d'échange.md
+      - section: Fichiers d'échange
+        contents:
+          - text: Données
+            href: fichiers/fichier_echange/2.2..Data.md
+          - text: Aide fichier
+            href: fichiers/fichier_echange/2.....Aide_ficher.md
+          - text: Etiquettes
+            href: fichiers/fichier_echange/2.3..Etiquettes.md
+          - text: Basic Components
+            href: fichiers/fichier_echange/2.2.1Basic_Components.qmd
+          - text: Computed Components
+            href: fichiers/fichier_echange/2.2.2Computed_Components.md
+          - text: Dynamic Components
+            href: fichiers/fichier_echange/2.2.3Dynamic_Components.qmd
+          - text: Constant Components
+            href: fichiers/fichier_echange/2.2.4Constant_Components.md
+          - text: Pattern Components
+            href: fichiers/fichier_echange/2.2.5Pattern_Components.md
+          - text: Verificateurs
+            href: fichiers/fichier_echange/2.2.6Verificateurs.md
+      - section: Pour aller plus loin
+        contents:
+          - text: Authorization
+            href: fichiers/pour_aller_plus_loin/authorization.md
+          - text: Component Qualifiers
+            href: fichiers/pour_aller_plus_loin/component_qualifiers.md
+          - text: Expression Groovy
+            href: fichiers/pour_aller_plus_loin/expressionGroovy.md
+          - text: Internationalisation i18n
+            href: fichiers/pour_aller_plus_loin/internationnalisation_i18n.md
+          - text: Submission
+            href: fichiers/pour_aller_plus_loin/submission.md
+      - section: Base de données
+        contents: 
+          - text: Introduction
+            href: fichiers/autres/database.qmd
+      - section: En réflexion
+        contents: 
+          - text: Introduction
+            href: fichiers/enReflexion/A savoir.md
+          - text: Introduction
+            href: fichiers/enReflexion/referencechecker.md      
+      - section: Exemples
+        contents:
+          - text: Fichier de configuration minimal
+            href: fichiers/examples/configuration_min/description.qmd
+  navbar:
+    background: primary
+    search: true
+    left: 
+      - href: index.qmd
+        text: Accueil
+      - href: index.qmd
+        text: Installation
+      - href: fichiers/README.md
+        text: A propos
+    right: 
+      - icon: github
+        href: https://github.com/openadom
+      - href: https://dev.openadom.fr
+        text: "<img src='/img/Logos_OpernADOM.svg' alt='Openadom' style='height: 20px; vertical-align: middle;'>"
+  page-footer: 
+    left: "Copyright 2025, OpenADOM"
+    right: 
+      - icon: github
+        href: https://forgemia.inra.fr/anaee-dev/openadom
+
+format:
+  html:
+    theme: 
+      light: cosmo
+      dark: darkly
+    css: styles.css
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    highlight-style: github
+    mainfont: "Roboto, sans-serif"
+    monofont: "Fira Code, monospace"
+    include-in-header: 
+      text: |
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Fira+Code&display=swap" rel="stylesheet">
+    page-layout: full
+    link-external-newwindow: true
+    citations-hover: true
+    footnotes-hover: true
+    date-format: "DD MMMM YYYY"
+    lang: fr-FR
+
+execute:
+  freeze: auto
