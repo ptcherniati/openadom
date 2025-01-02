@@ -1,6 +1,6 @@
 build_openadom_doc:
   image: rocker/verse:latest
-  stage: pages
+  stage: build
   script:
     - set -x
     - cp README.md documentations/openadom/fichiers/README.md
