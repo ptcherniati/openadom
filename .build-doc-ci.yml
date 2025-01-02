@@ -14,7 +14,7 @@ build_openadom_doc:
     - mv documentations/openadom/_site public/
   artifacts:
     paths:
-      - public
+      - documentations/openadom/_site
     #rules:
     #  - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
@@ -25,4 +25,5 @@ pages:
   stage: pages
   needs: ["build_openadom_doc"]
   script:
+    - mv documentations/openadom/_site public
     - ls public
