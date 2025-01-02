@@ -1,5 +1,6 @@
 project:
   type: website
+  output-dir: _site
 
 website:
   repo-url: https://forgemia.inra.fr/anaee-dev/openadom/backend/-/tree/develop
@@ -27,23 +28,23 @@ website:
       - section: Fichiers d'échange
         contents:
           - text: Données
-            href: fichiers/fichier_echange/2.2..Data.md
+            href: fichiers/fichier_echange/data.md
           - text: Aide fichier
-            href: fichiers/fichier_echange/2.....Aide_ficher.md
+            href: fichiers/fichier_echange/aide_fichier.md
           - text: Etiquettes
-            href: fichiers/fichier_echange/2.3..Etiquettes.md
+            href: fichiers/fichier_echange/etiquettes.md
           - text: Basic Components
-            href: fichiers/fichier_echange/2.2.1Basic_Components.qmd
+            href: fichiers/fichier_echange/basic_components.qmd
           - text: Computed Components
-            href: fichiers/fichier_echange/2.2.2Computed_Components.md
+            href: fichiers/fichier_echange/computed_components.md
           - text: Dynamic Components
-            href: fichiers/fichier_echange/2.2.3Dynamic_Components.qmd
+            href: fichiers/fichier_echange/dynamic_components.qmd
           - text: Constant Components
-            href: fichiers/fichier_echange/2.2.4Constant_Components.md
+            href: fichiers/fichier_echange/constant_components.md
           - text: Pattern Components
-            href: fichiers/fichier_echange/2.2.5Pattern_Components.md
+            href: fichiers/fichier_echange/pattern_components.md
           - text: Verificateurs
-            href: fichiers/fichier_echange/2.2.6Verificateurs.md
+            href: fichiers/fichier_echange/verificateurs.md
       - section: Pour aller plus loin
         contents:
           - text: Authorization
@@ -63,9 +64,9 @@ website:
       - section: En réflexion
         contents: 
           - text: Introduction
-            href: fichiers/enReflexion/A savoir.md
+            href: fichiers/enReflexion/a_savoir.md
           - text: Introduction
-            href: fichiers/enReflexion/referencechecker.md      
+            href: fichiers/enReflexion/reference_checker.md
       - section: Exemples
         contents:
           - text: Fichier de configuration minimal
@@ -78,9 +79,9 @@ website:
         text: Accueil
       - href: fichiers/readme.md
         text: Installation
-      - href: fichiers/schemaExample.yaml
+      - href: fichiers/schema_example.yaml
         text: Fichier d'example
-      - href: fichiers/autres/Lexique_yaml.qmd
+      - href: fichiers/autres/lexique_yaml.qmd
         text: Lexique
       - href: about.md
         text: A propos

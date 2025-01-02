@@ -1,0 +1,588 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\PassOptionsToPackage{dvipsnames,svgnames,x11names}{xcolor}
+%
+\documentclass[
+  letterpaper,
+  DIV=11,
+  numbers=noendperiod]{scrartcl}
+
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else  
+    % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+% Make \paragraph and \subparagraph free-standing
+\makeatletter
+\ifx\paragraph\undefined\else
+  \let\oldparagraph\paragraph
+  \renewcommand{\paragraph}{
+    \@ifstar
+      \xxxParagraphStar
+      \xxxParagraphNoStar
+  }
+  \newcommand{\xxxParagraphStar}[1]{\oldparagraph*{#1}\mbox{}}
+  \newcommand{\xxxParagraphNoStar}[1]{\oldparagraph{#1}\mbox{}}
+\fi
+\ifx\subparagraph\undefined\else
+  \let\oldsubparagraph\subparagraph
+  \renewcommand{\subparagraph}{
+    \@ifstar
+      \xxxSubParagraphStar
+      \xxxSubParagraphNoStar
+  }
+  \newcommand{\xxxSubParagraphStar}[1]{\oldsubparagraph*{#1}\mbox{}}
+  \newcommand{\xxxSubParagraphNoStar}[1]{\oldsubparagraph{#1}\mbox{}}
+\fi
+\makeatother
+
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{241,243,245}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.40,0.45,0.13}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\ExtensionTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.28,0.35,0.67}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.46,0.62}{#1}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.68,0.00,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{\textcolor[rgb]{0.00,0.23,0.31}{#1}}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.07,0.07,0.07}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.13,0.47,0.30}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.37,0.37,0.37}{\textit{#1}}}
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}\usepackage{longtable,booktabs,array}
+\usepackage{calc} % for calculating minipage widths
+% Correct order of tables after \paragraph or \subparagraph
+\usepackage{etoolbox}
+\makeatletter
+\patchcmd\longtable{\par}{\if@noskipsec\mbox{}\fi\par}{}{}
+\makeatother
+% Allow footnotes in longtable head/foot
+\IfFileExists{footnotehyper.sty}{\usepackage{footnotehyper}}{\usepackage{footnote}}
+\makesavenoteenv{longtable}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+
+\KOMAoption{captions}{tableheading}
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\AtBeginDocument{%
+\ifdefined\contentsname
+  \renewcommand*\contentsname{Table of contents}
+\else
+  \newcommand\contentsname{Table of contents}
+\fi
+\ifdefined\listfigurename
+  \renewcommand*\listfigurename{List of Figures}
+\else
+  \newcommand\listfigurename{List of Figures}
+\fi
+\ifdefined\listtablename
+  \renewcommand*\listtablename{List of Tables}
+\else
+  \newcommand\listtablename{List of Tables}
+\fi
+\ifdefined\figurename
+  \renewcommand*\figurename{Figure}
+\else
+  \newcommand\figurename{Figure}
+\fi
+\ifdefined\tablename
+  \renewcommand*\tablename{Table}
+\else
+  \newcommand\tablename{Table}
+\fi
+}
+\@ifpackageloaded{float}{}{\usepackage{float}}
+\floatstyle{ruled}
+\@ifundefined{c@chapter}{\newfloat{codelisting}{h}{lop}}{\newfloat{codelisting}{h}{lop}[chapter]}
+\floatname{codelisting}{Listing}
+\newcommand*\listoflistings{\listof{codelisting}{List of Listings}}
+\makeatother
+\makeatletter
+\makeatother
+\makeatletter
+\@ifpackageloaded{caption}{}{\usepackage{caption}}
+\@ifpackageloaded{subcaption}{}{\usepackage{subcaption}}
+\makeatother
+
+\usepackage{bookmark}
+
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  colorlinks=true,
+  linkcolor={blue},
+  filecolor={Maroon},
+  citecolor={Blue},
+  urlcolor={Blue},
+  pdfcreator={LaTeX via pandoc}}
+
+
+\author{}
+\date{}
+
+\begin{document}
+
+
+\paragraph{On peut poser des contraintes sur les données de
+référence}\label{on-peut-poser-des-contraintes-sur-les-donnuxe9es-de-ruxe9fuxe9rence}
+
+\subparagraph{\texorpdfstring{\hyperref[dataChecker]{Utilisation de
+vérificateurs
+(checker)}}{Utilisation de vérificateurs (checker)}}\label{utilisation-de-vuxe9rificateurs-checker}
+
+Pour chaque colonne, on peut ajouter des vérificateurs.
+
+\begin{itemize}
+\tightlist
+\item
+  vérifier la nature d'un champ (float, integer, date) ( Integer, Float,
+  Date) et son interval de valeur (min, max)
+\item
+  vérifier une expression régulière (String)
+\item
+  ajouter un lien avec un référentiel (Reference)
+\item
+  déclarer la récursivité d'un composant
+\item
+  déclarer une hiérarchie entre composants
+\item
+  vérifier la valeur en utilisant un script (le script renvoyant true) (
+  GroovyExpression)
+\end{itemize}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{  }\FunctionTok{sites}\KeywordTok{:}
+\CommentTok{  \#donnée de référence avec une clef sur une colonne}
+\AttributeTok{    }\FunctionTok{OA\_naturalKey}\KeywordTok{:}\AttributeTok{ }
+\AttributeTok{      }\KeywordTok{{-}}\AttributeTok{ zet\_chemin\_parent}
+\AttributeTok{      }\KeywordTok{{-}}\AttributeTok{ zet\_nom\_key}
+\AttributeTok{    }\FunctionTok{OA\_basicComponents}\KeywordTok{:}
+\AttributeTok{      }\FunctionTok{zet\_nom\_key}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_headerName}\KeywordTok{:}\AttributeTok{ nom du site}
+\AttributeTok{        }\FunctionTok{OA\_mandatory}\KeywordTok{:}\AttributeTok{ }\CharTok{true}\CommentTok{ \# La colonne doit être présente}
+\AttributeTok{        }\FunctionTok{OA\_required}\KeywordTok{:}\AttributeTok{ }\CharTok{true}\CommentTok{ \# Une valeur doit être fournie}
+\AttributeTok{      }\FunctionTok{tze\_type\_nom}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_required}\KeywordTok{:}\AttributeTok{ }\CharTok{true}
+\AttributeTok{        }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{          }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_reference}\CommentTok{ \# un vérificateur de type référence}
+\AttributeTok{          }\FunctionTok{OA\_params}\KeywordTok{:}
+\AttributeTok{            }\FunctionTok{OA\_reference}\KeywordTok{:}
+\AttributeTok{              }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ type\_de\_sites}\CommentTok{ \# Le référentiel ciblée}
+\AttributeTok{              }\FunctionTok{OA\_isParent}\KeywordTok{:}\AttributeTok{ }\CharTok{true}\CommentTok{ \# indique que la colonne tze\_type\_nom contient une clef primaire du référentiel type\_de\_sites}
+\AttributeTok{      }\FunctionTok{zet\_chemin\_parent}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_required}\KeywordTok{:}\AttributeTok{ }\CharTok{false}
+\AttributeTok{        }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{          }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_reference}\CommentTok{ \# vérificateur de type référentiel}
+\AttributeTok{          }\FunctionTok{OA\_params}\KeywordTok{:}
+\AttributeTok{            }\FunctionTok{OA\_reference}\KeywordTok{:}
+\AttributeTok{              }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ sites}\CommentTok{ \# référetil ciblé}
+\AttributeTok{              }\FunctionTok{OA\_isRecursive}\KeywordTok{:}\AttributeTok{ }\CharTok{true}\CommentTok{ \# la lien de référence est de type récursif}
+\AttributeTok{      }\FunctionTok{date}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{            }\FunctionTok{OA\_required}\KeywordTok{:}\AttributeTok{ }\CharTok{true}
+\AttributeTok{            }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_date}
+\AttributeTok{            }\FunctionTok{OA\_params}\KeywordTok{:}
+\AttributeTok{            }\FunctionTok{OA\_pattern}\KeywordTok{:}\AttributeTok{ dd/MM/yyyy}\CommentTok{ \# pattern de date attendu}
+\AttributeTok{            }\FunctionTok{OA\_min}\KeywordTok{:}\AttributeTok{ 01/01/1980}\CommentTok{ \# la valeur minimum acceptée}
+\AttributeTok{            }\FunctionTok{OA\_max}\KeywordTok{:}\AttributeTok{ 31/12/2014}\CommentTok{ \# la valeur maximum acceptée}
+\AttributeTok{      }\FunctionTok{numero}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_headerName}\KeywordTok{:}\AttributeTok{ }\StringTok{"numéro:"}
+\AttributeTok{        }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{          }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_integer}\CommentTok{ \# la valeur attendue est un entier}
+\AttributeTok{          }\FunctionTok{OA\_min}\KeywordTok{:}\AttributeTok{ }\DecValTok{100}\CommentTok{ \# la valeur minimum acceptée}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{Paramétrage des
+vérificateurs}\label{paramuxe9trage-des-vuxe9rificateurs}
+
+On définit un vérificateur dans une section ``OA\_checker''. Le type de
+vérificateur est défini par son nom (OA\_name). On peut passer des
+paramètres au vérificateur en renseignant la section OA\_params. Les
+différents paramètres dépendent du type de vérificateur utilisé.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{    }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_integer}
+\AttributeTok{        }\FunctionTok{OA\_params}\KeywordTok{:}\AttributeTok{ }
+\end{Highlighting}
+\end{Shaded}
+
+Lorsque l'on utilise un vérificateur, sa première fonction est de
+vérifier le format de la valeur en entrée : Sa seconde fonction est de
+transformer cette valeur , dans le cas où cela est possible, dans une
+primitive acceptable dans un champ json (numeric, boolean). C'est cette
+valeur qui sera stockée dan le champ json en base, ou comme valeur dans
+les vues. Si le vérificateur est de type Reference, il existera en base
+de données une contrainte de type clef étrangère avec la ligne
+référencée.
+
+Paramètres généraux
+
+\begin{itemize}
+\tightlist
+\item
+  OA\_multiplicity :
+
+  \begin{itemize}
+  \tightlist
+  \item
+    MANY : La valeur est un ensemble (tableau) de valeurs. L'entrée est
+    une chaîne ou chaque valeur est séparée par une virgule `,'. Dans la
+    base de donnée les valeurs de la chaîne seront enregistrées dans un
+    tableau de valeur au format indiqué par le vérificiateur. Par
+    exemple la chaine ``2,25.3,5.8'' sera traitée comme un tableau de
+    double {[}2,25.3,5.8{]} pour un vérificateur FLoat.
+  \item
+    ONE : (valeur par défaut) La valeur en entrée est considéré comme
+    une valeur simple.
+  \end{itemize}
+\item
+  \hyperref[transformations]{transformations} : La fonctionalité de
+  transformation est supprimée. Pour le moment les référentiel sont à
+  fournir au format clef primaire.
+\end{itemize}
+
+Vérificateur de type `Integer' et `Float'
+
+Ces vérificateurs servent à vérifier que les valeurs en entrée sont des
+nombres (respectivement des entiers ou des nombres à valeur floattante).
+
+On peut préciser les valeurs minimum et maximum en précisant les
+paramètres OA\_min et/ou OA\_max. Les valeurs min et max doivent être du
+type indiqué par le vérificateur.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{    }\FunctionTok{OA\_checker}\KeywordTok{:}\AttributeTok{ }
+\AttributeTok{      }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_float}
+\AttributeTok{      }\FunctionTok{OA\_params}\KeywordTok{:}\AttributeTok{ }
+\AttributeTok{        }\FunctionTok{OA\_min}\KeywordTok{:}\AttributeTok{ }\FloatTok{12.0}
+\AttributeTok{        }\FunctionTok{OA\_max}\KeywordTok{:}\AttributeTok{ }\FloatTok{25.0}
+\AttributeTok{        }\FunctionTok{OA\_multiplicity}\KeywordTok{:}\AttributeTok{ MANY}
+\end{Highlighting}
+\end{Shaded}
+
+Vérificateur de chaîne (`String')
+
+Sans vérificateur, les entrées sont traitées comme des chaînes de
+caractères acceptant de valeurs vide. On peut toutefois rajouter un
+vérificateur chaîne pour préciser des contraintes sur la chaîne.
+(required, multiplicity, transformation, expression régulière)
+
+Le paramètre `OA\_pattern' permet de préciser une
+\href{https://blog.paumard.org/cours/java-api/chap03-expression-regulieres-syntaxe.html}{expression
+régulière} qui permet de vérifier un pattern de chaîne de caractères.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{    }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_string}
+\AttributeTok{        }\FunctionTok{OA\_params}\KeywordTok{:}\AttributeTok{ }
+\AttributeTok{            }\FunctionTok{OA\_pattern}\KeywordTok{:}\AttributeTok{ \^{}(([\^{}\textless{}\textgreater{}()\textbackslash{}[\textbackslash{}]\textbackslash{}\textbackslash{}.,;:\textbackslash{}s@"]+(\textbackslash{}.[\^{}\textless{}\textgreater{}()\textbackslash{}[\textbackslash{}]\textbackslash{}\textbackslash{}.,;:\textbackslash{}s@"]+)*)|(".+"))@((\textbackslash{}[[0{-}9]\{1,3\}\textbackslash{}.[0{-}9]\{1,3\}\textbackslash{}.[0{-}9]\{1,3\}\textbackslash{}.[0{-}9]\{1,3\}])|(([a{-}zA{-}Z\textbackslash{}{-}0{-}9]+\textbackslash{}.)+[a{-}zA{-}Z]\{2\}))}
+\AttributeTok{            }\FunctionTok{OA\_multiplicity}\KeywordTok{:}\AttributeTok{ MANY}
+\end{Highlighting}
+\end{Shaded}
+
+Ce vérificateur permet de vérifier que l'entrée est une liste d'adresse
+mail.
+
+Vérificateur de date. (`Date')
+
+Ce vérificateur permet de vérifier que la valeur en entrée est une date
+au format définit par le paramètre
+`\href{https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html}{OA\_pattern}'
+
+En base de données,dans le champs json, la date sera stockée comme une
+chaîne de caractères qui supporte le tri. Dans les vues, le format
+timestamp sera utilisé.
+
+exemple la date 25/12/84 au format `dd/MM/yyyy' sera stockée comme
+chaîne ``date:1984-12-25T00:00:00:dd/MM/yyyy''.
+
+Les paramètres OA\_min et OA\_max permettent de spécifier l'intervale de
+valeur de la date. Il doivent être renseignés au même format de date.
+
+Le paramètre OA\_duration permet de définir que la valeur en entrée est
+une durée. Une durée est définie au sens SQL d'un
+\href{https://www.postgresql.org/docs/current/functions-datetime.html\#OPERATORS-DATETIME-TABLE}{interval}
+(`1 HOUR', `2 WEEKS', `30 MINUTES').
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{    }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_date}
+\AttributeTok{        }\FunctionTok{OA\_params}\KeywordTok{:}\AttributeTok{ }
+\AttributeTok{            }\FunctionTok{OA\_pattern}\KeywordTok{:}\AttributeTok{ dd/MM/yyyy}
+\AttributeTok{            }\FunctionTok{OA\_min}\KeywordTok{:}\AttributeTok{ 01/01/2004}
+\AttributeTok{            }\FunctionTok{OA\_max}\KeywordTok{:}\AttributeTok{ 31/12/2025}
+\AttributeTok{            }\FunctionTok{OA\_duration}\KeywordTok{:}\AttributeTok{ 1 DAY}
+\end{Highlighting}
+\end{Shaded}
+
+Vérificateur de Boolean. (`Boolean')
+
+Permet de vérifier que la valeur en entrée est true ou false.
+
+Une valeur booléenne sera enregistrée dans le champ json en base de
+données et dans les vues.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{    }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_boolean}
+\end{Highlighting}
+\end{Shaded}
+
+Vérificateur de référentiel. (`Reference')
+
+Ce vérificateur permet de vérifier que la valeur en entrée est un
+`{[}Ltree'https://www.postgresql.org/docs/current/ltree.html{]}'. Cette
+chaîne ne peut contenir que des termes contenant des
+minuscules/majuscules/chiffres/caractère\_souligné(\_), séparés par des
+points (.). Elle doit correspondre à la clef naturelle ou la clef
+hiérarchique d'une référence de type définit par le paramètre `refType'.
+La section \url{code} explique comment les chaînes sont encodées pour
+définir des \href{naturalKey}{clefs naturelles} ou des
+\href{hierarchicalKey}{clefs hiérarchiques}.
+
+Le paramètre OA\_reference permet de définir le référentiel contenant la
+ligne dont la clef naturelle est celle indiquée par la valeur en entrée.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{        }\FunctionTok{zones\_etudes}\KeywordTok{:}
+\AttributeTok{          }\FunctionTok{OA\_required}\KeywordTok{:}\AttributeTok{ }\CharTok{true}
+\AttributeTok{          }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{              }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_reference}
+\AttributeTok{              }\FunctionTok{OA\_params}\KeywordTok{:}
+\AttributeTok{                  }\FunctionTok{OA\_reference}\KeywordTok{:}\AttributeTok{ }
+\AttributeTok{                    }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ zones\_etudes}
+\end{Highlighting}
+\end{Shaded}
+
+Dans la section OA\_reference on peut préciser les informations
+précédement contenue dans la section composite\_references OA\_recursive
+-\textgreater{} le composant est récursive OA\_parent -\textgreater{} la
+colonne fait référence à un référentiel parent
+
+Il faut caster les valeurs du datum avant de les utiliser. Elles sont de
+type Object, et il faut les caster dans le type correspondant au
+checker. (par défaut String)
+
+Vérificateur utilisant une \href{validation}{expression groovy}.
+(`GroovyExpression')
+
+L'expression définit dans le paramètre groovy → expression; L'expression
+doit envoyer une faleur true/false.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{        }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{          }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_groovyExpression}
+\AttributeTok{          }\FunctionTok{OA\_params}\KeywordTok{:}
+\AttributeTok{            }\FunctionTok{OA\_groovy}\KeywordTok{:}
+\FunctionTok{              OA\_expression}\KeywordTok{: }\CharTok{\textgreater{}}
+\NormalTok{                Set.of("", "0", "1", "2").contains(datum.SWC.get("qualité"))}
+\end{Highlighting}
+\end{Shaded}
+
+On vérifie que la composante `qualité' de la variable `SWC' est vide ou
+``0'' ``1'' ou ``2''.
+
+Ajout de transformation à la chaîne en entrée.
+
+\begin{itemize}
+\tightlist
+\item
+  OA\_groovy : permet de déclarer une transformation de la valeur avec
+  une expression Groovy (qui doit retourner une chaîne de caractère)
+\end{itemize}
+
+La section groovy accepte trois paramètres
+
+\begin{itemize}
+\tightlist
+\item
+  OA\_expression : une expression groovy (pour le checker
+  GroovyExpression doit renvoyer true si la valeur est valide)
+\item
+  OA\_references : une liste de référentiels (ou data) pour lesquels on
+  veut disposer des valeurs dans l'expression
+\end{itemize}
+
+\begin{quote}
+\pandocbounded{\includegraphics[keepaspectratio]{../warning.png}} La
+différence entre une section groovy de la section params d'un checker
+\textbf{groovy} et une section groovy de la section transformation de la
+section params, tient dans le fait que pour un checker groovy
+l'expression renvoyée est un booléen tandis que dans la transformation
+l'expression groovy renvoie une nouvelle valeur.
+\end{quote}
+
+Pour les checkers GroovyExpression et les transformations Groovy, on
+récupère dans le script des informations :
+
+\begin{verbatim}
+datum : les valeurs de la ligne courante.
+  On récupère la valeur d'un variable-component →
+    datum.get("nom de la variable").get("nom du composant")
+application : le yaml de l'application
+references: les valeurs d'une donnée de référence spécifique;
+  Il faut renseigner dans params la clef "references" qui définit
+    les données de références accessibles dans references.
+  → references.get("nom de la reference") //reférentiel déclaré dans references. return une liste de références
+  → en itérant sur la liste  list.collect({it.refValues.nom_de_la_colonne})
+referencesValues : idem que references;
+  → referencesValues.get("nom de la reference").collect({it.get("nom de la colonne"))
+\end{verbatim}
+
+\begin{quote}
+\pandocbounded{\includegraphics[keepaspectratio]{../warning.png}} Les
+valeurs récuérées dans references et referencesValues au type indiqué
+par le checker. Il peut être nécessaire de les `caster' dans ce type
+pour les utiliser dans des méthodes. par exemple :
+(String)datum.date.day + ' ' + (String)datum.date.time
+\end{quote}
+
+\begin{quote}
+:information\_source: On peut aussi passer des constantes dans le script
+\end{quote}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{       OA\_expression }\KeywordTok{: }\CharTok{\textgreater{}}
+\NormalTok{          import java.time.LocalDate}
+\NormalTok{          import java.time.format.DateTimeFormatter}
+
+\NormalTok{          LocalDate minDate = LocalDate.of(2014,1,1)}
+\NormalTok{          LocalDate maxDate = LocalDate.of(2022,1,1)}
+\NormalTok{          LocalDate date = LocalDate.parse(}
+\NormalTok{            datum.date,}
+\NormalTok{            DateTimeFormatter.ofPattern(\textquotesingle{}dd/MM/yyyy\textquotesingle{})}
+\NormalTok{          )}
+\NormalTok{          return date.isBefore(maxDate) \&\& date.isAfter(minDate)}
+\end{Highlighting}
+\end{Shaded}
+
+\subparagraph{\texorpdfstring{\hyperref[dataChecker]{Utilisation de
+validations portant sur une ou plusieurs
+colonnes}}{Utilisation de validations portant sur une ou plusieurs colonnes}}\label{utilisation-de-validations-portant-sur-une-ou-plusieurs-colonnes}
+
+Les contraintes se définissent pour chacune des données de référence.
+Soit dans la définition de la colonne elle-même, soit dans la section
+\hyperref[referencesValidation]{validation}.
+
+Chaque règle de validation peut porter sur plusieurs colonnes de la
+donnée de référence. Elle comporte une description et un
+\hyperref[dataChecker]{OA\_checker} (OA\_eference, OA\_integer,
+OA\_float, OA\_string, OA\_date, OA\_groovyExpression).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\AttributeTok{  }\FunctionTok{site\_theme\_datatype}\KeywordTok{:}
+\AttributeTok{    }\FunctionTok{OA\_validations}\KeywordTok{:}
+\AttributeTok{      }\FunctionTok{projetRef}\KeywordTok{:}\CommentTok{ \# la clef d\textquotesingle{}une validation}
+\AttributeTok{        }\FunctionTok{OA\_i18n}\KeywordTok{:}
+\AttributeTok{         }\FunctionTok{fr}\KeywordTok{:}\AttributeTok{ }\StringTok{"référence au projet"}\CommentTok{ \# la description en français}
+\AttributeTok{         }\FunctionTok{en}\KeywordTok{:}\AttributeTok{ }\StringTok{"project reference"}\CommentTok{ \# la description en anglais}
+\AttributeTok{        }\FunctionTok{OA\_checker}\KeywordTok{:}\CommentTok{ \# le checker de validation}
+\AttributeTok{          }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_reference}\CommentTok{ \#Le checker à utiliser}
+\AttributeTok{          }\FunctionTok{OA\_params}\KeywordTok{:}\CommentTok{ \# liste de paramètres (dépend du checker choisi)}
+\AttributeTok{            }\FunctionTok{OA\_reference}\KeywordTok{:}\AttributeTok{ }
+\AttributeTok{                }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ projet}\CommentTok{ \#pour le checker référence la donnée référencée}
+\AttributeTok{        }\FunctionTok{OA\_columns}\KeywordTok{:}\AttributeTok{ }\KeywordTok{[}\AttributeTok{nom du projet}\KeywordTok{]}
+\CommentTok{        \# liste des colonnes sur lequel s\textquotesingle{}applique le checker}
+\AttributeTok{      }\FunctionTok{sitesRef}\KeywordTok{:}
+\AttributeTok{        }\FunctionTok{OA\_i18n}\KeywordTok{:}
+\AttributeTok{         }\FunctionTok{fr}\KeywordTok{:}\AttributeTok{ }\StringTok{"référence au site"}\CommentTok{ \# la description en français}
+\AttributeTok{         }\FunctionTok{en}\KeywordTok{:}\AttributeTok{ }\StringTok{"site reference"}\CommentTok{ \# la description en anglais}
+\AttributeTok{        }\FunctionTok{OA\_checker}\KeywordTok{:}
+\AttributeTok{          }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ OA\_reference}
+\AttributeTok{          }\FunctionTok{OA\_params}\KeywordTok{:}
+\AttributeTok{            }\FunctionTok{OA\_reference}\KeywordTok{:}\AttributeTok{ }
+\AttributeTok{                }\FunctionTok{OA\_name}\KeywordTok{:}\AttributeTok{ sites}
+\AttributeTok{        }\FunctionTok{OA\_columns}\KeywordTok{:}\AttributeTok{ }\KeywordTok{[}\AttributeTok{nom du site}\KeywordTok{]}
+\end{Highlighting}
+\end{Shaded}
+
+
+
+
+
+\end{document}
