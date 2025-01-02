@@ -8,9 +8,13 @@ build_openadom_doc:
     - ls
     - Rscript -e "install.packages('quarto')"
     - quarto render
+    - pwd
+    - cd ../..
+    - ls
+    - mv documentations/openadom/_site public/
   artifacts:
     paths:
-      - documentations/openadom/_site
+      - public
     #rules:
     #  - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
@@ -21,5 +25,4 @@ pages:
   stage: pages
   needs: ["build_openadom_doc"]
   script:
-    - mv documentations/openadom/_site public
     - ls public
