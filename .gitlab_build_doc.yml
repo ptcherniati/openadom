@@ -1,6 +1,6 @@
 build_openadom_doc:
   image: rocker/verse:latest
-  stage: deploy
+  stage: pages
   script:
     - cd documentations/openadom
     - Rscript -e "install.packages('quarto')"
