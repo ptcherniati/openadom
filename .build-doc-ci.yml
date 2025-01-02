@@ -2,15 +2,16 @@ build_openadom_doc:
   image: rocker/verse:latest
   stage: pages
   script:
-    - mkdir public
+    - set -x
     - cp README.md documentations/openadom/fichiers/README.md
     - cd documentations/openadom
+    - ls
     - Rscript -e "install.packages('quarto')"
     - quarto render
     - pwd
     - cd ../..
     - ls
-    - mv documentations/openadom/_site public
+    - mv documentations/openadom/_site public/
   artifacts:
     paths:
       - public
