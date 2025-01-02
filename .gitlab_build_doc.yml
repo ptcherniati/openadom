@@ -1,5 +1,4 @@
 build_openadom_doc:
-pages:
   image: rocker/verse:latest
   stage: deploy
   script:
