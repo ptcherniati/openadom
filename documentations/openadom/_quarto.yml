@@ -114,6 +114,7 @@ format:
     footnotes-hover: true
     date-format: "DD MMMM YYYY"
     lang: fr-FR
+    date: "last-modified"
 
 execute:
   freeze: auto
