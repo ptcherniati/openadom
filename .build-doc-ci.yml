@@ -15,3 +15,9 @@ build_openadom_doc:
 
     #rules:
     #- if: ($CI_JOB_MANUAL== "true" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)
+
+pages:
+  stage: pages
+  needs: ["build_openadom_doc"]
+  script:
+    - ls public
