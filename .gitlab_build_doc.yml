@@ -1,5 +1,5 @@
 build_openadom_doc:
-  image: rocker/verse:latest
+  image: run
   stage: build
   script:
     - set -x
@@ -8,6 +8,7 @@ build_openadom_doc:
     - cd documentations/openadom
     - ls
     - Rscript -e "install.packages('quarto')"
+    - python3 add_pdf_links.py
     - quarto render
     - quarto render fichiers/about.qmd --to pdf --output about.pdf
     - quarto render fichiers/autres/database.qmd --to pdf --output autres__database.pdf
