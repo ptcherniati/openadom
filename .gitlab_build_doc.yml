@@ -2,15 +2,24 @@ build_openadom_doc:
   image: rocker/verse:latest
   stage: pages
   script:
+    - set -x
+    - cp README.md documentations/openadom/fichiers/README.md
     - cd documentations/openadom
+    - ls
     - Rscript -e "install.packages('quarto')"
     - quarto render
-    - mv _site public
   artifacts:
     paths:
-      - public
-  #rules:
-  #  - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      - documentations/openadom/_site
+    #rules:
+    #  - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
 
-  #rules:
+    #rules:
     #- if: ($CI_JOB_MANUAL== "true" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)
+
+pages:
+  stage: pages
+  needs: ["build_openadom_doc"]
+  script:
+    - mv documentations/openadom/_site public
+    - ls public
