@@ -1,5 +1,5 @@
 build_openadom_doc:
-  image: run
+  image: rocker/verse:latest
   stage: build
   script:
     - set -x
