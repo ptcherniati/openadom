@@ -7,6 +7,7 @@ build_openadom_doc:
     - cd documentations/openadom
     - Rscript -e "install.packages('quarto')"
     - quarto render
+    - pwd
     - cd ../..
     - ls
     - mv documentations/openadom/_site public
