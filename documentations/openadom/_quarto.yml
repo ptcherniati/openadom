@@ -76,15 +76,19 @@ website:
     left: 
       - href: index.qmd
         text: Accueil
-      - href: index.qmd
+      - href: fichiers/readme.md
         text: Installation
-      - href: fichiers/README.md
+      - href: fichiers/schemaExample.yaml
+        text: Fichier d'example
+      - href: fichiers/autres/Lexique_yaml.qmd
+        text: Lexique
+      - href: about.md
         text: A propos
-    right: 
+    right:
       - icon: github
-        href: https://github.com/openadom
+        href: https://forgemia.inra.fr/anaee-dev/openadom
       - href: https://dev.openadom.fr
-        text: "<img src='/img/Logos_OpernADOM.svg' alt='Openadom' style='height: 20px; vertical-align: middle;'>"
+        icon: /img/Logos_OpernADOM.svg
   page-footer: 
     left: "Copyright 2025, OpenADOM"
     right: 
