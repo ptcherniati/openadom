@@ -5,6 +5,8 @@ build_openadom_doc:
     - set -x
     - cp README.md documentations/openadom/fichiers/readme.md
     - cp src/test/resources/data/configuration/schemaExample.yaml documentations/openadom/fichiers/schema_example.yaml
+    - cat documentations/openadom/fichiers/schema_example.yaml >> documentations/openadom/fichiers/schema-example.qmd
+    - echo "\`\`\`" >> documentations/openadom/fichiers/schema-example.qmd
     - cd documentations/openadom
     - ls
     - Rscript -e "install.packages('quarto')"

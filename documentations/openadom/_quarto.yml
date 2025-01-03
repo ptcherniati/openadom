@@ -79,7 +79,7 @@ website:
         text: Accueil
       - href: fichiers/readme.md
         text: Installation
-      - href: fichiers/schema_example.yaml
+      - href: fichiers/schema-example.qmd
         text: Fichier d'example
       - href: fichiers/autres/lexique_yaml.qmd
         text: Lexique
