@@ -2,9 +2,8 @@ package fr.inra.oresing.rest.data.extraction;
 
 import com.opencsv.CSVWriter;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.checker.type.ListType;
-import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.data.DataColumn;
+import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
@@ -23,15 +22,24 @@ public record DataCsvHeaderWriter(
         DataRepositoryWithBuffer dataRepositoryWithBuffer,
         List<ComponentOrderByForExport> orderedColumns,
         StandardDataDescription dataDescription,
-        Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns) {
+        Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns,
+        boolean horizontalDisplay) {
     public DataCsvHeaderWriter(
             CSVWriter writer,
             Comparator<ComponentOrderByForExport> comparator,
             Function<String, String> getInternationalizedHeader,
             DataRepositoryWithBuffer dataRepositoryWithBuffer,
             StandardDataDescription dataDescription,
-            Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns) {
-        this(writer, comparator, getInternationalizedHeader, dataRepositoryWithBuffer, new ArrayList<>(), dataDescription, internationalizedSortedColumns);
+            Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns,
+            boolean horizontalDisplay) {
+        this(writer,
+                comparator,
+                getInternationalizedHeader,
+                dataRepositoryWithBuffer,
+                new ArrayList<>(),
+                dataDescription,
+                internationalizedSortedColumns,
+                horizontalDisplay);
     }
 
     protected DataRow writeHeader(DataRow dataRow) {
@@ -55,17 +63,19 @@ public record DataCsvHeaderWriter(
                     case DynamicComponentOrderBy dynamicComponentOrderBy ->
                             dynamicComponentOrderBy.dynamicColumns().values().stream()
                                     .map(this::internationalizeColumnName);
+                    case ComponentPatternValueOrderBy componentPatternValue ->
+                            headerForPatternComponentValue(componentPatternValue);
                 })
                 .toList();
     }
 
-    private Stream<String> componentOrderByGetHeader(ComponentOrderBy componentOrderBy) {
+    private Stream<String> componentOrderByGetHeader(ComponentOrderByForExport componentOrderBy) {
         Configuration.InternationalizedSortedColumn internationalizedSortedColumn = internationalizedSortedColumns.get(componentOrderBy.componentKey());
         String exportHeader = Optional.ofNullable(internationalizedSortedColumn)
                 .map(Configuration.InternationalizedSortedColumn::header)
                 .map(getInternationalizedHeader())
                 .orElse(null);
-        return exportHeader==null?Stream.of(Objects.requireNonNull(internationalizedSortedColumn).header()):Stream.of(exportHeader);
+        return exportHeader == null ? Stream.of(Objects.requireNonNull(internationalizedSortedColumn).header()) : Stream.of(exportHeader);
 
     }
 
@@ -77,6 +87,15 @@ public record DataCsvHeaderWriter(
         List<String> internationalizedPatternColumns = new LinkedList<>();
         internationalizedPatternColumns.add(componentPatternOrderBy.qualifierKey());
         componentPatternOrderBy.qualifiersColumns().stream()
+                .map(this::internationalizeColumnName)
+                .forEach(internationalizedPatternColumns::add);
+        return internationalizedPatternColumns.stream();
+    }
+
+    private Stream<String> headerForPatternComponentValue(ComponentPatternValueOrderBy componentPatternOrderBy) {
+        List<String> internationalizedPatternColumns = new LinkedList<>();
+        internationalizedPatternColumns.add(getInternationalizedHeader().apply(componentPatternOrderBy.componentKey()));
+        componentPatternOrderBy.allColumns().stream()
                 .map(this::internationalizeColumnName)
                 .forEach(internationalizedPatternColumns::add);
         return internationalizedPatternColumns.stream();
@@ -103,30 +122,65 @@ public record DataCsvHeaderWriter(
         );
     }
 
-    private Stream<ComponentPatternOrderBy> columnsForPatternComponent(
+    private Stream<ComponentOrderByForExport> columnsForPatternComponent(
             Configuration.InternationalizedSortedColumn internationalizedSortedColumn,
             PatternComponent patternComponent,
             DataRow dataRow) {
-        ListType<MapType> fieldType = (ListType<MapType>) dataRow.values().get(patternComponent.componentKey());
-        return dataRow.allPatternColumnNames().stream()
-                .filter(columnName -> columnName.matches(patternComponent.patternForComponents()))
-                .map(columnName -> {
-                    List<ComponentOrderBy> qualifierColumns = new LinkedList<>();
-                    patternComponent.patternComponentAdjacents().forEach((key, value) -> qualifierColumns.add(
+        if (horizontalDisplay()) {
+            return dataRow.allPatternColumnNames().stream()
+                    .filter(columnName -> columnName.matches(patternComponent.patternForComponents()))
+                    .map(columnName -> {
+                        List<ComponentOrderBy> qualifierColumns = new LinkedList<>();
+                        patternComponent.patternComponentAdjacents().forEach((key, value) -> qualifierColumns.add(
+                                new ComponentOrderBy(
+                                        value.exportHeaderName(),
+                                        DataRepository.Order.ASC,
+                                        dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
+                                )
+                        ));
+                        return new ComponentPatternOrderBy(
+                                patternComponent.componentKey(),
+                                columnName,
+                                DataRepository.Order.ASC,
+                                dataDescription().getTypeForComponentKey(internationalizedSortedColumn.componentDescription().componentKey()),
+                                qualifierColumns.stream().sorted(comparator()).toList()
+                        );
+                    });
+        } else {
+            Set<ComponentOrderBy> qualifierColumns = new LinkedHashSet<>();
+            Set<ComponentOrderBy> adjacentColumns = new LinkedHashSet<>();
+            patternComponent.patternComponentQualifiers()
+                    .forEach((key, value) -> qualifierColumns.add(
                             new ComponentOrderBy(
                                     value.exportHeaderName(),
                                     DataRepository.Order.ASC,
                                     dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
                             )
                     ));
-                    return new ComponentPatternOrderBy(
-                            patternComponent.componentKey(),
-                            columnName,
-                            DataRepository.Order.ASC,
-                            dataDescription().getTypeForComponentKey(internationalizedSortedColumn.componentDescription().componentKey()),
-                            qualifierColumns.stream().sorted(comparator()).toList()
-                    );
-                });
+            patternComponent.patternComponentAdjacents()
+                    .forEach((key, value) -> adjacentColumns.add(
+                            new ComponentOrderBy(
+                                    value.exportHeaderName(),
+                                    DataRepository.Order.ASC,
+                                    dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
+                            )
+                    ));
+            return dataDescription().componentDescriptions().entrySet().stream()
+                    .filter(entry -> entry.getValue() instanceof PatternComponent)
+                    .map(entry -> new AbstractMap.SimpleImmutableEntry<>(entry.getKey(), (PatternComponent) entry.getValue()))
+                    .map(entry -> {
+                        String componentKey = entry.getKey();
+                        PatternComponent component = entry.getValue();
+                        return new ComponentPatternValueOrderBy(
+                                patternComponent.componentKey(),
+                                Column.__VALUE__,
+                                DataRepository.Order.ASC,
+                                dataDescription().getTypeForComponentKey(componentKey),
+                                qualifierColumns,
+                                adjacentColumns
+                        );
+                    });
+        }
     }
 
     private Stream<DynamicComponentOrderBy> columnsForDynamicComponent(DynamicComponent dynamicComponent) {

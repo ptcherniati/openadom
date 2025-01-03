@@ -548,7 +548,7 @@ public class DataService implements ServiceContainerBean {
                 .withOutputStream(outputStream)
                 .onRepositories(new DataRepositoryWithBuffer(application, dataRepository), null)
                 .addDatas(datas)
-                .buildDataCsv(downloadDatasetQuery.getLanguage(), dataDescription);
+                .buildDataCsv(downloadDatasetQuery.getLanguage(), dataDescription, downloadDatasetQuery.horizontalDisplay());
     }
 
     public List<ApplicationResult.DataSynthesis> getReferenceSynthesis(final Application application) {
@@ -610,6 +610,7 @@ public class DataService implements ServiceContainerBean {
                 })
                 .collectList();
     }
+
     @Transactional(readOnly = true)
     public void buildDataZip(
             ZipOutputStream zipOutputStream,

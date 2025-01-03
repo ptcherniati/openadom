@@ -22,4 +22,5 @@ public record DynamicComponentOrderBy(String componentKey, Map<String, Component
     public ComponentType sqlType() {
         return new ComponentTextType();
     }
+
 }

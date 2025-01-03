@@ -32,7 +32,6 @@ public record ComponentOrderBy(String componentKey, DataRepository.Order order,
     ) {
         String componentKey = componentKey();
         FieldType fieldType = dataRowValues.get(componentKey);
-        final String value = fieldType.toString();
         String valueString = valueToString(language, dataRepository, dataDescription,  fieldType);
         return Stream.of(valueString);
     }

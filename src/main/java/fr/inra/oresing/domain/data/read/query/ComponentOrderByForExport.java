@@ -18,7 +18,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public sealed interface ComponentOrderByForExport permits ComponentOrderBy, ComponentPatternOrderBy, DynamicComponentOrderBy {
+public sealed interface ComponentOrderByForExport
+        permits ComponentOrderBy, ComponentPatternOrderBy, ComponentPatternValueOrderBy, DynamicComponentOrderBy {
     Stream<String> toValue(String language, DataRepositoryWithBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription);
 
     String componentKey();

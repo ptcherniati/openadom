@@ -117,7 +117,7 @@ public class DataCsvBuilder {
         UUIDsfromData uuiDsfromData = new UUIDsfromData();
         String language = downloadDatasetQuery.getLanguage();
         try {
-            uuiDsfromData = buildDataCsv(language, dataDescription);
+            uuiDsfromData = buildDataCsv(language, dataDescription, downloadDatasetQuery.horizontalDisplay());
         } catch (final Exception e) {
             if (outputStream instanceof ZipOutputStream zipOutputStream) {
                 zipOutputStream.closeEntry();
@@ -136,7 +136,7 @@ public class DataCsvBuilder {
         return uuiDsfromData;
     }
 
-    public UUIDsfromData buildDataCsv(String language, StandardDataDescription dataDescription) {
+    public UUIDsfromData buildDataCsv(String language, StandardDataDescription dataDescription, boolean horizontalDisplay) {
         final UUIDsfromData uuiDsfromData = new UUIDsfromData();
         AtomicLong counter = new AtomicLong();
         Character separator = downloadDatasetQuery.application().findData(downloadDatasetQuery.dataName())
@@ -185,9 +185,10 @@ public class DataCsvBuilder {
                     getInternationalizedHeader,
                     dataRepositoryWithBuffer,
                     dataDescription,
-                    internationalizedSortedColumns
+                    internationalizedSortedColumns,
+                    horizontalDisplay
             );
-            DataCsvRowBuilder dataCsvRowBuilder = new DataCsvRowBuilder(language, dataRepositoryWithBuffer, dataDescription);
+            DataCsvRowBuilder dataCsvRowBuilder = new DataCsvRowBuilder(language, dataRepositoryWithBuffer, dataDescription, horizontalDisplay);
             datas
                     .map(dataCsvHeaderWriter::writeHeader)
                     .map(dataRow -> addRefsLinkedTo(dataRow, uuiDsfromData))

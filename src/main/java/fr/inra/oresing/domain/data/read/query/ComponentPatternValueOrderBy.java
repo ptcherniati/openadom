@@ -1,0 +1,71 @@
+package fr.inra.oresing.domain.data.read.query;
+
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.checker.type.FieldType;
+import fr.inra.oresing.domain.checker.type.ListType;
+import fr.inra.oresing.domain.checker.type.MapType;
+import fr.inra.oresing.domain.data.deposit.context.column.Column;
+import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
+
+import java.util.*;
+import java.util.stream.Stream;
+
+public record ComponentPatternValueOrderBy(String componentKey, String qualifierKey, DataRepository.Order order,
+                                           ComponentType sqlType,
+                                           Set<ComponentOrderBy> qualifiersColumns,
+                                           Set<ComponentOrderBy> adjacentColumns) implements ComponentOrderByForExport {
+    @Override
+    public Stream<String> toValue(String language, DataRepositoryWithBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription) {
+        String componentKey = componentKey();
+        ListType fieldType = (ListType) dataRowValues.get(componentKey);
+
+        Optional<MapType> patternMapTypeOpt = getMapType((ListType) fieldType);
+        if (patternMapTypeOpt.isPresent()) {
+            List<String> values = new LinkedList<>();
+            Optional<String> valueopt = patternMapTypeOpt
+                    .map(mapType -> getValue(language, dataRepository, dataDescription, mapType));
+            values.add(valueopt.isPresent() ? valueopt.get() : "");
+            allColumns().stream()
+                    .map(qualifier -> {
+                        if(qualifier.componentKey().contains("::")) {
+                            return getAdacentValue(language, dataRepository, dataDescription, qualifier, patternMapTypeOpt.get());
+                        }
+                        return getQualifierValue(language, dataRepository, dataDescription, qualifier, patternMapTypeOpt.get());
+                    }).forEach(values::add);
+            return values.stream();
+        }
+        return Stream.empty();
+    }
+
+    private String getAdacentValue(String language, DataRepositoryWithBuffer dataRepository, StandardDataDescription dataDescription, ComponentOrderBy qualifier, MapType patternMapTypeOpt) {
+        String adjacentKey = qualifier.componentKey().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[1];
+        FieldType adjacentField = (FieldType) patternMapTypeOpt.getValue().get(adjacentKey);
+        return valueToString(language, dataRepository, dataDescription, adjacentField);
+    }
+
+    private String getQualifierValue(String language, DataRepositoryWithBuffer dataRepository, StandardDataDescription dataDescription, ComponentOrderBy qualifier, MapType patternMapTypeOpt) {
+        FieldType adjacentField = (FieldType) patternMapTypeOpt.getValue().get(qualifier.componentKey());
+        return valueToString(language, dataRepository, dataDescription, adjacentField);
+    }
+
+    private String getValue(String language, DataRepositoryWithBuffer dataRepository, StandardDataDescription dataDescription, MapType mapType) {
+        return valueToString(language, dataRepository, dataDescription, (FieldType) mapType.getValue().get(Column.__VALUE__));
+    }
+
+    private static Optional getMapType(ListType fieldType) {
+        return ((List) fieldType.getValue()).stream()
+                .filter(MapType.class::isInstance)
+                .map(mapType -> ((MapType<String, FieldType>) mapType))
+                .findFirst();
+    }
+
+    public List<ComponentOrderBy> allColumns() {
+        Set<ComponentOrderBy> components = qualifiersColumns();
+        components.addAll(adjacentColumns());
+        return components.stream()
+                .sorted((a,b)-> a.order().compareTo(b.order()))
+                .toList();
+    }
+
+}
