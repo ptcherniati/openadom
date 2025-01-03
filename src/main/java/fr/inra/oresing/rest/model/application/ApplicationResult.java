@@ -35,19 +35,7 @@ public record ApplicationResult(
 
     public List<String> getOrderedReferences() {
         return configuration().hierarchicalNodes().stream()
-                .sorted((a,b)->{
-                    if(a.depends().contains(b.nodeName())){
-                        return 1;
-                    }
-                    if(b.depends().contains(a.nodeName())){
-                        return -1;
-                    }
-                    int compareOrder = a.order().compareTo(b.order());
-                    if(compareOrder == 0){
-                        return a.nodeName().compareTo(b.nodeName());
-                    }
-                    return compareOrder;
-                })
+                .sorted()
                 .map(Node::nodeName)
                 .collect(Collectors.toCollection(ArrayList::new));
     }
