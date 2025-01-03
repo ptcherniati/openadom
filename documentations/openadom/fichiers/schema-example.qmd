@@ -2,6 +2,6 @@
 title: "Schéma d'exemple YAML"
 ---
 
-```yaml
+``` 
 #| code-fold: true
 #| code-summary: "Afficher/Masquer le contenu YAML"
