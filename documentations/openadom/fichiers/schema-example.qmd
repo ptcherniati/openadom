@@ -3,5 +3,3 @@ title: "Schéma d'exemple YAML"
 ---
 
 ``` 
-#| code-fold: true
-#| code-summary: "Afficher/Masquer le contenu YAML"
