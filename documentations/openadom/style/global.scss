@@ -1,0 +1,458 @@
+/*-- scss:defaults --*/
+$h2-font-size:          1.6rem !default;
+$headings-font-weight:  500 !default;
+
+$font-family: "LiberationSans", Helvetica, Arial, sans-serif;
+
+$text-default-color: #2c3e50;
+$light-text: rgb(230, 230, 230);
+$primary-slightly-transparent-8: rgba(0, 157, 157, 0.8);
+$primary-slightly-transparent-6: rgba(0, 157, 157, 0.6);
+$primary-slightly-transparent-4: rgba(0, 157, 157, 0.4);
+$dark-slightly-transparent-8: rgba(0, 100, 100, 0.8);
+$dark-slightly-transparent-6: rgba(0, 100, 100, 0.6);
+$dark-slightly-transparent-4: rgba(0, 100, 100, 0.4);
+$info-transparent: rgba(20, 155, 170, 0.3);
+
+// PageView
+$container-padding-hor: 3rem;
+$container-padding-vert: calc($container-padding-hor / 2);
+$title-margin-top: 1.5rem;
+$size-icon-small: 1.15rem;
+$size-icon-medium: 1.5rem;
+$size-icon-large: 5rem;
+
+// MenuView
+$menu-height: 80px;
+
+/**************************************************************************************************
+*                                   Buefy/Bulma customizations                                   *
+*        see all customizable variables here https://buefy.org/documentation/customization/       *
+***************************************************************************************************/
+
+// General variables
+$primary: rgb(0, 157, 157);
+$info: rgb(20, 155, 170);
+$dark: rgb(0, 100, 100);
+$success: rgb(186, 222, 129);
+$warning: rgb(255, 170, 0);
+$danger: rgb(166, 0, 0);
+$light: rgb(202, 216, 216);
+$family-primary: $font-family;
+$primary-dark: #007F7F;
+
+// Import only what you need from Bulma and Buefy
+
+/*-- scss:rules --*/
+// A file for common css across the application
+html,
+body {
+  height: 100%;
+}
+.navbar-menu.is-active{
+  background-color: $primary;
+}
+.titleModal {
+  color: $primary;
+  font-size: 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.is-large.modal-close{
+  background-color: $primary;
+}
+.title {
+  color: $primary;
+  margin-top: $title-margin-top;
+
+  &.main-title {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+h3 {
+  text-decoration: underline;
+}
+
+h2 {
+  color: $dark;
+  font-weight: 600;
+  font-size: 1.2em;
+}
+
+a {
+  color: $info;
+}
+.columns {
+  margin: 0;
+}
+
+// affichage icon uniformisé
+.control.has-icons-right .input.is-small ~ .icon,
+.control.has-icons-left .input.is-small ~ .icon {
+  font-size: 0.75rem;
+  top: 0;
+  margin-left: 0;
+}
+.button .icon, .button .icon.is-small, .icon{
+  font-size: $size-icon-small;
+  align-items: center;
+  display: inline-flex;
+}
+.icon.is-medium {
+  font-size: $size-icon-medium;
+}
+.control.has-icons-right {
+  .icon {
+    z-index: 0;
+  }
+  .icon.is-right {
+    top: -2px;
+  }
+}
+.control.has-icons-left .icon {
+  z-index: 0;
+  .is-small {
+    top: -5px;
+  }
+}
+.b-checkbox.checkbox.button {
+  display: inline-flex;
+  padding: 0;
+}
+.button.is-light.is-focused:not(:active), .button.is-light.is-focused {
+  box-shadow: none;
+}
+.button .icon:first-child:not(:last-child) {
+  margin: 0;
+}
+.label {
+  text-transform: capitalize;
+}
+.clickable {
+  cursor: pointer;
+}
+.link {
+  cursor: pointer;
+  &:hover {
+    color: $dark;
+    font-weight: bold;
+  }
+}
+.hide {
+  display: none;
+}
+.defaultValueTooltip {
+  background-color: white;
+  color: $primary;
+  font-weight: bold;
+  padding-top: 5px;
+}
+a {
+  color: $dark;
+  cursor: pointer;
+  .leaf {
+    padding: 15px;
+  }
+}
+p.folder {
+  padding-left: 15px;
+  padding-bottom: 10px;
+  padding-top: 12px;
+}
+ul.rows{
+  margin-bottom: 10px;
+}
+
+// affichage icon uniformisé
+.control.has-icons-right,
+.control.has-icons-left {
+  .input.is-small ~ .icon{
+    font-size: 0.75rem;
+    top: 0;
+    margin-left: 0;
+  }
+  .icon.is-left{
+    height: 2em;
+  }
+  .icon.is-right {
+    top: -2px;
+  }
+  .input{
+    padding-left: 3em;
+  }
+  .icon.is-clickable{
+    color: white;
+    background-color: $primary;
+    border-radius: 5px 0 0 5px;
+  }
+  .icon.is-small {
+    top: -5px;
+  }
+}
+.loader-wrapper {
+  justify-content: center;
+
+  .loader {
+    height: 100px;
+    width: 100px;
+  }
+}
+.message-body {
+  .icon.is-large {
+    font-size: $size-icon-medium;
+    height: 3rem;
+    width: 3rem;
+  }
+}
+.icon.is-large {
+  font-size: $size-icon-large;
+  height: 6rem;
+  width: 6rem;
+}
+.icon.is-medium {
+  font-size: $size-icon-medium;
+}
+.icon.is-small {
+  font-size: $size-icon-small;
+}
+.inputAuth .control.has-icons-left .icon.is-left{
+  font-size: $size-icon-small;
+  align-items: center;
+}
+.button , .icon{
+  .icon.is-small{
+    font-size: $size-icon-small;
+    align-items: center;
+    display: inline-flex;
+  }
+  .icon:first-child:not(:last-child) {
+    margin: 0;
+  }
+  .is-right.is-small.is-clickable {
+    color: $primary;
+  }
+  .has-text-primary.is-medium {
+    width: 32px;
+  }
+}
+
+// mise en forme des tableaux
+.b-table .table {
+  border: 0.5px solid rgb(230, 230, 230);
+  th {
+    border: 0.5px solid rgb(230, 230, 230);
+    min-width: 200px;
+    .sort-icon {
+      left: 100%;
+      margin-left: 1em;
+      position: initial;
+    }
+  }
+  td {
+    border: 0.5px solid rgb(230, 230, 230);
+  }
+  td.is-sticky {
+    position: initial;
+    z-index: 0;
+  }
+  th.is-sortable .th-wrap {
+    width: max-content;
+  }
+  th.is-sortable{
+    width: max-content;
+  }
+}
+.column.card .card-content .table td{
+  vertical-align: middle;
+}
+
+// Buttons style
+.button.is-light.is-focused:not(:active), .button.is-light.is-focused {
+  box-shadow: none;
+}
+.buttons {
+  justify-content: flex-end;
+  &:last-child {
+    margin-bottom: 0;
+  }
+  .button {
+    margin-bottom: 0;
+  }
+}
+button.dropdown-item.is-active {
+  background-color: rgb(0,100,100);
+}
+.button.is-danger.is-light {
+  color: $danger;
+}
+.button.is-primary.is-light {
+  color: $dark;
+}
+
+// Buefy/Bulma UI overrides
+.notification a:not(.button):not(.dropdown-item){
+  text-decoration: none;
+}
+.b-checkbox.checkbox.button {
+  display: inline-flex;
+  padding: 0;
+}
+.tags{
+  margin: 0 10px;
+  align-items: normal;
+}
+.tags:not(:last-child) {
+  margin-bottom: 0;
+}
+
+// Input style
+.input-field {
+  margin-bottom: 1rem;
+
+  .label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    span {
+      color: $light;
+    }
+  }
+}
+.field {
+  .label {
+    width: max-content;
+    min-width: 200px;
+  }
+}
+.b-steps .steps .step-items .step-item.is-active .step-link, .b-steps .steps .step-items .step-item .step-link:not(.is-clickable) {
+  background-color: white;
+}
+//tabs style
+.b-tabs,
+.tabs.is-boxed , .tabs.is-boxed.is-right{
+  ul {
+    li.step-item{
+      list-style-type: none;
+    }
+    margin: 0;
+    li a {
+      text-decoration: none;
+    }
+  }
+  li.is-active  {
+    a {
+      color: $dark;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a:focus {
+      background-color: $primary;
+      color: white;
+      font-weight: bold;
+    }
+  }
+  a:hover{
+    background-color: $primary;
+    color: white;
+    font-weight: bold;
+  }
+  .tabs.is-boxed li:not(.is-active) a:focus {
+    background-color: $primary;
+    color: white;
+    font-weight: bold;
+  }
+  .tab-content {
+     padding: 0.5rem;
+  }
+}
+
+
+.dropdown-content{
+  box-shadow: 0 0.5em 1em -0.125em rgba(10, 10, 10, 0.5), 0 0px 0 1px rgba(10, 10, 10, 0.1);
+}
+.section {
+  padding: 1em;
+}
+.pagination-link.is-current {
+  background-color: $dark;
+  border-color: $dark;
+}
+
+.message .media {
+  align-items: center;
+}
+
+.pagination-link.is-current {
+  background-color: $dark;
+  border-color: $dark;
+}
+.pagination {
+  padding-bottom: 20px;
+}
+
+a.dropdown-item {
+  display: flex;
+  align-items: center;
+}
+
+.select:not(.is-multiple):not(.is-loading)::after {
+  border-color: $primary;
+}
+.select select:focus select:active {
+  border-color: $dark;
+}
+.input:focus, .textarea:focus, .taginput .taginput-container.is-focusable:focus, .select select:focus, .is-focused.input, .is-focused.textarea, .taginput .is-focused.taginput-container.is-focusable, .select select.is-focused, .input:active, .textarea:active, .taginput .taginput-container.is-focusable:active, .select select:active, .is-active.input, .is-active.textarea, .taginput .is-active.taginput-container.is-focusable, .select select.is-active {
+  border-color: $primary;
+  box-shadow: 0 0 0 0.125em rgba(0, 163, 166,0.25);
+}
+
+a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active{
+  background-color: rgb(0,100,100);
+}
+
+.textarea:not([rows]) {
+  min-height: 4em;
+}
+
+// mise en forme modal card synthèse
+#ranges {
+  display: none;
+}
+#minmax {
+  display: none;
+}
+.modal {
+  .animation-content .modal-card {
+    margin: auto;
+  }
+}
+
+.liste:nth-child(2n) {
+  background-color: rgba(239, 239, 239,0.5);
+}
+.liste {
+  background-color: rgb(239, 239, 239);
+}
+
+.svg-inline--fa.fa-info{
+  height: 24px;
+}
+
+.modalCardRef .modal-background {
+  background-color: rgba(10,10,10,0.25);
+}
+.modalArrayObj:nth-child(2n) {
+  background-color: rgba(239, 239, 239,0.5);
+}
+.modalArrayObj {
+  background-color: rgb(239, 239, 239);
+  border-bottom: 1px solid rgba(128, 128, 128,0.3);
+}
+span.messageElement {
+  border: solid .5px ;
+}

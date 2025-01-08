@@ -6,7 +6,7 @@ C'est un format tabulaire, avec des champs séparés par des points-virgules :
 
 *Example de fichier d'échange*
 
-![Fichier d'échange.png](../img/fichier_echange.png) 
+![Fichier d'échange.png](img/fichier_echange.png) 
 
 Comme on peut le voir dans cet example, un fichier csv est composé de lignes composées de colonnes. 
 Un champ est ainsi repéré par un numéro de ligne et de colonne.

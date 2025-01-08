@@ -1,0 +1,42 @@
+/**************************************************************************************************
+*                       Global app variables (defined in the app)                                 *
+***************************************************************************************************/
+
+$font-family: "LiberationSans", Helvetica, Arial, sans-serif;
+
+$text-default-color: #2c3e50;
+$light-text: rgb(230, 230, 230);
+$primary-slightly-transparent-8: rgba(0, 157, 157, 0.8);
+$primary-slightly-transparent-6: rgba(0, 157, 157, 0.6);
+$primary-slightly-transparent-4: rgba(0, 157, 157, 0.4);
+$dark-slightly-transparent-8: rgba(0, 100, 100, 0.8);
+$dark-slightly-transparent-6: rgba(0, 100, 100, 0.6);
+$dark-slightly-transparent-4: rgba(0, 100, 100, 0.4);
+$info-transparent: rgba(20, 155, 170, 0.3);
+
+// PageView
+$container-padding-hor: 3rem;
+$container-padding-vert: calc($container-padding-hor / 2);
+$title-margin-top: 1.5rem;
+$size-icon-small: 1.15rem;
+$size-icon-medium: 1.5rem;
+$size-icon-large: 5rem;
+
+// MenuView
+$menu-height: 80px;
+
+/**************************************************************************************************
+*                                   Buefy/Bulma customizations                                   *
+*        see all customizable variables here https://buefy.org/documentation/customization/       *
+***************************************************************************************************/
+
+// General variables
+$primary: rgb(0, 157, 157);
+$info: rgb(20, 155, 170);
+$dark: rgb(0, 100, 100);
+$success: rgb(186, 222, 129);
+$warning: rgb(255, 170, 0);
+$danger: rgb(166, 0, 0);
+$light: rgb(202, 216, 216);
+$family-primary: $font-family;
+$primary-dark: #007F7F;

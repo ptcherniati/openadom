@@ -1,6 +1,23 @@
-# <a id="aidefichier" />Rédaction du fichier de configuration
+---
+    title: Rédaction du fichier de configuration
+    
+    about: 
+        id: config_file
+        template: marquee
+        links: 
+          - icon: caret-left
+            text: Page précédente
+            href: vocabulaire.qmd
+          - icon: caret-right
+            text: Page suivante
+            href: ../fichier_echange/data.md
+            
+    abstract: >
+        Vous trouverez ci-dessous des exemples décrivant les parties attendues dans le fichier de configuration pour qu'il
+        soit valide. 
+---
 
-## <a id="creation" />La création :
+# <a id="creation" />La création :
 
 Vous trouverez ci-dessous des exemples décrivant les parties attendues dans le fichier de configuration pour qu'il
 soit valide. 

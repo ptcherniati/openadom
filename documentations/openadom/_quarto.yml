@@ -3,6 +3,10 @@ project:
   output-dir: _site
 
 website:
+
+  page-navigation: true
+  back-to-top-navigation: true
+  bread-crumbs: true
   repo-url: https://forgemia.inra.fr/anaee-dev/openadom/backend/-/tree/develop
   repo-actions: [edit, source, issue]
   title: "openadom"
@@ -17,32 +21,36 @@ website:
     collapse-level: 1
     background: primary
     border: true
-    style: "docked"
+    style: docked
     contents:
       - section: Introduction
         contents:
           - text: Introduction
-            href: fichiers/introduction/1_Introduction.md
+            href: fichiers/introduction/introduction.qmd
+          - text: Vocabulaire
+            href: fichiers/introduction/vocabulaire.qmd
           - text: Fichier d'échange
-            href: fichiers/introduction/1.2..Fichier d'échange.md
+            href: fichiers/introduction/yaml.qmd
       - section: Fichiers d'échange
         contents:
           - text: Données
             href: fichiers/fichier_echange/data.md
           - text: Aide fichier
-            href: fichiers/fichier_echange/aide_fichier.md
+            href: fichiers/fichier_echange/aide_fichier.qmd
           - text: Etiquettes
             href: fichiers/fichier_echange/etiquettes.md
-          - text: Basic Components
-            href: fichiers/fichier_echange/basic_components.qmd
-          - text: Computed Components
-            href: fichiers/fichier_echange/computed_components.md
-          - text: Dynamic Components
-            href: fichiers/fichier_echange/dynamic_components.qmd
-          - text: Constant Components
-            href: fichiers/fichier_echange/constant_components.md
-          - text: Pattern Components
-            href: fichiers/fichier_echange/pattern_components.md
+          - section: Components
+            contents: 
+              - text: Basic Components
+                href: fichiers/fichier_echange/data/components/basic_components.qmd
+              - text: Computed Components
+                href: fichiers/fichier_echange/data/components/computed_components.md
+              - text: Dynamic Components
+                href: fichiers/fichier_echange/data/components/dynamic_components.qmd
+              - text: Constant Components
+                href: /fichiers/fichier_echange/data/components/constant_components.md
+              - text: Pattern Components
+                href: fichiers/fichier_echange/data/components/pattern_components.md
           - text: Verificateurs
             href: fichiers/fichier_echange/verificateurs.md
       - section: Pour aller plus loin
@@ -88,8 +96,8 @@ website:
     right:
       - icon: github
         href: https://forgemia.inra.fr/anaee-dev/openadom
-      - href: https://dev.openadom.fr
-        icon: /img/Logos_OpernADOM.svg
+      - icon: /img/Logos_OA.svg
+        href: https://dev.openadom.fr
   page-footer: 
     left: "Copyright 2025, OpenADOM"
     right: 
@@ -98,16 +106,18 @@ website:
 
 format:
   html:
+    smooth-scroll: true
     theme: 
-      light: cosmo
-      dark: darkly
-    css: styles.css
+      - minty
+      - style/global.scss
+    css: style/global.scss
     toc: true
+    toc-expand: false
     toc-depth: 3
-    number-sections: true
+    number-sections: false
     code-fold: true
     code-tools: true
-    highlight-style: github
+    highlight-style: kate
     mainfont: "Roboto, sans-serif"
     monofont: "Fira Code, monospace"
     include-in-header: 
@@ -120,6 +130,8 @@ format:
     date-format: "DD MMMM YYYY"
     lang: fr-FR
     date: "last-modified"
+    anchor-sections: true
+    shift-heading-level-by: 1  # Convertit les h1 en h2 pour avoir des ancre
 
 execute:
   freeze: auto
