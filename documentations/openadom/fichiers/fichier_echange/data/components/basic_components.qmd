@@ -106,7 +106,7 @@ Il en est de même pour les clefs des components [(cf. *Identificateurs*)](#iden
 De plus dans les vues, le nom de la component peut être utilisé en concaténation avec d'autres mots. 
 Postgresql contraint ces noms à ne pas dépasser 63 caractères.
 
-Préférez des noms courts. Si ces nom ne correspondent pas à celui de l'en-tête de votre fichier, préciser le nom de 
+Préférez des noms courts. Si ces noms ne correspondent pas à celui de l'en-tête de votre fichier, préciser le nom de 
 l'en-tête dans le champ "OA_importHeader"
 
 exemple: 
@@ -124,7 +124,7 @@ Le contenu de *OA_basicComponents* seront indenté de 3.</span>
 :::
 
 ##### Component obligatoire
-La notion de component obligaotoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
+La notion de component obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
 
 ```yaml
     sit_nom_du_site:
@@ -134,7 +134,7 @@ La notion de component obligaotoire est à placer au niveau de la définition du
 
 ##### Valeur obligatoire
 
-La notion de valeur obligaotoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
+La notion de valeur obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
 ```yaml
     sit_nom_du_site:
         OA_required: true # default false sauf si le component (colonne) est déclaré dans OA_naturalKey. 
