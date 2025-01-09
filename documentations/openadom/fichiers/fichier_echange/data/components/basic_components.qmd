@@ -116,7 +116,7 @@ exemple:
 ```
 :::
 
-::: {.callout-note collapse="true" title="identation"}
+::: {.callout-note collapse="true" title="Indentation"}
 <span style="color: orange">*OA_data* n'est pas indenté. 
 *tr_type_de_site_tds*, *tr_sites_sit* et *tr_parcelles_par* sont indentés de 1. 
 *OA_dataHeaderLine*, *OA_dataFirstLine*, *OA_naturalKey* et *OA_basicComponents* sont indentés de 2. 
