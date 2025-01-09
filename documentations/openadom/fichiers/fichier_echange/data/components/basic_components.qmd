@@ -83,7 +83,7 @@ OA_data:
 ```
 :::
 
-::: {.callout-caution collapse="true" title="Restiction des identificateurs de référentiel"}
+::: {.callout-caution collapse="true" title="Restriction des identificateurs de référentiel"}
 La clef du data est soumise à des restrictions. Voir la déclaration des [*identificateurs*](#identificateur)
 
 Si vous souhaitez toutefois avoir un nom plus explicite, utilisez la section OA_i18n
@@ -101,7 +101,7 @@ OA_data:
 ```
 :::
 
-::: {.callout-caution collapse="true" title="Restiction des identificateurs de composant"}
+::: {.callout-caution collapse="true" title="Restriction des identificateurs de composant"}
 Il en est de même pour les clefs des components [(cf. *Identificateurs*)](#identificateur). 
 De plus dans les vues, le nom de la component peut être utilisé en concaténation avec d'autres mots. 
 Postgresql contraint ces noms à ne pas dépasser 63 caractères.
