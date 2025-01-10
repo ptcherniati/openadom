@@ -14,6 +14,7 @@ toc-title: "Table des matières"
 fontsize: 12pt
 linestretch: 1
 linkcolor: black
-
 ---
+
+![](img/Logos_OA.png){.hidden}
 

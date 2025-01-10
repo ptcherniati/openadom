@@ -14,12 +14,13 @@ website:
   favicon: /img/Logos_OA.svg
   site-url: https://dev.openadom.fr
   sidebar:
+    logo: /img/Logos_OpernADOM.png
+    background: rgba(0, 157, 157, .6)
     page-navigation: true
     back-to-top-navigation: true
     reader-mode: true
     search: true
     collapse-level: 1
-    background: primary
     border: true
     style: docked
     contents:
@@ -80,8 +81,8 @@ website:
           - text: Fichier de configuration minimal
             href: fichiers/examples/configuration_min/description.qmd
   navbar:
-    background: primary
     search: true
+    background: rgba(0, 157, 157, .6)
     left: 
       - href: index.qmd
         text: Accueil
@@ -96,7 +97,7 @@ website:
     right:
       - icon: github
         href: https://forgemia.inra.fr/anaee-dev/openadom
-      - icon: /img/Logos_OA.svg
+      - icon: oa
         href: https://dev.openadom.fr
   page-footer: 
     left: "Copyright 2025, OpenADOM"

@@ -456,3 +456,30 @@ a.dropdown-item.is-active, .dropdown .dropdown-menu .has-link a.is-active{
 span.messageElement {
   border: solid .5px ;
 }
+
+/*-- scss:rules --*/
+.quarto-title-block {
+  background-color: rgba(0, 157, 157, 0.1) ;
+  color: black;
+}
+
+.breadcrumb-item a  {
+  color: white !important;
+  font-weight: bold;
+}
+
+.breadcrumb-item.active {
+  color: white;
+}
+
+.bi-oa:before {
+  content: '';
+  display: inline-block;
+  background: url('/img/Logos_OpernADOM.png') no-repeat center center;
+  background-size: contain;
+  width: 1.5em;
+  height: 1.5em;
+  vertical-align: middle;
+}
+
+
