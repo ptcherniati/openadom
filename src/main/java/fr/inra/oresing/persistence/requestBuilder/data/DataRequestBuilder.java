@@ -32,6 +32,7 @@ public class DataRequestBuilder {
     static String sanitize(final String key) {
         return Optional.ofNullable(key)
                 .map(s -> s.replaceAll("'", "''"))
+                .map(s -> s.replaceAll("::", "."))
                 .orElse(null);
     }
 

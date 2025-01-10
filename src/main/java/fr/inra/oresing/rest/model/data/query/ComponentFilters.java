@@ -48,7 +48,10 @@ public class ComponentFilters {
         }
         final CheckerDescription formatForFieldType = Optional.ofNullable(dataDescription)
                 .map(StandardDataDescription::componentDescriptions)
-                .map(dd -> dd.get(componentFilter.componentKey))
+                .map(dd -> {
+                    ComponentDescription componentDescription = dd.get(componentFilter.componentKey);
+                    return componentDescription;
+                })
                 .map(ComponentDescription::checker)
                 .orElse(CheckerDescription.NO_CHECKER);
         final Multiplicity multiplicity = formatForFieldType.multiplicity();
