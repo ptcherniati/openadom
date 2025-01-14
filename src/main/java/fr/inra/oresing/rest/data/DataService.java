@@ -61,7 +61,9 @@ import reactor.core.publisher.Mono;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -76,6 +78,11 @@ import static fr.inra.oresing.domain.authorization.privilegeassessor.role.Privil
 @Slf4j
 @Component
 public class DataService implements ServiceContainerBean {
+    public static final String OPEN_ADOM_CLIENT_GROOVY = "OpenAdomClient.groovy";
+    public static final String OPEN_ADOM_CLIENT_CONFIGURATION_JSON = "openAdom-client-configuration.json";
+    public static final String README_FILE_NAME = "LISEZ-MOI.txt";
+    public static final String SCRIPTS = "Scripts";
+    public static final String SETUP_SCRIPT_NAME = "setup.sh";
     ServiceContainer serviceContainer;
     @Autowired
     private OreSiRepository repo;
@@ -556,12 +563,8 @@ public class DataService implements ServiceContainerBean {
     }
 
     public Boolean getDataFromStoredCsvStream(ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
-        SubmissionType submissionStrategy = application.findData(reference)
-                .map(StandardDataDescription::submission)
-                .map(Submission::strategy)
-                .orElse(SubmissionType.OA_INSERTION);
         dataRepository = repo.getRepository(application).data();
-        Flux<FileContent> storedData = dataRepository.getStoredData(reference, submissionStrategy);
+        Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
         return storedData
                 .flatMap(fileContent -> Mono.fromCallable(() -> {
@@ -814,12 +817,13 @@ public class DataService implements ServiceContainerBean {
         };
 
     }
+
     @Transactional(readOnly = true)
     public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData, Locale locale, ZipOutputStream zipOutputStream) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         String applicationName = application.getName();
         List<String> referentielsAvecDonnees = new ArrayList<>();
-        Map<String, List<String>> fichiersGeneres = new HashMap<>();
+        Map<String, Set<String>> fichiersGeneres = new HashMap<>();
         List<String> referentielsAvecDonneesExemple = new ArrayList<>();
         List<String> referentielsEnErreur = new ArrayList<>();
 
@@ -827,41 +831,10 @@ public class DataService implements ServiceContainerBean {
                 .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
 
         try (zipOutputStream) {
-            // Écrire le fichier Groovy
-            String groovyScriptFileName = "OpenAdomClient.groovy";
-            writeFileToZip(zipOutputStream, groovyScriptFileName, Resources.getResource(Client.class, groovyScriptFileName));
-            fichiersGeneres.put("Scripts", List.of(groovyScriptFileName));
-
-            // Écrire le fichier de configuration
-            String configFileName = "openAdom-client-configuration.json";
-            String configurationJson = """
-                    {
-                      "instanceUrl": "%s",
-                      "applicationName": "%s"
-                    }
-                    """.formatted(instanceUrl, nameOrId);
-            writeStringToZip(zipOutputStream, configFileName, configurationJson);
-            fichiersGeneres.put("Configuration", List.of(configFileName));
-
-            // Écrire le fichier README
-            String readmeFileName = "LISEZ-MOI.txt";
-            String readmeContent = """
-                    Instructions :
-                    
-                    1. installer Groovy version 4 minimum https://groovy.apache.org/download.html#osinstall
-                    
-                    2. vérifier que Groovy fonctionne en lançant groovy --version
-                    
-                    Exemple de retour correct :
-                    Groovy Version: 4.0.15 JVM: 17.0.8.1 Vendor: Private Build OS: Linux
-                    
-                    3. lancer le script d'import en masse
-                    
-                    groovy %s
-                    """.formatted(groovyScriptFileName);
-            writeStringToZip(zipOutputStream, readmeFileName, readmeContent);
-            fichiersGeneres.put("Documentation", List.of(readmeFileName));
-
+            writeGroovyClient(zipOutputStream, fichiersGeneres);
+            writeConfiguration(zipOutputStream, fichiersGeneres, instanceUrl, nameOrId);
+            writeReadMe(zipOutputStream, fichiersGeneres);
+            writeScriptSH(zipOutputStream, fichiersGeneres);
             // Traiter chaque référentiel
             for (String reference : application.getConfiguration().dataDescription().keySet()) {
                 String fileName = application.getConfiguration().findData(reference)
@@ -874,14 +847,14 @@ public class DataService implements ServiceContainerBean {
                 try {
                     if (withData && serviceContainer.dataService().getDataFromStoredCsvStream(zipOutputStream, application.getName(), reference, application, locale)) {
                         referentielsAvecDonnees.add(reference);
-                        fichiersGeneres.computeIfAbsent(reference, k -> new ArrayList<>()).add(dataCsvFilePath);
+                        fichiersGeneres.computeIfAbsent(reference, k -> new LinkedHashSet<>()).add(dataCsvFilePath);
                     } else {
                         zipOutputStream.putNextEntry(new ZipEntry(dataCsvFilePath));
                         application.getConfiguration().dataDescription().get(reference).buildEmptyFile(zipOutputStream);
                         zipOutputStream.flush();
                         zipOutputStream.closeEntry();
                         referentielsAvecDonneesExemple.add(reference);
-                        fichiersGeneres.computeIfAbsent(reference, k -> new ArrayList<>()).add(dataCsvFilePath);
+                        fichiersGeneres.computeIfAbsent(reference, k -> new LinkedHashSet<>()).add(dataCsvFilePath);
                     }
                 } catch (Exception e) {
                     log.error("Erreur lors du traitement du référentiel {}", reference, e);
@@ -896,6 +869,146 @@ public class DataService implements ServiceContainerBean {
         return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
     }
 
+    private void writeGroovyClient(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
+        writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_GROOVY, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_GROOVY));
+        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
+                        .add(OPEN_ADOM_CLIENT_GROOVY);
+    }
+
+    private void writeConfiguration(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres, String instanceUrl, String dataName) throws IOException {
+        String configurationJson = """
+                {
+                  "instanceUrl": "%s",
+                  "applicationName": "%s"
+                }
+                """.formatted(instanceUrl, dataName);
+        writeStringToZip(zipOutputStream, OPEN_ADOM_CLIENT_CONFIGURATION_JSON, configurationJson);
+        fichiersGeneres.put("Configuration", Set.of(OPEN_ADOM_CLIENT_CONFIGURATION_JSON));
+    }
+
+    private void writeReadMe(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
+        String readmeContent = """
+                Instructions d'utilisation :
+                
+                Trois méthodes d'exécution possibles :
+                
+                   A. Utilisation directe avec Groovy :
+                        Prérequis :
+                           - Groovy 4+ : https://groovy.apache.org/download.html#osinstall
+                           - Java 21+ : https://adoptium.net/temurin/releases/
+                              - Vérifier l'installation : groovy --version
+                        Lancer le script : groovy %1$s
+                
+                   B. Utilisation du script shell automatisé :
+                        Prérequis :
+                           - Docker (optionnel) : https://docs.docker.com/get-docker/
+                      - Rendre le script exécutable : chmod +x setup.sh
+                      - Lancer le script : ./setup.sh
+                
+                   C. Construction manuelle avec Docker :
+                        Prérequis :
+                           - Docker (optionnel) : https://docs.docker.com/get-docker/
+                      - Construire le Dockerfile :
+                            FROM groovy:4.0-jdk21
+                
+                            USER root
+                            RUN apt-get update && apt-get install -y openssl
+                
+                            RUN openssl s_client -connect preprod.openadom.fr:443 -showcerts </dev/null 2>/dev/null | \\
+                                openssl x509 -outform PEM > /tmp/cert.pem && \\
+                                keytool -import -noprompt -trustcacerts \\
+                                -alias openadom \\
+                                -file /tmp/cert.pem \\
+                                -keystore $JAVA_HOME/lib/security/cacerts \\
+                                -storepass changeit
+                
+                      - Construire l'image : docker build -t openadomgroovy .
+                      - Lancer le conteneur :
+                        docker run --rm -it --net host -v "$PWD":/home/groovy/scripts -w /home/groovy/scripts openadomgroovy groovy %1$s
+                
+                Notes importantes :
+                - La méthode B nécessite Docker et automatise tout le processus
+                - La méthode C est recommandée si vous souhaitez plus de contrôle sur l'environnement d'exécution
+                """
+                .formatted(OPEN_ADOM_CLIENT_GROOVY);
+        writeStringToZip(zipOutputStream, README_FILE_NAME, readmeContent);
+        fichiersGeneres.put("Documentation", Set.of(README_FILE_NAME));
+    }
+
+    private void writeScriptSH(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
+        String setupScriptName = SETUP_SCRIPT_NAME;
+        writeStringToZip(zipOutputStream, setupScriptName, buildScriptSh());
+        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
+                        .add(SETUP_SCRIPT_NAME);
+    }
+
+    private String buildScriptSh() {
+        return """
+        #!/bin/bash
+
+        # Vérification de la présence de Docker
+        check_docker() {
+            if ! docker --version > /dev/null 2>&1; then
+                echo "Docker n'est pas installé sur votre système."
+                echo "Veuillez installer Docker en visitant : https://docs.docker.com/get-docker/"
+                exit 1
+            fi
+
+            if ! docker info > /dev/null 2>&1; then
+                echo "Le daemon Docker n'est pas en cours d'exécution."
+                echo "Veuillez démarrer Docker et réessayer."
+                exit 1
+            fi
+        }
+
+        # Lecture de la configuration
+        INSTANCE_URL=$(cat %1$s | sed -n 's/.*"instanceUrl" *: *"\\([^"]*\\)".*/\\1/p')
+        PROTOCOL=$(echo $INSTANCE_URL | cut -d: -f1)
+        DOMAIN=$(echo $INSTANCE_URL | cut -d/ -f3 | cut -d: -f1)
+        PORT=$(echo $INSTANCE_URL | grep -o ':[0-9][0-9]*' || echo "")
+
+        if [ -z "$PORT" ]; then
+            if [ "$PROTOCOL" = "https" ]; then
+                PORT=":443"
+            else
+                PORT=":80"
+            fi
+        fi
+        
+        # Création du Dockerfile
+        cat > Dockerfile << EOF
+        FROM groovy:4.0-jdk21
+        USER root
+        RUN apt-get update && apt-get install -y openssl
+        RUN if [ "${PROTOCOL}" = "https" ]; then \\
+                openssl s_client -connect ${DOMAIN}${PORT} -showcerts </dev/null 2>/dev/null | \\
+                openssl x509 -outform PEM > /tmp/cert.pem && \\
+                keytool -import -noprompt -trustcacerts \\
+                -alias openadom \\
+                -file /tmp/cert.pem \\
+                -keystore \\$JAVA_HOME/lib/security/cacerts \\
+                -storepass changeit; \\
+            else \\
+                echo "Connexion HTTP : pas de certificat à installer"; \\
+            fi
+        EOF
+                
+
+        # Construction de l'image Docker
+        echo "Construction de l'image Docker..."
+        docker build -t openadomgroovy .
+
+        # Lancement du conteneur
+        echo "Lancement du conteneur..."
+        docker run --rm -it --net host \\
+            -v "$PWD":/home/groovy/scripts \\
+            -w /home/groovy/scripts \\
+            openadomgroovy \\
+            groovy OpenAdomClient.groovy
+        """.formatted(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
+    }
+
+
     private void writeFileToZip(ZipOutputStream zipOutputStream, String fileName, URL resourceUrl) throws IOException {
         zipOutputStream.putNextEntry(new ZipEntry(fileName));
         byte[] fileBytes = Resources.toByteArray(resourceUrl);
@@ -908,9 +1021,6 @@ public class DataService implements ServiceContainerBean {
         zipOutputStream.write(content.getBytes(StandardCharsets.UTF_8));
         zipOutputStream.closeEntry();
     }
-
-
-
 
 
     @Transactional()
