@@ -7,19 +7,7 @@ Un fichier de configuration doit au moins contenir la version du moteur openADom
 
 
 ``` yaml
-OA_version: 2.0.1
-OA_application:
-  OA_name: application_minimale
-  OA_i18n: # optional
-    OA_title:
-      fr: Configuration minimale
-      en: Minimale configuration
-    OA_description:
-      fr: Fichier de configuration minimum
-      en: Minimum configuration file
-  OA_version: 1.0.1
-  OA_defaultLanguage: en  # optional par défaut fr
-  OA_comment: une application pour rien faire # optional
+{{< include configuration_minimale.yaml >}}
   ```
-[fichier de configuration](#/fichiers/examples/configuration_min/configuration_minimale.yaml)
+[fichier de configuration](/fichiers/examples/configuration_min/configuration_minimale.yaml)
 
