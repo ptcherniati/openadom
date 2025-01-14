@@ -133,7 +133,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
     public Map<String, List<Ltree>> resolveRequiredAuthorizations(Map<String, List<Ltree>> requiredAuthorizations) {
-        if(requiredAuthorizations.isEmpty()){
+        if (requiredAuthorizations.isEmpty()) {
             return Map.of();
         }
         AtomicInteger counter = new AtomicInteger();
@@ -172,10 +172,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
         return getNamedParameterJdbcTemplate().
                 queryForObject(
-                sql,
-                parameterSource,
-                new JsonRowMapper<Map>()
-        );
+                        sql,
+                        parameterSource,
+                        new JsonRowMapper<Map>()
+                );
     }
 
 
@@ -191,7 +191,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
      */
     public List<UUID> deleteReferenceType(final String refType, final MultiValueMap<String, String> params) {
         String sql = "delete from %1$s%n" +
-                "WHERE application=:applicationId::uuid AND ReferenceType=:refType%n";
+                     "WHERE application=:applicationId::uuid AND ReferenceType=:refType%n";
         final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
                 .addValue(REF_TYPE, refType);
 
@@ -488,7 +488,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return hierarchicalKeyByNaturalKey;
     }
 
-        public record DataValuesByDataType(String dataType, Set<DataRowIds> ids) {
+    public record DataValuesByDataType(String dataType, Set<DataRowIds> ids) {
     }
 
     public Stream<DataValuesByDataType> getLinkedReferenceValuesStream(final Set<UUID> ids) {
@@ -566,17 +566,12 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     @Override
-    public Flux<FileContent> getStoredData(String dataName, SubmissionType submissionType) {
-        String sql;
+    public Flux<FileContent> getStoredData(Application application, String dataName) {
         MapSqlParameterSource params = new MapSqlParameterSource();
+        String sql = FileContent.buildFileNameRequest(application, dataName);
 
-        switch (submissionType) {
-            case OA_VERSIONING -> sql = FileContent.EXPORT_PUBLISHED_DATA_AS_CSF_SQL;
-            case null, default -> sql = FileContent.EXPORT_REGISTER_DATA_CSV_SQL;
-        }
-        sql = sql.formatted(dataName, getTable().schema().getSqlIdentifier(), "%s");
-
-        return Flux.fromStream(getNamedParameterJdbcTemplate().queryForStream(
+        return Flux.fromStream(
+                getNamedParameterJdbcTemplate().queryForStream(
                                 sql,
                                 params,
                                 (rs, rowNum) -> new FileContent(rs.getString("fileName"), rs.getString("fileContent"))

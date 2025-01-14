@@ -3,9 +3,12 @@ package fr.inra.oresing.domain.application.configuration;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
+import groovy.lang.Tuple;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -35,6 +38,27 @@ class SubmissionTest {
             )
     );
     final BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
+    @Test
+    void testPatternGroups(){
+        List<Submission.PatternPosition> groupPositions = submission.fileNameParsing().patternGroups();
+        Assertions.assertEquals(4, groupPositions.size());
+        Assertions.assertEquals("[[0, 4], [5, 9], [10, 14], [15, 19]]", groupPositions.toString());
+    }
+    @Test
+    void testPatternToBeReplacedByGroupCapture(){
+        Assertions.assertEquals("%1$s_%2$s_%3$s_%4$s.csv", submission.fileNameParsing().patternToBeReplacedByGroupCapture());
+    }
+    @Test
+    void testGroupCount(){
+        Assertions.assertEquals(4, submission.fileNameParsing().groupCount());
+    }
+
+    @Test
+    void testOrderedGroups(){
+        LinkedList<String> orderedGroups = submission.fileNameParsing().orderedGroups();
+        Assertions.assertArrayEquals(List.of("projet","chemin",ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN, ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN
+        ).toArray(new String[0]), orderedGroups.toArray(new String[0]));
+    }
 
     @Test
     void parseFileName() {
