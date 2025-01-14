@@ -29,6 +29,7 @@ public record DataColumnPatternValue(
 
     @Override
     public DataColumnPatternValue transform(final Function<FieldType, FieldType> transformation) {
+
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
         return new DataColumnPatternValue((FieldType) null);
     }
