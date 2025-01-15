@@ -9,6 +9,7 @@ import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 
 import java.util.Map;
+import java.util.Optional;
 
 public record GroovyValidationCheckResult(
         ValidationLevel level,
@@ -20,7 +21,12 @@ public record GroovyValidationCheckResult(
 
     public static GroovyValidationCheckResult success(final CheckerTarget target, final FieldType value) {
         if (value instanceof PatternType patternType) {
-            StringType stringTypeValue = (StringType) patternType.getValue().get(Column.__VALUE__);
+            StringType stringTypeValue = Optional.ofNullable(patternType)
+                    .map(PatternType::getValue)
+                    .map(values -> values.get(Column.__VALUE__))
+                    .map(Object::toString)
+                    .map(StringType::getStringTypeFromStringValue)
+                    .orElse(StringType.getStringTypeFromStringValue(""));
             return new GroovyValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, stringTypeValue);
         }
         return new GroovyValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, (StringType) value.copy());
