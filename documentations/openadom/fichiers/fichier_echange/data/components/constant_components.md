@@ -1,18 +1,20 @@
-
-#### <a id="constantComponents" />Constantes du csv (OA_constantComponents)
-
-Les constantes permettent de déclarer les données enregistrées dans les cartouches du fichier csv. 
+---
+  title: Constantes du csv
+  subtitl: OA_constantComponents
+  abstract: > 
+    Les constantes permettent de déclarer les données enregistrées dans les cartouches du fichier csv. 
+---
 
 Pour le fichier : __flux_journalier.csv__
 ```
-  ************* Début de la cartouche **************
+  ************* Début du cartouche **************
  1| Site          | Hesse                          |
  2| Theme         | flux                           |
  3| Frequence     | journalier                     |
  4| Date de debut | 01/01/2008                     |
  5| Date de fin   | 05/01/2008                     |
  6| Commentaire   | un commentaire                 | 
-  ************** Fin de la cartouche ***************
+  ************** Fin du cartouche ***************
  7|               |                                |                            |
  8| Date          | Carbon dioxide concentration   | Water vapour concentration |
   |---------------|--------------------------------|----------------------------|
@@ -22,7 +24,7 @@ Pour le fichier : __flux_journalier.csv__
 12| 02/01/2008    | 418,4319752083                 | 3,6077222917               |
 ```
 
-On définira le yaml suivant :
+On définira dans le fichier de configuration la section suivante :
 
 ```yaml
 OA_data:

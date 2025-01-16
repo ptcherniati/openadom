@@ -1,7 +1,16 @@
+---
+  title: Colonnes calculées 
+  subtitle: OA_computedComponents
+  abstract: >
+    Une colonne calculée est une colonne qui n'est pas présente dans le fichier. Ses valeurs sont issues du résultat d'un calcul ou d'une concaténation.
+---
+Par exemple on veut avoir la valeur de la date complète en concaténant la date (tds_date) et l'heure (tds_heure).
 
-#### <a id="computedComponents" />Colonnes calculées (OA_computedComponents)
+Dans l'{{< var page-refs.groovy.link >}}, les valeurs sont dans une map datum :
+- datum.tds_date
+- datum.tds_heure
 
-Une colonne calculée est une colonne qui n'est pas présente dans le fichier. Ses valeurs sont issues du résultat d'un calcul ou d'une concaténation.
+On définit dans le fichier de configuration la section OA_data suivante:
 
 ```yaml
 OA_data:
@@ -12,12 +21,24 @@ OA_data:
       - tds_nom
     OA_basicComponents:
       tds_nom: 
-        OA_importHeader: nom
+        OA_importHeader: Nom
+      tds_date: 
+        OA_importHeader: Date
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      tds_heure: 
+        OA_importHeader: Heure
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: HH:mm:ss
     OA_computedComponents:
       tds_date_heure:
         OA_computation:
           OA_expression: >
-            return datum.date + " " + datum.heure
+            return datum.tds_date + " " + datum.tds_heure
         OA_checker:
           OA_name: OA_date
           OA_params:

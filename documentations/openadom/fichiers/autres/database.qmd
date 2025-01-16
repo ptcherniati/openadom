@@ -35,10 +35,9 @@ quatre roles sont créés :
 - **public** : ce rôle porte les droits en lecture des données des différents SI. Tout utilisateur d'openadom est placé dans cce rôle.
 ̀̀̀
 
-``` 
-❗ 
+:::{.callout-warning}
  Un applicationCreator ne peut pas accéder aux application, ni les modifier. S'il créé une application il deviendra administrateur de cette application. S'il ne l'a pas créer, ces droits sur le SI dependront des administrateurs de cette application.
-```
+:::
 
 Après le démarrage, il convient de créer les utilisateurs qui pourront permettre la création du SI.
 

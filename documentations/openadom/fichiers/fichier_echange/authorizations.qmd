@@ -1,0 +1,7 @@
+---
+title: Autorisations
+subtitle: OA_authorizations
+abstract: >
+    Cette section permet de déclarer les composantes intervenant dans les autorizations.
+---
+TODO

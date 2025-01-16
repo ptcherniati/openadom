@@ -6,7 +6,7 @@
 ---
 
 
-#  Clefs et code
+# Clefs et code
 
 Dans un fichier, on définit une ou plusieurs colonnes qui correspondent à la clef d'idendification de la ligne. Cette clef naturelle permet lors d'une insertion / suppression de retrouver cette ligne dans la base de données et, si elle est présente, de la mettre à jour. Dans le cas contraire, une nouvelle ligne est créée.
 
@@ -63,3 +63,36 @@ __component__ : un ensemble de valeur qui servent à décrire la donnée. CeS va
 __authorizationScope__ :  une ou des informations contextuelles (variable-component) qui ont du sens pour limiter les autorisations.
 
 __timeScope__ :  l'information de temporalité d'une ligne ayant du sens pour limiter des authorisations à une période.
+
+# Identificateurs
+
+Lorsque l'on doit déclarer un ensemble de descriptions dans une section, on leur attribue un identificateur unique. 
+
+Par exemple pour déclarer les descriptions des référentiels, des types de données, des colonnes… 
+
+Comme ces identificateurs sont repris comme nom de table ou de champs dans la base de données, ils doivent respecter certaines 
+règles imposées par PostgreSQL. 
+
+::: {.callout-tip title="Règle de nommage des identificateurs" collapse="false"}
+Les identificateurs SQL doivent commencer avec une lettre minuscule, Les caractères suivants dans un identificateur peuvent être des lettres, des tirets bas ou des chiffres (0-9).
+
+De plus leur longueur ne peut dépasser 63 caractères. Il faut prendre en compte que lors de la création des vues,  les identificateurs peuvent être combinés entre eux ou préfixés / suffixés. Il est donc préférable d'utiliser des noms courts.
+ 
+Vous serez informés lors du dépôt du fichier d'identificateurs incorrects.
+:::
+
+::: {.callout-tip title="Convention de nommage des identificateurs" collapse="false"}
+Il est conseillé d'utiliser une [convention de nommage](https://sqlpro.developpez.com/cours/standards/) pour choisir un identificateur.
+
+- pour un [référentiel](#references) le préfixe tr pour table référentiel, le nom du référentiel et un trigramme unique pour ce référentiel : tr_villes_vil
+- pour une [donnée](#data) le préfixe t pour table fonctionnelle, le nom du type de données et un trigramme unique : t_meteo_met
+- pour les [colonnes](#columns), on préfixe avec le trigramme de la table d'origine suivit du nom explicite de la colonne :
+  - vil_nom
+  - met_temperature
+  
+L'utilisation de convention de nommage rendra la description de votre fichier de configuraion plus lisible, 
+ainsi que la compréhension des vues et tables générées automatiquement.
+:::
+
+Ces identificateurs seront aussi les clefs pour les valeurs dans le champ JSON (refValues pour les référentiels; 
+dataValues pour les données ; les variables et les composantes)

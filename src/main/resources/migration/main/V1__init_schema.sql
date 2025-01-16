@@ -202,9 +202,14 @@ AS
     IMMUTABLE
     RETURNS NULL ON NULL INPUT;
 CREATE CAST (COMPOSITE_DATE AS TIMESTAMP) WITH FUNCTION castCompositeDateToTimestamp(COMPOSITE_DATE) AS ASSIGNMENT;
+
+DROP CAST IF EXISTS (COMPOSITE_DATE AS Text);
+DROP FUNCTION IF EXISTS castCompositeDateToFormattedDate(COMPOSITE_DATE);
+
 CREATE FUNCTION castCompositeDateToFormattedDate(COMPOSITE_DATE) RETURNS Text
 AS
-'select ($1).formattedDate;'
+'select to_char(($1)::timestamp,
+($1).formattedDate::text);'
     LANGUAGE SQL
     IMMUTABLE
     RETURNS NULL ON NULL INPUT;

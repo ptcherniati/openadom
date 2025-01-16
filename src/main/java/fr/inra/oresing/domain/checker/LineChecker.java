@@ -5,16 +5,10 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.checker.GroovyExpressionChecker;
-import fr.inra.oresing.domain.checker.type.BooleanType;
-import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.checker.type.ListType;
-import fr.inra.oresing.domain.checker.type.StringType;
+import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultManyValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.GroovyValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.*;
 import fr.inra.oresing.domain.groovy.BooleanGroovyExpression;
 import fr.inra.oresing.domain.groovy.Expression;
 import fr.inra.oresing.domain.groovy.GroovyDecorator;
@@ -332,7 +326,9 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
                     DataDatum transformedReferenceDatum = transformer().transform(referenceDatum, context);
                     DataColumn column = target();
                     FieldType valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
-                    return GroovyValidationCheckResult.success(target(), valuesToCheck);
+                    return valuesToCheck instanceof PatternType patternType ?
+                            PatternValidationCheckResult.of(GroovyValidationCheckResult.success(target(), valuesToCheck), patternType)
+                            : GroovyValidationCheckResult.success(target(), valuesToCheck);
                 } catch (GroovyException groovyException) {
                     return GroovyValidationCheckResult.error(target(), groovyException.getMessage(), ImmutableMap.copyOf(groovyException.getParams()));
                 }

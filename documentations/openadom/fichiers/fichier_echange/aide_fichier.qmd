@@ -26,8 +26,8 @@ soit valide.
 
 Il y a 6 parties (<span style="color: orange">sans indentation</span>) attendues dans le fichier :
 
-* OA_version,
-* [OA_application](#application),
+* OA_version [#openadom_version],
+* {{<var page-refs.application.link>}},
 * [OA_data](#data),
 * [OA_tags](#tags),
 * [OA_additionalFiles](#additionalFiles)

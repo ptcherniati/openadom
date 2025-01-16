@@ -1,10 +1,11 @@
 
 ### <a id="tags" />Etiquettes (OA_tags)
 
-__OA_tags__: Création d'un regroupements sous une étiquette permettant de filtré l'affichages des listes des [__OA_data__](#data).
-Mais aussi les [__OA_basicComponents__](#basicComponents), les [__OA_computedComponents__](#computedComponents), les [__OA_dynamicComponents__](#dynamicComponents) d'un [__OA_data__](#data).
+__OA_tags__: Création d'un regroupements sous une étiquette permettant de filtrer l'affichage des listes des {{<var page-refs.etiquettes.link>}}.
 
+Mais aussi les {{<var page-refs.basic-comp.link>}}, les {{<var page-refs.computed-comp.link>}}, les {{<var page-refs.dynamic-comp.link>}}, les  {{<var page-refs.basic-comp.link>}}, les  {{<var page-refs.pattern-comp.link>}} , les  {{<var page-refs.constant-comp.link>}} d'un  {{<var page-refs.data.oe>}}.
 
+:::
 ```yaml
 OA_tags:
   profondeur:
@@ -99,15 +100,11 @@ OA_data:
       OA_importHeader: pheopigments
     chl_unit:
 ```
-
-> ![](../warning.png) Le tag n'est pas obligatoire. 
-> Si vous n'en mettez pas un, un tag par défaut se mettra.
->  * Pour les components -> ```no-tag``` : sans étiquette. Ce qui permettra de filtré au même titre que ceux avec une étiquette créé par vous.
->  * Pour les datas -> ```__REFERENCE__```. Ce qui permettra de filtré les datas par type.
-> 
-
-> ![](../warning.png) Le nom du tag est libre. 
-> Cependant, pour ceux réutilisés ailleurs dans l'application, il est préférable de n'utiliser que des minuscules et 
-> underscores sous peine de générer des erreurs dans les requête sql ou la création des vues.
+:::{.callout-caution title="Le tag n'est pas obligatoire"}
+Si vous n'en mettez pas un, un tag par défaut se mettra.
+ * Pour les components -> ```no-tag``` : sans étiquette. Ce qui permettra de filtré au même titre que ceux avec une étiquette créé par vous.
+ * Pour les datas -> ```__REFERENCE__```. Ce qui permettra de filtré les datas par type.
+:::
+ 
 
 

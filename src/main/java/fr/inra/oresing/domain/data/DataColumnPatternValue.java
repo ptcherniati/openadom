@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.data;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.column.Column;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +30,7 @@ public record DataColumnPatternValue(
 
     @Override
     public DataColumnPatternValue transform(final Function<FieldType, FieldType> transformation) {
+        transformation.apply(values().get(new DataColumn(Column.__VALUE__)).getValuesToCheck());
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
         return new DataColumnPatternValue((FieldType) null);
     }
@@ -66,5 +68,17 @@ public record DataColumnPatternValue(
 
     public void put(DataColumn secondPatternOfColumn, DataColumnValue valueToStoreInDatabase) {
         values().put(secondPatternOfColumn, valueToStoreInDatabase);
+    }
+
+    public Map<String, Object> toObjectsExposedInGroovyContext() {
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<DataColumn, DataColumnValue> dataColumnDataColumnValueEntry : values.entrySet()) {
+                final Object valueThatMayBeNull = Optional.ofNullable(dataColumnDataColumnValueEntry.getValue())
+                        .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
+                        .map(Object::toString)
+                        .orElse(null);
+                result.put(dataColumnDataColumnValueEntry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+        }
+        return result;
     }
 }

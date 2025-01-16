@@ -1,0 +1,101 @@
+---
+    title: Glossaire
+    abstract: Cette section reprend tout les mots clefs pré-définis du fichier de configuration
+---
+# Sections OpenAdom
+## {{<var page-refs.checker.oa>}}
+    Les vérificateurs permettent de valider et de typer les différents composants
+## OA_DEFAULT_VALUE
+## {{<var page-refs.data.oa-unexpectedColumns>}}
+## OA_HEADER_NAME
+## {{<var page-refs.etiquettes.oa>}}
+    Les étiquettes permettent de regrouper certains éléments (data, components)
+## OA_REQUIRED
+## OA_IMPORT_HEADER
+## OA_IMPORT_HEADER_PATTERN
+## OA_I_18_N
+voir {{<var page-refs.i18n.link>}}
+    - pour l'application {{<var page-refs.application.oa-i18n>}}
+    - pour un type de données {{<var page-refs.data.oa-i18n>}}
+## {{<var page-refs.data.oa-displayPattern>}}
+## OA_TITLE
+## OA_LANG_RESTRICTIONS
+## OA_FORM_FIELDS
+## OA_MIN
+## OA_DURATION
+## OA_PATTERN
+## OA_MAX
+## OA_NAME
+    Peut définir le nom de l'application ({{<var page-refs.application.oa-name>}})
+## OA_EXPRESSION
+## OA_GROOVY_EXCEPTIONS
+## OA_ADDITIONAL_FILES
+## {{<var page-refs.application.oa>}}
+    Cette section permet de renseigner les informations et paramétrage de l'application.
+##  {{<var page-refs.authorizations.oa>}}
+## OA_AUTHORIZATION_SCOPES
+## {{<var page-refs.basic-comp.oa>}}
+    Les composantes basiques permettent de capturer les colonnes du fichier en entrée.
+## {{<var page-refs.application.oa-comment>}}
+    Un commentaire libre pour le fichier de configuration
+## OA_COMPONENT
+## OA_COMPONENTS
+## OA_COMPONENT_ADJACENTS
+## OA_COMPONENT_QUALIFIERS
+## OA_COMPUTATION
+## {{<var page-refs.computed-comp.oa>}}
+    Les composantes calculées pemettent de créer de nouvelles composantes en utilisant une expression groovy.
+## {{<var page-refs.constant-comp.oa>}}
+    Les composantes constantes pemettent de créer des constantes pour l'ensemble du fichier provenant généralement de l'en-tête du fichier ou des lignes entre l'en-tête et la première ligne de data.
+## OA_CONSTANT_IMPORT_HEADER_COLUMN_NAME
+## OA_CONSTANT_IMPORT_HEADER_COLUMN_NUMBER
+## OA_CONSTANT_IMPORT_HEADER_ROW_NUMBER
+## OA_CONSTANT_IMPORT_HEADER_TARGET
+## {{<var page-refs.data.oa>}}
+    La section data permet de définir les types de données du domaine
+## OA_DATA_FIRST_LINE
+## OA_DATA_HEADER_LINE
+## {{<var page-refs.application.oa-defaultLanguage>}}
+    Pour l'ensemble de l'application, la langue par défaut.
+## OA_DESCRIPTION
+## {{<var page-refs.dynamic-comp.oa>}}
+    Les composantes dynamiques permettent de déclarer des colonnes dont les nom sont construit sur le contenu d'une composante d'un référentiel.
+## OA_END_DATE_MATCH_PATTERN
+## OA_EXPORT_HEADER
+## OA_FILE_NAME
+## OA_FILE_PATTERN
+## {{<var page-refs.data.oa-firstLine>}}
+## OA_GROOVY
+## {{<var page-refs.data.oa-headerLine>}}
+## OA_HEADER_PREFIX
+## OA_IS_PARENT
+## OA_IS_RECURSIVE
+## OA_IS_TRUE
+## OA_MANDATORY
+## OA_MATCH_PATTERN_SCOPES
+## {{<var page-refs.checker.oa-multiplicity>}}
+    Permet de déclarer si une données est un tableau de valeur.
+## {{<var page-refs.data.oa-nk>}}
+## OA_PARAMS
+## {{<var page-refs.pattern-comp.oa>}}
+    Les composantes pattern permettent de lire les données de colonnes répondant à une expression régulière.
+
+    En plus :
+        - on peut extraire des données du nom de la colonne
+        - on peut définir et capturer les données de colonnes adjacentes
+        - le résultat est veritcalisé (les colonnes capturés sont enregistrées comme des lignes différentes)
+## OA_PATTERN_FOR_COMPONENTS
+## OA_REFERENCE
+## OA_REFERENCES
+## OA_REFERENCE_COMPONENT_TO_LOOK_FOR_HEADER
+## OA_REFERENCE_SCOPES
+## OA_RIGHTS_REQUEST
+## {{<var page-refs.data.oa-separator>}}
+## OA_START_DATE_MATCH_PATTERN
+## OA_STRATEGY
+## {{<var page-refs.validations.oa>}}
+## OA_SUBMISSION_SCOPE
+## OA_TIME_SCOPE
+## {{<var page-refs.validations.oa>}}
+## OA_VERSION
+    utilisé pour définir la version {{<page-refs.aide_fichier.oa-version>}} du moteur OpenADOM comme pour définir la version {{<page-refs.application.oa-version>}} du fichier de configuration de l'application.

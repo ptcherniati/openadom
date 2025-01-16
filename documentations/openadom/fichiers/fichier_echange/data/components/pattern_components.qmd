@@ -1,0 +1,125 @@
+---
+    title: Colonnes avec pattern
+    subtitle: OA_patternComponents
+    abstract-title: >
+        Verticalisation qui parse selon une regexp le nom des colonnes d'un fichier csv.
+    abstract: >
+        <p>On peut utiliser OA_patternComponent pour rechercher des colonnes répondant à un pattern (OA_patternForComponents). 
+
+        <p>Les groupes capturés de l'expression régulière deviendront des sous composants (OA_componentQualifiers) du composant OA_patternComponent.
+
+        <p>Il sera possible de capturer les valeurs des colonnes adjacentes répondant à un pattern définit (OA_importHeaderPattern) qui deviendront des des sous composants (OA_componentAdjacents).
+
+        <p>Il y aura une verticalisation des colonnes (OA_patternComponents). Chaque colonne capturé sera enregistrée dans une nouvelle ligne.
+---
+
+Exemple de déclaration de section OA_patternComponents: 
+
+:::  {.callout-note collapse=false title="OA_data"}
+
+``` yaml 
+OA_data:
+    t_swc_swc:
+        OA_patternComponents:
+            swc_value:
+                OA_patternForComponents: "SWC(@?)_(.*)_(.*)"
+                OA_required: false
+                OA_exportHeader:
+                    OA_title:
+                        fr: "valeur"
+                        en: "value"
+                    OA_description:
+                        fr: "valeur"
+                        en: "value"
+                OA_componentQualifiers:
+                    - swc_variable:
+                        OA_exportHeader:
+                            OA_title:
+                                fr: "Humidité volumique du sol"
+                                en: "Soil water concentration"
+                            OA_description:
+                                fr: "variable mesurée"
+                                en: "mesured variable"
+                        OA_tags: [__ORDER_1__]
+                        OA_defaultValue:
+                            OA_expression: "'humidite_volumique_du_sol'"  #optional
+                        OA_checker:
+                            OA_name: OA_reference
+                            OA_params:
+                                OA_reference:
+                                    OA_name: tr_variables_var
+                    - swc_repetition:
+                        OA_exportHeader:
+                            OA_title:
+                                fr: "répétition"
+                                en: "repetition"
+                            OA_description:
+                                fr: "répétition de la variable"
+                                en: "variable repetition"
+                        OA_tags: [__ORDER_2__]
+                        OA_checker:
+                            OA_name: OA_integer
+                    - swc_profondeur:
+                        OA_exportHeader:
+                            OA_title:
+                                fr: "profondeur"
+                                en: "depth"
+                            OA_description:
+                                fr: "profondeur de la mesure"
+                                en: "depth of measurement"
+                        OA_tags: [__ORDER_3__]
+                        OA_checker:
+                            OA_name: OA_float
+                OA_componentAdjacents:
+                - swc_quality_class:
+                    OA_importHeaderPattern: "qc"
+                    OA_tags: [__ORDER_4__]
+                    OA_exportHeader: 
+                        OA_title: 
+                            fr: Indice de qualité
+                            en: Quality class
+                        OA_description: 
+                            fr  correcte
+                            en: 0 for valid value; 2 for invalid value
+                    OA_required: false 
+                    OA_mandatory: false 
+                    OA_checker: 
+                        OA_name: OA_integer 
+                        OA_params: 
+                            OA_max: 2 
+                            OA_min: 0 
+                            OA_multiplicity: ONE
+```
+:::
+
+(@) Définition du pattern
+Pour des colonnes SWC_2_20 où 2 est la répétition de la mesure et 20 sa profondeur.
+
+``` yaml
+    OA_patternForComponents: "SWC(@?)_(.*)_(.*)"
+```
+On utilise une [expression regulière](https://docs.python.org/fr/3/howto/regex.html) pour rechercher dans l'en-tête du fichier des colonnes.
+
+Les parenthèses correspondent à des groupes de capture. Ici (@?) est toujours une chaîne vide ce qui nous permet d'utiliser une {{< var page-refs.groovy.link >}} pour définir une valeur de remplacement 
+
+
+``` yaml
+    OA_defaultValue:
+                        OA_expression: "'humidite_volumique_du_sol'"
+```
+On aurait aussi pu utiliser
+``` yaml
+    OA_patternForComponents: "(humidite_volumique_du_sol)_(.*)_(.*)"
+```
+Mais cela aurait changé nos en-tête de colonne SWC_2_20 -> humidite_volumique_du_sol_2_20
+
+
+::: {.callout-important}
+<p>Le parseur va rechercher toutes les colonnes {{< var page-refs.basic-comp.oa >}}. On recherche dans les colonnes restantes celles qui "matchent" un OA_patternForComponents.
+
+<p>Le comportement fiOA_allowUnexpectedColumnsnal dépendra de la valeur de OA_allowUnexpectedColumns.
+:::
+
+(@) définition de la colonne pattern.
+
+Comme tous les composants 

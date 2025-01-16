@@ -122,11 +122,15 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     public ImmutableMap<String, Object> toObjectsExposedInGroovyContext() {
         final Map<String, Object> map = new LinkedHashMap<>();
         for (final Map.Entry<DataColumn, DataColumnValue> entry : values.entrySet()) {
-            final Object valueThatMayBeNull = Optional.ofNullable(entry.getValue())
-                    .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
-                    .map(Object::toString)
-                    .orElse(null);
-            map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+            if (entry.getValue() instanceof DataColumnPatternValue patternValue) {
+                map.put(entry.getKey().toJsonForDatabase(), patternValue.toObjectsExposedInGroovyContext());
+            } else {
+                final Object valueThatMayBeNull = Optional.ofNullable(entry.getValue())
+                        .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
+                        .map(Object::toString)
+                        .orElse(null);
+                map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+            }
         }
         return ImmutableMap.copyOf(map);
     }
