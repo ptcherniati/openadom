@@ -1,7 +1,12 @@
+---
+  title: Vérificateurs
+  subtitle: OA_checker
+  abstract: >
+    Les vérificateurs (checkers) permettent de vérifier l'entrée d'un "component" et éventuellement de spécifier son type (entier, valeur flottante, booolean, date, clef étrangère)
+---
+On peut poser des contraintes sur les différentes composantes des données
 
-#### On peut poser des contraintes sur les données de référence
-
-##### [Utilisation de vérificateurs (checker)](#dataChecker)
+# [Utilisation de vérificateurs (checker)](#dataChecker)
 
 Pour chaque colonne, on peut ajouter des vérificateurs.
 
@@ -11,6 +16,8 @@ Pour chaque colonne, on peut ajouter des vérificateurs.
 - déclarer la récursivité d'un composant
 - déclarer une hiérarchie entre composants
 - vérifier la valeur en utilisant un script (le script renvoyant true) ( GroovyExpression)
+
+::: {.callout-note title="Utilisation des vérificateurs (OA_checker)" collapse="false"}
 
 ```yaml
   sites:
@@ -53,11 +60,12 @@ Pour chaque colonne, on peut ajouter des vérificateurs.
           OA_name: OA_integer # la valeur attendue est un entier
           OA_min: 100 # la valeur minimum acceptée
 ```
-
+:::
 
 ### <a id="dataChecker" />Paramétrage des vérificateurs
 
 On définit un vérificateur dans une section "OA_checker". Le type de vérificateur est défini par son nom (OA_name).
+
 On peut passer des paramètres au vérificateur en renseignant la section OA_params. Les différents paramètres dépendent
 du type de vérificateur utilisé.
 
@@ -65,23 +73,42 @@ du type de vérificateur utilisé.
     OA_checker:
         OA_name: OA_integer
         OA_params: 
-
+          OA_min: 0
 ```
-Lorsque l'on utilise un vérificateur, sa première fonction est de vérifier le format de la valeur en entrée :
-Sa seconde fonction est de transformer cette valeur , dans le cas où cela est possible, dans une primitive acceptable dans un champ
-json (numeric, boolean). C'est cette valeur qui sera stockée dan le champ json en base, ou comme valeur dans les vues.
+Lorsque l'on utilise un vérificateur, sa première fonction est de vérifier le format de la valeur en entrée.
+
+Sa seconde fonction est de transformer cette valeur , dans le cas où cela est possible, dans une primitive acceptable dans un champ json (numeric, boolean). C'est cette valeur qui sera stockée dan le champ json en base, ou comme valeur dans les vues.
+
+::: {.callout-note title="enregistrement de date" collapse="true"}
+La date est stockée au format texte dans un format spécifique à l'application : "date:1984-01-05T00:00:00:dd/MM/yyyy". Elle peut alors être castée en utilisant le type "composite_date"
+
+``` postgresql
+  select ('date:1984-01-05T00:00:00:dd/MM/yyyy'::text::composite_date).*;
+  /*
+    datetimestamp formatteddate
+    1984-01-05 00:00:00 dd/MM/yyyy
+  */
+  select 'date:1984-01-05T00:00:00:dd/MM/yyyy'::text::composite_date::timestamp; -- 1984-01-05 00:00:00
+  select ('date:1984-01-05T00:00:00:dd/MM/yyyy'::text::composite_date)::text; --05/01/1984
+```
+:::
+
+
+::: {.callout-note title="enregistrement de clef étrangère" collapse="true"}
 Si le vérificateur est de type Reference, il existera en base de données une contrainte de type clef étrangère avec la ligne référencée.
+:::
 
-###### Paramètres généraux
+## Paramètres généraux
 
-- OA_multiplicity :
+::: {#multiplicity}
+- OA_multiplicity : {#multiplicty}
   - MANY : La valeur est un ensemble (tableau) de valeurs. L'entrée est une chaîne ou chaque valeur est séparée par une virgule ','.
-    Dans la base de donnée les valeurs de la chaîne seront enregistrées dans un tableau de valeur au format indiqué par le vérificiateur.
+    Dans la base de donnée les valeurs de la chaîne seront enregistrées dans un tableau de valeur au format indiqué par le vérificateur.
     Par exemple la chaine "2,25.3,5.8" sera traitée comme un tableau de double [2,25.3,5.8] pour un vérificateur FLoat.
   - ONE : (valeur par défaut) La valeur en entrée est considéré comme une valeur simple.
-- [transformations](#transformations) : La fonctionalité de transformation est supprimée. Pour le moment les référentiel sont à fournir au format clef primaire.
+:::
 
-###### <a id="numericChecker" />Vérificateur de type 'Integer' et 'Float'
+## Vérificateur de type 'Integer' et 'Float'{#numericchecker}
 
 Ces vérificateurs servent à vérifier que les valeurs en entrée sont des nombres (respectivement des entiers ou des nombres à valeur floattante).
 
@@ -95,7 +122,7 @@ On peut préciser les valeurs minimum et maximum en précisant les paramètres O
         OA_max: 25.0
         OA_multiplicity: MANY
 ``` 
-###### <a id="stringChecker" />Vérificateur de chaîne ('String')
+## <a id="stringChecker" />Vérificateur de chaîne ('String')
 
 Sans vérificateur, les entrées sont traitées comme des chaînes de caractères acceptant de valeurs vide. On peut toutefois rajouter
 un vérificateur chaîne pour préciser des contraintes sur la chaîne. (required, multiplicity, transformation, expression régulière)
@@ -112,7 +139,7 @@ Le paramètre 'OA_pattern' permet de préciser une [expression régulière](http
 ``` 
 Ce vérificateur permet de vérifier que l'entrée est une liste d'adresse mail.
 
-###### <a id="dateChecker" />Vérificateur de date. ('Date')
+## <a id="dateChecker" />Vérificateur de date. ('Date')
 
 Ce vérificateur permet de vérifier que la valeur en entrée est une date au format définit par le paramètre '[OA_pattern](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)'
 
@@ -135,7 +162,7 @@ Une durée est définie au sens SQL d'un [interval](https://www.postgresql.org/d
             OA_max: 31/12/2025
             OA_duration: 1 DAY
 ``` 
-###### <a id="booleanChecker" />Vérificateur de Boolean. ('Boolean')
+## <a id="booleanChecker" />Vérificateur de Boolean. ('Boolean')
 
 Permet de vérifier que la valeur en entrée est true ou false.
 
@@ -146,7 +173,7 @@ Une valeur booléenne sera enregistrée dans le champ json en base de données e
         OA_name: OA_boolean
 ``` 
 
-###### <a id="referenceChecker" />Vérificateur de référentiel. ('Reference')
+## <a id="referenceChecker" />Vérificateur de référentiel. ('Reference')
 
 Ce vérificateur permet de vérifier que la valeur en entrée est un '[Ltree'https://www.postgresql.org/docs/current/ltree.html]'.
 Cette chaîne ne peut contenir que des termes contenant des minuscules/majuscules/chiffres/caractère_souligné(_), séparés par des points (.).
@@ -173,7 +200,7 @@ OA_parent -> la colonne fait référence à un référentiel parent
 Il faut caster les valeurs du datum avant de les utiliser. Elles sont de type Object, et il faut les caster dans le type
 correspondant au checker. (par défaut String)
 
-###### <a id="groovyChecker" />Vérificateur utilisant une [expression groovy](validation). ('GroovyExpression')
+## <a id="groovyChecker" />Vérificateur utilisant une [expression groovy](validation). ('GroovyExpression')
 
 L'expression définit dans le paramètre groovy → expression; L'expression doit envoyer une faleur true/false.
 
@@ -188,7 +215,7 @@ L'expression définit dans le paramètre groovy → expression; L'expression doi
 On vérifie que la composante 'qualité' de la variable 'SWC' est vide ou "0" "1" ou "2".
 
 
-###### <a id="transformation" />Ajout de transformation à la chaîne en entrée.
+## <a id="transformation" />Ajout de transformation à la chaîne en entrée.
 
 - OA_groovy : permet de déclarer une transformation de la valeur avec une expression Groovy (qui doit retourner une chaîne de caractère)
 
@@ -245,7 +272,7 @@ Pour les checkers GroovyExpression et les transformations Groovy, on récupère 
 
 
 
-##### [Utilisation de validations portant sur une ou plusieurs colonnes](#dataChecker)
+# [Utilisation de validations portant sur une ou plusieurs colonnes](#dataChecker)
 
 Les contraintes se définissent pour chacune des données de référence. Soit dans la définition de la colonne elle-même, soit dans la section [validation](#referencesValidation).
 

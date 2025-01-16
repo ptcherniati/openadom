@@ -1,5 +1,6 @@
 ---
-  title: Description des colonnes (OA_basicComponents)
+  title: Description des colonnes 
+  subtitle: (OA_basicComponents)
   abstract: Ce document permet de configurer la section <b>OA_data > OA_basiComponents</b> pour lier les colonnes du fichier à des composantes
 ---
 

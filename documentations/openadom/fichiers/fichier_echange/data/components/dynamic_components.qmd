@@ -1,7 +1,9 @@
-
-#### <a id="dynamicComponents" />Colonnes dynamiques (OA_dynamicComponents)
-
-Les colonnes dynamiques permettent de traduire une relation n-n entre deux référentiels. Par exemple entre un objet et ses propriétés.
+---
+ title: Colonnes dynamiques
+ subtitle: OA_dynamicComponents
+ abstract: >
+  Les colonnes dynamiques permettent de traduire une relation n-n entre deux référentiels. Par exemple entre un objet et ses propriétés.
+---
 ``` {mermaid}
   classDiagram
       Taxon "*" -- "*" Proprietes_de_taxon

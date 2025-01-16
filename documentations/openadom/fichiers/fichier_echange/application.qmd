@@ -1,0 +1,114 @@
+---
+title: Section de description de l'application
+subtitle: OA_application
+abstract: >
+    Cette section définit un certain nombre d'informations et de paramètres de l'ensemble du système d'information
+lightbox: 
+  match: auto
+  effect: fade
+  desc-position: left
+  loop: false
+---
+
+# Déclaration d'une donnée
+
+``` yaml 
+OA_data:
+    tr_donnee_de_reference_ddr:
+        ...
+    t_donne_dat:
+        ...
+```
+::: {.callout-caution}
+Pour déclarer une donnée vous devez fournir un identificateur
+
+
+::: {.callout-note title="example de section application" collapse="false"}
+``` yaml
+OA_application:
+    OA_defaultLanguage: fr
+    OA_i18n:
+        OA_title:
+            fr: "ACBB"
+            en: "ACBB"
+        OA_description:
+            fr: "Agroécosystèmes, Cycles Biogéochimiques et Biodiversité"
+            en: "Agroecosystems, Biogeochemical Cycles and Biodiversity"
+    OA_comment: "L'application ACBB V2"
+    OA_name: acbb_openadom_v2
+    OA_version: 1.0.5    
+```
+
+:::
+
+Cette section doit comporter obligatoirement:
+
+(@) [**OA_name**](#name) le nom de l'application qui correspondra au nom du schema de la base de données. 
+
+ ``` yaml
+        OA_name: acbb_openadom_v2
+ ``` 
+
+Ce nom doit obligatoirement -etre en minuscules, commencer par une lettre et ne comporter que des caractères alphanumériques sans accent et l'espace souligné. (_)
+
+(@) [**OA_version**](#version) qui correspond à la version du fichier de configuration. Lors des mise à jour du schéma, vous incrémenterez ce numéro de version.
+
+ ``` yaml
+        OA_version: 1.0.5
+ ``` 
+
+::: {.callout-note collapse="true" title="Exemple de numérotation" }
+
+### Versions Majeures
+
+- 2.4.0
+- 2.4.1
+- 2.3.5
+- 2.0.0
+- 3.0.0
+- 1.11.2
+- 1.10.0
+- 1.9.0
+
+### Versions de Développement
+
+- 2.4.0-SNAPSHOT
+- 2.3.5-SNAPSHOT
+- 2.0.0-rc.3
+- 2.0.0-b.2
+- 2.0.0-a.1
+
+### Versions avec Métadonnées
+- 1.2.3+20231006
+- 1.2.0+build.123
+
+### Versions de Maintenance
+- 1.2.5
+- 1.2.3
+:::
+
+On peut aussi rajouter des informations facultatives: 
+
+1. [**OA_defaultLanguage**](#defaultLanguage) qui permet de définir la langue par défaut. La langue par défaut est celle utilisée si aucune autre information de langue n'est précisée. Lors de l'internationalisation de certains champs / données, on essait de trouver la traduction dans la langue demandée; à défaut on fournit la traduction dans la langue par défaut; si aucune traduction n'est trouvée on renvoit l'indentificateur fourni en entrée.
+ 
+ ``` yaml
+        OA_defaultLanguage: fr
+ ``` 
+
+ 2. **[OA_i18n]{i18n}**  cette section permet d'internationaliser le nom de l'application en fournissant un titre et / ou une description à ce nom.
+
+``` yaml
+        OA_i18n:
+            OA_title:
+                fr: "ACBB"
+                en: "ACBB"
+            OA_description:
+                fr: "Agroécosystèmes, Cycles Biogéochimiques et Biodiversité"
+                en: "Agroecosystems, Biogeochemical Cycles and 
+```
+
+![rendu en français](/img/application_fr.png){height="100" .lightbox}
+
+![rendu en anglais](/img/application-en.png){height="100" .lightbox}
+
+3. [**OA_comment** ](#comment) C'est un commentaire, que vous pouvez remplir à votre guise pour vous permettre d'indiquer les modifications de version en version.

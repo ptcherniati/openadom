@@ -31,15 +31,17 @@ website:
           - text: Vocabulaire
             href: fichiers/introduction/vocabulaire.qmd
           - text: Fichier d'échange
-            href: fichiers/introduction/yaml.qmd
+            href: fichiers/introduction/fichier_csv.qmd
       - section: Fichiers d'échange
         contents:
-          - text: Données
-            href: fichiers/fichier_echange/data.md
           - text: Aide fichier
             href: fichiers/fichier_echange/aide_fichier.qmd
+          - text: Application (OA_application)
+            href: fichiers/fichier_echange/application.qmd
+          - text: Données
+            href: fichiers/fichier_echange/data.qmd
           - text: Etiquettes
-            href: fichiers/fichier_echange/etiquettes.md
+            href: fichiers/fichier_echange/etiquettes.qmd
           - section: Components
             contents: 
               - text: Basic Components
@@ -49,11 +51,24 @@ website:
               - text: Dynamic Components
                 href: fichiers/fichier_echange/data/components/dynamic_components.qmd
               - text: Constant Components
-                href: /fichiers/fichier_echange/data/components/constant_components.md
+                href: fichiers/fichier_echange/data/components/constant_components.md
               - text: Pattern Components
-                href: fichiers/fichier_echange/data/components/pattern_components.md
+                href: fichiers/fichier_echange/data/components/pattern_components.qmd
+              - section: 
+                text: Paramétrage des composants
+                href: fichiers/fichier_echange/data/components/components_description.qmd
+                contents: 
+                  - text: Etiquettes (OA_tags)
+                    href: fichiers/fichier_echange/etiquettes.qmd
+
           - text: Verificateurs
-            href: fichiers/fichier_echange/verificateurs.md
+            href: fichiers/fichier_echange/verificateurs.qmd
+          - text: Validations
+            href: fichiers/fichier_echange/validations.qmd
+          - text: Dépôt de fichier (OA_submission)
+            href: fichiers/fichier_echange/submission.qmd
+          - text: Autorisations (OA_autorisations)
+            href: fichiers/fichier_echange/authorizations.qmd
       - section: Pour aller plus loin
         contents:
           - text: Authorization
