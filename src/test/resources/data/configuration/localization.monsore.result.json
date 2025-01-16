@@ -1,24 +1,24 @@
 {
   "tags" : {
     "unit" : {
-      "en" : "unit",
-      "fr" : "unité"
+      "en" : "Unit",
+      "fr" : "Unité"
     },
     "data" : {
-      "en" : "data",
-      "fr" : "données"
+      "en" : "Data",
+      "fr" : "Donnée"
     },
     "test" : {
-      "en" : "test",
-      "fr" : "test"
+      "en" : "Test",
+      "fr" : "Test"
     },
     "context" : {
-      "en" : "context",
-      "fr" : "contexte"
+      "en" : "Context",
+      "fr" : "Contexte"
     },
     "temporal" : {
-      "en" : "temporality",
-      "fr" : "temporalité"
+      "en" : "Temporality",
+      "fr" : "Temporalité"
     }
   },
   "application" : {

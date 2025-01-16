@@ -283,8 +283,8 @@ class ConfigurationBuilderTest {
     }
 
     private static void testMonsoreInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
-        Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations).getBytes(StandardCharsets.UTF_8))
-                .isEqualTo(LOCALIZATION_MONSORE_RESULT.getBytes(StandardCharsets.UTF_8));
+        Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
+                .isEqualTo(LOCALIZATION_MONSORE_RESULT);
     }
 
     private static JSONObject toJsonObject(Object json) {

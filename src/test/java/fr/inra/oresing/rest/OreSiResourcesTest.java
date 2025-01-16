@@ -986,7 +986,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.data.unites.tags[*].tagName", contains("data")))
                     .andExpect(jsonPath("$.data.valeurs_qualitatives.tags[*].tagName", contains("data")))
                     .andExpect(jsonPath("$.data.variables_et_unites_par_types_de_donnees.tags[*].tagName", contains("data")))
-                    .andExpect(jsonPath("$.internationalization.tags.context.fr", Is.is("contexte")))
+                    .andExpect(jsonPath("$.internationalization.tags.context.fr", Is.is("Contexte")))
                     .andExpect(jsonPath("$.rightsRequest.description.formFields.endDate", not(empty())))
                     .andExpect(jsonPath("$.configuration.rightsRequest.formFields.organization", not(empty())))
                     .andExpect(jsonPath("$.data.pem.tags[*].tagName", hasItem("data")))
