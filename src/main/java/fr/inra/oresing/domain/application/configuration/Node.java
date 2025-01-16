@@ -1,8 +1,5 @@
 package fr.inra.oresing.domain.application.configuration;
 
-import com.google.common.base.Strings;
-import fr.inra.oresing.domain.data.menu.ReferenceScope;
-
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,7 +27,7 @@ public record Node(
                                 node.nodeName(),
                                 node.componentKey(),
                                 node.columnToLookUpForRecursive(),
-                                Optional.ofNullable(node).map(BuilderNode::parent).map(BuilderNode::nodeName).orElse(null),
+                                Optional.of(node).map(BuilderNode::parent).map(BuilderNode::nodeName).orElse(null),
                                 new TreeSet<>(),
                                 node.depends(),
                                 node.order(),
@@ -54,7 +51,7 @@ public record Node(
                         node.nodeName(),
                         node.componentKey(),
                         node.columnToLookUpForRecursive(),
-                        Optional.ofNullable(node)
+                        Optional.of(node)
                                 .map(BuilderNode::parent)
                                 .map(BuilderNode::nodeName)
                                 .orElse(null),
@@ -78,7 +75,7 @@ public record Node(
                                     .orElseThrow(() -> new IllegalArgumentException(parentName));
                         }
                         Node finalParent = parent;
-                        nodeEntry.getValue().stream()
+                        nodeEntry.getValue()
                                 .forEach(child -> finalParent.children().add(child));
                         notBuildedNodes = notBuildedNodes.stream()
                                 .filter(node -> !node.nodeName().equals(parentName))
@@ -119,7 +116,7 @@ public record Node(
                         builderNode.nodeName(),
                         builderNode.componentKey(),
                         builderNode.columnToLookUpForRecursive(),
-                        Optional.ofNullable(builderNode)
+                        Optional.of(builderNode)
                                 .map(BuilderNode::parent)
                                 .map(BuilderNode::nodeName)
                                 .orElse(null),
@@ -137,30 +134,28 @@ public record Node(
     private boolean isRoot() {
         return Optional.ofNullable(parent()).map(String::isEmpty).orElse(true);
     }
-
+    private List<String> dependsRecursively(){
+        Set<String> result = new HashSet<>(depends());
+        children().forEach(child -> result.addAll(child.dependsRecursively()));
+        return new ArrayList<>(result);
+    }
 
     @Override
     public int compareTo(final Node o) {
         if (o == null) {
             return 1;
         }
-        if (o.depends().contains(nodeName())) {
-            return -o.depends.size();
+        if (o.dependsRecursively().contains(nodeName()) ) {
+            return -o.dependsRecursively().size();
         }
-        if (depends().contains(o.nodeName())) {
-            return depends().size();
+        if (dependsRecursively().contains(o.nodeName())) {
+            return dependsRecursively().size();
         }
-        if (order() != null) {
-            if (o.order() != null) {
-                final int compareTo = order().compareTo(o.order());
-                return compareTo == 0 ? nodeName().compareTo(o.nodeName()) : compareTo;
-            } else {
-                return -1;
-            }
-        } else if (o.order() != null) {
-            return 1;
+        int compareOrder = Optional.ofNullable(order()).orElse(9999).compareTo(Optional.ofNullable(o.order()).orElse(9999));
+        if(compareOrder == 0){
+            return nodeName().compareTo(o.nodeName());
         }
-        return nodeName().compareTo(o.nodeName());
+        return compareOrder;
     }
 
     public Node findNode(final String refType) {

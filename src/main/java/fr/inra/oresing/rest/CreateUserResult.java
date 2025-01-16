@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.OreSiUser;
-import lombok.Value;
 
 import java.sql.Timestamp;
 import java.util.Map;
@@ -12,9 +11,6 @@ public record CreateUserResult (
     String email,
     OreSiUser.OreSiUserStates accountState,
     Map<String, Timestamp> chartes){
-
-    public CreateUserResult {
-    }
 
     public static CreateUserResult of(OreSiUser user){
         return new CreateUserResult(user.getId(), user.getLogin(), user.getEmail(), user.getAccountstate(), user.getChartes());

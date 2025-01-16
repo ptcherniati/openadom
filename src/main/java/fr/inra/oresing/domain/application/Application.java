@@ -123,10 +123,8 @@ public class Application extends OreSiEntity {
             return Map.of();
         }
         Map<String, Submission.SubmissionScope> submissions = new HashMap<>();
-        data.forEach((dataName, dataDescription) -> {
-            dataDescription.findSubmissionScope()
-                    .ifPresent(authorizations -> submissions.put(dataName, authorizations));
-        });
+        data.forEach((dataName, dataDescription) -> dataDescription.findSubmissionScope()
+                .ifPresent(authorizations -> submissions.put(dataName, authorizations)));
         return submissions;
     }
 
@@ -136,10 +134,8 @@ public class Application extends OreSiEntity {
             return Map.of();
         }
         Map<String, Authorization> authorizations = new HashMap<>();
-        data.keySet().forEach((dataName) -> {
-            findAuthorizations(dataName)
-                    .ifPresent(authorization -> authorizations.put(dataName, authorization));
-        });
+        data.keySet().forEach((dataName) -> findAuthorizations(dataName)
+                .ifPresent(authorization -> authorizations.put(dataName, authorization)));
         return authorizations;
     }
 
@@ -164,7 +160,7 @@ public class Application extends OreSiEntity {
                 .map(InternationalizationData::getComponents)
                 .map(component -> component.get(componentName))
                 .map(InternationalizationComponent::getExportHeader)
-                .map(exportHeader -> exportHeader.getTitle().get(language))
+                .map(exportHeader -> exportHeader.getTitle().get(Locale.of(language)))
                 .orElse(findComponentOfData(dataName, componentName)
                         .map(ComponentDescription::importHeader)
                         .orElse(componentName));
@@ -177,7 +173,7 @@ public class Application extends OreSiEntity {
                 .map(InternationalizationData::getComponents)
                 .map(component -> component.get(componentName))
                 .map(InternationalizationComponent::getExportHeader)
-                .map(exportHeader -> exportHeader.getDescription().get(language))
+                .map(exportHeader -> exportHeader.getDescription().get(Locale.of(language)))
                 .orElse(null);
     }
 
@@ -228,7 +224,7 @@ public class Application extends OreSiEntity {
     public boolean isData(String dataName) {
         return findData(dataName)
                 .map(StandardDataDescription::tags)
-                .map(tags -> tags.stream().anyMatch(Tag.DataTag.INSTANCE()::equals))
+                .map(tags -> tags.stream().anyMatch(Tag.DataTag.instance()::equals))
                 .orElse(false);
     }
 
@@ -261,9 +257,9 @@ public class Application extends OreSiEntity {
                 ));
     }
 
-    public boolean hasPatternDefinition(String dataName) {
+    public long patternDefinitionCount(String dataName) {
         return findData(dataName)
-                .map(StandardDataDescription::hasPatternDefinition)
-                .orElse(false);
+                .map(StandardDataDescription::patternDefinitionCount)
+                .orElse(0L);
     }
 }

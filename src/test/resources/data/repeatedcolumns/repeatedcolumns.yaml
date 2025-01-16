@@ -1,111 +1,199 @@
-version: 1
-application:
-  name: repeatedcolumns
-  version: 1
-references:
+OA_version: 2.0.1
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: Colonnes repétées
+      en: repeatedOA_basicComponents
+    OA_description:
+      fr: Colonnes repétées
+      en: repeatedOA_basicComponents
+  OA_comment: Fichier de test de l'application repeatedOA_basicComponents
+  OA_name: repeatedcolumns
+  OA_version: 3.0.1
+OA_data:
   agroecosystemes :
-    keyColumns: [agroecosystem_key]
-    columns:
+    OA_naturalKey: [agroecosystem_key]
+    OA_basicComponents:
       agroecosystem_key:
-        headerName: Agroécosystème_key
+        OA_importHeader: Agroécosystème_key
       agroecosystem_fr:
-        headerName: Agroécosystème_fr
+        OA_importHeader: Agroécosystème_fr
       agroecosystem_en:
-        headerName: Agroécosystème_en
+        OA_importHeader: Agroécosystème_en
       region:
       departement:
-        headerName: Département
-  sites:
-    keyColumns: [site_key]
-    validations:
+        OA_importHeader: Département
+  sites: #"nom du sites_en", "nom du sites_key", "nom du sites_fr"
+    OA_validations:
       agroecosystemRef:
-        internationalizationName:
+        OA_i18n:
           fr: "référence à l'agroécosystème"
-        checker:
-          name: Reference
-          params:
-            refType: agroecosystemes
-        columns: [ agroecosystem ]
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: agroecosystemes
+        OA_components: [ agroecosystem ]
       checkDateMiseEnService:
-        internationalizationName:
+        OA_i18n:
           fr: "validation de date"
-        checker:
-          name: Date
-          params:
-            pattern : "dd/MM/yyyy"
-        columns: [ "date_mise_en_service" ]
-    columns:
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern : "dd/MM/yyyy"
+        OA_components: [ "date_mise_en_service" ]
+    OA_i18n:
+      OA_title:
+        fr: sites
+        en: sites
+      OA_description:
+        fr: sites
+        en: sites
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{sites_fr}"
+        en: "{sites_en}"
+    OA_naturalKey: [sites_key]
+    OA_basicComponents:
       agroecosystem:
-        headerName: Agroécosystème
-      site_key:
-        headerName: nom du site_key
-      site_fr:
-        headerName: nom du site_fr
-      site_en:
-        headerName: nom du site_en
+        OA_importHeader: Agroécosystème
+      sites_key:
+        OA_importHeader: nom du site_key
+      sites_fr:
+        OA_importHeader: nom du site_fr
+      sites_en:
+        OA_importHeader: nom du site_en
       ville:
       adresse:
       coordonees:
-        headerName: cordonnées du dispositif
+        OA_importHeader: cordonnées du dispositif
       milieu:
       climat:
       pluviometrie:
-        headerName: pluviométrie moyenne (mm)
+        OA_importHeader: pluviométrie moyenne (mm)
       temperature:
-        headerName: température moyenne (°C)
+        OA_importHeader: température moyenne (°C)
       vent_dominant:
-        headerName: vent dominant
+        OA_importHeader: vent dominant
       vitesse_vent:
-        headerName: vitesse moyenne du vent (km/h)
+        OA_importHeader: vitesse moyenne du vent (km/h)
       type_sol:
-        headerName: type de sol
+        OA_importHeader: type de sol
       profondeur_moyenne:
-        headerName: profondeur moyenne du sol (m)
+        OA_importHeader: profondeur moyenne du sol (m)
       altitude_moyenne:
-        headerName: altitude moyenne (m)
+        OA_importHeader: altitude moyenne (m)
       date_mise_en_service:
-        headerName: date mise en service du dispositif
+        OA_importHeader: date mise en service du dispositif
+  proprietes_taxon:
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_validations:
+      reference:
+        OA_i18n:
+          fr: les reference
+        OA_components: [sites]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: sites
+              OA_isParent: true
+      floats:
+        OA_i18n:
+          fr: les décimaux
+        OA_components: [ isFloatValue ]
+        OA_checker:
+          OA_name: OA_float
+      integer:
+        OA_i18n:
+          fr: les entiers
+        OA_components: [ ordre_affichage ]
+        OA_checker:
+          OA_name: OA_integer
+    OA_i18n:
+      OA_title:
+        fr: Proprétés de Taxon
+        en: Properties of Taxa
+      OA_description:
+        fr: Proprétés de Taxon
+        en: Properties of Taxa
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{propriete_fr}"
+        en: "{propriete_en}"
+      OA_description:
+        fr: "{definition_fr}"
+        en: "{definition_en}"
+    OA_naturalKey: [propriete_key]
+    OA_basicComponents:
+      date:
+        OA_importHeader: Date
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      propriete_key:
+        OA_importHeader:  nom de la propriété_key
+      propriete_fr:
+        OA_importHeader: nom de la propriété_fr
+      propriete_en:
+        OA_importHeader: nom de la propriété_en
+      definition_fr:
+        OA_importHeader: définition_fr
+      definition_en:
+        OA_importHeader: définition_en
+      isFloatValue:
+        OA_importHeader: isFloatValue
+      isQualitative:
+        OA_importHeader: isQualitative
+      type_associe:
+        OA_importHeader: type associé
+      ordre_affichage:
+        OA_importHeader: ordre d'affichage
+      sites:
   parcelles:
-    keyColumns: [site,parcelle_key]
-    columns:
-      site:
+    OA_naturalKey: [sites,parcelle_key]
+    OA_basicComponents:
+      sites:
       bloc:
       repetition:
-        headerName: répétition
+        OA_importHeader: répétition
       parcelle_key:
-        headerName: nom de la parcelle_key
+        OA_importHeader: nom de la parcelle_key
       parcelle_fr:
-        headerName: nom de la parcelle_fr
+        OA_importHeader: nom de la parcelle_fr
       parcelle_en:
-        headerName: nom de la parcelle_en
+        OA_importHeader: nom de la parcelle_en
       surface:
       date_creation:
-        headerName: date de création
+        OA_importHeader: date de création
       commentaire_fr:
       commentaire_en:
   blocs:
-    validations:
+    OA_validations:
       creationDate:
-        internationalizationName:
+        OA_i18n:
           fr: "date de création"
-        checker:
-          name: Date
-          params:
-            pattern: dd/MM/yyyy
-        columns: [ date_creation ]
-    keyColumns: [site,nom_du_bloc,repetition]
-    columns:
-      site:
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+        OA_components: [ date_creation ]
+    OA_naturalKey: [sites,nom_du_bloc,repetition]
+    OA_basicComponents:
+      sites:
       nom_du_bloc:
       repetition:
-        headerName: répétition
+        OA_importHeader: répétition
       date_creation:
-        headerName: date creation
-      decription_fr:
-      description_en:
+        OA_importHeader: date creation
   unites:
-    keyColumns: [nom_key]
-    columns:
+    OA_naturalKey: [nom_key]
+    OA_basicComponents:
       code_key:
       code_fr:
       code_en:
@@ -113,197 +201,135 @@ references:
       nom_fr:
       nom_en:
   modalites:
-    internationalizedColumns:
-      nom_fr:
-        fr: nom_fr
-        en: nom_en
-    internationalizationDisplay:
-      pattern:
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: '{nom_fr} ({code})'
         en: '{nom_fr} ({code})'
-    keyColumns: [code]
-    columns:
+    OA_naturalKey: [code]
+    OA_basicComponents:
       variable_forcage:
-        headerName: Variable de forcage
+        OA_importHeader: Variable de forcage
       code:
       nom_fr:
       nom_en:
       description_fr:
       description_en:
   version_de_traitement:
-    keyColumns: [site, traitement]
-    internationalizationDisplay:
-      pattern:
+    OA_naturalKey: [sites, traitement]
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: '{traitement} ({modalites})'
         en: '{traitement} ({modalites})'
-    columns:
-      site:
+    OA_basicComponents:
+      sites:
       traitement:
       version:
       date_debut:
-        headerName: date début
-        checker:
-          name: Date
-          params:
-            pattern: dd/MM/yyyy
-            required: true
+        OA_importHeader: date début
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
       date_fin:
-        headerName: date fin
-        checker:
-          name: Date
-          params:
-            pattern: dd/MM/yyyy
-            required: false
+        OA_importHeader: date fin
+        OA_required: false
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
       commentaire_fr:
       commentaire_en:
       modalites:
-    validations:
-      modalitesRef:
-        internationalizationName:
-          fr: "référence aux modalités"
-        columns: [ modalites ]
-        checker:
-          name: Reference
-          params:
-            refType: modalites
-            transformation:
-              codify: true
-            multiplicity: MANY
-compositeReferences:
-  localizations:
-    components:
-      - reference: sites
-      - reference: parcelles
-        parentKeyColumn: "site"
-dataTypes:
-  SWC:
-    repository:
-      filePattern:
-    data:
-      Nom parcelle:
-        components:
-          chemin:
-            checker:
-              name: Reference
-              params:
-                refType: parcelles
-      Nom traitement:
-        components:
-          valeur:
-      Date:
-        components:
-          day:
-            checker:
-              name: Date
-              params:
-                pattern: dd/MM/yyyy
-          time:
-            checker:
-              name: Date
-              params:
-                pattern: HH:mm:ss
-          datetime:
-            defaultValue:
-              expression: >
-                return datum.Date.day +" " +datum.Date.time
-            checker:
-              name: Date
-              params:
-                pattern: "dd/MM/yyyy HH:mm:ss"
-                duration: "30 MINUTES"
-      contexte:
-        components:
-          répétition:
-            checker:
-              name: Integer
-              params:
-          profondeur:
-            checker:
-              name: Integer
-              params:
-      SWC:
-        components:
-          valeur:
-            checker:
-              name: Float
-              params:
-                required: false
-          qualité:
-            checker:
-              name: Integer
-              params:
-                required: false
-          unite:
-            defaultValue:
-              expression: "\"pourcentage\""
-            checker:
-              name: Reference
-              params:
-                refType: unites
-    validations:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: modalites
+            OA_multiplicity: MANY
+  swc:
+    OA_allowUnexpectedColumns: true
+    OA_dataHeaderLine: 7
+    OA_dataFirstLine: 10
+    OA_naturalKey:
+      - chemin
+      - treatment
+      - datetime
+    OA_basicComponents:
+      chemin:
+        OA_importHeader: Nom parcelle
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: parcelles
+      treatment:
+        OA_importHeader: "Nom traitement"
+      day:
+        OA_importHeader: Date
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      time:
+        OA_importHeader: Time
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: "HH:mm:ss"
+    OA_computedComponents:
+      datetime:
+        OA_computation:
+          OA_expression: >
+            return datum.Date.day +" " +datum.Date.time
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: "dd/MM/yyyy HH:mm:ss"
+            OA_duration: "30 MINUTES"
+    OA_patternComponents:
+      swc:
+        OA_patternForComponents: "SWC_([0-9]+)_([0-9]+)"
+        OA_componentQualifiers:
+          - repetition:
+              OA_checker:
+                OA_name: OA_integer
+          - profondeur:
+              OA_checker:
+                OA_name: OA_float
+        OA_componentAdjacents:
+          - valeur:
+              OA_importHeaderPattern: valeur
+              OA_exportHeader:
+                OA_title:
+                  fr: valeur
+              OA_checker:
+                OA_name: OA_float
+          - qualite:
+              OA_importHeaderPattern: qualité
+              OA_exportHeader:
+                OA_title:
+                  fr: qualité
+              OA_checker:
+                OA_name: OA_float
+          - unite:
+            OA_defaultValue:
+              OA_expression: "\"pourcentage\""
+              OA_checker:
+                OA_name: OA_reference
+                OA_params:
+                  OA_reference:
+                    OA_name: unites
+            OA_importHeaderPattern: unité
+            OA_exportHeader:
+              OA_title:
+                fr: unité
+    OA_validations:
       swcQualityEnumeration:
-        internationalizationName:
+        OA_i18n:
           fr: "Si renseignée, la qualité du taux d'humidité vaut 1, 2 ou 3"
-        checker:
-          name: GroovyExpression
-          params:
-            groovy:
-              expression: "Set.of(\"\", \"0\", \"1\", \"2\").contains(datum.get(\"SWC\").get(\"qualité\"))"
-    format:
-      allowUnexpectedColumns: false
-      headerLine: 7
-      firstRowLine: 10
-      columns:
-        - header: "Nom parcelle"
-          boundTo:
-            variable: Nom parcelle
-            component: chemin
-        - header: "Nom traitement"
-          boundTo:
-            variable: Nom traitement
-            component: valeur
-        - header: "Date"
-          boundTo:
-            variable: Date
-            component: day
-        - header: "Time"
-          boundTo:
-            variable: Date
-            component: time
-      repeatedColumns:
-        - headerPattern: "SWC_([0-9]+)_([0-9]+)"
-          tokens:
-            - boundTo:
-                variable: contexte
-                component: répétition
-              exportHeader: "Répétition"
-            - boundTo:
-                variable: contexte
-                component: profondeur
-              exportHeader: "Profondeur"
-          boundTo:
-            variable: SWC
-            component: valeur
-          exportHeader: "SWC"
-        - headerPattern: "qc"
-          boundTo:
-            variable: SWC
-            component: qualité
-          exportHeader: "qc"
-    authorization:
-      authorizationScopes:
-        localization:
-          variable: Nom parcelle
-          component: chemin
-      timeScope:
-        variable: Date
-        component: datetime
-      dataGroups:
-        all:
-          label: "Toutes les données"
-          data:
-            - Nom parcelle
-            - Nom traitement
-            - Date
-            - contexte
-            - SWC
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: "Set.of(\"\", \"0\", \"1\", \"2\").contains(datum.get(\"SWC\").get(\"qualité\"))"

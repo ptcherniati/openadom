@@ -57,7 +57,7 @@ public record TagsBuilder(RootBuilder rootBuilder) {
         I18n i18n1 = i18n;
         final Map<String, Map<String, String>> tagsMap = (Map<String, Map<String, String>>) rootBuilder.getMapper().convertValue(tagsNode, Map.class);
         if (tagsMap == null) {
-            return new Parsing<Set<Tag>>(i18n1, Tag.buildTags(Set.of(),
+            return new Parsing<>(i18n1, Tag.buildTags(Set.of(),
                     new Validation(rootBuilder.getBuildErrorWithValidationParams(), path, null)));
         }
         for (final Map.Entry<String, Map<String, String>> entry : tagsMap.entrySet()) {
@@ -70,7 +70,7 @@ public record TagsBuilder(RootBuilder rootBuilder) {
             }
 
         }
-        return new Parsing<Set<Tag>>(
+        return new Parsing<>(
                 i18n1,
                 Tag
                         .buildTags(

@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.data.deposit.validation.validationcheckresults;
 
-import com.google.common.collect.SetMultimap;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.DataColumn;

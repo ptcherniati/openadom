@@ -10,6 +10,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public record AuthorizationsForApplicationUser(
+        List<String> roles,
         Application application,
         boolean isApplicationManager,
         boolean isUserManager,

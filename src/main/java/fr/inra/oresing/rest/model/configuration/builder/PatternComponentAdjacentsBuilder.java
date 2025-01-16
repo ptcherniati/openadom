@@ -11,10 +11,7 @@ import fr.inra.oresing.domain.application.configuration.checker.CheckerDescripti
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
-import java.util.AbstractMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public record PatternComponentAdjacentsBuilder(RootBuilder rootBuilder) {
     Parsing<Map<String, PatternComponentAdjacents>> build(
@@ -31,7 +28,7 @@ public record PatternComponentAdjacentsBuilder(RootBuilder rootBuilder) {
                 .orElse(new ArrayNode(JsonNodeFactory.instance));
         if (!componentsArrayNode.isEmpty()) {
             int componentNumber = 0;
-            final ImmutableMap.Builder<String, PatternComponentAdjacents> patternColumnComponentBuilder = new ImmutableMap.Builder<String, PatternComponentAdjacents>();
+            final ImmutableMap.Builder<String, PatternComponentAdjacents> patternColumnComponentBuilder = new ImmutableMap.Builder<>();
             for (final JsonNode node : componentsArrayNode) {
                 ++componentNumber;
                 final Map.Entry<String, JsonNode> patternColumnComponentNode = node.fields().next();
@@ -63,7 +60,7 @@ public record PatternComponentAdjacentsBuilder(RootBuilder rootBuilder) {
                     );
                 }
 
-                AbstractMap.SimpleEntry<String, JsonNode> adjacentEntry = new AbstractMap.SimpleEntry<>(Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentKey, patternColumnComponentNode.getKey(), componentKey), patternColumnComponentNode.getValue());
+                AbstractMap.SimpleEntry<String, JsonNode> adjacentEntry = new AbstractMap.SimpleEntry<>(Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentKey, patternColumnComponentNode.getKey()), patternColumnComponentNode.getValue());
                 final Parsing<String> exportHeaderParsing = rootBuilder.addExportHeaders(dataKey, i18n, adjacentEntry, ConfigurationSchemaNode.OA_PATTERN_COMPONENTS);
                 if (exportHeaderParsing != null) {
                     i18n = exportHeaderParsing.i18n();
@@ -76,13 +73,13 @@ public record PatternComponentAdjacentsBuilder(RootBuilder rootBuilder) {
                                 "%1$s.OA_patternComponents.%2$s.%3$s".formatted(componentPath, componentKey, label),
                                 componentNodeValue.get(ConfigurationSchemaNode.OA_CHECKER),
                                 label);
-                i18n = checkerDescriptionParsing.i18n();
+                i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
                 final PatternComponentAdjacents patternColumnComponent = new PatternComponentAdjacents(
                         ComponentDescription.ComponentDescriptionType.PatternComponentAdjacents,
                         label,
                         importHeaderPattern,
                         oaTags,
-                        exportHeaderParsing.result(),
+                        Objects.requireNonNull(exportHeaderParsing).result(),
                         required,
                         mandatory,
                         rootBuilder().getLangRestrictions(componentPath, componentNodeValue),

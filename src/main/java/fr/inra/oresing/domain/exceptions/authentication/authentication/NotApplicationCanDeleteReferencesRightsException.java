@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 public class NotApplicationCanDeleteReferencesRightsException extends OreSiTechnicalException {
-    public final static String NO_RIGHT_FOR_DELETE_REFERENCES_RIGHTS_APPLICATION = "NO_RIGHT_FOR_DELETE_REFERENCES_RIGHTS_APPLICATION";
+    public static final String NO_RIGHT_FOR_DELETE_REFERENCES_RIGHTS_APPLICATION = "NO_RIGHT_FOR_DELETE_REFERENCES_RIGHTS_APPLICATION";
     final String applicationName;
     final List<String> authorizationsRestrictions;
     public NotApplicationCanDeleteReferencesRightsException(final String applicationName) {

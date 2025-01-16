@@ -17,7 +17,7 @@ public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, Boole
         return new FileOrUUID(
                 fileId,
                 binaryFileDataset,
-                params == null ? true : params.topublish()
+                params == null || params.topublish()
         );
     }
 
@@ -36,7 +36,7 @@ public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, Boole
         if (requiredAuthorizationForFile.isPresent()) {
             for (final Map.Entry<String, List<Ltree>> requiredAuthorizationForFileEntry : requiredAuthorizationForFile.get().entrySet()) {
                 final String scope = requiredAuthorizationForFileEntry.getKey();
-                final String ltree = requiredAuthorizationForFileEntry.getValue().get(0).getSql();
+                final String ltree = requiredAuthorizationForFileEntry.getValue().getFirst().getSql();
                 if(requiredAuthorizationInDataBase.get(scope).stream()
                         .noneMatch(pathAuthorized -> ltree.equals(pathAuthorized) ||
                                     ltree.startsWith(pathAuthorized+Ltree.SEPARATOR))

@@ -1,7 +1,5 @@
 package fr.inra.oresing.domain;
 
-import fr.inra.oresing.domain.application.configuration.SubmissionType;
-
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -27,7 +25,6 @@ public enum ComponentPresenceConstraint {
     ABSENT;
 
     public static final Set<String> VALUES = Arrays.stream(values()).map(ComponentPresenceConstraint::name).collect(Collectors.toSet());
-    ;
 
     public boolean isMandatory() {
         return MANDATORY == this;
@@ -35,7 +32,6 @@ public enum ComponentPresenceConstraint {
 
     /**
      * Si une colonne est attendue dans le fichier CSV
-     * @return
      */
     public boolean isExpected() {
         return ABSENT != this;

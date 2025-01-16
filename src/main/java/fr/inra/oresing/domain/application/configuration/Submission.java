@@ -91,6 +91,13 @@ public record Submission(
 
         }
     }
+    public record PatternPosition(int start, int end){
+
+        @Override
+        public String toString() {
+            return "[%s, %s]".formatted(start, end);
+        }
+    }
 
     public record SubmissionFileNameParsing(
             String pattern,
@@ -98,6 +105,48 @@ public record Submission(
             Integer startDate,
             Integer endDate
     ) {
+
+        public static final Pattern GROUP_CAPTURE_PATTERN = Pattern.compile("\\([^(]*\\)");
+        public String patternToBeReplacedByGroupCapture() {
+            String patternToBeReplacedByGroupCapture = pattern();
+            for (int i = patternGroups().size(); i > 0; i--) {
+                PatternPosition patternGroup = patternGroups().get(i-1);
+                patternToBeReplacedByGroupCapture = new StringBuilder(patternToBeReplacedByGroupCapture.substring(0, patternGroup.start()))
+                        .append("%s")
+                        .append(patternToBeReplacedByGroupCapture.substring(patternGroup.end()))
+                        .toString();
+            }
+            return patternToBeReplacedByGroupCapture;
+        }
+
+        public LinkedList<String> orderedGroups(){
+            Map<Integer, String> orderedGroups = new HashMap<>();
+            int scopeIndex = 0;
+            for (int i = 1; i < groupCount()+1; i++) {
+                if(i==startDate()){
+                    orderedGroups.put(i, ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN);
+                } else if(i==endDate()){
+                    orderedGroups.put(i, ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN);
+                }else{
+                    orderedGroups.put(i, authorizationScopes().get(scopeIndex++));
+                }
+            }
+            return new LinkedList<>(orderedGroups.values());
+        }
+        public int groupCount() {
+            Matcher matcher = GROUP_CAPTURE_PATTERN.matcher(pattern());
+            return patternGroups().size()                    ;
+        }
+
+        public List<PatternPosition> patternGroups(){
+            Matcher matcher = GROUP_CAPTURE_PATTERN.matcher(pattern());
+            List<PatternPosition> matches = new LinkedList<>();
+            while(matcher.find()){
+                matches.add(new PatternPosition(matcher.start(),matcher.end()));
+            }
+            return matches;
+        }
+
         public String createExampleSubmissionFileName() {
             int scopeIndex = 0;
 
@@ -105,7 +154,7 @@ public record Submission(
             LinkedList<String> scopes = new LinkedList<>(authorizationScopes);
             Matcher m = r.matcher(pattern());
 
-            StringBuffer sb = new StringBuffer();
+            StringBuilder sb = new StringBuilder();
 
             int groupCount = 0;
             while (m.find()) {
@@ -129,7 +178,7 @@ public record Submission(
 
     public record SubmissionScope(
             List<ReferenceScope> referenceScopes,
-            SubmissionScope.TimeScope timescope
+            TimeScope timescope
     ) {
         public Set<String> componentNames() {
             return Optional.ofNullable(referenceScopes())

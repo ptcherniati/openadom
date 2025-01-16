@@ -1,0 +1,7 @@
+---
+title: Stratégie de dépôt 
+subtitle: OA_submission
+abstract: >
+    Cette section permet d'explicité comment la section OA_submission permet de définir une stratégie de dépôt des données.
+---
+TODO

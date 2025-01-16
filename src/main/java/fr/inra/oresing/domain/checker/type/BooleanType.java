@@ -27,12 +27,12 @@ public non-sealed class BooleanType implements FieldType<Boolean> {
     public BooleanType(final String expression, final Map<String, Object> context) {
         super();
         this.expression = GroovyExpression.forExpression(expression);
-        this.context = ImmutableMap.<String,Object>builder().putAll(context).build();;
+        this.context = ImmutableMap.<String,Object>builder().putAll(context).build();
         clone = () -> new BooleanType(expression, context);
     }
 
     public BooleanType(final String expression) {
-        this(expression, new HashMap<String, Object>());
+        this(expression, new HashMap<>());
     }
 
     public BooleanType(final Boolean value) {

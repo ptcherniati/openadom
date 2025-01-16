@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
-import org.junit.Assert;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -25,23 +24,18 @@ class ReferenceTypeTest {
     ReferenceValidationCheckResult checkBad;
     private DataColumn dataColumn;
     private String goodValue;
-    private String badValue;
-    private String goodValueNotLabel;
     private UUID uuid1;
-    private UUID uuid2;
-    private UUID uuid3;
-    private UUID uuid4;
 
     @BeforeEach
     public void before() {
         dataColumn = new DataColumn("laColonne");
         goodValue = "leman";
-        badValue = "annecy";
-        goodValueNotLabel = "LéMan";
+        String badValue = "annecy";
+        String goodValueNotLabel = "LéMan";
         uuid1 = UUID.randomUUID();
-        uuid2 = UUID.randomUUID();
-        uuid3 = UUID.randomUUID();
-        uuid4 = UUID.randomUUID();
+        UUID uuid2 = UUID.randomUUID();
+        UUID uuid3 = UUID.randomUUID();
+        UUID uuid4 = UUID.randomUUID();
         referenceValues = new ImmutableMap.Builder()
                 .put(new DataValue.LineIdentityColumnName(Ltree.fromSql(goodValue), Ltree.fromSql(goodValue)), ImmutableSet.of(uuid1))
                 .build();
@@ -58,22 +52,22 @@ class ReferenceTypeTest {
                 dataColumn,
                 "",
                 referenceValues,
-                transformer
-        );
+                transformer,
+                null);
     }
 
 
     @Test
     @Tag("SUITE")
     void check() {
-        Assert.assertTrue(checkGood.isSuccess());
+        Assertions.assertTrue(checkGood.isSuccess());
         Assertions.assertEquals(goodValue, checkGood.value().getValue().toString());
         Assertions.assertEquals(goodValue, checkGood.matchedReferenceHierarchicalKey ().stream().map(Ltree::toString).findFirst().orElse("null"));
         Assertions.assertEquals(uuid1, checkGood.matchedReferenceId ().stream().findFirst().orElse(null));
-        Assert.assertTrue(checkGoodValueNotLabel.isSuccess());
+        Assertions.assertTrue(checkGoodValueNotLabel.isSuccess());
         Assertions.assertEquals(goodValue, checkGoodValueNotLabel.value().getValue().toString());
         Assertions.assertEquals(goodValue, checkGoodValueNotLabel.matchedReferenceHierarchicalKey ().stream().map(Ltree::toString).findFirst().orElse("null"));
         Assertions.assertEquals(uuid1, checkGoodValueNotLabel.matchedReferenceId ().stream().findFirst().orElse(null));
-        Assert.assertFalse(checkBad.isSuccess());
+        Assertions.assertFalse(checkBad.isSuccess());
     }
 }

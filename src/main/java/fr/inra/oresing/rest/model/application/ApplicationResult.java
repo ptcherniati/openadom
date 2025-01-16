@@ -1,10 +1,8 @@
 package fr.inra.oresing.rest.model.application;
 
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 import lombok.Getter;
@@ -13,6 +11,7 @@ import lombok.Setter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 
 public record ApplicationResult(
@@ -31,27 +30,14 @@ public record ApplicationResult(
         ApplicationResult.RightsRequest rightsRequest,
         Configuration configuration,
         CurrentApplicationUserRolesResult currentApplicationUserRolesResult,
-        Map<String,Set<String>> dependantNodesByDataName
+        Map<String, Set<String>> dependantNodesByDataName
 ) {
 
     public List<String> getOrderedReferences() {
-        ArrayList orederedReferences = new ArrayList();
-        Consumer<Node> addReferenceRecursively = child->addReferenceRecursively(child, orederedReferences);
-        references().values().stream()
-                .forEach(addReferenceRecursively);
-        data().keySet()
-                .stream().filter(Predicate.not(orederedReferences::contains))
-                .forEach(orederedReferences::add);
-        return orederedReferences;
-    }
-
-    private void addReferenceRecursively(Node node,  ArrayList<String> orederedReferences) {
-        String referenceName = node.nodeName();
-        orederedReferences.add(referenceName);
-        Consumer<Node> addReferenceRecursively = child->addReferenceRecursively(child, orederedReferences);
-        node.children().stream()
-                .forEach(addReferenceRecursively);
-
+        return configuration().hierarchicalNodes().stream()
+                .sorted()
+                .map(Node::nodeName)
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     @Setter
@@ -112,14 +98,6 @@ public record ApplicationResult(
                                 String aggregation) {
             }
         }
-    }
-
-    @Setter
-    @Getter
-    public static class ReferenceSynthesis {
-        public String ReferenceType;
-        public int lineCount;
-
     }
 
 }

@@ -66,6 +66,123 @@
     "depends" : [ "type_de_site_tsi", "valeur_qualitative_vqe" ],
     "order" : 9999,
     "isRecursive" : true
+  }, {
+    "nodeName" : "site_sit",
+    "componentKey" : "sit_parent",
+    "columnToLookUpForRecursive" : "sit_parent",
+    "parent" : "type_de_site_tsi",
+    "children" : [ {
+      "nodeName" : "traitement_tra",
+      "componentKey" : "sit_key",
+      "columnToLookUpForRecursive" : null,
+      "parent" : "site_sit",
+      "children" : [ ],
+      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+      "order" : 1,
+      "isRecursive" : false
+    }, {
+      "nodeName" : "parcelle_par",
+      "componentKey" : "sit_key",
+      "columnToLookUpForRecursive" : null,
+      "parent" : "site_sit",
+      "children" : [ {
+        "nodeName" : "plot_plo",
+        "componentKey" : "sit_key",
+        "columnToLookUpForRecursive" : null,
+        "parent" : "parcelle_par",
+        "children" : [ ],
+        "depends" : [ "parcelle_par", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+        "order" : 9999,
+        "isRecursive" : false
+      } ],
+      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+      "order" : 2,
+      "isRecursive" : false
+    } ],
+    "depends" : [ "type_de_site_tsi", "valeur_qualitative_vqe" ],
+    "order" : 9999,
+    "isRecursive" : true
+  } ],
+  "depends" : [ ],
+  "order" : 9999,
+  "isRecursive" : false
+}, {
+  "nodeName" : "type_de_site_tsi",
+  "componentKey" : null,
+  "columnToLookUpForRecursive" : null,
+  "parent" : null,
+  "children" : [ {
+    "nodeName" : "site_sit",
+    "componentKey" : "sit_parent",
+    "columnToLookUpForRecursive" : "sit_parent",
+    "parent" : "type_de_site_tsi",
+    "children" : [ {
+      "nodeName" : "traitement_tra",
+      "componentKey" : "sit_key",
+      "columnToLookUpForRecursive" : null,
+      "parent" : "site_sit",
+      "children" : [ ],
+      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+      "order" : 1,
+      "isRecursive" : false
+    }, {
+      "nodeName" : "parcelle_par",
+      "componentKey" : "sit_key",
+      "columnToLookUpForRecursive" : null,
+      "parent" : "site_sit",
+      "children" : [ {
+        "nodeName" : "plot_plo",
+        "componentKey" : "sit_key",
+        "columnToLookUpForRecursive" : null,
+        "parent" : "parcelle_par",
+        "children" : [ ],
+        "depends" : [ "parcelle_par", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+        "order" : 9999,
+        "isRecursive" : false
+      } ],
+      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+      "order" : 2,
+      "isRecursive" : false
+    } ],
+    "depends" : [ "type_de_site_tsi", "valeur_qualitative_vqe" ],
+    "order" : 9999,
+    "isRecursive" : true
+  }, {
+    "nodeName" : "site_sit",
+    "componentKey" : "sit_parent",
+    "columnToLookUpForRecursive" : "sit_parent",
+    "parent" : "type_de_site_tsi",
+    "children" : [ {
+      "nodeName" : "traitement_tra",
+      "componentKey" : "sit_key",
+      "columnToLookUpForRecursive" : null,
+      "parent" : "site_sit",
+      "children" : [ ],
+      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+      "order" : 1,
+      "isRecursive" : false
+    }, {
+      "nodeName" : "parcelle_par",
+      "componentKey" : "sit_key",
+      "columnToLookUpForRecursive" : null,
+      "parent" : "site_sit",
+      "children" : [ {
+        "nodeName" : "plot_plo",
+        "componentKey" : "sit_key",
+        "columnToLookUpForRecursive" : null,
+        "parent" : "parcelle_par",
+        "children" : [ ],
+        "depends" : [ "parcelle_par", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+        "order" : 9999,
+        "isRecursive" : false
+      } ],
+      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+      "order" : 2,
+      "isRecursive" : false
+    } ],
+    "depends" : [ "type_de_site_tsi", "valeur_qualitative_vqe" ],
+    "order" : 9999,
+    "isRecursive" : true
   } ],
   "depends" : [ ],
   "order" : 9999,

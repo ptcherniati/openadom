@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.data.deposit.validation.transformer;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.Datum;
 
 import java.util.Map;
 import java.util.function.Function;

@@ -19,7 +19,7 @@ public record DefaultValueType(SectionBuilder sectionBuilder,
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_EXPRESSION, StringType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_MULTIPLICITY, EnumType.MULTIPLICITY_ENUM),
-                        new LabelDescription(ConfigurationSchemaNode.OA_REFERENCES, new CollectionType.ArrayType<StringType>(List.of(), true, false, StringType.EMPTY_INSTANCE()))
+                        new LabelDescription(ConfigurationSchemaNode.OA_REFERENCES, new CollectionType.ArrayType<>(List.of(), true, false, StringType.EMPTY_INSTANCE()))
                 );
     }
     public static DefaultValueType  EMPTY_INSTANCE() {

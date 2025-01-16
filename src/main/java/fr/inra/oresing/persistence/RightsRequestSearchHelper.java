@@ -18,7 +18,7 @@ public class RightsRequestSearchHelper {
     private final AtomicInteger i = new AtomicInteger();
 
     @Getter
-    private MapSqlParameterSource paramSource = new MapSqlParameterSource();
+    private final MapSqlParameterSource paramSource;
 
     private String addArgumentAndReturnSubstitution(final Object value) {
         final int i = this.i.incrementAndGet();
@@ -39,21 +39,17 @@ public class RightsRequestSearchHelper {
         Optional.ofNullable(rightsRequestInfos)
                 .map(RightsRequestInfos::getUuids)
                 .filter(uuids -> !CollectionUtils.isEmpty(uuids))
-                .ifPresent(list -> {
-                    where.add(list.stream()
-                            .map(this::addArgumentAndReturnSubstitution)
-                            .collect(Collectors.joining(",", " (\nid in (", ")\n) "))
-                    );
-                });
+                .ifPresent(list -> where.add(list.stream()
+                        .map(this::addArgumentAndReturnSubstitution)
+                        .collect(Collectors.joining(",", " (\nid in (", ")\n) "))
+                ));
         Optional.ofNullable(rightsRequestInfos)
                 .map(RightsRequestInfos::getAuthorizations)
                 .filter(authorizations -> !CollectionUtils.isEmpty(authorizations))
-                .ifPresent(list -> {
-                    where.add(list.stream()
-                            .map(this::addArgumentAndReturnSubstitution)
-                            .collect(Collectors.joining(",", " (\nassociate @> ARRAY[", "]\n) "))
-                    );
-                });
+                .ifPresent(list -> where.add(list.stream()
+                        .map(this::addArgumentAndReturnSubstitution)
+                        .collect(Collectors.joining(",", " (\nassociate @> ARRAY[", "]\n) "))
+                ));
         Optional.ofNullable(rightsRequestInfos)
                 .ifPresent(rightsRequestInfos -> where.add(whereForRightsRequest(rightsRequestInfos)));
 
@@ -69,9 +65,9 @@ public class RightsRequestSearchHelper {
         if (!CollectionUtils.isEmpty(fieldFilters)) {
             Optional.of(fieldFilters)
                     .map(filters -> filters.stream()
-                            .map(filter -> whereForField(filter))
+                            .map(this::whereForField)
                             .collect(Collectors.joining(" and ", "(", ")")))
-                    .ifPresent(whereElement -> where.add(whereElement));
+                    .ifPresent(where::add);
         }
         return CollectionUtils.isEmpty(where) ? "" : where.stream()
                 .filter(Objects::nonNull).collect(Collectors

@@ -1230,7 +1230,7 @@
     "validations" : { },
     "depends" : [ ],
     "migrations" : null,
-    "hidden" : false,
+    "hidden" : true,
     "order" : 9999
   },
   "variables_et_unites_par_types_de_donnees" : {

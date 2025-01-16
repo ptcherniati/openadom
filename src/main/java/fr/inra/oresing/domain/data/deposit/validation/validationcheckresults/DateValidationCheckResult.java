@@ -28,8 +28,7 @@ public record DateValidationCheckResult(ValidationLevel level, String message, M
                             localdate = localdate == null ? LocalDate.of(1970, 1, 1) : localdate;
                             LocalTime localTime = date.query(TemporalQueries.localTime());
                             localTime = localTime == null ? LocalTime.MIN : localTime;
-                            final LocalDateTime localDateTime = localdate.atTime(localTime);
-                            return localDateTime;
+                    return localdate.atTime(localTime);
                         }
                 )
                 .collect(Collectors.toCollection(TreeSet::new));

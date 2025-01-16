@@ -53,11 +53,17 @@ class ValidationExampleBuilder {
     }
 
     static ValidationType buildValidation(final I18nType i18n, final boolean required, final CheckerType checker, final List<String> columns) {
-        return new ValidationType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
-            put(ConfigurationSchemaNode.OA_I_18_N, i18n);
-            put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
-            put(ConfigurationSchemaNode.OA_CHECKER, checker);
-            put(ConfigurationSchemaNode.OA_COMPONENTS, new CollectionType.ArrayType<StringType>(columns.stream().map(StringType::new).collect(Collectors.toCollection(LinkedList::new)), false, false, StringType.EMPTY_INSTANCE()));
-        }});
+        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+        map.put(ConfigurationSchemaNode.OA_I_18_N, i18n);
+        map.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
+        map.put(ConfigurationSchemaNode.OA_CHECKER, checker);
+
+        LinkedList<StringType> columnTypes = new LinkedList<>();
+        for (String column : columns) {
+            columnTypes.add(new StringType(column));
+        }
+        map.put(ConfigurationSchemaNode.OA_COMPONENTS, new CollectionType.ArrayType<>(columnTypes, false, false, StringType.EMPTY_INSTANCE()));
+
+        return new ValidationType(map);
     }
 }

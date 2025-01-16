@@ -19,3 +19,7 @@ mermaid-filter.err
 # /ui/cypress/fixtures/applications/ore/monsore/monsoere.json
 # /ui/cypress/fixtures/applications/ore/monsore/createMonsore.txt
 # /ui/cypress/fixtures/applications/ore/monsore/changeMonsore.txt
+.Rproj.user
+/documentations/openadom/.quarto/
+/documentations/openadom/_site/
+/documentations/openadom/_freeze/

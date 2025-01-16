@@ -57,10 +57,6 @@ public class Ltree implements Comparable<Ltree> {
     /**
      * Construire à partir d'un ltree tel qu'il a pu existé en base (donc déjà échappé et syntaxiquement correct)
      *
-     * @param sql
-     * @param sql
-     * @return
-     * @return
      */
     public static Ltree fromSql(final String sql) {
         checkSyntax(sql);
@@ -70,12 +66,6 @@ public class Ltree implements Comparable<Ltree> {
     /**
      * Constuire en concaténant deux ltree pour en former un
      *
-     * @param prefix
-     * @param suffix
-     * @param suffix
-     * @param prefix
-     * @return
-     * @return
      */
     public static Ltree join(final Ltree prefix, final Ltree suffix) {
         return fromSql(prefix.sql + SEPARATOR + suffix.sql);
@@ -110,10 +100,6 @@ public class Ltree implements Comparable<Ltree> {
     /**
      * Échapper une chaîne pour former un label.
      *
-     * @param key
-     * @param key
-     * @return
-     * @return
      */
     public static String escapeToLabel(final String key) {
         if (VALID_LABEL_REGEX.asMatchPredicate().test(key) && isEncodedString(key)) {
@@ -144,7 +130,7 @@ public class Ltree implements Comparable<Ltree> {
     public static boolean isEncodedString(String label) {
         return KNOWN_SYMBOL_CODES.stream()
                 .parallel()
-                .anyMatch(sign -> label.contains(sign));
+                .anyMatch(label::contains);
     }
 
     public static boolean isEncodedString(String label, Set<String> knownSpecialCharacters) {
@@ -153,7 +139,7 @@ public class Ltree implements Comparable<Ltree> {
         }
         return knownSpecialCharacters.stream()
                 .parallel()
-                .anyMatch(sign -> label.contains(sign));
+                .anyMatch(label::contains);
     }
 
     /**

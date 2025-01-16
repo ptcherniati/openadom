@@ -2,7 +2,6 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import fr.inra.oresing.domain.file.FileBomResolver;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.web.multipart.MultipartFile;
 

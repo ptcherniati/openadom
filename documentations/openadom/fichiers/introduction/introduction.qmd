@@ -1,0 +1,98 @@
+---
+  title: Introduction
+  page-navigation: true
+  abstract: >
+    Ce document permet d'aider un gestionnaire de Système d'Information (SI) à décrire son domaine dans un fichier de configuration. 
+    Lorsque l'on depose ce fichier dans l'application, cela crée un schema dans la base de données ainsi que les outils permettant de l'alimenter et de la consulter. 
+    Chaque fichier de configuration déposé génèrera un schéma dédié dans la base de données.
+---
+
+
+
+
+# <a id="prealable" />Préalable
+Avant de commencer l'écriture du fichier de configuration, il faut travailler à définir le modèle des données que vous voulez traiter dans la base de données.
+
+Vous avez en votre possession un certain nombre de fichiers (format csv) contenant les données. Un fichier de données respecte un certain format. En particulier les en-têtes de colonnes doivent être fixés et le contenu sous un en-tête a un format déterminé (date, valeur flottante, entier, texte..).
+
+Chaque format de fichier correspond à ce que l'on appellera un type de données. Il regroupe plusieurs variables correspondant à :
+- une thématique,
+- un pas de temps,
+- une structuration des données
+- ...
+
+Chaque ligne peut être identifiée par sous-ensemble de colonnes. Cet identifiant permet de créer ou de mettre à jour une donnée, selon qu'elle est ou non déjà présente en base.
+
+Chaque ligne porte, sur une ou plusieurs colonnes, une information de temporalité.
+
+Chaque ligne porte aussi, sur une ou plusieurs colonnes, des informations sur le contexte d'acquisition des variables des autres colonnes.
+
+On peut vouloir aussi faire figurer dans la base de données certaines informations non présentes dans le fichier de données.
+
+- des informations liées aux variables que l'on fournit sous la forme de fichier de référentiels (description de site, description de méthodes, description d'unités, description d'outils...)
+- des informations constantes, ne dépendant pas du fichier (par exemple l'unité de la variable)
+- des informations constantes pour l'ensemble du fichier (par exemple le site correspondant aux valeurs du fichier). Ces informations pouvant être décrites dans un cartouche, avant l'en-tête de colonne ou juste sous l'en-tête de colonne (valeur minimum ou maximum)
+- des informations calculées à partir d'informations du fichier, d'informations des référentiels déjà déposés ou même des données déjà publiées.
+
+## exemple
+Supposons que l'on ait un fichier de données météorologiques
+
+
+``` {csv}
+#| label: tab-donnees-meteo
+#| code-fold: show
+#| code-summary: "t_data_dat.csv"
+#| code-title: "t_data_dat.csv"
+
+{{< include fichiers/t_data_dat.csv >}}
+
+```
+
+
+- La temporalité est portée par la colonne "Date de mesure".
+- Le contexte est porté par l'information du cartouche d'en-tête "Région" et la colonne "Site".
+- On identifie 4 variables:
+- _date_ au format dd/MM/yyyy (format au sens SQL : https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE). Cette variable n'a qu'une seule composante "day". On note que les moyennes sont calculées à la journée.
+- _localization_ qui fait référence à un site de la colonne "Site", avec deux composantes (site et region)
+- _precipitation_ qui correspond à la pluviométrie de la colonne "Précipitation" avec deux composantes (value,unit=mm)
+- _temperature_ qui se réfère aux colonnes "Température moyenne", "Température minimale" et "Température maximale" avec 4 composantes (value,min,max,unit=°C)
+
+Du coup, on peut aussi définir des référentiels pour préciser ses informations
+
+``` {r}
+#| echo: false
+#| label: tbl-regions
+#| tbl-cap: "regions"
+#| code-fold: show
+knitr::kable(read.csv("fichiers/tr_regions_reg.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+``` {r}
+#| echo: false
+#| label: tbl-sites
+#| tbl-cap: "sites"
+#| code-fold: show
+knitr::kable(read.csv("fichiers/tr_sites_sit.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+
+Les sites font référence aux régions.
+
+``` {r}
+#| echo: false
+#| label: tbl-unites
+#| tbl-cap: "unites"
+#| code-fold: show
+knitr::kable(read.csv("fichiers/tr_unites_uni.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+
+Le fait de dire que l'unité d'une donnée fait référence au référentiel unite signifie :
+
+- que l'unité doit être présente dans ce référentiel,
+
+- que l'on ne pourra pas supprimer une unité du référentiel si on y a fait référence.
+
+On aurait pu rajouter des responsables de site et de région, des descriptions des variables, des intervalles de valeurs...
+
+Ainsi nous avons pu faire une analyse de notre domaine et le format des fichiers qui s'y rapportent. Nous pouvons commencer l'écriture du fichier de configuration.

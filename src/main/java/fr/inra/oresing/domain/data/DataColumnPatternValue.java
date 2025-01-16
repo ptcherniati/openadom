@@ -3,9 +3,11 @@ package fr.inra.oresing.domain.data;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.column.Column;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -23,11 +25,12 @@ public record DataColumnPatternValue(
     public PatternType getValuesToCheck() {
         Map<String, FieldType> valuesToCheck = values().entrySet()
                 .stream().collect(Collectors.toMap(e -> e.getKey().column(), e -> e.getValue().getValuesToCheck()));
-        return new PatternType<String, FieldType>(valuesToCheck);
+        return new PatternType<>(valuesToCheck);
     }
 
     @Override
     public DataColumnPatternValue transform(final Function<FieldType, FieldType> transformation) {
+        transformation.apply(values().get(new DataColumn(Column.__VALUE__)).getValuesToCheck());
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
         return new DataColumnPatternValue((FieldType) null);
     }
@@ -50,21 +53,32 @@ public record DataColumnPatternValue(
     }
 
     private Map<String, Object> toStringStringMap() {
-        final Map<String, Object> jsonForDatabase = values.entrySet().stream()
+        return values.entrySet().stream()
                 .collect(Collectors.toMap(entry -> entry.getKey().column(), entry -> {
                     Object value = entry.getValue().toJsonForDatabase();
                     return switch (value) {
                         case IntegerType integerType -> integerType.getValue();
                         case BooleanType booleanType -> booleanType.getValue();
                         case FloatType floatType -> floatType.getValue();
-                        case NullType nullType -> null;
+                        case NullType nullType -> Optional.empty();
                         default -> value;
                     };
                 }));
-        return jsonForDatabase;
     }
 
     public void put(DataColumn secondPatternOfColumn, DataColumnValue valueToStoreInDatabase) {
         values().put(secondPatternOfColumn, valueToStoreInDatabase);
+    }
+
+    public Map<String, Object> toObjectsExposedInGroovyContext() {
+        Map<String, Object> result = new HashMap<>();
+        for (Map.Entry<DataColumn, DataColumnValue> dataColumnDataColumnValueEntry : values.entrySet()) {
+                final Object valueThatMayBeNull = Optional.ofNullable(dataColumnDataColumnValueEntry.getValue())
+                        .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
+                        .map(Object::toString)
+                        .orElse(null);
+                result.put(dataColumnDataColumnValueEntry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+        }
+        return result;
     }
 }

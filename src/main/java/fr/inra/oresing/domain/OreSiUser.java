@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain;
 
-import fr.inra.oresing.domain.application.Application;
 import lombok.Getter;
 import lombok.Setter;
 

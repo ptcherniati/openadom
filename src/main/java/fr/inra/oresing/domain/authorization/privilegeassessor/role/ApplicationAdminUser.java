@@ -5,13 +5,11 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.IllegalRoleToBeGranted;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.IllegalUserToBeGranted;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 public record ApplicationAdminUser(Application application) implements ApplicationManager {
     @Override
@@ -24,7 +22,7 @@ public record ApplicationAdminUser(Application application) implements Applicati
                 .map(OreSiUser::getChartes)
                 .map(chartes -> chartes.get(application().getId().toString()))
                 .isEmpty()) {
-            throw new IllegalUserToBeGranted(user, application().getName());
+            throw new IllegalUserToBeGranted(Objects.requireNonNull(user), application().getName());
         }
         OreSiRightOnApplicationRole userManager = OreSiRightOnApplicationRole.userAdminOn(application());
         OreSiRightOnApplicationRole applicationManager = OreSiRightOnApplicationRole.adminOn(application());

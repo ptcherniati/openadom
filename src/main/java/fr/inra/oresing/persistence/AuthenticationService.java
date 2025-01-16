@@ -14,6 +14,8 @@ import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.domain.exceptions.authentication.authentication.NotopenAdomAdminException;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.model.authorization.LoginApplicationResult;
+import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.services.ServiceContainerBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -32,9 +34,8 @@ import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
-public class AuthenticationService {
-    @Autowired
-    EmailService emailService;
+public class AuthenticationService implements ServiceContainerBean {
+    private ServiceContainer serviceContainer;
 
     @Autowired
     private UserRepository userRepository;
@@ -50,8 +51,7 @@ public class AuthenticationService {
 
     private static String generateVerificationKey(final OreSiUser oreSiUser) {
         final String s = oreSiUser.getEmail() + oreSiUser.getPassword() + oreSiUser.getCreationDate().toString();
-        final String validationKey = (Math.abs(s.hashCode() * 15621646) + "454996856456").substring(0, 10);
-        return validationKey;
+        return (Math.abs(s.hashCode() * 15621646) + "454996856456").substring(0, 10);
     }
 
     private static String getCollectAuthorizationForUser(final OreSiUser oreSiUser) {
@@ -76,6 +76,10 @@ public class AuthenticationService {
         return roleToAccessDatabase;
     }
 
+    public OreSiUser getCurrentUser() {
+        return userRepository.findById(request.getRequestClient().id());
+    }
+
     /**
      * Prend le role du openAdomAdmin qui a le droit de tout faire
      */
@@ -96,13 +100,7 @@ public class AuthenticationService {
     /**
      * verifie que l'utilisateur existe et que son mot de passe est le bon
      *
-     * @param login
-     * @param password
      * @return l'objet OreSiUser contenant les informations sur l'utilisateur identifié
-     * @throws JsonProcessingException
-     * @throws AuthenticationFailure
-     * @throws NoSuchAlgorithmException
-     * @throws InvalidKeySpecException
      */
     @Transactional
     public LoginAdminResult login(final String login, final String password) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
@@ -132,22 +130,21 @@ public class AuthenticationService {
                 .map(UUID::toString)
                 .map(this::getCurrentUserRoles)
                 .orElse(null);
-        LoginAdminResult loginAdminResult = userRepository.findByLogin(login)
+        return userRepository.findByLogin(login)
                 .filter(checkPassword)
                 .map(user -> toLoginResult(user, currentUserRoles))
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
-        return loginAdminResult;
     }
 
-    public OreSiUser sendEmailValidation(final String loginOrEmail, final String password) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException {
+    public OreSiUser sendEmailValidation(final String loginOrEmail, final String password) throws AuthenticationFailure {
         OreSiUser oreSiUser = userRepository.findByLoginOrEmail(loginOrEmail)
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, (LoginAdminResult) null));
         String verificationKey = generateVerificationKey(oreSiUser);
-        emailService.sendEmailValidation(oreSiUser.getLogin(), oreSiUser.getEmail(), verificationKey, EmailService.MESSAGES.NEW_EMAIL);
+        serviceContainer.emailService().sendEmailValidation(oreSiUser.getLogin(), oreSiUser.getEmail(), verificationKey, EmailService.MESSAGES.NEW_EMAIL);
         return oreSiUser;
     }
 
-    public OreSiUser sendEmailValidation(final Optional<OreSiUser> loginResult, final EmailService.MESSAGES messages) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    public OreSiUser sendEmailValidation(final Optional<OreSiUser> loginResult, final EmailService.MESSAGES messages) throws AuthenticationFailure, JsonProcessingException {
         setRoleAdmin();
         final Date updateDate = new Date();
         final OreSiUser oreSiUser = loginResult
@@ -157,7 +154,7 @@ public class AuthenticationService {
         final String verificationKey = generateVerificationKey(oreSiUser);
         userRepository.updateNewDate(oreSiUser, updateDate);
         setRoleForClient();
-        emailService.sendEmailValidation(loginResult.get().getLogin(), loginResult.get().getEmail(), verificationKey, messages);
+        serviceContainer.emailService().sendEmailValidation(loginResult.get().getLogin(), loginResult.get().getEmail(), verificationKey, messages);
         return oreSiUser;
     }
 
@@ -202,11 +199,7 @@ public class AuthenticationService {
     /**
      * Permet de créer un nouvel utilisateur
      *
-     * @param login
-     * @param password
-     * @param email
      * @return l'objet OreSiUser qui vient d'être créé
-     * @throws AuthenticationFailure
      */
     @Transactional
     public CreateUserResult createUser(final String login, final String password, final String email) throws AuthenticationFailure {
@@ -255,12 +248,7 @@ public class AuthenticationService {
         OreSiUser oreSiUser = getOreSiUser(userId);
         final OreSiUserRole roleToModify = getUserRole(userId);
         final OreSiopenAdomAdminRole roleToRevoke = OreSiRole.openAdomAdmin();
-        db.removeUserInRole(roleToModify, new OreSiRoleToBeGranted() {
-            @Override
-            public String getAsSqlRole() {
-                return OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole();
-            }
-        });
+        db.removeUserInRole(roleToModify, OreSiopenAdomAdminRole.openAdomAdmin::getAsSqlRole);
         return userRepository.findById(userId);
     }
 
@@ -270,12 +258,7 @@ public class AuthenticationService {
         OreSiUser oreSiUser = getOreSiUser(userId);
         final OreSiUserRole roleToModify = getUserRole(userId);
         final OreSiopenAdomAdminRole roleToAdd = OreSiRole.openAdomAdmin();
-        db.addUserInRole(roleToModify, new OreSiRoleToBeGranted() {
-            @Override
-            public String getAsSqlRole() {
-                return OreSiopenAdomAdminRole.openAdomAdmin.getAsSqlRole();
-            }
-        });
+        db.addUserInRole(roleToModify, OreSiopenAdomAdminRole.openAdomAdmin::getAsSqlRole);
         return userRepository.findById(userId);
     }
 
@@ -293,12 +276,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                userId::toString,
                 expression,
                 null
         );
@@ -330,12 +308,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                userId::toString,
                 expression,
                 null
         );
@@ -358,12 +331,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                userId::toString,
                 expression,
                 null
         );
@@ -387,12 +355,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                userId::toString,
                 expression,
                 null
         );
@@ -419,12 +382,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                userId::toString,
                 expression,
                 null
         );
@@ -447,12 +405,7 @@ public class AuthenticationService {
                 OreSiSqlSchema.application(),
                 SqlPolicy.PermissiveOrRestrictive.RESTRICTIVE,
                 List.of(SqlPolicy.Statement.ALL),
-                new OreSiRole() {
-                    @Override
-                    public String getAsSqlRole() {
-                        return userId.toString();
-                    }
-                },
+                userId::toString,
                 expression,
                 null
         );
@@ -514,7 +467,6 @@ public class AuthenticationService {
                     .map(oreSiUser -> {
                         Optional<Timestamp> timestampOpt = Optional.ofNullable(oreSiUser.getChartes())
                                 .map(getCharteTimestamp);
-                        ;
                         CurrentUserRoles currentUserRoles = getCurrentUserRoles(oreSiUser.getId().toString());
                         return new LoginApplicationResult(
                                 application.getName(),
@@ -580,7 +532,7 @@ public class AuthenticationService {
     public OreSiUser getByIdOrLogin(final String userIdOrLogin) {
         return userRepository.findByLogin(userIdOrLogin)
                 .orElseGet(() -> {
-                    UUID id = null;
+                    UUID id;
                     try {
                         id = UUID.fromString(userIdOrLogin);
                     } catch (Exception e) {
@@ -645,7 +597,7 @@ public class AuthenticationService {
                 .orElse(new OreSiUser());
     }
 
-    private OreSiUser sendValidationKey(final Optional<OreSiUser> loginResult) throws NoSuchAlgorithmException, InvalidKeySpecException, AuthenticationFailure, JsonProcessingException {
+    private OreSiUser sendValidationKey(final Optional<OreSiUser> loginResult) throws AuthenticationFailure, JsonProcessingException {
         return sendEmailValidation(loginResult, EmailService.MESSAGES.VALIDATION_KEY);
     }
 
@@ -665,7 +617,7 @@ public class AuthenticationService {
         return update;
     }
 
-    private OreSiUser updateAccount(final OreSiUser user, final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    private OreSiUser updateAccount(final OreSiUser user, final CreateUserRequest createUserRequest) throws AuthenticationFailure, JsonProcessingException {
         final String email = Optional.ofNullable(createUserRequest.getEmail())
                 .filter(mail -> !Strings.isNullOrEmpty(mail))
                 .orElse(user.getEmail())
@@ -698,4 +650,7 @@ public class AuthenticationService {
         return user;
     }
 
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
+    }
 }

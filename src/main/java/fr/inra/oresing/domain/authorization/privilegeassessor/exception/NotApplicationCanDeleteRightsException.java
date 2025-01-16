@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 public class NotApplicationCanDeleteRightsException extends OreSiTechnicalException {
-    public final static String NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION = "NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION";
+    public static final String NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION = "NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION";
     final String applicationName;
     final String dataType;
     final List<Authorization> authorizationsRestrictions;

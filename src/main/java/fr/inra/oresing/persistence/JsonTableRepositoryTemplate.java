@@ -4,14 +4,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
 import fr.inra.oresing.domain.OreSiEntity;
-import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.persistence.requestBuilder.data.DataRequestBuilder;
-import fr.inra.oresing.persistence.requestBuilder.data.SqlRequest;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -71,18 +66,6 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
             try{
                 uuids.addAll(namedParameterJdbcTemplate.queryForList(
                         query, new MapSqlParameterSource("json", json), UUID.class));
-            }catch (final BadSqlGrammarException bsge){
-                Pattern pattern = Pattern.compile(".*new row violates row-level security policy for.*\"(.*)\".*", Pattern.DOTALL);
-                Matcher matcher = pattern.matcher(Objects.requireNonNull(bsge.getMessage()));
-                Matcher matcher2 = pattern.matcher(Objects.requireNonNull(bsge.getCause().getMessage()));
-                if(matcher.matches() ){
-                    String table = matcher.group(1);
-                    throw SiOreIllegalArgumentException.noRightOnTable(table);
-                }else if(matcher2.matches()){
-                    String table = matcher2.group(1);
-                    throw SiOreIllegalArgumentException.noRightOnTable(table);
-                }
-                throw bsge;
             } catch (final Exception e) {
                 Pattern pattern = Pattern.compile(".*new row violates row-level security policy for.*\"(.*)\".*", Pattern.DOTALL);
                 Matcher matcher = pattern.matcher(Objects.requireNonNull(e.getMessage()));
@@ -147,8 +130,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
     public Optional<T> tryFindById(final UUID id) {
         Preconditions.checkArgument(id != null);
         final String query = String.format("SELECT '%s' as \"@class\", to_jsonb(t) as json FROM %s t WHERE id = :id", getEntityClass().getName(), getTable().getSqlIdentifier());
-        final Optional<T> result = (Optional<T>) namedParameterJdbcTemplate.query(query, new MapSqlParameterSource("id", id), jsonRowMapper).stream().findFirst();
-        return result;
+        return namedParameterJdbcTemplate.query(query, new MapSqlParameterSource("id", id), jsonRowMapper).stream().findFirst();
     }
 
     protected abstract Class<T> getEntityClass();
@@ -170,8 +152,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
             sql += " WHERE " + whereClause;
         }
         final String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
-        final List<T> result = (List<T>) namedParameterJdbcTemplate.query(query, sqlParameterSource, jsonRowMapper);
-        return result;
+        return namedParameterJdbcTemplate.query(query, sqlParameterSource, jsonRowMapper);
     }
 
     protected Stream<T> findStream(final String whereClause, final SqlParameterSource sqlParameterSource) {
@@ -180,8 +161,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
             sql += " WHERE " + whereClause;
         }
         final String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
-        final Stream<T> result = (Stream<T>) namedParameterJdbcTemplate.queryForStream(query, sqlParameterSource, jsonRowMapper);
-        return result;
+        return namedParameterJdbcTemplate.queryForStream(query, sqlParameterSource, jsonRowMapper);
     }
 
     public void flush() {

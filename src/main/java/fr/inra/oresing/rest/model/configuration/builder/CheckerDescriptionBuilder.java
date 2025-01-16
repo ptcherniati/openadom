@@ -3,8 +3,6 @@ package fr.inra.oresing.rest.model.configuration.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
-import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
-import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.checker.*;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.type.CheckerEnum;
@@ -29,7 +27,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
             final String dataKey) {
         if (checkerNode == null || checkerNode.isMissingNode()) {
             if (required) {
-                return new Parsing<>(i18n, new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, required, null));
+                return new Parsing<>(i18n, new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, true, null));
             }
             return new Parsing<>(i18n, null);
         }
@@ -69,16 +67,12 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
 
         Parsing<Set<String>> exceptionMessagesParsing = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS))
                 .map(exceptionsNode -> buildMessagesExceptions(localI18n, dataKey, componentKey, path, exceptionsNode))
-                .orElse(new Parsing<Set<String>>(localI18n, Set.of()));
+                .orElse(new Parsing<>(localI18n, Set.of()));
         i18n = exceptionMessagesParsing.i18n();
         final Multiplicity multiplicity = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_MULTIPLICITY))
                 .map(multi -> rootBuilder.getMapper().convertValue(multi, Multiplicity.class))
                 .orElse(Multiplicity.ONE);
         final CheckerDescription checkerDescription = switch (name) {
-            case null -> new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker,
-                    multiplicity,
-                    required,
-                    "");
             case OA_reference -> {
                 String reference = params.findPath(ConfigurationSchemaNode.OA_REFERENCE)
                         .findPath(ConfigurationSchemaNode.OA_NAME)
@@ -115,7 +109,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                         .map(j -> j.get(ConfigurationSchemaNode.OA_IS_PARENT))
                         .map(JsonNode::asBoolean)
                         .orElse(false);
-                final Boolean isrecursive = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_REFERENCE))
+                final boolean isrecursive = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_REFERENCE))
                         .map(j -> j.get(ConfigurationSchemaNode.OA_IS_RECURSIVE))
                         .map(JsonNode::asBoolean)
                         .orElse(isParent && reference.equals(dataKey));
@@ -126,7 +120,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                         required,
                         reference,
                         isrecursive,
-                        isParent = isParent || isrecursive);
+                        isParent || isrecursive);
             }
             case OA_date -> {
                 final DatePattern<TemporalAccessor> datePattern;
@@ -155,7 +149,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                         .map(JsonNode::asText);
                 final Optional<String> duration = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_DURATION))
                         .map(JsonNode::asText);
-                final String durationRegex = "^(?!.*(second|minute|hour|day|week|month|year).*\1)\\d+\s+(?:second|minute|hour|day|week|month|year)s?(?: +\\d+\s+(?:second|minute|hour|day|week|month|year)s?)*$";
+                final String durationRegex = "^(?!.*(second|minute|hour|day|week|month|year).*\1)\\d+ +(?:second|minute|hour|day|week|month|year)s?(?: +\\d+ +(?:second|minute|hour|day|week|month|year)s?)*$";
                 if (!duration.isEmpty() && !duration.get().toLowerCase().matches(durationRegex)) {
                     rootBuilder.buildError(ConfigurationException.INVALID_DURATION_CHECKER_DATE, Map.of(
                                     "declaredDuration", duration.get()),
@@ -168,7 +162,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                 }
                 try {
                     final TemporalAccessor minDate = min
-                            .map(datePattern::format)
+                            .map(Objects.requireNonNull(datePattern)::format)
                             .orElse(LocalDateTime.MIN);
                     final TemporalAccessor maxDate = max
                             .map(datePattern::format)
@@ -183,9 +177,9 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                             duration.orElse(null));
                 } catch (final Exception exception) {
                     rootBuilder.buildError(ConfigurationException.INVALID_MIN_MAX_FOR_CHECKER_DATE, Map.of(
-                                    "declaredPattern", datePattern.pattern(),
-                                    "declaredMinValue", min.get().toString(),
-                                    "declaredMaxValue", max.get().toString()),
+                                    "declaredPattern", Objects.requireNonNull(datePattern).pattern(),
+                                    "declaredMinValue", Objects.requireNonNull(min.orElse(null)),
+                                    "declaredMaxValue", Objects.requireNonNull(max.orElse(null))),
                             NodeSchemaValidator.joinPath(
                                     path,
                                     ConfigurationSchemaNode.OA_CHECKER,
@@ -284,10 +278,10 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
         if (dataKey != null) {
             rootBuilder.getCheckers().computeIfAbsent(
                             checkerDescription.type(),
-                            k -> new HashMap<String, Map<String, List<CheckerDescription>>>()
+                            k -> new HashMap<>()
                     )
-                    .computeIfAbsent(dataKey, k -> new HashMap<String, List<CheckerDescription>>())
-                    .computeIfAbsent(componentKey, k -> new ArrayList<CheckerDescription>())
+                    .computeIfAbsent(dataKey, k -> new HashMap<>())
+                    .computeIfAbsent(componentKey, k -> new ArrayList<>())
                     .add(checkerDescription);
         }
         return new Parsing<>(i18n, checkerDescription);
@@ -332,6 +326,6 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                 exceptionMessages.add(key);
             }
         }
-        return new Parsing<Set<String>>(i18n, exceptionMessages);
+        return new Parsing<>(i18n, exceptionMessages);
     }
 }

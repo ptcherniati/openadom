@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.data.deposit.validation.validationcheckresults;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.SetMultimap;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.CheckerTarget;

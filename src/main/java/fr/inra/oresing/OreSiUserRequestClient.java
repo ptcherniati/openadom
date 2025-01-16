@@ -7,7 +7,6 @@ import java.util.UUID;
 public record OreSiUserRequestClient(UUID id, OreSiUserRole role) implements OreSiRequestClient {
 
     public static OreSiUserRequestClient of(final UUID userId, final OreSiUserRole userRole) {
-        final OreSiUserRequestClient newRequestClient = new OreSiUserRequestClient(userId, userRole);
-        return newRequestClient;
+        return new OreSiUserRequestClient(userId, userRole);
     }
 }

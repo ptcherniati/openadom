@@ -2,7 +2,6 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
@@ -30,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -80,7 +80,7 @@ public class Fixtures {
     }
 
     public String getIdFromApplicationResult(final MvcResult result) throws UnsupportedEncodingException {
-        return (String) getResults(result).get(0).result();
+        return (String) getResults(result).getFirst().result();
 
     }
 
@@ -115,14 +115,11 @@ public class Fixtures {
                         Collectors.groupingBy(
                                 m -> ReactiveType.valueOf((String) m.get("type")),
                                 Collectors.collectingAndThen(Collectors.toList(),
-                                        list -> list.stream().map(el -> {
-                                            final ReactiveResult rr = switch (ReactiveType.valueOf((String) el.get("type"))) {
-                                                case REACTIVE_RESULT -> new ReactiveTypeResult(el.get("result"));
-                                                case REACTIVE_INFO -> new ReactiveTypeInfo(el.get("result"));
-                                                case REACTIVE_ERROR -> new ReactiveTypeError(el.get("result"));
-                                                case REACTIVE_PROGRESS -> new ReactiveTypeProgress(el.get("result"));
-                                            };
-                                            return rr;
+                                        list -> list.stream().map(el -> switch (ReactiveType.valueOf((String) el.get("type"))) {
+                                            case REACTIVE_RESULT -> new ReactiveTypeResult(el.get("result"));
+                                            case REACTIVE_INFO -> new ReactiveTypeInfo(el.get("result"));
+                                            case REACTIVE_ERROR -> new ReactiveTypeError(el.get("result"));
+                                            case REACTIVE_PROGRESS -> new ReactiveTypeProgress(el.get("result"));
                                         }).collect(Collectors.toList())))
                 );
     }
@@ -454,10 +451,10 @@ public class Fixtures {
 
     public static Map<String, List<String>> getRepeatedColumnsgWithAllowUnexpectedColumnsDataErrorsStringReplace() {
         final Map<String, List<String>> DataTypeErrors = new LinkedHashMap<>();
-        DataTypeErrors.put("unexpectedHeaderColumnsInList", List.of(
+        DataTypeErrors.put("missingMandatoryColumns", List.of(
                 "\"Nom parcelle\";\"Nom traitement\";\"Date\";\"Time\";\"SWC_1_15\";\"qc\";\"SWC_2_15\";\"qc\";\"SWC_1_45\";\"qc\";\"SWC_2_45\";\"qc\";\"SWC_1_75\";\"qc\";\"SWC_2_75\";\"qc\";\"SWC_1_105\";\"qc\";\"SWC_2_105\";\"qc\";\"SWC_1_135\";\"qc\";\"SWC_2_135\";\"qc\";\"SWC_1_165\";\"qc\";\"SWC_2_165\";\"qc\";\"SWC_1_195\";\"qc\";\"SWC_2_195\";\"qc\";\"SWC_1_235\";\"qc\";\"DateTime\";\"SWC_2_235\";\"qc\"",
                 "\"Nom parcelle\";\"Nom traitement\";\"Dates\";\"Time\";\"SWC_1_15\";\"qc\";\"SWC_2_15\";\"qc\";\"SWC_1_45\";\"qc\";\"SWC_2_45\";\"qc\";\"SWC_1_75\";\"qc\";\"SWC_2_75\";\"qc\";\"SWC_1_105\";\"qc\";\"SWC_2_105\";\"qc\";\"SWC_1_135\";\"qc\";\"SWC_2_135\";\"qc\";\"SWC_1_165\";\"qc\";\"SWC_2_165\";\"qc\";\"SWC_1_195\";\"qc\";\"SWC_2_195\";\"qc\";\"SWC_1_235\";\"qc\";\"DateTime\";\"SWC_2_235\";\"qc\"",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"unexpectedHeaderColumn\",\"messageParams\":{\"actualHeaderColumns\":[{\"Nom parcelle\":\"estreesmons.estreesmons__a06\"},{\"Nom traitement\":\"T3\"},{\"Dates\":\"01/07/2010\"},{\"Time\":\"00:00\"},{\"SWC_1_15\":\"8.50\"},{\"qc\":\"0\"},{\"SWC_2_15\":\"\"},{\"qc\":\"\"},{\"SWC_1_45\":\"16.96\"},{\"qc\":\"0\"},{\"SWC_2_45\":\"\"},{\"qc\":\"\"},{\"SWC_1_75\":\"28.98\"},{\"qc\":\"0\"},{\"SWC_2_75\":\"\"},{\"qc\":\"\"},{\"SWC_1_105\":\"30.14\"},{\"qc\":\"0\"},{\"SWC_2_105\":\"\"},{\"qc\":\"\"},{\"SWC_1_135\":\"32.18\"},{\"qc\":\"0\"},{\"SWC_2_135\":\"\"},{\"qc\":\"\"},{\"SWC_1_165\":\"32.01\"},{\"qc\":\"0\"},{\"SWC_2_165\":\"\"},{\"qc\":\"\"},{\"SWC_1_195\":\"32.18\"},{\"qc\":\"0\"},{\"SWC_2_195\":\"\"},{\"qc\":\"\"},{\"SWC_1_235\":\"35.43\"},{\"qc\":\"0\"},{\"DateTime\":\"01/07/2010\"},{\"SWC_2_235\":\"\"},{\"qc\":\"\"}],\"expectedHeaderColumn\":\"Date\"},\"target\":null},\"lineNumber\":7}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"missingMandatoryColumns\",\"messageParams\":{\"missingMandatoryColumns\":[\"Date\"]},\"target\":null},\"lineNumber\":7}]"
         ));
         return DataTypeErrors;
     }
@@ -477,8 +474,8 @@ public class Fixtures {
         return referentielFiles;
     }
 
-    public static String getSWCRepositoryResourceName(final String localization) {
-        return String.format("/data/repeatedcolumns/SWC_truncated.csv", localization);
+    public static String getSWCRepositoryResourceName() {
+        return String.format("/data/repeatedcolumns/SWC_truncated.csv");
     }
 
     public static Map<String, List<String>> getRepeatedColumnsDataErrorsStringReplace() {
@@ -486,7 +483,7 @@ public class Fixtures {
         DataTypeErrors.put("unexpectedHeaderColumnsInList", List.of(
                 "\"Nom parcelle\";\"Nom traitement\";\"Date\";\"Time\";\"SWC_1_15\";\"qc\";\"SWC_2_15\";\"qc\";\"SWC_1_45\";\"qc\";\"SWC_2_45\";\"qc\";\"SWC_1_75\";\"qc\";\"SWC_2_75\";\"qc\";\"SWC_1_105\";\"qc\";\"SWC_2_105\";\"qc\";\"SWC_1_135\";\"qc\";\"SWC_2_135\";\"qc\";\"SWC_1_165\";\"qc\";\"SWC_2_165\";\"qc\";\"SWC_1_195\";\"qc\";\"SWC_2_195\";\"qc\";\"SWC_1_235\";\"qc\";\"DateTime\";\"SWC_2_235\";\"qc\"",
                 "\"Nom parcelle\";\"Nom traitement\";\"Dates\";\"Time\";\"SWC_1_15\";\"qc\";\"SWC_2_15\";\"qc\";\"SWC_1_45\";\"qc\";\"SWC_2_45\";\"qc\";\"SWC_1_75\";\"qc\";\"SWC_2_75\";\"qc\";\"SWC_1_105\";\"qc\";\"SWC_2_105\";\"qc\";\"SWC_1_135\";\"qc\";\"SWC_2_135\";\"qc\";\"SWC_1_165\";\"qc\";\"SWC_2_165\";\"qc\";\"SWC_1_195\";\"qc\";\"SWC_2_195\";\"qc\";\"SWC_1_235\";\"qc\";\"DateTime\";\"SWC_2_235\";\"qc\"",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"unexpectedHeaderColumn\",\"messageParams\":{\"actualHeaderColumn\":\"Dates\",\"expectedHeaderColumn\":\"Date\"},\"target\":null},\"lineNumber\":7}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"missingMandatoryColumns\",\"messageParams\":{\"missingMandatoryColumns\":[\"Date\"]},\"target\":null},\"lineNumber\":7}]"
         ));
         return DataTypeErrors;
     }
@@ -509,8 +506,8 @@ public class Fixtures {
         final Map<String, List<String>> referentielErrors = new LinkedHashMap<>();
         referentielErrors.put("invalidHeaders", List.of(
                 "définition_en",
-                "définition_es",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"nom de la propriété_key\",\"isFloatValue\",\"isQualitative\",\"ordre d'affichage\"],\"actualColumns\":[\"Date\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_es\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingComponents\":[\"définition_en\"],\"unknownComponent\":[\"définition_es\"]},\"target\":null},\"lineNumber\":1}]"
+                "définition_en;définition_es",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"isQualitative\",\"nom de la propriété_key\",\"ordre d'affichage\"],\"actualColumns\":[\"Date\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_en\",\"définition_es\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingComponents\":[],\"unknownComponents\":[\"définition_es\"]},\"target\":null},\"lineNumber\":1}]"
         ));
         referentielErrors.put("emptyHeader", List.of(
                 "définition_en",
@@ -519,44 +516,44 @@ public class Fixtures {
         ));
         referentielErrors.put("duplicatedHeaders", List.of(
                 "définition_en",
-                "définition_fr",
+                "définition_en;définition_fr",
                 "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedHeaders\",\"messageParams\":{\"duplicatedHeaders\":[\"définition_fr\"]},\"target\":null},\"lineNumber\":1}]"
         ));
-        referentielErrors.put("invalidDateWithColumn", List.of(
+        referentielErrors.put("invalidDateWithComponent", List.of(
                 "02/01/2016",
                 "01/01/16",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithColumn\",\"messageParams\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\"},\"target\":{\"column\":\"date\"},\"date\":null,\"localDateTime\":null},\"lineNumber\":2}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithComponent\",\"messageParams\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\"},\"target\":{\"column\":\"date\"},\"date\":null,\"localDateTime\":null,\"value\":null},\"lineNumber\":2}]"
         ));
         referentielErrors.put("invalidFloatWithColumn", List.of(
                 "55,22",
                 "x",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloatWithColumn\",\"messageParams\":{\"target\":{\"column\":\"is_float_value\"},\"value\":\"x\"},\"target\":{\"column\":\"is_float_value\"}},\"lineNumber\":5}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloatWithComponent\",\"messageParams\":{\"target\":{\"column\":\"isFloatValue\"},\"value\":\"x\"},\"target\":{\"column\":\"isFloatValue\"},\"value\":null},\"lineNumber\":5}]"
         ));
-        referentielErrors.put("invalidIntegerWithColumn", List.of(
+        referentielErrors.put("invalidIntegerWithComponent", List.of(
                 "4",
                 "x",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloatWithColumn\",\"messageParams\":{\"target\":{\"column\":\"ordre_affichage\"},\"value\":\"x\"},\"target\":{\"column\":\"ordre_affichage\"}},\"lineNumber\":5}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidIntegerWithComponent\",\"messageParams\":{\"target\":{\"column\":\"ordre_affichage\"},\"value\":\"x\"},\"target\":{\"column\":\"ordre_affichage\"},\"value\":null},\"lineNumber\":5}]"
         ));
         referentielErrors.put("duplicatedLineInReference", List.of(
                 "01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;39,22;false;Phytoplancton;38",
                 "01/01/2016;Notes libres;Notes libres;Free notes;;;39,22;false;Phytoplancton;39",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInReference\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"notes_libres\"},\"target\":null},\"lineNumber\":40}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInReference\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"proprietes_taxonKnotes_libres\"},\"target\":null},\"lineNumber\":40}]"
         ));
         // me renvois une erreur "invalidHeaders"
         referentielErrors.put("unexpectedHeaderColumn", List.of(
-                "Date;nom de la propriété_key;nom de la propriété_fr;nom de la propriété_en;définition_fr;définition_en;isFloatValue;isQualitative;type associé;ordre d'affichage",
-                "martin",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"nom de la propriété_key\",\"isFloatValue\",\"isQualitative\",\"ordre d'affichage\"],\"actualColumns\":[\"martin\",\"site\"],\"missingComponents\":[\"Date\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"nom de la propriété_key\",\"isFloatValue\",\"isQualitative\",\"ordre d'affichage\"],\"unknownComponent\":[\"martin\"]},\"target\":null},\"lineNumber\":1}]"
+                "Date",
+                "Date;martin",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"isQualitative\",\"nom de la propriété_key\",\"ordre d'affichage\"],\"actualColumns\":[\"Date\",\"martin\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_en\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingComponents\":[],\"unknownComponents\":[\"martin\"]},\"target\":null},\"lineNumber\":1}]"
         ));
-        referentielErrors.put("invalidReferenceWithColumn", List.of(
+        referentielErrors.put("invalidReferenceWithComponent", List.of(
                 "38;",
                 "38;martin",
-                "[{\"validationCheckResult\":{\"target\":{\"column\":\"site\"},\"level\":\"ERROR\",\"rawValue\":\"martin\",\"matchedReferenceHierarchicalKey\":null,\"message\":\"invalidReferenceWithColumn\",\"messageParams\":{\"target\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"}},\"lineNumber\":39}]"
+                "[{\"validationCheckResult\":{\"target\":{\"column\":\"site\"},\"level\":\"ERROR\",\"rawValue\":\"martin\",\"matchedReferenceHierarchicalKey\":null,\"message\":\"invalidReferenceWithComponent\",\"messageParams\":{\"target\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"},\"value\":{\"refType\":\"site\",\"referenceValues\":{},\"value\":{\"sql\":\"martin\"},\"hierarchicalKey\":{\"sql\":\"martin\"},\"sqlType\":\"LTREE\"}},\"lineNumber\":39}]"
         ));
-        referentielErrors.put("patternNotMatchedWithColumn", List.of(
+        referentielErrors.put("patternNotMatchedWithComponent", List.of(
                 "02/01/2016",
                 "12:00:00",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithColumn\",\"messageParams\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"target\":{\"column\":\"date\"},\"date\":null,\"localDateTime\":null},\"lineNumber\":2}]"
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithComponent\",\"messageParams\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"target\":{\"column\":\"date\"},\"date\":null,\"localDateTime\":null,\"value\":null},\"lineNumber\":2}]"
         ));
         return referentielErrors;
     }
@@ -565,29 +562,29 @@ public class Fixtures {
         final Map<String, List<String>> DataTypeErrors = new LinkedHashMap<>();
         // problème liste de site non fixe donc le test ne passe pas mais le message d'erreur est bon
         DataTypeErrors.put("invalidDate", List.of(
-                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
-                "suivi des lacs;leman;SHL2;x16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDate\",\"messageParams\":{\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"x16/12/2020\"},\"target\":{\"variable\":\"date\",\"component\":\"day\",\"id\":\"date_day\"},\"date\":null,\"localDateTime\":null},\"lineNumber\":17}]"
+                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "suivi des lacs;leman;SHL2;x24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithComponent\",\"messageParams\":{\"target\":{\"column\":\"date_day\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"x24/02/2020\"},\"target\":{\"column\":\"date_day\"},\"date\":null,\"localDateTime\":null,\"value\":null},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("invalidInt", List.of(
-                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
-                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6.0;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloat\",\"messageParams\":{\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"temperature de l'air\",\"id\":\"valeurs quantitatives_temperature de l'air\"},\"value\":\"6.0\"},\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"temperature de l'air\",\"id\":\"valeurs quantitatives_temperature de l'air\"}},\"lineNumber\":17}]"
+                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;x8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidIntegerWithComponent\",\"messageParams\":{\"target\":{\"column\":\"temperatureDeLAir\"},\"value\":\"x8\"},\"target\":{\"column\":\"temperatureDeLAir\"},\"value\":null},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("invalidFloat", List.of(
-                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
-                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8x;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloat\",\"messageParams\":{\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"transparence par secchi\",\"id\":\"valeurs quantitatives_transparence par secchi\"},\"value\":\"7.8x\"},\"target\":{\"variable\":\"valeurs quantitatives\",\"component\":\"transparence par secchi\",\"id\":\"valeurs quantitatives_transparence par secchi\"}},\"lineNumber\":17}]"
+                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;x10;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloatWithComponent\",\"messageParams\":{\"target\":{\"column\":\"transparenceParSecchi\"},\"value\":\"x10\"},\"target\":{\"column\":\"transparenceParSecchi\"},\"value\":null},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("requiredValue", List.of(
-                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
-                "suivi des lacs;;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"requiredValue\",\"messageParams\":{\"target\":{\"variable\":\"site\",\"component\":\"nom du site\",\"id\":\"site_nom du site\"}},\"target\":{\"variable\":\"site\",\"component\":\"nom du site\",\"id\":\"site_nom du site\"}},\"lineNumber\":17}]"
+                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "suivi des lacs;leman;SHL2;;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"requiredValueWithComponent\",\"messageParams\":{\"target\":{\"column\":\"date_day\"}}},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("duplicatedLineInDatatype", List.of(
-                "suivi des lacs;leman;SHL2;18/11/2020;09:15:00;Octeau tract� par Daphnie;12;5;ensoleille;clair;W;2;983;petites vagues;branches;;5.2;vert-jaune",
-                "suivi des lacs;leman;SHL2;16/12/2020;09:15:00;Octeau tract� par Daphnie;6;7;ombre;brume;E;0.4;974;petites vagues;feuilles;;7.8;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInDatatype\",\"messageParams\":{\"file\":\"condition_prelevements\",\"duplicatedRows\":[16,17],\"uniquenessKey\":{\"date_time\":{\"pattern\":\"HH:mm:ss\",\"duration\":null,\"sortableDate\":null,\"minDate\":null,\"maxDate\":null,\"value\":[1970,1,1,9,15],\"sqlType\":\"TEXT\"},\"date_day\":{\"pattern\":\"dd/MM/yyyy\",\"duration\":null,\"sortableDate\":null,\"minDate\":null,\"maxDate\":null,\"value\":[2020,12,16,0,0],\"sqlType\":\"TEXT\"},\"site_nom du site\":{\"refType\":\"site\",[\"aiguebelette\",\"annecy\",\"anterne\",\"aratilles\",\"arbu\",\"arpont\",\"aumar\",\"barroude\",\"blanc_du_bramant\",\"blanc_du_carro\",\"bourget\",\"bramant\",\"bresses_inferieur\",\"bresses_superieur\",\"brevent\",\"corne\",\"cornu\",\"cos\",\"dranse\",\"espingo\",\"estany_gros\",\"gentau\",\"gourg_gaudet\",\"isaby\",\"izourt\",\"jovet\",\"lauzanier\",\"leman\",\"malrif\",\"mercube\",\"merlet_superieur\",\"mont_coua\",\"muzelle\",\"noir_du_carro\",\"oncet\",\"pave\",\"petarel\",\"pisses\",\"plan_vianney\",\"pormenaz\",\"port___bielh\",\"port_bielh\",\"rabuons\"],\"value\":{\"sql\":\"leman\"},\"sqlType\":\"LTREE\"}}},\"target\":null},\"lineNumber\":16}]"
+                "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "suivi des lacs;leman;SHL2;22/01/2020;08:45:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
+                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInReference\",\"messageParams\":{\"file\":\"condition_prelevements\",\"lineNumber\":3,\"otherLines\":[2,3],\"duplicateKey\":\"condition_prelevementsK22_01_2020__08COLON45COLON00__leman\"},\"target\":null},\"lineNumber\":3}]"
         ));
         return DataTypeErrors;
     }
@@ -629,10 +626,10 @@ public class Fixtures {
         final String resourceName = "/data/acbb/SWC.csv";
         if (truncated) {
             try {
-                final String collect = Resources.asCharSource(Objects.requireNonNull(getClass().getResource(resourceName)), Charsets.UTF_8).lines()
+                final String collect = Resources.asCharSource(Objects.requireNonNull(getClass().getResource(resourceName)), StandardCharsets.UTF_8).lines()
                         .limit(100)
                         .collect(Collectors.joining("\n"));
-                return IOUtils.toInputStream(collect, Charsets.UTF_8);
+                return IOUtils.toInputStream(collect, StandardCharsets.UTF_8);
             } catch (final IOException e) {
                 throw new OreSiTechnicalException("ne devrait pas arriver", e);
             }
@@ -665,18 +662,32 @@ public class Fixtures {
                     .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
         }
         return cookie;
-    }
-
-    @Transactional
+    }@Transactional
     void addRoleAdmin(final CreateUserResult dbUserResult) {
-        namedParameterJdbcTemplate.update("grant \"openAdomAdmin\" to \"" + dbUserResult.userId().toString() + "\" WITH INHERIT TRUE", Map.of());
-    }
+        String sql = """
+        GRANT "openAdomAdmin" TO :userId WITH INHERIT TRUE
+        """;
 
+        namedParameterJdbcTemplate.update(
+                sql,
+                Map.of("userId", dbUserResult.userId().toString())
+        );
+    }
 
     @Transactional
     void setToActive(final UUID userId) {
-        namedParameterJdbcTemplate.update("update public.OreSiUser set accountstate = 'active' where id = :id", Map.of("id", userId));
+        String sql = """
+        UPDATE public.OreSiUser 
+        SET accountstate = 'active' 
+        WHERE id = :id
+        """;
+
+        namedParameterJdbcTemplate.update(
+                sql,
+                Map.of("id", userId)
+        );
     }
+
 
     public Cookie addApplicationCreatorUser(final String applicationPattern) throws Exception {
         if (cookie == null) {
@@ -692,8 +703,7 @@ public class Fixtures {
             cookie = response.getCookie(AuthHelper.JWT_COOKIE_NAME);
         }
         final String aPassword = "xxxxxxxx";
-        final String aLogin = applicationPattern;
-        final CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword, aLogin + "@inrae.fr");
+        final CreateUserResult createUserResult = authenticationService.createUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
         setToActive(createUserResult.userId());
         UUID userId = createUserResult.userId();
         final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
@@ -708,15 +718,14 @@ public class Fixtures {
         OreSiUser user = userRepository.findById(userId);
         assertTrue(user.getAuthorizations().contains(applicationPattern));
         setToActive(createUserResult.userId());
-        final Cookie applicationCreator = mockMvc.perform(post("/api/v1/login")
-                        .param("login", aLogin)
+        return mockMvc.perform(post("/api/v1/login")
+                        .param("login", applicationPattern)
                         .param("password", aPassword))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
-        return applicationCreator;
     }
 
     public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {
-        MvcResult result = null;
+        MvcResult result;
         try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
             result = loadApplication(configuration, authCookie, (applicationName == null ? "monsore" : applicationName), (applicationName == null ? "monsore" : applicationName));
@@ -1225,7 +1234,7 @@ public class Fixtures {
     }
 
     @Getter
-    enum Application {
+    public enum Application {
         MONSORE("monsore", ImmutableSet.of("pem")),
         ACBB("acbb", ImmutableSet.of("flux_tours", "biomasse_production_teneur", "SWC")),
         //PRO("pros", ImmutableSet.of("donnees_prelevement_pro")),

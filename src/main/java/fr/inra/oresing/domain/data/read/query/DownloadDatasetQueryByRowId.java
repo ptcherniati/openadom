@@ -7,14 +7,14 @@ import org.apache.logging.log4j.util.Strings;
 import java.util.*;
 
 public record DownloadDatasetQueryByRowId(
-        boolean hasPatternDefinition,
         Application application,
         String dataName,
         OutPut outPut,
         Set<String> componentSelects,
         Set<ComponentOrderBy> componentOrderBy,
 
-        Set<DataRowIds> rowIds) implements DownloadDatasetQuery {
+        Set<DataRowIds> rowIds,
+        boolean horizontalDisplay) implements DownloadDatasetQuery {
     public DownloadDatasetQueryByRowId {
         Objects.requireNonNull(application, "You must provide a valide application");
         if(!Strings.isNotEmpty(dataName)){

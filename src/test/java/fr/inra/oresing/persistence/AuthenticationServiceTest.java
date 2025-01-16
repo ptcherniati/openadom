@@ -4,12 +4,14 @@ import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
+import fr.inra.oresing.domain.repository.authorization.role.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.AuthHelper;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import org.hamcrest.Matchers;
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -68,12 +70,13 @@ public class AuthenticationServiceTest {
 
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
     public void testSetRole() {
-        authenticationService.setRole(OreSiRole.anonymous());
+        OreSiRoleToAccessDatabase anonymousRole = authenticationService.setRole(OreSiRole.anonymous());
+        Assertions.assertEquals(OreSiRole.anonymous(), anonymousRole);
     }
 
     @Test
@@ -98,7 +101,7 @@ public class AuthenticationServiceTest {
         assertArrayEquals(new String[]{email}, message.getTo());
         assertEquals(mailFrom, message.getFrom());
         String[] lines = Objects.requireNonNull(message.getText()).split("\n");
-        String validationKey = lines[lines.length - 3];
+        String validationKey = lines[6];
         String user = mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
@@ -109,7 +112,7 @@ public class AuthenticationServiceTest {
         assertEquals(login, loginAdminResult.login());
         final OreSiUserRole userRole = authenticationService.getUserRole(UUID.fromString(id));
 
-        user = mockMvc.perform(put("/api/v1/users")
+        mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"email\": \"" + email + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -118,14 +121,13 @@ public class AuthenticationServiceTest {
         message = messageArgumentCaptor.getValue();
         assertArrayEquals(new String[]{email}, message.getTo());
         assertEquals(mailFrom, message.getFrom());
-        lines = Objects.requireNonNull(message.getText()).split("\n");
-        validationKey = lines[lines.length - 2];
+        Objects.requireNonNull(message.getText()).split("\n");
 
         final String newEmail = "newmail@inrae.fr";
         validationKey = getValidationKey(messageArgumentCaptor, login, password, "pending", newEmail);
 
         //on valide l'email
-        user = mockMvc.perform(put("/api/v1/users")
+        mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -134,7 +136,7 @@ public class AuthenticationServiceTest {
         validationKey = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
         final String validationKey2 = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
         assertEquals(validationKey2, validationKey);
-        user = mockMvc.perform(put("/api/v1/users")
+        mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\"" +
                                 ", \"email\": \"" + newEmail + "\", " +
@@ -163,7 +165,7 @@ public class AuthenticationServiceTest {
         final String user;
         final String validationKey;
         final SimpleMailMessage message;
-        user = mockMvc.perform(put("/api/v1/users")
+        mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"email\": \"" + email + "\", \"password\": \"" + password + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is(expectedState)))

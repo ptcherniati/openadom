@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 
 public record AuthorizationForUser(
         boolean isApplicationCreator,
@@ -58,9 +57,7 @@ public record AuthorizationForUser(
                             .map(ltrees->ltrees.stream().map(Ltree::getSql).toList())
                             .orElse(List.of());
                     return pathesForDatatype.stream()
-                            .anyMatch(path -> Strings.isNullOrEmpty(path) ?
-                                    true :
-                                    authorizationsForDatatype.stream().anyMatch(pathForDatatype->path.equals(path)));
+                            .anyMatch(path -> Strings.isNullOrEmpty(path) || authorizationsForDatatype.stream().anyMatch(path::equals));
                 });
     }
 
@@ -85,7 +82,7 @@ public record AuthorizationForUser(
                 isApplicationCreator
                         || (hasRightForOperationType &&
                         testPredicateForOperationType(operationType,
-                                parsedAuhorizations -> testRequiredAuthorizations(parsedAuhorizations))
+                                this::testRequiredAuthorizations)
                 )) {
             return true;
         }
@@ -109,7 +106,7 @@ public record AuthorizationForUser(
         if (requiredAuthorizationForFile.isPresent()) {
             for (final Map.Entry<String, List<Ltree>> requiredAuthorizationForFileEntry : requiredAuthorizationForFile.get().entrySet()) {
                 final String scope = requiredAuthorizationForFileEntry.getKey();
-                final String ltree = requiredAuthorizationForFileEntry.getValue().get(0).getSql();
+                final String ltree = requiredAuthorizationForFileEntry.getValue().getFirst().getSql();
                 final Set<String> toCompareLtree = requiredAuthorizationInDataBase.getOrDefault(scope, Set.of());
                 return toCompareLtree.stream()
                         .anyMatch(ltreeAuth -> ltree.equals(ltreeAuth) ||

@@ -37,31 +37,28 @@ public class InternationalizationDisplay {
                 .map(ApplicationDescription::defaultLanguage)
                 .orElse(Locale.FRENCH);
         displayPattern
-                .ifPresent(patterns -> {
-                    patterns.getTitle().entrySet()
-                            .forEach(entryByLocale -> {
-                                DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
-                                        StringType.getStringTypeFromStringValue(
-                                                parsePattern(entryByLocale.getValue()).stream()
-                                                        .map(patternSection -> {
-                                                                    String internationalizedPattern = patternSection.text;
-                                                                    if (!Strings.isNullOrEmpty(patternSection.variable)) {
-                                                                        String referencedColumn = patternSection.variable;
-                                                                        internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, entryByLocale.getKey().getDisplayName());
-                                                                    }
-                                                                    return internationalizedPattern;
-                                                                }
-                                                        )
-                                                        .collect(Collectors.joining()))
-                                );
-                                displaysName.put(DataColumn.forDisplayName(entryByLocale.getKey()),
-                                        displayForLocale
-                                );
-                                if (entryByLocale.getKey().equals(defaultLanguage)) {
-                                    displaysName.put(DataColumn.forDisplayName("default"), displayForLocale);
-                                }
-                            });
-                });
+                .ifPresent(patterns -> patterns.getTitle().forEach((key, value) -> {
+                    DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
+                            StringType.getStringTypeFromStringValue(
+                                    parsePattern(value).stream()
+                                            .map(patternSection -> {
+                                                        String internationalizedPattern = patternSection.text;
+                                                        if (!Strings.isNullOrEmpty(patternSection.variable)) {
+                                                            String referencedColumn = patternSection.variable;
+                                                            internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, key.getDisplayName());
+                                                        }
+                                                        return internationalizedPattern;
+                                                    }
+                                            )
+                                            .collect(Collectors.joining()))
+                    );
+                    displaysName.put(DataColumn.forDisplayName(key),
+                            displayForLocale
+                    );
+                    if (key.equals(defaultLanguage)) {
+                        displaysName.put(DataColumn.forDisplayName("default"), displayForLocale);
+                    }
+                }));
         if (!displaysName.contains(DataColumn.forDisplayName("default"))) {
             String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
                     .stream()
@@ -94,31 +91,28 @@ public class InternationalizationDisplay {
                 .map(ApplicationDescription::defaultLanguage)
                 .orElse(Locale.FRENCH);
         displayPattern
-                .ifPresent(patterns -> {
-                    patterns.getDescription().entrySet()
-                            .forEach(entryByLocale -> {
-                                DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
-                                        StringType.getStringTypeFromStringValue(
-                                                parsePattern(entryByLocale.getValue()).stream()
-                                                        .map(patternSection -> {
-                                                                    String internationalizedPattern = patternSection.text;
-                                                                    if (!Strings.isNullOrEmpty(patternSection.variable)) {
-                                                                        String referencedColumn = patternSection.variable;
-                                                                        internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, entryByLocale.getKey().getDisplayName());
-                                                                    }
-                                                                    return internationalizedPattern;
-                                                                }
-                                                        )
-                                                        .collect(Collectors.joining()))
-                                );
-                                displaysDescription.put(DataColumn.forDisplayDescription(entryByLocale.getKey()),
-                                        displayForLocale
-                                );
-                                if (entryByLocale.getKey().equals(defaultLanguage)) {
-                                    displaysDescription.put(DataColumn.forDisplayName("default"), displayForLocale);
-                                }
-                            });
-                });
+                .ifPresent(patterns -> patterns.getDescription().forEach((key, value) -> {
+                    DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
+                            StringType.getStringTypeFromStringValue(
+                                    parsePattern(value).stream()
+                                            .map(patternSection -> {
+                                                        String internationalizedPattern = patternSection.text;
+                                                        if (!Strings.isNullOrEmpty(patternSection.variable)) {
+                                                            String referencedColumn = patternSection.variable;
+                                                            internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, key.getDisplayName());
+                                                        }
+                                                        return internationalizedPattern;
+                                                    }
+                                            )
+                                            .collect(Collectors.joining()))
+                    );
+                    displaysDescription.put(DataColumn.forDisplayDescription(key),
+                            displayForLocale
+                    );
+                    if (key.equals(defaultLanguage)) {
+                        displaysDescription.put(DataColumn.forDisplayName("default"), displayForLocale);
+                    }
+                }));
         if (!displaysDescription.contains(DataColumn.forDisplayName("default"))) {
             String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
                     .stream()
@@ -147,7 +141,7 @@ public class InternationalizationDisplay {
 
     public static List<PatternSection> parsePattern(final String pattern) {
         return getPatternSplitStream(pattern)
-                .map(section -> new PatternSection(section))
+                .map(PatternSection::new)
                 .collect(Collectors.toList());
     }
 

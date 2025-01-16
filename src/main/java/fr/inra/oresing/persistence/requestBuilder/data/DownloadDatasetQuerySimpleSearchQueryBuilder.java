@@ -3,7 +3,6 @@ package fr.inra.oresing.persistence.requestBuilder.data;
 import fr.inra.oresing.domain.application.configuration.Authorization;
 import fr.inra.oresing.domain.application.configuration.AuthorizationScopeComponentData;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.data.read.query.AuthorizationDescription;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuerySimpleSearch;
 import fr.inra.oresing.domain.data.read.query.IntervalValues;
@@ -46,7 +45,7 @@ public record DownloadDatasetQuerySimpleSearchQueryBuilder(DownloadDatasetQueryS
         List<String> where = new ArrayList<>();
         if(authorizationDescription==null){
             return null;
-        };
+        }
         Function<RequiredAuthorization, String> toSql = requiredAuthorization -> toSql(dataForAuthorization, requiredAuthorization);
         Predicate<RequiredAuthorization> filterValidData = requiredAuthorization -> dataForAuthorization.contains(requiredAuthorization.compositereferenceLabel());
         authorizationDescription.requiredAuthorizations().stream()
@@ -54,12 +53,12 @@ public record DownloadDatasetQuerySimpleSearchQueryBuilder(DownloadDatasetQueryS
                 .map(List::getFirst)
                 .filter(filterValidData)
                 .map(toSql)
-                .filter(Objects::nonNull)
+                .filter(obj1 -> true)
                 .forEach(where::add);
-        Optional.ofNullable(authorizationDescription)
+        Optional.of(authorizationDescription)
                 .map(AuthorizationDescription::timeScope)
                 .map(this::toSql)
-                .filter(Objects::nonNull)
+                .filter(obj -> true)
                 .ifPresent(where::add);
         return where.stream()
                 .collect(Collectors.joining("\n\t\t\t\t AND \n\t\t\t\t\t", "\t\t\t(\n\t\t\t\t\t", "\n\t\t\t)"));

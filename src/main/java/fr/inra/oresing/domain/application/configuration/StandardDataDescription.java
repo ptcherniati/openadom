@@ -65,21 +65,19 @@ public record StandardDataDescription(
                         .entrySet().stream()
                         .map(componentEntry -> Optional.ofNullable(componentEntry.getValue())
                                 .map(ComponentDescription::checker)
-                                .map(checker -> {
-                                    return switch (checker) {
-                                        case final ReferenceChecker referenceChecker: {
-                                            final String refType = referenceChecker.refType();
-                                            if (referenceChecker.isParent()) {
-                                                yield new DependsParent(Depends.DependsType.DependsParent, refType, componentEntry.getKey());
-                                            } else if (referenceChecker.isRecursive()) {
-                                                yield new DependsRecursive(Depends.DependsType.DependsRecursive, refType, componentEntry.getKey());
-                                            } else {
-                                                yield new DependsReferences(Depends.DependsType.DependsReferences, refType, componentEntry.getKey());
-                                            }
+                                .map(checker -> switch (checker) {
+                                    case final ReferenceChecker referenceChecker: {
+                                        final String refType = referenceChecker.refType();
+                                        if (referenceChecker.isParent()) {
+                                            yield new DependsParent(Depends.DependsType.DependsParent, refType, componentEntry.getKey());
+                                        } else if (referenceChecker.isRecursive()) {
+                                            yield new DependsRecursive(Depends.DependsType.DependsRecursive, refType, componentEntry.getKey());
+                                        } else {
+                                            yield new DependsReferences(Depends.DependsType.DependsReferences, refType, componentEntry.getKey());
                                         }
-                                        default:
-                                            yield null;
-                                    };
+                                    }
+                                    default:
+                                        yield null;
                                 }).orElse(null)).filter(Objects::nonNull).collect(Collectors.toList()),
                 null
         );
@@ -118,7 +116,7 @@ public record StandardDataDescription(
 
     public Boolean isHidden() {
         return Optional.ofNullable(tags())
-                .map(tags -> tags.stream().anyMatch(tag -> Tag.HiddenTag.INSTANCE() == tag))
+                .map(tags -> tags.stream().anyMatch(tag -> Tag.HiddenTag.instance().equals(tag)))
                 .orElse(false);
     }
 
@@ -176,7 +174,7 @@ public record StandardDataDescription(
 
     public void buildEmptyFile(OutputStream output) throws IOException {
         CSVFormat customFormat = CSVFormat.Builder.create()
-                .setDelimiter(Optional.ofNullable(separator()).orElse(';'))
+                .setDelimiter(Optional.of(separator()).orElse(';'))
                 .build();
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(output);
         CSVPrinter csvPrinter = new CSVPrinter(outputStreamWriter, customFormat);
@@ -229,7 +227,9 @@ public record StandardDataDescription(
     }
 
     private TreeMap<Integer, TreeMap<Integer, String>> getHeadersByLineAndColumn() {
-        TreeMap<Integer, TreeMap<Integer, String>> headersByLineAndColumn = Optional.of(componentDescriptions())
+        // Use the component() method here
+        // if there is a clash in rowNumber choose either value
+        return Optional.of(this.componentDescriptions())
                 .map(components -> components.values().stream()
                         .filter(ConstantComponent.class::isInstance)
                         .map(ConstantComponent.class::cast)
@@ -250,7 +250,6 @@ public record StandardDataDescription(
                 )
                 .stream().findFirst()
                 .orElseGet(TreeMap::new);
-        return headersByLineAndColumn;
     }
 
     private String exampleForConstantValue(ConstantValue constantValue) {
@@ -262,10 +261,11 @@ public record StandardDataDescription(
                 .orElseGet(constantValue::component);
     }
 
-    public boolean hasPatternDefinition() {
+    public long patternDefinitionCount() {
         return componentDescriptions()
                 .values().stream()
-                .anyMatch(PatternComponent.class::isInstance);
+                .filter(PatternComponent.class::isInstance)
+                .count();
     }
 
     record ConstantValue(String component, int lineNumber, int rowNumber) {

@@ -50,9 +50,9 @@ public sealed interface FieldType<T> extends SomethingToBeStoredAsJsonInDatabase
 
     default String toStringForComponentValue(){
         return toString();
-    };
+    }
 
     default CheckerValidationCheckResult postTreatment(CheckerValidationCheckResult checkerValidationCheckResult){
         return checkerValidationCheckResult;
-    };
+    }
 }

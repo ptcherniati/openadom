@@ -2,8 +2,6 @@ package fr.inra.oresing.domain.data;
 
 import fr.inra.oresing.domain.checker.CheckerTarget;
 
-import java.util.Locale;
-
 public record DataColumnPatternQualifierValue(
         String qualifierComponentKey,
         String column

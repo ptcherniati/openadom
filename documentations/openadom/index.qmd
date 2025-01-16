@@ -1,0 +1,20 @@
+---
+title: Documentation fichiers de configuration pour OpenADOM
+subtitle: Documentation décrivant la structure du fichier de configuration de l'application OpenADOM
+author:
+- TCHERNIATINSKY Philippe
+- VARLOTEAUX Lucile
+date: "last-modified"
+lang: fr
+numbersections: true
+documentclass: scrreprt
+toc: true
+toc-depth: 6
+toc-title: "Table des matières"
+fontsize: 12pt
+linestretch: 1
+linkcolor: black
+---
+
+![](img/Logos_OA.png){.hidden}
+

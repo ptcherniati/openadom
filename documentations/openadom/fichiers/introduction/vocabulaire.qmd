@@ -1,0 +1,98 @@
+---
+  title: Vocabulaire
+  page-navigation: true
+  abstract: >
+    Ce document permet de définir le vocabulaire qui sera utilisé dans la documentation
+---
+
+
+# Clefs et code
+
+Dans un fichier, on définit une ou plusieurs colonnes qui correspondent à la clef d'idendification de la ligne. Cette clef naturelle permet lors d'une insertion / suppression de retrouver cette ligne dans la base de données et, si elle est présente, de la mettre à jour. Dans le cas contraire, une nouvelle ligne est créée.
+
+## code
+
+Pour enregistrer ces clefs dans la base de données, et pour éviter les erreurs, les clefs sont codées. Le code utilisé n'autorise que les chiffres, les lettres minuscules et majuscules ainsi que le caractère souligné (underscore).
+
+Cependant, pour permettre une plus grande souplesse, les accents sont supprimés, les majuscules sont remplacées par les minuscules, les espace et les tirets (-) sont remplacés par des _ et les autres caractères sont remplacés par leur nom ascii en majuscules.
+
+- L'année de départ -> lAPOSTROPHEannee_de_depart
+- µmol m-2 s-1 -> MICROSIGNmol_m2_s1
+- m²/m² -> mSUPERSCRIPTTWOSOLIDUSmSUPERSCRIPTTWO
+- °C -> DEGREESIGNc
+
+Ainsi les valeurs Elévation, élévation, elevation ou même EléVaTioN renvoient toutes le même code.
+
+Ces transformations sont faites de manière transparente.
+
+> :information_source : Quand on fait référence à un référentiel, que cela soit pour un type de données ou pour un autre référentiel, on utilise la clef naturelle de ce référentiel. Cependant, il sera possible de demander la mise en code de la valeur avant de rechercher son existence dans le référentiel de référence.
+
+## Clef naturelle
+
+Elle est construite en concaténant les valeurs des différentes colonnes composant la clef. Le signe de concaténation est le double underscore '__'.
+
+- Forme géométrique de la colonie + prisme -> forme_geometrique_de_la_colonie__prisme
+- Ensoleillement + Ensoleillé -> ensoleillement__ensoleille
+- Piégeage en montée + Couleur des individus -> piegeage_en_montee__couleur_des_individus
+
+##  Clef hiérarchique
+
+Elle est construite en concaténant les clefs naturelles de différents référentiels. Le signe de concaténation de la clef hiérarchique est le point '.'
+
+Ainsi si on a une parcelle "1", dans le site "Site 1" du type de site "Site d'étude" :
+
+| référentiel  | Nom                                           | Clef naturelle                                                                                                                      | Clef hiérarchique                                                                                                                                                                      |
+|--------------|-----------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Type de site | <span style="color:blue"> Site étude</span> | <span style="color:blue"> site_etude</span>                                                                              | <span style="color:blue">tr_sites_sitKsite_etude</span>                                                                                                                                  |
+| Site         | <span style="color:green">Site 1</span>       | <span style="color:blue">site_etude</span>__ <span style="color:green">site_1</span>                                     | <span style="color:blue">tr_sites_sitKsite_etude</span>.<span style="color:green">tr_sites_sitK</span><span style="color:blue">site_etude</span> __<span style="color:green">site_1</span>                               |
+| Parcelle     | <span style="color:red">1</span>              | <span style="color:blue"> site_etude__</span><span style="color:green">site_1__</span><span style="color:red">1</span> | <span style="color:blue">tr_sites_sitKsite_etude</span>.<span style="color:green">tr_sites_sitK</span><span style="color:blue">site_etude__</span><span style="color:green">site_1</span>.<span style="color:red">tr_parcelles_parK</span><span style="color:blue">site_etude__</span><span style="color:green">site__</span><span style="color:red">1</span> |
+
+
+
+# Référentiels
+__references__: Un ensemble d'informations permettant de préciser le contexte de la mesure ou de l'observation.
+
+En déportant ces informations dans des fichiers __references__, on évite la répétition d'informations. On utilisera la clef d'une information pour y faire référence.
+
+__data__ : un ensemble de données correspondant à une thématique et un format de fichier commun.
+
+__variable__ : correspond à un ensemble de données, qualifiant ou se rapportant à une variable de mesure, d'observation, d'informations, de temporalité ou de contexte.
+
+__component__ : un ensemble de valeur qui servent à décrire la donnée. CeS valeurs peuvent être ou non rendu visibles. Certaines peuvent juste être utilisée pour calculer d'autres valeurs. Tous les composants décrits sont enregistrés dans la
+
+__authorizationScope__ :  une ou des informations contextuelles (variable-component) qui ont du sens pour limiter les autorisations.
+
+__timeScope__ :  l'information de temporalité d'une ligne ayant du sens pour limiter des authorisations à une période.
+
+# Identificateurs
+
+Lorsque l'on doit déclarer un ensemble de descriptions dans une section, on leur attribue un identificateur unique. 
+
+Par exemple pour déclarer les descriptions des référentiels, des types de données, des colonnes… 
+
+Comme ces identificateurs sont repris comme nom de table ou de champs dans la base de données, ils doivent respecter certaines 
+règles imposées par PostgreSQL. 
+
+::: {.callout-tip title="Règle de nommage des identificateurs" collapse="false"}
+Les identificateurs SQL doivent commencer avec une lettre minuscule, Les caractères suivants dans un identificateur peuvent être des lettres, des tirets bas ou des chiffres (0-9).
+
+De plus leur longueur ne peut dépasser 63 caractères. Il faut prendre en compte que lors de la création des vues,  les identificateurs peuvent être combinés entre eux ou préfixés / suffixés. Il est donc préférable d'utiliser des noms courts.
+ 
+Vous serez informés lors du dépôt du fichier d'identificateurs incorrects.
+:::
+
+::: {.callout-tip title="Convention de nommage des identificateurs" collapse="false"}
+Il est conseillé d'utiliser une [convention de nommage](https://sqlpro.developpez.com/cours/standards/) pour choisir un identificateur.
+
+- pour un [référentiel](#references) le préfixe tr pour table référentiel, le nom du référentiel et un trigramme unique pour ce référentiel : tr_villes_vil
+- pour une [donnée](#data) le préfixe t pour table fonctionnelle, le nom du type de données et un trigramme unique : t_meteo_met
+- pour les [colonnes](#columns), on préfixe avec le trigramme de la table d'origine suivit du nom explicite de la colonne :
+  - vil_nom
+  - met_temperature
+  
+L'utilisation de convention de nommage rendra la description de votre fichier de configuraion plus lisible, 
+ainsi que la compréhension des vues et tables générées automatiquement.
+:::
+
+Ces identificateurs seront aussi les clefs pour les valeurs dans le champ JSON (refValues pour les référentiels; 
+dataValues pour les données ; les variables et les composantes)

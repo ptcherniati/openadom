@@ -13,7 +13,7 @@ class TitleExampleBuilder {
             null);
     public static final TitleType QUALITY_CLASS = buildTitle(
             buildI18n("Indic de qualité", "Quality class"),
-            buildI18n("0 pour une valeur valide ; 2 pour une valeur incorrecte", " 0 for valid value; 2 for bad value"));;
+            buildI18n("0 pour une valeur valide ; 2 pour une valeur incorrecte", " 0 for valid value; 2 for bad value"));
     public static final ConfigurationSchemaNodeType RIGHT_REQUEST_DESCRIPTION = TitleExampleBuilder.buildTitle(
             I18nExampleBuilder.buildI18n(
                     "Formulaire de demande de droits de l'application MONSORE",
@@ -270,9 +270,11 @@ class TitleExampleBuilder {
             I18nType title,
             I18nType description
     ) {
-        return new TitleType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
-            put(ConfigurationSchemaNode.OA_TITLE, title);
-            put(ConfigurationSchemaNode.OA_DESCRIPTION, description);
-        }});
+        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+        map.put(ConfigurationSchemaNode.OA_TITLE, title);
+        map.put(ConfigurationSchemaNode.OA_DESCRIPTION, description);
+
+        return new TitleType(map);
     }
+
 }

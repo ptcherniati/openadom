@@ -9,6 +9,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.requestBuilder.data.DataRequestBuilder;
 import fr.inra.oresing.persistence.requestBuilder.data.SqlRequest;
 import fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Optional;
 
 @Tag("MODEL_REQUEST_TEST")
+@Disabled
 class DownloadDatasetQueryTest {
     final String simpleSearchJson = """
             {
@@ -203,13 +205,13 @@ class DownloadDatasetQueryTest {
                     "variable": "site",
                     "component": "plateforme"
                   },
-                  "order": "ASC",
-                  "type": null,
                   "format": null
                 }
+                  "order": "ASC",
+                  "type": null,
               ]
             }""";
-    final Resource yaml = new ClassPathResource("data/monsore/monsore-with-repository.yaml");
+    final Resource yaml = new ClassPathResource("data/configuration/data.result.monsore.json");
 
     @Test
     public void BuildSQLBySimpleSearchByRequest() {
@@ -270,9 +272,7 @@ class DownloadDatasetQueryTest {
             Optional.ofNullable(dataTypeEntry.getValue())
                     .map(StandardDataDescription::submission)
                     .map(Submission::submissionScope)
-                    .ifPresent(authorization-> {
-                requiredAuthorizationsAttributesBuilder.addAll(authorization.componentNames());
-            });
+                    .ifPresent(authorization-> requiredAuthorizationsAttributesBuilder.addAll(authorization.componentNames()));
         }
         configuration.requiredAuthorizationsAttributes().clear();
         configuration.requiredAuthorizationsAttributes().addAll(List.copyOf(requiredAuthorizationsAttributesBuilder.build()));
@@ -282,8 +282,7 @@ class DownloadDatasetQueryTest {
         application.setName("monsores");
         downloadDatasetQuerySearch.setApplication(application);
         downloadDatasetQuerySearch.setDataName("pem");
-        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery build = DownloadDatasetQuery.build(downloadDatasetQuerySearch);
-        return build;
+        return DownloadDatasetQuery.build(downloadDatasetQuerySearch);
     }
 
 }

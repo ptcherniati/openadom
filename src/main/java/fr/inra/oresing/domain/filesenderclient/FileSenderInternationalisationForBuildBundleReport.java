@@ -93,7 +93,7 @@ implements FileSenderInternationalisation{
         return Optional.ofNullable(buildBundleReport.applicationName().getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
-                .map(i18nApplication -> i18nApplication.getTitle().get(locale.getLanguage()))
+                .map(i18nApplication -> i18nApplication.getTitle().get(Locale.of(locale.getLanguage())))
                 .orElse(buildBundleReport.applicationName().getName());
     }
 
@@ -102,7 +102,7 @@ implements FileSenderInternationalisation{
         return Optional.ofNullable(buildBundleReport.applicationName().getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
-                .map(i18nApplication -> i18nApplication.getDescription().get(locale.getLanguage()))
+                .map(i18nApplication -> i18nApplication.getDescription().get(Locale.of(locale.getLanguage())))
                 .orElse(buildBundleReport.applicationName().getName());
     }
 

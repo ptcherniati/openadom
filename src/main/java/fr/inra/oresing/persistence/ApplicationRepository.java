@@ -55,7 +55,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
     }
 
     public Optional<Application> tryFindApplication(final String nameOrId) {
-        final Optional<Application> result = getNamedParameterJdbcTemplate()
+        return getNamedParameterJdbcTemplate()
                 .query(
                         SELECT_APPLICATION,
                         new MapSqlParameterSource(
@@ -63,7 +63,6 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
                         getJsonRowMapper()
                 ).stream()
                 .findFirst();
-        return result;
     }
 
     public Optional<Application> tryFindApplication(final UUID id) {
@@ -84,7 +83,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
 
     private String buildQueryAddIdentifier(String applicationName, String identifier) {
         return """
-                	alter type %1$s.requiredauthorizations add attribute %2$s ltree;"""
+                    alter type %1$s.requiredauthorizations add attribute %2$s ltree;"""
                 .formatted(applicationName, identifier);
     }
 
@@ -92,7 +91,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
         AuthorizationIndex authorizationIndex = new AuthorizationIndex(application);
         String sql = authorizationIndex.dropIndexes();
         int updateAuthorizationIndexes = getNamedParameterJdbcTemplate().update(sql, Map.of());
-        sql = authorizationIndex.createIndexes();
+        authorizationIndex.createIndexes();
         return updateAuthorizationIndexes;
     }
 }

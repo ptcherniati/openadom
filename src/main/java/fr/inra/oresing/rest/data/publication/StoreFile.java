@@ -21,34 +21,32 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
             byte[] bytes = file==null?null : FileBomResolver.of(file.getInputStream()).readAllBytes();
             assert builder().hasRightForDeposit();
 
-            BinaryFile storedFile = Optional.ofNullable(params()).map(FileOrUUID::fileid)
-                    .flatMap(uuid -> binaryFileRepository.tryFindByIdWithData(uuid))
-                    .orElseGet(() -> {
-                        UUID fileId = null;
-                        try {
-                            fileId = binaryFileService
-                                    .storeFile(
-                                            application(),
-                                            file,
-                                            "",
-                                            Optional.ofNullable(params()).map(p -> p.binaryfiledataset()).orElse(null));
-                        } catch (IOException e) {
-                            throw null;
-                        }
-                        BinaryFile binaryFile = binaryFileRepository.tryFindByIdWithData(fileId).orElse(null);
-                        if (binaryFile == null) {
-                            return null;
-                        }
-                        if (params() != null) {
-                            binaryFile.withBinaryFileDataset(params().binaryfiledataset());
-                        }
-                        binaryFile.setFileData(bytes);
-                        fileId = binaryFileRepository.store(binaryFile);
-                        return binaryFile;
-                    });
-            builder().binaryFile = storedFile;
-        ;
-            if(builder().fileMustBeJustStored()){
+        builder().binaryFile = Optional.ofNullable(params()).map(FileOrUUID::fileid)
+                .flatMap(binaryFileRepository::tryFindByIdWithData)
+                .orElseGet(() -> {
+                    UUID fileId;
+                    try {
+                        fileId = binaryFileService
+                                .storeFile(
+                                        application(),
+                                        file,
+                                        "",
+                                        Optional.ofNullable(params()).map(FileOrUUID::binaryfiledataset).orElse(null));
+                    } catch (IOException e) {
+                        throw null;
+                    }
+                    BinaryFile binaryFile = binaryFileRepository.tryFindByIdWithData(fileId).orElse(null);
+                    if (binaryFile == null) {
+                        return null;
+                    }
+                    if (params() != null) {
+                        binaryFile.withBinaryFileDataset(params().binaryfiledataset());
+                    }
+                    binaryFile.setFileData(bytes);
+                    binaryFileRepository.store(binaryFile);
+                    return binaryFile;
+                });
+        if(builder().fileMustBeJustStored()){
                 return new JustStoredFile(builder());
             }
         return new UnPublishedVersions(builder());

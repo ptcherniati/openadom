@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.io.file.AccumulatorPathVisitor;
 import org.apache.commons.io.file.Counters;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods   .HttpPost;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.cookie.CookieStore;
 import org.apache.hc.client5.http.entity.mime.FileBody;
@@ -58,16 +58,8 @@ public class Client {
         String password;
         boolean interactive = false;
         Scanner scanner = new Scanner(System.in);
-        if (interactive) {
-            System.out.println("Veuillez saisir les informations de connexion à " + instanceUrl);
-            System.out.print("identifiant : ");
-            login = scanner.nextLine();
-            System.out.print("mot de passe : ");
-            password = scanner.nextLine();
-        } else {
-            login = "poussin";
-            password = "xxxx";
-        }
+        login = "poussin";
+        password = "xxxx";
 
         CookieStore cookieStore = new BasicCookieStore();
         UriFactory uriFactory = new UriFactory(instanceUrl, applicationName);
@@ -89,7 +81,7 @@ public class Client {
                         switch (cookieStore.getCookies().size()) {
                             case 0 -> fail("authentification échouée : pas de cookie d’authentification retourné");
                             case 1 -> {
-                                if (cookieStore.getCookies().get(0).getName().equals("si-ore-jwt")) {
+                                if (cookieStore.getCookies().getFirst().getName().equals("si-ore-jwt")) {
                                     log("authentification OK");
                                 } else {
                                     fail("authentification échouée : pas de cookie d’authentification retourné");
@@ -115,7 +107,7 @@ public class Client {
                     switch (response.getCode()) {
                         case HttpURLConnection.HTTP_OK -> parseJsonInResponseBody(
                                 response,
-                                new TypeReference<List<String>>() {
+                                new TypeReference<>() {
                                 }
                         );
                         case HttpURLConnection.HTTP_UNAUTHORIZED ->
@@ -150,20 +142,6 @@ public class Client {
 
             List<Command> commands = newCommands(data);
 
-            if (interactive) {
-                String plan = commands.stream()
-                        .map(Command::getDescription)
-                        .collect(Collectors.joining(System.lineSeparator()));
-                log("Plan :");
-                log(plan);
-                System.out.print("est-ce que le plan convient ? [O/n]");
-                String planIsOkString = scanner.nextLine();
-                boolean planIsOk = Set.of("o", "oui", "").contains(planIsOkString.toLowerCase());
-                if (!planIsOk) {
-                    fail("Abandon");
-                }
-            }
-
             for (Command command : commands) {
                 log("va traiter " + command.getDescription());
                 ClassicHttpRequest request = command.getRequest(uriFactory);
@@ -177,12 +155,11 @@ public class Client {
 
     private ClientConfiguration readConfiguration() throws IOException {
         File configurationFile = new File("openAdom-client-configuration.json");
-        ClientConfiguration clientConfiguration = new ObjectMapper()
+        return new ObjectMapper()
                 .readValue(
                         configurationFile,
                         ClientConfiguration.class
                 );
-        return clientConfiguration;
     }
 
     private List<Command> newCommands(List<String> data/*, List<String> dataTypes*/) {
@@ -192,8 +169,7 @@ public class Client {
         /*List<Command> dataCommands = dataTypes.stream()
                 .flatMap(dataType -> getUploadDataCommands(dataType).stream())
                 .toList();*/
-        List<Command> commands = new LinkedList<>();
-        commands.addAll(dataCommands);
+        List<Command> commands = new LinkedList<>(dataCommands);
         //commands.addAll(dataCommands);
         return commands;
     }
@@ -252,6 +228,9 @@ public class Client {
 
     private Command newUploadDataCommand(String dataName, File dataFile) {
         return new Command() {
+
+            public static final String MESSAGE_PARAMS = "messageParams";
+
             @Override
             public String getDescription() {
                 return "Téléversement de %s pour alimenter le référentiel %s".formatted(dataFile, dataName);
@@ -271,14 +250,14 @@ public class Client {
 
             private List<Map<String, Object>> parseJsonInResponseBodyForErrorMessagesAndParams(ClassicHttpResponse response) {
                 try (InputStream inputStream = response.getEntity().getContent()) {
-                    List<Map<String, Object>> responseBody = new ObjectMapper().readValue(inputStream, new TypeReference<List<Map<String, Object>>>() {
+                    List<Map<String, Object>> responseBody = new ObjectMapper().readValue(inputStream, new TypeReference<>() {
                     });
 
                     return responseBody.stream()
                             .map(record -> {
                                 Map<String, Object> resultMap = new HashMap<>();
                                 resultMap.put("message", ((Map<String, Object>) record.get("validationCheckResult")).get("message").toString());
-                                resultMap.put("messageParams", (Map<String, Object>) ((Map<String, Object>) record.get("validationCheckResult")).get("messageParams"));
+                                resultMap.put(MESSAGE_PARAMS, ((Map<String, Object>) record.get("validationCheckResult")).get(MESSAGE_PARAMS));
                                 return resultMap;
                             })
                             .collect(Collectors.toList());
@@ -297,14 +276,12 @@ public class Client {
                     case HttpURLConnection.HTTP_BAD_REQUEST -> {
                         List<Map<String, Object>> errorMessagesAndParams = parseJsonInResponseBodyForErrorMessagesAndParams(response);
                         logError("Une erreur  est survenue dans le traitement");
-                        errorMessagesAndParams.stream()
+                        errorMessagesAndParams
                                 .forEach(map -> {
                                     logError("->>>>>>>>>>");
                                     logError(map.get("message").toString());
-                                    ((Map<String, Object>) map.get("messageParams")).entrySet().stream()
-                                            .forEach(entry -> {
-                                                logError("%s : %s".formatted(entry.getKey(), entry.getValue()));
-                                            });
+                                    ((Map<String, Object>) map.get(MESSAGE_PARAMS)).entrySet()
+                                            .forEach(entry -> logError("%s : %s".formatted(entry.getKey(), entry.getValue())));
                                 });
                     }
                     default -> fail(
@@ -366,7 +343,7 @@ public class Client {
     }
 
     enum ValidationLevel {
-        SUCCESS, WARN, ERROR;
+        SUCCESS, WARN, ERROR
     }
 
     enum ValidationMessage {
@@ -424,7 +401,7 @@ public class Client {
     /**
      * Le contenu du fichier de configuration du client.
      *
-     * @param instanceUrl     l’adresse du serveur au format "http://hote:port"
+     * @param instanceUrl     l’adresse du serveur au format "<a href="http://hote:port">...</a>"
      * @param applicationName le nom de l’application
      */
     private record ClientConfiguration(URI instanceUrl, String applicationName) {

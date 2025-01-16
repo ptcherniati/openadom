@@ -13,7 +13,6 @@ public interface SomethingThatCanProvideEvaluationContext {
 
     /**
      * Récupérer le contenu de cet objet sous forme de Map qui peut être lue en groovy.
-     * @return
      */
     ImmutableMap<String, Object> getEvaluationContext();
 }

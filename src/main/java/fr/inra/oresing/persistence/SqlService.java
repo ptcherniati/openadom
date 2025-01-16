@@ -1,11 +1,8 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.PolicyDescription;
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.repository.authorization.role.*;
-import fr.inra.oresing.persistence.index.AuthorizationIndex;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -169,8 +166,7 @@ public class SqlService {
     public boolean hasRole(final OreSiRole role) {
         final String sql = "SELECT pg_has_role('%s', 'MEMBER')"
                 .formatted(role.getAsSqlRole());
-        final boolean hasRole = Boolean.TRUE.equals(namedParameterJdbcTemplate.queryForObject(sql, EmptySqlParameterSource.INSTANCE, Boolean.class));
-        return hasRole;
+        return Boolean.TRUE.equals(namedParameterJdbcTemplate.queryForObject(sql, EmptySqlParameterSource.INSTANCE, Boolean.class));
     }
 
     private void execute(final String sql) {

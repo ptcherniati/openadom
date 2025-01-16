@@ -28,7 +28,7 @@ public sealed interface ComponentType permits
             case FloatChecker ignored-> new fr.inra.oresing.domain.data.read.query.ComponentNumericType();
             case BooleanChecker ignored-> new fr.inra.oresing.domain.data.read.query.ComponentBooleanType();
             case DateChecker dateChecker-> {
-                    String pattern = Optional.ofNullable(dateChecker)
+                    String pattern = Optional.of(dateChecker)
                             .map(DateChecker::pattern)
                             .orElseThrow(() -> new BadDownloadDatasetQuery(BadDownloadDatasetQuery.MISSING_FORMAT_FOR_FILTER));
                     yield switch (DatePattern.of(pattern).getFieldType()){
@@ -43,7 +43,7 @@ public sealed interface ComponentType permits
                                 DownloadDatasetQueryAdvancedSearch.FieldType.datetime);
                     };
             }
-            case null, default -> new fr.inra.oresing.domain.data.read.query.ComponentTextType();
+            default -> new fr.inra.oresing.domain.data.read.query.ComponentTextType();
         };
     }
 

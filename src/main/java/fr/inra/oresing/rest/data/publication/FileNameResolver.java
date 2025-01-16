@@ -2,7 +2,6 @@ package fr.inra.oresing.rest.data.publication;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.BinaryFileInfos;
 

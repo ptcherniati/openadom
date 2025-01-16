@@ -26,7 +26,7 @@ public class BinaryFileDataset {
     @Override
     public String toString() {
         final String authorizationsString =requiredAuthorizations.entrySet().stream()
-                .map(ra -> String.format("%s : %s", ra.getKey(), ra.getValue().get(0).getSql()))
+                .map(ra -> String.format("%s : %s", ra.getKey(), ra.getValue().getFirst().getSql()))
                 .collect(Collectors.joining(",", "[", "]"));
         return String.format("%s -> [%s, %s]",
                 authorizationsString, Strings.isNullOrEmpty(from) ?"": LocalDateTimeRange.DATE_FORMATTER_DDMMYYYY.format(LocalDateTimeRange.DATE_TIME_FORMATTER.parse(from)),

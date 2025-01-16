@@ -31,7 +31,7 @@ public enum AuthorizationRequestException {
 
     private static String toMessage(final String name) {
         final String message = Arrays.stream(name.split("_"))
-                .map(n -> n.substring(0, 1) + n.substring(1, n.length()).toLowerCase())
+                .map(n -> n.charAt(0) + n.substring(1).toLowerCase())
                 .collect(Collectors.joining());
         return message.replaceFirst("^.", message.substring(0, 1).toLowerCase());
     }

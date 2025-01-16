@@ -1,0 +1,43 @@
+## <a id="csvFile" />Fichier d'échange
+
+L'alimentation de votre Système d'Information s'effectue au travers de fichier d'échange. Le format retenu étant [le fichier csv](https://fr.wikipedia.org/wiki/Comma-separated_values). 
+
+C'est un format tabulaire, avec des champs séparés par des points-virgules :
+
+*Example de fichier d'échange*
+
+::: {.callout-note title="Example de fichier d'échange" collapse="true"}
+![Fichier d'échange.png](/img/fichier_echange.png) 
+:::
+
+Comme on peut le voir dans cet example, un fichier csv est composé de lignes composées de colonnes. 
+- Un champ est ainsi repéré par un numéro de ligne et de colonne.
+- Un champ peut contenir 0, une ou plusieurs informations.
+
+Dans l'application OpenAdom, nous avons la possibilité d'étendre le format csv standard en définissant un "cartouche" c'es à dire des information avant l'en-tête (pré-header) et après l'en-tête avant les données (post-header).
+
+On peut voir ainsi :
+
+- un en-tête, généralement utilisé pour renseigner des métadonnées (cartouche)
+  - pre-header
+    - la zone d'étude, 
+    - le commentaire, 
+  - header
+    - un libellé pour le contenu de chaque colonne,
+  - post-header 
+    - le min et le max accepté dans chaque colonne.
+    - ...
+  - data
+    - les données à partir de la ligne 13.
+
+La ligne 10 est la ligne d'en-tête de colonne. (_Date_, _SWC_1_10_)
+
+Les lignes 1 à 9 contiennent des informations (métadonnées) pour l'ensemble du fichier)
+
+Les lignes 11 et 12 contiennent des informations spécifiques de chaque colonnes (min, max)
+
+A partir de la ligne 13, on a les données proprement dîtes. _01/01/1999_ est une donnée de la colonne _Date_
+
+Enfin, un champ peut être vide, contenir une ou plusieurs  informations.
+
+Dans le fichier de configuration, vous devrez décrire votre format d'échange de données.

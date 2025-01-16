@@ -25,7 +25,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
             final Map<String, ComponentDescription> componentDescriptions) {
         final JsonNode oaSubmission = jsonNode.get(ConfigurationSchemaNode.OA_SUBMISSION);
         if (oaSubmission == null) {
-            return new Parsing<Submission>(i18n, null);
+            return new Parsing<>(i18n, null);
         }
         SubmissionType oaStrategy = null;
         try {
@@ -55,7 +55,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
         final Parsing<Submission.SubmissionFileNameParsing> submissionFileNameParsing = rootBuilder.getSubmissionFileNameBuilder().build(i18n, oaFileName, componentDescriptions, referenceScopesLabels);
         i18n = submissionFileNameParsing.i18n();
         final Submission.SubmissionFileNameParsing submissionFileName = submissionFileNameParsing.result();
-        return new Parsing<Submission>(i18n, new Submission(oaStrategy, submissionFileName, authorization));
+        return new Parsing<>(i18n, new Submission(oaStrategy, submissionFileName, authorization));
     }
 
     Parsing<Submission.SubmissionScope> buildSubmissionScope(I18n i18n,
@@ -63,7 +63,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
                                                              final JsonNode authorizationNode,
                                                              final Map<String, ComponentDescription> componentDescriptions) {
         if (authorizationNode == null) {
-            return new Parsing<Submission.SubmissionScope>(i18n, null);
+            return new Parsing<>(i18n, null);
         }
         final String dataPath = NodeSchemaValidator.joinPath(
                 ConfigurationSchemaNode.OA_DATA,
@@ -82,7 +82,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
                 ImmutableMap.copyOf(componentDescriptions),
                 dataPath);
         i18n = timeScopeParsing.i18n();
-        return new Parsing<Submission.SubmissionScope>(i18n, new Submission.SubmissionScope(
+        return new Parsing<>(i18n, new Submission.SubmissionScope(
                 referenceScopeParsing.result(),
                 timeScopeParsing.result()
         ));
@@ -92,7 +92,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
                                                                       final String dataPath) {
 
         if (timeScope == null) {
-            return new Parsing<Submission.SubmissionScope.TimeScope>(i18n, null);
+            return new Parsing<>(i18n, null);
         }
         final String component = Optional.ofNullable(timeScope.get(ConfigurationSchemaNode.OA_COMPONENT))
                 .map(JsonNode::asText)
@@ -125,7 +125,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
                     )
             );
         }
-        return new Parsing<Submission.SubmissionScope.TimeScope>(
+        return new Parsing<>(
                 i18n,
                 new Submission.SubmissionScope.TimeScope(component)
         );
@@ -136,7 +136,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
             final ArrayNode referenceScopesNode,
             final String dataKey, Map<String, ComponentDescription> componentDescriptions) {
         if (referenceScopesNode == null) {
-            return new Parsing<List<Submission.SubmissionScope.ReferenceScope>>(i18n, null);
+            return new Parsing<>(i18n, null);
         }
         final List<Submission.SubmissionScope.ReferenceScope> referenceScopes = new LinkedList<>();
         Integer index = 1;
@@ -218,7 +218,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
         }
         //referencecopes.fieldNames().forEachRemaining(componentNames::add);
         final ImmutableMap.Builder<String, Submission.SubmissionScope.ReferenceScope> builder = ImmutableMap.builder();
-        return new Parsing<List<Submission.SubmissionScope.ReferenceScope>>(i18n, referenceScopes);
+        return new Parsing<>(i18n, referenceScopes);
     }
 
     @Nullable
@@ -251,7 +251,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
                 .flatMap(Set::stream)
                 .toList().contains(authorizationScopeReference)) {
             rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
-                            "referenceName", authorizationScopeReference,
+                            "referenceName", Objects.requireNonNull(authorizationScopeReference),
                             "allDataNames", rootBuilder.getListDataKeys()),
                     NodeSchemaValidator.joinPath(
                             ConfigurationSchemaNode.OA_DATA,

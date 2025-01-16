@@ -1,7 +1,5 @@
 package fr.inra.oresing.rest.model.authorization;
 
-import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
-
 import java.sql.Timestamp;
 import java.util.Map;
 import java.util.Set;

@@ -4,6 +4,7 @@ import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Submission;
 
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -67,20 +68,16 @@ public record SqlSchemaForApplication(Application application) implements SqlSch
 
     private Stream<String> getAttributes() {
         return Optional.of(application.findData())
-                .map(d -> {
-                    return d.entrySet()
-                            .stream()
-                            .map(entry -> {
-                                return Optional.ofNullable(entry)
-                                        .map(e -> e.getValue().submission())
-                                        .map(Submission::submissionScope)
-                                        .map(Submission.SubmissionScope::componentNames)
-                                        .orElse(null);
-                            })
-                            .filter(c -> c != null)
-                            .flatMap(Set::stream)
-                            .distinct();
-                })
+                .map(d -> d.entrySet()
+                        .stream()
+                        .map(entry -> Optional.ofNullable(entry)
+                                .map(e -> e.getValue().submission())
+                                .map(Submission::submissionScope)
+                                .map(Submission.SubmissionScope::componentNames)
+                                .orElse(null))
+                        .filter(Objects::nonNull)
+                        .flatMap(Set::stream)
+                        .distinct())
                 .orElse(Set.of("").stream());
     }
 

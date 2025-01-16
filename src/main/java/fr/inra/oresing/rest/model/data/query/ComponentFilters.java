@@ -11,7 +11,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.util.Strings;
-import org.checkerframework.checker.units.qual.C;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
@@ -49,7 +48,10 @@ public class ComponentFilters {
         }
         final CheckerDescription formatForFieldType = Optional.ofNullable(dataDescription)
                 .map(StandardDataDescription::componentDescriptions)
-                .map(dd -> dd.get(componentFilter.componentKey))
+                .map(dd -> {
+                    ComponentDescription componentDescription = dd.get(componentFilter.componentKey);
+                    return componentDescription;
+                })
                 .map(ComponentDescription::checker)
                 .orElse(CheckerDescription.NO_CHECKER);
         final Multiplicity multiplicity = formatForFieldType.multiplicity();
@@ -95,7 +97,6 @@ public class ComponentFilters {
                                     .collect(Collectors.toCollection(LinkedList::new)),
                             multiplicity
                     );
-                    default -> throw new IllegalStateException("Unexpected value: " + DatePattern.of(pattern).getFieldType());
                 };
                 case BooleanChecker ignored -> new ComponentFiltersByBoolean(
                         componentFilter.componentKey,
@@ -156,7 +157,6 @@ public class ComponentFilters {
                             componentFilter.getFilters(),
                             multiplicity
                     );
-                    default -> throw new IllegalStateException("Unexpected value: " + DatePattern.of(pattern).getFieldType());
                 };
                 case IntegerChecker ignored -> new ComponentFiltersByNumeric(
                         componentFilter.componentKey,
@@ -173,7 +173,7 @@ public class ComponentFilters {
                         componentFilter.getFilters(),
                         multiplicity
                 );
-                case null, default -> {
+                default -> {
                     if (Optional.ofNullable(componentFilter.isRegExp).orElse(false)) {
                         yield new ComponentFiltersForWordByRegexp(
                                 componentFilter.componentKey,

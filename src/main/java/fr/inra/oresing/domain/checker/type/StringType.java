@@ -11,7 +11,7 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Che
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Supplier;
+import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.*;
@@ -35,7 +35,7 @@ public non-sealed class StringType implements FieldType<String> {
     public StringType(final String pattern) {
         super();
         this.pattern = pattern;
-        predicate = Optional.ofNullable(pattern).filter(s -> !s.isEmpty() && !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
+        predicate = Optional.ofNullable(pattern).filter(s -> !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
         clone = () -> new StringType(pattern);
     }
 

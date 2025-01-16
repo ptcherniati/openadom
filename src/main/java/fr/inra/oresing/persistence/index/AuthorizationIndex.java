@@ -9,7 +9,7 @@ import fr.inra.oresing.domain.authorization.request.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public record AuthorizationIndex(Application application) {
+public record  AuthorizationIndex(Application application) {
     public String createIndexes() {
         StringBuilder sqlBuilder = new StringBuilder();
 
@@ -17,9 +17,7 @@ public record AuthorizationIndex(Application application) {
         sqlBuilder.append(dropIndexes()).append("\n");
 
         // Créer les nouveaux index pour chaque dataname
-        application().getConfiguration().dataDescription().keySet().stream().forEach(dataname -> {
-            sqlBuilder.append(createIndex(dataname)).append("\n");
-        });
+        application().getConfiguration().dataDescription().keySet().forEach(dataname -> sqlBuilder.append(createIndex(dataname)).append("\n"));
 
         return sqlBuilder.toString();
     }
@@ -30,7 +28,7 @@ public record AuthorizationIndex(Application application) {
                 DECLARE
                     idx record;
                 BEGIN
-                    FOR idx IN (SELECT indexname FROM pg_indexes WHERE schemaname = '%1$s' 
+                    FOR idx IN (SELECT indexname FROM pg_indexes WHERE schemaname = '%1$s'
                     AND indexname LIKE 'authorization_%%_index')
                     LOOP
                         EXECUTE 'DROP INDEX IF EXISTS ' || quote_ident(idx.indexname);

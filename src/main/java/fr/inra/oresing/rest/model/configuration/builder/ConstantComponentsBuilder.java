@@ -63,7 +63,7 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
                             componentNodeValue
                                     .get(ConfigurationSchemaNode.OA_CHECKER),
                             key);
-            i18n = checkerDescriptionParsing.i18n();
+            i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
                     .map(CheckerDescription::multiplicity)
                     .orElse(Multiplicity.ONE);
@@ -152,7 +152,7 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
             );
             return null;
         }
-        final int constantRowNumber = Optional.ofNullable(rowNomberNode)
+        final int constantRowNumber = Optional.of(rowNomberNode)
                 .map(JsonNode::asInt)
                 .orElse(-1);
         if (constantRowNumber < 1) {

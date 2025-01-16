@@ -9,6 +9,7 @@ import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public record FieldBuilder(RootBuilder rootBuilder) {
@@ -20,7 +21,7 @@ public record FieldBuilder(RootBuilder rootBuilder) {
             final Iterator<Map.Entry<String, JsonNode>> iterator,
             final String path,
             final String i18nPath) {
-        final ImmutableMap.Builder<String, FD> fields = new ImmutableMap.Builder<String, FD>();
+        final ImmutableMap.Builder<String, FD> fields = new ImmutableMap.Builder<>();
         int index = 0;
         while (iterator.hasNext()) {
             final Map.Entry<String, JsonNode> entry = iterator.next();
@@ -45,7 +46,7 @@ public record FieldBuilder(RootBuilder rootBuilder) {
                     fieldpath,
                     fieldNode.get(ConfigurationSchemaNode.OA_CHECKER),
                     null);
-            i18n = checkerDescriptionParsing.i18n();
+            i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
             FD fieldDescription = switch (type) {
                 case RightsRequestField ->
                         (FD) new RightsRequestField(index++, type, required, checkerDescriptionParsing.result());

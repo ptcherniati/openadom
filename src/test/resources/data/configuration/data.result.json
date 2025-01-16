@@ -2122,7 +2122,7 @@
     "validations" : { },
     "depends" : [ ],
     "migrations" : null,
-    "hidden" : false,
+    "hidden" : true,
     "order" : 9999
   },
   "tr_flag_fla" : {

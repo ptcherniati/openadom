@@ -269,7 +269,6 @@ OA_data:
                   en: "resolution en"
               OA_checker:
                 OA_name: OA_float
-
   condition_prelevements:
     OA_tags: ["__DATA__"]
     OA_naturalKey:
@@ -286,18 +285,22 @@ OA_data:
         en: Collection condition
     OA_basicComponents:
           date_day:
+            OA_importHeader: "date de prelevement"
+            OA_required: true
             OA_checker:
               OA_name: OA_date
               OA_params:
                 OA_pattern: dd/MM/yyyy
           date_time:
+            OA_importHeader: "heure de prelevement"
             OA_checker:
               OA_name: OA_date
               OA_params:
                 OA_pattern: HH:mm:ss
           projet:
+            OA_importHeader: "Nom du projet"
           siteName:
-            OA_importHeader: Nom du site
+            OA_importHeader: "Nom du site"
             OA_required: true
             OA_checker:
               OA_name: OA_reference
@@ -305,7 +308,7 @@ OA_data:
                 OA_reference:   
                   OA_name: site
           sitePlateforme:
-            OA_importHeader: Plateforme du site
+            OA_importHeader: Nom de la plateforme
           couleurDeLEau:
             OA_importHeader: couleur de l'eau
           directionDuVent:
@@ -320,15 +323,15 @@ OA_data:
           vitesseDuVent:
             OA_importHeader: vitesse du vent
           pressionAtmospherique:
-            OA_importHeader: pression atmospherique
+            OA_importHeader: "pression atmosphérique"
           temperatureDeLAir:
-            OA_importHeader: temperature de l'air
+            OA_importHeader: "Température de l'air"
             OA_checker:
               OA_name: OA_integer
           transparenceParDisqueInra:
             OA_importHeader: transparence par disque inra
           transparenceParSecchi:
-            OA_importHeader: transparence par secchi
+            OA_importHeader: "transparence par secchi 20 cm"
             OA_checker:
               OA_name: OA_float
           commentaire:

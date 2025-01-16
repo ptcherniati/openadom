@@ -29,8 +29,7 @@ public class ChainTransformersLineTransformer implements LineTransformer {
             final DataDatum datumAfterOneMoreTransformation = lineTransformer.transform(datumAfterLastTransformation, context);
             transformations.add(datumAfterOneMoreTransformation);
         });
-        final DataDatum datumAfterFullTransformation = transformations.getLast();
-        return datumAfterFullTransformation;
+        return transformations.getLast();
     }
 
     @Override
@@ -42,7 +41,6 @@ public class ChainTransformersLineTransformer implements LineTransformer {
             final Datum datumAfterOneMoreTransformation = lineTransformer.transform(datumAfterLastTransformation);
             transformations.add(datumAfterOneMoreTransformation);
         });
-        final Datum datumAfterFullTransformation = transformations.getLast();
-        return datumAfterFullTransformation;
+        return transformations.getLast();
     }
 }

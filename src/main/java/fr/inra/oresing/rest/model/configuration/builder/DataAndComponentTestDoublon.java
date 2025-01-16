@@ -3,14 +3,11 @@ package fr.inra.oresing.rest.model.configuration.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import org.flywaydb.core.internal.util.CollectionsUtils;
 
 import java.util.*;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import static fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode.*;
 
@@ -79,42 +76,40 @@ public class DataAndComponentTestDoublon extends HashMap<String, Map<String, Lis
     }
 
     private void testUniqueComponentsForData(final JsonNode dataNodes, final String componentType) {
-        dataNodes.fieldNames().forEachRemaining(dataName -> {
-            dataNodes.get(dataName)
-                    .findPath(componentType)
-                    .fieldNames()
-                    .forEachRemaining(componentName -> {
-                        final String path = NodeSchemaValidator.joinPath(OA_DATA, dataName, componentType, componentName);
-                        addPathesForNode(dataNodes, dataName, componentName, path);
-                        if (OA_PATTERN_COMPONENTS.equals(componentType)) {
-                            for (final JsonNode componentComponentNode : dataNodes
-                                    .findPath(dataName)
-                                    .findPath(OA_PATTERN_COMPONENTS)
-                                    .findPath(componentName)
-                                    .findPath(OA_COMPONENT_QUALIFIERS)) {
-                                componentComponentNode.fieldNames().forEachRemaining(qualifierName ->
-                                {
-                                    final String componentComponentPath = NodeSchemaValidator.joinPath(OA_DATA, dataName, componentType, componentName, OA_COMPONENT_QUALIFIERS, qualifierName);
+        dataNodes.fieldNames().forEachRemaining(dataName -> dataNodes.get(dataName)
+                .findPath(componentType)
+                .fieldNames()
+                .forEachRemaining(componentName -> {
+                    final String path = NodeSchemaValidator.joinPath(OA_DATA, dataName, componentType, componentName);
+                    addPathesForNode(dataNodes, dataName, componentName, path);
+                    if (OA_PATTERN_COMPONENTS.equals(componentType)) {
+                        for (final JsonNode componentComponentNode : dataNodes
+                                .findPath(dataName)
+                                .findPath(OA_PATTERN_COMPONENTS)
+                                .findPath(componentName)
+                                .findPath(OA_COMPONENT_QUALIFIERS)) {
+                            componentComponentNode.fieldNames().forEachRemaining(qualifierName ->
+                            {
+                                final String componentComponentPath = NodeSchemaValidator.joinPath(OA_DATA, dataName, componentType, componentName, OA_COMPONENT_QUALIFIERS, qualifierName);
 
-                                    String qualifierKey = Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentName, qualifierName);
-                                    addPathesForPatternNode(componentComponentNode, dataName, componentName, qualifierKey, componentComponentPath);
-                                });
-                            }
-                            for (final JsonNode componentComponentNode : dataNodes
-                                    .findPath(dataName)
-                                    .findPath(OA_PATTERN_COMPONENTS)
-                                    .findPath(componentName)
-                                    .findPath(OA_COMPONENT_ADJACENTS)) {
-                                componentComponentNode.fieldNames().forEachRemaining(adjacentName ->
-                                {
-                                    final String componentComponentPath = NodeSchemaValidator.joinPath(OA_DATA, dataName, componentType, componentName, OA_COMPONENT_ADJACENTS, adjacentName);
-                                    String qualifierKey = Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentName, adjacentName);
-                                    addPathesForPatternNode(componentComponentNode, dataName, componentName, qualifierKey, componentComponentPath);
-                                });
-                            }
+                                String qualifierKey = Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentName, qualifierName);
+                                addPathesForPatternNode(componentComponentNode, dataName, componentName, qualifierKey, componentComponentPath);
+                            });
                         }
-                    });
-        });
+                        for (final JsonNode componentComponentNode : dataNodes
+                                .findPath(dataName)
+                                .findPath(OA_PATTERN_COMPONENTS)
+                                .findPath(componentName)
+                                .findPath(OA_COMPONENT_ADJACENTS)) {
+                            componentComponentNode.fieldNames().forEachRemaining(adjacentName ->
+                            {
+                                final String componentComponentPath = NodeSchemaValidator.joinPath(OA_DATA, dataName, componentType, componentName, OA_COMPONENT_ADJACENTS, adjacentName);
+                                String qualifierKey = Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentName, adjacentName);
+                                addPathesForPatternNode(componentComponentNode, dataName, componentName, qualifierKey, componentComponentPath);
+                            });
+                        }
+                    }
+                }));
     }
 
     private void addPathesForNode(final JsonNode dataNodes, final String dataName, final String componentName, final String path) {
@@ -130,9 +125,9 @@ public class DataAndComponentTestDoublon extends HashMap<String, Map<String, Lis
     }
 
     private void addPathesForPatternNode(final JsonNode dataNodes, final String dataName, final String componentName, final String qualifierOrAdjacentName, final String path) {
-        duplicatedInPattern.computeIfAbsent(dataName, l -> new HashMap<String, Map<String, List<String>>>())
-                .computeIfAbsent(componentName, l -> new HashMap<String, List<String>>())
-                .computeIfAbsent(qualifierOrAdjacentName, l -> new LinkedList<String>())
+        duplicatedInPattern.computeIfAbsent(dataName, l -> new HashMap<>())
+                .computeIfAbsent(componentName, l -> new HashMap<>())
+                .computeIfAbsent(qualifierOrAdjacentName, l -> new LinkedList<>())
                 .add(path);
         addPatternImportHeader(
                 dataNodes.findPath(qualifierOrAdjacentName),
@@ -178,15 +173,15 @@ public class DataAndComponentTestDoublon extends HashMap<String, Map<String, Lis
 
     public Map<String, List<String>> listReferencableComponentKeysByDataKey() {
         final ImmutableMap.Builder<String, List<String>> builder = new ImmutableMap.Builder<>();
-        entrySet().forEach(dataEntry -> {
+        forEach((key, value) -> {
             final ImmutableList.Builder<String> components = new ImmutableList.Builder<>();
-            for (final Entry<String, List<String>> componentEntry : dataEntry.getValue().entrySet()) {
+            for (final Entry<String, List<String>> componentEntry : value.entrySet()) {
                 if (componentEntry.getValue().stream().anyMatch(path -> path.matches(".*(" + OA_BASIC_COMPONENTS + "|" + OA_CONSTANT_COMPONENTS + "|" + OA_PATTERN_COMPONENTS + "|" + OA_COMPUTED_COMPONENTS + ").*"))) {
                     components.add(componentEntry.getKey());
                 }
             }
             builder
-                    .put(dataEntry.getKey(), components.build());
+                    .put(key, components.build());
         });
         return builder.build();
     }

@@ -1,26 +1,18 @@
 package fr.inra.oresing.rest.model.data.query;
 
-import fr.inra.oresing.domain.Authorization;
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.data.read.query.RequiredAuthorization;
-import fr.inra.oresing.persistence.SqlSchemaForApplication;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Getter
 @Setter
-/**
- *
+/*
+
  */
 public class AuthorizationDescription {
 

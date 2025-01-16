@@ -19,7 +19,10 @@ record SelectRequest(
         SelectRequestLimit limit
 ) {
     SqlRequest build() {
-        String select = Optional.ofNullable(selectRequestRequest()).map(SelectRequestRequest::build).orElse("")
+        String select = Optional
+                .ofNullable(selectRequestRequest())
+                .map(request -> request.build(downloadDatasetQuery().horizontalDisplay()))
+                .orElse("")
                         .formatted(
                             Optional.ofNullable(orderBy()).map(SelectRequestOrderBy::build).orElse(""), //$1%s
                             Optional.ofNullable(offset()).map(SelectRequestOffset::build).orElse(""),//$2%s
@@ -33,7 +36,7 @@ record SelectRequest(
     }
 
     record SelectRequestRequest(
-            boolean hasPatternDefinition,
+            long patternDefinitionCount,
             String dataName,
             List<BuildRemoveSqlSelectNotInValues> buildRemoveSqlSelectNotInValues,
             String from,
@@ -65,11 +68,11 @@ record SelectRequest(
                     FROM rs
                     JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
                     GROUP BY naturalkey, hierarchicalkey
-                    %%1$s --order by 
+                    %%1$s --order by
                 """;
 
         static final String TEMPLATE_WITH_NO_PATTERNS_DEFINITION = """
-                SELECT 
+                SELECT
                     'fr.inra.oresing.persistence.DataRows' AS "@class",
                     jsonb_build_object(
                       --'rowNumber', row_number() over (),
@@ -81,18 +84,18 @@ record SelectRequest(
                       'values', ARRAY[refvalues] ,
                       'refsLinkedTo', ARRAY[refsLinkedTo],
                        'allPatternColumnNames',ARRAY[patterncolumnname]
-					) AS   "json"
-                	FROM %3$s.referencevalue rs
+                    ) AS   "json"
+                    FROM %3$s.referencevalue rs
                     WHERE
                             rs.referencetype = '%4$s'%5$s
-                            
-                %%1$s --order by 
+     
+                %%1$s --order by
                 %%2$s --offset
                 %%3$s --limit
-                """;
+     """;
 
-        public String build() {
-            return (hasPatternDefinition()? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
+        public String build(boolean horizontalDisplay) {
+            return ((patternDefinitionCount() > 1 || (patternDefinitionCount()==1 && horizontalDisplay))? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
                     .formatted(
                     buildRemoveSqlSelectNotInValues.stream()
                             .map(BuildRemoveSqlSelectNotInValues::valuePathToHide)
@@ -142,7 +145,7 @@ record SelectRequest(
 
             return (outPut().limit() != null && outPut().limit() >= 0) ?
                     """
-                            LIMIT  %d  """.formatted(outPut().limit()) :
+                            LIMIT  %d""".formatted(outPut().limit()) :
                     "";
         }
     }
@@ -154,8 +157,7 @@ record SelectRequest(
                             .map(vckob -> {
                                         final String cast = switch (vckob.sqlType()) {
                                             case final ComponentBooleanType componentBooleanType -> "BOOL";
-                                            case final ComponentDateType componentDateType ->
-                                                    "COMPOSITE_DATE::TIMESTAMP";
+                                            case final ComponentDateType componentDateType -> "COMPOSITE_DATE::TIMESTAMP";
                                             case final ComponentNumericType componentNumericType -> "NUMERIC";
                                             case final ComponentReferenceType componentReferenceType -> "LTREE";
                                             case final ComponentTextType componentTextType -> "TEXT";

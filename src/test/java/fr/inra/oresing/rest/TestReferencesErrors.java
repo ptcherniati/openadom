@@ -13,9 +13,12 @@ import org.hamcrest.core.IsNull;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
@@ -26,7 +29,6 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -97,18 +99,38 @@ public class TestReferencesErrors {
 
     @Transactional
     void addRoleAdmin(final CreateUserResult dbUserResult) {
-        namedParameterJdbcTemplate.update("grant \"openAdomAdmin\" to \"" + dbUserResult.userId().toString() + "\" WITH INHERIT TRUE", Map.of());
+        String sql = """
+                GRANT "openAdomAdmin" TO "%1$s" WITH INHERIT TRUE
+                """;
+
+        namedParameterJdbcTemplate.update(
+                String.format(sql, dbUserResult.userId().toString()),
+                Map.of()
+        );
     }
 
     @Transactional
     void setToActive(final UUID userId) {
-        namedParameterJdbcTemplate.update("update public.OreSiUser set accountstate = 'active' where id = :id", Map.of("id", userId));
+        String sql = """
+                UPDATE public.oresiuser 
+                SET accountstate = 'active' 
+                WHERE id = :id
+                """;
+
+        namedParameterJdbcTemplate.update(sql, Map.of("id", userId));
     }
 
     @Transactional
     void setToActive(final String login) {
-        namedParameterJdbcTemplate.update("update public.OreSiUser set accountstate = 'active' where login = :login", Map.of("login", login));
+        String sql = """
+                UPDATE public.oresiuser 
+                SET accountstate = 'active' 
+                WHERE login = :login
+                """;
+
+        namedParameterJdbcTemplate.update(sql, Map.of("login", login));
     }
+
 
     @Test
     public void testRecursivity() throws Exception {
@@ -131,9 +153,9 @@ public class TestReferencesErrors {
                             .param("filter", "ALL")
                             .cookie(recursivityCookie))
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].reference", IsEqual.equalTo("proprietes_taxon")))
-                    .andExpect(jsonPath("$.references.taxon.dynamicColumns['propriétés de taxons'].headerPrefix", IsEqual.equalTo("pt_")))
-                    .andExpect(jsonPath("$.internationalization.references.taxon.internationalizedDynamicColumns['propriétés de taxons'].en", IsEqual.equalTo("Properties of Taxa")))
+                    .andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon")))
+                    .andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_")))
+                    .andExpect(jsonPath("$.configuration.i18n.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties")))
                     .andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
@@ -148,7 +170,7 @@ public class TestReferencesErrors {
             assert refStream != null;
             try (final Reader reader = new BufferedReader(new InputStreamReader
                     (refStream, StandardCharsets.UTF_8))) {
-                int c = 0;
+                int c;
                 while ((c = reader.read()) != -1) {
                     textBuilder.append((char) c);
                 }
@@ -166,8 +188,7 @@ public class TestReferencesErrors {
                                 .cookie(recursivityCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
-
-                assertEquals(e.getValue().get(2), response, "for key " + e.getKey());
+                JSONAssert.assertEquals(e.getValue().get(2), response, JSONCompareMode.NON_EXTENSIBLE);
                 responses.put(e.getKey(), response);
             }
         }
@@ -194,7 +215,7 @@ public class TestReferencesErrors {
         try (final InputStream refStream = Objects.requireNonNull(resources).openStream()) {
             try (final Reader reader = new BufferedReader(new InputStreamReader
                     (refStream, StandardCharsets.UTF_8))) {
-                int c = 0;
+                int c;
                 while ((c = reader.read()) != -1) {
                     textBuild.append((char) c);
                 }
@@ -228,12 +249,12 @@ public class TestReferencesErrors {
     }
 
     private void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
-        final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+        mockMvc.perform(put("/api/v1/authorization/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", pattern)
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(userId.toString())))
+                .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(userId.toString())))
                 .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
                 .andExpect(jsonPath("$.authorizations", Matchers.hasItem(pattern)))
                 .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
@@ -274,6 +295,11 @@ public class TestReferencesErrors {
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
                                 .file(refFile)
                                 .cookie(repeatedColumnCookie))
+                        .andDo(result -> {
+                            if (result.getResponse().getStatus() > 300) {
+                                log.error(e.getKey());
+                            }
+                        })
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
@@ -282,13 +308,12 @@ public class TestReferencesErrors {
             }
         }
         // test repository
-        final String localization = "estreesmons";
-        final URL resources = getClass().getResource(Fixtures.getSWCRepositoryResourceName(localization));
+        final URL resources = getClass().getResource(Fixtures.getSWCRepositoryResourceName());
         final StringBuilder textBuild = new StringBuilder();
         try (final InputStream refStream = Objects.requireNonNull(resources).openStream()) {
             try (final Reader reader = new BufferedReader(new InputStreamReader
                     (refStream, StandardCharsets.UTF_8))) {
-                int c = 0;
+                int c;
                 while ((c = reader.read()) != -1) {
                     textBuild.append((char) c);
                 }
@@ -300,7 +325,7 @@ public class TestReferencesErrors {
             try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
                 log.info(e.getKey());
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/SWC")
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
                                 .file(refFile)
                                 .cookie(repeatedColumnCookie))
                         .andExpect(status().is4xxClientError())
@@ -354,13 +379,12 @@ public class TestReferencesErrors {
             }
         }
         // test repository
-        final String localization = "estreesmons";
-        final URL resources = getClass().getResource(Fixtures.getSWCRepositoryResourceName(localization));
+        final URL resources = getClass().getResource(Fixtures.getSWCRepositoryResourceName());
         final StringBuilder textBuild = new StringBuilder();
         try (final InputStream refStream = Objects.requireNonNull(resources).openStream()) {
             try (final Reader reader = new BufferedReader(new InputStreamReader
                     (refStream, StandardCharsets.UTF_8))) {
-                int c = 0;
+                int c;
                 while ((c = reader.read()) != -1) {
                     textBuild.append((char) c);
                 }
@@ -372,7 +396,7 @@ public class TestReferencesErrors {
             try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
                 log.info(e.getKey());
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/SWC")
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
                                 .file(refFile)
                                 .cookie(repeatedColumnsCookie))
                         .andExpect(status().is4xxClientError())

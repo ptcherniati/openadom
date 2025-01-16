@@ -17,3 +17,4 @@ ALTER SCHEMA public OWNER TO "openAdomTechUser";
 -- Accorder les privilèges nécessaires sur la base de données
 GRANT ALL PRIVILEGES ON DATABASE openadom TO "openAdomTechUser";
 ALTER ROLE "openAdomTechUser" BYPASSRLS;
+GRANT "openAdomTechUser" TO "openAdomAdmin" WITH INHERIT TRUE;

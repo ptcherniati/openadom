@@ -6,25 +6,21 @@ import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import lombok.Value;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
 /**
  * Permet de stocker la valeur pour une colonne d'un référentiel lorsque cette colonne a une seule valeur associée ({@link Multiplicity#ONE}).
  */
-@Value
-public class DataColumnDisplayValue implements DataColumnValue<String, DataColumnDisplayValue.ReferenceColumnDisplayValueForLocale> {
+public record DataColumnDisplayValue(
+        fr.inra.oresing.domain.data.DataColumnDisplayValue.ReferenceColumnDisplayValueForLocale value) implements DataColumnValue<String, DataColumnDisplayValue.ReferenceColumnDisplayValueForLocale> {
 
     private static final DataColumnDisplayValue EMPTY = new DataColumnDisplayValue(null);
 
-    ReferenceColumnDisplayValueForLocale value;
-
     /**
      * Un {@link DataColumnDisplayValue} vide (valeur non renseignée ?)
-     * @return
+     *
      */
     public static DataColumnDisplayValue empty() {
         return EMPTY;
@@ -54,6 +50,7 @@ public class DataColumnDisplayValue implements DataColumnValue<String, DataColum
     public String toJsonForDatabase() {
         return null;
     }
+
     @Getter
     @Setter
     @ToString

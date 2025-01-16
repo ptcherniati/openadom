@@ -2,12 +2,9 @@ package fr.inra.oresing.domain.repository.file;
 
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.exceptions.ReportErrors;
-import fr.inra.oresing.domain.file.FileOrUUID;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 public interface BinaryFileRepository {

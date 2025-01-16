@@ -194,7 +194,7 @@ OA_data:   #optional
       spe_date_heure:   #optional
         OA_computation:
           OA_expression: >  #optional
-            return datum.date   " "   datum.heure
+            return datum.date + " " + datum.heure
         OA_checker:   #mandatory
           OA_name: OA_date  #mandatory
           OA_params:   #optional
@@ -558,7 +558,7 @@ OA_data:   #optional
       dat_date_heure:   #optional
         OA_computation:
           OA_expression: >  #optional
-            return datum.dat_date   " "   datum.dat_heure
+            return datum.dat_date + " " + datum.dat_heure
         OA_checker:   #mandatory
           OA_name: OA_date  #mandatory
           OA_params:   #optional
@@ -993,6 +993,52 @@ OA_rightsRequest:   #optional
       en: You can request rights to the monsore application by filling out this form
   OA_formFields:   #optional
     nom:   #optional
+      OA_checker:   #optional
+        OA_name: OA_string  #mandatory
+        OA_params:   #optional
+          OA_pattern: "[a-z]*"  #optional
+          OA_multiplicity: ONE  #optional
+      OA_required: true  #optional
+      OA_i18n:   #mandatory
+        OA_title:   #optional
+          fr: Nom
+          en: Name
+        OA_description:   #optional
+          fr: Nom
+          en: Name
+    projet:   #optional
+      OA_checker:   #mandatory
+        OA_name: OA_reference  #mandatory
+        OA_params:   #optional
+          OA_reference:   #mandatory
+            OA_name: tr_projet_pro  #mandatory
+          OA_multiplicity: MANY  #optional
+      OA_required: true  #optional
+      OA_i18n:   #mandatory
+        OA_title:   #optional
+          fr: Projet
+          en: Project
+        OA_description:   #optional
+          fr: Référentiel des projet
+          en: Project repository
+    start_date:   #optional
+      OA_checker:   #mandatory
+        OA_name: OA_date  #mandatory
+        OA_params:   #optional
+          OA_pattern: dd/MM/yyyy  #mandatory
+          OA_duration: 1 Day  #optional
+          OA_max: 31/12/2013  #optional
+          OA_min: 01/01/2013  #optional
+          OA_multiplicity: ONE  #optional
+      OA_required: true  #optional
+      OA_i18n:   #mandatory
+        OA_title:   #optional
+          fr: Date de début
+          en: Start Date
+        OA_description:   #optional
+          fr: La date de début au format dd/MM/yyyy
+          en: The start date in dd/MM/yyyy format
+    end_date:   #optional
       OA_checker:   #optional
         OA_name: OA_string  #mandatory
         OA_params:   #optional

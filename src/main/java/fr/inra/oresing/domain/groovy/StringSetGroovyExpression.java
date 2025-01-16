@@ -24,23 +24,27 @@ public final class StringSetGroovyExpression implements Expression<Set<String>> 
     @Override
     public Set<String> evaluate(final Map<String, Object> context) {
         final Object evaluation = expression.evaluate(context);
-        if (evaluation == null) {
-            return null;
-        }
-        if (evaluation instanceof String) {
-            return Collections.singleton((String) evaluation);
-        }
-        if (evaluation instanceof Iterable) {
-            final Set<String> result = new LinkedHashSet<>();
-            for (final Object unknownElement : (Iterable) evaluation) {
-                switch (unknownElement) {
-                    case final String ignored -> result.add((String) evaluation);
-                    case final Number ignored -> result.add(unknownElement.toString());
-                    case null, default ->
-                            throw CheckerReturnType.getError(evaluation, expression, context, Set.of(CheckerReturnType.SET_OF_STRING, CheckerReturnType.SET_OF_NUMBER));
-                }
+        switch (evaluation) {
+            case null -> {
+                return null;
             }
-            return result;
+            case String s -> {
+                return Collections.singleton(s);
+            }
+            case Iterable iterable -> {
+                final Set<String> result = new LinkedHashSet<>();
+                for (final Object unknownElement : iterable) {
+                    switch (unknownElement) {
+                        case final String ignored -> result.add((String) evaluation);
+                        case final Number ignored -> result.add(unknownElement.toString());
+                        case null, default ->
+                                throw CheckerReturnType.getError(evaluation, expression, context, Set.of(CheckerReturnType.SET_OF_STRING, CheckerReturnType.SET_OF_NUMBER));
+                    }
+                }
+                return result;
+            }
+            default -> {
+            }
         }
         throw CheckerReturnType.getError(evaluation, expression, context, Set.of(CheckerReturnType.SET_OF_STRING));
     }

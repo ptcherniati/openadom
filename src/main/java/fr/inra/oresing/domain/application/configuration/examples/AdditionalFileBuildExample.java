@@ -21,17 +21,28 @@ class AdditionalFileBuildExample {
 
     protected static AdditionalFileType buildAdditionalFileSchema(final TitleType title) {
         return new AdditionalFileType(
-                new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
-                    put(ConfigurationSchemaNode.OA_I_18_N, title);
-                    put(ConfigurationSchemaNode.OA_FORM_FIELDS, new CollectionType.MapType<FormatType>(
-                            new LinkedHashMap<String, FormatType>() {{
-                                put("nom", FormatExampleBuilder.NOM);
-                                put("projet", FormatExampleBuilder.PROJET);
-                            }},
-                            false,
-                            false,
-                            FormatType.EMPTY_INSTANCE()));
-                }}
+                getChildren(title)
         );
     }
+
+    private static LinkedHashMap<String, ConfigurationSchemaNodeType> getChildren(TitleType title) {
+
+        LinkedHashMap<String, ConfigurationSchemaNodeType> children = createChildrenMap(title);
+        return children;
+    }
+
+    private static LinkedHashMap<String, ConfigurationSchemaNodeType> createChildrenMap(TitleType title) {
+        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+        map.put(ConfigurationSchemaNode.OA_I_18_N, title);
+        map.put(ConfigurationSchemaNode.OA_FORM_FIELDS, createFormFieldsMap());
+        return map;
+    }
+
+    private static CollectionType.MapType<FormatType> createFormFieldsMap() {
+        LinkedHashMap<String, FormatType> formFields = new LinkedHashMap<>();
+        formFields.put("nom", FormatExampleBuilder.NOM);
+        formFields.put("projet", FormatExampleBuilder.PROJET);
+        return new CollectionType.MapType<>(formFields, false, false, FormatType.EMPTY_INSTANCE());
+    }
+
 }

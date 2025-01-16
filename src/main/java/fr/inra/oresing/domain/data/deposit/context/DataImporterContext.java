@@ -55,7 +55,6 @@ public class DataImporterContext {
         return columnsWithPatternColumns;
     }
 
-    @Getter
     private ImmutableSet<Column> columnsWithPatternColumns;
     @Getter
     private final PatternColumnFactory patternColumnFactory;
@@ -63,9 +62,8 @@ public class DataImporterContext {
     private final Mapper jsonRowMapper;
     final Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey;
     final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey;
-    boolean allowUnexpectedColumns;
-    private final String reftype;
-    private PublishContext.PublishContextBuilder publishContextBuilder;
+    final boolean allowUnexpectedColumns;
+    private final PublishContext.PublishContextBuilder publishContextBuilder;
 
     public DataImporterContext(final ContextConstants constants,
                                final ImmutableSet<LineChecker> lineCheckers,
@@ -89,7 +87,6 @@ public class DataImporterContext {
         this.displayNamesByReferenceAndNaturalKey = displayNamesByReferenceAndNaturalKey;
         this.displayDescriptionsByReferenceAndNaturalKey = displayDescriptionsByReferenceAndNaturalKey;
         this.allowUnexpectedColumns = allowUnexpectedColumns;
-        this.reftype = reftype;
         this.publishContextBuilder = publishContextBuilder;
         this.nodesForMenu = nodesForMenu;
     }
@@ -109,7 +106,6 @@ public class DataImporterContext {
     /**
      * Séparateur pour les clés naturelles composites.
      *
-     * @return
      */
     public static String getCompositeNaturalKeyComponentsSeparator() {
         return COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR;
@@ -122,9 +118,6 @@ public class DataImporterContext {
     /**
      * Crée une clé hiérarchique
      *
-     * @param recursiveNaturalKey
-     * @param referenceDatum
-     * @return
      */
     public Ltree newHierarchicalKey(final Ltree recursiveNaturalKey, final DataDatum referenceDatum) {
         return getHierarchicalKeyFactory().newHierarchicalKey(recursiveNaturalKey, referenceDatum);
@@ -137,7 +130,6 @@ public class DataImporterContext {
     /**
      * Les colonnes dont les valeurs composent la clé naturelle composite de chaque ligne pour ce référentiel
      *
-     * @return
      */
     public ImmutableList<DataColumn> getKeyColumns() {
         Preconditions.checkState(CollectionUtils.isNotEmpty(getDataDescription().naturalKey()), ExceptionMessage.MISSING_PRIMARY_KEY_COMPONENT.toMessage(), getRefType());
@@ -159,7 +151,6 @@ public class DataImporterContext {
     /**
      * Si le référentiel contient des colonnes qui font références à d'autres lignes de ce même référentiel
      *
-     * @return
      */
     public boolean isRecursive() {
         return getRecursiveComponentDescription().isPresent();
@@ -168,7 +159,6 @@ public class DataImporterContext {
     /**
      * Pour un référentiel récursif, indique la colonne dans laquelle la valeur est la clé vers le parent de la ligne courante
      *
-     * @return
      */
     public DataColumn getColumnToLookForParentKey() {
         Preconditions.checkState(isRecursive());
@@ -182,7 +172,6 @@ public class DataImporterContext {
     /**
      * Le séparateur à utiliser pour distinguer les cellules du fichier CSV
      *
-     * @return
      */
     public char getCsvSeparator() {
         return getDataDescription().separator();
@@ -195,7 +184,6 @@ public class DataImporterContext {
     /**
      * Dans le cas d'un référentiel récursif, le {@link ReferenceType} qui porte sur la colonne contenant des valeurs faisant référence à d'autres lignes du référentiel.
      *
-     * @return
      */
     public LineChecker getReferenceLineChecker() {
         Preconditions.checkState(isRecursive());
@@ -212,11 +200,16 @@ public class DataImporterContext {
     }
 
     public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(final Ltree hierarchicalKey) {
-        return Optional.ofNullable(storedReferences.get(hierarchicalKey));
+        if(storedReferences==null){
+            return Optional.empty();
+        }
+        return storedReferences.entrySet().stream()
+                .filter(entry -> entry.getKey().identity().hierarchicalKey().equals(hierarchicalKey))
+                .map(Map.Entry::getValue)
+                .findFirst();
     }
 
     /**
-     * @return
      * @deprecated ne devrait pas être exposé
      */
     @Deprecated
@@ -225,17 +218,16 @@ public class DataImporterContext {
     }
 
     public ImmutableMap<String, Column> getExpectedColumnsPerHeaders() {
-        final ImmutableMap<String, Column> expectedColumnsPerHeaders = columns.stream()
+        return columns.stream()
                 .filter(Column::isExpected)
                 .collect(ImmutableMap.toImmutableMap(
                         Column::getExpectedHeader,
                         Function.identity()
                 ));
-        return expectedColumnsPerHeaders;
     }
 
     public Map<String, ComponentOrderBy> getExpectedComponentOrderByPerHeaders(String language) {
-        final Map<String, ComponentOrderBy> expectedColumnsPerHeaders = columns.stream()
+        return columns.stream()
                 .filter(Column::isExpected)
                 .map(Column::getReferenceColumn)
                 .map(DataColumn::column)
@@ -244,7 +236,6 @@ public class DataImporterContext {
                                 .internationalizeHeader(getRefType(), componentName, language),
                         componentName -> new ComponentOrderBy(componentName, DataRepository.Order.ASC, getDataDescription().getTypeForComponentKey(componentName))
                 ));
-        return expectedColumnsPerHeaders;
     }
 
     public boolean pushValue(final DataDatum referenceDatum, final String header, final String cellContent, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
@@ -268,7 +259,7 @@ public class DataImporterContext {
 
     public String getCsvCellContent(final DataDatum referenceDatum, final String header) {
         final Column column = getExpectedColumnsPerHeaders().get(header);
-        return column.getCsvCellContent(referenceDatum);
+        return Objects.requireNonNull(column).getCsvCellContent(referenceDatum);
     }
 
     public Optional<InternationalizationTitle> getDisplayPattern() {

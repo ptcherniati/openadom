@@ -28,7 +28,7 @@ public record IntervalValuesDate(
             try {
                 if (from.matches("[0-9]*")) {
                     ZoneId zone = ZoneId.of("UTC");
-                    fromDate = LocalDate.ofInstant(Instant.ofEpochMilli(Long.valueOf(from)), zone);
+                    fromDate = LocalDate.ofInstant(Instant.ofEpochMilli(Long.parseLong(from)), zone);
                     from = fromDate.format(DateTimeFormatter.ofPattern(format));
                 } else {
                     fromDate = LocalDate.from(DateTimeFormatter.ofPattern(format).parse(from));
@@ -41,7 +41,7 @@ public record IntervalValuesDate(
             try {
                 if (to.matches("[0-9]*")) {
                     ZoneId zone = ZoneId.of("UTC");
-                    toDate = LocalDate.ofInstant(Instant.ofEpochMilli(Long.valueOf(to)), zone);
+                    toDate = LocalDate.ofInstant(Instant.ofEpochMilli(Long.parseLong(to)), zone);
                     to = toDate.format(DateTimeFormatter.ofPattern(format));
                 } else {
                     toDate = LocalDate.from(DateTimeFormatter.ofPattern(format).parse(to));

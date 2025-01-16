@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.application.configuration.examples;
 
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.CollectionType;
-import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 import fr.inra.oresing.domain.application.configuration.type.DynamicComponentType;
 import fr.inra.oresing.domain.application.configuration.type.StringType;
 
@@ -22,7 +21,7 @@ class DynamicComponentsExampleBuilder {
             final StringType columnToLookup,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        return new DynamicComponentType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {
+        return new DynamicComponentType(new LinkedHashMap<>() {
             {
                 put(ConfigurationSchemaNode.OA_HEADER_PREFIX, prefix);
                 put(ConfigurationSchemaNode.OA_REFERENCE, reference);

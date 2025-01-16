@@ -2,19 +2,21 @@ package fr.inra.oresing.rest.data;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
+import com.google.common.io.Resources;
+import fr.inra.oresing.client.Client;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.GroovyDataInjectionConfiguration;
+import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationReader;
 import fr.inra.oresing.domain.checker.CheckerFactory;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
-import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.checker.type.ReferenceType;
-import fr.inra.oresing.domain.checker.type.StringType;
+import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
@@ -23,10 +25,12 @@ import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.column.*;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
+import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
+import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
-import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
-import fr.inra.oresing.domain.data.read.query.DownloadDatasetQueryNoFilter;
-import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileOrUUID;
@@ -39,8 +43,12 @@ import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
-import fr.inra.oresing.rest.application.ApplicationService;
+import fr.inra.oresing.rest.filesenderclient.*;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
+import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
+import fr.inra.oresing.rest.model.data.LineCheckerResult;
+import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +59,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.*;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -61,29 +73,34 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain.DATA_READ;
+
 @Slf4j
 @Component
-@Transactional(readOnly = true)
-public class DataService {
-
-    private final GroovyContextHelper groovyContextHelper = new GroovyContextHelper();
-    @Autowired
-    private ApplicationService applicationService;
-    @Autowired
-    private AuthenticationService authenticationService;
+public class DataService implements ServiceContainerBean {
+    public static final String OPEN_ADOM_CLIENT_GROOVY = "OpenAdomClient.groovy";
+    public static final String OPEN_ADOM_CLIENT_CONFIGURATION_JSON = "openAdom-client-configuration.json";
+    public static final String README_FILE_NAME = "LISEZ-MOI.txt";
+    public static final String SCRIPTS = "Scripts";
+    public static final String SETUP_SCRIPT_NAME = "setup.sh";
+    ServiceContainer serviceContainer;
     @Autowired
     private OreSiRepository repo;
     @Autowired
     private JsonRowMapper jsonRowMapper;
 
     private DataRepository dataRepository;
+    @Autowired
+    private OreSiRepository repository;
+    @Autowired
+    private FileRepository fileRepository;
 
     private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription) {
         final String reference = referenceDynamicColumnDescription.reference();
         final DataColumn referenceColumnToLookForHeader = new DataColumn(referenceDynamicColumnDescription.referenceColumnToLookForHeader());
         final List<DataValue> allByReferenceType = referenceValueRepository.findAllByReferenceTypeStream(reference)
                 .toList();
-        final ImmutableSet<Column> valuedDynamicColumns = allByReferenceType.stream()
+        return allByReferenceType.stream()
                 .map(referenceValue -> {
                     final DataDatum referenceDatum = referenceValue.getRefValues();
                     final Ltree naturalKey = referenceValue.getNaturalKey();
@@ -113,20 +130,17 @@ public class DataService {
                         }
                     };
                 }).collect(ImmutableSet.toImmutableSet());
-        return valuedDynamicColumns;
     }
 
     @Transactional()
     public UUID addData(final Application application,
                         final String dataName,
                         final DataFile file) throws IOException {
-        authenticationService.setRoleForClient();
+        serviceContainer.authenticationService().setRoleForClient();
         try (final InputStream csv = new ByteArrayInputStream(file.data())) {
             addData(application, dataName, csv, file.params());
         } catch (InvalidDatasetContentException invalidDatasetContentException) {
             throw invalidDatasetContentException;
-        } catch (Exception exception) {
-            throw exception;
         }
         return file.params().fileid();
     }
@@ -158,7 +172,7 @@ public class DataService {
                 .collect(ImmutableList.toImmutableList());
         ImmutableSortedSet<String> sortedReferenceTypes = ImmutableSortedSet.copyOf(Ordering.explicit(referenceTypes), referenceTypes);
         ImmutableSortedSet<String> includedReferences = sortedReferenceTypes.headSet(lowestLevelReference, true);
-        Optional.ofNullable(compositeReferenceDescription.node())
+        Optional.of(compositeReferenceDescription.node())
                 //.filter(node -> includedReferences.contains(node.nodeName()))
                 .ifPresent(compositeReferenceComponentDescription -> {
                     String reference = compositeReferenceComponentDescription.nodeName();
@@ -175,7 +189,6 @@ public class DataService {
                                 Ltree parentHierarchicalKey = Ltree.fromSql(parentHierarchicalKeyAsString);
                                 parentHierarchicalKeys.put(referenceValue, parentHierarchicalKey);
                             }
-                            ;
                         });
                     });
                 });
@@ -210,57 +223,55 @@ public class DataService {
         final Set<String> patternColumnsNames = Optional.ofNullable(constants.displayPattern())
                 .map(InternationalizationTitle::getTitle)
                 .map(Map::values)
-                .map(m -> m.stream().collect(Collectors.toSet()))
+                .map(HashSet::new)
                 .orElseGet(HashSet::new);
         final Set<String> patternColumnsDescription = Optional.ofNullable(constants.displayPattern())
                 .map(InternationalizationTitle::getDescription)
                 .map(Map::values)
-                .map(m -> m.stream().collect(Collectors.toSet()))
+                .map(HashSet::new)
                 .orElseGet(HashSet::new);
         Map<String, List<String>> referenceToColumnName = lineCheckers.stream()
                 .filter(lc -> lc.underlyingType() instanceof ReferenceType)
                 .collect(Collectors.groupingBy(
                                 lc -> ((ReferenceType) lc.underlyingType()).getRefType(),
-                                Collectors.mapping(ReferenceType -> ((DataColumn) ReferenceType.target()).column(), Collectors.toList())
+                                Collectors.mapping(ReferenceType -> ReferenceType.target().column(), Collectors.toList())
                         )
                 );
         Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey =
                 lineCheckers.stream()
                         .filter(lc -> lc.underlyingType() instanceof ReferenceType)
                         .map(lc -> ((ReferenceType) lc.underlyingType()).getRefType())
-                        .filter(rt -> patternColumnsNames.contains(rt))
+                        .filter(patternColumnsNames::contains)
                         .collect(Collectors.toMap(ref ->
                                         Optional.ofNullable(referenceToColumnName.getOrDefault(ref, null))
-                                                .map(l -> l.get(0))
+                                                .map(List::getFirst)
                                                 .orElse(ref),
                                 ref -> getReferenceValueRepository(application).findDisplayByNaturalKey(ref)));
         Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey =
                 lineCheckers.stream()
                         .filter(lc -> lc.underlyingType() instanceof ReferenceType)
                         .map(lc -> ((ReferenceType) lc.underlyingType()).getRefType())
-                        .filter(rt -> patternColumnsDescription.contains(rt))
+                        .filter(patternColumnsDescription::contains)
                         .collect(Collectors.toMap(ref ->
                                         Optional.ofNullable(referenceToColumnName.getOrDefault(ref, null))
-                                                .map(l -> l.get(0))
+                                                .map(List::getFirst)
                                                 .orElse(ref),
                                 ref -> getReferenceValueRepository(application).findDisplayByNaturalKey(ref)));
         List<ReferenceScope.NodeDescription> nodesForMenu = referenceValueRepository.getNodesForMenu(MenuType.authorization);
-        DataImporterContext referenceImporterContext =
-                new DataImporterContext(
-                        constants,
-                        lineCheckers,
-                        storedReferences,
-                        result.columns(),
-                        result.patternColumnFactory(),
-                        jsonRowMapper,
-                        displayNamesByReferenceAndNaturalKey,
-                        displayDescriptionsByReferenceAndNaturalKey,
-                        allowUnexpectedColumns,
-                        dataName,
-                        publishContextBuilder,
-                        nodesForMenu
-                );
-        return referenceImporterContext;
+        return new DataImporterContext(
+                constants,
+                lineCheckers,
+                storedReferences,
+                result.columns(),
+                result.patternColumnFactory(),
+                jsonRowMapper,
+                displayNamesByReferenceAndNaturalKey,
+                displayDescriptionsByReferenceAndNaturalKey,
+                allowUnexpectedColumns,
+                dataName,
+                publishContextBuilder,
+                nodesForMenu
+        );
     }
 
 
@@ -271,25 +282,25 @@ public class DataService {
                         new LinkedList<>()
                 ).stream()
                 .map(entry -> {
-                    final ComponentDescription basicComponent = (BasicComponent) entry.getValue();
+                    final ComponentDescription basicComponent = entry.getValue();
                     final TransformationConfiguration defaultValue = Optional
                             .ofNullable(basicComponent.defaultValue())
                             .orElse(null);
                     final DataColumn referenceColumn = new DataColumn(entry.getKey());
-                    final String headerForReferenceColumn = Optional.ofNullable(basicComponent)
+                    final String headerForReferenceColumn = Optional.of(basicComponent)
                             .map(ComponentDescription::importHeader)
                             .orElse(entry.getKey());
-                    final ComponentPresenceConstraint mandatory = Optional.ofNullable(basicComponent)
+                    final ComponentPresenceConstraint mandatory = Optional.of(basicComponent)
                             .map(ComponentDescription::mandatory)
                             .orElse(ComponentPresenceConstraint.MANDATORY);
-                    final Set<? extends Tag> tags = Optional.ofNullable(basicComponent)
+                    final Set<? extends Tag> tags = Optional.of(basicComponent)
                             .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.INSTANCE()));
-                    final CheckerDescription checker = Optional.ofNullable(basicComponent)
+                            .orElse(Set.of(Tag.NoTag.instance()));
+                    final CheckerDescription checker = Optional.of(basicComponent)
                             .map(ComponentDescription::checker)
                             .orElse(null);
                     final Multiplicity multiplicity = Optional.ofNullable(basicComponent.checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
-                    final Column column = Optional.ofNullable(defaultValue)
+                    return Optional.ofNullable(defaultValue)
                             .map(defaultValueConfiguration -> Column.staticColumnDescriptionToColumn(
                                     referenceColumn,
                                     headerForReferenceColumn,
@@ -304,7 +315,6 @@ public class DataService {
                                     multiplicity,
                                     referenceValueRepository,
                                     defaultValue));
-                    return column;
                 }).collect(ImmutableSet.toImmutableSet());
 
         final ImmutableSet<Column> computedColumns = componentDescriptionEntryByComputedType
@@ -325,7 +335,7 @@ public class DataService {
                             .orElse(ComponentPresenceConstraint.MANDATORY);
                     final Set<? extends Tag> tags = Optional.ofNullable(computedComponent)
                             .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.INSTANCE()));
+                            .orElse(Set.of(Tag.NoTag.instance()));
                     final CheckerDescription checker = Optional.ofNullable(computedComponent)
                             .map(ComputedComponent::computationChecker)
                             .orElse(null);
@@ -338,7 +348,7 @@ public class DataService {
                                     tags,
                                     checker,
                                     headerForReferenceColumn,
-                                    computedComponent.transformation());
+                                    Objects.requireNonNull(computedComponent).transformation());
                     return computedColumnDescriptionToColumn(referenceValueRepository, referenceColumn, multiplicity, referenceStaticComputedColumnDescription);
                 }).collect(ImmutableSet.toImmutableSet());
 
@@ -354,8 +364,8 @@ public class DataService {
                             .orElse(ComponentPresenceConstraint.MANDATORY);
                     final Set<? extends Tag> tags = Optional.ofNullable(dynamicComponent)
                             .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.INSTANCE()));
-                    final Multiplicity multiplicity = Optional.ofNullable(dynamicComponent.checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
+                            .orElse(Set.of(Tag.NoTag.instance()));
+                    final Multiplicity multiplicity = Optional.ofNullable(Objects.requireNonNull(dynamicComponent).checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
                     final ReferenceDynamicColumnDescription referenceDynamicColumnDescription =
                             new ReferenceDynamicColumnDescription(
                                     mandatory,
@@ -383,8 +393,7 @@ public class DataService {
                 .addAll(computedColumns)
                 .addAll(dynamicColumns)
                 .build();
-        BuildColumns result = new BuildColumns(patternColumnFactory, columns);
-        return result;
+        return new BuildColumns(patternColumnFactory, columns);
     }
 
     private Column computedColumnDescriptionToColumn(final DataRepository referenceValueRepository,
@@ -419,11 +428,10 @@ public class DataService {
                         .putAll(referenceDatum.getEvaluationContext())
                         .build();
                 final Set<String> evaluate = computationExpression.evaluate(evaluationContext);
-                final Optional<DataColumnValue> computedValue = Optional.ofNullable(evaluate)
+                return Optional.ofNullable(evaluate)
                         .map(l -> l.stream().map(StringType::getStringTypeFromStringValue)
                                 .collect(Collectors.toCollection(LinkedList<FieldType>::new)))
                         .map(DataColumnMultipleValue::new);
-                return computedValue;
             }
         };
     }
@@ -445,11 +453,10 @@ public class DataService {
                         .putAll(referenceDatum.getEvaluationContext())
                         .build();
                 final String evaluate = computationExpression.evaluate(evaluationContext);
-                final Optional<DataColumnValue> computedValue = Optional.ofNullable(evaluate)
+                return Optional.ofNullable(evaluate)
                         .map(s -> StringUtils.isEmpty(s) ? "" : s)
                         .map(StringType::getStringTypeFromStringValue)
                         .map(DataColumnSingleValue::new);
-                return computedValue;
             }
         };
     }
@@ -460,8 +467,13 @@ public class DataService {
             return Map.of();
         }
         final Set<String> configurationReferences = groovyDataInjectionConfiguration.getReferences();
-        final ImmutableMap<String, Object> contextForExpression = GroovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, null);
-        return contextForExpression;
+        return GroovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, null);
+    }
+
+    public List<DataValue> findReference(final String nameOrId, final String refType, final MultiValueMap<String, String> params) {
+        Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
+        return serviceContainer.dataService()
+                .findReferenceAccordingToRights(application, refType, params);
     }
 
     public List<DataValue> findReferenceAccordingToRights(final Application application, final String refType, final MultiValueMap<String, String> params) {
@@ -469,7 +481,7 @@ public class DataService {
             return List.of();
         }
         final Set<String> hiddenComponents = application.getConfiguration().getHiddenComponentsForData(refType);
-        authenticationService.setRoleForClient();
+        serviceContainer.authenticationService().setRoleForClient();
         return getReferenceValueRepository(application)
                 .findAllByReferenceTypeWithReferencingReferencesStream(refType, params)
                 .peek(referenceValue -> referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents)))
@@ -481,9 +493,8 @@ public class DataService {
     }
 
     public List<UUID> deleteDataAccordingToRights(final Application application, final String refType, final MultiValueMap<String, String> params) {
-        authenticationService.setRoleForClient();
-        final List<UUID> list = getReferenceValueRepository(application).deleteReferenceType(refType, params);
-        return list;
+        serviceContainer.authenticationService().setRoleForClient();
+        return getReferenceValueRepository(application).deleteReferenceType(refType, params);
     }
 
     public Flux<DataRow> findDataFlux(final DownloadDatasetQuery downloadDatasetQuery) {
@@ -495,7 +506,7 @@ public class DataService {
             return Flux.empty();
         }
         dataRepository = getDataRepository(downloadDatasetQuery);
-        authenticationService.setRoleForClient();
+        serviceContainer.authenticationService().setRoleForClient();
         return dataRepository.findAllByDataTypeFlux(downloadDatasetQuery)
                 .map(dataRows -> DataRow.of(downloadDatasetQuery.application().findData(downloadDatasetQuery.dataName()), dataRows));
     }
@@ -512,19 +523,13 @@ public class DataService {
             final OutputStream outputStream,
             final String applicationNameOrId,
             final String dataName,
-            Locale language) {
-        final Application application = applicationService.getApplication(applicationNameOrId);
+            Locale language,
+            boolean horizontalDisplay) {
+        final Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
         if (application.getConfiguration().getHiddenData().contains(dataName)) {
             return;
         }
         DownloadDatasetQueryNoFilter downloadDatasetQuery = new DownloadDatasetQueryNoFilter(
-                application.findData(dataName)
-                        .map(StandardDataDescription::componentDescriptions)
-                        .map(components->components.values().stream()
-                                .filter(PatternComponent.class::isInstance)
-                                .count()>1
-                        )
-                        .orElse(false),
                 application,
                 dataName,
                 new OutPut(
@@ -534,7 +539,8 @@ public class DataService {
                         -1L
                 ),
                 Set.of(),
-                Set.of()
+                Set.of(),
+                horizontalDisplay
         );
         final Flux<DataRow> datas = findDataFlux(downloadDatasetQuery);
         Optional<StandardDataDescription> data = downloadDatasetQuery.application()
@@ -542,17 +548,14 @@ public class DataService {
         final StandardDataDescription dataDescription = data
                 .orElseThrow(() -> new IllegalStateException("can't find application %s".formatted(downloadDatasetQuery.dataName())));
         final AtomicLong counter = new AtomicLong();
-
-        DataCsvBuilder.getDataCsvBuilder((appOrName, referenceType) ->
-                        getDataImporterContext(application, referenceType, null)
-                )
-                .withDownloadDatasetQuery(downloadDatasetQuery
-                )
+        DataCsvBuilder
+                .getDataCsvBuilder((appOrName, referenceType) -> getDataImporterContext(application, referenceType, null))
+                .withDownloadDatasetQuery(downloadDatasetQuery)
                 .withReferenceService(this)
                 .withOutputStream(outputStream)
                 .onRepositories(new DataRepositoryWithBuffer(application, dataRepository), null)
                 .addDatas(datas)
-                .buildDataCsv(downloadDatasetQuery.getLanguage(), dataDescription);
+                .buildDataCsv(downloadDatasetQuery.getLanguage(), dataDescription, downloadDatasetQuery.horizontalDisplay());
     }
 
     public List<ApplicationResult.DataSynthesis> getReferenceSynthesis(final Application application) {
@@ -560,12 +563,8 @@ public class DataService {
     }
 
     public Boolean getDataFromStoredCsvStream(ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
-        SubmissionType submissionStrategy = application.findData(reference)
-                .map(StandardDataDescription::submission)
-                .map(Submission::strategy)
-                .orElse(SubmissionType.OA_INSERTION);
         dataRepository = repo.getRepository(application).data();
-        Flux<FileContent> storedData = dataRepository.getStoredData(reference, submissionStrategy);
+        Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
         return storedData
                 .flatMap(fileContent -> Mono.fromCallable(() -> {
@@ -584,6 +583,508 @@ public class DataService {
                 .block();
     }
 
+    public void setServiceContainer(ServiceContainer serviceContainer) {
+        this.serviceContainer = serviceContainer;
+    }
+
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
+    }
+
+    public Mono<List<DownloadDatasetQueryByRowId>> getDownloadDatasetQueriesAsync(
+            long patternDefinitionCount,
+            Application application,
+            Locale locale,
+            DataRepository dataRepository,
+            Set<UUID> uuidsFromData,
+            boolean horizontalDisplay) {
+        return Flux.fromStream(dataRepository.getLinkedReferenceValuesStream(uuidsFromData))
+                .map(dataValuesByDataType -> {
+                    String dataType = dataValuesByDataType.dataType();
+                    Set<DataRowIds> ids = dataValuesByDataType.ids();
+                    return new DownloadDatasetQueryByRowId(
+                            application,
+                            dataType,
+                            new OutPut(locale, 0L, null),
+                            new HashSet<>(),
+                            new HashSet<>(),
+                            ids,
+                            horizontalDisplay
+                    );
+                })
+                .collectList();
+    }
+
+    @Transactional(readOnly = true)
+    public void buildDataZip(
+            ZipOutputStream zipOutputStream,
+            DownloadDatasetQuery downloadDatasetQuery) {
+        Application application = downloadDatasetQuery.application();
+        DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
+        DataRepositoryWithBuffer dataRepositoryWithBuffer = new DataRepositoryWithBuffer(application, dataRepository);
+
+        serviceContainer.authenticationService().setRoleForClient();
+
+        UUIDsfromData uuiDsfromData = addDatacsv(zipOutputStream, dataRepositoryWithBuffer, downloadDatasetQuery, "%s.csv");
+
+
+        getDownloadDatasetQueriesAsync(
+                downloadDatasetQuery.patternDefinitionCount(),
+                application,
+                downloadDatasetQuery.outPut().locale(),
+                dataRepository,
+                uuiDsfromData.uuidsfromData(),
+                downloadDatasetQuery.horizontalDisplay()
+        )
+                .subscribe(downloadDatasetQueries -> {
+                    for (DownloadDatasetQueryByRowId downloadDatasetQueryByRowId : downloadDatasetQueries) {
+                        try {
+                            addDatacsv(zipOutputStream, dataRepositoryWithBuffer, downloadDatasetQueryByRowId, "references/%s.csv");
+                        } catch (Exception e) {
+                            throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                        }
+                    }
+                    try {
+                        zipOutputStream.close();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+        //TODO add additionalFiles
+
+        /*Flux.fromStream(dataRepository.getLinkedReferenceValuesStream(uuiDsfromData.uuidsfromData()))
+                //.filter(dataValuesByDataType -> "tr_metadata_agri_magri".equals(dataValuesByDataType.getDataType()))
+                //.take(10)
+                .doOnNext(dataValuesByDataType -> {
+                    try {
+                        addReferenceEntry(
+                                downloadDatasetQuery.application(),
+                                language,
+                                separator,
+                                dataValuesByDataType,
+                                dataRepositoryWithBuffer,
+                                zipOutputStream);
+                    } catch (Exception e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .doOnError(e -> {
+                    // Gestion des erreurs
+                    throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                })
+                .doOnComplete(() -> {
+                    try {
+                        zipOutputStream.close();
+                    } catch (IOException e) {
+                        throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                    }
+                })
+                .subscribe();*/
+
+        // 3. Construire la liste des fichiers additionnels
+        //AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
+        /*for (String additionalFileType : downloadDatasetQuery.application().getConfiguration().additionalFiles()) {
+            if (!additionalFileType.isEmpty()) {
+                additionalFileRepository.getAssociatedAdditionalFilesStream(uuiDsfromData.getDatasIds())
+                        .forEach(additionalFile -> {
+                            try {
+                                new AdditionalFileSearchHelper().addAdditionalFilesToZip(additionalFile, zipOutputStream, "additionalFiles/");
+                            } catch (final IOException e) {
+                                throw new RuntimeException("Erreur lors de l'ajout des fichiers additionnels", e);
+                            }
+                        });
+            }
+        }*/
+    }
+
+    public UUIDsfromData addDatacsv(
+            final ZipOutputStream zipOutputStream,
+            DataRepositoryWithBuffer dataRepositoryWithBuffer,
+            final DownloadDatasetQuery downloadDatasetQuery,
+            String fileNamePattern) {
+        final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
+        try {
+            DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
+            AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
+            return DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> serviceContainer.dataService().getDataImporterContext(downloadDatasetQuery.application(), referenceType, null))
+                    .withDownloadDatasetQuery(downloadDatasetQuery)
+                    .withReferenceService(serviceContainer.dataService())
+                    .withOutputStream(zipOutputStream)
+                    .onRepositories(dataRepositoryWithBuffer, additionalFileRepository)
+                    .addDatas(datas)
+                    .build(fileNamePattern);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public List<DataRow> findData(final DownloadDatasetQuery downloadDatasetQuery) {
+        ApplicationReader applicationReader = serviceContainer.authorizationService()
+                .getPrivilegeAssessorForApplication(DATA_READ, downloadDatasetQuery.application())
+                .forDataRead(downloadDatasetQuery.dataName());
+        return serviceContainer.dataService().findDataFlux(downloadDatasetQuery).collectList().block();
+    }
+
+    public String sendZipLinkByMail(Path filePath, MessageInformations messageInformations, OreSiUser currentUser) {
+        return switch (messageInformations) {
+            case DownloadDatasetQuery downloadDatasetQuery -> {
+                try {
+                    FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForDownloadDatasetQuery(downloadDatasetQuery);
+                    Locale locale = downloadDatasetQuery.outPut().locale();
+                    String applicationName = Optional.ofNullable(
+                                    fileSenderInternationalisation.getInternationnalizedApplication(locale)
+                            )
+                            .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage()))
+                                    .orElse(downloadDatasetQuery.application().getName()));
+                    String dataName = Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(locale, downloadDatasetQuery.dataName()))
+                            .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(fileSenderInternationalisation.getDefaultLanguage(), downloadDatasetQuery.dataName()))
+                                    .orElse(downloadDatasetQuery.dataName()));
+                    String subject = fileSenderInternationalisation.subjectPattern();
+                    String message = fileSenderInternationalisation.messagePattern();
+                    String internationnalizedDataName = fileSenderInternationalisation.getInternationnalizedDataName(
+                            Locale.of(downloadDatasetQuery.getLanguage()),
+                            dataName
+                    );
+
+                    String messageWithReport = fileSenderInternationalisation.
+                            mailMessagefor(message.formatted(internationnalizedDataName),
+                                    FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID);
+                    FileInfos fileInfos = new FileInfos(
+                            applicationName,
+                            dataName,
+                            filePath,
+                            currentUser.getEmail(),
+                            subject.formatted(applicationName),
+                            messageWithReport);
+                    String downloadUrl = fileRepository.postTransfer(fileInfos);
+                    log.info("Adresse de téléchargement : %s".formatted(downloadUrl));
+                    /*sendUploadZipEmail(
+                            currentUser.getEmail(),
+                            subject.formatted(applicationName),
+                            message.formatted(dataName),
+                            downloadUrl,
+                            fileSenderInternationalisation,
+                            internationnalizedDataName
+                    );*/
+                    yield downloadUrl;
+                } catch (Exception e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            case BuildBundleReport buildBundleReport -> {
+                try {
+                    FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForBuildBundleReport(buildBundleReport);
+                    Locale locale = buildBundleReport.locale();
+
+                    String applicationName = Optional.ofNullable(
+                            fileSenderInternationalisation.getInternationnalizedApplication(locale)
+                    ).orElseGet(() -> Optional.ofNullable(
+                            fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage())
+                    ).orElse(buildBundleReport.applicationName().getName()));
+
+                    String subject = fileSenderInternationalisation.subjectPattern().formatted(applicationName);
+                    String message = fileSenderInternationalisation.messagePattern().formatted(applicationName);
+
+
+                    String emailMessage = fileSenderInternationalisation.mailMessagefor(message, FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID);
+
+                    /*sendUploadZipEmail(
+                            currentUser.getEmail(),
+                            subject,
+                            emailMessage,
+                            FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID,
+                            fileSenderInternationalisation,
+                            applicationName
+                    );*/
+                    FileInfos fileInfos = new FileInfos(
+                            applicationName,
+                            "BulkUploadZIP",
+                            filePath,
+                            currentUser.getEmail(),
+                            subject,
+                            message
+                    );
+                    String downloadUrl = fileRepository.postTransfer(fileInfos);
+                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
+
+                    yield downloadUrl;
+                } catch (Exception e) {
+                    log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                    throw new RuntimeException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                }
+            }
+            default -> throw new IllegalStateException("Unexpected value: " + messageInformations);
+        };
+
+    }
+
+    @Transactional(readOnly = true)
+    public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData, Locale locale, ZipOutputStream zipOutputStream) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        String applicationName = application.getName();
+        List<String> referentielsAvecDonnees = new ArrayList<>();
+        Map<String, Set<String>> fichiersGeneres = new HashMap<>();
+        List<String> referentielsAvecDonneesExemple = new ArrayList<>();
+        List<String> referentielsEnErreur = new ArrayList<>();
+
+        locale = Optional.of(locale)
+                .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
+
+        try (zipOutputStream) {
+            writeGroovyClient(zipOutputStream, fichiersGeneres);
+            writeConfiguration(zipOutputStream, fichiersGeneres, instanceUrl, nameOrId);
+            writeReadMe(zipOutputStream, fichiersGeneres);
+            writeScriptSH(zipOutputStream, fichiersGeneres);
+            // Traiter chaque référentiel
+            for (String reference : application.getConfiguration().dataDescription().keySet()) {
+                String fileName = application.getConfiguration().findData(reference)
+                        .map(StandardDataDescription::submission)
+                        .map(Submission::fileNameParsing)
+                        .map(Submission.SubmissionFileNameParsing::createExampleSubmissionFileName)
+                        .orElse("%s.csv".formatted(reference));
+                String dataCsvFilePath = "%1$s/%2$s".formatted(reference, fileName);
+
+                try {
+                    if (withData && serviceContainer.dataService().getDataFromStoredCsvStream(zipOutputStream, application.getName(), reference, application, locale)) {
+                        referentielsAvecDonnees.add(reference);
+                        fichiersGeneres.computeIfAbsent(reference, k -> new LinkedHashSet<>()).add(dataCsvFilePath);
+                    } else {
+                        zipOutputStream.putNextEntry(new ZipEntry(dataCsvFilePath));
+                        application.getConfiguration().dataDescription().get(reference).buildEmptyFile(zipOutputStream);
+                        zipOutputStream.flush();
+                        zipOutputStream.closeEntry();
+                        referentielsAvecDonneesExemple.add(reference);
+                        fichiersGeneres.computeIfAbsent(reference, k -> new LinkedHashSet<>()).add(dataCsvFilePath);
+                    }
+                } catch (Exception e) {
+                    log.error("Erreur lors du traitement du référentiel {}", reference, e);
+                    referentielsEnErreur.add(reference);
+                }
+            }
+        } catch (Exception e) {
+            log.error("Erreur générale lors de la création du bundle", e);
+            referentielsEnErreur.add("ERREUR_GENERALE");
+        }
+
+        return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
+    }
+
+    private void writeGroovyClient(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
+        writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_GROOVY, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_GROOVY));
+        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
+                        .add(OPEN_ADOM_CLIENT_GROOVY);
+    }
+
+    private void writeConfiguration(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres, String instanceUrl, String dataName) throws IOException {
+        String configurationJson = """
+                {
+                  "instanceUrl": "%s",
+                  "applicationName": "%s"
+                }
+                """.formatted(instanceUrl, dataName);
+        writeStringToZip(zipOutputStream, OPEN_ADOM_CLIENT_CONFIGURATION_JSON, configurationJson);
+        fichiersGeneres.put("Configuration", Set.of(OPEN_ADOM_CLIENT_CONFIGURATION_JSON));
+    }
+
+    private void writeReadMe(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
+        String readmeContent = """
+                Instructions d'utilisation :
+                
+                Trois méthodes d'exécution possibles :
+                
+                   A. Utilisation directe avec Groovy :
+                        Prérequis :
+                           - Groovy 4+ : https://groovy.apache.org/download.html#osinstall
+                           - Java 21+ : https://adoptium.net/temurin/releases/
+                              - Vérifier l'installation : groovy --version
+                        Lancer le script : groovy %1$s
+                
+                   B. Utilisation du script shell automatisé :
+                        Prérequis :
+                           - Docker (optionnel) : https://docs.docker.com/get-docker/
+                      - Rendre le script exécutable : chmod +x setup.sh
+                      - Lancer le script : ./setup.sh
+                
+                   C. Construction manuelle avec Docker :
+                        Prérequis :
+                           - Docker (optionnel) : https://docs.docker.com/get-docker/
+                      - Construire le Dockerfile :
+                            FROM groovy:4.0-jdk21
+                
+                            USER root
+                            RUN apt-get update && apt-get install -y openssl
+                
+                            RUN openssl s_client -connect preprod.openadom.fr:443 -showcerts </dev/null 2>/dev/null | \\
+                                openssl x509 -outform PEM > /tmp/cert.pem && \\
+                                keytool -import -noprompt -trustcacerts \\
+                                -alias openadom \\
+                                -file /tmp/cert.pem \\
+                                -keystore $JAVA_HOME/lib/security/cacerts \\
+                                -storepass changeit
+                
+                      - Construire l'image : docker build -t openadomgroovy .
+                      - Lancer le conteneur :
+                        docker run --rm -it --net host -v "$PWD":/home/groovy/scripts -w /home/groovy/scripts openadomgroovy groovy %1$s
+                
+                Notes importantes :
+                - La méthode B nécessite Docker et automatise tout le processus
+                - La méthode C est recommandée si vous souhaitez plus de contrôle sur l'environnement d'exécution
+                """
+                .formatted(OPEN_ADOM_CLIENT_GROOVY);
+        writeStringToZip(zipOutputStream, README_FILE_NAME, readmeContent);
+        fichiersGeneres.put("Documentation", Set.of(README_FILE_NAME));
+    }
+
+    private void writeScriptSH(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
+        String setupScriptName = SETUP_SCRIPT_NAME;
+        writeStringToZip(zipOutputStream, setupScriptName, buildScriptSh());
+        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
+                        .add(SETUP_SCRIPT_NAME);
+    }
+
+    private String buildScriptSh() {
+        return """
+        #!/bin/bash
+
+        # Vérification de la présence de Docker
+        check_docker() {
+            if ! docker --version > /dev/null 2>&1; then
+                echo "Docker n'est pas installé sur votre système."
+                echo "Veuillez installer Docker en visitant : https://docs.docker.com/get-docker/"
+                exit 1
+            fi
+
+            if ! docker info > /dev/null 2>&1; then
+                echo "Le daemon Docker n'est pas en cours d'exécution."
+                echo "Veuillez démarrer Docker et réessayer."
+                exit 1
+            fi
+        }
+
+        # Lecture de la configuration
+        INSTANCE_URL=$(cat %1$s | sed -n 's/.*"instanceUrl" *: *"\\([^"]*\\)".*/\\1/p')
+        PROTOCOL=$(echo $INSTANCE_URL | cut -d: -f1)
+        DOMAIN=$(echo $INSTANCE_URL | cut -d/ -f3 | cut -d: -f1)
+        PORT=$(echo $INSTANCE_URL | grep -o ':[0-9][0-9]*' || echo "")
+
+        if [ -z "$PORT" ]; then
+            if [ "$PROTOCOL" = "https" ]; then
+                PORT=":443"
+            else
+                PORT=":80"
+            fi
+        fi
+        
+        # Création du Dockerfile
+        cat > Dockerfile << EOF
+        FROM groovy:4.0-jdk21
+        USER root
+        RUN apt-get update && apt-get install -y openssl
+        RUN if [ "${PROTOCOL}" = "https" ]; then \\
+                openssl s_client -connect ${DOMAIN}${PORT} -showcerts </dev/null 2>/dev/null | \\
+                openssl x509 -outform PEM > /tmp/cert.pem && \\
+                keytool -import -noprompt -trustcacerts \\
+                -alias openadom \\
+                -file /tmp/cert.pem \\
+                -keystore \\$JAVA_HOME/lib/security/cacerts \\
+                -storepass changeit; \\
+            else \\
+                echo "Connexion HTTP : pas de certificat à installer"; \\
+            fi
+        EOF
+                
+
+        # Construction de l'image Docker
+        echo "Construction de l'image Docker..."
+        docker build -t openadomgroovy .
+
+        # Lancement du conteneur
+        echo "Lancement du conteneur..."
+        docker run --rm -it --net host \\
+            -v "$PWD":/home/groovy/scripts \\
+            -w /home/groovy/scripts \\
+            openadomgroovy \\
+            groovy OpenAdomClient.groovy
+        """.formatted(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
+    }
+
+
+    private void writeFileToZip(ZipOutputStream zipOutputStream, String fileName, URL resourceUrl) throws IOException {
+        zipOutputStream.putNextEntry(new ZipEntry(fileName));
+        byte[] fileBytes = Resources.toByteArray(resourceUrl);
+        zipOutputStream.write(fileBytes);
+        zipOutputStream.closeEntry();
+    }
+
+    private void writeStringToZip(ZipOutputStream zipOutputStream, String fileName, String content) throws IOException {
+        zipOutputStream.putNextEntry(new ZipEntry(fileName));
+        zipOutputStream.write(content.getBytes(StandardCharsets.UTF_8));
+        zipOutputStream.closeEntry();
+    }
+
+
+    @Transactional()
+    public List<UUID> deleteData(final DownloadDatasetQuery downloadDatasetQuery) {
+        serviceContainer.authenticationService().setRoleForClient();
+        final Application application = downloadDatasetQuery.application();
+        return repository.getRepository(application).data().delete(downloadDatasetQuery);
+    }
+
+    public DataRepositoryWithBuffer getNewDataRepositoryWithBuffer(Application application) {
+        return new DataRepositoryWithBuffer(application, repository.getRepository(application).data());
+    }
+
+    public Map<Ltree, List<DataValue>> getReferenceDisplaysById(final Application application, final Set<String> listOfDataIds) {
+        return repository.getRepository(application).data().getReferenceDisplaysById(listOfDataIds);
+    }
+
+
+    public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        return new CheckerFactory(repository.getRepository(application).data()).getCheckers(application, dataName, new PublishContext.PublishContextBuilder(application, dataName, null, r -> List.of())).stream()
+                .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
+                        .groupingBy(
+                                c -> c.underlyingType().getClass().getSimpleName(),
+                                Collectors.toMap(c -> {
+                                            final DataColumn dataColumn = c.target();
+                                            return dataColumn.toHumanReadableString();
+                                        },
+                                        DefaultLineCheckerResult::fromLineChecker)
+                        )
+                );
+    }
+
+
+    @Transactional(readOnly = true)
+    public Map<String, Map<String, LineChecker>> getFormatChecked(final String nameOrId, final String references) {
+        final DataRepository dataRepository = repository.getRepository(serviceContainer.applicationService().getApplication(nameOrId)).data();
+        return new CheckerFactory(dataRepository)
+                .getCheckers(
+                        serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId),
+                        references,
+                        null
+                ).stream()
+                .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
+                        .groupingBy(
+                                c -> c.fieldTypeForOne().getClass().getSimpleName(),
+                                Collectors.toMap(
+                                        c -> {
+                                            final DataColumn vc = c.target();
+                                            return vc.asString();
+                                        },
+                                        c -> c)
+                        )
+                );
+    }
+
+    public List<List<String>> getDataColumn(final Application application, final String refType, final String column) {
+        List<List<String>> list = List.of();
+        if (application.findData(refType)
+                .map(StandardDataDescription::tags)
+                .filter(Tag.HiddenTag.HAS_HIDDEN_TAG_PREDICATE)
+                .isPresent()) {
+            list = repository.getRepository(application).data().findDataColumn(refType, column);
+        }
+        return list;
     }
 }

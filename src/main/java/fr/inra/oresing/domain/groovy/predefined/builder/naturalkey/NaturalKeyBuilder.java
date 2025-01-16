@@ -1,7 +1,6 @@
 package fr.inra.oresing.domain.groovy.predefined.builder.naturalkey;
 
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.groovy.GroovyContextHelper;
 import fr.inra.oresing.domain.groovy.GroovyDecorator;
 import fr.inra.oresing.domain.groovy.exception.GroovyException;
 
@@ -23,7 +22,7 @@ public record NaturalKeyBuilder(
     public NaturalKeyBuilder(Map<String, Object> context) {
         this(
                 (Map<String, Object>) (context.containsKey(DATUM) ? context.get(DATUM) : new HashMap<>()),
-                (Map<String, List<GroovyDecorator>>) (context.containsKey(REFERENCES) ? ((Map<String, List<GroovyDecorator>>) context.get(REFERENCES)) : new HashMap<>()),
+                context.containsKey(REFERENCES) ? ((Map<String, List<GroovyDecorator>>) context.get(REFERENCES)) : new HashMap<>(),
                 new ArrayList<>()
         );
     }
@@ -35,7 +34,7 @@ public record NaturalKeyBuilder(
     public String naturalKey() {
         StringBuilder key = new StringBuilder();
         for (Step step : steps) {
-            if (key.length() > 0) {
+            if (!key.isEmpty()) {
                 key.append("__");
             }
             String stepValue = step.build(datum, references, key.toString());

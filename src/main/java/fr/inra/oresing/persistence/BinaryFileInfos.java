@@ -17,7 +17,7 @@ public record BinaryFileInfos(
         this(false, null, null, null, null, null, binaryFileDataset);
     }
 
-    public static final BinaryFileInfos forPublish(boolean published, UUID publisheduser, String publisheddate, BinaryFileDataset binaryFileDataset) {
+    public static BinaryFileInfos forPublish(boolean published, UUID publisheduser, String publisheddate, BinaryFileDataset binaryFileDataset) {
         return new BinaryFileInfos(
                 published,
                 publisheduser,

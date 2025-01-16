@@ -1,8 +1,6 @@
 package fr.inra.oresing.domain;
 
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
-import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
-import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.persistence.SqlPolicy;
 import lombok.Getter;
 import lombok.Setter;

@@ -33,15 +33,9 @@ public record DataHeaderReader(DataDatum constantValues,
 
     private static void addConstants(final DataDatum constantValues, final ConstantComponent constant, final FieldType value) {
         switch (value) {
-            case final ListType listType -> {
-                constantValues.put(new DataColumn(constant.componentKey()), new DataColumnMultipleValue(listType.getValue()));
-            }
-            case final MapType mapType -> {
-                throw new IllegalArgumentException("NO MAP HERE");
-            }
-            case null, default -> {
-                constantValues.put(new DataColumn(constant.componentKey()), new DataColumnSingleValue(value));
-            }
+            case final ListType listType -> constantValues.put(new DataColumn(constant.componentKey()), new DataColumnMultipleValue(listType.getValue()));
+            case final MapType mapType -> throw new IllegalArgumentException("NO MAP HERE");
+            case null, default -> constantValues.put(new DataColumn(constant.componentKey()), new DataColumnSingleValue(value));
         }
     }
 
@@ -75,7 +69,7 @@ public record DataHeaderReader(DataDatum constantValues,
                                         .map(FileOrUUID::binaryfiledataset)
                                         .map(BinaryFileDataset::getRequiredAuthorizations)
                                         .map(requiredAuthorizations->requiredAuthorizations.get(constantComponent.componentKey()))
-                                        .map(list->list.get(0).getSql())
+                                        .map(list->list.getFirst().getSql())
                                         .orElseThrow(()->new IllegalArgumentException("no entry for constant submission"))
                                 )));
         publishContextBuilder().withPreHeaderRow(preHeaderRows);

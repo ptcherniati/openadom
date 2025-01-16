@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCr
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -19,14 +18,14 @@ public record PrivilegeAssessorDomainForSystem<PrivilegeSystemDomain>(
         return Optional.of(authorizations())
                 .filter(authorizationsForSystemUser -> authorizationsForSystemUser.currentUserRoles().isOpenAdomAdmin())
                 .map(t->new OpenAdomAdmin())
-                .orElseThrow(() -> new NotOpenAdomAdminException());
+                .orElseThrow(NotOpenAdomAdminException::new);
     }
 
     public ApplicationCreator forCreateApplication() {
         Set<String> applicationCreatorPatterns = Optional.of(authorizations())
                 .map(AuthorizationsForSystemUser::applicationCreator)
                 .filter(CollectionUtils::isNotEmpty)
-                .orElseThrow(() -> new NotApplicationCreatorRightsException());
+                .orElseThrow(NotApplicationCreatorRightsException::new);
         if (authorizations().currentUserRoles().isOpenAdomAdmin()) {
             return new OpenAdomAdmin();
         }

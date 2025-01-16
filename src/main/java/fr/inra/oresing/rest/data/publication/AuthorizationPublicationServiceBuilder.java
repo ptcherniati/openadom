@@ -19,13 +19,13 @@ import java.util.function.Predicate;
 
 public class AuthorizationPublicationServiceBuilder {
 
-    public static final AuthorizationForUserBuilder BUILDER(ReportErrors errors,
-                                                            final Application application,
-                                                            final String dataName,
-                                                            String fileName,
-                                                            String params,
-                                                            Function<Map<String, List<Ltree>>, Map<String, List<Ltree>>> requiredAuthorizationResolver,
-                                                            Function<UUID, Optional<BinaryFile>> resolveFileById) {
+    public static AuthorizationForUserBuilder BUILDER(ReportErrors errors,
+                                                      final Application application,
+                                                      final String dataName,
+                                                      String fileName,
+                                                      String params,
+                                                      Function<Map<String, List<Ltree>>, Map<String, List<Ltree>>> requiredAuthorizationResolver,
+                                                      Function<UUID, Optional<BinaryFile>> resolveFileById) {
         AuthorizationPublicationService builder = new AuthorizationPublicationService(
                 errors,
                 application,
@@ -37,10 +37,9 @@ public class AuthorizationPublicationServiceBuilder {
                                              .map(Submission.SubmissionScope::referenceScopes)
                                              .map(List::size)
                                              .orElse(-1) > 0;
-        boolean hasNoFileId = Optional.ofNullable(builder)
+        boolean hasNoFileId = Optional.of(builder)
                 .map(AuthorizationPublicationService::getParams)
-                .map(FileOrUUID::fileid)
-                .filter(Objects::nonNull)
+                .map(fileOrUUID -> true)
                 .isEmpty();
         if (hasNoFileId && hasSubmissionScope) {
             return new FileNameResolver(builder)
@@ -56,9 +55,7 @@ public class AuthorizationPublicationServiceBuilder {
         }
 
         try {
-            final FileOrUUID fileOrUUID = params != null && !"undefined".equals(params) ?
-                    new ObjectMapper().readValue(params, FileOrUUID.class) :
-                    null;
+            final FileOrUUID fileOrUUID = new ObjectMapper().readValue(params, FileOrUUID.class);
             Optional.ofNullable(fileOrUUID)
                     .map(FileOrUUID::binaryfiledataset)
                     .ifPresent(binaryFileDataset -> {
@@ -83,7 +80,7 @@ public class AuthorizationPublicationServiceBuilder {
                         .map(Optional::get)
                         .map(BinaryFile::getParams)
                         .map(fileOrUUID::withParams)
-                        .orElseThrow(() -> new IllegalArgumentException());
+                        .orElseThrow(IllegalArgumentException::new);
             }
             return fileOrUUID;
         } catch (final IOException e) {

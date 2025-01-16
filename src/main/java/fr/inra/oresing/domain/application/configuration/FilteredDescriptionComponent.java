@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.application.configuration;
 
-import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -19,16 +18,6 @@ public record FilteredDescriptionComponent(ComponentDescriptionType type,
     @Override
     public String exportHeaderName() {
         return null;
-    }
-
-    @Override
-    public boolean required() {
-        return false;
-    }
-
-    @Override
-    public ComponentPresenceConstraint mandatory() {
-        return ComponentPresenceConstraint.OPTIONAL;
     }
 
     @Override

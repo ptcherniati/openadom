@@ -3,14 +3,18 @@ package fr.inra.oresing.domain.application.configuration;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
+import groovy.lang.Tuple;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class SubmissionTest {
-    Submission submission = new Submission(
+    final Submission submission = new Submission(
             SubmissionType.OA_VERSIONING,
             new Submission.SubmissionFileNameParsing(
                     "(.*)_(.*)_(.*)_(.*).csv",
@@ -33,21 +37,42 @@ class SubmissionTest {
                     )
             )
     );
-    BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
+    final BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
+    @Test
+    void testPatternGroups(){
+        List<Submission.PatternPosition> groupPositions = submission.fileNameParsing().patternGroups();
+        Assertions.assertEquals(4, groupPositions.size());
+        Assertions.assertEquals("[[0, 4], [5, 9], [10, 14], [15, 19]]", groupPositions.toString());
+    }
+    @Test
+    void testPatternToBeReplacedByGroupCapture(){
+        Assertions.assertEquals("%1$s_%2$s_%3$s_%4$s.csv", submission.fileNameParsing().patternToBeReplacedByGroupCapture());
+    }
+    @Test
+    void testGroupCount(){
+        Assertions.assertEquals(4, submission.fileNameParsing().groupCount());
+    }
+
+    @Test
+    void testOrderedGroups(){
+        LinkedList<String> orderedGroups = submission.fileNameParsing().orderedGroups();
+        Assertions.assertArrayEquals(List.of("projet","chemin",ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN, ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN
+        ).toArray(new String[0]), orderedGroups.toArray(new String[0]));
+    }
 
     @Test
     void parseFileName() {
         submission.parseFileName("leProjet_leSite_01-01-1984_05-01-1984.csv", binaryFileDataset);
-        assertEquals(Ltree.fromSql("leProjet"),binaryFileDataset.getRequiredAuthorizations().get("projet"));
-        assertEquals(Ltree.fromSql("leSite"),binaryFileDataset.getRequiredAuthorizations().get("chemin"));
-        assertEquals("{},ISO resolved to 1984-01-01",binaryFileDataset.getFrom().toString());
-        assertEquals("{},ISO resolved to 1984-01-05",binaryFileDataset.getTo().toString());
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
+        assertTrue(binaryFileDataset.getFrom().equals("1984-01-01 00:00:00"));
+        assertTrue(binaryFileDataset.getTo().equals("1984-01-05 00:00:00"));
         //do nothing if already done
         submission.parseFileName("leProjet2_leSite2_01-01-1985_05-01-1985.csv", binaryFileDataset);
-        assertEquals(Ltree.fromSql("leProjet"),binaryFileDataset.getRequiredAuthorizations().get("projet"));
-        assertEquals(Ltree.fromSql("leSite"),binaryFileDataset.getRequiredAuthorizations().get("chemin"));
-        assertEquals("{},ISO resolved to 1984-01-01",binaryFileDataset.getFrom().toString());
-        assertEquals("{},ISO resolved to 1984-01-05",binaryFileDataset.getTo().toString());
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
+        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
+        assertTrue(binaryFileDataset.getFrom().equals("1984-01-01 00:00:00"));
+        assertTrue(binaryFileDataset.getTo().equals("1984-01-05 00:00:00"));
 
     }
     @Test
@@ -56,7 +81,7 @@ class SubmissionTest {
             submission.parseFileName("leProjet_leSite_01-01/1984_05-01-1984.csv", binaryFileDataset);
         }catch (SiOreAuthorizationRequestException e){
             assertEquals(AuthorizationRequestException.BAD_FILE_NAME_START_DATE,e.getException());
-            assertEquals("projet_chemin_dd-MM-yyyy_dd-MM-yyyy.csv",e.getParams().get("fileNameFormat"));
+            assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv",e.getParams().get("fileNameFormat"));
             assertEquals("01-01/1984",e.getParams().get("startDate"));
             assertEquals("dd-MM-yyyy",e.getParams().get("dateformat"));
         }
@@ -68,7 +93,7 @@ class SubmissionTest {
             submission.parseFileName("leProjet_leSite_01-01-1984_05-01/1984.csv", binaryFileDataset);
         }catch (SiOreAuthorizationRequestException e){
             assertEquals(AuthorizationRequestException.BAD_FILE_NAME_END_DATE,e.getException());
-            assertEquals("projet_chemin_dd-MM-yyyy_dd-MM-yyyy.csv",e.getParams().get("fileNameFormat"));
+            assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv",e.getParams().get("fileNameFormat"));
             assertEquals("05-01/1984",e.getParams().get("endDate"));
             assertEquals("dd-MM-yyyy",e.getParams().get("dateformat"));
         }

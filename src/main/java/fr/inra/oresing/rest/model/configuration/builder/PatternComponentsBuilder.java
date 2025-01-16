@@ -8,10 +8,7 @@ import fr.inra.oresing.domain.application.configuration.checker.CheckerDescripti
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public record PatternComponentsBuilder(RootBuilder rootBuilder) {
 
@@ -33,7 +30,7 @@ public record PatternComponentsBuilder(RootBuilder rootBuilder) {
                     "%1$s.OA_patternComponents.%2$s".formatted(componentPath, componentKey),
                     patternComponentNode.get(ConfigurationSchemaNode.OA_CHECKER),
                     dataKey);
-            i18n = checkerDescriptionParsing.i18n();
+            i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
                     .map(CheckerDescription::multiplicity)
                     .orElse(Multiplicity.ONE);
@@ -82,9 +79,7 @@ public record PatternComponentsBuilder(RootBuilder rootBuilder) {
                             i18n,
                             patternComponentNode
                     );
-            if (patternComponentsQualifiersParsing != null) {
-                i18n = patternComponentsQualifiersParsing.i18n();
-            }
+            i18n = patternComponentsQualifiersParsing.i18n();
             componentDescriptionBuilder.put(
                     componentKey,
                     new PatternComponent(

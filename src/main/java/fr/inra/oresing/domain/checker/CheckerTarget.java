@@ -6,7 +6,6 @@ public interface CheckerTarget {
 
     /**
      * @deprecated utilisé dans le front? On devrait plutôt utilisé l'héritage.
-     * @return
      */
 
     @Deprecated

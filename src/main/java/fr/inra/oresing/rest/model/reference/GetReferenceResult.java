@@ -8,10 +8,8 @@ import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import lombok.Value;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 
 public record GetReferenceResult(Set<ReferenceValue> referenceValues,
                                  Map<String, String> referenceTypeForReferencingColumns) {

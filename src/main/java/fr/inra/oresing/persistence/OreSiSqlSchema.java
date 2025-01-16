@@ -1,7 +1,5 @@
 package fr.inra.oresing.persistence;
 
-import org.flywaydb.core.internal.database.base.Schema;
-
 public enum OreSiSqlSchema implements SqlSchema {
 
     /**

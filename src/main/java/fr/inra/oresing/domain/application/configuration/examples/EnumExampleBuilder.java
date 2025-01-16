@@ -6,9 +6,12 @@ import fr.inra.oresing.domain.application.configuration.type.EnumType;
 import java.util.Optional;
 
 class EnumExampleBuilder {
+    private EnumExampleBuilder() {
+    }
+
     protected static EnumType buildMultiplicityType(Multiplicity multiplicity) {
-        Multiplicity multiplicity1 = multiplicity == null ? Multiplicity.ONE : multiplicity;
-        return Optional.ofNullable(multiplicity1)
+        multiplicity = multiplicity == null ? Multiplicity.ONE : multiplicity;
+        return Optional.of(multiplicity)
                 .map(Multiplicity::name)
                 .map(name ->
                         new EnumType(

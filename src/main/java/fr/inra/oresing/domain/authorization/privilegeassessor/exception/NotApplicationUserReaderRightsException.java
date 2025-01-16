@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 public class NotApplicationUserReaderRightsException extends OreSiTechnicalException {
-    public final static String NO_RIGHT_FOR_APPLICATION_USER_READER_RIGHT_EXCEPTION = "NO_RIGHT_FOR_APPLICATION_USER_READER_RIGHT_EXCEPTION";
+    public static final String NO_RIGHT_FOR_APPLICATION_USER_READER_RIGHT_EXCEPTION = "NO_RIGHT_FOR_APPLICATION_USER_READER_RIGHT_EXCEPTION";
     public String applicationName;
 
     public NotApplicationUserReaderRightsException(final String applicationName) {

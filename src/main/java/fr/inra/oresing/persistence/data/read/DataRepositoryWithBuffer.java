@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence.data.read;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.Node;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.persistence.DataRepository;
 
@@ -29,7 +30,7 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
             String uniqueId = UUID.randomUUID().toString();
             return Files.createTempDirectory("data_repo_buffer_" + uniqueId);
         } catch (IOException e) {
-            throw new RuntimeException("Impossible de créer le répertoire temporaire", e);
+            throw new OreSiTechnicalException("Impossible de créer le répertoire temporaire", e);
         }
     }
 
@@ -67,12 +68,17 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
         String referenceType = scopeEntry.getKey();
         List<String> availableKeys = new ArrayList<>();
 
-        List<Ltree> result = scopeEntry.getValue().stream()
+        // Collecter toutes les clés disponibles
+
+        return scopeEntry.getValue().stream()
                 .map(keyForScope -> {
                     String hierarchicalKey = getDataFromFileOrRepository(
                             fileWithPrefix(referenceType, PREFIX_FOR_HIERARCHICAL),
                             stream -> stream
-                                    .peek(parts -> availableKeys.add(parts[1])) // Collecter toutes les clés disponibles
+                                    .map(parts -> {
+                                        availableKeys.add(parts[1]);
+                                        return parts;
+                                    }) // Collecter toutes les clés disponibles
                                     .filter(parts -> parts[1].equals(keyForScope.toString()) || parts[2].equals(keyForScope.toString()))
                                     .map(parts -> parts[2])
                                     .findFirst()
@@ -90,8 +96,6 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
                     return Ltree.fromSql(hierarchicalKey);
                 })
                 .toList();
-
-        return result;
     }
 
     @Override
@@ -122,7 +126,7 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
             while(parentName!=null){
                 parents.add(parentName);
                 parentName = application().findParentNode(parentName).map(Node::nodeName).orElse(null);
-            };
+            }
 
 
             Map<String, String> data = repository.findHierarchicalKeysByKeyForReferenceTypes(parents);
@@ -193,8 +197,8 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
     }
 
     public void cleanup() {
-        try {
-            Files.walk(tempDir)
+        try(Stream<Path> pathStream = Files.walk(tempDir)) {
+            pathStream
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
