@@ -1,11 +1,16 @@
-
-### <a id="tags" />Etiquettes (OA_tags)
+---
+title: Etiquettes
+subtitle: OA_tags
+abstract: >
+  Cette section permet de définir des étiquettes (tags) qui peuvent être réutiliser dans d'autres sections pour regrouper / filtrer des objets (données, composantes de données.. )
+---
+ <a id="OA_tags" />Etiquettes (OA_tags)</a>
 
 __OA_tags__: Création d'un regroupements sous une étiquette permettant de filtrer l'affichage des listes des {{<var page-refs.etiquettes.link>}}.
 
-Mais aussi les {{<var page-refs.basic-comp.link>}}, les {{<var page-refs.computed-comp.link>}}, les {{<var page-refs.dynamic-comp.link>}}, les  {{<var page-refs.basic-comp.link>}}, les  {{<var page-refs.pattern-comp.link>}} , les  {{<var page-refs.constant-comp.link>}} d'un  {{<var page-refs.data.oe>}}.
+Mais aussi les {{<var page-refs.basic-comp.link>}}, les {{<var page-refs.computed-comp.link>}}, les {{<var page-refs.dynamic-comp.link>}}, les  {{<var page-refs.basic-comp.link>}}, les  {{<var page-refs.pattern-comp.link>}} , les  {{<var page-refs.constant-comp.link>}} d'un  {{<var page-refs.data.oa>}}.
 
-:::
+::: {.callout-note collapse="false" title="Déclaration des étiquettes"}
 ```yaml
 OA_tags:
   profondeur:
@@ -21,6 +26,7 @@ OA_tags:
     fr: Context
     en: Context
 ```
+:::
 
 Les étiquettes ```__DATA__```, ```__REFERENCE__```, ```__ORDER_([0-9]*)__``` et ```__HIDDEN__``` sont des étiquettes qui n'ont pas besoin d'êtres mise dans la liste de création.
 
@@ -30,9 +36,11 @@ Les étiquettes ```__DATA__```, ```__REFERENCE__```, ```__ORDER_([0-9]*)__``` et
 
 Pour lier une ou plusieurs étiquettes avec une *référence* ou une *colonne* il suffit d'ajouter une section *OA_tags* sous le nom de la *référence*, *type de de donnée*, *variable*/*component* ou *colonne* à lier.
 
-exemple d'utilisation des étiquettes (__OA_tags__) pour [__OA_data__](#data) :
+exemple d'utilisation des étiquettes (__OA_tags__) pour {{<var page-refs.data.oa>}} commun. :
 
 Pour une référence :
+
+::: {.callout-note collapse="false" title="Déclaration des étiquettes pour une référence"}
 
 ```yaml
 OA_data:
@@ -47,6 +55,9 @@ OA_data:
         OA_tags: [localisation]
         OA_importHeader: nom
 ```
+:::
+
+::: {.callout-note collapse="false" title="Déclaration des étiquettes pour une donnée"}
 Pour une donnée :
 
 ```yaml
@@ -100,7 +111,9 @@ OA_data:
       OA_importHeader: pheopigments
     chl_unit:
 ```
-:::{.callout-caution title="Le tag n'est pas obligatoire"}
+:::
+
+:::{.callout-caution title="Le tag n'est pas obligatoire" collapse="false"}
 Si vous n'en mettez pas un, un tag par défaut se mettra.
  * Pour les components -> ```no-tag``` : sans étiquette. Ce qui permettra de filtré au même titre que ceux avec une étiquette créé par vous.
  * Pour les datas -> ```__REFERENCE__```. Ce qui permettra de filtré les datas par type.

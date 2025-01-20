@@ -14,9 +14,9 @@
 ## OA_IMPORT_HEADER
 ## OA_IMPORT_HEADER_PATTERN
 ## OA_I_18_N
-voir {{<var page-refs.i18n.link>}}
-    - pour l'application {{<var page-refs.application.oa-i18n>}}
-    - pour un type de données {{<var page-refs.data.oa-i18n>}}
+    voir {{<var page-refs.i18n.link>}}
+        - pour l'application {{<var page-refs.application.oa-i18n>}}
+        - pour un type de données {{<var page-refs.data.oa-i18n>}}
 ## {{<var page-refs.data.oa-displayPattern>}}
 ## OA_TITLE
 ## OA_LANG_RESTRICTIONS
@@ -29,7 +29,7 @@ voir {{<var page-refs.i18n.link>}}
     Peut définir le nom de l'application ({{<var page-refs.application.oa-name>}})
 ## OA_EXPRESSION
 ## OA_GROOVY_EXCEPTIONS
-## OA_ADDITIONAL_FILES
+## {{<var page-refs.additionalFiles.oa>}}
 ## {{<var page-refs.application.oa>}}
     Cette section permet de renseigner les informations et paramétrage de l'application.
 ##  {{<var page-refs.authorizations.oa>}}
@@ -53,8 +53,8 @@ voir {{<var page-refs.i18n.link>}}
 ## OA_CONSTANT_IMPORT_HEADER_TARGET
 ## {{<var page-refs.data.oa>}}
     La section data permet de définir les types de données du domaine
-## OA_DATA_FIRST_LINE
-## OA_DATA_HEADER_LINE
+## {{<var page-refs.data.oa-firstLine>}}
+## {{<var page-refs.data.oa-headerLine>}}
 ## {{<var page-refs.application.oa-defaultLanguage>}}
     Pour l'ensemble de l'application, la langue par défaut.
 ## OA_DESCRIPTION
@@ -89,7 +89,7 @@ voir {{<var page-refs.i18n.link>}}
 ## OA_REFERENCES
 ## OA_REFERENCE_COMPONENT_TO_LOOK_FOR_HEADER
 ## OA_REFERENCE_SCOPES
-## OA_RIGHTS_REQUEST
+## {{<var page-refs.rightsRequest.oa>}}
 ## {{<var page-refs.data.oa-separator>}}
 ## OA_START_DATE_MATCH_PATTERN
 ## OA_STRATEGY
@@ -98,4 +98,5 @@ voir {{<var page-refs.i18n.link>}}
 ## OA_TIME_SCOPE
 ## {{<var page-refs.validations.oa>}}
 ## OA_VERSION
-    utilisé pour définir la version {{<page-refs.aide_fichier.oa-version>}} du moteur OpenADOM comme pour définir la version {{<page-refs.application.oa-version>}} du fichier de configuration de l'application.
+- la version {{< var page-refs.aide-fichier.oa-version >}} du moteur OpenADOM
+- la version {{< var page-refs.application.oa-version >}} du fichier de configuration de l'application

@@ -50,19 +50,19 @@ Ainsi si on a une parcelle "1", dans le site "Site 1" du type de site "Site d'é
 
 
 # Référentiels
-__references__: Un ensemble d'informations permettant de préciser le contexte de la mesure ou de l'observation.
+[__references__]{#references}: Un ensemble d'informations permettant de préciser le contexte de la mesure ou de l'observation.
 
 En déportant ces informations dans des fichiers __references__, on évite la répétition d'informations. On utilisera la clef d'une information pour y faire référence.
 
-__data__ : un ensemble de données correspondant à une thématique et un format de fichier commun.
+[__data__]{#data} : un ensemble de données correspondant à une thématique et un format de fichier commun.
 
-__variable__ : correspond à un ensemble de données, qualifiant ou se rapportant à une variable de mesure, d'observation, d'informations, de temporalité ou de contexte.
+[__variable__]{#variable} : correspond à un ensemble de données, qualifiant ou se rapportant à une variable de mesure, d'observation, d'informations, de temporalité ou de contexte.
 
-__component__ : un ensemble de valeur qui servent à décrire la donnée. CeS valeurs peuvent être ou non rendu visibles. Certaines peuvent juste être utilisée pour calculer d'autres valeurs. Tous les composants décrits sont enregistrés dans la
+[__component__]{#component} : un ensemble de valeur qui servent à décrire la donnée. CeS valeurs peuvent être ou non rendu visibles. Certaines peuvent juste être utilisée pour calculer d'autres valeurs. Tous les composants décrits sont enregistrés dans la
 
-__authorizationScope__ :  une ou des informations contextuelles (variable-component) qui ont du sens pour limiter les autorisations.
+[__authorizationScope__]{#authorizationScope} :  une ou des informations contextuelles (variable-component) qui ont du sens pour limiter les autorisations.
 
-__timeScope__ :  l'information de temporalité d'une ligne ayant du sens pour limiter des authorisations à une période.
+[__timeScope__]{#timescope}:  l'information de temporalité d'une ligne ayant du sens pour limiter des authorisations à une période.
 
 # Identificateurs
 
@@ -86,7 +86,7 @@ Il est conseillé d'utiliser une [convention de nommage](https://sqlpro.developp
 
 - pour un [référentiel](#references) le préfixe tr pour table référentiel, le nom du référentiel et un trigramme unique pour ce référentiel : tr_villes_vil
 - pour une [donnée](#data) le préfixe t pour table fonctionnelle, le nom du type de données et un trigramme unique : t_meteo_met
-- pour les [colonnes](#columns), on préfixe avec le trigramme de la table d'origine suivit du nom explicite de la colonne :
+- pour les [colonnes](#components), on préfixe avec le trigramme de la table d'origine suivit du nom explicite de la colonne :
   - vil_nom
   - met_temperature
   

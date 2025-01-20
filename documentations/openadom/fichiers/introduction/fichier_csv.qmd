@@ -1,6 +1,8 @@
-## <a id="csvFile" />Fichier d'échange
-
-L'alimentation de votre Système d'Information s'effectue au travers de fichier d'échange. Le format retenu étant [le fichier csv](https://fr.wikipedia.org/wiki/Comma-separated_values). 
+---
+title: Fichier d'échange
+abstract: 
+  L'alimentation de votre Système d'Information s'effectue au travers de fichier d'échange. Le format retenu étant [le fichier csv](https://fr.wikipedia.org/wiki/Comma-separated_values). 
+---
 
 C'est un format tabulaire, avec des champs séparés par des points-virgules :
 

@@ -1,0 +1,7 @@
+---
+title: Formulaire de demande de droits
+subtitle: OA_rightsRequest
+abstract: >
+    Cette section permet de décrire le formulaire qui sera présenté aux demandeur de droits pour accéder aux données.
+---
+TODO

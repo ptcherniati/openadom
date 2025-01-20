@@ -26,12 +26,19 @@ soit valide.
 
 Il y a 6 parties (<span style="color: orange">sans indentation</span>) attendues dans le fichier :
 
-* OA_version [#openadom_version],
+* OA_version
+
+::: {.callout-tip title="OA_version" collapse="true" #openadom_version}
+Cela détermine la version du moteur openADOM charger de lire le fichier de configuration. En cas de version incompatible avec celle du moteur une erreur sera renvoyée.
+
+Actuellement la version du navigateur est la version {{<var openadom.version>}}
+:::
+
 * {{<var page-refs.application.link>}},
-* [OA_data](#data),
-* [OA_tags](#tags),
-* [OA_additionalFiles](#additionalFiles)
-* [OA_rightsRequest](#rightsRequest)
+* {{<var page-refs.data.oa>}},
+* {{<var page-refs.etiquettes.oa>}},
+* {{<var page-refs.additionalFiles.oa>}}
+* {{<var page-refs.rightsRequest.oa>}}
 
 <span style="color:orange">l'indentation du fichier yaml est très importante.</span>
 

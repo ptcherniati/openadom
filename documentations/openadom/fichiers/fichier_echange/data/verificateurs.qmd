@@ -6,7 +6,7 @@
 ---
 On peut poser des contraintes sur les différentes composantes des données
 
-# [Utilisation de vérificateurs (checker)](#dataChecker)
+# [Utilisation de vérificateurs (checker)]{#dataChecker}
 
 Pour chaque colonne, on peut ajouter des vérificateurs.
 
@@ -178,8 +178,8 @@ Une valeur booléenne sera enregistrée dans le champ json en base de données e
 Ce vérificateur permet de vérifier que la valeur en entrée est un '[Ltree'https://www.postgresql.org/docs/current/ltree.html]'.
 Cette chaîne ne peut contenir que des termes contenant des minuscules/majuscules/chiffres/caractère_souligné(_), séparés par des points (.).
 Elle doit correspondre à la clef naturelle ou la clef hiérarchique d'une référence de type définit par le paramètre 'refType'.
-La section [code](code) explique comment les chaînes sont encodées pour définir des [clefs naturelles](naturalKey) ou
-des [clefs hiérarchiques](hierarchicalKey).
+La section {{<var page-refs.vocab.link-code>}} explique comment les chaînes sont encodées pour définir des {{<var page-refs.vocab.link-nk>}} ou
+des {{<var page-refs.vocab.link-hk>}}.
 
 Le paramètre OA_reference permet de définir le référentiel contenant la ligne dont la clef naturelle est celle indiquée par la valeur en entrée.
 

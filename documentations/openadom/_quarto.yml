@@ -15,7 +15,7 @@ website:
   site-url: https://dev.openadom.fr
   sidebar:
     logo: /img/Logos_OpernADOM.png
-    background: rgba(0, 157, 157, .6)
+    background: rgb(102, 196, 196)
     page-navigation: true
     back-to-top-navigation: true
     reader-mode: true
@@ -38,39 +38,42 @@ website:
             href: fichiers/fichier_echange/aide_fichier.qmd
           - text: Application (OA_application)
             href: fichiers/fichier_echange/application.qmd
-          - text: Données
-            href: fichiers/fichier_echange/data.qmd
-          - text: Etiquettes
+          - text: Etiquettes (OA_tags)
             href: fichiers/fichier_echange/etiquettes.qmd
-          - section: Components
+          - section:
+            text: Données
+            href: fichiers/fichier_echange/data/data.qmd
             contents: 
-              - text: Basic Components
-                href: fichiers/fichier_echange/data/components/basic_components.qmd
-              - text: Computed Components
-                href: fichiers/fichier_echange/data/components/computed_components.md
-              - text: Dynamic Components
-                href: fichiers/fichier_echange/data/components/dynamic_components.qmd
-              - text: Constant Components
-                href: fichiers/fichier_echange/data/components/constant_components.md
-              - text: Pattern Components
-                href: fichiers/fichier_echange/data/components/pattern_components.qmd
-              - section: 
-                text: Paramétrage des composants
-                href: fichiers/fichier_echange/data/components/components_description.qmd
+              - section: Components
                 contents: 
-                  - text: Etiquettes (OA_tags)
-                    href: fichiers/fichier_echange/etiquettes.qmd
-
-          - text: Verificateurs
-            href: fichiers/fichier_echange/verificateurs.qmd
-          - text: Validations
-            href: fichiers/fichier_echange/validations.qmd
-          - text: Dépôt de fichier (OA_submission)
-            href: fichiers/fichier_echange/submission.qmd
-          - text: Autorisations (OA_autorisations)
-            href: fichiers/fichier_echange/authorizations.qmd
+                  - text: Basic Components
+                    href: fichiers/fichier_echange/data/components/basic_components.qmd
+                  - text: Computed Components
+                    href: fichiers/fichier_echange/data/components/computed_components.md
+                  - text: Dynamic Components
+                    href: fichiers/fichier_echange/data/components/dynamic_components.qmd
+                  - text: Constant Components
+                    href: fichiers/fichier_echange/data/components/constant_components.md
+                  - text: Pattern Components
+                    href: fichiers/fichier_echange/data/components/pattern_components.qmd
+                  - section:  Paramétrage des composants
+                    href: fichiers/fichier_echange/data/components/components_description.qmd
+                  - text: Verificateurs
+                    href: fichiers/fichier_echange/data/verificateurs.qmd                          
+                  - text: Validations
+                    href: fichiers/fichier_echange/data/validations.qmd
+                  - section: Dépôt de fichier (OA_submission)
+                    href: fichiers/fichier_echange/data/submission/submission.qmd
+                  - section: Autorisations (OA_autorisations)
+                    href: fichiers/fichier_echange/data/authorizations/authorizations.qmd
+              - section: Fichier additionnels
+                href: fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd
+              - section: Formulaire de demande de droits
+                href: fichiers/fichier_echange/rightsRequest/rightsRequest.qmd
       - section: Pour aller plus loin
         contents:
+          - text: Glossaire
+            href: fichiers/autres/glossaire.qmd
           - text: Authorization
             href: fichiers/pour_aller_plus_loin/authorization.md
           - text: Component Qualifiers
@@ -97,7 +100,7 @@ website:
             href: fichiers/examples/configuration_min/description.qmd
   navbar:
     search: true
-    background: rgba(0, 157, 157, .6)
+    background: rgb(102, 196, 196)
     left: 
       - href: index.qmd
         text: Accueil
@@ -110,14 +113,14 @@ website:
       - href: about.md
         text: A propos
     right:
-      - icon: github
+      - icon: gitlab
         href: https://forgemia.inra.fr/anaee-dev/openadom
       - icon: oa
-        href: https://dev.openadom.fr
+        href: https://openadom.fr
   page-footer: 
     left: "Copyright 2025, OpenADOM"
     right: 
-      - icon: github
+      - icon: gitlab
         href: https://forgemia.inra.fr/anaee-dev/openadom
 
 format:

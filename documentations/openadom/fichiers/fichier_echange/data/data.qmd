@@ -29,7 +29,7 @@ OA_data:
 ```
 :::
 
-## Clef naturelle ([OA_naturalKey]{#nk})
+## Clef naturelle ([OA_naturalKey(#nk))
 Vous devrez déclarer une {{< var page-refs.vocab.link-nk >}}.
 
 ::: {.callout-note title="OA_naturalKey" collapse="false"}
@@ -48,7 +48,7 @@ OA_data:
 ```
 :::
 
-## Internationalisation ([OA_i18n]{#i18n})
+## Internationalisation (OA_i18n) {#i18n}
 Vous pouvez internationaliser votre type de données en rajoutant une section **OA_i18n** voir la section {{< var page-refs.i18n.link >}}.
 
 ::: {.callout-note title="OA_i18n" collapse="false"}
@@ -66,12 +66,12 @@ OA_data:
 ```
 :::
 
-## Surcharge de la clef naturelle lors du référencement ([OA_i18nDisplayPattern]{#displayPattern})
+## Surcharge de la clef naturelle lors du référencement (OA_i18nDisplayPattern) {#displayPattern}
 Lorsque dans un autre type de données vous ferez référence un ce tye de données, c'est la clef naturelle de la ligne référencée qui s'affichera. 
 
-Vous pourrez surcharger cet affichage en déclarant un pattern d'affichage en utilisant les valeurs de la ligne référencée dans une section [**OA_i18nDisplayPattern**]{#displayPattern}.
+Vous pourrez surcharger cet affichage en déclarant un pattern d'affichage en utilisant les valeurs de la ligne référencée dans une section **OA_i18nDisplayPattern**
 
-::: {.callout-note title="OA_i18nDisplayPattern" collapse="false"}
+::: {.callout-note title="OA_i18nDisplayPattern" collapse="false" #displayPattern}
 ``` yaml
 
 OA_data:
@@ -85,23 +85,24 @@ OA_data:
 Ici {sit_site_fr} repésente la valeur de la colonne sit_site_fr et {sit_agroecosystem} la valeur de la colonne sit_agroecosystem.
 
 Si une colonne est aussi une référence, alors récursivement on calculera les inférences de OA_i18nDisplayPattern de tous ces référentiels.
+
 :::
 
 
 
 ::: {.callout-warning title="Calcul de la valeur d'affichage d'une données" collapse="false"}
 Les inférences de OA_i18nDisplayPattern sont calculées au moment du dépôt de la données et stockées en base de données. S'il vous arrivait de modifier les colonnes de référentiels intervenant dans cette construction, alors vous devriez redéposer vos données pour recalculer les valeurs d'affichage.
+
 :::
+## Déclaration d'un cartouche
 
-
-
-## Déclaration d'un cartouche
 
 Par défaut la ligne 1 est la ligne d'en-tête et la ligne 2 celle de la première ligne de données.
 
 On peut changer ce comportement en précisant :
-- [OA_DATA_HEADER_LINE]{#headerLine} la ligne d'en-tête
-- [OA_DATA_FIRST_LINE]{#firstLine} la ligne d'en-tête
+
+- [OA_dataHeaderLine]{#headerLine} la ligne d'en-tête 
+- [OA_dataFirstLine]{#firstLine} la ligne d'en-tête 
 
 ::: {.callout-note title="en-tête" collapse="false"}
 ``` yaml
@@ -113,7 +114,7 @@ OA_data:
 ```
 :::
 
-## Colonnes non signifiantes ([OA_ALLOW_UNEXPECTED_COLUMNS]{#unexpectedColumns})
+## Colonnes non signifiantes (OA_allowUnexpectedColumns){#unexpectedColumns}
 
 Par défaut, toutes les colonnes présentes dans le fichier de données doivent avoir été déclarées. 
 
@@ -189,7 +190,7 @@ OA_data:
 ```
 :::
 
-## {{<var page-refs.authorizations.text>}}
+## {{<var page-refs.authorizations.text>}} (OA_authorizations)
 Cette section vous permet de définir les composantes qui permettront de construire des autorisations voir {{<var page-refs.authorizations.link>}}
 
 

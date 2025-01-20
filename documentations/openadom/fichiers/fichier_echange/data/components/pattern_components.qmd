@@ -15,7 +15,7 @@
 
 Exemple de déclaration de section OA_patternComponents: 
 
-:::  {.callout-note collapse=false title="OA_data"}
+:::  {.callout-note title="OA_data" collapse="false"}
 
 ``` yaml 
 OA_data:
@@ -113,13 +113,12 @@ On aurait aussi pu utiliser
 ```
 Mais cela aurait changé nos en-tête de colonne SWC_2_20 -> humidite_volumique_du_sol_2_20
 
-
 ::: {.callout-important}
-<p>Le parseur va rechercher toutes les colonnes {{< var page-refs.basic-comp.oa >}}. On recherche dans les colonnes restantes celles qui "matchent" un OA_patternForComponents.
+    <p>Le parseur va rechercher toutes les colonnes {{< var page-refs.basic-comp.oa >}}. On recherche dans les colonnes restantes celles qui "matchent" un OA_patternForComponents.
 
-<p>Le comportement fiOA_allowUnexpectedColumnsnal dépendra de la valeur de OA_allowUnexpectedColumns.
+    <p>Le comportement final de OA_allowUnexpectedColumns dépendra de la valeur de OA_allowUnexpectedColumns.
 :::
 
 (@) définition de la colonne pattern.
 
-Comme tous les composants 
+Comme tous les composants vous allez pouvoir 

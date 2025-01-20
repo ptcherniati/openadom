@@ -24,7 +24,9 @@ link-styles:
     text: "{text}"
     link: '::: {.card} [{text}]({href}) :::'
 page-refs:
-  # Section Introduction
+  openadom:
+    version: 2.0.1
+# Section Introduction
   intro:
     href: /fichiers/introduction/introduction.qmd
     text: Introduction
@@ -36,12 +38,22 @@ page-refs:
     link-code: "[code](/fichiers/introduction/vocabulaire.qmd#code)"
     link-nk: "[clef naturelle](/fichiers/introduction/vocabulaire.qmd#clef-naturelle)"
     link-hk: "[clef hierarchique](/fichiers/introduction/vocabulaire.qmd#clef-hierarchique)"
-    link-data: "[données](/fichiers/introduction/vocabulaire.qmd#referentiels)"
+    link-referentiels: "[données](/fichiers/introduction/vocabulaire.qmd#referentiels)"
+    link-references: "[référentiels](/fichiers/introduction/vocabulaire.qmd#references)"
+    link-data: "[données](/fichiers/introduction/vocabulaire.qmd#data)"
+    link-variable: "[variable](/fichiers/introduction/vocabulaire.qmd#variable)"
+    link-component: "[component](/fichiers/introduction/vocabulaire.qmd#component)"
+    link-authorizationScope: "[authorizationScope](/fichiers/introduction/vocabulaire.qmd#authorizationScope)"
+    link-timescope: "[timescope](/fichiers/introduction/vocabulaire.qmd#timescope)"
     link-identificateurs: "[Identificateurs](/fichiers/introduction/vocabulaire.qmd#identificateurs)"
   csv:
     href: /fichiers/introduction/fichier_csv.qmd
     text: Fichier d'échange
     link: "[Fichier d'échange](/fichiers/introduction/fichier_csv.qmd)"
+  glossaire:
+    href: /fichiers/autres/glossaire.qmd
+    text: Glossaire
+    link: "[Glossaire](/fichiers/autres/glossaire.qmd)"
 
   # Section Fichiers d'échange
   application:
@@ -57,37 +69,37 @@ page-refs:
   data:
     href: /fichiers/fichier_echange/data.qmd
     text: Données
-    link: "[Données](/fichiers/fichier_echange/data.qmd)"
-    oa: "[OA_data](/fichiers/fichier_echange/data.qmd)"
-    oa-nk: "[OA_naturalKey](/fichiers/fichier_echange/data.qmd#nk)"
-    oa-i18n: "[OA_i18n](/fichiers/fichier_echange/data.qmd#i18n)"
-    oa-displayPattern: "[OA_i18nDisplayPattern](/fichiers/fichier_echange/data.qmd#displayPattern)"
-    oa-components: "[Components](/fichiers/fichier_echange/data.qmd#components)"
-    oa-headerLine: "[OA_DATA_HEADER_LINE](/fichiers/fichier_echange/data.qmd#headerLine)"
-    oa-firstLine: "[OA_DATA_FIRST_LINE](/fichiers/fichier_echange/data.qmd#firstLine)"
-    oa-unexpectedColumns: "[OA_ALLOW_UNEXPECTED_COLUMNS](/fichiers/fichier_echange/data.qmd#unexpectedColumns)"
-    oa-separator: "[OA_separator](/fichiers/fichier_echange/data.qmd#separator)"
-    oa-validations: "[OA_separator](/fichiers/fichier_echange/data.qmd#validations)"
+    link: "[Données](/fichiers/fichier_echange/data/data.qmd)"
+    oa: "[OA_data](/fichiers/fichier_echange/data/data.qmd)"
+    oa-nk: "[OA_naturalKey](/fichiers/fichier_echange/data/data.qmd#nk)"
+    oa-i18n: "[OA_i18n](/fichiers/fichier_echange/data/data.qmd#i18n)"
+    oa-displayPattern: "[OA_i18nDisplayPattern](/fichiers/fichier_echange/data/data.qmd#displayPattern)"
+    oa-components: "[Components](/fichiers/fichier_echange/data/data.qmd#components)"
+    oa-headerLine: "[OA_dataFirstLine](/fichiers/fichier_echange/data/data.qmd#headerLine)"
+    oa-firstLine: "[OA_dataHeadertLine](/fichiers/fichier_echange/data/data.qmd#firstLine)"
+    oa-unexpectedColumns: "[OA_AllowUnexpectedColumns](/fichiers/fichier_echange/data/data.qmd#unexpectedColumns)"
+    oa-separator: "[OA_separator](/fichiers/fichier_echange/data/data.qmd#separator)"
+    oa-validations: "[OA_validations](/fichiers/fichier_echange/data/data.qmd#validations)"
   authorizations:
-    href: /fichiers/fichier_echange/submission.qmd
+    href: /fichiers/fichier_echange/data/authorizations/authorizations.qmd
     text: Définition des composantes participant à la construction d'autorisations.
-    link: "[Authorizations](/fichiers/fichier_echange/authorizations.qmd)"
-    oa: "[OA_authorizations](/fichiers/fichier_echange/authorizations.qmd)"
+    link: "[Authorizations](/fichiers/fichier_echange/data/authorizations/authorizations.qmd)"
+    oa: "[OA_authorizations](/fichiers/fichier_echange/data/authorizations/authorizations.qmd)"
   submission:
-    href: /fichiers/fichier_echange/submission.qmd
+    href: /fichiers/fichier_echange/data/submission/submission.qmd
     text: Stratégie de  dépôt
-    link: "[Stratégie de  dépôt](/fichiers/fichier_echange/submission.qmd)"
-    oa: "[OA_submission](/fichiers/fichier_echange/submission.qmd)"
+    link: "[Stratégie de  dépôt](/fichiers/fichier_echange/data/submission/submission.qmd)"
+    oa: "[OA_submission](/fichiers/fichier_echange/data/submission/submission.qmd)"
   validations:
-    href: /fichiers/fichier_echange/validations.qmd
+    href: /fichiers/fichier_echange/data/validations.qmd
     text: Règles de validations
-    link: "[Règles de validations](/fichiers/fichier_echange/validations.qmd)"
-    oa: "[OA_validations](/fichiers/fichier_echange/validations.qmd)"
+    link: "[Règles de validations](/fichiers/fichier_echange/data/validations.qmd)"
+    oa: "[OA_validations](/fichiers/fichier_echange/data/validations.qmd)"
   aide-fichier:
     href: /fichiers/fichier_echange/aide_fichier.qmd
     text: Aide fichier
     link: "[Aide fichier](/fichiers/fichier_echange/aide_fichier.qmd)"
-    oa-version: "[OA_validations](/fichiers/fichier_echange/aide_fichier.qmd#openadom_version)"
+    oa-version: "[OA_version](/fichiers/fichier_echange/aide_fichier.qmd#openadom_version)"
   etiquettes:
     href: /fichiers/fichier_echange/etiquettes.qmd
     text: Etiquettes
@@ -124,14 +136,27 @@ page-refs:
     href: /fichiers/fichier_echange/data/components/pattern_components.qmd
     text: Pattern Components
     link: "[Pattern Components](/fichiers/fichier_echange/data/components/pattern_components.qmd)"
+    oa: "[OA_patternComponents](/fichiers/fichier_echange/data/components/pattern_components.qmd)"
   checker: 
-    href: /fichiers/fichier_echange/verificateurs.qmd
+    href: /fichiers/fichier_echange/data/verificateurs.qmd
     text: Vérificateurs (OA_checker)
-    link: "[Vérificateurs (OA_checker)](/fichiers/fichier_echange/verificateurs.qmd)"
-    link-multiplicity: "[Multiplicity (OA_multiplicity)](/fichiers/fichier_echange/verificateurs.qmd#multiplicity)"
-    oa-multiplicity: "[OA_multiplicity](/fichiers/fichier_echange/verificateurs.qmd#multiplicity)"
-    link-numericchecker: "[Vérificateur de type 'Integer' et 'Float'](/fichiers/fichier_echange/verificateurs.qmd#numericchecker)"
-    oa: "[OA_checker](/fichiers/fichier_echange/verificateurs.qmd)"
+    link: "[Vérificateurs (OA_checker)](/fichiers/fichier_echange/data/verificateurs.qmd)"
+    link-multiplicity: "[Multiplicity (OA_multiplicity)](/fichiers/fichier_echange/data/verificateurs.qmd#multiplicity)"
+    oa-multiplicity: "[OA_multiplicity](/fichiers/fichier_echange/data/verificateurs.qmd#multiplicity)"
+    link-numericchecker: "[Vérificateur de type 'Integer' et 'Float'](/fichiers/fichier_echange/data/verificateurs.qmd#numericchecker)"
+    oa: "[OA_checker](/fichiers/fichier_echange/data/verificateurs.qmd)"
+  # additionalFiles
+  additionalFiles: 
+      href: /fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd
+      text: Fichiers additionnels
+      link: "[Fichiers additionnels](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
+      oa: "[OA_additionalFiles](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
+  # rightsRequest
+  rightsRequest: 
+      href: /fichiers/fichier_echange/rightsRequest.qmd
+      text: Demandes de droits
+      link: "[Demandes de droits](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
+      oa: "[OA_rightsRequest](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
   # section pour aller plus loin
   authorization: 
     text: Authorization

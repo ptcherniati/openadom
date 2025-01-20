@@ -8,6 +8,10 @@ lightbox:
   effect: fade
   desc-position: left
   loop: false
+oa-mandatory: 
+    - OA_name
+oa-optional: 
+    - OA_i18n
 ---
 
 # Déclaration d'une donnée
@@ -22,6 +26,7 @@ OA_data:
 ::: {.callout-caution}
 Pour déclarer une donnée vous devez fournir un identificateur
 
+:::
 
 ::: {.callout-note title="example de section application" collapse="false"}
 ``` yaml
@@ -43,19 +48,23 @@ OA_application:
 
 Cette section doit comporter obligatoirement:
 
-(@) [**OA_name**](#name) le nom de l'application qui correspondra au nom du schema de la base de données. 
+(@) **OA_name** le nom de l'application qui correspondra au nom du schema de la base de données. 
 
+:::{.callout-note collapse="false" #name title=""}
  ``` yaml
         OA_name: acbb_openadom_v2
  ``` 
-
+:::
 Ce nom doit obligatoirement -etre en minuscules, commencer par une lettre et ne comporter que des caractères alphanumériques sans accent et l'espace souligné. (_)
 
-(@) [**OA_version**](#version) qui correspond à la version du fichier de configuration. Lors des mise à jour du schéma, vous incrémenterez ce numéro de version.
+(@) [**OA_version**]{#version} qui correspond à la version du fichier de configuration. Lors des mise à jour du schéma, vous incrémenterez ce numéro de version.
 
+:::{.callout-note collapse="false" title="" }
  ``` yaml
         OA_version: 1.0.5
  ``` 
+:::
+
 
 ::: {.callout-note collapse="true" title="Exemple de numérotation" }
 
@@ -89,13 +98,18 @@ Ce nom doit obligatoirement -etre en minuscules, commencer par une lettre et ne 
 
 On peut aussi rajouter des informations facultatives: 
 
-1. [**OA_defaultLanguage**](#defaultLanguage) qui permet de définir la langue par défaut. La langue par défaut est celle utilisée si aucune autre information de langue n'est précisée. Lors de l'internationalisation de certains champs / données, on essait de trouver la traduction dans la langue demandée; à défaut on fournit la traduction dans la langue par défaut; si aucune traduction n'est trouvée on renvoit l'indentificateur fourni en entrée.
+1. **OA_defaultLanguage* qui permet de définir la langue par défaut. La langue par défaut est celle utilisée si aucune autre information de langue n'est précisée. Lors de l'internationalisation de certains champs / données, on essait de trouver la traduction dans la langue demandée; à défaut on fournit la traduction dans la langue par défaut; si aucune traduction n'est trouvée on renvoit l'indentificateur fourni en entrée.
+
+:::{.callout-note collapse="false" title="" #defaultLanguage}
  
  ``` yaml
         OA_defaultLanguage: fr
  ``` 
+:::
 
- 2. **[OA_i18n]{i18n}**  cette section permet d'internationaliser le nom de l'application en fournissant un titre et / ou une description à ce nom.
+ 2. **OA_i18n**  cette section permet d'internationaliser le nom de l'application en fournissant un titre et / ou une description à ce nom.
+
+:::{.callout-note collapse="false" title="" #i18n}
 
 ``` yaml
         OA_i18n:
@@ -106,9 +120,24 @@ On peut aussi rajouter des informations facultatives:
                 fr: "Agroécosystèmes, Cycles Biogéochimiques et Biodiversité"
                 en: "Agroecosystems, Biogeochemical Cycles and 
 ```
+:::
 
 ![rendu en français](/img/application_fr.png){height="100" .lightbox}
 
 ![rendu en anglais](/img/application-en.png){height="100" .lightbox}
 
-3. [**OA_comment** ](#comment) C'est un commentaire, que vous pouvez remplir à votre guise pour vous permettre d'indiquer les modifications de version en version.
+3. **OA_comment**  C'est un commentaire, que vous pouvez remplir à votre guise pour vous permettre d'indiquer les modifications de version en version.
+
+:::{.callout-note collapse="false" title="" #comment}
+
+``` yaml
+    OA_comment: >
+        Ceci est un 
+        commentaire sur
+        plusieurs lignes
+```
+
+``` yaml
+    OA_comment: "ceci est un commentaire entre quotes"
+```
+:::
