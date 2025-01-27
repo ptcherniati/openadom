@@ -32,7 +32,12 @@ public interface BinaryFileService extends ServiceContainerBean {
 
     ReportErrors findPublishedVersion(String nameOrId, String dataType, FileOrUUID params, Set<BinaryFile> filesToStore, boolean searchOverlaps);
 
-    List<BinaryFile> getFilesOnRepository(String nameOrId, String datatype, BinaryFileDataset fileDatasetID, boolean overlap);
+    List<BinaryFile> getFilesOnRepository(
+            String nameOrId,
+            String datatype,
+            BinaryFileDataset fileDatasetID,
+            boolean overlap
+    );
 
     AdditionalBinaryFileResult getAdditionalBinaryFileResult(
             AdditionalBinaryFile additionalBinaryFile,

@@ -11,15 +11,16 @@ import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResu
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -102,7 +103,9 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     public Optional<UUID> removeFile(Application application, UUID id) {
         Function<BinaryFile, UUID> deleteBinaryFile = binaryFile -> getBinaryFileRepository(application).delete(binaryFile.getId()) ? binaryFile.getId() : null;
         return getFile(application.getName(), id)
-                .map(deleteBinaryFile);
+                .map(BinaryFile::getId)
+                .map(getBinaryFileRepository(application)::delete)
+                .orElse(false)?Optional.of(id):Optional.empty();
     }
 
     @Override
@@ -143,9 +146,11 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     }
 
     @Override
-    public List<BinaryFile> getFilesOnRepository(final String nameOrId, final String datatype, final BinaryFileDataset fileDatasetID, final boolean overlap) {
+    public List<BinaryFile> getFilesOnRepository(final String nameOrId, final String datatype, final BinaryFileDataset binaryFileDataset, final boolean overlap) {
         authenticationService.setRoleForClient();
-        return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, fileDatasetID, overlap);
+        Application application= serviceContainer.applicationService().getApplication(nameOrId);
+        DataRepositoryForBuffer dataRepositoryForBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
+        return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepositoryForBuffer), overlap);
     }
 
     @Override

@@ -11,8 +11,8 @@ import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.UUIDsfromData;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.*;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.data.DataService;
 import org.apache.commons.csv.CSVFormat;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class DataCsvBuilder {
     private static final Logger log = LoggerFactory.getLogger(DataCsvBuilder.class);
     private DownloadDatasetQuery downloadDatasetQuery;
 
-    private DataRepositoryWithBuffer dataRepositoryWithBuffer;
+    private DataRepositoryForBuffer dataRepositoryForBuffer;
 
     private Flux<DataRow> datas;
     private OutputStream outputStream;
@@ -86,8 +86,8 @@ public class DataCsvBuilder {
         return this;
     }
 
-    public DataCsvBuilder onRepositories(DataRepositoryWithBuffer DataRepositoryWithBuffer, AdditionalFileRepository additionalFileRepository) {
-        this.dataRepositoryWithBuffer = DataRepositoryWithBuffer;
+    public DataCsvBuilder onRepositories(DataRepositoryForBuffer DataRepositoryWithBuffer, AdditionalFileRepository additionalFileRepository) {
+        this.dataRepositoryForBuffer = DataRepositoryWithBuffer;
         return this;
     }
 
@@ -183,12 +183,12 @@ public class DataCsvBuilder {
                     writer,
                     comparator,
                     getInternationalizedHeader,
-                    dataRepositoryWithBuffer,
+                    dataRepositoryForBuffer,
                     dataDescription,
                     internationalizedSortedColumns,
                     horizontalDisplay
             );
-            DataCsvRowBuilder dataCsvRowBuilder = new DataCsvRowBuilder(language, dataRepositoryWithBuffer, dataDescription, horizontalDisplay);
+            DataCsvRowBuilder dataCsvRowBuilder = new DataCsvRowBuilder(language, dataRepositoryForBuffer, dataDescription, horizontalDisplay);
             datas
                     .map(dataCsvHeaderWriter::writeHeader)
                     .map(dataRow -> addRefsLinkedTo(dataRow, uuiDsfromData))

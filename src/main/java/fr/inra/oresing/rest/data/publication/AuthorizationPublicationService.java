@@ -3,9 +3,11 @@ package fr.inra.oresing.rest.data.publication;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
@@ -14,6 +16,7 @@ import fr.inra.oresing.domain.services.synthesis.SynthesisService;
 import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -26,30 +29,33 @@ public class AuthorizationPublicationService {
     protected final StandardDataDescription dataDescription;
     protected final Application application;
 
+    protected final String dataName;
+    protected FileOrUUID fileOrUUID;
+    protected ApplicationDataWriter applicationDataWriter;
+
     public String getDataName() {
         return this.dataName;
     }
-
-    protected final String dataName;
-    protected AuthorizationsResult authorizationsForPublic;
-    protected AuthorizationsResult authorizationsForUser;
-    protected FileOrUUID params;
-
-    public AuthorizationForUser getAuthorizations() {
-        return this.authorizations;
+    public ApplicationDataWriter applicationDataWriter() {
+        return this.applicationDataWriter;
     }
 
-    protected AuthorizationForUser authorizations;
-    protected AuthorizationPublicationService(ReportErrors errors, final Application application, final String dataName, FileOrUUID params) {
+    protected AuthorizationPublicationService(
+            ReportErrors errors,
+            final Application application,
+            final String dataName,
+            FileOrUUID fileOrUUID,
+            ApplicationDataWriter applicationDataWriter) {
         this.errors = errors;
         this.application = application;
-        this.dataName = dataName!=null?dataName:Optional.ofNullable(params).map(FileOrUUID::binaryfiledataset).map(BinaryFileDataset::getDatatype).orElse(null);
-        this.params = buildParams(params);
+        this.dataName = dataName != null ? dataName : Optional.ofNullable(fileOrUUID).map(FileOrUUID::binaryfiledataset).map(BinaryFileDataset::getDatatype).orElse(null);
+        this.fileOrUUID = setFileOrUUID(fileOrUUID);
         this.dataDescription = buildDataDescription(application);
+        this.applicationDataWriter = applicationDataWriter;
     }
 
-    public FileOrUUID getParams() {
-        return this.params;
+    public FileOrUUID getFileOrUUID() {
+        return this.fileOrUUID;
     }
 
     protected StandardDataDescription buildDataDescription(Application application) {
@@ -57,14 +63,14 @@ public class AuthorizationPublicationService {
                 .orElseThrow(() -> new IllegalArgumentException("dataName Can't be null"));
     }
 
-    protected FileOrUUID buildParams(FileOrUUID params) {
-        Optional.ofNullable(params)
+    protected FileOrUUID setFileOrUUID(FileOrUUID fileOrUUIDLocal) {
+        Optional.ofNullable(fileOrUUIDLocal)
                 .map(par -> par.binaryfiledataset() != null ?
-                        params.binaryfiledataset() :
+                        fileOrUUIDLocal.binaryfiledataset() :
                         BinaryFileDataset.EMPTY_INSTANCE()
                 )
                 .ifPresent(binaryFileDataset -> binaryFileDataset.setDatatype(dataName));
-        return params;
+        return fileOrUUIDLocal;
     }
 
 
@@ -79,8 +85,8 @@ public class AuthorizationPublicationService {
     }
 
     protected BinaryFile getPublishedVersion(BinaryFileRepository binaryFileRepository) {
-        assert params.binaryfiledataset() != null;
-        return binaryFileRepository.findPublishedVersions(params.binaryfiledataset()).orElse(null);
+        assert fileOrUUID.binaryfiledataset() != null;
+        return binaryFileRepository.findPublishedVersions(fileOrUUID.binaryfiledataset()).orElse(null);
     }
 
     protected void unPublishVersions(
@@ -101,33 +107,9 @@ public class AuthorizationPublicationService {
         }
     }
 
-    boolean hasRightForPublishOrUnPublish() {
-        return authorizations.hasRightForPublishOrUnPublish();
-    }
-
-    boolean hasRightForDeposit() {
-        return authorizations.hasRightForDeposit();
-    }
-
-    boolean isApplicationCreator() {
-        return authorizations.isApplicationCreator();
-    }
-
-    boolean isRepository() {
-        return authorizations.isRepository();
-    }
-
-    boolean canDeposit() {
-        return authorizations.canDeposit();
-    }
-
-    AuthorizationsResult authorizationsForUser() {
-        return authorizations == null ? authorizationsForUser : authorizations.authorizationsForUserOrPublic();
-    }
-
     boolean fileMustBeJustStored() {
         boolean existsFileToPublish = Optional.ofNullable(binaryFile).map(BinaryFile::getId).isPresent();
-        Boolean publishIsAsked = Optional.ofNullable(params).map(FileOrUUID::topublish).orElse(false);
+        Boolean publishIsAsked = Optional.ofNullable(fileOrUUID).map(FileOrUUID::topublish).orElse(false);
         Boolean unPublishIsAsked = !publishIsAsked && Optional.ofNullable(binaryFile).map(BinaryFile::getParams).map(BinaryFileInfos::published).orElse(false);
         return
                 isRepository() &&
@@ -137,7 +119,13 @@ public class AuthorizationPublicationService {
                 );
     }
 
+    protected boolean isRepository() {
+        return application.findSubmission(dataName)
+                .map(Submission::strategy)
+                .stream().anyMatch(SubmissionType.OA_VERSIONING::equals);
+    }
+
     boolean fileMustBePublished() {
-        return !isRepository() || Optional.ofNullable(params).map(FileOrUUID::topublish).orElse(false);
+        return !isRepository() || Optional.ofNullable(fileOrUUID).map(FileOrUUID::topublish).orElse(false);
     }
 }
