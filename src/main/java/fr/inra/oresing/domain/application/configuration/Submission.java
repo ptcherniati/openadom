@@ -85,7 +85,7 @@ public record Submission(
 
         } catch (Exception e) {
             throw new SiOreAuthorizationRequestException(
-                    AuthorizationRequestException.INVAALID_FILE_NAME,
+                    AuthorizationRequestException.INVALID_FILE_NAME,
                     Map.of("fileNameFormat", fileNameParsing().createExampleSubmissionFileName())
             );
 

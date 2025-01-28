@@ -11,7 +11,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationReader;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataReader;
 import fr.inra.oresing.domain.checker.CheckerFactory;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
@@ -30,6 +30,7 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.file.DataFile;
@@ -61,9 +62,7 @@ import reactor.core.publisher.Mono;
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.PosixFilePermission;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -553,7 +552,7 @@ public class DataService implements ServiceContainerBean {
                 .withDownloadDatasetQuery(downloadDatasetQuery)
                 .withReferenceService(this)
                 .withOutputStream(outputStream)
-                .onRepositories(new DataRepositoryWithBuffer(application, dataRepository), null)
+                .onRepositories(getDataRepositoryWithBuffer(application), null)
                 .addDatas(datas)
                 .buildDataCsv(downloadDatasetQuery.getLanguage(), dataDescription, downloadDatasetQuery.horizontalDisplay());
     }
@@ -585,6 +584,10 @@ public class DataService implements ServiceContainerBean {
 
     public void setServiceContainer(ServiceContainer serviceContainer) {
         this.serviceContainer = serviceContainer;
+    }
+
+    public DataRepositoryForBuffer getDataRepositoryWithBuffer(Application application) {
+        return new DataRepositoryWithBuffer(application, dataRepository);
     }
 
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
@@ -620,7 +623,7 @@ public class DataService implements ServiceContainerBean {
             DownloadDatasetQuery downloadDatasetQuery) {
         Application application = downloadDatasetQuery.application();
         DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
-        DataRepositoryWithBuffer dataRepositoryWithBuffer = new DataRepositoryWithBuffer(application, dataRepository);
+        DataRepositoryForBuffer dataRepositoryWithBuffer = getDataRepositoryWithBuffer(application);
 
         serviceContainer.authenticationService().setRoleForClient();
 
@@ -698,7 +701,7 @@ public class DataService implements ServiceContainerBean {
 
     public UUIDsfromData addDatacsv(
             final ZipOutputStream zipOutputStream,
-            DataRepositoryWithBuffer dataRepositoryWithBuffer,
+            DataRepositoryForBuffer dataRepositoryWithBuffer,
             final DownloadDatasetQuery downloadDatasetQuery,
             String fileNamePattern) {
         final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
@@ -719,7 +722,7 @@ public class DataService implements ServiceContainerBean {
     }
 
     public List<DataRow> findData(final DownloadDatasetQuery downloadDatasetQuery) {
-        ApplicationReader applicationReader = serviceContainer.authorizationService()
+        ApplicationDataReader applicationReader = serviceContainer.authorizationService()
                 .getPrivilegeAssessorForApplication(DATA_READ, downloadDatasetQuery.application())
                 .forDataRead(downloadDatasetQuery.dataName());
         return serviceContainer.dataService().findDataFlux(downloadDatasetQuery).collectList().block();
@@ -1028,10 +1031,6 @@ public class DataService implements ServiceContainerBean {
         serviceContainer.authenticationService().setRoleForClient();
         final Application application = downloadDatasetQuery.application();
         return repository.getRepository(application).data().delete(downloadDatasetQuery);
-    }
-
-    public DataRepositoryWithBuffer getNewDataRepositoryWithBuffer(Application application) {
-        return new DataRepositoryWithBuffer(application, repository.getRepository(application).data());
     }
 
     public Map<Ltree, List<DataValue>> getReferenceDisplaysById(final Application application, final Set<String> listOfDataIds) {

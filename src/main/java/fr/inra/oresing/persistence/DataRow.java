@@ -15,9 +15,15 @@ import java.util.stream.Collectors;
 /**
  * @param allPatternColumnNames Long totalRows;Long rowNumber;
  */
-public record DataRow(List<String> rowId, List<String> patternColumnName, Ltree naturalKey, Ltree hierarchicalKey,
-                      Map<String, FieldType> values, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
-                      List<String> allPatternColumnNames) {
+public record DataRow(
+        List<String> rowId,
+        List<String> patternColumnName,
+        Ltree naturalKey,
+        Ltree hierarchicalKey,
+        Map<String, FieldType> values,
+        Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
+        List<String> allPatternColumnNames
+) {
     public static DataRow of(Optional<StandardDataDescription> application, DataRows dataRows) {
         List<String> patternComponentKeys = application
                 .map(StandardDataDescription::componentDescriptions)

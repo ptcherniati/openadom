@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.model.authorization;
 
+import com.google.common.collect.ImmutableSortedSet;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.internationalization.Internationalization;
 import fr.inra.oresing.domain.data.AuthorizationColumnsDescription;
@@ -11,7 +12,7 @@ import java.util.stream.Collectors;
 
 
 public record GetGrantableResult(
-        com.google.common.collect.ImmutableSortedSet<ApplicationUserResult> users,
+        ImmutableSortedSet<ApplicationUserResult> users,
         Map<String, List<ReferenceScope>> referenceScopes,
         Map<String, SortedMap<String, ColumnDescription>> columnsDescription,
         AuthorizationsResult authorizationsForUser,

@@ -201,7 +201,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return getNamedParameterJdbcTemplate().queryForList(query, paramSource, UUID.class);
     }
 
-    public Stream<DataValue> findAllByReferenceTypeStream(final String refType) {
+    public Stream<DataValue> findAllByReferenceTypeStream(final String referenceName) {
         String query = """
                 SELECT DISTINCT '%1$s' as "@class",
                 to_jsonb(t)  as json
@@ -212,7 +212,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 """
                 .formatted(DataValue.class.getName(), getTable().getSqlIdentifier());
         final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
-                .addValue(REF_TYPE, refType);
+                .addValue(REF_TYPE, referenceName);
         return getNamedParameterJdbcTemplate()
                 .queryForStream(query, paramSource, getJsonRowMapper());
     }
