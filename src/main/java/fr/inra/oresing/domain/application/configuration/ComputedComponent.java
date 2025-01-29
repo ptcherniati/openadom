@@ -38,10 +38,5 @@ public record ComputedComponent(ComponentDescriptionType type,
                 computationChecker(),
                 submission);
     }
-    Multiplicity multiplicity(){
-        return Optional.ofNullable(checker)
-                .map(CheckerDescription::multiplicity)
-                .orElse(Multiplicity.ONE);
-    }
 
 }

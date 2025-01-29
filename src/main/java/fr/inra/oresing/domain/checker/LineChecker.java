@@ -174,7 +174,7 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
                     groovyExpressionOnOneLineElementTransformer.context.putAll(context);
                 }
 
-                final Function<FieldType, FieldType> fn = value -> transform(referenceDatum, value);
+                final Function<FieldType, FieldType> fn = value -> transform(referenceDatum);
                 final DataColumnValue transformedReferenceColumnValue = referenceColumnValue.transform(fn);
                 final DataDatum transformedDatum = DataDatum.copyOf(referenceDatum);
                 transformedDatum.put(target(), transformedReferenceColumnValue);
@@ -182,7 +182,7 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
                         groovyExpressionOnOneLineElementTransformer.multiplicity().equals(Multiplicity.ONE) ? referenceDatum : transformedDatum;
             }
 
-            FieldType transform(SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, FieldType value);
+            FieldType transform(SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext);
 
             record GroovyExpressionOnOneLineElementTransformer(
                     DataColumn target,
@@ -193,7 +193,7 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
             ) implements TransformOneLineElementTransformer {
 
                 @Override
-                public FieldType transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, final FieldType value) {
+                public FieldType transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext) {
                     final Map<String, Object> context = ImmutableMap.<String, Object>builder()
                             .putAll(this.context)
                             .putAll(somethingThatCanProvideEvaluationContext.getEvaluationContext())
@@ -321,7 +321,7 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
 
         public CheckerValidationCheckResult checkReference(final DataDatum referenceDatum, Map<String, Object> context) {
 
-            if (checkerDescription() instanceof GroovyExpressionChecker groovyExpressionChecker) {
+            if (checkerDescription() instanceof GroovyExpressionChecker) {
                 try {
                     DataDatum transformedReferenceDatum = transformer().transform(referenceDatum, context);
                     DataColumn column = target();

@@ -32,35 +32,6 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         this.errors = errors;
     }
 
-    public static InvalidDatasetContentException forUnexpectedHeaderColumn(final String expected, final String actual, final int headerLine) {
-        return newInvalidDatasetContentException(headerLine, "unexpectedHeaderColumn", ImmutableMap.of(
-                "actualHeaderColumn", actual,
-                "expectedHeaderColumn", expected
-        ));
-    }
-
-    public static InvalidDatasetContentException forUnexpectedHeaderColumnsInList(final String expected, final List<Map.Entry<String, String>> actual, final int headerLine) {
-        return newInvalidDatasetContentException(headerLine, "unexpectedHeaderColumnsInList", ImmutableMap.of(
-                "actualHeaderColumns", actual,
-                "expectedHeaderColumn", expected
-        ));
-    }
-
-    public static InvalidDatasetContentException forHeaderColumnPatternNotMatching(final String expectedPattern, final String actual, final int headerLine) {
-        return newInvalidDatasetContentException(headerLine, "headerColumnPatternNotMatching", ImmutableMap.of(
-                "actualHeaderColumn", actual,
-                "expectedHeaderColumnPattern", expectedPattern
-        ));
-    }
-
-    public static InvalidDatasetContentException forUnexpectedTokenCount(final int expectedTokenCount, final String actualHeader, final int actualTokenCount, final int headerLine) {
-        return newInvalidDatasetContentException(headerLine, "unexpectedTokenCount", ImmutableMap.of(
-                "expectedTokenCount", expectedTokenCount,
-                "actualHeader", actualHeader,
-                "actualTokenCount", actualTokenCount
-        ));
-    }
-
     public static InvalidDatasetContentException forInvalidHeaders(final ImmutableSet<String> expectedColumns, final ImmutableSet<String> mandatoryHeaders, final ImmutableSet<String> actualColumns, final int headerLine) {
         final Set<String> missingComponents = SetUtils.difference(mandatoryHeaders, actualColumns);
         final Set<String> unknownComponents = SetUtils.difference(actualColumns, expectedColumns);
@@ -151,12 +122,6 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
     }
 
     public static void checkErrorsIsEmpty(final ReportErrors errors) {
-        if (!errors.isEmpty()) {
-            throw new InvalidDatasetContentException(errors);
-        }
-    }
-
-    public static void checkReferenceErrorsIsEmpty(final List<CsvRowValidationCheckResult> errors) {
         if (!errors.isEmpty()) {
             throw new InvalidDatasetContentException(errors);
         }

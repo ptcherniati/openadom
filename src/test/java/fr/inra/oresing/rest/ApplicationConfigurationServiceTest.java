@@ -134,7 +134,7 @@ public class ApplicationConfigurationServiceTest {
                 .collectList()
                 .block()
                 .stream().collect(Collectors.joining("\n")));
-        Assertions.assertEquals("""
+        assertEquals("""
                 1.0.5
                 3.0.1
                 3.0.1
@@ -169,7 +169,7 @@ public class ApplicationConfigurationServiceTest {
     private void testConfiguration(ReactiveProgression.CreateApplicationProgression progression, String config, boolean expectedValidity) throws IOException {
         byte[] configBytes = config.getBytes(StandardCharsets.UTF_8);
         FileBomResolver fileBomResolver = FileBomResolver.of(new ByteArrayInputStream(configBytes));
-        Application application = service.parseConfigurationBytes("", progression, fileBomResolver);
+        Application application = ApplicationConfigurationService.parseConfigurationBytes("", progression, fileBomResolver);
         System.out.println(application);
         //assertEquals(expectedValidity, application.isValid(), "La configuration '" + config + "' devrait être " + (expectedValidity ? "valide" : "invalide"));
     }
@@ -558,7 +558,7 @@ public class ApplicationConfigurationServiceTest {
                     final List<String> expectedComponents = Arrays.stream(new String[]{"site_bassin", "date", "tel_experimental_site", "site", "bassin", "projet", "espece", "ordre_affichage", "chemin", "tel_experimental_network", "plateforme", "is_float_value", "tel_value"})
                             .collect(Collectors.toCollection(LinkedList::new));
                     final Collection<String> givenComponents = (Collection<String>) validationError.getParam("knownComponents");
-                    Assertions.assertIterableEquals(expectedComponents, givenComponents);
+                    assertIterableEquals(expectedComponents, givenComponents);
                 });
     }
 
@@ -1078,7 +1078,7 @@ public class ApplicationConfigurationServiceTest {
                     final List<String> expectedComponents = Arrays.stream(new String[]{"site_bassin", "date", "tel_experimental_site", "site", "bassin", "projet", "espece", "ordre_affichage", "chemin", "tel_experimental_network", "plateforme", "is_float_value", "tel_value"})
                             .collect(Collectors.toCollection(LinkedList::new));
                     final Collection<String> givenComponents = (Collection<String>) validationError.getParam("knownComponents");
-                    Assertions.assertIterableEquals(expectedComponents, givenComponents);
+                    assertIterableEquals(expectedComponents, givenComponents);
                 });
     }
 

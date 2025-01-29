@@ -208,14 +208,6 @@ public class DataImporter {
         );
     }
 
-    public String getDisplayNamesByReferenceAndNaturalKey(final String referencedColumn, final String naturalKey, final String locale) {
-        return dataImporterContext.getDisplayNamesByReferenceAndNaturalKey(referencedColumn, naturalKey, locale);
-    }
-
-    public String getDisplayDescriptionsByReferenceAndNaturalKey(final String referencedColumn, final String naturalKey, final String locale) {
-        return dataImporterContext.getDisplayDescriptionsByReferenceAndNaturalKey(referencedColumn, naturalKey, locale);
-    }
-
     /**
      *
      */
@@ -402,7 +394,6 @@ public class DataImporter {
         if (patternValueForHeaders.isEmpty()) {
             return Stream.of(new RowWithReferenceDatum(lineNumber, "", referenceDatum, ImmutableMap.copyOf(refsLinkedTo)));
         }
-        final int rowId = 1;
         List<RowWithReferenceDatum> rowWithReferenceData = new LinkedList<>();
         for (PatternValueForHeader patternValueForHeader : patternValueForHeaders) {
             DataDatum patternComponentDatum = dataImporterContext.getPatternColumnFactory().toQualifierDatum(patternValueForHeader.header(), patternValueForHeader);
@@ -482,8 +473,6 @@ public class DataImporter {
                 .map(PublishContext::fileOrUUID)
                 .map(FileOrUUID::binaryfiledataset)
                 .orElse(null);
-        final boolean haveAuthorizationsDescription = true;
-
 
         Map<String, List<Ltree>> requiredAuthorizations = new LinkedHashMap<>();
         authorization.authorizationScope().stream()
@@ -494,7 +483,6 @@ public class DataImporter {
                 .filter(ReferenceType.class::isInstance)
                 .map(ReferenceType.class::cast)
                 .forEach(referenceType -> {
-                            List<ReferenceScope.NodeDescription> nodesForMenu = dataImporterContext.getNodesForMenu();
                             List<Ltree> hierarchyOfHierarchicalkeys = getHierarchyOfHierarchicalkeys(referenceType);
                             requiredAuthorizations.put(referenceType.getRefType(), hierarchyOfHierarchicalkeys);
                         }
@@ -562,7 +550,7 @@ public class DataImporter {
         builder.put("value", DISPLAY_DATE_FORMATTER_DDMMYYYY.format(lowerBound));
         LocalDateTime to = binaryFileDataset.getTo() == null ?
                 null :
-                LocalDate.from(ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo())).plus(1, ChronoUnit.DAYS).atStartOfDay();
+                LocalDate.from(ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo())).plusDays(1).atStartOfDay();
         dateTimeRange = LocalDateTimeRange.between(from, to);
         builder.put("to", DISPLAY_DATE_FORMATTER_DDMMYYYY.format(to));
         if (!dateTimeRange.getRange().encloses(timeScope.getRange())) {
@@ -661,15 +649,6 @@ public class DataImporter {
           */
         @Override
         public Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-            List<DataColumn> list = dataImporterContext().getNaturalKeyColumns().stream()
-                    .map(DataColumn::new)
-                    .flatMap(column ->
-                            dataImporterContext().getLineCheckers().stream()
-                                    .filter(lineChecker -> lineChecker.target().equals(column))
-                                    .filter(lineChecker -> lineChecker.underlyingType() instanceof ReferenceType)
-                                    .map(lineChecker -> column)
-                    )
-                    .toList();
             Function<String, String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
             Function<DataColumn, String> toEscapedValueFromColumnRegardingColumnIsReferenceType = dataColumn -> getEscapedValueFromColumnRegardingColumnIsReferenceType(dataColumn, referenceDatumAfterChecking.referenceDatumAfterChecking());
             String naturalKey = dataImporterContext().getNaturalKeyColumns().stream()
@@ -725,20 +704,11 @@ public class DataImporter {
                     .map(Object::toString)
                     .map(Ltree::fromSql)
                     .map(toNaturalKey(parentType));
-            final Ltree parent = getParentNaturalKey(dataImporterContext().getParent(), referenceDatum);
             Ltree hierarchicalKey = recursiveNaturalKey;
             if (parentValue.isPresent()) {
                 hierarchicalKey = Ltree.join(parentValue.get(), recursiveNaturalKey);
             }
             return hierarchicalKey;
-        }
-
-        private Optional<Ltree> newHierarchicalKey(Ltree recursiveNaturalKey) {
-            Ltree transformedToNaturalKeyValue = Ltree.fromSql(recursiveNaturalKey.getSql().replaceAll("^[a-z]*K", ""));
-            return afterPreloadReferenceUuids().keySet().stream()
-                    .filter(lineIdentityColumnName -> transformedToNaturalKeyValue.equals(lineIdentityColumnName.naturalKey()))
-                    .map(DataValue.LineIdentityColumnName::hierarchicalKey)
-                    .findFirst();
         }
 
         private Ltree getRecursiveNaturalKey(final Ltree naturalKey) {
@@ -751,8 +721,6 @@ public class DataImporter {
 
         @Override
         public Stream<RowWithReferenceDatum> firstPass(final Stream<RowWithReferenceDatum> streamBeforePreloading) {
-            Optional<Node> hierarchicalParentColumnOpt = dataImporterContext().getApplication()
-                    .findParentNode(dataImporterContext().getRefType());
             DataColumn columnToLookForParentKey = dataImporterContext().getColumnToLookForParentKey();
             final LineChecker lineChecker = dataImporterContext().getReferenceLineChecker();
             final ReferenceType referenceType = (ReferenceType) lineChecker.fieldTypeForOne();
@@ -789,7 +757,7 @@ public class DataImporter {
                     })
                     .toList();
             Map<DataValue.LineIdentityColumnName, UUID> resolvedDuringPreloadReferenceUuids = afterPreloadReferenceUuids().entrySet().stream()
-                    .map(entry -> buildEntryWithHierarchicalKey(entry, parentReferenceMap()))
+                    .map(entry -> buildEntryWithHierarchicalKey(entry))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
             afterPreloadReferenceUuids().clear();
             afterPreloadReferenceUuids().putAll(resolvedDuringPreloadReferenceUuids);
@@ -802,7 +770,7 @@ public class DataImporter {
             return collect.stream();
         }
 
-        private Map.Entry<DataValue.LineIdentityColumnName, UUID> buildEntryWithHierarchicalKey(Map.Entry<DataValue.LineIdentityColumnName, UUID> lineIdentityColumnNameUUIDEntry, Map<DataValue.LineIdentityColumnName, Ltree> parentReferenceMap) {
+        private Map.Entry<DataValue.LineIdentityColumnName, UUID> buildEntryWithHierarchicalKey(Map.Entry<DataValue.LineIdentityColumnName, UUID> lineIdentityColumnNameUUIDEntry) {
             Ltree child = lineIdentityColumnNameUUIDEntry.getKey().naturalKey();
             Ltree currentChild = toNaturalKey(dataImporterContext().getRefType()).apply(child);
             Ltree hierarchicalKey = currentChild;

@@ -29,7 +29,7 @@ class PatternComponentExampleBuilder {
 
         children.put(ConfigurationSchemaNode.OA_PATTERN_FOR_COMPONENTS, new StringType(pattern));
         children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(
-                TagExampleBuilder.buildTagArray(Arrays.asList("context")),
+                TagExampleBuilder.buildTagArray(List.of("context")),
                 false,
                 false,
                 StringType.EMPTY_INSTANCE()

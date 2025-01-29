@@ -20,7 +20,7 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
         String componentKey = componentKey();
         ListType fieldType = (ListType) dataRowValues.get(componentKey);
 
-        Optional<MapType> patternMapTypeOpt = getMapType((ListType) fieldType);
+        Optional<MapType> patternMapTypeOpt = getMapType(fieldType);
         if (patternMapTypeOpt.isPresent()) {
             List<String> values = new LinkedList<>();
             Optional<String> valueopt = patternMapTypeOpt
@@ -54,9 +54,9 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
     }
 
     private static Optional getMapType(ListType fieldType) {
-        return ((List) fieldType.getValue()).stream()
+        return fieldType.getValue().stream()
                 .filter(MapType.class::isInstance)
-                .map(mapType -> ((MapType<String, FieldType>) mapType))
+                .map(mapType -> mapType)
                 .findFirst();
     }
 

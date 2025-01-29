@@ -16,12 +16,6 @@ public class Authorization {
         this.timeScope = timeScope;
     }
 
-    public Authorization(final LocalDateTimeRange timeScope) {
-        super();
-        this.requiredAuthorizations = null;
-        this.timeScope = timeScope;
-    }
-
     public Authorization() {
         super();
     }

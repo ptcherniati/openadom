@@ -4,6 +4,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.mail.EmailService;
 import fr.inra.oresing.domain.OreSiUser;
@@ -11,7 +12,6 @@ import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.model.authorization.CurrentUserRolesResult;
 import fr.inra.oresing.rest.CreateUserResult;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
-import fr.inra.oresing.domain.exceptions.authentication.authentication.NotopenAdomAdminException;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.model.authorization.LoginApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
@@ -503,7 +503,7 @@ public class AuthenticationService implements ServiceContainerBean {
                     })
                     .collect(Collectors.toList());
         } else {
-            throw new NotopenAdomAdminException();
+            throw new NotOpenAdomAdminException();
         }
     }
 
@@ -525,7 +525,7 @@ public class AuthenticationService implements ServiceContainerBean {
                     })
                     .collect(Collectors.toList());
         } else {
-            throw new NotopenAdomAdminException();
+            throw new NotOpenAdomAdminException();//TODO
         }
     }
 

@@ -68,7 +68,6 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
         this.pattern = pattern;
         this.formatter = formatter;
         this.duration = duration;
-        final DatePattern<TemporalAccessor> datePattern = DatePattern.of(pattern);
         this.minDate = minDate;
         this.maxDate = maxDate;
     }
@@ -132,18 +131,6 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
 
     public static String sortableDateToFormattedDate(final String formattedDate) {
         return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
-    }
-
-    public static boolean isValidPattern(final String pattern) {
-        if (StringUtils.isBlank(pattern)) {
-            return false;
-        }
-        try {
-            newDateTimeFormatter(pattern);
-            return true;
-        } catch (final IllegalArgumentException e) {
-            return false;
-        }
     }
 
     LocalDateTime value;

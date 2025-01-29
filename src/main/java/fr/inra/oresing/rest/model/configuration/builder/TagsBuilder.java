@@ -53,7 +53,7 @@ public record TagsBuilder(RootBuilder rootBuilder) {
         return oaTags;
     }
 
-    protected Parsing<Set<Tag>> buildTags(final String path, final JsonNode tagsNode, I18n i18n) {
+    private Parsing<Set<Tag>> buildTags(final String path, final JsonNode tagsNode, I18n i18n) {
         I18n i18n1 = i18n;
         final Map<String, Map<String, String>> tagsMap = (Map<String, Map<String, String>>) rootBuilder.getMapper().convertValue(tagsNode, Map.class);
         if (tagsMap == null) {

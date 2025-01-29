@@ -24,7 +24,6 @@ public record AuthorizationRequest(UUID authorizationId,
         if (authorizationForAll == null || MapUtils.isEmpty(authorizationForAll.authorizationForAll())) {
             return new HashMap<>();
         }
-        Map<String, AuthorizationForScope> buildAuthorizationsByReferences = new HashMap<>();
         return authorizationForAll.authorizationForAll().entrySet().stream()
                 .collect(Collectors.toMap(
                                 Map.Entry::getKey,

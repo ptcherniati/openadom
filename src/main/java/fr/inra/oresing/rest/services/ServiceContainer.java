@@ -20,7 +20,7 @@ public record ServiceContainer(
         RelationalService relationalService,
         Email emailService
 ) {
-    public static final ServiceContainer of(
+    public static ServiceContainer of(
             ApplicationService applicationService,
             AuthorizationService authorizationService,
             AuthenticationService authenticationService,

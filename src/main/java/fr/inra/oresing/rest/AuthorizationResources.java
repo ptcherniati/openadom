@@ -9,10 +9,10 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResult;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
-import fr.inra.oresing.domain.exceptions.authentication.authentication.NotApplicationCanManageReferenceRightsException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -31,7 +31,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -310,19 +309,22 @@ public class AuthorizationResources implements ServiceContainerBean {
             @PathVariable("nameOrId") final String applicationNameOrId,
             @PathVariable("authorizationId") final UUID authorizationId) {
         Application application = serviceContainer.authorizationService().getApplication(applicationNameOrId);
-        serviceContainer.authorizationService().getPrivilegeAssessorForApplication(
+        ApplicationAdminUser applicationAdminUser = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(
                         PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT,
                         application
                 )
                 .forDeleteAuthorization();
-        UUID revokeId = serviceContainer.authorizationService().revoke(applicationNameOrId, new AuthorizationRequest(
-                authorizationId,
-                "",
-                "",
-                application.getId(),
-                Set.of(),
-                null,
-                null));
+        UUID revokeId = serviceContainer.authorizationService().revoke(
+                applicationAdminUser,
+                applicationNameOrId,
+                new AuthorizationRequest(
+                        authorizationId,
+                        "",
+                        "",
+                        application.getId(),
+                        Set.of(),
+                        null,
+                        null));
         return ResponseEntity.ok(revokeId);
     }
 
@@ -349,7 +351,8 @@ public class AuthorizationResources implements ServiceContainerBean {
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
         final List<OreSiAdditionalFileAuthorization> additionalFilesAuthorizationsForCurrentUser = serviceContainer.authorizationService().findUserAdditionalFilesAuthorizationsForApplicationAndDataType(application);
         if (!isApplicationCreator) {
-            throw new NotApplicationCanManageReferenceRightsException(application.getName());
+            //TODO rights definition for additionnals
+            //throw new NotApplicationCanManageReferenceRightsException(application.getName());
         }
         final Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
         final OreSiAdditionalFileAuthorization oreSiAuthorization = serviceContainer.authorizationService().addAdditionalFileAuthorizations(application, authorization, additionalFilesAuthorizationsForCurrentUser, true);
@@ -496,7 +499,10 @@ public class AuthorizationResources implements ServiceContainerBean {
             serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, application)
                     .forManageAdministrator()
                     .canManagerRightOfUserForRole(user, roleForUser);
-            user = serviceContainer.authorizationService().deleteApplicationRoleUser(roleForUser, application);
+            user = serviceContainer.authorizationService().deleteApplicationRoleUser(
+                    roleForUser,
+                    application
+            );
         }
         return ResponseEntity.ok(user);
     }

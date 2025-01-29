@@ -23,8 +23,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
     ) {
 
         try {
-            byte[] bytes = null;
-            bytes = file == null ? null : FileBomResolver.of(file.getInputStream()).readAllBytes();
+            byte[] bytes = file == null ? null : FileBomResolver.of(file.getInputStream()).readAllBytes();
 
             byte[] finalBytes = bytes;
             builder().binaryFile = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::fileid)

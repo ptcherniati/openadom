@@ -1,46 +1,46 @@
 package fr.inra.oresing.client
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.apache.commons.io.file.AccumulatorPathVisitor;
-import org.apache.commons.io.file.Counters;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.cookie.BasicCookieStore;
-import org.apache.hc.client5.http.entity.mime.FileBody;
+import org.apache.commons.io.file.AccumulatorPathVisitor
+import org.apache.commons.io.file.Counters
+import org.apache.hc.client5.http.classic.methods.HttpPost
+import org.apache.hc.client5.http.cookie.BasicCookieStore
+import org.apache.hc.client5.http.entity.mime.FileBody
 import org.apache.hc.client5.http.entity.mime.MultipartEntityBuilder
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.core5.http.ClassicHttpRequest;
-import org.apache.hc.core5.http.ClassicHttpResponse;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.core5.http.io.HttpClientResponseHandler;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.client5.http.impl.classic.HttpClients
+import org.apache.hc.core5.http.ClassicHttpRequest
+import org.apache.hc.core5.http.ClassicHttpResponse
+import org.apache.hc.core5.http.HttpEntity
+import org.apache.hc.core5.http.io.HttpClientResponseHandler
+import org.apache.hc.core5.http.io.entity.EntityUtils
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder
 
-import java.nio.file.Files;
+import java.nio.file.Files
 import java.nio.file.Path
-import java.util.stream.Collectors;
+import java.util.stream.Collectors
 
 @Grab(group = "commons-io", module = "commons-io", version = "2.8.0")
 @Grab(group = "org.apache.httpcomponents.client5", module = "httpclient5", version = "5.2.1")
 
-ClientConfiguration clientConfiguration = readConfiguration();
+ClientConfiguration clientConfiguration = readConfiguration()
 
-String applicationName = clientConfiguration.applicationName();
-URI instanceUrl = clientConfiguration.instanceUrl();
+String applicationName = clientConfiguration.applicationName()
+URI instanceUrl = clientConfiguration.instanceUrl()
 
-String login;
-String password;
-boolean interactive = true;
-Scanner scanner = new Scanner(System.in);
+String login
+String password
+boolean interactive = true
+Scanner scanner = new Scanner(System.in)
 if (interactive) {
-    System.out.println("Veuillez saisir les informations de connexion à " + instanceUrl);
-    System.out.print("identifiant : ");
-    login = scanner.nextLine();
-    System.out.print("mot de passe : ");
-    password = scanner.nextLine();
+    System.out.println("Veuillez saisir les informations de connexion à " + instanceUrl)
+    System.out.print("identifiant : ")
+    login = scanner.nextLine()
+    System.out.print("mot de passe : ")
+    password = scanner.nextLine()
 } else {
-    login = "poussin";
-    password = "xxxx";
+    login = "poussin"
+    password = "xxxx"
 }
 
 BasicCookieStore cookieStore = new BasicCookieStore()
@@ -120,89 +120,89 @@ HttpClients.custom()
         }
 
 ClientConfiguration readConfiguration() throws IOException {
-    File configurationFile = new File("openAdom-client-configuration.json");
+    File configurationFile = new File("openAdom-client-configuration.json")
     ClientConfiguration clientConfiguration = new ObjectMapper()
             .readValue(
                     configurationFile,
                     ClientConfiguration.class
-            );
-    return clientConfiguration;
+            )
+    return clientConfiguration
 }
 
 List<Command> newCommands(List<String> data/*, List<String> dataTypes*/) {
     List<Command> dataCommands = data.stream()
             .flatMap(refType -> getDataCommands(refType).stream())
-            .toList();
+            .toList()
 
-    List<Command> commands = new LinkedList<>();
-    commands.addAll(dataCommands);
+    List<Command> commands = new LinkedList<>()
+    commands.addAll(dataCommands)
 
-    return commands;
+    return commands
 }
 
 List<Command> getUploadDataCommands(String dataType) {
-    Path dataDirectoryForDataType = Path.of(dataType);
-    List<Command> commands;
+    Path dataDirectoryForDataType = Path.of(dataType)
+    List<Command> commands
     if (dataDirectoryForDataType.toFile().exists()) {
         if (dataDirectoryForDataType.toFile().isDirectory()) {
-            SortedSet<Path> csvFilePaths = findCsvFilePathsInDirectory(dataDirectoryForDataType);
+            SortedSet<Path> csvFilePaths = findCsvFilePathsInDirectory(dataDirectoryForDataType)
             commands = csvFilePaths.stream()
                     .map(Path::toFile)
                     .map(dataFile -> newUploadDataCommand(dataType, dataFile))
-                    .toList();
+                    .toList()
         } else {
-            logError("le répertoire " + dataDirectoryForDataType + " est un fichier mais il devrait être un dossier. On l’ignore.");
-            commands = Collections.emptyList();
+            logError("le répertoire " + dataDirectoryForDataType + " est un fichier mais il devrait être un dossier. On l’ignore.")
+            commands = Collections.emptyList()
         }
     } else {
-        log("le répertoire " + dataDirectoryForDataType + " n’existe pas. Pas de données à importer pour " + dataType);
-        commands = Collections.emptyList();
+        log("le répertoire " + dataDirectoryForDataType + " n’existe pas. Pas de données à importer pour " + dataType)
+        commands = Collections.emptyList()
     }
-    return commands;
+    return commands
 }
 
 
 List<Command> getDataCommands(String dataName) {
-    File dir = new File(dataName);
-    File[] csvFiles = dir.listFiles((dir1, name) -> name.endsWith(".csv"));
-    List<Command> commands = new LinkedList<>();
+    File dir = new File(dataName)
+    File[] csvFiles = dir.listFiles((dir1, name) -> name.endsWith(".csv"))
+    List<Command> commands = new LinkedList<>()
     if (csvFiles == null) {
-        return List.of();
+        return List.of()
     }
     Arrays.stream(csvFiles).forEach(refFile -> {
         if (refFile.exists()) {
-            Set<Path> csvFilePathsInDirectory;
+            Set<Path> csvFilePathsInDirectory
             if (refFile.isFile()) {
-                csvFilePathsInDirectory = Collections.singleton(refFile.toPath());
+                csvFilePathsInDirectory = Collections.singleton(refFile.toPath())
             } else if (refFile.isDirectory()) {
-                csvFilePathsInDirectory = findCsvFilePathsInDirectory(refFile.toPath());
+                csvFilePathsInDirectory = findCsvFilePathsInDirectory(refFile.toPath())
             } else {
-                throw new IllegalStateException("ne comprend pas de quel type est " + refFile);
+                throw new IllegalStateException("ne comprend pas de quel type est " + refFile)
             }
             commands.addAll(csvFilePathsInDirectory.stream()
                     .map(path -> newUploadDataCommand(dataName, path.toFile()))
                     .toList()
-            );
+            )
         } else {
-            logError("le fichier %s n’existe pas, on ignore l’import du référentiel %s".formatted(refFile, dataName));
-            commands.addAll(Collections.emptyList());
+            logError("le fichier %s n’existe pas, on ignore l’import du référentiel %s".formatted(refFile, dataName))
+            commands.addAll(Collections.emptyList())
         }
-    });
-    return commands;
+    })
+    return commands
 
 }
 
 Command newUploadDataCommand(String dataName, File dataFile) {
     return new Command() {
         @Override
-        public String getDescription() {
-            return "Téléversement de %s pour alimenter le référentiel %s".formatted(dataFile, dataName);
+        String getDescription() {
+            return "Téléversement de %s pour alimenter le référentiel %s".formatted(dataFile, dataName)
         }
 
         @Override
-        public ClassicHttpRequest getRequest(UriFactory uriFactory) {
-            HttpPost httpPost = new HttpPost(uriFactory.forUploadingData(dataName));
-            FileBody refFileBody = new FileBody(dataFile);
+        ClassicHttpRequest getRequest(UriFactory uriFactory) {
+            HttpPost httpPost = new HttpPost(uriFactory.forUploadingData(dataName))
+            FileBody refFileBody = new FileBody(dataFile)
             HttpEntity reqEntity = MultipartEntityBuilder.create()
                     .addPart("file", refFileBody)
                     .addTextBody("params", """
@@ -211,26 +211,26 @@ Command newUploadDataCommand(String dataName, File dataFile) {
                                "topublish":true
                             }
             """)
-                    .build();
-            httpPost.setEntity(reqEntity);
-            return httpPost;
+                    .build()
+            httpPost.setEntity(reqEntity)
+            return httpPost
         }
 
         List<Map<String, Object>> parseJsonInResponseBodyForErrorMessagesAndParams(ClassicHttpResponse response) {
             try (InputStream inputStream = response.getEntity().getContent()) {
                 List<Map<String, Object>> responseBody = new ObjectMapper().readValue(inputStream, new TypeReference<List<Map<String, Object>>>() {
-                });
+                })
 
                 return responseBody.stream()
                         .map(record -> {
-                            Map<String, Object> resultMap = new HashMap<>();
-                            resultMap.put("message", ((Map<String, Object>) record.get("validationCheckResult")).get("message").toString());
-                            resultMap.put("messageParams", (Map<String, Object>) ((Map<String, Object>) record.get("validationCheckResult")).get("messageParams"));
-                            return resultMap;
+                            Map<String, Object> resultMap = new HashMap<>()
+                            resultMap.put("message", ((Map<String, Object>) record.get("validationCheckResult")).get("message").toString())
+                            resultMap.put("messageParams", (Map<String, Object>) ((Map<String, Object>) record.get("validationCheckResult")).get("messageParams"))
+                            return resultMap
                         })
-                        .collect(Collectors.toList());
+                        .collect(Collectors.toList())
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException(e)
             }
         }
 
@@ -258,40 +258,40 @@ Command newUploadDataCommand(String dataName, File dataFile) {
             }
             null
         }
-    };
+    }
 }
 
 SortedSet<Path> findCsvFilePathsInDirectory(Path directory) {
     try {
-        AccumulatorPathVisitor accumulatorPathVisitor = new AccumulatorPathVisitor(Counters.longPathCounters());
-        Files.walkFileTree(directory, accumulatorPathVisitor);
+        AccumulatorPathVisitor accumulatorPathVisitor = new AccumulatorPathVisitor(Counters.longPathCounters())
+        Files.walkFileTree(directory, accumulatorPathVisitor)
         SortedSet<Path> csvFilePathsInDirectory = accumulatorPathVisitor.getFileList().stream()
                 .filter(path -> path.getFileName().toString().endsWith(".csv"))
-                .collect(Collectors.toCollection(TreeSet::new));
-        return Collections.unmodifiableSortedSet(csvFilePathsInDirectory);
+                .collect(Collectors.toCollection(TreeSet::new))
+        return Collections.unmodifiableSortedSet(csvFilePathsInDirectory)
     } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new RuntimeException(e)
     }
 }
 
 void fail(String message) {
-    logError(message);
-    System.exit(1);
+    logError(message)
+    System.exit(1)
 }
 
 static void logError(String string) {
-    System.err.println(string);
+    System.err.println(string)
 }
 
 static void log(String message) {
-    System.out.println(message);
+    System.out.println(message)
 }
 
 <T> T parseJsonInResponseBody(ClassicHttpResponse response, TypeReference<T> valueTypeRef) {
     try (InputStream inputStream = response.getEntity().getContent()) {
-        return new ObjectMapper().readValue(inputStream, valueTypeRef);
+        return new ObjectMapper().readValue(inputStream, valueTypeRef)
     } catch (IOException e) {
-        throw new RuntimeException(e);
+        throw new RuntimeException(e)
     }
 }
 
@@ -329,19 +329,19 @@ record UriFactory(URI instanceUrl, String applicationName) {
 
     URI newUri(String endpoint) {
         try {
-            return new URI("%s/api/v1/%s".formatted(instanceUrl, endpoint));
+            return new URI("%s/api/v1/%s".formatted(instanceUrl, endpoint))
         } catch (URISyntaxException e) {
-            throw new RuntimeException("ne devrait pas arriver", e);
+            throw new RuntimeException("ne devrait pas arriver", e)
         }
     }
 
-    public URI forLogin() {
-        return newUri("login");
+    URI forLogin() {
+        return newUri("login")
     }
 
-    public URI forUploadingData(String dataType) {
-        String endpoint = "applications/%s/data/%s".formatted(applicationName, dataType);
-        return newUri(endpoint);
+    URI forUploadingData(String dataType) {
+        String endpoint = "applications/%s/data/%s".formatted(applicationName, dataType)
+        return newUri(endpoint)
     }
 
     /*public URI forApplicationReferenceTypes(String applicationName) {
@@ -349,9 +349,9 @@ record UriFactory(URI instanceUrl, String applicationName) {
         return newUri(endpoint);
     }*/
 
-    public URI forApplicationDataTypes(String applicationName) {
-        String endpoint = "applications/%s/data".formatted(applicationName);
-        return newUri(endpoint);
+    URI forApplicationDataTypes(String applicationName) {
+        String endpoint = "applications/%s/data".formatted(applicationName)
+        return newUri(endpoint)
     }
 }
 

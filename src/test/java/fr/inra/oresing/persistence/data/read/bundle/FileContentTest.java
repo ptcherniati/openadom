@@ -45,19 +45,19 @@ class FileContentTest {
         Application application = Mockito.mock(Application.class);
         Mockito.doReturn(Optional.of(submission)).when(application).findSubmission(dataName);
         String request = FileContent.buildFileNameRequest(application, dataName);
-        Assertions.assertEquals("""
-                SELECT DISTINCT ON (rv.binaryfile)
-                    format('%s_%s_%s_%s.csv',
-                    ((bf.authorization).requiredauthorizations).projet,
-                	((bf.authorization).requiredauthorizations).chemin,
-                	TO_CHAR(lower((bf.authorization).timescope),'yyyy-MM-dd'),
-                	TO_CHAR(upper((bf.authorization).timescope),'yyyy-MM-dd')
-                ) as "fileName",
-                    convert_from(decode(encode(bf.filedata, 'escape'), 'base64'), 'UTF8') AS "fileContent"
-                FROM null.referencevalue rv
-                JOIN null.binaryfile bf ON bf.id = rv.binaryfile
-                WHERE rv.referencetype = 'data'
-                ORDER BY rv.binaryfile, bf.updatedate DESC;
+        assertEquals("""
+               SELECT DISTINCT ON (rv.binaryfile)
+                   format('%1$s_%2$s_%3$s_%4$s.csv',
+                   ((bf."authorization").requiredauthorizations).projet[1],
+               	((bf."authorization").requiredauthorizations).sites[1],
+               	TO_CHAR(lower((bf."authorization").timescope),'yyyy-MM-dd'),
+               	TO_CHAR(upper((bf."authorization").timescope),'yyyy-MM-dd')
+               ) as "fileName",
+                   convert_from(decode(encode(bf.filedata, 'escape'), 'base64'), 'UTF8') AS "fileContent"
+               FROM null.referencevalue rv
+               JOIN null.binaryfile bf ON bf.id = rv.binaryfile
+               WHERE rv.referencetype = 'data'
+               ORDER BY rv.binaryfile, bf.updatedate DESC;
                 """, request);
     }
 

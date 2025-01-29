@@ -12,7 +12,7 @@ import java.util.List;
 
 public class ReferenceScopeTypeExampleBuilder {
     public static final CollectionType.ArrayType<ReferenceScopeType> REFERENCE_SCOPES = buildReferenceScopes(
-            Arrays.asList(
+            List.of(
                     new ReferenceScopeType(createReferenceScopeMap())
             )
     );

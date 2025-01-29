@@ -41,22 +41,22 @@ class SubmissionTest {
     @Test
     void testPatternGroups(){
         List<Submission.PatternPosition> groupPositions = submission.fileNameParsing().patternGroups();
-        Assertions.assertEquals(4, groupPositions.size());
-        Assertions.assertEquals("[[0, 4], [5, 9], [10, 14], [15, 19]]", groupPositions.toString());
+        assertEquals(4, groupPositions.size());
+        assertEquals("[[0, 4], [5, 9], [10, 14], [15, 19]]", groupPositions.toString());
     }
     @Test
     void testPatternToBeReplacedByGroupCapture(){
-        Assertions.assertEquals("%1$s_%2$s_%3$s_%4$s.csv", submission.fileNameParsing().patternToBeReplacedByGroupCapture());
+        assertEquals("%1$s_%2$s_%3$s_%4$s.csv", submission.fileNameParsing().patternToBeReplacedByGroupCapture());
     }
     @Test
     void testGroupCount(){
-        Assertions.assertEquals(4, submission.fileNameParsing().groupCount());
+        assertEquals(4, submission.fileNameParsing().groupCount());
     }
 
     @Test
     void testOrderedGroups(){
         LinkedList<String> orderedGroups = submission.fileNameParsing().orderedGroups();
-        Assertions.assertArrayEquals(List.of("projet","chemin",ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN, ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN
+        assertArrayEquals(List.of("projet","chemin",ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN, ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN
         ).toArray(new String[0]), orderedGroups.toArray(new String[0]));
     }
 
@@ -65,14 +65,14 @@ class SubmissionTest {
         submission.parseFileName("leProjet_leSite_01-01-1984_05-01-1984.csv", binaryFileDataset);
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
-        assertTrue(binaryFileDataset.getFrom().equals("1984-01-01 00:00:00"));
-        assertTrue(binaryFileDataset.getTo().equals("1984-01-05 00:00:00"));
+        assertEquals("1984-01-01 00:00:00", binaryFileDataset.getFrom());
+        assertEquals("1984-01-05 00:00:00", binaryFileDataset.getTo());
         //do nothing if already done
         submission.parseFileName("leProjet2_leSite2_01-01-1985_05-01-1985.csv", binaryFileDataset);
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
-        assertTrue(binaryFileDataset.getFrom().equals("1984-01-01 00:00:00"));
-        assertTrue(binaryFileDataset.getTo().equals("1984-01-05 00:00:00"));
+        assertEquals("1984-01-01 00:00:00", binaryFileDataset.getFrom());
+        assertEquals("1984-01-05 00:00:00", binaryFileDataset.getTo());
 
     }
     @Test

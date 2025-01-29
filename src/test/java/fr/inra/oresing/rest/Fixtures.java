@@ -475,7 +475,7 @@ public class Fixtures {
     }
 
     public static String getSWCRepositoryResourceName() {
-        return String.format("/data/repeatedcolumns/SWC_truncated.csv");
+        return "/data/repeatedcolumns/SWC_truncated.csv";
     }
 
     public static Map<String, List<String>> getRepeatedColumnsDataErrorsStringReplace() {
