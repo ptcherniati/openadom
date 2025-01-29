@@ -43,7 +43,7 @@ public record DataCsvHeaderWriter(
                 horizontalDisplay);
     }
 
-    protected DataRow writeHeader(DataRow dataRow) {
+    DataRow writeHeader(DataRow dataRow) {
         if (CollectionUtils.isNotEmpty(orderedColumns())) {
             return dataRow;
         }

@@ -33,9 +33,6 @@ class ReferenceTypeTest {
         String badValue = "annecy";
         String goodValueNotLabel = "LéMan";
         uuid1 = UUID.randomUUID();
-        UUID uuid2 = UUID.randomUUID();
-        UUID uuid3 = UUID.randomUUID();
-        UUID uuid4 = UUID.randomUUID();
         referenceValues = new ImmutableMap.Builder()
                 .put(new DataValue.LineIdentityColumnName(Ltree.fromSql(goodValue), Ltree.fromSql(goodValue)), ImmutableSet.of(uuid1))
                 .build();

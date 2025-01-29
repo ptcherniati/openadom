@@ -1,4 +1,4 @@
-package fr.inra.oresing.domain.exceptions.authentication.authentication;
+package fr.inra.oresing.domain.authorization.privilegeassessor.exception;
 
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 

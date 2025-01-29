@@ -1313,22 +1313,22 @@ public class OreSiResourcesTest {
 
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
                             .cookie(authCookie))
-                    .andExpect(jsonPath("$.users[*].label", Matchers.contains("_public_",
+                    .andExpect(jsonPath("$.users[*].label", contains("_public_",
                             "lambda",
                             "poussin",
                             "withrigths")))
-                    .andExpect(jsonPath("$.additionalFileName", Matchers.is("fichiers")))
-                    .andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", Matchers.is("10")));
+                    .andExpect(jsonPath("$.additionalFileName", is("fichiers")))
+                    .andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", is("10")));
 
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.users[*].label", Matchers.contains("_public_",
+                    .andExpect(jsonPath("$.users[*].label", contains("_public_",
                             "lambda",
                             "poussin",
                             "withrigths")))
-                    .andExpect(jsonPath("$.additionalFileName", Matchers.is("fichiers")))
-                    .andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", Matchers.is("10")));
+                    .andExpect(jsonPath("$.additionalFileName", is("fichiers")))
+                    .andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", is("10")));
 
             final String error = Objects.requireNonNull(mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
                             .cookie(lambdaCookie))
@@ -1486,7 +1486,7 @@ public class OreSiResourcesTest {
                 SiOreAuthorizationRequestException cause = (SiOreAuthorizationRequestException) servletException.getCause();
                 AuthorizationRequestException requestException = cause.getException();
                 Assertions.assertEquals(AuthorizationRequestException.MISSING_REQUIRED_AUTHORIZATION, requestException);
-                Assertions.assertTrue(((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").getFirst().getSql().equals("projet_manche"));
+                Assertions.assertEquals("projet_manche", ((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").getFirst().getSql());
             }
 
             String createRights = getJsonRightsforRestrictions(

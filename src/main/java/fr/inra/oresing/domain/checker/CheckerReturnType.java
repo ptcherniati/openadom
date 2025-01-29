@@ -26,14 +26,15 @@ public enum CheckerReturnType {
                 )
         );
     }
+
     public static SiOreIllegalArgumentException getError(final Object evaluation, final GroovyExpression expression, final Map<String, Object> context, final Set<CheckerReturnType> knownCheckerReturnType) {
         return new SiOreIllegalArgumentException(
                 "badGroovyExpressionCheckerReturnFalse",
                 Map.of(
                         "value", evaluation,
                         "expression", expression.toString(),
-                        "context", context/*,
-                        "knownCheckerReturnType", knownCheckerReturnType*/
+                        "context", context,
+                        "knownCheckerReturnType", knownCheckerReturnType
                 )
         );
     }
@@ -45,7 +46,7 @@ public enum CheckerReturnType {
     private final String name;
 
     CheckerReturnType(final String name) {
-        this.name= name;
+        this.name = name;
     }
 
     @Override

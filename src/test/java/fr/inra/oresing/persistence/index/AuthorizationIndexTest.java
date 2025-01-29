@@ -128,7 +128,7 @@ class AuthorizationIndexTest {
         );
         AuthorizationForScope authorization = new AuthorizationForReferenceScopeAndTimeScope(Set.of(), authorizationScope, timescope);
         String sqlFilter = authorizationIndex.sqlFilterForAuthorization("pem", authorization, false);
-        Assertions.assertEquals("""
+        assertEquals("""
                         referencetype = 'pem'
                         AND ("authorization").requiredauthorizations.projet @> ARRAY['projetKprojet_atlantique', 'projetKprojet_mediterranee']::ltree[]
                         AND ("authorization").requiredauthorizations.sites @> ARRAY['type_de_sitesKplateforme', 'type_de_sitesKlaboratoire']::ltree[]
@@ -146,7 +146,7 @@ class AuthorizationIndexTest {
         );
         AuthorizationForScope authorization = new AuthorizationForReferenceScope(Set.of(), authorizationScope);
         String sqlFilter = authorizationIndex.sqlFilterForAuthorization("pem", authorization, false);
-        Assertions.assertEquals("""
+        assertEquals("""
                         referencetype = 'pem'
                         AND ("authorization").requiredauthorizations.projet IS NULL
                         AND ("authorization").requiredauthorizations.sites @> ARRAY['type_de_sitesKplateforme']::ltree[]""",

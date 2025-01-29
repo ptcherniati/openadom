@@ -40,10 +40,6 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
 
     String exportHeaderName();
 
-    default boolean required() {
-        return false;
-    }
-
     default ComponentPresenceConstraint mandatory() {
         return ComponentPresenceConstraint.OPTIONAL;
     }
@@ -58,18 +54,6 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
     List<Locale> langRestrictions();
 
     ComponentDescription withSubmission(String submission);
-
-    default Set<LineChecker> buildLineChecker(final DataRepository referenceValueRepository,
-                                              final PublishContext.PublishContextBuilder publishContextBuilder,
-                                              final Application application) {
-        final ImmutableSet.Builder<LineChecker> lineCheckerBuilder = new ImmutableSet.Builder<>();
-        if (checker() != null) {
-            return toLineChecker(referenceValueRepository, publishContextBuilder, application);
-        }
-        return Set.of();
-
-    }
-
 
     private Set<LineChecker> toLineChecker(DataRepository referenceValueRepository, PublishContext.PublishContextBuilder publishContextBuilder, Application application) {
         final DataColumn target = new DataColumn(componentKey());
@@ -104,10 +88,6 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                     checker()
             ));
         };
-    }
-
-    default String getExportHeaderName() {
-        return Optional.ofNullable(exportHeaderName()).orElse(Optional.ofNullable(importHeader()).orElse(componentKey()));
     }
 
     default TransformationConfiguration transformation() {

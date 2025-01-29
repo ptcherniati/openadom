@@ -76,7 +76,7 @@ public class AuthenticationServiceTest {
     @Test
     public void testSetRole() {
         OreSiRoleToAccessDatabase anonymousRole = authenticationService.setRole(OreSiRole.anonymous());
-        Assertions.assertEquals(OreSiRole.anonymous(), anonymousRole);
+        assertEquals(OreSiRole.anonymous(), anonymousRole);
     }
 
     @Test

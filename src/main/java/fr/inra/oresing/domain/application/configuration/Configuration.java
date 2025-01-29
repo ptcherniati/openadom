@@ -52,7 +52,8 @@ public record Configuration(Version version, Set<Tag> tags,
     }
 
     public LinkedHashMap<String, StandardDataDescription> componentDescriptionAccordingToRights() {
-        return dataDescription().entrySet().stream().peek(entry -> {
+        return dataDescription().entrySet().stream()
+                /*.peek(entry -> {
                     final String key = entry.getKey();
                     final StandardDataDescription componentDescription = entry.getValue();
                     ComponentDescription componentDescriptionccordingToRights = new FilteredDescriptionComponent(
@@ -62,7 +63,7 @@ public record Configuration(Version version, Set<Tag> tags,
                             null
 
                     );
-                })
+                })*/
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 
@@ -101,21 +102,6 @@ public record Configuration(Version version, Set<Tag> tags,
         return Optional.of(dataDescription())
                 .map(getDataDescription);
     }
-
-    public Optional<ComponentDescription> findComponentOfData(String dataName, String componentName) {
-        Function<Map<String, ComponentDescription>, ComponentDescription> getComponentDescription = components -> components.get(componentName);
-        return findData(dataName)
-                .map(StandardDataDescription::componentDescriptions)
-                .map(getComponentDescription);
-    }
-
-    public Map<String, Submission.SubmissionScope> findSubmission() {
-        Map<String, Submission.SubmissionScope> submissions = new HashMap<>();
-        dataDescription().forEach((dataName, dataDescription) -> dataDescription.findSubmissionScope()
-                .ifPresent(authorizations -> submissions.put(dataName, authorizations)));
-        return submissions;
-    }
-
 
     public TreeSet<Node> orderedNodes() {
         TreeSet<Node> nodes = new TreeSet<>();
@@ -208,22 +194,6 @@ public record Configuration(Version version, Set<Tag> tags,
                         (a, b) -> a,
                         LinkedHashMap::new
                 ));
-    }
-
-    public String getInternationalizedHeaderDescription(String dataName,
-                                             String componentName,
-                                             String locale) {
-        Optional<InternationalizationTitle> localizedExportHeaders = Optional.ofNullable(i18n())
-                .map(Internationalizations::getData)
-                .map(stringInternationalizationDataMap -> stringInternationalizationDataMap.get(dataName))
-                .map(InternationalizationData::getComponents)
-                .map(stringInternationalizationComponentMap -> stringInternationalizationComponentMap.get(componentName))
-                .map(InternationalizationComponent::getExportHeader);
-        return localizedExportHeaders
-                .map(InternationalizationTitle::getDescription)
-                .map(localizationMap -> localizationMap.get(Locale.of(locale)))
-                .orElse(null);
-
     }
 
     public String getInternationalizedHeader(String dataName,

@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.model.authorization;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.OreSiAuthorization;
@@ -15,8 +16,12 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
+import lombok.SneakyThrows;
+import org.json.JSONException;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 
 import java.io.IOException;
 import java.net.URL;
@@ -154,38 +159,45 @@ class CreateAuthorizationRequestTest {
                 errors
         )
                 .build(createAuthorizationRequest, dataRepositoryWithBuffer);
-        /*Assertions.assertEquals("""
+        String expectedJson = """
                 {
-                  "authorizationId" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",
-                  "name" : "une submissionScope sur le référentiel monsore",
-                  "description" : null,
-                  "applicationId" : "41e8f1dd-4b3c-4bc7-9013-1309b4714d9d",
-                  "userId" : [ "f7570009-38fb-489d-ad3b-5bb335e7c5d5" ],
-                  "authorizationForAll" : {
-                    "authorizationForAll" : {
-                      "type_de_sites" : [ "extraction" ],
-                      "sites" : [ "extraction" ]
-                    }
-                  },
-                  "authorizationWithRestriction" : {
-                    "authorizationForScope" : {
-                      "pem" : {
-                        "operationTypes" : [ "extraction", "depot" ],
-                        "authorizationScope" : {
-                          "projet" : [ {
-                            "sql" : "projet_atlantique"
-                          }, {
-                            "sql" : "projet_manche"
-                          } ]
-                        },
-                        "timeScope" : {
-                          "range" : {
-                            "empty" : true
-                          }
-                        }
-                      }
-                    }
-                  }
-                }""", new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest));*/
+                   "authorizationId" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",
+                   "name" : "une submissionScope sur le référentiel monsore",
+                   "description" : null,
+                   "applicationId" : "41e8f1dd-4b3c-4bc7-9013-1309b4714d9d",
+                   "userId" : [ "f7570009-38fb-489d-ad3b-5bb335e7c5d5" ],
+                   "authorizationForAll" : {
+                     "authorizationForAll" : {
+                       "type_de_sites" : [ "extraction" ],
+                       "sites" : [ "extraction" ]
+                     }
+                   },
+                   "authorizationWithRestriction" : {
+                     "authorizationForScope" : {
+                       "pem" : {
+                         "operationTypes" : [ "depot", "extraction" ],
+                         "authorizationScope" : {
+                           "projet" : [ {
+                             "sql" : "projet_atlantique"
+                           }, {
+                             "sql" : "projet_manche"
+                           } ]
+                         },
+                         "timeScope" : {
+                           "range" : {
+                             "empty" : true
+                           }
+                         }
+                       }
+                     }
+                   }
+                 }""";
+
+        String actualJson = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
+        try {
+            JSONAssert.assertEquals(expectedJson, actualJson, JSONCompareMode.LENIENT);
+        } catch (JSONException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
