@@ -6,13 +6,13 @@ abstract: Cette section définit la notion de composante de données, la manièr
 
 On appelle composante de la données toute information enregistrée en base de données permettant de décrire une donnée.
 
-Les composantes sont enregistrées en fonction de leur méthode d'obtention et de leur type {{\<var page-refs.checker.link\>}}.
+Les composantes sont enregistrées en fonction de leur méthode d'obtention et de leur type {{< var  page-refs.checker.link>}}.
 
 On déclarera une composante en fonction de la façon de la récupérer dans le fichier ou de la définir de façon globale.
 
-## Données déclarées dans une colonne du fichier.
+## Données déclarées dans une colonne du fichier. {#OA_importHeader}
 
-Si la valeur correspond à la valeur sous l'en-tête, on la déclarera dans la section {{\<var page-refs.basic-comp.oa\>}}. On choisira un {{\<var page-refs.vocab.link-identificateurs\>}} pour cette composante.
+Si la valeur correspond à la valeur sous l'en-tête, on la déclarera dans la section {{< var  page-refs.basic-comp.oa>}}. On choisira un {{< var  page-refs.vocab.link-identificateurs>}} pour cette composante.
 
 ::: {.callout-tip collapse="false"}
 | date       |
@@ -27,6 +27,7 @@ OA_data:
         date: 
 ```
 :::
+
 
 Si le nom de l'en-tête ne correspond pas à l'identificateur fourni, on pourra le préciser dans la section OA_importHeader
 
@@ -49,7 +50,7 @@ OA_data:
 
 ## Données déclarées dans le {{< var page-refs.data.link-cartouche >}}
 
-En utilisant l'en-tête du fichier on peut récupérer dans valeurs qui seront constantes pour toutes les lignes. On déclarera ces composantes dans la section {{\<var page-refs.constant-comp.oa\>}}
+En utilisant l'en-tête du fichier on peut récupérer dans valeurs qui seront constantes pour toutes les lignes. On déclarera ces composantes dans la section {{< var  page-refs.constant-comp.oa>}}
 
 On peut aussi définir une constante avec une composante ne récupérant pas de valeur à laquelle on fournit une valeur par défaut (OA_defautValue)
 

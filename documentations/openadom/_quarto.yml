@@ -92,20 +92,22 @@ website:
             href: fichiers/autres/database.qmd
       - section: En réflexion
         contents: 
-          - text: Introduction
+          - text: Verificateurs
             href: fichiers/enReflexion/a_savoir.md
-          - text: Introduction
+          - text: Clefs étrangères 
             href: fichiers/enReflexion/reference_checker.md
       - section: Exemples
         contents:
-          - text: Fichier de configuration minimal
+          - text: Fichier de configuration minimale
             href: fichiers/examples/configuration_min/description.qmd
-          - section: Composantes dynamiques 
+          - section: Composantes 
             contents: 
             - text: Example d'utilisation des composantes dynamiques(sites)
               href: fichiers/examples/dynamicComponant/description.qmd
             - text: Example d'utilisation des composantes dynamiques (taxons)
               href: fichiers/examples/taxons/description.qmd
+            - text: Example d'utilisation des composantes basiques
+              href: fichiers/examples/basicComponents/description.qmd
   navbar:
     search: true
     background: rgb(102, 196, 196)

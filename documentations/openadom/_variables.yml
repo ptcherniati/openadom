@@ -112,7 +112,10 @@ page-refs:
     href: /home/ptcherniati/projets/backend/documentations/openadom/fichiers/fichier_echange/data/components/components_description.qmd
     text: "Description des \"components\""
     link: "[Description des \"components\"](/home/ptcherniati/projets/backend/documentations/openadom/fichiers/fichier_echange/data/components/components_description.qmd)"
-    
+  components:
+    href: /fichiers/fichier_echange/data/components/components.qmd
+    text: "[Composantes](/fichiers/fichier_echange/data/components/components.qmd)"
+    OA_importHeader: "[OA_importHeader](/fichiers/fichier_echange/data/components/components.qmd#OA_importHeader)"
   basic-comp:
     href: /fichiers/fichier_echange/data/components/basic_components.qmd
     text: Basic Components

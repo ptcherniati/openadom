@@ -156,7 +156,7 @@ Ce vérificateur permet de vérifier que la valeur en entrée est une date au fo
 
 En base de données,dans le champs json, la date sera stockée comme une chaîne de caractères qui supporte le tri. Dans les vues, le format timestamp sera utilisé.
 
-exemple la date 25/12/84 au format 'dd/MM/yyyy' sera stockée comme chaîne "date:1984-12-25T00:00:00:dd/MM/yyyy".
+exemple la date 25/12/1984 au format 'dd/MM/yyyy' sera stockée comme chaîne "date:1984-12-25T00:00:00:dd/MM/yyyy".
 
 Les paramètres OA_min et OA_max permettent de spécifier l'intervale de valeur de la date. Il doivent être renseignés au même format de date.
 
@@ -201,7 +201,7 @@ Une valeur booléenne sera enregistrée dans le champ json en base de données e
 
 Ce vérificateur permet de vérifier que la valeur en entrée est un '\[Ltree'https://www.postgresql.org/docs/current/ltree.html\]'. Cette chaîne ne peut contenir que des termes contenant des minuscules/majuscules/chiffres/caractère_souligné(\_), séparés par des points (.).
 
-Elle doit correspondre à la clef naturelle ou la clef hiérarchique d'une référence de type définit par le paramètre 'refType'. La section {{\<var page-refs.vocab.link-code\>}} explique comment les chaînes sont encodées pour définir des {{\<var page-refs.vocab.link-nk\>}} ou des {{\<var page-refs.vocab.link-hk\>}}.
+Elle doit correspondre à la clef naturelle ou la clef hiérarchique d'une référence de type définit par le paramètre 'refType'. La section {{< var  page-refs.vocab.link-code>}} explique comment les chaînes sont encodées pour définir des {{< var  page-refs.vocab.link-nk>}} ou des {{< var  page-refs.vocab.link-hk>}}.
 
 Le paramètre **OA_reference** permet de définir le référentiel contenant la ligne dont la clef naturelle est celle indiquée par la valeur en entrée.
 
@@ -219,9 +219,39 @@ Dans la section **OA_reference** on peut préciser les informations précédemen
 
 #### **OA_isRecursive** : le composant est récursive {#oa_isRecursive}
 
+``` yaml
+OA_data:
+    sites:
+        OA_basicComponents:
+          zet_chemin_parent:
+            OA_required: false
+            OA_checker:
+              OA_name: OA_reference
+              OA_params:
+                OA_reference:
+                  OA_name: sites
+                  OA_isRecursive: true
+```
+
 #### **OA_isParent** : la colonne fait référence à un référentiel parent {#oa_isParent}
 
+``` yaml
+OA_data:
+    sites:
+        OA_basicComponents:
+          tze_type_nom:
+            OA_required: true
+            OA_checker:
+              OA_name: OA_reference
+              OA_params:
+                OA_reference:
+                  OA_name: type_de_sites
+                  OA_isParent: true
+```
+
+::: callout-warning
 Il faut caster les valeurs du datum avant de les utiliser. Elles sont de type Object, et il faut les caster dans le type correspondant au checker. (par défaut String)
+:::
 
 ## Vérificateur utilisant une [expression groovy](validation). ('GroovyExpression') {#oa_groovyExpression}
 
@@ -238,15 +268,42 @@ L'expression définit dans le paramètre groovy → expression; L'expression doi
 
 On vérifie que la composante 'qualité' de la variable 'SWC' est vide ou "0" "1" ou "2".
 
-## <a id="transformation" />Ajout de transformation à la chaîne en entrée.
+## Ajout de transformation à la chaîne en entrée. {#transformation}
 
--   OA_groovy : permet de déclarer une transformation de la valeur avec une expression Groovy (qui doit retourner une chaîne de caractère)
+Les references sont transformées en chaîne codifiée de manière transparente\
+Dans un script groovy vous pouvez utiliser la fonction
 
-La section groovy accepte trois paramètres
+``` groovy
+OA_escapeLabel('chaîne à échapper');
+```
 
-#### OA_expression : une expression groovy (pour le checker GroovyExpression doit renvoyer true si la valeur est valide)  {#oa_expression}
+Il n'est pas possible de transformer directeme nt une valeur en entrée. Pour cela on doit définir un **OA_computedComponent**
 
-#### OA_references : une liste de référentiels (ou data) pour lesquels on veut disposer des valeurs dans l'expression  {#oa_references}
+``` yaml
+OA_data:
+    t_variable_var
+        OA_computedComponents:
+          var_metadata:
+            OA_computation: # récupère les clés naturelles des métadonnées existantes pour chaque variable (en + de celles de ce référentiel)
+              OA_expression: >
+                String search_var_code = (String)datum.var_code;
+                return reference.tr_var_metadata_vmet
+                .findAll({it.refValues.vmet_var_code.equals(search_var_code)})
+                .collect({it.naturalKey})
+                .join(",");
+              OA_references:
+                - tr_var_metadata_vmet
+```
+
+Les sections acceptées sont:
+
+#### OA_expression :  {#oa_expression}
+
+une expression groovy (pour le checker GroovyExpression doit renvoyer true si la valeur est valide)
+
+#### OA_references  {#oa_references}
+
+une liste de référentiels (ou data) pour lesquels on veut disposer des valeurs dans l'expression
 
 ::: {.callout-warning collapse="false"}
 La différence entre une section groovy de la section params d'un checker **groovy** et une section groovy de la section transformation de la section params, tient dans le fait que pour un checker groovy l'expression renvoyée est un booléen tandis que dans la transformation l'expression groovy renvoie une nouvelle valeur.
@@ -267,12 +324,12 @@ references: les valeurs d'une donnée de référence spécifique;
 referencesValues : idem que references;
   → referencesValues.get("nom de la reference").collect({it.get("nom de la colonne"))
 ```
+
 ::: {.callout-warning collapse="false"}
 Les valeurs récupérées dans references et referencesValues au type indiqué par le checker. Il peut être nécessaire de les 'caster' dans ce type pour les utiliser dans des méthodes. par exemple : (String)datum.date.day + ' ' + (String)datum.date.time
 :::
 
 ::: {.callout-tip collapse="false"}
-
 On peut aussi passer des constantes dans le script
 
 ``` yaml
@@ -290,7 +347,25 @@ On peut aussi passer des constantes dans le script
 ```
 :::
 
-# [Utilisation de validations portant sur une ou plusieurs colonnes](#dataChecker)
+## Valeur par défaut {#OA_defaultValue}
+
+On peut déclarer une valeur par défaut. Il s'agit d'une expression groovy sans contexte.
+
+``` yaml
+OA_data:
+    pem:
+        OA_basicComponents:      
+          individusNumbervalue:
+            OA_importHeader: "Nombre d'individus"
+            OA_exportHeader:
+              OA_title:
+            fr: Nombre d'individus
+            en: Number of individuals
+        OA_defaultValue:
+          OA_expression: return 0
+```
+
+## [Utilisation de validations portant sur une ou plusieurs colonnes](#dataChecker)
 
 Les contraintes se définissent pour chacune des données de référence. Soit dans la définition de la colonne elle-même, soit dans la section [validation](#referencesValidation).
 

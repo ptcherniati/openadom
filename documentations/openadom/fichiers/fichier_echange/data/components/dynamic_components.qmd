@@ -4,12 +4,14 @@
  abstract: >
   Les colonnes dynamiques permettent de traduire une relation n-n entre deux référentiels. Par exemple entre un objet et ses propriétés.
 ---
+
 ## Exemple
 
-{{<var page-refs.example.link-taxons>}}
+{{< var  page-refs.example.link-taxons>}}
 
 ## Description
-``` {mermaid}
+
+```{mermaid}
   classDiagram
       Taxon "*" -- "*" Proprietes_de_taxon
 ```
@@ -27,9 +29,7 @@ knitr::kable(read.csv("../../../examples/taxons/fichiers/tr_taxon_properties_tpt
 ```
 :::
 
-
 Dans le référentiel *Taxon*, on donne la liste des propriétés observées pour chacune des propriétés dans une colonne avec comme en-tête le nom de la propriété préfixée.
-
 
 ::: {.callout-important collapse="false" title="Taxons"}
 ```{r}
@@ -44,8 +44,6 @@ knitr::kable(read.csv("../../../examples/taxons/fichiers/te_taxon_tax.csv", head
 
 On définira le référentiel objet de la manière suivante
 
-
-
 ::: {.callout-important collapse="false" title="dynamicComponent.yaml"}
 ``` yaml
 {{< include ../../../examples/taxons/configuration.yaml >}}
@@ -55,21 +53,26 @@ On définira le référentiel objet de la manière suivante
 :::
 
 ### Préfixe {#OA_headerPrefix}
-On précise un préfixe en utilisant OA_headerPrefix 
+
+On précise un préfixe en utilisant OA_headerPrefix
 
 ``` yaml
       tax_propriete_taxon: 
         OA_headerPrefix: pt_
 ```
+
 ### Référentiel de propriétés {#OA_reference}
-On précise un préfixe le référentiel contenant les nom de colonnes en utilisant OA_reference 
+
+On précise un préfixe le référentiel contenant les nom de colonnes en utilisant OA_reference
 
 ``` yaml
       tax_propriete_taxon: 
         OA_reference: tr_propriete_taxon_ptx
 ```
+
 ### Colonne de propriétés {#OA_referenceColumnToLookForHeader}
-On précise dans ce référentiel la composante contenant les noms de colonnes en utilisant OA_referenceColumnToLookForHeader 
+
+On précise dans ce référentiel la composante contenant les noms de colonnes en utilisant OA_referenceColumnToLookForHeader
 
 ``` yaml
       tax_propriete_taxon: 
@@ -78,5 +81,4 @@ On précise dans ce référentiel la composante contenant les noms de colonnes e
 
 ## Exemple
 
-
-voir {{<var page-refs.example.link-dynamic>}}
+voir {{< var  page-refs.example.link-dynamic>}}

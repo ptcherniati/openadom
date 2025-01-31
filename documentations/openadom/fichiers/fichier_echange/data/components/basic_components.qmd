@@ -1,57 +1,73 @@
 ---
   title: Description des colonnes 
   subtitle: (OA_basicComponents)
-  abstract: Ce document permet de configurer la section <b>OA_data > OA_basiComponents</b> pour lier les colonnes du fichier à des composantes
+  abstract: Ce document permet de configurer la section <b>OA_data > OA_basicComponents</b> pour lier les colonnes du fichier à des composantes
 ---
 
-Nous allons décrire la section OA_basicComponents pour  le modèle de référentiels, ...
+Nous allons décrire la section OA_basicComponents pour le modèle de référentiels, ...
 
 ```{mermaid}
-  classDiagram
+classDiagram
     direction LR
     tr_sites_sit *-- tr_parcelles_par:site
     tr_type_de_sites_tds  *-- tr_sites_sit:type_de_sites
-    class tr_sites_sit {
-       tr_type_de_sites_tds type_de_sites
+    
+    class tr_type_de_sites_tds:::pkClass {
+        +String tds_nom PK
     }
-    class tr_parcelles_par {
-       tr_sites_sit site
+    
+    class tr_sites_sit:::fkClass {
+        +String sit_nom_type_de_site PK
+        +String sit_nom_du_site PK
+        +tr_type_de_sites_tds type_de_sites FK
     }
+    
+    class tr_parcelles_par:::fkClass {
+        +String par_nom_de_la_parcelle PK
+        +String par_nom_du_site PK
+        +tr_sites_sit site FK
+    }
+
+  style tr_type_de_sites_tds fill:#d7e4fa,stroke:#333,stroke-width:2px
+  style tr_sites_sit fill:#f8d7fa,stroke:#333,stroke-width:2px
+  style tr_parcelles_par fill:#f4fad7,stroke:#333,stroke-width:2px
+
+
 ```
 
 ... et pour les fichiers :
 
-``` {r}
+```{r}
 #| echo: false
 #| label: tbl-type-de-sites
-#| tbl-cap: "type_de_sites"
-knitr::kable(read.csv("fichiers/tr_type_de_sites_tds.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+#| tbl-cap: "tr_type_de_sites_tds.csv"
+knitr::kable(read.csv("../../../examples/basicComponents/fichiers/tr_type_de_sites_tds.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
 ```
 
-``` {r}
+```{r}
 #| echo: false
 #| label: tbl-sites
-#| tbl-cap: "sites"
-knitr::kable(read.csv("fichiers/tr_sites_sit.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+#| tbl-cap: "tr_sites_sit.csv"
+knitr::kable(read.csv("../../../examples/basicComponents/fichiers/tr_sites_sit.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
 ```
 
-``` {r}
+```{r}
 #| echo: false
 #| label: tbl-parcelles
-#| tbl-cap: "parcelles"
-knitr::kable(read.csv("fichiers/tr_parcelles_par.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+#| tbl-cap: "tr_parcelles_par.csv"
+knitr::kable(read.csv("../../../examples/basicComponents/fichiers/tr_parcelles_par.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
 ```
-
 
 on aura le yaml suivant
 
 ::: {.callout-note title="configuration.yaml" collapse="false"}
-```yaml
+``` yaml
+...
 OA_data:
-  tr_type_de_sites_tds:
+  tr_type_de_sites_tds: 
     OA_dataHeaderLine: 1
     OA_dataFirstLine: 2
     OA_naturalKey:
@@ -103,14 +119,12 @@ OA_data:
 :::
 
 ::: {.callout-caution collapse="true" title="Restriction des identificateurs de composant"}
-Il en est de même pour les clefs des components [(cf. *Identificateurs*)](#identificateur). 
-De plus dans les vues, le nom de la component peut être utilisé en concaténation avec d'autres mots. 
-Postgresql contraint ces noms à ne pas dépasser 63 caractères.
+Il en est de même pour les clefs des components [(cf. *Identificateurs*)](#identificateur). De plus dans les vues, le nom de la component peut être utilisé en concaténation avec d'autres mots. Postgresql contraint ces noms à ne pas dépasser 63 caractères.
 
-Préférez des noms courts. Si ces noms ne correspondent pas à celui de l'en-tête de votre fichier, préciser le nom de 
-l'en-tête dans le champ "OA_importHeader"
+Préférez des noms courts. Si ces noms ne correspondent pas à celui de l'en-tête de votre fichier, préciser le nom de l'en-tête dans le champ "OA_importHeader"
 
-exemple: 
+exemple:
+
 ``` yaml
       parcelle:
          OA_importHeader: nom de la parcelle
@@ -118,16 +132,14 @@ exemple:
 :::
 
 ::: {.callout-note collapse="true" title="Indentation"}
-<span style="color: orange">*OA_data* n'est pas indenté. 
-*tr_type_de_site_tds*, *tr_sites_sit* et *tr_parcelles_par* sont indentés de 1. 
-*OA_dataHeaderLine*, *OA_dataFirstLine*, *OA_naturalKey* et *OA_basicComponents* sont indentés de 2. 
-Le contenu de *OA_basicComponents* seront indenté de 3.</span>
+[*OA_data* n'est pas indenté. *tr_type_de_site_tds*, *tr_sites_sit* et *tr_parcelles_par* sont indentés de 1. *OA_dataHeaderLine*, *OA_dataFirstLine*, *OA_naturalKey* et *OA_basicComponents* sont indentés de 2. Le contenu de *OA_basicComponents* seront indenté de 3.]{style="color: orange"}
 :::
 
-##### Component obligatoire 
+##### Component obligatoire
+
 La notion de component obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
 
-```yaml
+``` yaml
     sit_nom_du_site:
         OA_mandatory: true # default false sauf si le component (colonne) est déclaré dans OA_naturalKey. 
       #Dans ce cas elle passe a true par default.
@@ -136,7 +148,8 @@ La notion de component obligatoire est à placer au niveau de la définition du 
 ##### Valeur obligatoire
 
 La notion de valeur obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
-```yaml
+
+``` yaml
     sit_nom_du_site:
         OA_required: true # default false sauf si le component (colonne) est déclaré dans OA_naturalKey. 
       #Dans ce cas elle passe a true par default.
