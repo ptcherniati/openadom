@@ -210,6 +210,9 @@ page-refs:
     href: /fichiers/schema-example.qmd
     text: Fichier d'example
     link: "[Fichier d'example](/fichiers/schema-example.qmd)"
+    link-minimal:  "[Configuration minimale](/fichiers/examples/configuration_min/description.qmd)"
+    link-dynamic:  "[Utilisation d'une composante dynamique (sites)](/fichiers/examples/dynamicComponant/description.qmd)"
+    link-taxons:  "[Utilisation d'une composante dynamique (taxons)](/fichiers/examples/taxons/description.qmd)"
   lexique:
     href: /fichiers/autres/lexique_yaml.qmd
     text: Lexique

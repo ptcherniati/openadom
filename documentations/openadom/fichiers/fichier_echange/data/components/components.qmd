@@ -66,3 +66,7 @@ Par exemple des taxons ou des sites ayant des propriétés différentes selon le
 Dans ce cas on définit un référentiel de propriétés avec une colonne donnant un nom pour la propriété.
 
 Dans le type de données utilisant ces propriétés, les colonnes "propriétés" utilisent le nom des propriétes du référentiel propriétés, éventuellement préfixé. On crée alors une définition d'une composante  {{<var page-refs.dynamic-comp.oa>}}.
+
+voir 
+- {{<var page-refs.example.link-dynamic>}}
+- {{<var page-refs.example.link-taxons>}}

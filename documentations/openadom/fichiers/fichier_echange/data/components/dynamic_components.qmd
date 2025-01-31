@@ -4,6 +4,11 @@
  abstract: >
   Les colonnes dynamiques permettent de traduire une relation n-n entre deux référentiels. Par exemple entre un objet et ses propriétés.
 ---
+## Exemple
+
+{{<var page-refs.example.link-taxons>}}
+
+## Description
 ``` {mermaid}
   classDiagram
       Taxon "*" -- "*" Proprietes_de_taxon
@@ -11,87 +16,67 @@
 
 Dans le référentiel *Proprietes_de_taxon* on liste les différentes propriétés qui sont observées sur l'objet.
 
+::: {.callout-important collapse="false" title="Propriétés des taxons"}
+```{r}
+#| echo: false
+#| label: tr_sites_properties_spt.csv
+#| tbl-cap: "Propriétés des sites"
+#| code-fold: show
+knitr::kable(read.csv("../../../examples/taxons/fichiers/tr_taxon_properties_tpt.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+:::
+
+
 Dans le référentiel *Taxon*, on donne la liste des propriétés observées pour chacune des propriétés dans une colonne avec comme en-tête le nom de la propriété préfixée.
 
-__Proprietes_de_taxon.csv__
 
-| nom de la propriété_key             | nom de la propriété_fr              | nom de la propriété_en            | définition_fr                       | définition_en                 | type associé  | ordre d'affichage |
-|-------------------------------------|-------------------------------------|-----------------------------------|-------------------------------------|-------------------------------|---------------|-------------------|
-| niveau_incertitude_de_determination | Niveau incertitude de détermination | Uncertainty determining the level | niveau du taxon qui a été déterminé | Level of the determined taxon | Phytoplancton | 1                 |
-| auteur_de_la_description            | Auteur de la description            | Description's author              | Quand c'est connu                   | When known                    | Phytoplancton | 2                 |
+::: {.callout-important collapse="false" title="Taxons"}
+```{r}
+#| echo: false
+#| label: tr_sites_sit.csv
+#| tbl-cap: "Zones d'études"
+#| code-fold: show
+knitr::kable(read.csv("../../../examples/taxons/fichiers/te_taxon_tax.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
-__Taxon.csv__
-
-| nom du taxon déterminé | theme         | nom du niveau de taxon | nom du taxon superieur | code sandre du taxon | code sandre du taxon supérieur | pt_niveau incertitude de détermination | pt_Auteur de la description |
-|------------------------|---------------|------------------------|------------------------|----------------------|--------------------------------|----------------------------------------|-----------------------------|
-| Achnanthes catenata    | Phytoplancton | Genre espèce           | Achnanthaceae          |                      |                                |                                        | BILY & MARVAN               |
-| Acanthosphaera sp.     | Phytoplancton | Genre espèce           | Golenkiniaceae         |                      |                                | espèce                                 |                             |
+```
+:::
 
 On définira le référentiel objet de la manière suivante
 
-```yaml
-OA_data: 
-  tr_propriete_taxon_ptx: 
-    OA_dataHeaderLine: 1
-    OA_dataFirstLine: 2
-    OA_naturalKey: 
-      - ptx_propriete_key
-    OA_i18n: 
-      fr: Propriété des taxon
-      en: Taxa properties
-    OA_basicComponents: 
-      ptx_propriete_key: 
-        OA_required: true
-        OA_importHeader: nom de la propriété_key 
-      ptx_propriete_fr: 
-        OA_required: false
-        OA_importHeader: nom de la propriété_fr 
-      ptx_propriete_en: 
-        OA_required: false
-        OA_importHeader: nom de la propriété_en
-      ptx_definition_fr: 
-        OA_required: false
-        OA_importHeader: définition_fr
-      ptx_definition_en: 
-        OA_required: false
-        OA_importHeader: définition_en
-      ptx_type_associe: 
-        OA_required: false
-        OA_importHeader: type associé
-      ptx_ordre_affichage: 
-        OA_required: false
-        OA_importHeader: ordre d'affichage
-  tr_taxon_tax: 
-    OA_dataHeaderLine: 1
-    OA_dataFirstLine: 2
-    OA_naturalKey: 
-      - tax_taxon
-    OA_i18n: 
-      fr: Taxon
-      en: Taxa
-    OA_basicComponents: 
-      tax_taxon: 
-        OA_required: true
-        OA_importHeader: nom du taxon déterminé
-      tax_theme : 
-        OA_required: true
-        OA_importHeader: theme
-      tax_nom_niveau_taxon: 
-        OA_required: true
-        OA_importHeader: nom du niveau de taxon
-      tax_nom_taxon_sup: 
-        OA_required: true
-        OA_importHeader: nom du taxon superieur
-      tax_code_taxon : 
-        OA_required: false
-        OA_importHeader: code sandre du taxon
-      tax_code_taxon_sup: 
-        OA_required: false
-        OA_importHeader: code sandre du taxon supérieur
-    OA_dynamicComponents: 
+
+
+::: {.callout-important collapse="false" title="dynamicComponent.yaml"}
+``` yaml
+{{< include ../../../examples/taxons/configuration.yaml >}}
+```
+
+[dynamicComponent.yaml](../../../examples/taxons/configuration.yaml)
+:::
+
+### Préfixe {#OA_headerPrefix}
+On précise un préfixe en utilisant OA_headerPrefix 
+
+``` yaml
       tax_propriete_taxon: 
         OA_headerPrefix: pt_
+```
+### Référentiel de propriétés {#OA_reference}
+On précise un préfixe le référentiel contenant les nom de colonnes en utilisant OA_reference 
+
+``` yaml
+      tax_propriete_taxon: 
         OA_reference: tr_propriete_taxon_ptx
+```
+### Colonne de propriétés {#OA_referenceColumnToLookForHeader}
+On précise dans ce référentiel la composante contenant les noms de colonnes en utilisant OA_referenceColumnToLookForHeader 
+
+``` yaml
+      tax_propriete_taxon: 
         OA_referenceColumnToLookForHeader: ptx_propriete_key
 ```
 
+## Exemple
+
+
+voir {{<var page-refs.example.link-dynamic>}}

@@ -1,16 +1,16 @@
 OA_version: 2.0.1
 OA_application:
-  OA_name: dynamic_case
+  OA_name: dynamic_case_sites
   OA_i18n: # optional
     OA_title:
-      fr: Example de composante dynamique
-      en: Dynamic configuration example
+      fr: Example de composante dynamique (Sites)
+      en: Dynamic configuration example (Sites)
     OA_description:
-      fr: Fichier de configuration minimum
-      en: Dynamic component example
+      fr: Example de composante dynamique (Sites)
+      en: Dynamic component example (Sites)
   OA_version: 1.0.1
   OA_defaultLanguage: fr  # optional par défaut fr
-  OA_comment: Cas d'usage des composantes dynamiques # optional
+  OA_comment: Cas d'usage des composantes dynamiques (sites) # optional
 OA_data:
   tr_sites_properties_spt:
     OA_naturalKey: [nom_propriete]

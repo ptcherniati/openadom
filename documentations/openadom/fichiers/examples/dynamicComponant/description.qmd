@@ -1,5 +1,6 @@
 ---
-title: Example d'utilisation d'une composante dymique
+title: Example d'utilisation d'une composante dynamique
+subtitle: sites
 abstract: Cet exemple permet de définir une composante dymique site_property s'appuyant sur un référentiel de propriétés de sites.
 ---
 
@@ -55,7 +56,7 @@ On pourra décrire le fichier de configuration en utilisant une composante prope
 
 ``` sql
 select refvalues 
-from dynamic_case.referencevalue
+from dynamic_case_sites.referencevalue
 where referencetype = 'tr_sites_sit' and 
 naturalkey = 'zone_puy_de_dome'::ltree
 ```

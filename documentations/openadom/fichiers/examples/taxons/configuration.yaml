@@ -1,0 +1,85 @@
+OA_version: 2.0.1
+OA_application:
+  OA_name: dynamic_case_taxon
+  OA_i18n: # optional
+    OA_title:
+      fr: Example de composante dynamique (Taxons)
+      en: Dynamic configuration example (Taxons)
+    OA_description:
+      fr: Example de composante dynamique (Taxons)
+      en: Dynamic component example (Taxons)
+  OA_version: 1.0.1
+  OA_defaultLanguage: fr  # optional par défaut fr
+  OA_comment: Cas d'usage des composantes dynamiques (taxons) # optional
+OA_data: 
+  tr_propriete_taxon_ptx: 
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey: 
+      - ptx_propriete_key
+    OA_i18n: 
+      OA_title:
+        fr: Propriété des taxon
+        en: Taxa properties
+    OA_basicComponents: 
+      ptx_propriete_key: 
+        OA_required: true
+        OA_importHeader: nom de la propriété_key 
+      ptx_propriete_fr: 
+        OA_required: false
+        OA_importHeader: nom de la propriété_fr 
+      ptx_propriete_en: 
+        OA_required: false
+        OA_importHeader: nom de la propriété_en
+      ptx_definition_fr: 
+        OA_required: false
+        OA_importHeader: définition_fr
+      ptx_definition_en: 
+        OA_required: false
+        OA_importHeader: définition_en
+      ptx_type_associe: 
+        OA_required: false
+        OA_importHeader: type associé
+      ptx_ordre_affichage: 
+        OA_required: false
+        OA_importHeader: ordre d'affichage
+  tr_taxon_tax: 
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey: 
+      - tax_taxon
+    OA_i18n: 
+      OA_title:
+        fr: Taxon
+        en: Taxa
+    OA_basicComponents: 
+      tax_taxon: 
+        OA_required: true
+        OA_importHeader: nom du taxon déterminé
+      tax_theme : 
+        OA_required: true
+        OA_importHeader: theme
+      tax_nom_niveau_taxon: 
+        OA_required: true
+        OA_importHeader: nom du niveau de taxon
+      tax_nom_taxon_sup: 
+        OA_required: false
+        OA_importHeader: nom du taxon superieur
+      tax_code_taxon : 
+        OA_required: false
+        OA_importHeader: code sandre du taxon
+      tax_code_taxon_sup: 
+        OA_required: false
+        OA_importHeader: code sandre du taxon supérieur
+    OA_dynamicComponents: 
+      tax_propriete_taxon: 
+        OA_exportHeader:
+          OA_title:
+            fr: Propriétés de taxons
+            en: Taxa properties
+          OA_description:
+            fr: Propriétés de taxons
+            en: Taxa properties
+        OA_headerPrefix: "pt_"
+        OA_reference: tr_propriete_taxon_ptx
+        OA_referenceComponentToLookForHeader: ptx_propriete_key
