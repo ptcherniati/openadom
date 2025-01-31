@@ -4,7 +4,7 @@ OA_application:
   OA_i18n: # optional
     OA_title:
       fr: Example de composante dynamique
-      en: Minimale configuration
+      en: Dynamic configuration example
     OA_description:
       fr: Fichier de configuration minimum
       en: Dynamic component example
