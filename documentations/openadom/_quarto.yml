@@ -46,6 +46,8 @@ website:
             contents: 
               - section: Components
                 contents: 
+                  - text: introduction
+                    href: fichiers/fichier_echange/data/components/components.qmd
                   - text: Basic Components
                     href: fichiers/fichier_echange/data/components/basic_components.qmd
                   - text: Computed Components

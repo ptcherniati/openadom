@@ -76,7 +76,7 @@
 ## {{<var page-refs.checker.oa-multiplicity>}}
     Permet de déclarer si une données est un tableau de valeur.
 ## {{<var page-refs.data.oa-nk>}}
-## OA_PARAMS
+## {{<var page-refs.checker.oa-params>}}
 ## {{<var page-refs.pattern-comp.oa>}}
     Les composantes pattern permettent de lire les données de colonnes répondant à une expression régulière.
 

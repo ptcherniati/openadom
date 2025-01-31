@@ -124,7 +124,7 @@ exemple:
 Le contenu de *OA_basicComponents* seront indenté de 3.</span>
 :::
 
-##### Component obligatoire
+##### Component obligatoire 
 La notion de component obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
 
 ```yaml

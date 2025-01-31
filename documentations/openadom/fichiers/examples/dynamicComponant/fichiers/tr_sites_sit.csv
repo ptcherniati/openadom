@@ -1,0 +1,6 @@
+nom;niveau;parent;ps_altitude;ps_superficie;ps_type_sol;ps_densite_vegetation;ps_type_vegetation;ps_exposition;ps_humidite_sol;ps_ph_sol;ps_temperature_moyenne;ps_pluviometrie_annuelle
+"Massif Central";"massif";;1200;5000000;;;;;;;;
+"Zone Puy de Dôme";"zone";"Massif Central";1465;150000;;;"prairie alpine";"Sud";;;;
+"Parcelle P1";"parcelle";"Zone Puy de Dôme";1480;5000;"volcanique";75;;;;;;
+"Point Etude 1";"point";"Parcelle P1";1485;10;;;;;65;6.5;;
+"Station Meteo 1";"station";"Zone Puy de Dôme";1470;25;;;;;;;12.5;850

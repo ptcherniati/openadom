@@ -1,0 +1,11 @@
+nom_propriete;type_donnee;unite;niveau_site
+altitude;numeric;m;zone, massif, station,parcelle,point
+superficie;numeric;m2;zone, massif, station,parcelle,point
+type_sol;character;;parcelle
+densite_vegetation;numeric;pourcentage;parcelle
+type_vegetation;character;;zone
+exposition;character;cardil;zone
+humidite_sol;numeric;pourcentage;point
+ph_sol;numeric;;point
+temperature_moyenne;numeric;celsius;station
+pluviometrie_annuelle;numeric;mm;station

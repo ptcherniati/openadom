@@ -80,6 +80,7 @@ page-refs:
     oa-unexpectedColumns: "[OA_AllowUnexpectedColumns](/fichiers/fichier_echange/data/data.qmd#unexpectedColumns)"
     oa-separator: "[OA_separator](/fichiers/fichier_echange/data/data.qmd#separator)"
     oa-validations: "[OA_validations](/fichiers/fichier_echange/data/data.qmd#validations)"
+    link-cartouche: "[cartouche](/fichiers/fichier_echange/data/data.qmd#cartouche)"
   authorizations:
     href: /fichiers/fichier_echange/data/authorizations/authorizations.qmd
     text: Définition des composantes participant à la construction d'autorisations.
@@ -145,6 +146,16 @@ page-refs:
     oa-multiplicity: "[OA_multiplicity](/fichiers/fichier_echange/data/verificateurs.qmd#multiplicity)"
     link-numericchecker: "[Vérificateur de type 'Integer' et 'Float'](/fichiers/fichier_echange/data/verificateurs.qmd#numericchecker)"
     oa: "[OA_checker](/fichiers/fichier_echange/data/verificateurs.qmd)"
+    oa-params: "[OA_params](/fichiers/fichier_echange/data/verificateurs.qmd#params)"
+    oa-string: "[OA_string](/fichiers/fichier_echange/data/verificateurs.qmd#oa_string)"
+    oa-reference: "[OA_reference](/fichiers/fichier_echange/data/verificateurs.qmd#oa_reference)"
+    oa-boolean: "[OA_boolean](/fichiers/fichier_echange/data/verificateurs.qmd#oa_boolean)"
+    oa-groovyExpression: "[OA_groovyExpression](/fichiers/fichier_echange/data/verificateurs.qmd#oa_groovyExpression)"
+    oa-date: "[OA_date](/fichiers/fichier_echange/data/verificateurs.qmd#oa_date)"
+    oa-isRecursive: "[OA_isRecursive](/fichiers/fichier_echange/data/verificateurs.qmd#oa_isRecursive)"
+    oa-isParent: "[OA_isParent](/fichiers/fichier_echange/data/verificateurs.qmd#oa_isParent)"
+    oa-expression: "[OA_expression](/fichiers/fichier_echange/data/verificateurs.qmd#oa_expression)"
+    oa-references: "[OA_references](/fichiers/fichier_echange/data/verificateurs.qmd#oa_references)"
   # additionalFiles
   additionalFiles: 
       href: /fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd

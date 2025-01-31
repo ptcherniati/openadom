@@ -58,7 +58,16 @@ OA_data:
     tr_sites_site:
         OA_i18n:
             OA_title:
-                fr: référence aux sites
+                f
+    OA_validations:
+      sit_checkDateMiseEnService:
+        OA_i18n:
+          fr: "validation de date"
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern : "dd/MM/yyyy"
+        OA_components: [ sit_date_mise_en_service ]r: référence aux sites
                 en: reference to sites
             OA_description:
                 fr: sites d'etudes
@@ -76,7 +85,16 @@ Vous pourrez surcharger cet affichage en déclarant un pattern d'affichage en ut
 
 OA_data:
     tr_sites_site:
-        OA_i18nDisplayPattern:   #mandatory
+        OA_i18nDisplayPattern:   #manda
+    OA_validations:
+      sit_checkDateMiseEnService:
+        OA_i18n:
+          fr: "validation de date"
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern : "dd/MM/yyyy"
+        OA_components: [ sit_date_mise_en_service ]tory
             OA_title:   
                 fr: "{sit_site_fr} dans ({sit_agroecosystem})"
                 en: "{sit_site_en} in ({sit_agroecosystem})"
@@ -94,7 +112,7 @@ Si une colonne est aussi une référence, alors récursivement on calculera les 
 Les inférences de OA_i18nDisplayPattern sont calculées au moment du dépôt de la données et stockées en base de données. S'il vous arrivait de modifier les colonnes de référentiels intervenant dans cette construction, alors vous devriez redéposer vos données pour recalculer les valeurs d'affichage.
 
 :::
-## Déclaration d'un cartouche
+## {#cartouche}Déclaration d'un cartouche
 
 
 Par défaut la ligne 1 est la ligne d'en-tête et la ligne 2 celle de la première ligne de données.
@@ -165,8 +183,8 @@ OA_data:
 - un {{< var page-refs.computed-comp.link >}} est une colonne qui n’est pas présente dans le fichier et dont la valeur est une constante ou le résultat d'un calcul, 
 - un {{< var page-refs.dynamic-comp.link >}} est un ensemble de colonnes dont la clef est la concaténation d'un préfixe et d'une valeur d'un référentiel. Par exemple s’il existe un référentiel "propriétés" avec les valeurs (couleur, catégorie, obligatoire), on pourrait avoir dans un autre référentiel (en utilisant le préfixe "pts_") pts_couleur, pts_catégorie et pts_obligatoire, en les déclarant comme {{< var page-refs.dynamic-comp.link >}}
 - un {{< var page-refs.pattern-comp.link >}} est un ensemble de colonnes dont le nom à un format commun et qui par conséquent répond à un pattern. Par exemple avec des colonnes dont le nom répond au pattern variable_profondeur_répétition : SWC_([0-9]*)_([0-9]*), 
-- un {{< var page-refs.constant-comp.link >}} est le descriptif de la cartouche du fichier csv. On précisera le nombre de lignes dans la cartouche dans rowNumber et le nombre de colonnes utiliser dans la cartouche dans columnNumber. On peut aussi choisir pour des informations sous l’en-tête de préciser le nom de l’en-tête headerName en lieu et place du numéro de colonne.
-
+- un {{< var page-refs.constant-comp.link >}} Si le {{< var page-refs.data.link-cartouche >}} surcharge les valeur par défaut, alors on peut référencer des valeurs de l'en-tête du fichier csv. Soit des valeur avant l'en-tête (pre-header), soit des information sous l'en-tête et avant la première ligne de données.
+validations
 ## Validation [OA_validations]{#validations}
 
 Chaque composante peut contenir un vérificateur. Pour la lisibilité, il est conseiller de laisser ces vérificateurs dans la section du composant. Cependant vous pourriez vouloir croiser des informations pour effectuer une validation, ou valider un ensemble de composants de la même façon.
@@ -174,6 +192,7 @@ Chaque composante peut contenir un vérificateur. Pour la lisibilité, il est co
 En ce cas vous serez ammener à définir un certain nombre de règle dans la section 
 
 ::: {.callout-note title="OA_validations" collapse="false"}
+
 ``` yaml
 
 OA_data:
@@ -187,6 +206,47 @@ OA_data:
                 OA_params:
                     OA_pattern : "dd/MM/yyyy"
                 OA_components: [ sit_date_mise_en_service ]
+```
+:::
+
+## {{<var page-refs.submission.text>}} (OA_submission)
+Cette section vous permet de définir les composantes qui permettront de versionner les dépôts d'un type de données. voir {{<var page-refs.submission.link>}}
+
+
+::: {.callout-note title="OA_validations" collapse="false"}
+``` yaml
+
+OA_data:
+    t_flux_tours_flx:     
+        OA_submission:   
+        OA_strategy: OA_VERSIONING  
+        OA_submissionScope:   #mandatory
+            OA_referenceScopes:   
+            -   
+                OA_component: voir {{<var page-refs.authorizations.link>}} sit_key  #mandatory
+                OA_reference: tr_sites_sit  
+                OA_i18n:   #mandatory
+                OA_title:   
+                    fr: Site
+                    en: Site
+                OA_description:   
+                    fr: Référentiel des Sites
+                    en: Site repository
+                OA_exportHeader:   #mandatory
+                OA_title:   
+                    fr: Site
+                    en: Site
+                OA_descriptio voir {{<var page-refs.authorizations.link>}}n:   
+                    fr: Référentiel des Sites
+                    en: Site repository
+            OA_timeScope:   
+            OA_component: flx_date  #mandatory
+        OA_fileName:   
+            OA_filePattern: (.*)_(.*)_(.*).csv  #mandatory
+            OA_matchPatternScopes:   
+            - sit_key  
+            - __START_DATE__  
+            - __END_DATE__        
 ```
 :::
 

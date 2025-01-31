@@ -1,0 +1,49 @@
+OA_version: 2.0.1
+OA_application:
+  OA_name: dynamic_case
+  OA_i18n: # optional
+    OA_title:
+      fr: Example de composante dynamique
+      en: Minimale configuration
+    OA_description:
+      fr: Fichier de configuration minimum
+      en: Dynamic component example
+  OA_version: 1.0.1
+  OA_defaultLanguage: fr  # optional par défaut fr
+  OA_comment: Cas d'usage des composantes dynamiques # optional
+OA_data:
+  tr_sites_properties_spt:
+    OA_naturalKey: [nom_propriete]
+    OA_basicComponents:
+      nom_propriete:
+      type_donnee:
+      unite:
+      niveau_site:
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_multiplicity: MANY
+  tr_sites_sit:
+    OA_naturalKey: [nom]
+    OA_basicComponents:
+      nom:
+      niveau:
+      parent:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_sites_sit
+              OA_isRecursive: true
+    OA_dynamicComponents:
+      property:
+        OA_exportHeader:
+          OA_title:
+            fr: Propriétés de sites
+            en: Sites properties
+          OA_description:
+            fr: Propriétés de Sites
+            en: Sites properties
+        OA_headerPrefix: "ps_"
+        OA_reference: tr_sites_properties_spt
+        OA_referenceComponentToLookForHeader: nom_propriete
