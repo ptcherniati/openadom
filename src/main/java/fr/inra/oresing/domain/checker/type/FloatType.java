@@ -105,7 +105,6 @@ public non-sealed class FloatType implements FieldType<Float> {
 
     @Override
     public String toString() {
-        final Float f = 4.0F;
         return Optional.ofNullable(value).map(Object::toString).orElse("");
     }
 

@@ -25,7 +25,7 @@ public record AuthorizationForUser(
         AuthorizationsResult authorizationsForUserOrPublic,
         AuthorizationPublicationService builder) implements State {
 
-    protected static Boolean hasRight(
+    /*protected static Boolean hasRight(
             final Authorization authorization,
             final List<AuthorizationParsed> auths) {
         return auths.stream()
@@ -100,7 +100,7 @@ public record AuthorizationForUser(
 
     protected boolean requiredAuthorizationMatchForFile(
             final Map<String, Set<String>> requiredAuthorizationInDataBase) {
-        Optional<Map<String, List<Ltree>>> requiredAuthorizationForFile = Optional.ofNullable(params())
+        Optional<Map<String, List<Ltree>>> requiredAuthorizationForFile = Optional.ofNullable(fileOrUuid())
                 .map(FileOrUUID::binaryfiledataset)
                 .map(BinaryFileDataset::getRequiredAuthorizations);
         if (requiredAuthorizationForFile.isPresent()) {
@@ -140,5 +140,5 @@ public record AuthorizationForUser(
 
     public boolean isApplicationCreator() {
         return isApplicationCreator;
-    }
+    }*/
 }

@@ -101,7 +101,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
                 case FloatType floatType -> mapNode.put((String) kvEntry.getKey(), floatType.getValue());
                 case Boolean bool -> mapNode.put((String) kvEntry.getKey(), bool);
                 case BooleanType booleanType -> mapNode.put((String) kvEntry.getKey(), booleanType.getValue());
-                case NullType fieldType -> mapNode.set((String) kvEntry.getKey(), NullNode.getInstance());
+                case NullType ignored -> mapNode.set((String) kvEntry.getKey(), NullNode.getInstance());
                 case FieldType fieldType -> mapNode.put((String) kvEntry.getKey(), fieldType.toString());
                 default -> mapNode.put((String) kvEntry.getKey(), kvEntry.getValue().toString());
             }

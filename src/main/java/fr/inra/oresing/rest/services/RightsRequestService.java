@@ -75,7 +75,7 @@ public class RightsRequestService  implements ServiceContainerBean{
 
     private RightsRequestResult getRightsRequestResult(final RightsRequest rightsRequest, final Application application) {
         Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
-        serviceContainer.authorizationService().authorizationsToParsedAuthorizations(
+        AuthorizationService.authorizationsToParsedAuthorizations(
                 List.of(rightsRequest.getRightsRequest()),
                 authorizationsParsed);
         return new RightsRequestResult(

@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.exceptions;
 
 import com.google.common.base.Throwables;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
@@ -8,7 +9,6 @@ import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.application.NoSuchApplicationException;
-import fr.inra.oresing.domain.exceptions.authentication.authentication.DisconnectedException;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;

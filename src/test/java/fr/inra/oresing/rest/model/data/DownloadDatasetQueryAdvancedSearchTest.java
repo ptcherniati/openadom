@@ -197,7 +197,7 @@ class DownloadDatasetQueryAdvancedSearchTest {
                 }
                 return true;
             });
-            Assertions.assertTrue(test);
+            assertTrue(test);
         } else if (componentFilters.size() != 1) {
             fail("componentFilters must not be empty");
         }

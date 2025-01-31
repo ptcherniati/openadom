@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.NullType;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import org.apache.commons.collections.keyvalue.DefaultMapEntry;
@@ -30,7 +31,7 @@ public record DataRowResult(
     public static DataRowResult of(DataRow dataRow,
                                    ImmutableSet<String> variables,
                                    String locale,
-                                   DataRepositoryWithBuffer dataRepositoryWithBuffer) {
+                                   DataRepositoryForBuffer dataRepositoryWithBuffer) {
         final Map<String, Object> rows = new HashMap<>();
         for (final Map.Entry<String, FieldType> componentEntry : dataRow.values().entrySet()) {
             final String component = componentEntry.getKey();

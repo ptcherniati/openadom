@@ -3,8 +3,8 @@ package fr.inra.oresing.domain.data.read.query;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRepository;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 
 import java.util.Map;
 import java.util.stream.Stream;
@@ -26,7 +26,7 @@ public record ComponentOrderBy(String componentKey, DataRepository.Order order,
 
     public Stream<String> toValue(
             String language,
-            DataRepositoryWithBuffer dataRepository,
+            DataRepositoryForBuffer dataRepository,
             Map<String, FieldType> dataRowValues,
             StandardDataDescription dataDescription
     ) {

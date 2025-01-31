@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
@@ -19,7 +20,7 @@ public record DataCsvHeaderWriter(
         CSVWriter writer,
         Comparator<ComponentOrderByForExport> comparator,
         Function<String, String> getInternationalizedHeader,
-        DataRepositoryWithBuffer dataRepositoryWithBuffer,
+        DataRepositoryForBuffer dataRepositoryWithBuffer,
         List<ComponentOrderByForExport> orderedColumns,
         StandardDataDescription dataDescription,
         Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns,
@@ -28,7 +29,7 @@ public record DataCsvHeaderWriter(
             CSVWriter writer,
             Comparator<ComponentOrderByForExport> comparator,
             Function<String, String> getInternationalizedHeader,
-            DataRepositoryWithBuffer dataRepositoryWithBuffer,
+            DataRepositoryForBuffer dataRepositoryWithBuffer,
             StandardDataDescription dataDescription,
             Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns,
             boolean horizontalDisplay) {
@@ -42,7 +43,7 @@ public record DataCsvHeaderWriter(
                 horizontalDisplay);
     }
 
-    protected DataRow writeHeader(DataRow dataRow) {
+    DataRow writeHeader(DataRow dataRow) {
         if (CollectionUtils.isNotEmpty(orderedColumns())) {
             return dataRow;
         }
@@ -188,7 +189,8 @@ public record DataCsvHeaderWriter(
         String referenceName = dynamicComponent.reference();
         String referenceColumnToLookForHeader = dynamicComponent.referenceColumnToLookForHeader();
         ComponentType typeForComponentKey = dataDescription().getTypeForComponentKey(componentKey);
-        Map<String, ComponentOrderBy> dynamicColumns = dataRepositoryWithBuffer().repository().findAllByReferenceTypeStream(referenceName)
+        Map<String, ComponentOrderBy> dynamicColumns = dataRepositoryWithBuffer()
+                .findAllByReferenceTypeStream(referenceName)
                 .sorted(Comparator.comparing(dataValue -> dataValue.getNaturalKey().getSql()))
                 .collect(Collectors.toMap(
                         dataValue -> dataValue.getNaturalKey().getSql(),

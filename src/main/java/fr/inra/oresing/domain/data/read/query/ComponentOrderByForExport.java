@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker
 import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.MapType;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 
 import java.time.LocalDateTime;
@@ -20,7 +21,7 @@ import java.util.stream.Stream;
 
 public sealed interface ComponentOrderByForExport
         permits ComponentOrderBy, ComponentPatternOrderBy, ComponentPatternValueOrderBy, DynamicComponentOrderBy {
-    Stream<String> toValue(String language, DataRepositoryWithBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription);
+    Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription);
 
     String componentKey();
 
@@ -28,7 +29,7 @@ public sealed interface ComponentOrderByForExport
 
     default String valueToString(
             String language,
-            DataRepositoryWithBuffer dataRepository,
+            DataRepositoryForBuffer dataRepository,
             StandardDataDescription dataDescription,
             FieldType fieldType) {
         if (fieldType instanceof MapType mapType) {

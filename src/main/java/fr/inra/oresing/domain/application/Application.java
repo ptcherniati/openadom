@@ -64,20 +64,6 @@ public class Application extends OreSiEntity {
         return returnApp;
     }
 
-    public Map<String, DynamicComponent> getDynamicComponents(final String dataComponent) {
-        final Map<String, ComponentDescription> componentDescriptions = Optional.ofNullable(configuration)
-                .map(Configuration::dataDescription)
-                .map(map -> map.get(dataComponent))
-                .map(StandardDataDescription::componentDescriptions)
-                .orElse(null);
-        if (componentDescriptions == null) {
-            return Map.of();
-        }
-        return Maps.transformValues(
-                Maps.filterValues(componentDescriptions, DynamicComponent.class::isInstance),
-                DynamicComponent.class::cast);
-    }
-
     public Optional<StandardDataDescription> findData(String dataName) {
         Function<Map<String, StandardDataDescription>, StandardDataDescription> getDataDescription = data -> data.get(dataName);
         return Optional.of(findData())
@@ -102,11 +88,6 @@ public class Application extends OreSiEntity {
                 .map(Configuration::rightsRequest);
     }
 
-    public Optional<RightRequestDescription> findAdditionalFiles() {
-        return Optional.of(getConfiguration())
-                .map(Configuration::rightsRequest);
-    }
-
     public Optional<Internationalizations> findInternationalizations() {
         return Optional.of(getConfiguration())
                 .map(Configuration::i18n);
@@ -117,28 +98,6 @@ public class Application extends OreSiEntity {
                 .map(Configuration::applicationDescription);
     }
 
-    public Map<String, Submission.SubmissionScope> findSubmission() {
-        Map<String, StandardDataDescription> data = configuration.dataDescription();
-        if (data == null) {
-            return Map.of();
-        }
-        Map<String, Submission.SubmissionScope> submissions = new HashMap<>();
-        data.forEach((dataName, dataDescription) -> dataDescription.findSubmissionScope()
-                .ifPresent(authorizations -> submissions.put(dataName, authorizations)));
-        return submissions;
-    }
-
-    public Map<String, Authorization> findAuthorizations() {
-        Map<String, StandardDataDescription> data = configuration.dataDescription();
-        if (data == null) {
-            return Map.of();
-        }
-        Map<String, Authorization> authorizations = new HashMap<>();
-        data.keySet().forEach((dataName) -> findAuthorizations(dataName)
-                .ifPresent(authorization -> authorizations.put(dataName, authorization)));
-        return authorizations;
-    }
-
     public boolean existsData(String dataName) {
         return findData(dataName).isPresent();
     }
@@ -146,11 +105,6 @@ public class Application extends OreSiEntity {
     public Optional<Submission> findSubmission(String dataName) {
         return findData(dataName)
                 .map(StandardDataDescription::submission);
-    }
-
-    public Optional<Authorization> findAuthorizations(String dataName) {
-        return findData(dataName)
-                .map(StandardDataDescription::authorization);
     }
 
     public String internationalizeHeader(String dataName, String componentName, String language) {
@@ -164,17 +118,6 @@ public class Application extends OreSiEntity {
                 .orElse(findComponentOfData(dataName, componentName)
                         .map(ComponentDescription::importHeader)
                         .orElse(componentName));
-    }
-
-    public String internationalizeHeaderDescription(String dataName, String componentName, String language) {
-        return Optional.ofNullable(getConfiguration().i18n())
-                .map(Internationalizations::getData)
-                .map(data -> data.get(dataName))
-                .map(InternationalizationData::getComponents)
-                .map(component -> component.get(componentName))
-                .map(InternationalizationComponent::getExportHeader)
-                .map(exportHeader -> exportHeader.getDescription().get(Locale.of(language)))
-                .orElse(null);
     }
 
     private Function<Node, Optional<Node>> findParentNodeForDataName(String dataName) {

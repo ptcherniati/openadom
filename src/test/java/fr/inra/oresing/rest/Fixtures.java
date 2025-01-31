@@ -345,8 +345,8 @@ public class Fixtures {
                    "fileid":"%1$s",
                    "binaryfiledataset":{
                       "requiredAuthorizations":{
-                         "projet":["projet_%2$s"],
-                         "sites":["%3$s.%4$s.%4$s__p1"]
+                         "projet":["projetKprojet_%2$s"],
+                         "sites":["type_de_sitesK%3$s.sitesK%4$s.sitesK%4$s__p1"]
                       },
                       "from":"1984-01-01 00:00:00",
                       "to":"1984-01-05 00:00:00"
@@ -475,7 +475,7 @@ public class Fixtures {
     }
 
     public static String getSWCRepositoryResourceName() {
-        return String.format("/data/repeatedcolumns/SWC_truncated.csv");
+        return "/data/repeatedcolumns/SWC_truncated.csv";
     }
 
     public static Map<String, List<String>> getRepeatedColumnsDataErrorsStringReplace() {

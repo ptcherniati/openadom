@@ -9,13 +9,16 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.Authorization;
 import fr.inra.oresing.domain.authorization.privilegeassessor.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationManagerRightsException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.domain.authorization.request.*;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.domain.exceptions.authentication.authentication.*;
 import fr.inra.oresing.domain.exceptions.role.role.BadApplicationRoleException;
 import fr.inra.oresing.domain.exceptions.role.role.BadRoleException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
@@ -67,16 +70,16 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                         .map(AuthorizationScopeComponentData::data)
                         .collect(Collectors.toSet()))
                 .orElseGet(Set::of);
-        switch (authByType){
+        switch (authByType) {
             case AuthorizationForReferenceScope authorizationForReferenceScope ->
                     Preconditions.checkArgument(labels.containsAll(authorizationForReferenceScope.authorizationScope().keySet()));
             case AuthorizationForReferenceScopeAndTimeScope authorizationForReferenceScopeAndTimeScope ->
                     Preconditions.checkArgument(labels.containsAll(authorizationForReferenceScopeAndTimeScope.authorizationScope().keySet()));
             case AuthorizationForTimeScope authorizationForTimeScope -> {
-                return;// Pas de vérification nécessaire pour AuthorizationForTimeScope
+                // Pas de vérification nécessaire pour AuthorizationForTimeScope
             }
             case AuthorizationNoRestriction authorizationNoRestriction -> {
-                return;// Pas de vérification nécessaire pour AuthorizationNoRestriction
+                // Pas de vérification nécessaire pour AuthorizationNoRestriction
             }
             default -> throw new IllegalArgumentException("Type d'autorisation non reconnu");
         }
@@ -87,20 +90,6 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 .filter(authorizationListForCurrentUser::contains)
                 .collect(Collectors.toList());
         authByTypeEntry.setValue(collect);
-    }
-
-    private static void addStoredAuthorizationReferencesThatCantBeModified(final OreSiReferenceAuthorization entity, final Set<String> authorizationListForCurrentUser, final Map<OperationReferenceType, List<String>> modifiedAuthorizations) {
-        Optional.ofNullable(entity)
-                .map(OreSiReferenceAuthorization::getReferences)
-                .ifPresent(a -> a.forEach((key, value) -> {
-                            List<String> collect = value.stream()
-                                    .filter(authorizationListForCurrentUser::contains)
-                                    .toList();
-                            modifiedAuthorizations
-                                    .computeIfAbsent(key, k -> new LinkedList<>())
-                                    .addAll(collect);
-                        })
-                );
     }
 
     private static void addStoredAuthorizationAdditionalFilesThatCantBeModified(final OreSiAdditionalFileAuthorization entity, final Set<String> authorizationListForCurrentUser, final Map<OperationAdditionalFileType, List<String>> modifiedAuthorizations) {
@@ -336,16 +325,12 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     }
 
     @Transactional
-    public UUID revoke(final String applicationNameOrid, final AuthorizationRequest revokeAuthorizationRequest) {
+    public UUID revoke(
+            final ApplicationAdminUser applicationAdminUser,
+            final String applicationNameOrid,
+            final AuthorizationRequest revokeAuthorizationRequest) {
+        Optional.of(applicationAdminUser).orElseThrow(() -> new NotApplicationUserManagerRightsException(applicationNameOrid));
         Application application = getApplication(applicationNameOrid);
-        authenticationService.setRoleAdmin();
-        CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
-        authenticationService.setRoleForClient();
-        boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-
-        if (!isApplicationCreator) {
-            throw new NotApplicationCanSetRightsException(application.getName());
-        }
 
         OreSiAuthorization oreSiAuthorization = repository.getRepository(application).authorization().findById(revokeAuthorizationRequest.authorizationId());
         Map<String, AuthorizationForScope> authorizationListForCurrentUser = getAuthorizationListForCurrentUser(application);
@@ -353,7 +338,11 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
         Map<String, AuthorizationForScope> filteredAuthorizations = oreSiAuthorization.getAuthorizations().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
-                        entry -> validateAndGetAuthForScope(entry, true, authorizationListForCurrentUser, application)
+                        Map.Entry::getValue/*entry -> validateAndGetAuthForScope(
+                                entry,
+                                true,
+                                authorizationListForCurrentUser,
+                                application)*/
                 ));
 
         if (filteredAuthorizations.isEmpty()) {
@@ -369,10 +358,10 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e2));
     }
 
-    private AuthorizationForScope validateAndGetAuthForScope(Map.Entry<String, AuthorizationForScope> entry,
-                                                             boolean isApplicationCreator,
-                                                             Map<String, AuthorizationForScope> authorizationListForCurrentUser,
-                                                             Application application) {
+ /*   private AuthorizationForScope validateAndGetAuthForScope(
+            Map.Entry<String, AuthorizationForScope> entry,
+            Map<String, AuthorizationForScope> authorizationListForCurrentUser,
+            Application application) {
         String datatype = entry.getKey();
         AuthorizationForScope authForScope = entry.getValue();
 
@@ -387,7 +376,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
         }
 
         return authForScope;
-    }
+    }*/
 
     public ImmutableSet<GetAuthorizationResult> getAuthorizations(
             final String applicationNameOrId,
@@ -507,7 +496,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 ApplicationUserResult.getApplicationRoles(application)
         );
         return allUsers.stream()
-                .map(user-> ApplicationUserResult.of(
+                .map(user -> ApplicationUserResult.of(
                         application.getId(),
                         user,
                         administratorRoles,
@@ -527,10 +516,10 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 .stream()
                 .filter(ReferenceScope.NodeDescription::isRoot)
                 .map(node -> new ReferenceScope.TreeNode(
-                        node.node_nk(),
-                        node,
-                        findChildren(node, referenceScopeBykey)
-                )
+                                node.node_nk(),
+                                node,
+                                findChildren(node, referenceScopeBykey)
+                        )
                 )
                 .filter(ReferenceScope.TreeNode::containsContextNode)
                 .toList();
@@ -580,6 +569,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
         }
         throw new BadRoleException("cantDeleteRole", roleForUser.role());
     }
+
     @Transactional
     public OreSiUserResult deleteApplicationRoleUser(final OreSiRoleForUser roleForUser, Application application) {
         authenticationService.setRoleAdmin();
@@ -592,33 +582,12 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     }
 
     private OreSiUserResult deleteApplicationCreatorRoleUser(final OreSiRoleForUser oreSiUserRoleApplicationCreator) {
-        final boolean canAddApplicationCreatorRole = canAddApplicationCreatorRole(oreSiUserRoleApplicationCreator);
-        if (canAddApplicationCreatorRole) {
+        //final boolean canAddApplicationCreatorRole = canAddApplicationCreatorRole(oreSiUserRoleApplicationCreator);
+        //if (canAddApplicationCreatorRole) {
             OreSiUser user = authenticationService.deleteUserRightCreateApplication(UUID.fromString(oreSiUserRoleApplicationCreator.userId()), oreSiUserRoleApplicationCreator.applicationPattern());
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationCreator.userId()));
-        }
-        throw new NotopenAdomAdminException();
-    }
-
-    private boolean canAddApplicationCreatorRole(final OreSiRoleForUser oreSiUserRoleApplicationCreator) {
-        boolean canAddApplicationCreatorRole = false;
-        CurrentUserRoles currentUserRoles = authenticationService.getCurrentUserRoles();
-        if (currentUserRoles.isOpenAdomAdmin()) {
-            canAddApplicationCreatorRole = true;
-        } else if (currentUserRoles.isApplicationCreator()) {
-            OreSiUser user = userRepository.findByLogin(oreSiUserRoleApplicationCreator.userId()).orElseGet(() -> userRepository.findById(UUID.fromString(oreSiUserRoleApplicationCreator.userId())));
-            if (user.getAuthorizations().stream()
-                    .anyMatch(p -> Pattern.compile(p)
-                            .matcher(oreSiUserRoleApplicationCreator.applicationPattern())
-                            .matches()
-                    )) {
-                canAddApplicationCreatorRole = true;
-            } else {
-                throw new NotApplicationCreatorRightsException(oreSiUserRoleApplicationCreator.applicationPattern(), user.getAuthorizations());
-            }
-
-        }
-        return canAddApplicationCreatorRole;
+        /*}
+        throw new NotopenAdomAdminException();*/
     }
 
     private OreSiUserResult deleteApplicationManagerRoleUser(final OreSiRoleForUser oreSiRoleForApplicationManager, Application application) {
@@ -627,7 +596,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
             final OreSiUser user = authenticationService.deleteUserRightApplicationManager(UUID.fromString(oreSiRoleForApplicationManager.userId()), application);
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiRoleForApplicationManager.userId()));
         }
-        throw new NotopenAdomAdminException();
+        throw new NotOpenAdomAdminException();//TODO
     }
 
     private OreSiUserResult deleteUserManagerRoleUser(final OreSiRoleForUser oreSiUserRoleUserManager, Application application) {
@@ -636,7 +605,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
             OreSiUser user = authenticationService.deleteUserRightUserManager(UUID.fromString(oreSiUserRoleUserManager.userId()), application);
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleUserManager.userId()));
         }
-        throw new NotopenAdomAdminException();
+        throw new NotOpenAdomAdminException();//TODO
     }
 
     private OreSiUserResult deleteAdminRoleUser(final OreSiRoleForUser oreSiRoleForUserAdmin) {
@@ -646,7 +615,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
             final OreSiUser user = authenticationService.deleteUserRightopenAdomAdmin(UUID.fromString(oreSiRoleForUserAdmin.userId()));
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiRoleForUserAdmin.userId()));
         }
-        throw new NotopenAdomAdminException();
+        throw new NotOpenAdomAdminException();//TODO
     }
 
     @Transactional
@@ -672,12 +641,12 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     }
 
     private OreSiUserResult addApplicationCreatorRoleUser(final OreSiRoleForUser oreSiUserRoleApplicationCreator) {
-        final boolean canAddApplicationCreatorRole = canAddApplicationCreatorRole(oreSiUserRoleApplicationCreator);
-        if (canAddApplicationCreatorRole) {
+        //final boolean canAddApplicationCreatorRole = canAddApplicationCreatorRole(oreSiUserRoleApplicationCreator);
+        //if (canAddApplicationCreatorRole) {
             OreSiUser user = authenticationService.addUserRightCreateApplication(UUID.fromString(oreSiUserRoleApplicationCreator.userId()), oreSiUserRoleApplicationCreator.applicationPattern());
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationCreator.userId()));
-        }
-        throw new NotopenAdomAdminException();
+        /*}
+        throw new NotOpenAdomAdminException();//TODO*/
     }
 
     private OreSiUserResult addApplicationManagerRoleUser(final OreSiRoleForUser oreSiUserRoleApplicationManager, Application application) {
@@ -686,7 +655,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
             OreSiUser user = authenticationService.addUserRightApplicationManager(UUID.fromString(oreSiUserRoleApplicationManager.userId()), application);
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationManager.userId()));
         }
-        throw new NotopenAdomAdminException();
+        throw new NotOpenAdomAdminException();//TODO
     }
 
     private OreSiUserResult addUserManagerRoleUser(final OreSiRoleForUser oreSiUserRoleUserManager, Application application) {
@@ -695,7 +664,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
             OreSiUser user = authenticationService.addUserRightUserManager(UUID.fromString(oreSiUserRoleUserManager.userId()), application);
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleUserManager.userId()));
         }
-        throw new NotopenAdomAdminException();
+        throw new NotOpenAdomAdminException();//TODO
     }
 
     private OreSiUserResult addAdminRoleUser(final OreSiRoleForUser oreSiRoleForUserAdmin) {
@@ -705,7 +674,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
             final OreSiUser user = authenticationService.addUserRightopenAdomAdmin(UUID.fromString(oreSiRoleForUserAdmin.userId()));
             return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiRoleForUserAdmin.userId()));
         }
-        throw new NotopenAdomAdminException();
+        throw new NotOpenAdomAdminException();//TODO
     }
 
     public boolean isApplicationCreator(final Application application, final UUID userId) {
@@ -842,7 +811,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 .limit(limit)
                 .filter(oreSiReferenceAuthorization ->
                         (user == null || oreSiReferenceAuthorization.getOreSiUsers().stream().anyMatch(uuid -> uuid.toString().equals(user)))
-                                && (authorizationId == null || oreSiReferenceAuthorization.getId().toString().equals(authorizationId))
+                        && (authorizationId == null || oreSiReferenceAuthorization.getId().toString().equals(authorizationId))
                 )
                 .map(oreSiAuthorization -> toGetAdditionalFilesAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
                 .collect(ImmutableSet.toImmutableSet());
@@ -966,7 +935,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 String datatype = authorizationEntry.getKey();
                 AuthorizationForScope authorizationToParse = authorizationEntry.getValue();
                 AuthorizationParsed authorizationParsed = AuthorizationParsed.of(authorizationToParse);
-                authorizationsParsed.computeIfAbsent(datatype, k->new LinkedList<>())
+                authorizationsParsed.computeIfAbsent(datatype, k -> new LinkedList<>())
                         .add(authorizationParsed);
             }
         }
@@ -1000,6 +969,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
         Set<String> applicationCreator = currentUser.getAuthorizations();
         return new AuthorizationsForSystemUser(currentUserRoles, applicationCreator);
     }
+
     @Override
     public PrivilegeAssessorDomainForSystem getPrivilegeAssessorForSystem(
             PrivilegeSystemDomain privilegeDomain

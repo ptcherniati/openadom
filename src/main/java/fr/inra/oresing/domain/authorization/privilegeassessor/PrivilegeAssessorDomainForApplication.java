@@ -1,13 +1,10 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationManagerRightsException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserReaderRightsException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManager;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManagerUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationReader;
+import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.SubmissionType;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
@@ -21,6 +18,9 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
         PrivilegeApplicationDomain domain,
         Application application,
         GetGrantableResult grantable) implements PrivilegeAssessorDomain {
+    /*
+    Test if is applicationAdminUserForUpdate
+     */
     public ApplicationManager forUpdateApplication() {
         if (!authorizations.isApplicationManager()) {
             throw new NotApplicationManagerRightsException(application.getName());
@@ -28,20 +28,30 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
         return new ApplicationAdminUser(application());
     }
 
+    /*
+    Test if is applicationManagerUserForUpdateRights
+     */
     public ApplicationManager forManageAuthorizations() {
         if (!authorizations.isUserManager()) {
             throw new NotApplicationUserManagerRightsException(application.getName());
         }
-        return new ApplicationManagerUser();
+        return new ApplicationManagerUser(application());
     }
 
+
+    /*
+    Test if is applicationManagerUserForCreateRights
+     */
     public ApplicationManager forAddAuthorization() {
         if (!authorizations.isUserManager()) {
             throw new NotApplicationUserReaderRightsException(application.getName());
         }
-        return new ApplicationManagerUser();
+        return new ApplicationManagerUser(application());
     }
 
+    /*
+    Test if is applicationManagerUserForManageAdministrator
+     */
     public ApplicationAdminUser forManageAdministrator() {
         if (!authorizations.isApplicationManager()) {
             throw new NotApplicationManagerRightsException(application.getName());
@@ -49,11 +59,15 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
         return new ApplicationAdminUser(application());
     }
 
-    public ApplicationReader forDataRead(String dataName) {
+
+    /*
+    Test if is applicationUserForReadingData
+     */
+    public ApplicationDataReader forDataRead(String dataName) {
         Optional.of(authorizations())
                 .filter(authorizationsForApplicationUser -> authorizationsForApplicationUser.canRead(dataName))
-                .orElseThrow(NotApplicationManagerRightsException::new);
-        return new ApplicationReader(application());
+                .orElseThrow(()->new NotApplicationDataReaderException(application().getName(), dataName));
+        return new ApplicationDataReader(application());
     }
 
     public Map<AuthorizationsForUserResult.Roles, Boolean> getAuthorizationsForUser(String dataName) {
@@ -91,4 +105,50 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
         }
         return  new ApplicationAdminUser(application());
     }
+
+    public ApplicationDataWriter forDataWrite(String dataName, boolean toPublish) {
+        AuthorizationsForApplicationUser authorizationsForApplicationUser = Optional.of(authorizations())
+                .filter(authorizations -> authorizations.canWrite(dataName, toPublish))
+                .orElseThrow(() -> new NotApplicationDataWriterException(application().getName(), dataName));
+        if(authorizationsForApplicationUser.isApplicationManager()){
+            return new ApplicationAdminUser(application(),dataName);
+        }
+        if(authorizationsForApplicationUser.isUserManager()){
+            return new ApplicationManagerUser(application(), dataName);
+        }
+        if(toPublish || !application().isData(dataName)){
+            return new ApplicationPublishWriterUser(
+                    application(),
+                    dataName,
+                    authorizationsForApplicationUser.getAuthorizations(dataName, Set.of(OperationType.publication))
+            );
+        }
+        return new ApplicationDepositWriterUser(
+                application(),
+                dataName,
+                authorizationsForApplicationUser.getAuthorizations(dataName, Set.of(OperationType.depot))
+        );
+    }
+
+    public ApplicationDataDelete forDataDelete(String dataName) {
+        boolean isRepository = application().findSubmission(dataName)
+                .map(Submission::strategy)
+                .filter(SubmissionType.OA_VERSIONING::equals)
+                .isPresent();
+        AuthorizationsForApplicationUser authorizationsForApplicationUser = Optional.of(authorizations())
+                .filter(authorizations -> authorizations.canDelete(dataName, isRepository))
+                .orElseThrow(() -> new NotApplicationCanDeleteRightsException(application().getName(), dataName));
+        if(authorizationsForApplicationUser.isApplicationManager()){
+            return new ApplicationAdminUser(application(),dataName);
+        }
+        if(authorizationsForApplicationUser.isUserManager()){
+            return new ApplicationManagerUser(application(), dataName);
+        }
+        return new ApplicationDeleteUser(
+                application(),
+                dataName,
+                authorizationsForApplicationUser.getAuthorizations(dataName, Set.of(OperationType.delete))
+        );
+    }
+
 }

@@ -35,7 +35,6 @@ public class CheckerFactory {
     final ImmutableSet.Builder<LineChecker> checkers = ImmutableSet.builder();
     for (final Map.Entry<String, ComponentDescription> variableEntry : dataDescription.componentDescriptions().entrySet()) {
       final String column = variableEntry.getKey();
-      final DataColumn referenceColumn = new DataColumn(column);
       final ComponentDescription componentDescription = variableEntry.getValue();
       if (componentDescription.checker() != null) {
         checkers.addAll(LineChecker.toLineChecker(
@@ -63,12 +62,5 @@ public class CheckerFactory {
         );
     });
     return checkers.build();
-  }
-
-  public Map<String, LineChecker> getReferenceCheckersByComponentname(final Application application, final String reference, final PublishContext.PublishContextBuilder publishContextBuilder) {
-    return getCheckers(application, reference, publishContextBuilder)
-            .stream()
-            .filter(lineChecker -> lineChecker.underlyingType() instanceof ReferenceType)
-            .collect(Collectors.toMap(lineChecker -> lineChecker.target().column(), Function.identity()));
   }
 }

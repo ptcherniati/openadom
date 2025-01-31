@@ -11,6 +11,10 @@ import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
@@ -23,16 +27,13 @@ import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
 import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
-import fr.inra.oresing.domain.exceptions.authentication.authentication.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
-import fr.inra.oresing.domain.exceptions.data.data.DeleteOnrepositoryApplicationNotAllowedException;
 import fr.inra.oresing.domain.file.FileOrUUID;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.binaryFile.BinaryFileService;
 import fr.inra.oresing.rest.data.publication.*;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
@@ -68,7 +69,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -173,34 +173,49 @@ public class OreSiResources implements ServiceContainerBean {
     public ResponseEntity<String> removeFile(@PathVariable("name") final String applicationName,
                                              @PathVariable("id") final UUID id) {
         Application application = serviceContainer.applicationService().getApplication(applicationName);
-        StoreFile storeFile = serviceContainer.versioningService().getStoreFile(application,
+        StoreFile storeFile = serviceContainer.versioningService().getStoreFile(
+                application,
                 null,
-                """
-                        {"fileid": "%s"}""".formatted(id), null);
+                FileOrUUID.forUUID(id),
+                null,
+                null
+        );
         Optional<UUID> fileId = Optional.ofNullable(storeFile)
-                .map(State::params)
+                .map(State::fileOrUuid)
                 .map(FileOrUUID::fileid);
         if (fileId.isEmpty()) {
             throw new SiOreIllegalArgumentException(SiOreIllegalArgumentException.NO_FILE_To_DELETE, Map.of("fileId", id));
         }
-        Boolean canDelete = Optional.of(storeFile)
+        String dataName = Optional.of(storeFile)
                 .map(StoreFile::builder)
-                .map(AuthorizationPublicationService::getAuthorizations)
-                .map(AuthorizationForUser::canDelete)
-                .orElse(false);
+                .map(AuthorizationPublicationService::getDataName)
+                .orElse("notFoundDataName");
+        ApplicationDataDelete applicationDataDelete = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_ACCESS, application)
+                .forDataDelete(dataName);
+        storeFile = serviceContainer.versioningService().getStoreFile(
+                application,
+                dataName,
+                storeFile.fileOrUuid(),
+                null,
+                applicationDataDelete
+        );
+
+        StoreFile finalStoreFile = storeFile;
+        Boolean canDelete = applicationDataDelete.canDelete(finalStoreFile.fileOrUuid());
         if (!canDelete) {
-            String dataName = Optional.of(storeFile)
-                    .map(StoreFile::builder)
-                    .map(AuthorizationPublicationService::getDataName)
-                    .orElse("notFoundDataname");
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
-        DataVersioningResult dataVersioningResult = serviceContainer.versioningService().unPublishVersionBeforeDelete(applicationName, id);
+        if(!storeFile.builder().getFileOrUUID().topublish()) {
+            if (!applicationDataDelete.hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
+                throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
+            }
+            DataVersioningResult dataVersioningResult = serviceContainer.versioningService().unPublishVersionBeforeDelete(applicationName, id);
+        }
         Optional<UUID> uuid = serviceContainer.binaryFileService().removeFile(application, id);
         if (uuid.isPresent()) {
             return ResponseEntity.ok(id.toString());
         } else {
-            return ResponseEntity.notFound().build();
+            throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
     }
 
@@ -209,6 +224,7 @@ public class OreSiResources implements ServiceContainerBean {
                                                                  @PathVariable("dataType") final String dataType,
                                                                  @RequestParam("repositoryId") final String repositoryId) {
         final BinaryFileDataset binaryFileDataset = BinaryFileService.deserialiseBinaryFileDatasetQuery(dataType, repositoryId);
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
         final List<BinaryFile> files = serviceContainer.binaryFileService().getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false);
         return ResponseEntity.ok(files);
     }
@@ -859,7 +875,7 @@ public class OreSiResources implements ServiceContainerBean {
         } else {
             //TODO on est dans le cas ou aucun computationChecker reference n'est décrit : authorizationscope  n'est pas un referentiel
         }
-        DataRepositoryWithBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getNewDataRepositoryWithBuffer(application);
+        DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
 
         final List<DataRowResult> dataRowResults = data.stream()
                 .map(dataRow -> DataRowResult.of(
@@ -902,20 +918,13 @@ public class OreSiResources implements ServiceContainerBean {
     @DeleteMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> deleteData(
             @PathVariable("nameOrId") final String nameOrId,
-            @PathVariable("dataType") final String dataType,
+            @PathVariable("dataType") final String dataName,
             @RequestParam(value = "downloadDatasetQuery", required = false) final String params) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        ApplicationDataDelete applicationDataDelete = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_ACCESS, application)
+                .forDataDelete(dataName);
 
-        final ResponseEntity<String> resposeEntity = null;
-        final boolean deleteOnrepositoryApplicationNotAllowed = serviceContainer.applicationService().getApplication(nameOrId)
-                .findSubmission(dataType)
-                .map(Submission::strategy)
-                .map(SubmissionType.OA_VERSIONING::equals)
-                .isPresent();
-        if (deleteOnrepositoryApplicationNotAllowed) {
-            throw new DeleteOnrepositoryApplicationNotAllowedException();
-        }
-
-        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataType, false);
+        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, false);
         final List<UUID> deletedData = serviceContainer.dataService().deleteData(downloadDatasetQuery);
         return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(",")));
 

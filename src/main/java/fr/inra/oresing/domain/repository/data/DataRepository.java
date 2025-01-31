@@ -24,7 +24,7 @@ public interface DataRepository {
     ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> getDataIdPerKeys(String s);
 
     @Transactional(readOnly = true)
-    Stream<DataValue> findAllByReferenceTypeStream(String ref);
+    Stream<DataValue> findAllByReferenceTypeStream(String referenceName);
 
     @Transactional(readOnly = true)
     Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final MultiValueMap<String, String> params);
@@ -42,4 +42,6 @@ public interface DataRepository {
     Flux<FileContent> getStoredData(Application application, String dataName);
 
     void flush();
+
+    Map<String, Map<String, String>> findDisplayByNaturalKey(String replace);
 }

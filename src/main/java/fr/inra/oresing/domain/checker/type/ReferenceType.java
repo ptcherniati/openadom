@@ -90,7 +90,6 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
     @Override
     public CheckerValidationCheckResult check(final String rawValue, final LineChecker lineChecker) {
         final String localRawValue = Ltree.escapeToLabel(rawValue, knownSpecialCharacters);
-        final CheckerValidationCheckResult validationCheckResult;
         final CheckerTarget target = lineChecker.target();
 
         value = Ltree.fromSql(localRawValue);
@@ -166,7 +165,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
                                             lineIdentityColumnName.hierarchicalKey()
                                     ));
                     return switch (referenceColumnRawValue) {
-                        case DataColumnSingleValue dataColumnSingleValue -> new DataColumnSingleValue(this);
+                        case DataColumnSingleValue ignored -> new DataColumnSingleValue(this);
                         case DataColumnMultipleValue dataColumnMultipleValue -> dataColumnMultipleValue;
                         default -> null;
                     };

@@ -3,9 +3,10 @@ package fr.inra.oresing.persistence.data.read;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.Node;
+import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 
 import java.io.*;
 import java.nio.file.*;
@@ -15,7 +16,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public record DataRepositoryWithBuffer(Application application, DataRepository repository, Path tempDir)
+public record DataRepositoryWithBuffer(
+        Application application,
+        DataRepository repository,
+        Path tempDir
+)
         implements fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer {
 
     public static final String PREFIX_FOR_HIERARCHICAL = "hierarchical";
@@ -87,7 +92,7 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
 
                     if (hierarchicalKey == null) {
                         String availableKeysMessage = String.join(", ", availableKeys);
-                        throw new IllegalArgumentException(
+                        throw new IllegalArgumentException(//TODO throw sioretechnicalException
                                 String.format("Clé non trouvée pour le type de référence: %s, clé: %s. Clés disponibles: %s",
                                         referenceType, keyForScope, availableKeysMessage)
                         );
@@ -205,5 +210,10 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
         } catch (IOException e) {
             throw new UncheckedIOException("Erreur lors du nettoyage du répertoire temporaire", e);
         }
+    }
+
+    @Override
+    public Stream<DataValue> findAllByReferenceTypeStream(String referenceName) {
+        return repository().findAllByReferenceTypeStream(referenceName);
     }
 }

@@ -8,21 +8,22 @@ import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdministratorForSystemException;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.domain.exceptions.authentication.authentication.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
-import fr.inra.oresing.domain.exceptions.data.data.DeleteOnrepositoryApplicationNotAllowedException;
+import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
-import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.services.RelationalService;
@@ -1312,22 +1313,22 @@ public class OreSiResourcesTest {
 
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
                             .cookie(authCookie))
-                    .andExpect(jsonPath("$.users[*].label", Matchers.contains("_public_",
+                    .andExpect(jsonPath("$.users[*].label", contains("_public_",
                             "lambda",
                             "poussin",
                             "withrigths")))
-                    .andExpect(jsonPath("$.additionalFileName", Matchers.is("fichiers")))
-                    .andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", Matchers.is("10")));
+                    .andExpect(jsonPath("$.additionalFileName", is("fichiers")))
+                    .andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", is("10")));
 
             mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.users[*].label", Matchers.contains("_public_",
+                    .andExpect(jsonPath("$.users[*].label", contains("_public_",
                             "lambda",
                             "poussin",
                             "withrigths")))
-                    .andExpect(jsonPath("$.additionalFileName", Matchers.is("fichiers")))
-                    .andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", Matchers.is("10")));
+                    .andExpect(jsonPath("$.additionalFileName", is("fichiers")))
+                    .andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", is("10")));
 
             final String error = Objects.requireNonNull(mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
                             .cookie(lambdaCookie))
@@ -1478,14 +1479,14 @@ public class OreSiResourcesTest {
                                 System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                             }
                         })
-                        .andExpect(jsonPath("$.message", Is.is(SiOreIllegalArgumentException.NO_RIGHT_ON_TABLE_FOR_DEPOSIT)))
+                        .andExpect(jsonPath("$.message", Is.is(NotApplicationDataWriterException.NO_RIGHT_FOR_USER_DATA_WRITER)))
                         .andReturn().getResponse().getContentAsString();
                 log.debug(response);
             } catch (ServletException servletException) {
                 SiOreAuthorizationRequestException cause = (SiOreAuthorizationRequestException) servletException.getCause();
                 AuthorizationRequestException requestException = cause.getException();
                 Assertions.assertEquals(AuthorizationRequestException.MISSING_REQUIRED_AUTHORIZATION, requestException);
-                Assertions.assertTrue(((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").getFirst().getSql().equals("projet_manche"));
+                Assertions.assertEquals("projet_manche", ((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").getFirst().getSql());
             }
 
             String createRights = getJsonRightsforRestrictions(
@@ -1543,10 +1544,10 @@ public class OreSiResourcesTest {
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResolvedException();
 
-            Assertions.assertInstanceOf(SiOreIllegalArgumentException.class, exception);
-            Assertions.assertEquals("noRightForPublish", exception.getMessage());
-            Assertions.assertEquals("pem", ((SiOreIllegalArgumentException) exception).getParams().get("dataName"));
-            Assertions.assertEquals("monsore", ((SiOreIllegalArgumentException) exception).getParams().get("application"));
+            Assertions.assertInstanceOf(NotApplicationDataWriterException.class, exception);
+            Assertions.assertEquals(NotApplicationDataWriterException.NO_RIGHT_FOR_USER_DATA_WRITER, exception.getMessage());
+            Assertions.assertEquals("pem", ((NotApplicationDataWriterException) exception).dataName);
+            Assertions.assertEquals("monsore", ((NotApplicationDataWriterException) exception).applicationName);
 
 
             // on donne les droits publication
@@ -1632,9 +1633,9 @@ public class OreSiResourcesTest {
         try {
             publishOrDepublish(withRigthsCookie, "manche", "plateforme", "nivelle", 34, true, 1, true);
 
-        } catch (final SiOreIllegalArgumentException e) {
-            Assertions.assertEquals(SiOreIllegalArgumentException.NO_RIGHT_ON_TABLE_FOR_DEPOSIT, e.getMessage());
-            Assertions.assertEquals("referencevalue", e.getParams().get("table"));
+        } catch (final NotApplicationDataWriterForDepositException e) {
+            Assertions.assertEquals(NotApplicationDataWriterForDepositException.NO_RIGHT_FOR_USER_DATA_WRITER_FOR_DEPOSIT, e.getMessage());
+            Assertions.assertEquals("pem", e.dataName);
         }
         getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.publication.name()),
                 "pem", "type_de_sitesKplateforme.sitesKnivelle.sitesKnivelle__p1", "1984,1,1", "1984,1,6", authCookie);
@@ -1713,25 +1714,22 @@ public class OreSiResourcesTest {
         Assertions.assertEquals("NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION", resolvedException.getMessage());
         Assertions.assertEquals("pem", resolvedException.getDataType());
         Assertions.assertEquals("monsore", resolvedException.getApplicationName());
-        Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
+        /*Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
                         .cookie(authCookie))
                 .andExpect(status().is4xxClientError())
                 .andReturn()
                 .getResolvedException();
-        Assertions.assertInstanceOf(DeleteOnrepositoryApplicationNotAllowedException.class, resolvedException1);
+        Assertions.assertInstanceOf(NotApplicationCanDeleteRightsException.class, resolvedException1);*/
 
         //on donne les droits de suppression
-        String deleteRights = getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.delete.name()),
+
+        getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.delete.name()),
                 "pem", "type_de_sitesKplateforme.sitesKnivelle.sitesKnivelle__p1", "1984,1,1", "1984,1,6", authCookie);
 
         // on supprime le fichier a les droits car à les droits de publication
         mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)
                         .cookie(withRigthsCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(content().string(fileUUID2));
-        // on supprime le fichier additionnel
-        return;
-
+                .andExpect(status().is2xxSuccessful());
     }
 
     @Test

@@ -21,6 +21,12 @@ public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, Boole
         );
     }
 
+    public static FileOrUUID forUUID(UUID id) {
+        return new FileOrUUID(
+                id, null, false
+        );
+    }
+
     public FileOrUUID withParams(BinaryFileInfos binaryFileInfos) {
         return new FileOrUUID(
                 fileid(),
@@ -30,17 +36,17 @@ public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, Boole
 
     }
 
-    public boolean requiredAuthorizationMatchForFile(final Map<String, Set<String>>requiredAuthorizationInDataBase) {
+    public boolean requiredAuthorizationMatchForFile(final Map<String, Set<String>> requiredAuthorizationInDataBase) {
         Optional<Map<String, List<Ltree>>> requiredAuthorizationForFile = Optional.ofNullable(binaryfiledataset())
                 .map(BinaryFileDataset::getRequiredAuthorizations);
         if (requiredAuthorizationForFile.isPresent()) {
             for (final Map.Entry<String, List<Ltree>> requiredAuthorizationForFileEntry : requiredAuthorizationForFile.get().entrySet()) {
                 final String scope = requiredAuthorizationForFileEntry.getKey();
                 final String ltree = requiredAuthorizationForFileEntry.getValue().getFirst().getSql();
-                if(requiredAuthorizationInDataBase.get(scope).stream()
+                if (requiredAuthorizationInDataBase.get(scope).stream()
                         .noneMatch(pathAuthorized -> ltree.equals(pathAuthorized) ||
-                                    ltree.startsWith(pathAuthorized+Ltree.SEPARATOR))
-                ){
+                                                     ltree.startsWith(pathAuthorized + Ltree.SEPARATOR))
+                ) {
                     return false;
                 }
             }

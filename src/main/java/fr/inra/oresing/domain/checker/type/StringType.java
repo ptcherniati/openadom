@@ -39,18 +39,6 @@ public non-sealed class StringType implements FieldType<String> {
         clone = () -> new StringType(pattern);
     }
 
-    public static boolean isValid(final String pattern) {
-        if (StringUtils.isBlank(pattern)) {
-            return false;
-        }
-        try {
-            compile(pattern);
-            return true;
-        } catch (final PatternSyntaxException e) {
-            return false;
-        }
-    }
-
     @Override
     public String getValue() {
         return value;

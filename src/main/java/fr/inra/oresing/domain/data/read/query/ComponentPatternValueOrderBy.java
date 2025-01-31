@@ -5,8 +5,8 @@ import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRepository;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 
 import java.util.*;
 import java.util.stream.Stream;
@@ -16,11 +16,11 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
                                            Set<ComponentOrderBy> qualifiersColumns,
                                            Set<ComponentOrderBy> adjacentColumns) implements ComponentOrderByForExport {
     @Override
-    public Stream<String> toValue(String language, DataRepositoryWithBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription) {
+    public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription) {
         String componentKey = componentKey();
         ListType fieldType = (ListType) dataRowValues.get(componentKey);
 
-        Optional<MapType> patternMapTypeOpt = getMapType((ListType) fieldType);
+        Optional<MapType> patternMapTypeOpt = getMapType(fieldType);
         if (patternMapTypeOpt.isPresent()) {
             List<String> values = new LinkedList<>();
             Optional<String> valueopt = patternMapTypeOpt
@@ -38,25 +38,25 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
         return Stream.empty();
     }
 
-    private String getAdacentValue(String language, DataRepositoryWithBuffer dataRepository, StandardDataDescription dataDescription, ComponentOrderBy qualifier, MapType patternMapTypeOpt) {
+    private String getAdacentValue(String language, DataRepositoryForBuffer dataRepository, StandardDataDescription dataDescription, ComponentOrderBy qualifier, MapType patternMapTypeOpt) {
         String adjacentKey = qualifier.componentKey().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[1];
         FieldType adjacentField = (FieldType) patternMapTypeOpt.getValue().get(adjacentKey);
         return valueToString(language, dataRepository, dataDescription, adjacentField);
     }
 
-    private String getQualifierValue(String language, DataRepositoryWithBuffer dataRepository, StandardDataDescription dataDescription, ComponentOrderBy qualifier, MapType patternMapTypeOpt) {
+    private String getQualifierValue(String language, DataRepositoryForBuffer dataRepository, StandardDataDescription dataDescription, ComponentOrderBy qualifier, MapType patternMapTypeOpt) {
         FieldType adjacentField = (FieldType) patternMapTypeOpt.getValue().get(qualifier.componentKey());
         return valueToString(language, dataRepository, dataDescription, adjacentField);
     }
 
-    private String getValue(String language, DataRepositoryWithBuffer dataRepository, StandardDataDescription dataDescription, MapType mapType) {
+    private String getValue(String language, DataRepositoryForBuffer dataRepository, StandardDataDescription dataDescription, MapType mapType) {
         return valueToString(language, dataRepository, dataDescription, (FieldType) mapType.getValue().get(Column.__VALUE__));
     }
 
     private static Optional getMapType(ListType fieldType) {
-        return ((List) fieldType.getValue()).stream()
+        return fieldType.getValue().stream()
                 .filter(MapType.class::isInstance)
-                .map(mapType -> ((MapType<String, FieldType>) mapType))
+                .map(mapType -> mapType)
                 .findFirst();
     }
 

@@ -85,7 +85,7 @@ public record Submission(
 
         } catch (Exception e) {
             throw new SiOreAuthorizationRequestException(
-                    AuthorizationRequestException.INVAALID_FILE_NAME,
+                    AuthorizationRequestException.INVALID_FILE_NAME,
                     Map.of("fileNameFormat", fileNameParsing().createExampleSubmissionFileName())
             );
 
@@ -112,7 +112,7 @@ public record Submission(
             for (int i = patternGroups().size(); i > 0; i--) {
                 PatternPosition patternGroup = patternGroups().get(i-1);
                 patternToBeReplacedByGroupCapture = new StringBuilder(patternToBeReplacedByGroupCapture.substring(0, patternGroup.start()))
-                        .append("%s")
+                        .append("%%%d$s".formatted(i))
                         .append(patternToBeReplacedByGroupCapture.substring(patternGroup.end()))
                         .toString();
             }
