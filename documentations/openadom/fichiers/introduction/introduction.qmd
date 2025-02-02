@@ -11,11 +11,11 @@
 
 
 # <a id="prealable" />Préalable
-Avant de commencer l'écriture du fichier de configuration, il faut travailler à définir le modèle des données que vous voulez traiter dans la base de données.
+Avant de commencer l'écriture du fichier de configuration, il vous faut travailler à définir le modèle des données que vous voulez traiter dans la base de données.
 
 Vous avez en votre possession un certain nombre de fichiers (format csv) contenant les données. Un fichier de données respecte un certain format. En particulier les en-têtes de colonnes doivent être fixés et le contenu sous un en-tête a un format déterminé (date, valeur flottante, entier, texte..).
 
-Chaque format de fichier correspond à ce que l'on appellera un type de données. Il regroupe plusieurs variables correspondant à :
+Chaque format de fichier correspond à ce que l'on appellera un **type de données**. Il regroupe plusieurs variables correspondant à :
 - une thématique,
 - un pas de temps,
 - une structuration des données
@@ -23,9 +23,9 @@ Chaque format de fichier correspond à ce que l'on appellera un type de données
 
 Chaque ligne peut être identifiée par sous-ensemble de colonnes. Cet identifiant permet de créer ou de mettre à jour une donnée, selon qu'elle est ou non déjà présente en base.
 
-Chaque ligne porte, sur une ou plusieurs colonnes, une information de temporalité.
+Chaque ligne peut porter, sur une ou plusieurs colonnes, une information de temporalité.
 
-Chaque ligne porte aussi, sur une ou plusieurs colonnes, des informations sur le contexte d'acquisition des variables des autres colonnes.
+Chaque ligne peut porter aussi, sur une ou plusieurs colonnes, des informations sur le contexte d'acquisition des variables des autres colonnes.
 
 On peut vouloir aussi faire figurer dans la base de données certaines informations non présentes dans le fichier de données.
 
@@ -37,25 +37,25 @@ On peut vouloir aussi faire figurer dans la base de données certaines informati
 ## exemple
 Supposons que l'on ait un fichier de données météorologiques
 
-
+::: {.callout-note collapse="false" title="Météorologie"}
 ``` {csv}
 #| label: tab-donnees-meteo
 #| code-fold: show
 #| code-summary: "t_data_dat.csv"
 #| code-title: "t_data_dat.csv"
 
-{{< include fichiers/t_data_dat.csv >}}
+{{< include ../examples/meteo/fichiers/t_data_dat.csv >}}
 
 ```
-
+:::
 
 - La temporalité est portée par la colonne "Date de mesure".
 - Le contexte est porté par l'information du cartouche d'en-tête "Région" et la colonne "Site".
-- On identifie 4 variables:
-- _date_ au format dd/MM/yyyy (format au sens SQL : https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE). Cette variable n'a qu'une seule composante "day". On note que les moyennes sont calculées à la journée.
-- _localization_ qui fait référence à un site de la colonne "Site", avec deux composantes (site et region)
-- _precipitation_ qui correspond à la pluviométrie de la colonne "Précipitation" avec deux composantes (value,unit=mm)
-- _temperature_ qui se réfère aux colonnes "Température moyenne", "Température minimale" et "Température maximale" avec 4 composantes (value,min,max,unit=°C)
+- On identifie:
+- une composante _date_ au format dd/MM/yyyy (format au sens SQL : https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE). On note que les moyennes sont calculées à la journée.
+- deux composantes _localization_ qui fait référence à un site de la colonne "Site", avec deux composantes (site et region)
+- deux composantes _precipitation_ qui correspond à la pluviométrie de la colonne "Précipitation" value,unit=mm
+- 4 composantes (value,min,max,unit=°C) _temperature_ qui se réfère aux colonnes "Température moyenne", "Température minimale" et "Température maximale" 
 
 Du coup, on peut aussi définir des référentiels pour préciser ses informations
 
@@ -64,7 +64,7 @@ Du coup, on peut aussi définir des référentiels pour préciser ses informatio
 #| label: tbl-regions
 #| tbl-cap: "regions"
 #| code-fold: show
-knitr::kable(read.csv("fichiers/tr_regions_reg.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+knitr::kable(read.csv("../examples/meteo/fichiers/tr_regions_reg.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
 ```
 ``` {r}
@@ -72,7 +72,7 @@ knitr::kable(read.csv("fichiers/tr_regions_reg.csv", header = TRUE,  sep = ';', 
 #| label: tbl-sites
 #| tbl-cap: "sites"
 #| code-fold: show
-knitr::kable(read.csv("fichiers/tr_sites_sit.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+knitr::kable(read.csv("../examples/meteo/fichiers/tr_sites_sit.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
 ```
 
@@ -83,7 +83,7 @@ Les sites font référence aux régions.
 #| label: tbl-unites
 #| tbl-cap: "unites"
 #| code-fold: show
-knitr::kable(read.csv("fichiers/tr_unites_uni.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+knitr::kable(read.csv("../examples/meteo/fichiers/tr_unites_uni.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
 ```
 
