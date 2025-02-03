@@ -329,6 +329,48 @@ cat(yaml_content, sep = "\n")
 
 ## Stockage en base
 
+### tr_sites_sit
+
+``` sql
+select  refvalues 
+from meteorologie.referencevalue
+where referencetype = 'tr_sites_sit' and 
+naturalkey = 'frcvl__os1'::ltree
+```
+
+``` json
+{
+  "sit_nom": "Os1",
+  "reg_code": "frcvl",
+  "sit_date": "date:2000-01-01T00:00:00:dd/MM/yyyy",
+  "__display_en": "Os1 (frcvl)",
+  "__display_fr": "Os1 (frcvl)",
+  "__display_default": "Nom du site: Os1; Nom de la région: (frcvl)",
+  "__display_description_en": "Site name: Os1; région name (frcvl)",
+  "__display_description_fr": "Nom du site: Os1; Nom de la région: (frcvl)"
+}
+```
+On remarquera la surcharge de la clef naturelle __display_...
+
+On peut récupérer la date
+
+``` sql
+select  
+  ((refvalues #>> '{sit_date}')::composite_date)::timestamp, 
+  ((refvalues #>> '{sit_date}')::composite_date)::text 
+from meteorologie.referencevalue
+where referencetype = 'tr_sites_sit' and 
+naturalkey = 'frcvl__os1'::ltree
+```
+
+::: {.callout-important collapse="false" title="visualisation de la météorologie"}
+![](images/date.png)
+:::
+
+
+
+### t_data_dat
+
 ``` sql
 select  refvalues 
 from meteorologie.referencevalue
@@ -355,4 +397,12 @@ naturalkey = 'frcvl__os1__01SOLIDUS06SOLIDUS2004'::ltree
     "dat_temperature_minimale": 10
   }
 }
+
+```
+
+On remarque la différence de stratégie de récupération des valeurs précipitation et température : 
+
+- il n'y a pas de marquage de la proximité des variables dat_precipitation et dat_precipitation_unit
+- toutes les valeurs correspondant à la température sont regroupées dans un même objet json sous le label dat_temperature_moyenne qui est l'idendificateur du patternComponent
+
 ```
