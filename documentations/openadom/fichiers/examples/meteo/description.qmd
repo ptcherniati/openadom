@@ -405,4 +405,3 @@ On remarque la différence de stratégie de récupération des valeurs précipit
 - il n'y a pas de marquage de la proximité des variables dat_precipitation et dat_precipitation_unit
 - toutes les valeurs correspondant à la température sont regroupées dans un même objet json sous le label dat_temperature_moyenne qui est l'idendificateur du patternComponent
 
-```
