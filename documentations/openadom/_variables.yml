@@ -24,6 +24,8 @@ link-styles:
     text: "{text}"
     link: '::: {.card} [{text}]({href}) :::'
 page-refs:
+  index: 
+    ancre:  "[Créer une ancre](/index.qmd)" #chemin absolu depuis openadom
   openadom:
     version: 2.0.1
 # Section Introduction
