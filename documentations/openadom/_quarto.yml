@@ -102,6 +102,8 @@ website:
             href: fichiers/examples/configuration_min/description.qmd
           - section: Composantes 
             contents: 
+            - text: Example d'utilisation des composants
+              href: fichiers/examples/meteo/description.qmd
             - text: Example d'utilisation des composantes dynamiques(sites)
               href: fichiers/examples/dynamicComponant/description.qmd
             - text: Example d'utilisation des composantes dynamiques (taxons)
