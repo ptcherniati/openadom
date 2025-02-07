@@ -12,11 +12,13 @@ On appelera type de données un regroupement de données (variables) qui partage
 
 Les types de données sont alimentés dans la base par des fichier au format csv.
 
-On définit aussi des données dites de références. Ce sont des données nécessaires à la description des données expérimentales (référentiels) ou d'observation (data). Il n'y a pas de différence dans l'application pour le traitement des référentiels et des data. Les seules différences se retrouvent dans la présentation au niveau de l'interface. Pour définir un type de données "data", on ajoute dans la section {{< var  page-refs.etiquettes.oa>}} un tag **DATA**.
+On définit aussi des données dites de références. Ce sont des données nécessaires à la description des données expérimentales (référentiels) ou d'observation (data). Il n'y a pas de différence dans l'application pour le traitement des référentiels et des data. Les seules différences se retrouvent dans la présentation au niveau de l'interface. 
 
-On décrit les données de références et les types de données dans la partie *OA_data*, on y liste les noms des colonnes souhaitées (dans {{< var page-refs.basic-comp.link >}}, {{< var page-refs.pattern-comp.link >}} et {{< var page-refs.pattern-comp.link >}}, des constantes extraites du cartouche {{< var page-refs.constant-comp.link >}} et des valeurs calculées {{< var page-refs.computed-comp.link >}}
+Pour définir un type de données "data", on ajoute dans la section {{< var  page-refs.etiquettes.oa>}} un tag  **__ DATA __**.
 
-Pour ajouter une référence, on ajoute dans la section "*OA_data*" une description de ce référentiel.
+On décrit les données de références et les types de données dans la partie **OA_data**, on y liste les noms des colonnes souhaitées (dans {{< var page-refs.basic-comp.link >}}, {{< var page-refs.pattern-comp.link >}} et {{< var page-refs.pattern-comp.link >}}, des constantes extraites du cartouche {{< var page-refs.constant-comp.link >}} et des valeurs calculées {{< var page-refs.computed-comp.link >}}
+
+Pour ajouter une référence, on ajoute dans la section "**OA_data**" une description de ce référentiel.
 
 ## Déclaration d'un type de données
 
@@ -30,7 +32,7 @@ OA_data:
 ```
 :::
 
-## Clef naturelle (\[OA_naturalKey(#nk))
+## Clef naturelle (OA_naturalKey) {#nk}
 
 Vous devrez déclarer une {{< var page-refs.vocab.link-nk >}}.
 
@@ -79,7 +81,7 @@ OA_data:
 ```
 :::
 
-## Surcharge de la clef naturelle lors du référencement (OA_i18nDisplayPattern)  {#displayPattern}
+## Surcharge de la clef naturelle lors du référencement (OA_i18nDisplayPattern){#displayPattern}
 
 Lorsque dans un autre type de données vous ferez référence un ce tye de données, c'est la clef naturelle de la ligne référencée qui s'affichera.
 
@@ -148,7 +150,7 @@ OA_data:
 ```
 :::
 
-## Séparateur de champ [OA_separator]{#separator}
+## Séparateur de champ (OA_separator){#separator}
 
 Par défaut le séparateur dans le fichier csv est le point-virgule (;). Vous pouvez changer ce séparateur en précisant OA_separator
 
@@ -167,7 +169,7 @@ Vous pouvez étiquetter vos types de données voir {{< var  page-refs.etiquettes
 
 - soit pour pouvoir les filtrer dans l'interface 
 - soit pour ajouter un comportement -> **DATA** signifie que ce type de données est une données expérimentale ou d'observation. 
-- soit pour préciser un ordre d'affichage-> **ORDER_4** donne un numéro d'ordre dans l'affichage des types de données.
+- soit pour préciser un ordre d'affichage-> **__ ORDER_4__** donne un numéro d'ordre dans l'affichage des types de données.
 
 ::: {.callout-note title="OA_separator" collapse="false"}
 ``` yaml
@@ -255,7 +257,7 @@ Cette section vous permet de définir les composantes qui permettront de constru
 ::: {.callout-note title="OA_validations" collapse="false"}
 ``` yaml
 
-OA_data:y a  t-il un tain qui permet d'aller d'orleans vers les pyrennees et l'espagne
+OA_data:
     t_piegeage_en_montee_pem:
      OA_authorizations:
       OA_authorizationScope:

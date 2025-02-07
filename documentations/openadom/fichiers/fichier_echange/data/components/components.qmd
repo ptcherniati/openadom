@@ -14,7 +14,7 @@ On déclarera une composante en fonction de la façon de la récupérer dans le 
 
 Si la valeur correspond à la valeur sous l'en-tête, on la déclarera dans la section {{< var  page-refs.basic-comp.oa>}}. On choisira un {{< var  page-refs.vocab.link-identificateurs>}} pour cette composante.
 
-::: {.callout-tip collapse="false"}
+::: {.callout-tip collapse="false" title="Déclaration d'une composante"}
 | date       |
 |------------|
 | 23/12/2004 |
@@ -31,7 +31,7 @@ OA_data:
 
 Si le nom de l'en-tête ne correspond pas à l'identificateur fourni, on pourra le préciser dans la section OA_importHeader
 
-::: {.callout-tip collapse="false"}
+::: {.callout-tip collapse="false" title="Déclaration d'une composante avec un en-tête spécifique"}
 {{< var page-refs.data.link-cartouche >}}
 
 | Date de prélèvement |
@@ -66,8 +66,51 @@ Par exemple des taxons ou des sites ayant des propriétés différentes selon le
 
 Dans ce cas on définit un référentiel de propriétés avec une colonne donnant un nom pour la propriété.
 
-Dans le type de données utilisant ces propriétés, les colonnes "propriétés" utilisent le nom des propriétes du référentiel propriétés, éventuellement préfixé. On crée alors une définition d'une composante  {{<var page-refs.dynamic-comp.oa>}}.
+Dans le type de données utilisant ces propriétés, les colonnes "propriétés" utilisent OA_importHeaderle nom des propriétes du référentiel propriétés, éventuellement préfixé. On crée alors une définition d'une composante  {{<var page-refs.dynamic-comp.oa>}}.
 
 voir 
+
 - {{<var page-refs.example.link-dynamic>}}
 - {{<var page-refs.example.link-taxons>}}
+
+
+## Component obligatoire {#OA_mandatory}
+
+La notion de component obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
+
+``` yaml
+    sit_nom_du_site:
+        OA_mandatory: true # default false sauf si le component (colonne) est déclaré dans OA_naturalKey. 
+      #Dans ce cas elle passe a true par default.
+```
+
+## Valeur obligatoire {#OA_required}
+
+La notion de valeur obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
+
+``` yaml
+    sit_nom_du_site:
+        OA_required: true # default false sauf si le component (colonne) est déclaré dans OA_naturalKey. 
+      #Dans ce cas elle passe a true par default.
+```
+
+
+
+## Internationalisation
+
+Vous pouvez modifier l'affichage de l'en-tête d'une composante en sortie en utilisant une section **OA_exportHeader**
+
+
+``` yaml
+OA_data:
+    OA_basicComponents:
+        date: 
+            OA_importHeader: "Date de prélèvement"
+            OA_exportHeader: 
+                OA_title:
+                    fr: Date de prélèvement
+                    en: Date of collection
+                OA_description:
+                    fr: Date à laquelle le prélèvement à été effectué
+                    en: Date on which the sample was taken
+```

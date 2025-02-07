@@ -1,3 +1,5 @@
+openadom:
+  version: 2.0.1
 link-styles:
   primary:
     href: "{href}"
@@ -118,16 +120,19 @@ page-refs:
     href: /fichiers/fichier_echange/data/components/components.qmd
     text: "[Composantes](/fichiers/fichier_echange/data/components/components.qmd)"
     OA_importHeader: "[OA_importHeader](/fichiers/fichier_echange/data/components/components.qmd#OA_importHeader)"
+    OA_mandatory: "[OA_mandatory](/fichiers/fichier_echange/data/components/components.qmd#OA_mandatory)"
+    OA_required: "[OA_required](/fichiers/fichier_echange/data/components/components.qmd#OA_required)"
+    OA_importHeader: "[OA_importHeader](/fichiers/fichier_echange/data/components/components.qmd#OA_importHeader)"
   basic-comp:
     href: /fichiers/fichier_echange/data/components/basic_components.qmd
     text: Basic Components
     link: "[Basic Components](/fichiers/fichier_echange/data/components/basic_components.qmd)"
     oa: "[OA_basicComponents](/fichiers/fichier_echange/data/components/basic_components.qmd)"
   computed-comp:
-    href: /fichiers/fichier_echange/data/components/computed_components.md
+    href: /fichiers/fichier_echange/data/components/computed_components.qmd
     text: Computed Components
-    link: "[Computed Components](/fichiers/fichier_echange/data/components/computed_components.md)"
-    oa: "[OA_computedComponents](/fichiers/fichier_echange/data/components/computed_components.md)"
+    link: "[Computed Components](/fichiers/fichier_echange/data/components/computed_components.qmd)"
+    oa: "[OA_computedComponents](/fichiers/fichier_echange/data/components/computed_components.qmd)"
   dynamic-comp:
     href: /fichiers/fichier_echange/data/components/dynamic_components.qmd
     text: Dynamic Components
@@ -143,6 +148,10 @@ page-refs:
     text: Pattern Components
     link: "[Pattern Components](/fichiers/fichier_echange/data/components/pattern_components.qmd)"
     oa: "[OA_patternComponents](/fichiers/fichier_echange/data/components/pattern_components.qmd)"
+    OA_componentQualifiers: "[OA_componentQualifiers](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_componentQualifiers)"
+    OA_patternForComponents: "[OA_patternForComponents](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_patternForComponents)"
+    OA_componentAdjacents: "[OA_componentAdjacents](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_componentAdjacents)"
+    OA_importHeaderPattern: "[OA_importHeaderPattern](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_importHeaderPattern)"
   checker: 
     href: /fichiers/fichier_echange/data/verificateurs.qmd
     text: Vérificateurs (OA_checker)
@@ -218,6 +227,7 @@ page-refs:
     link-minimal:  "[Configuration minimale](/fichiers/examples/configuration_min/description.qmd)"
     link-dynamic:  "[Utilisation d'une composante dynamique (sites)](/fichiers/examples/dynamicComponant/description.qmd)"
     link-taxons:  "[Utilisation d'une composante dynamique (taxons)](/fichiers/examples/taxons/description.qmd)"
+    link-meteo:  "[Cas complet(météorologie)](/fichiers/examples/meteo/description.qmd)"
   lexique:
     href: /fichiers/autres/lexique_yaml.qmd
     text: Lexique
@@ -226,3 +236,6 @@ page-refs:
     href: about.md
     text: A propos
     link: "[A propos](about.md)"
+# example
+  meteo:
+    link: "[Exemple de data complet](fichiers/examples/meteo/description.qmd)"

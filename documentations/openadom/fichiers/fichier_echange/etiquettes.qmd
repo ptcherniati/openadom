@@ -28,10 +28,10 @@ OA_tags:
 ```
 :::
 
-Les étiquettes ```__DATA__```, ```__REFERENCE__```, ```__ORDER_([0-9]*)__``` et ```__HIDDEN__``` sont des étiquettes qui n'ont pas besoin d'êtres mise dans la liste de création.
+Les étiquettes ```__DATA__```, ```__REFERENCE__```, ```__ORDER_([0-9]*)__```  et ```__HIDDEN__``` sont des étiquettes qui n'ont pas besoin d'êtres mise dans la liste de création.
 
 * ```__DATA__```: nous l'utiliserons pour les données qui ne sont pas des références (```__REFERENCE__``` est le tag par défault pour une data)
-* ```__ORDER_([0-9]*)__```: nous l'utiliserons pour ordonner l'affichage des colonnes dans un ordre voulu (autre qu'alphabétique qui est l'ordre par default)
+* ```__ORDER_([0-9]*)__```: nous l'utiliserons pour ordonner l'affichage des colonnes dans un ordre voulu (autre qu'alphabétique qui est l'ordre par default) par exemple ```__ORDER_2__```
 * ```__HIDDEN__``` : nous l'utiliserons pour les données que l'on veux enregistrer en base mais que l'on ne veux pas rendre accessible à l'utilisateur.
 
 Pour lier une ou plusieurs étiquettes avec une *référence* ou une *colonne* il suffit d'ajouter une section *OA_tags* sous le nom de la *référence*, *type de de donnée*, *variable*/*component* ou *colonne* à lier.
@@ -43,9 +43,13 @@ Pour une référence :
 ::: {.callout-note collapse="false" title="Déclaration des étiquettes pour une référence"}
 
 ```yaml
+OA_tags:
+  context:
+    fr: Context
+    en: Context
 OA_data:
   tr_type_de_site_tds:
-    OA_tags: [__REFERENCE__, context]
+    OA_tags: [__REFERENCE__, context] #context est un tag utilisateur déclaré dans la section **OA_tags** de premier niveau
     OA_dataHeaderLine: 1
     OA_dataFirstLine: 2
     OA_naturalKey:
@@ -61,6 +65,10 @@ OA_data:
 Pour une donnée :
 
 ```yaml
+OA_tags:
+  context:
+    fr: taxon
+    en: taxa
 OA_data:
   t_chlorophylle_chl:
   OA_tags: [ taxon, __DATA__ ]
@@ -115,8 +123,9 @@ OA_data:
 
 :::{.callout-caution title="Le tag n'est pas obligatoire" collapse="false"}
 Si vous n'en mettez pas un, un tag par défaut se mettra.
- * Pour les components -> ```no-tag``` : sans étiquette. Ce qui permettra de filtré au même titre que ceux avec une étiquette créé par vous.
- * Pour les datas -> ```__REFERENCE__```. Ce qui permettra de filtré les datas par type.
+
+* Pour les components -> ```no-tag``` : sans étiquette. Ce qui permettra de filtré au même titre que ceux avec une étiquette créé par vous.
+* Pour les datas -> ```__REFERENCE__```. Ce qui permettra de filtré les datas par type.
 :::
  
 

@@ -24,7 +24,7 @@ OA_data:
         ...
 ```
 ::: {.callout-caution}
-Pour déclarer une donnée vous devez fournir un identificateur
+Pour déclarer une donnée vous devez fournir un {{<var page-refs.vocab.link-identificateurs>}}
 
 :::
 
@@ -98,7 +98,7 @@ Ce nom doit obligatoirement -etre en minuscules, commencer par une lettre et ne 
 
 On peut aussi rajouter des informations facultatives: 
 
-1. **OA_defaultLanguage* qui permet de définir la langue par défaut. La langue par défaut est celle utilisée si aucune autre information de langue n'est précisée. Lors de l'internationalisation de certains champs / données, on essait de trouver la traduction dans la langue demandée; à défaut on fournit la traduction dans la langue par défaut; si aucune traduction n'est trouvée on renvoit l'indentificateur fourni en entrée.
+1. **OA_defaultLanguage** qui permet de définir la langue par défaut. La langue par défaut est celle utilisée si aucune autre information de langue n'est précisée. Lors de l'internationalisation de certains champs / données, on essait de trouver la traduction dans la langue demandée; à défaut on fournit la traduction dans la langue par défaut; si aucune traduction n'est trouvée on renvoit l'indentificateur fourni en entrée.
 
 :::{.callout-note collapse="false" title="" #defaultLanguage}
  

@@ -16,6 +16,7 @@ Avant de commencer l'écriture du fichier de configuration, il vous faut travail
 Vous avez en votre possession un certain nombre de fichiers (format csv) contenant les données. Un fichier de données respecte un certain format. En particulier les en-têtes de colonnes doivent être fixés et le contenu sous un en-tête a un format déterminé (date, valeur flottante, entier, texte..).
 
 Chaque format de fichier correspond à ce que l'on appellera un **type de données**. Il regroupe plusieurs variables correspondant à :
+
 - une thématique,
 - un pas de temps,
 - une structuration des données
@@ -37,8 +38,8 @@ On peut vouloir aussi faire figurer dans la base de données certaines informati
 ## exemple
 Supposons que l'on ait un fichier de données météorologiques
 
-::: {.callout-note collapse="false" title="Météorologie"}
-``` {csv}
+::: {.callout-note collapse="false"  title="Météorologie"}
+``` {txt}
 #| label: tab-donnees-meteo
 #| code-fold: show
 #| code-summary: "t_data_dat.csv"
@@ -96,3 +97,5 @@ Le fait de dire que l'unité d'une donnée fait référence au référentiel uni
 On aurait pu rajouter des responsables de site et de région, des descriptions des variables, des intervalles de valeurs...
 
 Ainsi nous avons pu faire une analyse de notre domaine et le format des fichiers qui s'y rapportent. Nous pouvons commencer l'écriture du fichier de configuration.
+
+{{<var page-refs.meteo.link>}}

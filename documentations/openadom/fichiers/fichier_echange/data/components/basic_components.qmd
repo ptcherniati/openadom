@@ -134,23 +134,3 @@ exemple:
 ::: {.callout-note collapse="true" title="Indentation"}
 [*OA_data* n'est pas indenté. *tr_type_de_site_tds*, *tr_sites_sit* et *tr_parcelles_par* sont indentés de 1. *OA_dataHeaderLine*, *OA_dataFirstLine*, *OA_naturalKey* et *OA_basicComponents* sont indentés de 2. Le contenu de *OA_basicComponents* seront indenté de 3.]{style="color: orange"}
 :::
-
-##### Component obligatoire
-
-La notion de component obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
-
-``` yaml
-    sit_nom_du_site:
-        OA_mandatory: true # default false sauf si le component (colonne) est déclaré dans OA_naturalKey. 
-      #Dans ce cas elle passe a true par default.
-```
-
-##### Valeur obligatoire
-
-La notion de valeur obligatoire est à placer au niveau de la définition du composant (pas besoin de déclarer un vérificateur)
-
-``` yaml
-    sit_nom_du_site:
-        OA_required: true # default false sauf si le component (colonne) est déclaré dans OA_naturalKey. 
-      #Dans ce cas elle passe a true par default.
-```

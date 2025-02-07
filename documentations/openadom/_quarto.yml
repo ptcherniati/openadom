@@ -51,7 +51,7 @@ website:
                   - text: Basic Components
                     href: fichiers/fichier_echange/data/components/basic_components.qmd
                   - text: Computed Components
-                    href: fichiers/fichier_echange/data/components/computed_components.md
+                    href: fichiers/fichier_echange/data/components/computed_components.qmd
                   - text: Dynamic Components
                     href: fichiers/fichier_echange/data/components/dynamic_components.qmd
                   - text: Constant Components
