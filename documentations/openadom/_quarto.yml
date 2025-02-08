@@ -55,7 +55,7 @@ website:
                   - text: Dynamic Components
                     href: fichiers/fichier_echange/data/components/dynamic_components.qmd
                   - text: Constant Components
-                    href: fichiers/fichier_echange/data/components/constant_components.md
+                    href: fichiers/fichier_echange/data/components/constant_components.qmd
                   - text: Pattern Components
                     href: fichiers/fichier_echange/data/components/pattern_components.qmd
                   - section:  Paramétrage des composants

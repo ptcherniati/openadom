@@ -139,10 +139,14 @@ page-refs:
     link: "[Dynamic Components](/fichiers/fichier_echange/data/components/dynamic_components.qmd)"
     oa: "[OA_dynamicComponents](/fichiers/fichier_echange/data/components/dynamic_components.qmd)"
   constant-comp:
-    href: /fichiers/fichier_echange/data/components/constant_components.md
+    href: /fichiers/fichier_echange/data/components/constant_components.qmd
     text: Constant Components
-    link: "[Constant Components](/fichiers/fichier_echange/data/components/constant_components.md)"
-    oa: "[OA_constantComponents](/fichiers/fichier_echange/data/components/constant_components.md)"
+    link: "[Constant Components](/fichiers/fichier_echange/data/components/constant_components.qmd)"
+    oa: "[OA_constantComponents](/fichiers/fichier_echange/data/components/constant_components.qmd)"
+    OA_importHeaderTarget: "[OA_importHeaderTarget](/fichiers/fichier_echange/data/components/constant_components.qmd#OA_importHeaderTarget)"
+    OA_rowNumber: "[OA_rowNumber](/fichiers/fichier_echange/data/components/constant_components.qmd#OA_rowNumber)"
+    OA_columnNumber: "[OA_columnNumber](/fichiers/fichier_echange/data/components/constant_components.qmd#OA_columnNumber)"
+    OA_columnName: "[OA_columnName](/fichiers/fichier_echange/data/components/constant_components.qmd#OA_columnName)"
   pattern-comp:
     href: /fichiers/fichier_echange/data/components/pattern_components.qmd
     text: Pattern Components
@@ -195,6 +199,12 @@ page-refs:
     text: Expression Groovy
     href: /fichiers/pour_aller_plus_loin/expressionGroovy.md
     link: "[Expression Groovy](/fichiers/pour_aller_plus_loin/expressionGroovy.md)"
+    OA_expression: "[OA_expression](/fichiers/pour_aller_plus_loin/expressionGroovy.md)"
+    OA_groovyExpression: "[OA_groovyExpression](/fichiers/pour_aller_plus_loin/expressionGroovy.md)"
+    OA_naturalKeyBuilder: "[OA_naturalKeyBuilder](/fichiers/pour_aller_plus_loin/expressionGroovy.md#OA_naturalKeyBuilder)"
+    OA_escapeLabel: "[OA_escapeLabel](/fichiers/pour_aller_plus_loin/expressionGroovy.md#OA_escapeLabel)"
+    OA_buildException: "[OA_buildException](/fichiers/pour_aller_plus_loin/expressionGroovy.md#OA_buildException)"
+    OA_buildCompositeKey: "[OA_buildCompositeKey](/fichiers/pour_aller_plus_loin/expressionGroovy.md#OA_buildCompositeKey)"
   i18n:
     text: Internationalisation i18n
     href: /fichiers/pour_aller_plus_loin/internationnalisation_i18n.md

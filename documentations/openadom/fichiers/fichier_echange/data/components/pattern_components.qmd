@@ -400,6 +400,7 @@ OA_validations:
                                         .map { val -> val.toString().replace(" ", "_") }
                                         .orElse(""));
                             })) {
+On peut définir les sections des composantes ({{<var page-refs.etiquettes.oa>}}, {{<var page-refs.checker.oa>}}, {{<var page-refs.components.OA_mandatory>}}, {{<var page-refs.components.OA_required>}}.)
                         return true;
                     } else {
                         throw OA_buildException("NO_QUALITATIVE_VALUE",
@@ -416,3 +417,4 @@ OA_validations:
                    en: "For dataType  {datatype} and site  {site}: the value {value} for variable {variable} must be between {min} and  {max}"
 ```
 :::
+

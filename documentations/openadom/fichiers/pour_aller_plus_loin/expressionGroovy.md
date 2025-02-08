@@ -81,7 +81,7 @@ Le contexte met aussi des expressions pour simplifier l'écriture du groovy ains
 ### Expressions Prédéfinies
 Le contexte inclut des expressions prédéfinies pour simplifier l'écriture des scripts Groovy et générer des exceptions personnalisées :
 
-#### OA_naturalKeyBuilder
+#### OA_naturalKeyBuilder {#OA_naturalKeyBuilder}
 Construit des clés naturelles à partir de multiples critères. Exemple :
   ```groovy
   OA_naturalKeyBuilder
@@ -123,7 +123,7 @@ Voici un exemple d'une telle section :
               - en: plot {value} doesn't exists. Knowns plots for site {parents[0]} are ${knownValues}
 ```
 
-#### OA_escapeLabel
+#### OA_escapeLabel {#OA_escapeLabel}
 Permet d'échapper un texte pour qu'il puisse être utilisé dans une clef naturelle
 
 ``` groovy
@@ -131,7 +131,7 @@ Permet d'échapper un texte pour qu'il puisse être utilisé dans une clef natur
 ```
 valeur de retour:  une_chaine_a_echapper
 
-#### OA_buildException
+#### OA_buildException {#OA_buildException}
 Permet de créer une exception dans un script groovy
 
 ``` groovy
@@ -162,7 +162,7 @@ N'oublier pas de déclarer l'internationalisation de votre exception dans une se
               - en: site {site} doesn't exists. Knowns sites are {knownSites}
 ```
 
-#### OA_buildCompositeKey
+#### OA_buildCompositeKey {#OA_buildCompositeKey}
 Créé une clé composite à partir des valeurs de plusieurs composants
 
 ``` groovy
