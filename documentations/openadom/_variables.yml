@@ -197,14 +197,14 @@ page-refs:
     link: "[Component Qualifiers](/fichiers/pour_aller_plus_loin/component_qualifiers.md)"
   groovy:
     text: Expression Groovy
-    href: /fichiers/pour_aller_plus_loin/expressionGroovy.md
-    link: "[Expression Groovy](/fichiers/pour_aller_plus_loin/expressionGroovy.md)"
-    OA_expression: "[OA_expression](/fichiers/pour_aller_plus_loin/expressionGroovy.md)"
-    OA_groovyExpression: "[OA_groovyExpression](/fichiers/pour_aller_plus_loin/expressionGroovy.md)"
-    OA_naturalKeyBuilder: "[OA_naturalKeyBuilder](/fichiers/pour_aller_plus_loin/expressionGroovy.md#OA_naturalKeyBuilder)"
-    OA_escapeLabel: "[OA_escapeLabel](/fichiers/pour_aller_plus_loin/expressionGroovy.md#OA_escapeLabel)"
-    OA_buildException: "[OA_buildException](/fichiers/pour_aller_plus_loin/expressionGroovy.md#OA_buildException)"
-    OA_buildCompositeKey: "[OA_buildCompositeKey](/fichiers/pour_aller_plus_loin/expressionGroovy.md#OA_buildCompositeKey)"
+    href: /fichiers/pour_aller_plus_loin/expressionGroovy.qmd
+    link: "[Expression Groovy](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd)"
+    OA_expression: "[OA_expression](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd)"
+    OA_groovyExpression: "[OA_groovyExpression](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd)"
+    OA_naturalKeyBuilder: "[OA_naturalKeyBuilder](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd#OA_naturalKeyBuilder)"
+    OA_escapeLabel: "[OA_escapeLabel](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd#OA_escapeLabel)"
+    OA_buildException: "[OA_buildException](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd#OA_buildException)"
+    OA_buildCompositeKey: "[OA_buildCompositeKey](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd#OA_buildCompositeKey)"
   i18n:
     text: Internationalisation i18n
     href: /fichiers/pour_aller_plus_loin/internationnalisation_i18n.md
