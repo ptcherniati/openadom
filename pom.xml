@@ -90,6 +90,11 @@
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.language>java</sonar.language>
+        <properties>
+        <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
+        <sonar.projectName>openADOM-backend</sonar.projectName>
+        <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
+</properties>
     </properties>
 
     <dependencies>

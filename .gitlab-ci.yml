@@ -53,6 +53,8 @@ include:
     path: .
   - local: .gitlab-ci_docker.yml
     path: .
+  - local: .gitlab-ci_sonar.yml
+    path: .
 # - local: .gitlab_build_doc2.yml
 
 
