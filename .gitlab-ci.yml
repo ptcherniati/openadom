@@ -30,6 +30,7 @@ variables:
 stages:
   - build
   - pages
+  - sonarqube-check 
   - test
   - package
   # Docker image build
