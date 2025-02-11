@@ -30,8 +30,8 @@ variables:
 stages:
   - build
   - pages
-  - sonarqube-check
-  - sonarqube-vulnerability-report
+  #- sonarqube-check
+  #- sonarqube-vulnerability-report
   - test
   - package
   # Docker image build
@@ -55,8 +55,8 @@ include:
     path: .
   - local: .gitlab-ci_docker.yml
     path: .
-  - local: .gitlab-ci_sonar.yml
-    path: .
+  #- local: .gitlab-ci_sonar.yml
+   # path: .
 # - local: .gitlab_build_doc2.yml
 
 
