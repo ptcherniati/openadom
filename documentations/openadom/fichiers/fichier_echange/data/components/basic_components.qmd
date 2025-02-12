@@ -43,11 +43,6 @@ classDiagram
         +String par_nom_du_site PK
         +tr_sites_sit site FK
     }
-
-    %% Styles
-    style tr_type_de_sites_tds fill:#d7e4fa,stroke:#333,stroke-width:2px
-    style tr_sites_sit fill:#f8d7fa,stroke:#333,stroke-width:2px
-    style tr_parcelles_par fill:#f4fad7,stroke:#333,stroke-width:2px
 ```
 
 ... et pour les fichiers :
