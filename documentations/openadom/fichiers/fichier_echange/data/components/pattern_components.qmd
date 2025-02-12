@@ -121,7 +121,7 @@ OA_data:
 ## exemple
 :::
 
-### Définition du pattern
+### Définition du pattern (#OA_patternForComponents)
 
 Pour des colonnes SWC_2_20 où 2 est la répétition de la mesure et 20 sa profondeur.
 

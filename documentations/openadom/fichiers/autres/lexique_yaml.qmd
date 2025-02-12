@@ -165,17 +165,17 @@ __dataTypes :__
   - __rowNumber :__ numéro de la ligne
   - __columnNumber :__ numéro de la colonne
   - __exportHeader :__ Un nom de colonne fictif (pour les expressions groovy)
-  - __headerName __: Pour les informations présentes sous la ligne d'en-tête le nom de la colonne (à la place du numéro de la colonne) ; par example pour une ligne d'unité ou de contraintes.
-  - __boundTo__: <a id="boundTo" name="boundTo"></a>permet de relier l'information à une composante de variable.
+  - __headerName :__ Pour les informations présentes sous la ligne d'en-tête le nom de la colonne (à la place du numéro de la colonne) ; par example pour une ligne d'unité ou de contraintes.
+  - __boundTo :__ <a id="boundTo" name="boundTo"></a>permet de relier l'information à une composante de variable.
 - __headerLine :__ numéro de la ligne des noms des colonnes
 - __firstRowLine :__ numéro de la première ligne de données du tableau
 - __columns :__ Liste des colonnes du fichier CSV de données
   - __header :__ "nom de la colonne se trouvant dans le fichier"
   - __boundTo :__ (cf. [boundTo](#boundTo)).
-- __repeteadColumns __: Définit des colonnes dont le nom répond à un pattern donné contenant des informations.
+- __repeteadColumns :__ Définit des colonnes dont le nom répond à un pattern donné contenant des informations.
   - __boundTo :__ (cf. [boundTo](#boundTo)).
   - __exportHeader :__ Un nom de colonne fictif (pour les expressions groovy)
-  - __headerPattern __: une expression régulière dont les groupes sont liés à des composantes de variables dans la section tokens
+  - __headerPattern :__ une expression régulière dont les groupes sont liés à des composantes de variables dans la section tokens
     - __tokens__: un tableau de token dans l'ordre de leur groupe dans l'expression régulière. La valeur du groupe sera utilisée comme valeur de la colonne fictive.
         - __boundTo :__ (cf. [boundTo](#boundTo)).
         - __exportHeader :__ Un nom de colonne fictif (pour les expressions groovy)
@@ -189,15 +189,15 @@ __dataTypes :__
 - __authorizationScopes :__ On définit des composantes de contexte. Elles doivent être liées à des référentiels composites (checker Reference) ce qui permettra de les sélectionner dans un arbre pour limiter la portée de l'autorisation. On donnera un nom à chaque `authorizationScopes en l'utilisant comme clef.
   - __variable :__ nom d'un _data_
   - __component :__ nom d'un _component_ dans un _data_
-  - __internationalizationName: (cf.[internationalisationName](#internationalisationname)) 
+  - __internationalizationName :__ (cf.[internationalisationName](#internationalisationname)) 
   
 - __timeScope :__ On définit des composantes de temporelles (checker Date) pour limiter les autorisations à des intervales de dates. Si les valeurs correspondent à une agrégation temporelle, il faudra préciser la durée de la période de aggregation dans le champ duration du checker (par défaut 1 jour).
-- __columnsDescription __: décrit comment dans le panneau des autorisations, chacun des rôles (depot, suppression publication..), doit être affiché. 
-  - __display__: visibilité de la 
-  - __title__: le nom du rôle
-  - __internationalizationName__: (cf.[internationalisationName](#internationalisationname))
-  - __withDatagroups __: true si le rôle peut ne porter que sur certaines variables
-  - __withPeriods __: true si le rôle peut être limité à certaines périodes.
+- __columnsDescription :__ décrit comment dans le panneau des autorisations, chacun des rôles (depot, suppression publication..), doit être affiché. 
+  - __display :__ visibilité de la 
+  - __title :__ le nom du rôle
+  - __internationalizationName :__ (cf.[internationalisationName](#internationalisationname))
+  - __withDatagroups :__ true si le rôle peut ne porter que sur certaines variables
+  - __withPeriods :__ true si le rôle peut être limité à certaines périodes.
 Par défaut, la configuration suivante sera appliquée pour afficher les autorisations. Vous devrez la redéfinir entièrement pour lui apporter des changements : 
   
 ```yaml

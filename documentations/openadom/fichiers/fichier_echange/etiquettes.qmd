@@ -4,7 +4,6 @@ subtitle: OA_tags
 abstract: >
   Cette section permet de définir des étiquettes (tags) qui peuvent être réutiliser dans d'autres sections pour regrouper / filtrer des objets (données, composantes de données.. )
 ---
- <a id="OA_tags" />Etiquettes (OA_tags)</a>
 
 __OA_tags__: Création d'un regroupements sous une étiquette permettant de filtrer l'affichage des listes des {{<var page-refs.etiquettes.link>}}.
 

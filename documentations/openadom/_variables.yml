@@ -122,7 +122,6 @@ page-refs:
     link: "[Composantes](/fichiers/fichier_echange/data/components/components.qmd)"
     OA_mandatory: "[OA_mandatory](/fichiers/fichier_echange/data/components/components.qmd#OA_mandatory)"
     OA_required: "[OA_required](/fichiers/fichier_echange/data/components/components.qmd#OA_required)"
-    OA_importHeader: "[OA_importHeader](/fichiers/fichier_echange/data/components/components.qmd#OA_importHeader)"
   basic-comp:
     href: /fichiers/fichier_echange/data/components/basic_components.qmd
     text: Basic Components
@@ -173,18 +172,19 @@ page-refs:
     oa-isParent: "[OA_isParent](/fichiers/fichier_echange/data/verificateurs.qmd#oa_isParent)"
     oa-expression: "[OA_expression](/fichiers/fichier_echange/data/verificateurs.qmd#oa_expression)"
     oa-references: "[OA_references](/fichiers/fichier_echange/data/verificateurs.qmd#oa_references)"
+    oa-defaultValue: "[OA_defaultValue](/fichiers/fichier_echange/data/verificateurs.qmd##OA_defaultValue)"
   # additionalFiles
   additionalFiles: 
-      href: /fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd
-      text: Fichiers additionnels
-      link: "[Fichiers additionnels](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
-      oa: "[OA_additionalFiles](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
+    href: /fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd
+    text: Fichiers additionnels
+    link: "[Fichiers additionnels](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
+    oa: "[OA_additionalFiles](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
   # rightsRequest
   rightsRequest: 
-      href: /fichiers/fichier_echange/rightsRequest.qmd
-      text: Demandes de droits
-      link: "[Demandes de droits](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
-      oa: "[OA_rightsRequest](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
+    href: /fichiers/fichier_echange/rightsRequest.qmd
+    text: Demandes de droits
+    link: "[Demandes de droits](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
+    oa: "[OA_rightsRequest](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
   # section pour aller plus loin
   authorization: 
     text: Authorization
@@ -217,10 +217,6 @@ page-refs:
     text: Internationalisation i18n
     href: /fichiers/pour_aller_plus_loin/internationnalisation_i18n.md
     link: "[Internationalisation i18n](/fichiers/pour_aller_plus_loin/internationnalisation_i18n.md)"
-  submission:
-    text: Submission
-    href: /fichiers/pour_aller_plus_loin/submission.md
-    link: "[Submission](/fichiers/pour_aller_plus_loin/submission.md)"
 
 
   # Autres sections

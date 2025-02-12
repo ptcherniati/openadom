@@ -11,7 +11,7 @@ website:
   repo-actions: [edit, source, issue]
   title: "openadom"
   description: "Documentation des fichiers de configuration pour OpenADOM"
-  favicon: /img/Logos_OA.svg
+  favicon: /img/Logos_OA.svg  
   site-url: https://dev.openadom.fr
   sidebar:
     logo: /img/Logos_OpernADOM.png
@@ -41,7 +41,7 @@ website:
           - text: Etiquettes (OA_tags)
             href: fichiers/fichier_echange/etiquettes.qmd
           - section:
-            text: Données
+            text: Données (OA_data)
             href: fichiers/fichier_echange/data/data.qmd
             contents: 
               - section: Components
@@ -116,7 +116,7 @@ website:
     left: 
       - href: index.qmd
         text: Accueil
-      - href: fichiers/README.md
+      - href: fichiers/readme.md
         text: Installation
       - href: fichiers/schema-example.qmd
         text: Fichier d'example
@@ -134,16 +134,13 @@ website:
     right: 
       - icon: gitlab
         href: https://forgemia.inra.fr/anaee-dev/openadom
-
+        
 format:
   html:
     smooth-scroll: true
     theme: 
       - minty
       - style/global.scss
-    template-partials:
-      - _extensions/section-meta/partials/title-block.html
-    css: style/global.scss
     toc: true
     toc-expand: false
     toc-depth: 3
