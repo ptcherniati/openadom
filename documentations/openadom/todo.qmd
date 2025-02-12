@@ -1,0 +1,103 @@
+---
+title: Plan de travail pour la documentation OpenADOM
+subtitle: TODO List et Planning
+abstract: >
+  Ce document détaille le travail restant à effectuer dans la documentation OpenADOM,
+  incluant les sections à traiter, les pages inachevées, et les informations à mettre à jour.
+  Il propose également un planning de réalisation.
+---
+
+# Sections et thèmes à traiter
+
+## Documentation technique fondamentale (Priorité Haute)
+
+### 1. Expressions Groovy (`/fichiers/pour_aller_plus_loin/expressionGroovy.qmd`)
+- [ ] Mettre à jour avec les nouvelles fonctionnalités
+- [ ] Ajouter plus d'exemples concrets
+- [ ] Documenter les nouvelles fonctions disponibles
+
+### 2. Validations et Vérificateurs (`/fichiers/fichier_echange/data/validations.qmd`, `/verificateurs.qmd`)
+- [ ] Compléter la documentation des nouveaux types de vérificateurs
+- [ ] Ajouter des exemples de cas d'usage courants
+- [ ] Documenter les messages d'erreur
+
+## Sections de configuration (Priorité Moyenne)
+
+### 1. Autorisations (`/fichiers/fichier_echange/data/authorizations/authorizations.qmd`)
+- [ ] Mettre à jour avec le nouveau système de droits
+- [ ] Documenter les différents niveaux d'accès
+- [ ] Ajouter des exemples de configuration
+
+### 2. Soumission de données (`/fichiers/fichier_echange/data/submission/submission.qmd`)
+- [ ] Documenter le nouveau processus de soumission
+- [ ] Ajouter des exemples de workflows
+- [ ] Expliquer la gestion des erreurs
+
+# Pages inachevées
+
+## 1. Composants dynamiques (`/fichiers/fichier_echange/data/components/dynamic_components.qmd`)
+- [ ] Compléter les exemples
+- [ ] Ajouter des cas d'usage avancés
+- [ ] Documenter les limitations
+
+## 2. Base de données (`/fichiers/autres/database.qmd`)
+- [ ] Expliquer la structure des tables générées
+- [ ] Documenter les index et contraintes
+- [ ] Ajouter des informations sur les performances
+
+## 3. Internationalisation (`/fichiers/autres/internationalization.qmd`)
+- [ ] Mettre à jour avec les nouvelles fonctionnalités i18n
+- [ ] Ajouter plus d'exemples
+
+# Informations obsolètes à mettre à jour
+
+## 1. Format des fichiers CSV (`/fichiers/introduction/fichier_csv.qmd`)
+- [ ] Mettre à jour les formats supportés
+- [ ] Actualiser les exemples
+
+## 2. Exemples (`/fichiers/schema-example.qmd`)
+- [ ] Mettre à jour avec la nouvelle structure
+- [ ] Ajouter des exemples plus récents
+
+# Planning de réalisation
+
+## Phase 1 - Documentation critique (Semaine 1-2)
+- [ ] Mettre à jour la documentation des expressions Groovy
+- [ ] Compléter la documentation des validations et vérificateurs
+- [ ] Actualiser la documentation des autorisations
+
+## Phase 2 - Mise à jour des composants (Semaine 3-4)
+- [ ] Finaliser la documentation des composants dynamiques
+- [ ] Mettre à jour les exemples de configuration
+- [ ] Compléter la documentation de soumission des données
+
+## Phase 3 - Documentation technique (Semaine 5-6)
+- [ ] Mettre à jour la documentation de la base de données
+- [ ] Compléter la documentation d'internationalisation
+- [ ] Actualiser les formats de fichiers CSV
+
+## Phase 4 - Finalisation et révision (Semaine 7-8)
+- [ ] Mettre à jour tous les exemples
+- [ ] Vérifier la cohérence globale
+- [ ] Relecture et corrections
+
+# Recommandations supplémentaires
+
+## Structure
+- [ ] Standardiser le format YAML en-tête pour tous les fichiers
+- [ ] Ajouter des sections obligatoires/optionnelles systématiquement
+
+## Contenu
+- [ ] Ajouter plus d'exemples concrets
+- [ ] Inclure des diagrammes explicatifs
+- [ ] Améliorer la navigation entre les sections
+
+## Qualité
+- [ ] Vérifier les liens entre les documents
+- [ ] Assurer la cohérence de la terminologie
+- [ ] Maintenir un style d'écriture uniforme
+
+::: {.callout-note}
+Ce planning est indicatif et peut être ajusté en fonction des priorités et des ressources disponibles.
+Les durées proposées sont des estimations et peuvent varier selon la complexité des tâches et les contraintes rencontrées.
+:::
