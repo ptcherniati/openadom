@@ -1,17 +1,17 @@
 build_openadom_doc:
-  image: rocker/rstudio:latest #rocker/r-rmd
+  image: ghcr.io/quarto-dev/quarto:latest
   stage: build
-  script:
-    - set -x
+  before_script:
+    - apt-get update
+    - apt-get install -y nodejs npm r-base
+    - npm install -g mermaid-cli
     - Rscript -e "install.packages(c('rmarkdown', 'knitr'), repos='https://cloud.r-project.org')"
+  script:
     - cp README.md documentations/openadom/fichiers/readme.md
     - cp src/test/resources/data/configuration/schemaExample.yaml documentations/openadom/fichiers/schema_example.yaml
     - cd documentations/openadom
-    - ls
     - quarto render
-    - pwd
     - cd ../..
-    - ls
     - mkdir -p public
     - mv documentations/openadom/_site/* public/
   artifacts:
