@@ -20,6 +20,6 @@ class EnumExampleBuilder {
                                 false
                         )
                 )
-                .get();
+                .orElseThrow();
     }
 }

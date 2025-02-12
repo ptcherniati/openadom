@@ -60,7 +60,10 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
         final ListType fieldType = (ListType) Optional.ofNullable(values)
                 .map(transformation)
                 .orElse(values);
-        return new DataColumnMultipleValue(fieldType.getValue());
+        return Optional.ofNullable(fieldType)
+                .map(ListType::getValue)
+                .map(DataColumnMultipleValue::new)
+                .orElse(new DataColumnMultipleValue(ListType.EMPTY_LIST));
     }
 
     private U stringToValue(final String s) {

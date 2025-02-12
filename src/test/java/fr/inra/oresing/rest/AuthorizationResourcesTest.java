@@ -124,8 +124,7 @@ public class AuthorizationResourcesTest {
                 .build()
                 .parseSignedClaims(authCookie.getValue())
                 .getPayload()
-                .getSubject()
-                ;
+                .getSubject();
         String authId = JsonPath.parse(token).read("$.requestClient.id");
         {
             assertEquals(1, Arrays.stream(getApplicationsFlux(authCookie, "ALL")
@@ -378,38 +377,38 @@ public class AuthorizationResourcesTest {
         {
 
             final String json = "{\n" +
-                          "   \"usersId\":[\"" + readerUserId + "\"],\n" +
-                          "   \"applicationNameOrId\":\"hautefrequence\",\n" +
-                          "   \"id\": null,\n" +
-                          "   \"name\": \"une submissionScope sur haute fréquence\",\n" +
-                          "   \"authorizations\":{\n" +
-                          "   \"hautefrequence\":{\n" +
-                          "   \"extraction\":[\n" +
-                          "      {\n" +
-                          "         \"requiredAuthorizations\":{\n" +
-                          "            \"localization\":\"bimont.bim13\",\n" +
-                          "            \"projet\":\"sou\"\n" +
-                          "         },\n" +
-                          "         \"datagroups\":[\n" +
-                          "            \"all\"\n" +
-                          "         ],\n" +
-                          "         \"intervalDates\":{\n" +
-                          "            \"fromDay\":[\n" +
-                          "               2016,\n" +
-                          "               1,\n" +
-                          "               1\n" +
-                          "            ],\n" +
-                          "            \"toDay\":[\n" +
-                          "               2017,\n" +
-                          "               1,\n" +
-                          "               1\n" +
-                          "            ]\n" +
-                          "         }\n" +
-                          "      }\n" +
-                          "   ]\n" +
-                          "  }\n" +
-                          " }\n" +
-                          "}";
+                                "   \"usersId\":[\"" + readerUserId + "\"],\n" +
+                                "   \"applicationNameOrId\":\"hautefrequence\",\n" +
+                                "   \"id\": null,\n" +
+                                "   \"name\": \"une submissionScope sur haute fréquence\",\n" +
+                                "   \"authorizations\":{\n" +
+                                "   \"hautefrequence\":{\n" +
+                                "   \"extraction\":[\n" +
+                                "      {\n" +
+                                "         \"requiredAuthorizations\":{\n" +
+                                "            \"localization\":\"bimont.bim13\",\n" +
+                                "            \"projet\":\"sou\"\n" +
+                                "         },\n" +
+                                "         \"datagroups\":[\n" +
+                                "            \"all\"\n" +
+                                "         ],\n" +
+                                "         \"intervalDates\":{\n" +
+                                "            \"fromDay\":[\n" +
+                                "               2016,\n" +
+                                "               1,\n" +
+                                "               1\n" +
+                                "            ],\n" +
+                                "            \"toDay\":[\n" +
+                                "               2017,\n" +
+                                "               1,\n" +
+                                "               1\n" +
+                                "            ]\n" +
+                                "         }\n" +
+                                "      }\n" +
+                                "   ]\n" +
+                                "  }\n" +
+                                " }\n" +
+                                "}";
 
             final MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
@@ -535,19 +534,12 @@ public class AuthorizationResourcesTest {
                     final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorCookies, "monsore", ""));
                     Map validationCheckResult = (((LinkedHashMap) errors.getFirst().result()));
                     fail();
-                } catch (final Throwable e) {
-                    switch (e) {
-                        case final NotApplicationCreatorRightsException notApplicationCreatorRightsException -> {
-
-                            assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
-                            assertEquals("monsore", notApplicationCreatorRightsException.applicationName);
-
-                        }
-                        case null, default -> throw new RuntimeException(e);
-                    }
-
+                } catch (NotApplicationCreatorRightsException notApplicationCreatorRightsException) {
+                    assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
+                    assertEquals("monsore", notApplicationCreatorRightsException.applicationName);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
                 }
-
             }
             {
                 //on donne des droits pour le pattern monsore
@@ -583,16 +575,11 @@ public class AuthorizationResourcesTest {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
                     final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorCookies, "monsore", ""));
                     fail();
-                } catch (final Throwable e) {
-                    switch (e) {
-                        case final NotApplicationCreatorRightsException notApplicationCreatorRightsException -> {
-
-                            assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
-                            assertEquals("monsore", notApplicationCreatorRightsException.applicationName);
-
-                        }
-                        case null, default -> throw new RuntimeException(e);
-                    }
+                } catch (final NotApplicationCreatorRightsException notApplicationCreatorRightsException) {
+                    assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
+                    assertEquals("monsore", notApplicationCreatorRightsException.applicationName);
+                } catch (Throwable e) {
+                    throw new RuntimeException(e);
                 }
             }
         }
@@ -602,8 +589,8 @@ public class AuthorizationResourcesTest {
     @Transactional
     void addRoleAdmin(final CreateUserResult dbUserResult) {
         String sql = """
-        GRANT "openAdomAdmin" TO :userId WITH INHERIT TRUE
-        """;
+                GRANT openadomadmin TO :userid WITH INHERIT TRUE
+                """;
 
         namedParameterJdbcTemplate.update(
                 sql,
