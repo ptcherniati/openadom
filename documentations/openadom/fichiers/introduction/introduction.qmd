@@ -39,11 +39,7 @@ On peut vouloir aussi faire figurer dans la base de données certaines informati
 Supposons que l'on ait un fichier de données météorologiques
 
 ::: {.callout-note collapse="false"  title="Météorologie"}
-``` {txt}
-#| label: tab-donnees-meteo
-#| code-fold: show
-#| code-summary: "t_data_dat.csv"
-#| code-title: "t_data_dat.csv"
+``` csv
 
 {{< include ../examples/meteo/fichiers/t_data_dat.csv >}}
 
@@ -52,7 +48,9 @@ Supposons que l'on ait un fichier de données météorologiques
 
 - La temporalité est portée par la colonne "Date de mesure".
 - Le contexte est porté par l'information du cartouche d'en-tête "Région" et la colonne "Site".
-- On identifie:
+
+On identifie:
+
 - une composante _date_ au format dd/MM/yyyy (format au sens SQL : https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE). On note que les moyennes sont calculées à la journée.
 - deux composantes _localization_ qui fait référence à un site de la colonne "Site", avec deux composantes (site et region)
 - deux composantes _precipitation_ qui correspond à la pluviométrie de la colonne "Précipitation" value,unit=mm

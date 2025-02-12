@@ -1,16 +1,5 @@
 ---
     title: Rédaction du fichier de configuration
-    
-    about: 
-        id: config_file
-        template: marquee
-        links: 
-          - icon: caret-left
-            text: Page précédente
-            href: vocabulaire.qmd
-          - icon: caret-right
-            text: Page suivante
-            href: ../fichier_echange/data.md
             
     abstract: >
         Vous trouverez ci-dessous des exemples décrivant les parties attendues dans le fichier de configuration pour qu'il
@@ -37,8 +26,12 @@ Actuellement la version du navigateur est la version {{<var openadom.version>}}
 * {{<var page-refs.application.link>}},
 * {{<var page-refs.data.oa>}},
 * {{<var page-refs.etiquettes.oa>}},
-* {{<var page-refs.additionalFiles.oa>}}
 * {{<var page-refs.rightsRequest.oa>}}
+
+::: {.callout-caution collapse="true" title="prochaine release"}
+
+* {{<var page-refs.additionalFiles.oa>}}
+:::
 
 <span style="color:orange">l'indentation du fichier yaml est très importante.</span>
 
