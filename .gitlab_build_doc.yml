@@ -1,9 +1,12 @@
 build_openadom_doc:
   image: ghcr.io/quarto-dev/quarto:latest
   stage: build
+  variables:
+    DEBIAN_FRONTEND: noninteractive
+    TZ: Europe/Paris
   before_script:
     - apt-get update
-    - apt-get install -y nodejs npm r-base
+    - apt-get install -y --no-install-recommends nodejs npm r-base tzdata
     - npm install -g mermaid-cli
     - Rscript -e "install.packages(c('rmarkdown', 'knitr'), repos='https://cloud.r-project.org')"
   script:
