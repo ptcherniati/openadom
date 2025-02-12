@@ -15,6 +15,7 @@ On déclarera une composante en fonction de la façon de la récupérer dans le 
 Si la valeur correspond à la valeur sous l'en-tête, on la déclarera dans la section {{< var  page-refs.basic-comp.oa>}}. On choisira un {{< var  page-refs.vocab.link-identificateurs>}} pour cette composante.
 
 ::: {.callout-tip collapse="false" title="Déclaration d'une composante"}
+
 | date       |
 |------------|
 | 23/12/2004 |

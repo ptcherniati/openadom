@@ -116,7 +116,7 @@ website:
     left: 
       - href: index.qmd
         text: Accueil
-      - href: fichiers/readme.md
+      - href: fichiers/README.md
         text: Installation
       - href: fichiers/schema-example.qmd
         text: Fichier d'example
@@ -141,6 +141,8 @@ format:
     theme: 
       - minty
       - style/global.scss
+    template-partials:
+      - _extensions/section-meta/partials/title-block.html
     css: style/global.scss
     toc: true
     toc-expand: false

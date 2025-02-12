@@ -1,8 +1,21 @@
 ---
-  title: Colonnes calculées 
-  subtitle: OA_computedComponents
-  abstract: >
-    Une colonne calculée est une colonne qui n'est pas présente dans le fichier. Ses valeurs sont issues du résultat d'un calcul ou d'une concaténation.
+title: Colonnes calculées
+subtitle: OA_computedComponents
+abstract: >
+  Cette section permet de définir des colonnes dont les valeurs sont calculées automatiquement
+  à partir d'autres colonnes ou de données externes. Les calculs peuvent être effectués via
+  des expressions Groovy ou en utilisant les clés naturelles d'autres composants.
+sections:
+  alternative:
+    - components:
+      - OA_computation
+      - OA_withNaturalKeyComponents
+  optional:
+    - OA_required
+    - OA_tags
+    - OA_exportHeader
+    - OA_checker
+    - OA_langRestrictions
 ---
 Par exemple on veut avoir la valeur de la date complète en concaténant la date (tds_date) et l'heure (tds_heure).
 
@@ -56,5 +69,4 @@ OA_data:
 Les expression groovy sont souvent sur plusieurs lignes. on utilise > pour commencer le texte mutilignes.
 
 Comme le texte de l'expression est échappé par la suite, il faut mettre un **;** à la fin de toutes les expressions y compris à la fin des blocs entre accolades.
-:::
-
+::: 

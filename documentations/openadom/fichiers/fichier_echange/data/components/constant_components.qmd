@@ -1,174 +1,107 @@
 ---
-  title: Constantes du csv
-  subtitl: OA_constantComponents
-  abstract: > 
-    Les constantes permettent de déclarer les données enregistrées dans les cartouches du fichier csv. 
+title: Colonnes constantes
+subtitle: OA_constantComponents
+abstract: >
+  Cette section permet de définir des colonnes dont les valeurs sont extraites directement
+  du fichier d'entrée, à des positions fixes. Ces colonnes peuvent avoir des valeurs par
+  défaut et des restrictions sur les langues supportées.
+sections:
+  mandatory:
+    - OA_constantImportHeaderTarget
+  optional:
+    - OA_tags
+    - OA_exportHeader
+    - OA_required
+    - OA_checker
+    - OA_defaultValue
+    - OA_langRestrictions
 ---
 
 ## Présentation
 
-Pour le fichier : __flux_journalier.csv__
+Les constantes permettent de déclarer les données enregistrées dans les cartouches du fichier csv. Parfois on souhaite rajouter un {{< var page-refs.data.link-cartouche >}} pour définir des constantes liées au fichier.
 
+## Structure
 
-```
-  ************* Début du cartouche **************
- 1| Site          | Hesse                          |
- 2| Theme         | flux                           |
- 3| Frequence     | journalier                     |
- 4| Date de debut | 01/01/2008                     |
- 5| Date de fin   | 05/01/2008                     |
- 6| Commentaire   | un commentaire                 | 
-  ************** Fin du cartouche ***************
- 7|               |                                |                            |
- 8| Date          | Carbon dioxide concentration   | Water vapour concentration |
-  |---------------|--------------------------------|----------------------------|
- 9| date          | CO2                            | H2O                        |
-10| dd/mm/yyyy    | µmol mol-1                     | mmol mol-1                 |
-11| 01/01/2008    | 425,10298875                   | 5,3855572917               |
-12| 02/01/2008    | 418,4319752083                 | 3,6077222917               |
-```
-
-On définira dans le fichier de configuration la section suivante :
-
-::: {.callout-tip collapse="false" title="Récupération des constantes de l'en-tête"}
-
+Voici un exemple de configuration pour une colonne constante :
 
 ```yaml
-OA_data:
-  t_flux_j_flj:
-    OA_dataHeaderLine: 8
-    OA_dataFirstLine: 11
-    OA_naturalKey:
-      - flj_date
-    OA_constantComponents:
-      flj_site:
-        OA_exportHeader:
-          OA_title:
-            fr: Site
-            en: Site
-        OA_required: true
-        OA_importHeaderTarget:
-          OA_rowNumber: 1 # On définit la ligne où ce trouve la donnée
-          OA_columnNumber: 2 # On définit la colonne où ce trouve la donnée
-      flj_theme:
-        OA_exportHeader:
-          OA_title:
-            fr: Theme
-            en: Theme
-        OA_required: true
-        OA_importHeaderTarget:
-          OA_rowNumber: 2
-          OA_columnNumber: 2
-      flj_frequence:
-        OA_exportHeader:
-          OA_title:
-            fr: Frequence
-            en: Frequence
-        OA_required: true
-        OA_importHeaderTarget:
-          OA_rowNumber: 3
-          OA_columnNumber: 2
-      flj_date_start:
-        OA_exportHeader:
-          OA_title:
-            fr: Date de debut
-            en: Start date
-        OA_required: true
-        OA_importHeaderTarget:
-          OA_rowNumber: 4
-          OA_columnNumber: 2
-      flj_date_end:
-        OA_exportHeader:
-          OA_title:
-            fr: Date de fin
-            en: End date
-        OA_required: true
-        OA_importHeaderTarget:
-          OA_rowNumber: 5
-          OA_columnNumber: 2
-      flj_site:
-        OA_exportHeader:
-          OA_title:
-            fr: Commentaire
-            en: Comment
-        OA_required: true
-        OA_importHeaderTarget:
-          OA_rowNumber: 6
-          OA_columnNumber: 2
-    OA_basicComponents:
-      flj_date:
-        OA_importHeader: Date
-      flj_carbon_dioxide_concentration:
-        OA_importHeader: Carbon dioxide concentration
-      flj_Water_vapour_concentration:
-        OA_importHeader: Water vapour concentration
+OA_constantComponents:
+  flj_site:
+    OA_exportHeader:
+      OA_title:
+        fr: Site
+        en: Site
+    OA_required: true
+    OA_constantImportHeaderTarget:  
+      OA_rowNumber: 1 
+      OA_columnNumber: 2 
 ```
+
+::: {.callout-tip collapse="false" title="Référence au numéro de la colonne"}
+Le numéro de la colonne fait référence à la position dans le fichier CSV, en commençant par 1.
 :::
 
-## Constantes du pré en-tête {#OA_importHeaderTarget}
+## Constantes du pré en-tête {#OA_preHeaderTarget}
 
-Parfois on souhaite rajouter un {{<page-refs.data.link-cartouche>}} pour définir des constantes liées au fichier.
+Parfois on souhaite rajouter un {{< var page-refs.data.link-cartouche >}} pour définir des constantes liées au fichier.
 
-Pour récupérer les valeurs du pré en-tête, on définit dans la section **OA_constantHeader** une composante avec une section **OA_importHeaderTarget**
+Pour récupérer les valeurs du pré en-tête, on définit dans la section **OA_constantHeader** une composante avec une section **OA_constantImportHeaderTarget**
 
 ::: {.callout-tip collapse="false" title="Récupération d'une valeur dans une ligne et une colonne" #OA_rowNumber}
 
-On répéère la valeur par le numéro de la ligne **OA_rowNumber** et de la colonne **OA_columnNumber**
 ```yaml
-
-    OA_constantComponents:
-      flj_site:
-        OA_exportHeader:
-          OA_title:
-            fr: Site
-            en: Site
-        OA_required: true
-        OA_importHeaderTarget:
-          OA_rowNumber: 1 # On définit la ligne où ce trouve la donnée
-          OA_columnNumber: 2 # On définit la colonne où ce trouve la donnée
+OA_constantComponents:
+  flj_site:
+    OA_exportHeader:
+      OA_title:
+        fr: Site
+        en: Site
+    OA_required: true
+    OA_constantImportHeaderTarget:  
+      OA_rowNumber: 1 
+      OA_columnNumber: 2 
 ```
 :::
 
 
-## Constantes du post en-tête: constantes de colonne {#OA_importHeaderTarget}
+## Constantes du post en-tête {#OA_postHeaderTarget}
 
-Il s'agit de récupérer des informations placées entre le nom de la colonne (en-tête) et la première ligne de données. On récupérera par exemple de informations sur l'unité le minimum le maximum...
+Les colonnes constantes permettent de déclarer les données enregistrées dans les cartouches du fichier csv.
 
-Il y a deux façons de déclarer une valeur de post-header:
-
-::: {.callout-tip collapse="false" title="référence au numéro de la colonne" #OA_columnNumber}
+::: {.callout-tip collapse="false" title="Référence au numéro de la colonne" #OA_columnNumber}
 
 ```yaml
-      dat_end_date:   #optional
-        OA_exportHeader:   #mandatory
-          OA_title:   #optional
+      dat_end_date:   
+        OA_exportHeader:   
+          OA_title:   
             fr: Date de fin
             en: End date
-          OA_description:   #optional
+          OA_description:   
             fr: Date de fin
             en: End date
-        OA_required: false  #optional
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 6  #optional
-          OA_columnNumber: 7  #optional
+        OA_required: false  
+        OA_constantImportHeaderTarget:   
+          OA_rowNumber: 6  
+          OA_columnNumber: 7  
 ```
 :::
 
-::: {.callout-tip collapse="false" title="référence au nom de la colonne" #OA_columnName}
+::: {.callout-tip collapse="false" title="Référence au nom de la colonne" #OA_columnName}
 
 ```yaml
-      dat_end_date:   #optional
-        OA_exportHeader:   #mandatory
-          OA_title:   #optional
+      dat_end_date:   
+        OA_exportHeader:   
+          OA_title:   
             fr: Date de fin
             en: End date
-          OA_description:   #optional
+          OA_description:   
             fr: Date de fin
             en: End date
-        OA_required: false  #optional
-        OA_importHeaderTarget:   #optional
-          OA_rowNumber: 6  #optional
-          OA_columnName: dat_date  #optional
+        OA_required: false  
+        OA_constantImportHeaderTarget:   
+          OA_rowNumber: 6  
+          OA_columnName: dat_date  
 ```
 :::
 

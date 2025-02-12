@@ -1,23 +1,35 @@
 ---
-    title: Colonnes avec pattern
-    subtitle: OA_patternComponents
-    abstract-title: >
-        Verticalisation qui parse selon une regexp le nom des colonnes d'un fichier csv.
-    abstract: >
-        <p>On peut utiliser OA_patternComponent pour rechercher des colonnes répondant à un pattern (OA_patternForComponents). 
+title: Colonnes avec pattern
+subtitle: OA_patternComponents
+abstract-title: >
+    Verticalisation qui parse selon une regexp le nom des colonnes d'un fichier csv.
+abstract: >
+    <p>On peut utiliser OA_patternComponent pour rechercher des colonnes répondant à un pattern (OA_patternForComponents). 
 
-        <p>Les groupes capturés de l'expression régulière deviendront des sous composants (OA_componentQualifiers) du composant OA_patternComponent.
+    <p>Les groupes capturés de l'expression régulière deviendront des sous composants (OA_componentQualifiers) du composant OA_patternComponent.
 
-        <p>Il sera possible de capturer les valeurs des colonnes adjacentes répondant à un pattern définit (OA_importHeaderPattern) qui deviendront des des sous composants (OA_componentAdjacents).
+    <p>Il sera possible de capturer les valeurs des colonnes adjacentes répondant à un pattern défini (OA_importHeaderPattern) qui deviendront des sous composants (OA_componentAdjacents).
 
-        <p>Il y aura une verticalisation des colonnes (OA_patternComponents). Chaque colonne capturé sera enregistrée dans une nouvelle ligne.
+    <p>Il y aura une verticalisation des colonnes (OA_patternComponents). Chaque colonne capturée sera enregistrée dans une nouvelle ligne.
+sections:
+  mandatory:
+    - OA_patternForComponents
+  optional:
+    - OA_componentQualifiers
+    - OA_componentAdjacents
+    - OA_tags
+    - OA_exportHeader
+    - OA_required
+    - OA_checker
+    - OA_defaultValue
+    - OA_langRestrictions
 ---
 
 ## Principe
 
-Le principe de pattern component est de rechercher des colonnes répondant à un pattern (ecpression régulière).
+Le principe de pattern component est de rechercher des colonnes répondant à un pattern (expression régulière).
 
--   s'il y a des groupes de capture dans l'expression régulière, il pourront être récupérés dans des ualifierComponents.
+-   s'il y a des groupes de capture dans l'expression régulière, il pourront être récupérés dans des qualifierComponents.
 -   il est possible de définir des pattern pour rechercher des adjacentComponents. Ces pattern pourront se baser sur les expressions des groupes de captures (\$0, \$1 ...)
 -   il va s'opérer une verticalisation de la ligne. C'est à dire q'une ligne sera créée pour chaque colonne répondant à un pattern component. La clef naturelle de la ligne + le groupe capturé (\$0) formeront la clef naturelle réelle de la ligne (naturalKey + patterncolumnname dans la base de données).
 
@@ -301,7 +313,7 @@ On trouve aussi sous le label "__ORIGINAL_COLUMN_NAME__" le nom de la colonne or
 
 Si vous cherchez à récupérer une composante patternComponent, une composante qualifiante ou une composante adjacente, il faudra prendre en compte son stockage en base de donées:
 
-::: {.callout-tip collapse="true" title="exemple de récupération des valeurs d'un pattern component"}
+::: {.callout-tip title="exemple de récupération des valeurs d'un pattern component"}
 Avec la déclaration 
 ```yaml
 OA_patternComponents:
@@ -415,6 +427,3 @@ On peut définir les sections des composantes ({{<var page-refs.etiquettes.oa>}}
                 NO_COHERENCE:
                    fr: "Pour le type de données {datatype} et le site {site}: la valeur {value} de la variable {variable} doit être comprise entre {min} et {max}"
                    en: "For dataType  {datatype} and site  {site}: the value {value} for variable {variable} must be between {min} and  {max}"
-```
-:::
-

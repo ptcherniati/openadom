@@ -1,7 +1,23 @@
 ---
-  title: Description des colonnes 
-  subtitle: (OA_basicComponents)
-  abstract: Ce document permet de configurer la section <b>OA_data > OA_basicComponents</b> pour lier les colonnes du fichier à des composantes
+title: Description des colonnes 
+subtitle: OA_basicComponents
+abstract: >
+  Cette section permet de définir les colonnes de base de votre fichier de données.
+  Chaque colonne est associée à un type de données (texte, nombre, date, etc.) et peut avoir des contraintes spécifiques.
+sections:
+  mandatory:
+    - OA_name
+    - OA_type
+  optional:
+    - OA_label
+    - OA_description
+    - OA_pattern
+    - OA_format
+    - OA_nullable
+    - OA_defaultValue
+    - OA_values
+    - OA_referential
+    - OA_referentialFilter
 ---
 
 Nous allons décrire la section OA_basicComponents pour le modèle de référentiels, ...
@@ -12,27 +28,29 @@ classDiagram
     tr_sites_sit *-- tr_parcelles_par:site
     tr_type_de_sites_tds  *-- tr_sites_sit:type_de_sites
     
-    class tr_type_de_sites_tds:::pkClass {
+    class tr_type_de_sites_tds {
         +String tds_nom PK
     }
     
-    class tr_sites_sit:::fkClass {
+    class tr_sites_sit {
         +String sit_nom_type_de_site PK
         +String sit_nom_du_site PK
         +tr_type_de_sites_tds type_de_sites FK
     }
     
-    class tr_parcelles_par:::fkClass {
+    class tr_parcelles_par {
         +String par_nom_de_la_parcelle PK
         +String par_nom_du_site PK
         +tr_sites_sit site FK
     }
 
-  style tr_type_de_sites_tds fill:#d7e4fa,stroke:#333,stroke-width:2px
-  style tr_sites_sit fill:#f8d7fa,stroke:#333,stroke-width:2px
-  style tr_parcelles_par fill:#f4fad7,stroke:#333,stroke-width:2px
-
-
+  classDef pkClass fill:#d7e4fa,stroke:#333,stroke-width:2px
+  classDef fkClass fill:#f8d7fa,stroke:#333,stroke-width:2px
+  classDef parClass fill:#f4fad7,stroke:#333,stroke-width:2px
+  
+  class tr_type_de_sites_tds pkClass
+  class tr_sites_sit fkClass
+  class tr_parcelles_par parClass
 ```
 
 ... et pour les fichiers :

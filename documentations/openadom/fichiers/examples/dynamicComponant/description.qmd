@@ -49,7 +49,7 @@ On pourra décrire le fichier de configuration en utilisant une composante prope
 :::
 
 ::: {.callout-important collapse="false" title="visualisation des propriétés de Zone Puy de Dôme"}
-![](images/paste-2.png):::
+![](images/paste-2.png)
 :::
 
 ## Stockage en base
