@@ -141,6 +141,8 @@ format:
     theme: 
       - minty
       - style/global.scss
+    template-partials:
+      - _extensions/section-meta/partials/title-block.html
     toc: true
     toc-expand: false
     toc-depth: 3
