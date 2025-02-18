@@ -25,9 +25,11 @@ Ainsi les valeurs Elévation, élévation, elevation ou même EléVaTioN renvoie
 
 Ces transformations sont faites de manière transparente.
 
-> :information_source : Quand on fait référence à un référentiel, que cela soit pour un type de données ou pour un autre référentiel, on utilise la clef naturelle de ce référentiel. Cependant, il sera possible de demander la mise en code de la valeur avant de rechercher son existence dans le référentiel de référence.
+::: {.callout-note title="codification des clefs de référentiels"}
+Quand on fait référence à un référentiel, que cela soit pour un type de données ou pour un autre référentiel, on utilise la clef naturelle de ce référentiel. Cependant, il sera possible de demander la mise en code de la valeur avant de rechercher son existence dans le référentiel de référence.
+:::
 
-## Clef naturelle
+## Clef naturelle {#clef-naturelle}
 
 Elle est construite en concaténant les valeurs des différentes colonnes composant la clef. Le signe de concaténation est le double underscore '__'.
 
@@ -35,7 +37,7 @@ Elle est construite en concaténant les valeurs des différentes colonnes compos
 - Ensoleillement + Ensoleillé -> ensoleillement__ensoleille
 - Piégeage en montée + Couleur des individus -> piegeage_en_montee__couleur_des_individus
 
-##  Clef hiérarchique
+##  Clef hiérarchique {#clef-hierarchique}
 
 Elle est construite en concaténant les clefs naturelles de différents référentiels. Le signe de concaténation de la clef hiérarchique est le point '.'
 

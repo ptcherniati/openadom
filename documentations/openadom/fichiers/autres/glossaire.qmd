@@ -5,17 +5,15 @@
 # Sections OpenAdom
 ## {{<var page-refs.checker.oa>}}
     Les vérificateurs permettent de valider et de typer les différents composants
-## OA_DEFAULT_VALUE
+## {{<var page-refs.checker.oa-defaultValue>}}
 ## {{<var page-refs.data.oa-unexpectedColumns>}}
-## OA_HEADER_NAME
 ## {{<var page-refs.etiquettes.oa>}}
     Les étiquettes permettent de regrouper certains éléments (data, components)
-## OA_REQUIRED
-## OA_IMPORT_HEADER
-## OA_IMPORT_HEADER_PATTERN
-## OA_I_18_N
-    voir {{<var page-refs.i18n.link>}}
-        - pour l'application {{<var page-refs.application.oa-i18n>}}
+## {{<var page-refs.components.OA_required>}}
+## {{<var page-refs.components.OA_importHeader>}}
+## {{<var page-refs.pattern-comp.OA_importHeaderPattern>}}
+## {{<var page-refs.i18n.link>}}
+        - pour l'application : {{<var page-refs.application.oa-i18n>}}
         - pour un type de données {{<var page-refs.data.oa-i18n>}}
 ## {{<var page-refs.data.oa-displayPattern>}}
 ## OA_TITLE
@@ -84,7 +82,7 @@
         - on peut extraire des données du nom de la colonne
         - on peut définir et capturer les données de colonnes adjacentes
         - le résultat est veritcalisé (les colonnes capturés sont enregistrées comme des lignes différentes)
-## OA_PATTERN_FOR_COMPONENTS
+## {{<var page-refs.pattern-comp.OA_patternForComponents>}}
 ## OA_REFERENCE
 ## OA_REFERENCES
 ## OA_REFERENCE_COMPONENT_TO_LOOK_FOR_HEADER

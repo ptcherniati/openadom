@@ -11,7 +11,7 @@ website:
   repo-actions: [edit, source, issue]
   title: "openadom"
   description: "Documentation des fichiers de configuration pour OpenADOM"
-  favicon: /img/Logos_OA.svg
+  favicon: /img/Logos_OA.svg  
   site-url: https://dev.openadom.fr
   sidebar:
     logo: /img/Logos_OpernADOM.png
@@ -41,7 +41,7 @@ website:
           - text: Etiquettes (OA_tags)
             href: fichiers/fichier_echange/etiquettes.qmd
           - section:
-            text: Données
+            text: Données (OA_data)
             href: fichiers/fichier_echange/data/data.qmd
             contents: 
               - section: Components
@@ -51,11 +51,11 @@ website:
                   - text: Basic Components
                     href: fichiers/fichier_echange/data/components/basic_components.qmd
                   - text: Computed Components
-                    href: fichiers/fichier_echange/data/components/computed_components.md
+                    href: fichiers/fichier_echange/data/components/computed_components.qmd
                   - text: Dynamic Components
                     href: fichiers/fichier_echange/data/components/dynamic_components.qmd
                   - text: Constant Components
-                    href: fichiers/fichier_echange/data/components/constant_components.md
+                    href: fichiers/fichier_echange/data/components/constant_components.qmd
                   - text: Pattern Components
                     href: fichiers/fichier_echange/data/components/pattern_components.qmd
                   - section:  Paramétrage des composants
@@ -81,7 +81,7 @@ website:
           - text: Component Qualifiers
             href: fichiers/pour_aller_plus_loin/component_qualifiers.md
           - text: Expression Groovy
-            href: fichiers/pour_aller_plus_loin/expressionGroovy.md
+            href: fichiers/pour_aller_plus_loin/expressionGroovy.qmd
           - text: Internationalisation i18n
             href: fichiers/pour_aller_plus_loin/internationnalisation_i18n.md
           - text: Submission
@@ -134,14 +134,15 @@ website:
     right: 
       - icon: gitlab
         href: https://forgemia.inra.fr/anaee-dev/openadom
-
+        
 format:
   html:
     smooth-scroll: true
     theme: 
       - minty
       - style/global.scss
-    css: style/global.scss
+    template-partials:
+      - _extensions/section-meta/partials/title-block.html
     toc: true
     toc-expand: false
     toc-depth: 3

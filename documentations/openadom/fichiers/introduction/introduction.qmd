@@ -1,68 +1,64 @@
 ---
-  title: Introduction
-  page-navigation: true
-  abstract: >
-    Ce document permet d'aider un gestionnaire de Système d'Information (SI) à décrire son domaine dans un fichier de configuration. 
-    Lorsque l'on depose ce fichier dans l'application, cela crée un schema dans la base de données ainsi que les outils permettant de l'alimenter et de la consulter. 
-    Chaque fichier de configuration déposé génèrera un schéma dédié dans la base de données.
+title: Introduction
+page-navigation: true
+abstract: >
+  Ce document permet d'aider un gestionnaire de Système d'Information (SI) à décrire son domaine dans un fichier de configuration. 
+  Lorsque l'on dépose ce fichier dans l'application, cela crée un schéma dans la base de données ainsi que les outils permettant de l'alimenter et de la consulter. 
+  Chaque fichier de configuration déposé générera un schéma dédié dans la base de données.
 ---
 
-
-
-
 # <a id="prealable" />Préalable
+
 Avant de commencer l'écriture du fichier de configuration, il vous faut travailler à définir le modèle des données que vous voulez traiter dans la base de données.
 
-Vous avez en votre possession un certain nombre de fichiers (format csv) contenant les données. Un fichier de données respecte un certain format. En particulier les en-têtes de colonnes doivent être fixés et le contenu sous un en-tête a un format déterminé (date, valeur flottante, entier, texte..).
+Vous avez en votre possession un certain nombre de fichiers (format CSV) contenant les données. Un fichier de données respecte un certain format. En particulier, les en-têtes de colonnes doivent être fixés et le contenu sous un en-tête a un format déterminé (date, valeur flottante, entier, texte...).
 
-Chaque format de fichier correspond à ce que l'on appellera un **type de données**. Il regroupe plusieurs variables correspondant à :
+Chaque format de fichier correspond à ce que l'on appellera un **type de données**. Il regroupe plusieurs variables correspondant à :
+
 - une thématique,
 - un pas de temps,
-- une structuration des données
+- une structuration des données,
 - ...
 
-Chaque ligne peut être identifiée par sous-ensemble de colonnes. Cet identifiant permet de créer ou de mettre à jour une donnée, selon qu'elle est ou non déjà présente en base.
+Chaque ligne peut être identifiée par un sous-ensemble de colonnes. Cet identifiant permet de créer ou de mettre à jour une donnée, selon qu'elle est ou non déjà présente en base.
 
 Chaque ligne peut porter, sur une ou plusieurs colonnes, une information de temporalité.
 
 Chaque ligne peut porter aussi, sur une ou plusieurs colonnes, des informations sur le contexte d'acquisition des variables des autres colonnes.
 
-On peut vouloir aussi faire figurer dans la base de données certaines informations non présentes dans le fichier de données.
+On peut vouloir aussi faire figurer dans la base de données certaines informations non présentes dans le fichier de données :
 
-- des informations liées aux variables que l'on fournit sous la forme de fichier de référentiels (description de site, description de méthodes, description d'unités, description d'outils...)
-- des informations constantes, ne dépendant pas du fichier (par exemple l'unité de la variable)
-- des informations constantes pour l'ensemble du fichier (par exemple le site correspondant aux valeurs du fichier). Ces informations pouvant être décrites dans un cartouche, avant l'en-tête de colonne ou juste sous l'en-tête de colonne (valeur minimum ou maximum)
+- des informations liées aux variables que l'on fournit sous la forme de fichiers de référentiels (description de site, description de méthodes, description d'unités, description d'outils...),
+- des informations constantes, ne dépendant pas du fichier (par exemple l'unité de la variable),
+- des informations constantes pour l'ensemble du fichier (par exemple le site correspondant aux valeurs du fichier). Ces informations peuvent être décrites dans un cartouche, avant l'en-tête de colonne ou juste sous l'en-tête de colonne (valeur minimum ou maximum),
 - des informations calculées à partir d'informations du fichier, d'informations des référentiels déjà déposés ou même des données déjà publiées.
 
-## exemple
-Supposons que l'on ait un fichier de données météorologiques
+## Exemple
+
+Supposons que l'on ait un fichier de données météorologiques :
 
 ::: {.callout-note collapse="false" title="Météorologie"}
-``` {csv}
-#| label: tab-donnees-meteo
-#| code-fold: show
-#| code-summary: "t_data_dat.csv"
-#| code-title: "t_data_dat.csv"
-
+```csv
 {{< include ../examples/meteo/fichiers/t_data_dat.csv >}}
-
 ```
 :::
 
 - La temporalité est portée par la colonne "Date de mesure".
 - Le contexte est porté par l'information du cartouche d'en-tête "Région" et la colonne "Site".
-- On identifie:
-- une composante _date_ au format dd/MM/yyyy (format au sens SQL : https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE). On note que les moyennes sont calculées à la journée.
-- deux composantes _localization_ qui fait référence à un site de la colonne "Site", avec deux composantes (site et region)
-- deux composantes _precipitation_ qui correspond à la pluviométrie de la colonne "Précipitation" value,unit=mm
-- 4 composantes (value,min,max,unit=°C) _temperature_ qui se réfère aux colonnes "Température moyenne", "Température minimale" et "Température maximale" 
 
-Du coup, on peut aussi définir des référentiels pour préciser ses informations
+On identifie :
+
+- une composante _date_ au format dd/MM/yyyy (format au sens SQL : https://www.postgresql.org/docs/current/functions-formatting.html#FUNCTIONS-FORMATTING-DATETIME-TABLE). On note que les moyennes sont calculées à la journée.
+- deux composantes _localization_ qui font référence à un site de la colonne "Site", avec deux composantes (site et région)
+- deux composantes _precipitation_ qui correspondent à la pluviométrie de la colonne "Précipitation" (value, unit=mm)
+- 4 composantes (value, min, max, unit=°C) _temperature_ qui se réfèrent aux colonnes "Température moyenne", "Température minimale" et "Température maximale"
+
+Du coup, on peut aussi définir des référentiels pour préciser ces informations :
 
 ``` {r}
 #| echo: false
 #| label: tbl-regions
-#| tbl-cap: "regions"
+#| tbl-cap: "régions"
 #| code-fold: show
 knitr::kable(read.csv("../examples/meteo/fichiers/tr_regions_reg.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
@@ -81,13 +77,13 @@ Les sites font référence aux régions.
 ``` {r}
 #| echo: false
 #| label: tbl-unites
-#| tbl-cap: "unites"
+#| tbl-cap: "unités"
 #| code-fold: show
 knitr::kable(read.csv("../examples/meteo/fichiers/tr_unites_uni.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
 
 ```
 
-Le fait de dire que l'unité d'une donnée fait référence au référentiel unite signifie :
+Le fait de dire que l'unité d'une donnée fait référence au référentiel unité signifie :
 
 - que l'unité doit être présente dans ce référentiel,
 
@@ -96,3 +92,5 @@ Le fait de dire que l'unité d'une donnée fait référence au référentiel uni
 On aurait pu rajouter des responsables de site et de région, des descriptions des variables, des intervalles de valeurs...
 
 Ainsi nous avons pu faire une analyse de notre domaine et le format des fichiers qui s'y rapportent. Nous pouvons commencer l'écriture du fichier de configuration.
+
+{{<var page-refs.meteo.link>}}

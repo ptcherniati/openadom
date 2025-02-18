@@ -3,16 +3,11 @@ title: Section de description de l'application
 subtitle: OA_application
 abstract: >
     Cette section définit un certain nombre d'informations et de paramètres de l'ensemble du système d'information
-lightbox: 
-  match: auto
-  effect: fade
-  desc-position: left
-  loop: false
-oa-mandatory: 
-    - OA_name
-oa-optional: 
-    - OA_i18n
+mandatories: OA_version, 
+alternatives:
+optionals: OA_defaultLanguage
 ---
+
 
 # Déclaration d'une donnée
 
@@ -24,7 +19,7 @@ OA_data:
         ...
 ```
 ::: {.callout-caution}
-Pour déclarer une donnée vous devez fournir un identificateur
+Pour déclarer une donnée vous devez fournir un {{<var page-refs.vocab.link-identificateurs>}}
 
 :::
 
@@ -48,16 +43,16 @@ OA_application:
 
 Cette section doit comporter obligatoirement:
 
-(@) **OA_name** le nom de l'application qui correspondra au nom du schema de la base de données. 
+1 **OA_name** le nom de l'application qui correspondra au nom du schema de la base de données. 
 
 :::{.callout-note collapse="false" #name title=""}
  ``` yaml
         OA_name: acbb_openadom_v2
  ``` 
 :::
-Ce nom doit obligatoirement -etre en minuscules, commencer par une lettre et ne comporter que des caractères alphanumériques sans accent et l'espace souligné. (_)
+Ce nom doit obligatoirement être en minuscules, commencer par une lettre et ne comporter que des caractères alphanumériques sans accent et l'espace souligné. (_)
 
-(@) [**OA_version**]{#version} qui correspond à la version du fichier de configuration. Lors des mise à jour du schéma, vous incrémenterez ce numéro de version.
+2 [**OA_version**]{#version} qui correspond à la version du fichier de configuration. Lors des mise à jour du schéma, vous incrémenterez ce numéro de version.
 
 :::{.callout-note collapse="false" title="" }
  ``` yaml
@@ -98,7 +93,7 @@ Ce nom doit obligatoirement -etre en minuscules, commencer par une lettre et ne 
 
 On peut aussi rajouter des informations facultatives: 
 
-1. **OA_defaultLanguage* qui permet de définir la langue par défaut. La langue par défaut est celle utilisée si aucune autre information de langue n'est précisée. Lors de l'internationalisation de certains champs / données, on essait de trouver la traduction dans la langue demandée; à défaut on fournit la traduction dans la langue par défaut; si aucune traduction n'est trouvée on renvoit l'indentificateur fourni en entrée.
+1. **OA_defaultLanguage** qui permet de définir la langue par défaut. La langue par défaut est celle utilisée si aucune autre information de langue n'est précisée. Lors de l'internationalisation de certains champs / données, on essait de trouver la traduction dans la langue demandée; à défaut on fournit la traduction dans la langue par défaut; si aucune traduction n'est trouvée on renvoit l'indentificateur fourni en entrée.
 
 :::{.callout-note collapse="false" title="" #defaultLanguage}
  

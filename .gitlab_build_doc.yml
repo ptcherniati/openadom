@@ -7,11 +7,8 @@ build_openadom_doc:
     - cp README.md documentations/openadom/fichiers/readme.md
     - cp src/test/resources/data/configuration/schemaExample.yaml documentations/openadom/fichiers/schema_example.yaml
     - cd documentations/openadom
-    - ls
     - quarto render
-    - pwd
     - cd ../..
-    - ls
     - mkdir -p public
     - mv documentations/openadom/_site/* public/
   artifacts:

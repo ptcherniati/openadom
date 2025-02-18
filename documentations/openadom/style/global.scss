@@ -482,4 +482,52 @@ span.messageElement {
   vertical-align: middle;
 }
 
+/*-- SCSS DOCUMENTATION --*/
+/*-- ------------------ --*/
 
+/*-- scss:defaults --*/
+$callout-color-note: $dark;
+$callout-color-caution: $warning;
+$callout-color-danger: $danger;
+$callout-color: $primary;
+
+/*-- scss:rules --*/
+.callout-note {
+  border-left-color: $callout-color-note !important;
+}
+.callout-note .callout-header {
+  background-color: mix($callout-color-note, $body-bg, 15%) !important;
+}
+
+/*-- scss:defaults --*/
+$sidebar-bg: $primary-slightly-transparent-4;
+$sidebar-fg: black;
+
+/*-- scss:rules --*/
+#quarto-sidebar{
+  background-color: $sidebar-bg !important;
+  color: $sidebar-fg !important;
+}
+.sidebar-title {
+  color: $sidebar-fg !important;
+}
+.sidebar-item {
+  color: $sidebar-fg !important;
+}
+.sidebar-title:hover {
+  color: $dark !important;
+}
+
+.sidebar-item:hover {
+  color: $dark !important;
+}
+.sidebar-item-container:hover {
+  color: $dark !important;
+}
+.sidebar-item-container .active {
+  color: $dark !important;
+  text-decoration: underline !important;
+}
+.sidebar-item-container .active::before {
+  content: "\002B9E";
+}

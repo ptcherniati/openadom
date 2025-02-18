@@ -1,0 +1,8 @@
+name: section-meta
+author: OpenADOM
+version: 1.0.0
+contributes:
+  format:
+    html:
+      template-partials:
+        - "partials/title-block.html"

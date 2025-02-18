@@ -1,47 +1,60 @@
-### Expression groovy
-Les expressions Groovy dans votre application sont utilisées pour 
-calculer des valeurs par défaut, 
-tester les valeurs de components
-ou effectuer des computations en utilisant des données fournies. 
-Ce contexte est généralement une map contenant :
-- les données d'entrée de la ligne (datum)
-- Les valeurs enregistrées des types de données déclarés (OA_references) en même temps que l'expression (OA_expression) (references et referencesValues)
-- pour le dépôt avec versionnement (OA_strategy: OA_VERSIONING) le contexte de versionnement (binaryFile)
-- l'internationalisation du data (dataI18n)
-- la description du data (dataDescription)
-- l'identificateur du data (dataName)
-- la configuration de l'application (application)
-- l'identificateur de l'application (applicationName)
-- les lignes d'en-tête du fichier (preHeaderRow, headerRow, postHeaderRow)
-- la ligne courante (currentRow)
-- le numéro de ligne (currentRowNumber)
+---
+title: Expression groovy
+subtitle: Expressions pour calculer ou transformer des valeurs de composantes
+abstract: >
+  Les expressions Groovy dans votre application sont utilisées pour
+  calculer des valeurs par défaut, 
+  tester les valeurs de components
+  ou effectuer des computations en utilisant des données fournies. 
+---
 
-Les valeurs enregistrées des types de données déclarés (OA_references) en même temps que l'expression (OA_expression)
-(references et referencesValues), et des fonctions utilitaires. 
-Les expressions sont évaluées dans ce contexte pour produire un résultat
-ou déclencher des exceptions personnalisées en cas d'erreur.
+## Expression groovy {#OA_expression}
+
+Les expressions Groovy dans votre application sont utilisées pour calculer des valeurs par défaut, tester les valeurs de components ou effectuer des computations en utilisant des données fournies. Ce contexte est généralement une map contenant :
+
+-   les données d'entrée de la ligne (datum)
+-   Les valeurs enregistrées des types de données déclarés (OA_references) en même temps que l'expression (OA_expression) (references et referencesValues)
+-   pour le dépôt avec versionnement (OA_strategy: OA_VERSIONING) le contexte de versionnement (binaryFile)
+-   l'internationalisation du data (dataI18n)
+-   la description du data (dataDescription)
+-   l'identificateur du data (dataName)
+-   la configuration de l'application (application)
+-   l'identificateur de l'application (applicationName)
+-   les lignes d'en-tête du fichier (preHeaderRow, headerRow, postHeaderRow)
+-   la ligne courante (currentRow)
+-   le numéro de ligne (currentRowNumber)
+
+Les valeurs enregistrées des types de données déclarés (OA_references) en même temps que l'expression (OA_expression) (references et referencesValues), et des fonctions utilitaires. Les expressions sont évaluées dans ce contexte pour produire un résultat ou déclencher des exceptions personnalisées en cas d'erreur.
 
 Le contexte met aussi des expressions pour simplifier l'écriture du groovy ainsi que pour générer des exceptions personalisées.
-### Exemples de scripts groovy
-```groovy
+
+## Exemples de scripts groovy
+
+::: {#search .callout-note title="search" collapse="true"}
+``` groovy
     def numbers = [1, 2, 3, 4, 5]
     def firstEven = numbers.find { it % 2 == 0 }
     println(firstEven) // Affiche: 2
- ```
+```
+:::
 
-```groovy
+## Exemples de scripts groovy
+
+::: {.callout-note title="listes" collapse="transform"}
+``` groovy
     def names = ['Alice', 'Bob', 'Charlie']
     def upperNames = names.collect { it.toUpperCase() }
     println(upperNames) // Affiche: [ALICE, BOB, CHARLIE]
- ```
+```
+:::
 
-```groovy
+``` groovy
     def numbers = [1, 2, 3, 4, 5]
     def evenNumbers = numbers.findAll { it % 2 == 0 }
     println(evenNumbers) // Affiche: [2, 4]
- ```
+```
 
-```groovy
+``` groovy
     def sales = [
         [product: 'A', amount: 100],
         [product: 'B', amount: 200],
@@ -49,9 +62,9 @@ Le contexte met aussi des expressions pour simplifier l'écriture du groovy ains
     ]
     def totalSales = sales.sum { it.amount }
     println(totalSales) // Affiche: 450
- ```
+```
 
-```groovy
+``` groovy
         def transactions = [
             [product: 'A', amount: 100],
             [product: 'B', amount: 200],
@@ -64,9 +77,9 @@ Le contexte met aussi des expressions pour simplifier l'écriture du groovy ains
                                          }
         println(salesByProduct)
         // Affiche: [[product:A, total:250], [product:B, total:200], [product:C, total:300]]
- ```
+```
 
-```groovy
+``` groovy
     def people = [
         [name: 'Alice', age: 25],
         [name: 'Bob', age: 30],
@@ -76,28 +89,29 @@ Le contexte met aussi des expressions pour simplifier l'écriture du groovy ains
     def namesOfPeopleOver30 = people.findAll { it.age > 30 }
             .collect { it.name }
     println(namesOfPeopleOver30) // Affiche: [Charlie]
- ```
+```
+
 [Groovy Official Site](http://groovy-lang.org/)
-### Expressions Prédéfinies
+
+## Expressions Prédéfinies
+
 Le contexte inclut des expressions prédéfinies pour simplifier l'écriture des scripts Groovy et générer des exceptions personnalisées :
 
-#### OA_naturalKeyBuilder
+### OA_naturalKeyBuilder {#OA_naturalKeyBuilder}
+
 Construit des clés naturelles à partir de multiples critères. Exemple :
-  ```groovy
-  OA_naturalKeyBuilder
-    .forDatumField("agroecosystem").onDataName("tr_agroecosystem_agr").forKey("agr_key").withException("MISSING_AGROECOSYSTEM")
-    .forDatumField("site").onDataName("tr_site_sit").forKey("sit_key").withException("MISSING_SITE")
-    .naturalKey()
-  ```
-  Ici on construit une clé naturelle en se basant sur les colonnes agroecosystem et site, que l'on compare auw valeurs des composants 
-agr_key de tr_agroecosystem_agr et sit_key de tr_site_sit.
-Si l'une de ces valeurs est manquante, on renverra une groovyException avec le nom MISSING_AGROECOSYSTEM ou MISSING_SITE.
 
-Il est à votre charge de compléter l'expression de la section OA_expression par une section d'internationalisation de
-ces exceptions.
+``` groovy
+groovy   OA_naturalKeyBuilder     .forDatumField("agroecosystem").onDataName("tr_agroecosystem_agr").forKey("agr_key").withException("MISSING_AGROECOSYSTEM")     .forDatumField("site").onDataName("tr_site_sit").forKey("sit_key").withException("MISSING_SITE")     .naturalKey() 
+```
 
-Voici un exemple d'une telle section : 
-```yaml
+Ici on construit une clé naturelle en se basant sur les colonnes agroecosystem et site, que l'on compare auw valeurs des composants **agr_key** de **tr_agroecosystem_agr** et **sit_key** de **tr_site_sit**. Si l'une de ces valeurs est manquante, on renverra une groovyException avec le nom *MISSING_AGROECOSYSTEM* ou *MISSING_SITE*.
+
+Il est à votre charge de compléter l'expression de la section OA_expression par une section d'internationalisation de ces exceptions.
+
+Voici un exemple d'une telle section :
+
+``` yaml
         OA_computation:
           OA_expression: >
             OA_naturalKeyBuilder
@@ -123,15 +137,18 @@ Voici un exemple d'une telle section :
               - en: plot {value} doesn't exists. Knowns plots for site {parents[0]} are ${knownValues}
 ```
 
-#### OA_escapeLabel
+### OA_escapeLabel {#OA_escapeLabel}
+
 Permet d'échapper un texte pour qu'il puisse être utilisé dans une clef naturelle
 
 ``` groovy
     OA_escapeLabel("Une chaîne à échapper")
 ```
-valeur de retour:  une_chaine_a_echapper
 
-#### OA_buildException
+valeur de retour: une_chaine_a_echapper
+
+### OA_buildException {#OA_buildException}
+
 Permet de créer une exception dans un script groovy
 
 ``` groovy
@@ -143,9 +160,10 @@ Permet de créer une exception dans un script groovy
                           )
                       )
 ```
+
 N'oublier pas de déclarer l'internationalisation de votre exception dans une section OA_groovyExceptions
 
-```yaml
+``` yaml
         OA_computation:
           OA_expression: >
             throw OA_buildException(
@@ -162,13 +180,15 @@ N'oublier pas de déclarer l'internationalisation de votre exception dans une se
               - en: site {site} doesn't exists. Knowns sites are {knownSites}
 ```
 
-#### OA_buildCompositeKey
+### OA_buildCompositeKey {#OA_buildCompositeKey}
+
 Créé une clé composite à partir des valeurs de plusieurs composants
 
 ``` groovy
     OA_buildCompositeKey(['agroecosystem', 'site', 'plot'])
 ```
-Exemple de réponse : agroecosysteme_1__site_experimental_1__parcelle_2
+
+Exemple de réponse : agroecosysteme_1\_\_site_experimental_1\_\_parcelle_2
 
 Si vous voulez construire une liste de clé composite à partir de component MANY, on utilisera OA_buildManyCompositeKey
 
@@ -176,16 +196,17 @@ Si vous voulez construire une liste de clé composite à partir de component MAN
     OA_buildManyCompositeKey(['agroecosystem', 'site', 'plot'])
 ```
 
-Exemple de réponse : agroecosysteme_1__site_experimental_1__parcelle_1,agroecosysteme_2__site_experimental_1__parcelle_2
+Exemple de réponse : agroecosysteme_1\_\_site_experimental_1\_\_parcelle_1,agroecosysteme_2\_\_site_experimental_1\_\_parcelle_2
 
+## Objets du contexte
 
-### Objets du contexte
+### datum
 
-#### datum
-Ce sont les valeurs de la ligne. 
+Ce sont les valeurs de la ligne.
 
-datum: 
-```groovy
+datum:
+
+``` groovy
     [
         "date": "01/01/2005",
         "heure": "00:30:00",
@@ -194,19 +215,22 @@ datum:
 ```
 
 utilisation :
-```yaml
+
+``` yaml
         OA_computation:
           OA_expression: >
             return datum.date + " " + datum.heure
 ```
+
 valeur de retour: 01/01/20005 00:30:00
 
-#### references et referencesValues
-Ce sont les lignes enregistrées des référentiels déclarés dans la section OA_references relative à l'expression.
-Renvoie un tableau de lignes ou un tableau de tableau de valeurs des lignes
+### references et referencesValues
 
-referenceValues: 
-```groovy
+Ce sont les lignes enregistrées des référentiels déclarés dans la section OA_references relative à l'expression. Renvoie un tableau de lignes ou un tableau de tableau de valeurs des lignes
+
+referenceValues:
+
+``` groovy
     [
             "t_data_dat": [
                 [
@@ -231,31 +255,29 @@ referenceValues:
     ]
 ```
 
-```yaml
+``` yaml
         OA_computation:
           OA_expression: >
             return references.t_data_dat[0].refValues.collect { it.date }
           OA_references: [t_data_dat]
 ```
 
+valeur de retour: \["01/01/2005","02/01/2005","03/01/2005","04/01/2005"}
 
-valeur de retour: ["01/01/2005","02/01/2005","03/01/2005","04/01/2005"}
-
-```yaml
+``` yaml
         OA_computation:
           OA_expression: >
             return references.t_data_dat[0].naturalKey
           OA_references: [t_data_dat]
 ```
 
-
 valeur de retour: theix
 
-A noter que referenceValues permet d'accéder aux métadonnées de la ligne. Si vous n'utilisez que les valeurs 
-vous utiliserez la variable de contexte referenceValues
+A noter que referenceValues permet d'accéder aux métadonnées de la ligne. Si vous n'utilisez que les valeurs vous utiliserez la variable de contexte referenceValues
 
 referencesValues :
-```groovy
+
+``` groovy
     [
         ["key": "theix",
         "date": "01/01/2005",
@@ -271,7 +293,8 @@ referencesValues :
         "name": "Theix"]
     ]
 ```
-```yaml
+
+``` yaml
         OA_computation:
           OA_expression: >
             return referencesValues.collect{it.t_data_dat.date}
@@ -280,24 +303,28 @@ referencesValues :
 
 valeur de retour: {"01/01/2005","02/01/2005","03/01/2005","04/01/2005"}
 
-#### headerRow
+### headerRow
+
 La liste de la ligne d'en-tête
 
 headerRow:
-```groovy
+
+``` groovy
     ["site",  "traitement","version"]
 ```
 
-#### preHeaderRow et postHeaderRow
-La liste des lignes avant ou après  la ligne d'en-tête et avant les lignes de données
+### preHeaderRow et postHeaderRow
 
-### autres 
-- application correspond à l'objet application correspondant à la configuration chargées
-- applicationName: identificateur de l'application
-- dataDescription: description du data courant tel que définie dans le fichier de configuration
-- dataName: identificateur du data courant
-- dataI18n: valeurs d'internationalisation pour ce data
-- currentRowNumber: numero de la ligne en cours
-- binaryFile: objet d'information du fichier déposé ou en cours de publication
+La liste des lignes avant ou après la ligne d'en-tête et avant les lignes de données
+
+## autres
+
+-   application correspond à l'objet application correspondant à la configuration chargées
+-   applicationName: identificateur de l'application
+-   dataDescription: description du data courant tel que définie dans le fichier de configuration
+-   dataName: identificateur du data courant
+-   dataI18n: valeurs d'internationalisation pour ce data
+-   currentRowNumber: numero de la ligne en cours
+-   binaryFile: objet d'information du fichier déposé ou en cours de publication
 
 Pour plus d'information sur ces valeurs vous pouvez tester un computed component avec la valeur en retour.

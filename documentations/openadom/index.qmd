@@ -151,7 +151,7 @@ cat(yaml_content, sep = "\n")
 
 ## Insérer une image
 
-```{html}
+```{}
 ::: {layout-ncol=2}
 ![Petit logo](img/Logos_OA.png){width=50}
 
@@ -165,3 +165,29 @@ cat(yaml_content, sep = "\n")
 
 ![Grand logo](img/Logos_OpernADOM.svg){width=50}
 :::
+
+## Ajouter un page dans le menu
+
+On ajoute les pages dans le fichier _quarto.yaml
+
+Dans la section sidebar: -> contents
+
+``` yaml
+  sidebar:
+    contents:
+      - section: Introduction
+        contents:
+          - text: Introduction
+            href: fichiers/introduction/introduction.qmd
+          - text: Vocabulaire
+            href: fichiers/introduction/vocabulaire.qmd
+
+```
+
+ - **section** ajoute un nouveau dossier
+ - **text** le texte à afficher
+ - **href** le chemin vers le fichier
+ - **----** une ligne de séparation
+
+
+ 
