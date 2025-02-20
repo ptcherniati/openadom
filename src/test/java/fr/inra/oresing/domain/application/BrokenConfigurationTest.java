@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.application;
 
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.Version;
-import org.junit.Assert;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -20,15 +19,15 @@ class ConfigurationTest {
         final String versionString = "2.3.4.42-SNAPSHOT+12-2024-01-11";
         final Version applicationVersion = new Version(versionString);
         final Runtime.Version version = applicationVersion.getRunTimeVersion();
-        Assert.assertEquals("2.3.4.42-SNAPSHOT+12-2024-01-11",version.toString());
-        Assert.assertEquals(2,version.feature());
-        Assert.assertEquals(3,version.interim());
-        Assert.assertEquals(4,version.update());
-        Assert.assertEquals(42,version.patch());
-        Assert.assertEquals("SNAPSHOT",version.pre().orElse("absent"));
-        Assert.assertEquals(Optional.of(12),version.build());
-        Assert.assertEquals("2024-01-11",version.optional().orElse("no optional"));
-        Assert.assertEquals(List.of(2, 3, 4, 42),version.version());
+        assertEquals("2.3.4.42-SNAPSHOT+12-2024-01-11", version.toString());
+        assertEquals(2, version.feature());
+        assertEquals(3, version.interim());
+        assertEquals(4, version.update());
+        assertEquals(42, version.patch());
+        assertEquals("SNAPSHOT", version.pre().orElse("absent"));
+        assertEquals(Optional.of(12), version.build());
+        assertEquals("2024-01-11", version.optional().orElse("no optional"));
+        assertEquals(List.of(2, 3, 4, 42), version.version());
     }
 
 }

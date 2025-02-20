@@ -17,7 +17,7 @@ public class GroovyExpressionOnOneLineElementTransformer implements TransformOne
     private final ImmutableMap<String, Object> context;
 
     private final CheckerTarget target;
-    Set<String> references;
+    final Set<String> references;
 
     public GroovyExpressionOnOneLineElementTransformer(final StringGroovyExpression groovyExpression,
                                                        final ImmutableMap<String, Object> context,
@@ -41,8 +41,7 @@ public class GroovyExpressionOnOneLineElementTransformer implements TransformOne
                 .putAll(this.context)
                 .putAll(somethingThatCanProvideEvaluationContext.getEvaluationContext())
                 .build();
-        final FieldType transformed = StringType.getStringTypeFromStringValue(groovyExpression.evaluate(context));
-        return transformed;
+        return StringType.getStringTypeFromStringValue(groovyExpression.evaluate(context));
     }
 
     @Override

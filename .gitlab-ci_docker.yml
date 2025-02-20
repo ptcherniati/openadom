@@ -110,40 +110,43 @@ production:
 
 deployment:
   stage: trigger
+  variables:
+    TRIGGERED_BY_PARENT: 'true'
+    TRIGGERED_PROJECT_NAME: "$CI_PROJECT_NAME"
+    TRIGGERED_USER_NAME: "$GITLAB_USER_NAME"
+    TRIGGERED_PROJECT_COMMIT: "$CI_PROJECT_URL/-/commit/$CI_COMMIT_SHA"
+    TRIGGERED_PROJECT_COMMIT_TITLE: "$CI_COMMIT_TITLE"
+    TRIGGERED_PROJECT_BRANCH: "$CI_COMMIT_REF_NAME"
   rules:
     - if: '$CI_COMMIT_REF_SLUG == "develop"' # Development Env
       variables:
-        TRIGGERED_BY_PARENT: 'true'
         ENV: 'development'
         OA_BACKEND_VERSION: '$CI_COMMIT_REF_SLUG' # develop branch
         INIT_DB_USER: true
-        REMOVE_VOLUMES: true
+        REMOVE_DB_AND_VOLUMES: true
       when: on_success
     - if: '$CI_COMMIT_REF_SLUG == "main"' # Preprod Env
       variables:
-        TRIGGERED_BY_PARENT: 'true'
         ENV: 'preprod'
         OA_BACKEND_VERSION: '$CI_COMMIT_REF_SLUG' # main branch
         INIT_DB_USER: true
-        REMOVE_VOLUMES: true 
+        REMOVE_DB_AND_VOLUMES: true 
       when: on_success
     - if: '$CI_COMMIT_TAG'  # Production Env
       variables:
-        TRIGGERED_BY_PARENT: 'true'
         ENV: "production"
         OA_BACKEND_VERSION: '$CI_COMMIT_TAG'
         INIT_DB_USER: false
-        REMOVE_VOLUMES: false
+        REMOVE_DB_AND_VOLUMES: false
       when: on_success
     - if: '$CI_MERGE_REQUEST_IID != null' # Do nothing with merge request
       when: never
     - when: manual  # Trigger manually if needed ( Feature Dev branch )
       variables:
-        TRIGGERED_BY_PARENT: 'true'
         ENV: "development"
         OA_BACKEND_VERSION: '$CI_COMMIT_REF_SLUG'
         INIT_DB_USER: true
-        REMOVE_VOLUMES: true
+        REMOVE_DB_AND_VOLUMES: true
   trigger:
     project: '$TRIGGER_PROJECT_NAME'
     branch: main

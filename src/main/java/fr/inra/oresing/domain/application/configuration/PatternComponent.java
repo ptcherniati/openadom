@@ -41,7 +41,7 @@ public record PatternComponent(ComponentDescriptionType type,
                 .map(patternColumnComponent -> "%d : %s as %s".formatted(
                                 patternColumnComponent.patternNumber(),
                                 patternColumnComponent.componentKey(),
-                                Optional.ofNullable(patternColumnComponent)
+                                Optional.of(patternColumnComponent)
                                         .map(PatternComponentQualifiers::checker)
                                         .map(CheckerDescription::comment)
                                         .orElse("String")

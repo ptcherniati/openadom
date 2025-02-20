@@ -1,0 +1,193 @@
+---
+title: Documentation fichiers de configuration pour OpenADOM
+subtitle: Documentation décrivant la structure du fichier de configuration de l'application OpenADOM
+author:
+- TCHERNIATINSKY Philippe
+- VARLOTEAUX Lucile
+date: "last-modified"
+lang: fr
+numbersections: true
+documentclass: scrreprt
+toc: true
+toc-depth: 6
+toc-title: "Table des matières"
+fontsize: 12pt
+linestretch: 1
+linkcolor: black
+---
+
+![](img/Logos_OA.png){.hidden}
+
+## Ecriture de la documentation
+
+-   Vous pouvez utiliser visual studio code et l'extention for quarto.
+-   Vous pouvez aussi utilise rstudio
+
+Pour compiler certaine pages on doit rajouter les framework R rmarkdown et knitr
+
+``` r
+    Rscript -e "install.packages(c('rmarkdown', 'knitr'), repos='https://cloud.r-project.org')"
+```
+
+Reportez vous à la documentation de [Quarto](https://quarto.org/docs/guide/)
+
+## Ecrire une page
+
+Ouvrez un nouveau document et donnez lui un nom avec de préférence le suffixe .qmd (quarto markdown).
+
+Ajoutez une balise meta
+
+``` text
+---
+title: Le titre
+subtitle: le sous titre 
+abstract: le résumé
+---
+```
+
+## Créer une ancre {#ancre}
+
+Pour faire référence à un paragraphe, une image ou autre de votre page rajoutez un identifiant (ancre)
+
+```         
+    Créer une ancre {#ancre}
+```
+
+Pour éviter à devoir réécrire tous les liens, on va mettre dans le fichier \_variables.yml tous le liens que l'on utilisera. Ce sera le point unique pour les modifier.
+
+``` yaml
+page-refs:
+    index: 
+        ancre:  "[Créer une ancre](/index.qmd)" #chemin absolu depuis openadom
+    
+```
+
+pour utilise cette ancre:
+
+``` text
+{{ <var page-refs.index.ancre> }} sans espaces
+```
+ -> {{<var page-refs.index.ancre>}}
+
+## Ajouter un block
+
+``` text
+::: {.callout-note #block1 .titleModal collapse="false" style="border:red 2px solid"}
+
+ceci est un block
+:::
+```
+
+::: {.callout-note #block1 .titleModal collapse="false" style="border:red 2px solid"}
+ceci est un block
+:::
+
+
+``` text
+::: {.callout-note #block2  collapse="false" style="border:blue 2px solid; color:pink; background: yellow"}
+ceci est un block
+:::
+```
+
+::: {.callout-note #block2  collapse="false" style="border:blue 2px solid;color:pink; background: yellow"}
+ceci est un block
+:::
+
+## Importer un fichier
+
+Il est important que les fichiers fournis (blocs de code) puissent être sortis, afin d'être réutilisé.
+
+On les mets dans un dossier fichiers.
+pour les importer 
+
+```{code-fold="show"}
+    ::: {.callout-warning collapse="false" title="Les parcelles"}
+    ``` text
+    {{ < include fichiers/examples/basicComponents/fichiers/tr_parcelles_par.csv >}} sans l'espace
+    ```
+    :::
+
+```
+
+::: {.callout-warning collapse="false" title="Les parcelles"}
+``` text {style="border:blue"}
+{{< include fichiers/examples/basicComponents/fichiers/tr_parcelles_par.csv >}}
+```
+:::
+
+Il est possible s'inclure ce fichier csv sous forme de table
+
+
+::: {.callout-tip collapse="false" title="Types de sites" .code}
+```{r}
+#| echo: true
+#| output: true
+#| label: tr_parcelles_par.csv
+#| tbl-cap: Les parcelles
+#| code-fold: show
+
+#dans un bloc {r}
+knitr::kable(read.csv("fichiers/examples/basicComponents/fichiers/tr_parcelles_par.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+:::
+
+On peut aussi ne choisir que d'afficher certaines lignes
+
+::: {.callout-important collapse="false" title="computed component: sit_site"}
+
+``` {r}
+#| echo: true
+#| output: true
+#| tbl-cap: Les parcelles
+#| code-fold: show
+
+# dans un bloc {r}
+yaml_content <- suppressWarnings(readLines("fichiers/examples/basicComponents/fichiers/tr_parcelles_par.csv"))
+yaml_content <- yaml_content[2:3]
+cat(yaml_content, sep = "\n")
+```
+:::
+
+## Insérer une image
+
+```{}
+::: {layout-ncol=2}
+![Petit logo](img/Logos_OA.png){width=50}
+
+![Grand logo](img/Logos_OpernADOM.svg){width=50}
+:::
+```
+
+
+::: {layout-ncol=2}
+![Petit logo](img/Logos_OA.png){width=50}
+
+![Grand logo](img/Logos_OpernADOM.svg){width=50}
+:::
+
+## Ajouter un page dans le menu
+
+On ajoute les pages dans le fichier _quarto.yaml
+
+Dans la section sidebar: -> contents
+
+``` yaml
+  sidebar:
+    contents:
+      - section: Introduction
+        contents:
+          - text: Introduction
+            href: fichiers/introduction/introduction.qmd
+          - text: Vocabulaire
+            href: fichiers/introduction/vocabulaire.qmd
+
+```
+
+ - **section** ajoute un nouveau dossier
+ - **text** le texte à afficher
+ - **href** le chemin vers le fichier
+ - **----** une ligne de séparation
+
+
+ 

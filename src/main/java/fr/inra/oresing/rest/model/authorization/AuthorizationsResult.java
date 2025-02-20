@@ -19,6 +19,4 @@ public record AuthorizationsResult(
         this(userAuthorization, publicAuthorization, applicationName, applicationCreator, applicationManager, applicationCreator||applicationManager, userManager, applicationUser, activeApplicationUser);
     }
 
-    public AuthorizationsResult {
-    }
 }

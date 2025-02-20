@@ -12,7 +12,6 @@ public class FileSenderServiceException extends Exception {
 
   /**
    *
-   * @param message
    */
   public FileSenderServiceException(String message){
   super(message);

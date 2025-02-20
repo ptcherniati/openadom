@@ -13,8 +13,6 @@ import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 
 public record ConfigurationBuilder(RootBuilder rootBuilder) {
 
@@ -23,8 +21,8 @@ public record ConfigurationBuilder(RootBuilder rootBuilder) {
         final YAMLMapper mapper = YAMLMapper.builder().build();
         mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
         final boolean hasErrors = false;
-        JsonNode rootNode = null;
-        DocumentContext documentContext = null;
+        JsonNode rootNode;
+        DocumentContext documentContext;
         try {
             rootNode = mapper.readTree(bytes);
             documentContext = JsonPath.parse(mapper.writeValueAsString(rootNode));
@@ -37,11 +35,10 @@ public record ConfigurationBuilder(RootBuilder rootBuilder) {
             progression.complete();
             return null;
         }
-        final Configuration configuration = new RootBuilder(
+        return new RootBuilder(
                 progression,
                 rootNode,
                 documentContext
         ).build(bytes, comment);
-        return configuration;
     }
 }

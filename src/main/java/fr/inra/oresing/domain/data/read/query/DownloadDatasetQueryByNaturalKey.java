@@ -9,14 +9,14 @@ import java.util.Objects;
 import java.util.Set;
 
 public record DownloadDatasetQueryByNaturalKey(
-        boolean hasPatternDefinition,
         Application application,
         String dataName,
         OutPut outPut,
         Set<String> componentSelects,
         Set<ComponentOrderBy> componentOrderBy,
 
-        Set<Ltree> naturalOrHierarchicalKey) implements DownloadDatasetQuery {
+        Set<Ltree> naturalOrHierarchicalKey,
+        boolean horizontalDisplay) implements DownloadDatasetQuery {
     public DownloadDatasetQueryByNaturalKey {
         Objects.requireNonNull(application, "You must provide a valide application");
         if(!Strings.isNotEmpty(dataName)){

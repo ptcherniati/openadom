@@ -2,21 +2,15 @@ package fr.inra.oresing.domain.data.read.query;
 
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.checker.type.ListType;
-import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.checker.type.StringType;
-import fr.inra.oresing.domain.data.deposit.context.column.Column;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 public record DynamicComponentOrderBy(String componentKey, Map<String, ComponentOrderBy> dynamicColumns) implements ComponentOrderByForExport {
     @Override
-    public Stream<String> toValue(String language, DataRepositoryWithBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription) {
+    public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription) {
         String componentKey = componentKey();
         Map<String, StringType> values = (Map<String, StringType>) dataRowValues.get(componentKey).getValue();
         return dynamicColumns().keySet().stream()
@@ -28,4 +22,5 @@ public record DynamicComponentOrderBy(String componentKey, Map<String, Component
     public ComponentType sqlType() {
         return new ComponentTextType();
     }
+
 }

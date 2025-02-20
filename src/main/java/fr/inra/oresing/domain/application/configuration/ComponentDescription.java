@@ -40,10 +40,6 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
 
     String exportHeaderName();
 
-    default boolean required() {
-        return false;
-    }
-
     default ComponentPresenceConstraint mandatory() {
         return ComponentPresenceConstraint.OPTIONAL;
     }
@@ -58,18 +54,6 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
     List<Locale> langRestrictions();
 
     ComponentDescription withSubmission(String submission);
-
-    default Set<LineChecker> buildLineChecker(final DataRepository referenceValueRepository,
-                                              final PublishContext.PublishContextBuilder publishContextBuilder,
-                                              final Application application) {
-        final ImmutableSet.Builder<LineChecker> lineCheckerBuilder = new ImmutableSet.Builder<>();
-        if (checker() != null) {
-            return toLineChecker(referenceValueRepository, publishContextBuilder, application);
-        }
-        return Set.of();
-
-    }
-
 
     private Set<LineChecker> toLineChecker(DataRepository referenceValueRepository, PublishContext.PublishContextBuilder publishContextBuilder, Application application) {
         final DataColumn target = new DataColumn(componentKey());
@@ -91,27 +75,19 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                 lineTransformer
         );
         return switch (checker().multiplicity()) {
-            case ONE -> {
-                yield Set.of(new LineChecker.OneChecker<>(
-                        fieldType,
-                        target,
-                        lineTransformer,
-                        checker()
-                ));
-            }
-            case MANY -> {
-                yield Set.of(new LineChecker.ManyChecker<>(
-                        new ListType<>(fieldType),
-                        target,
-                        lineTransformer,
-                        checker()
-                ));
-            }
+            case ONE -> Set.of(new LineChecker.OneChecker<>(
+                    fieldType,
+                    target,
+                    lineTransformer,
+                    checker()
+            ));
+            case MANY -> Set.of(new LineChecker.ManyChecker<>(
+                    new ListType<>(fieldType),
+                    target,
+                    lineTransformer,
+                    checker()
+            ));
         };
-    }
-
-    default String getExportHeaderName() {
-        return Optional.ofNullable(exportHeaderName()).orElse(Optional.ofNullable(importHeader()).orElse(componentKey()));
     }
 
     default TransformationConfiguration transformation() {
@@ -145,7 +121,7 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                 .map(ComponentDescription::checker)
                 .filter(ReferenceChecker.class::isInstance)
                 .map(ReferenceChecker.class::cast)
-                .filter(checker -> checker.refType() != dataname)
+                .filter(checker -> !checker.refType().equals(dataname))
                 .map(ReferenceChecker::isParent)
                 .orElse(false);
     }
@@ -156,19 +132,13 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                 .isPresent();
     }
 
-    ;
-
     default String buildImportHeaderForComponent() {
         return null;
     }
 
-    ;
-
     default String buildImportDataExempleForComponent() {
         return null;
     }
-
-    ;
 
     default boolean hasOrderTag() {
         return componentOrder() < 9999;

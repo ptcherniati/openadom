@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.application.configuration.type;
 
-import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;

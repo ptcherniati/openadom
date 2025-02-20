@@ -12,7 +12,6 @@ public interface TransformationConfiguration extends GroovyDataInjectionConfigur
 
     /**
      * Si la valeur doit être transformée en l'échappant pour lui donner la forme d'une clé
-     * @return
      */
     boolean isCodify();
     Set<String> references();

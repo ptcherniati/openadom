@@ -1,14 +1,40 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
+import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.domain.file.FileOrUUID;
 
-import java.util.List;
-import java.util.regex.Pattern;
+public record ApplicationManagerUser(
+        Application application,
+        String dataName
+) implements ApplicationManager, ApplicationDataWriter, ApplicationDataDelete {
 
-public record ApplicationManagerUser() implements ApplicationManager {
+    public ApplicationManagerUser(Application application) {
+        this(application, ApplicationManager.ALL_DATANAMES);
+    }
 
     @Override
     public boolean canUpdateApplication() {
         return false;
+    }
+
+    @Override
+    public boolean canDelete(FileOrUUID fileOrUUID) {
+        return true;
+    }
+
+    @Override
+    public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
+        return true;
+    }
+
+    @Override
+    public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
+        return true;
+    }
+
+    @Override
+    public OreSiTechnicalException getException() {
+        return null;
     }
 }

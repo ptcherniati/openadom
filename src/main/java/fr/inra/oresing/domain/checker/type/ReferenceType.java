@@ -16,8 +16,10 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Che
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import lombok.Getter;
-import lombok.Setter;
-import org.apache.logging.log4j.util.Supplier;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+
+import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.*;
@@ -65,14 +67,14 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
 
     final Supplier<ReferenceType> clone;
 
-    public ReferenceType(final CheckerTarget target, final String refType, final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues, final LineChecker.Transformer transformer) {
+    public ReferenceType(final CheckerTarget target, final String refType, final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues, final LineChecker.Transformer transformer, DataValue.LineIdentityColumnName lineIdentityColumnName) {
         super();
-        this.lineIdentityColumnName = lineIdentityColumnName;
         this.target = target;
         this.refType = refType;
         this.referenceValues = referenceValues;
         this.transformer = transformer;
-        clone = () -> new ReferenceType(target, refType, referenceValues, transformer);
+        this.lineIdentityColumnName = lineIdentityColumnName;
+        clone = () -> new ReferenceType(target, refType, referenceValues, transformer, this.lineIdentityColumnName);
     }
 
     @Override
@@ -90,7 +92,6 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
     @Override
     public CheckerValidationCheckResult check(final String rawValue, final LineChecker lineChecker) {
         final String localRawValue = Ltree.escapeToLabel(rawValue, knownSpecialCharacters);
-        final CheckerValidationCheckResult validationCheckResult;
         final CheckerTarget target = lineChecker.target();
 
         value = Ltree.fromSql(localRawValue);
@@ -110,7 +111,14 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
         }
         return ReferenceValidationCheckResult.error(target, localRawValue, target.getInternationalizedKey("invalidReference"), ImmutableMap.of(
                         "target", target.toHumanReadableString(),
-                        "referenceValues", referenceValues == null ? new HashSet<>() : referenceValues.keySet().stream().map(DataValue.LineIdentityColumnName::naturalKey).map(Ltree::getSql).collect(Collectors.toSet()),
+                        "referenceValues", Optional.ofNullable(referenceValues)
+                                .filter(MapUtils::isNotEmpty)
+                                .map(Map::keySet)
+                                .orElseGet(HashSet::new)
+                                .stream()
+                                .map(DataValue.LineIdentityColumnName::naturalKey)
+                                .map(Ltree::getSql)
+                                .collect(Collectors.toSet()),
                         "refType", refType,
                         "value", rawValue),
                 this);
@@ -137,7 +145,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
             gen.writeNull();
             return;
         }
-        gen.writeString(Optional.ofNullable(value).map(Ltree::getSql).orElse(""));
+        gen.writeString(Optional.of(value).map(Ltree::getSql).orElse(""));
     }
 
     @Override
@@ -155,7 +163,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
                                      final DataColumnValue referenceColumnRawValue,
                                      final DataColumn referenceColumn,
                                      final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-        DataColumnValue dataColumnValue = Optional.ofNullable(value)
+        return Optional.ofNullable(value)
                 .map(ltree -> {
                     refsLinkedTo
                             .computeIfAbsent(
@@ -166,13 +174,12 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
                                             lineIdentityColumnName.hierarchicalKey()
                                     ));
                     return switch (referenceColumnRawValue) {
-                        case DataColumnSingleValue dataColumnSingleValue -> new DataColumnSingleValue(this);
+                        case DataColumnSingleValue ignored -> new DataColumnSingleValue(this);
                         case DataColumnMultipleValue dataColumnMultipleValue -> dataColumnMultipleValue;
                         default -> null;
                     };
                 })
                 .orElse(referenceColumnRawValue);
-        return dataColumnValue;
     }
 
 

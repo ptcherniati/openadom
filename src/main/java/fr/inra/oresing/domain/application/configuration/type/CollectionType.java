@@ -14,11 +14,11 @@ public sealed interface CollectionType<T, C extends ConfigurationSchemaNodeType>
                                                           C type) implements CollectionType<Map<String, C>, C> {
 
         public static MapType<PatternComponentQualifierType> PATTERN_COMPONENT_QUALIFIER_EMPTY_INSTANCE() {
-            return new MapType<PatternComponentQualifierType>(Map.of(), false, false, PatternComponentQualifierType.EMPTY_INSTANCE());
+            return new MapType<>(Map.of(), false, false, PatternComponentQualifierType.EMPTY_INSTANCE());
         }
 
         public static MapType<PatternComponentAdjacentType> PATTERN_COMPONENT_ADJACENT_EMPTY_INSTANCE() {
-            return new MapType<PatternComponentAdjacentType>(Map.of(), false, false, PatternComponentAdjacentType.EMPTY_INSTANCE());
+            return new MapType<>(Map.of(), false, false, PatternComponentAdjacentType.EMPTY_INSTANCE());
         }
 
 

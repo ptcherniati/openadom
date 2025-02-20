@@ -1,0 +1,8 @@
+---
+title: Validations
+subtitle: OA_validations
+abstract: >
+    Cette section vous permet de définir des règles qui s'appliquent à un ensemble de composants ou dont la règle fait intervenir plusieurs composants.
+---
+
+TODO

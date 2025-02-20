@@ -28,23 +28,21 @@ public abstract class Column implements Comparable<Column> {
 
     @Getter
     private final ComputedValueUsage computedValueUsage;
-    private final String headerForColumn;
 
     public Column(final DataColumn referenceColumn, final String headerForColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage) {
         super();
         this.referenceColumn = referenceColumn;
         this.presenceConstraint = presenceConstraint;
         this.computedValueUsage = computedValueUsage;
-        this.headerForColumn = headerForColumn;
     }
 
-    public static final Column staticPatternQualifierComponentDescriptionToColumn(final DataColumn referenceColumn,
-                                                               String headerForColumn,
-                                                               String componentQualifierKey,
-                                                               final ComponentPresenceConstraint presenceConstraint,
-                                                               final Multiplicity multiplicity,
-                                                               final DataRepository referenceValueRepository,
-                                                               final TransformationConfiguration defaultValue) {
+    public static Column staticPatternQualifierComponentDescriptionToColumn(final DataColumn referenceColumn,
+                                                                            String headerForColumn,
+                                                                            String componentQualifierKey,
+                                                                            final ComponentPresenceConstraint presenceConstraint,
+                                                                            final Multiplicity multiplicity,
+                                                                            final DataRepository referenceValueRepository,
+                                                                            final TransformationConfiguration defaultValue) {
         Column column = null;
         if (multiplicity == Multiplicity.ONE) {
             column = new OneValueStaticColumn(referenceColumn, headerForColumn, presenceConstraint, ComputedValueUsage.NOT_COMPUTED) {
@@ -78,15 +76,20 @@ public abstract class Column implements Comparable<Column> {
         return column;
     }
 
-    public static final Column staticColumnDescriptionToColumn(final DataColumn referenceColumn,
-                                                               String headerForColumn,
-                                                               final ComponentPresenceConstraint presenceConstraint,
-                                                               final Multiplicity multiplicity,
-                                                               final DataRepository referenceValueRepository,
-                                                               final TransformationConfiguration defaultValue) {
+    public static Column staticColumnDescriptionToColumn(final DataColumn referenceColumn,
+                                                         String headerForColumn,
+                                                         final ComponentPresenceConstraint presenceConstraint,
+                                                         final Multiplicity multiplicity,
+                                                         final DataRepository referenceValueRepository,
+                                                         final TransformationConfiguration defaultValue) {
         Column column = null;
         if (multiplicity == Multiplicity.ONE) {
-            column = new OneValueStaticColumn(referenceColumn, headerForColumn, presenceConstraint, ComputedValueUsage.NOT_COMPUTED) {
+            column = new OneValueStaticColumn(
+                    referenceColumn,
+                    headerForColumn,
+                    presenceConstraint,
+                    ComputedValueUsage.NOT_COMPUTED
+            ) {
                 @Override
                 public String getExpectedHeader() {
                     return Optional.ofNullable(headerForColumn)
@@ -99,7 +102,12 @@ public abstract class Column implements Comparable<Column> {
                 }
             };
         } else if (multiplicity == Multiplicity.MANY) {
-            column = new ManyValuesStaticColumn(referenceColumn, headerForColumn, presenceConstraint, ComputedValueUsage.NOT_COMPUTED) {
+            column = new ManyValuesStaticColumn(
+                    referenceColumn,
+                    headerForColumn,
+                    presenceConstraint,
+                    ComputedValueUsage.NOT_COMPUTED
+            ) {
                 @Override
                 public String getExpectedHeader() {
                     return Optional.ofNullable(headerForColumn)
@@ -117,16 +125,16 @@ public abstract class Column implements Comparable<Column> {
         return column;
     }
 
-    public static final Column staticPatternColumnDescriptionToColumn(final DataColumn referenceColumn,
-                                                                      String headerForColumn,
-                                                                      String headerInFile,
-                                                                      final ComponentPresenceConstraint presenceConstraint,
-                                                                      final Multiplicity multiplicity,
-                                                                      final DataRepository referenceValueRepository,
-                                                                      final List<Column> qualifierColumns,
-                                                                      final List<Column> adjacentColumns,
-                                                                      final TransformationConfiguration defaultValue) {
-        Column column = null;
+    public static Column staticPatternColumnDescriptionToColumn(final DataColumn referenceColumn,
+                                                                String headerForColumn,
+                                                                String headerInFile,
+                                                                final ComponentPresenceConstraint presenceConstraint,
+                                                                final Multiplicity multiplicity,
+                                                                final DataRepository referenceValueRepository,
+                                                                final List<Column> qualifierColumns,
+                                                                final List<Column> adjacentColumns,
+                                                                final TransformationConfiguration defaultValue) {
+        Column column;
         column = new OneValueStaticPatternColumn(
                 referenceColumn,
                 headerForColumn,

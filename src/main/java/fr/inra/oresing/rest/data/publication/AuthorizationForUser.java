@@ -14,7 +14,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
 
 public record AuthorizationForUser(
         boolean isApplicationCreator,
@@ -26,7 +25,7 @@ public record AuthorizationForUser(
         AuthorizationsResult authorizationsForUserOrPublic,
         AuthorizationPublicationService builder) implements State {
 
-    protected static Boolean hasRight(
+    /*protected static Boolean hasRight(
             final Authorization authorization,
             final List<AuthorizationParsed> auths) {
         return auths.stream()
@@ -58,9 +57,7 @@ public record AuthorizationForUser(
                             .map(ltrees->ltrees.stream().map(Ltree::getSql).toList())
                             .orElse(List.of());
                     return pathesForDatatype.stream()
-                            .anyMatch(path -> Strings.isNullOrEmpty(path) ?
-                                    true :
-                                    authorizationsForDatatype.stream().anyMatch(pathForDatatype->path.equals(path)));
+                            .anyMatch(path -> Strings.isNullOrEmpty(path) || authorizationsForDatatype.stream().anyMatch(path::equals));
                 });
     }
 
@@ -85,7 +82,7 @@ public record AuthorizationForUser(
                 isApplicationCreator
                         || (hasRightForOperationType &&
                         testPredicateForOperationType(operationType,
-                                parsedAuhorizations -> testRequiredAuthorizations(parsedAuhorizations))
+                                this::testRequiredAuthorizations)
                 )) {
             return true;
         }
@@ -103,13 +100,13 @@ public record AuthorizationForUser(
 
     protected boolean requiredAuthorizationMatchForFile(
             final Map<String, Set<String>> requiredAuthorizationInDataBase) {
-        Optional<Map<String, List<Ltree>>> requiredAuthorizationForFile = Optional.ofNullable(params())
+        Optional<Map<String, List<Ltree>>> requiredAuthorizationForFile = Optional.ofNullable(fileOrUuid())
                 .map(FileOrUUID::binaryfiledataset)
                 .map(BinaryFileDataset::getRequiredAuthorizations);
         if (requiredAuthorizationForFile.isPresent()) {
             for (final Map.Entry<String, List<Ltree>> requiredAuthorizationForFileEntry : requiredAuthorizationForFile.get().entrySet()) {
                 final String scope = requiredAuthorizationForFileEntry.getKey();
-                final String ltree = requiredAuthorizationForFileEntry.getValue().get(0).getSql();
+                final String ltree = requiredAuthorizationForFileEntry.getValue().getFirst().getSql();
                 final Set<String> toCompareLtree = requiredAuthorizationInDataBase.getOrDefault(scope, Set.of());
                 return toCompareLtree.stream()
                         .anyMatch(ltreeAuth -> ltree.equals(ltreeAuth) ||
@@ -143,5 +140,5 @@ public record AuthorizationForUser(
 
     public boolean isApplicationCreator() {
         return isApplicationCreator;
-    }
+    }*/
 }

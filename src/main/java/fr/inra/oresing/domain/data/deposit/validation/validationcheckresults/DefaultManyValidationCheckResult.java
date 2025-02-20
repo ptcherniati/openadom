@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.data.deposit.validation.validationcheckresults;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.inra.oresing.ValidationLevel;
-import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.*;
@@ -57,15 +56,15 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
     public DataColumnValue transform(final LineChecker lineChecker, final DataColumnValue referenceColumnRawValue, final DataColumn dataColumn, final Map refsLinkedTo) {
         return switch (lineChecker.underlyingType()) {
             case ReferenceType ignored -> new DataColumnMultipleValue(
-                            ((List<FieldType>) value().getValue()).stream()
-                                    .map(referenceType -> {
-                                        referenceType.transform(lineChecker, referenceColumnRawValue, dataColumn, refsLinkedTo);
-                                        return referenceType;
-                                    })
-                                    .map(FieldType::getValue)
-                                    .map(Object::toString)
-                                    .map(StringType::getStringTypeFromStringValue)
-                                    .toList()
+                    ((List<FieldType>) value().getValue()).stream()
+                            .map(referenceType -> {
+                                referenceType.transform(lineChecker, referenceColumnRawValue, dataColumn, refsLinkedTo);
+                                return referenceType;
+                            })
+                            .map(FieldType::getValue)
+                            .map(Object::toString)
+                            .map(StringType::getStringTypeFromStringValue)
+                            .toList()
             );
             default -> new DataColumnMultipleValue((List) value().getValue());
         };
@@ -85,7 +84,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
     @Override
     public ValidationLevel level() {
         return stream()
-                .anyMatch(vcr -> vcr.isError()) ? ValidationLevel.ERROR : ValidationLevel.SUCCESS;
+                .anyMatch(ValidationCheckResult::isError) ? ValidationLevel.ERROR : ValidationLevel.SUCCESS;
     }
 
     @Override
@@ -100,12 +99,9 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         final Map<String, Object> messagesParams = new HashMap<>();
         for (final ValidationCheckResult validationCheckResult : this) {
             final Map<String, Object> map = validationCheckResult.messageParams();
-            map.entrySet()
-                    .forEach(entry -> {
-                        ((List) messagesParams
-                                .computeIfAbsent(entry.getKey(), k -> new LinkedList<>()))
-                                .add(entry.getValue());
-                    });
+            map.forEach((key, value1) -> ((List) messagesParams
+                    .computeIfAbsent(key, k -> new LinkedList<>()))
+                    .add(value1));
         }
         return messagesParams;
 

@@ -1,10 +1,8 @@
 package fr.inra.oresing.domain.authorization.request;
 
-import fr.inra.oresing.domain.repository.authorization.OperationType;
 import org.apache.commons.collections4.MapUtils;
 
 import java.util.*;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public record AuthorizationRequest(UUID authorizationId,
@@ -26,7 +24,6 @@ public record AuthorizationRequest(UUID authorizationId,
         if (authorizationForAll == null || MapUtils.isEmpty(authorizationForAll.authorizationForAll())) {
             return new HashMap<>();
         }
-        Map<String, AuthorizationForScope> buildAuthorizationsByReferences = new HashMap<>();
         return authorizationForAll.authorizationForAll().entrySet().stream()
                 .collect(Collectors.toMap(
                                 Map.Entry::getKey,

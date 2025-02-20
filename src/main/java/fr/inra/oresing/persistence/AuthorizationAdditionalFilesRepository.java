@@ -42,22 +42,36 @@ public class AuthorizationAdditionalFilesRepository extends JsonTableInApplicati
     }
 
     public List<OreSiAdditionalFileAuthorization> findAuthorizations(final UUID userId, final Application application) {
-        final String query  = String.join("\n",
-                "select '"+OreSiAdditionalFileAuthorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
-                "from " + getTable().getSqlIdentifier()+ " t",
-                "where t.application = :applicationId",
-               " and array[ :userId::entityref] <@ t.oresiusers"
+        final String query = String.format("""
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
+                        FROM %2$s t
+                        WHERE t.application = :applicationId
+                          AND array[:userId::entityref] <@ t.oresiusers
+                        """,
+                OreSiAdditionalFileAuthorization.class.getName(),
+                getTable().getSqlIdentifier()
         );
-         final MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
-               .addValue("userId", userId.toString());
+
+        final MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
+                .addValue("userId", userId.toString());
         return getNamedParameterJdbcTemplate().query(query, sqlParams, getJsonRowMapper());
     }
 
     public List<OreSiAdditionalFileAuthorization> findPublicAuthorizations() {
-        final String query  = String.join("\n",
-                "select '"+OreSiAdditionalFileAuthorization.class.getName() +"' as \"@class\"   ,  to_jsonb(t) as json",
-                "from " + getTable().getSqlIdentifier()+ " t, public.oresiuser u",
-                "where ARRAY[u.id]::entityref[] <@ oresiusers and u.login='_public_'");
+        final String query = String.format("""
+                        SELECT 
+                            '%1$s' AS "@class", 
+                            to_jsonb(t) AS json
+                        FROM %2$s t, public.oresiuser u
+                        WHERE 
+                            ARRAY[u.id]::entityref[] <@ oresiusers 
+                            AND u.login = '_public_'
+                        """,
+                OreSiAdditionalFileAuthorization.class.getName(),
+                getTable().getSqlIdentifier()
+        );
+
         return getNamedParameterJdbcTemplate().query(query, Map.of(), getJsonRowMapper());
     }
+
 }

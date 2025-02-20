@@ -7,7 +7,6 @@ import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.index.AuthorizationIndex;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
-import fr.inra.oresing.rest.OreSiService;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -31,16 +30,8 @@ import java.util.*;
 @Component
 @Slf4j
 public class MigrateService {
-    final Map<String, ActionToDoAfterMigration> callBackFunction =
-            new LinkedHashMap<>() {{
-                put("1", new Migrate1());
-            }};
     @Autowired
     ApplicationRepository applicationRepository;
-    @Autowired
-    OreSiService oreSiService;
-    @Autowired
-    private OreSiApiRequestContext request;
     @Autowired
     private SqlService db;
     @Autowired
@@ -106,14 +97,17 @@ public class MigrateService {
                 return rs.getString(1);
             }
         } catch (SQLException e) {
-            new IllegalStateException("Impossible d'obtenir l'utilisateur actuel de la base de données");
+            throw new IllegalStateException("Impossible d'obtenir l'utilisateur actuel de la base de données");
         }
         throw new IllegalStateException("Impossible d'obtenir l'utilisateur actuel de la base de données");
     }
 
     public Flyway getFlyway(OreSiUserRole creator) {
         final SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-        final Flyway flyway = Flyway.configure()
+        final Map<String, ActionToDoAfterMigration> callBackFunction = new LinkedHashMap<>();
+        callBackFunction.put("1", new Migrate1());
+
+        return Flyway.configure()
                 .dataSource(dataSource)
                 .placeholders(Map.of(
                         "applicationSchema", sqlSchemaForApplication.getSqlIdentifier(),
@@ -130,7 +124,6 @@ public class MigrateService {
                                 creator,
                                 callBackFunction))
                 .load();
-        return flyway;
     }
 
     public void updateSchema() {
@@ -146,7 +139,7 @@ public class MigrateService {
         if (hasNoAddition) {
             return;
         }
-        Collection<String> newDataIdentifiers = CollectionUtils.<String>removeAll(
+        Collection<String> newDataIdentifiers = CollectionUtils.removeAll(
                 newRequiredAuthorizationAttributes, currentRequiredAuthorizationAttributes
         );
 
@@ -172,7 +165,7 @@ public class MigrateService {
         if (hasNoDeletion) {
             return;
         }
-        Collection<String> removingDataIdentifiers = CollectionUtils.<String>removeAll(newRequiredAuthorizationAttributes, currentRequiredAuthorizationAttributes);
+        Collection<String> removingDataIdentifiers = CollectionUtils.removeAll(newRequiredAuthorizationAttributes, currentRequiredAuthorizationAttributes);
 
         throw new SiOreConfigurationFormatException(
                 ConfigurationException.REMOVING_AUTHORIZATION_SCOPE_ATTRIBUTES_ERROR,
@@ -201,6 +194,10 @@ public class MigrateService {
         public void handle(final Event event, final Context context) {
             final Connection connection = context.getConnection();
             String version = context.getMigrationInfo().getVersion().getVersion();
+
+            final Map<String, ActionToDoAfterMigration> callBackFunction = new LinkedHashMap<>();
+            callBackFunction.put("1", new Migrate1());
+
             Optional.ofNullable(callBackFunction.get(version))
                     .ifPresent(actionToDoAfterMigration -> {
                         try {

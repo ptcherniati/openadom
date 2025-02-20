@@ -16,7 +16,7 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -32,35 +32,6 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
         this.errors = errors;
     }
 
-    public static InvalidDatasetContentException forUnexpectedHeaderColumn(final String expected, final String actual, final int headerLine) {
-        return newInvalidDatasetContentException(headerLine, "unexpectedHeaderColumn", ImmutableMap.of(
-                "actualHeaderColumn", actual,
-                "expectedHeaderColumn", expected
-        ));
-    }
-
-    public static InvalidDatasetContentException forUnexpectedHeaderColumnsInList(final String expected, final List<Map.Entry<String, String>> actual, final int headerLine) {
-        return newInvalidDatasetContentException(headerLine, "unexpectedHeaderColumnsInList", ImmutableMap.of(
-                "actualHeaderColumns", actual,
-                "expectedHeaderColumn", expected
-        ));
-    }
-
-    public static InvalidDatasetContentException forHeaderColumnPatternNotMatching(final String expectedPattern, final String actual, final int headerLine) {
-        return newInvalidDatasetContentException(headerLine, "headerColumnPatternNotMatching", ImmutableMap.of(
-                "actualHeaderColumn", actual,
-                "expectedHeaderColumnPattern", expectedPattern
-        ));
-    }
-
-    public static InvalidDatasetContentException forUnexpectedTokenCount(final int expectedTokenCount, final String actualHeader, final int actualTokenCount, final int headerLine) {
-        return newInvalidDatasetContentException(headerLine, "unexpectedTokenCount", ImmutableMap.of(
-                "expectedTokenCount", expectedTokenCount,
-                "actualHeader", actualHeader,
-                "actualTokenCount", actualTokenCount
-        ));
-    }
-
     public static InvalidDatasetContentException forInvalidHeaders(final ImmutableSet<String> expectedColumns, final ImmutableSet<String> mandatoryHeaders, final ImmutableSet<String> actualColumns, final int headerLine) {
         final Set<String> missingComponents = SetUtils.difference(mandatoryHeaders, actualColumns);
         final Set<String> unknownComponents = SetUtils.difference(actualColumns, expectedColumns);
@@ -69,6 +40,12 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
                 "actualColumns", actualColumns,
                 "missingComponents", missingComponents,
                 "unknownComponents", unknownComponents
+        ));
+    }
+
+    public static InvalidDatasetContentException forMissingMandatoryColumns(final Set<String> missingMandatoryColumns, final int headerLine) {
+        return newInvalidDatasetContentException(headerLine, "missingMandatoryColumns", ImmutableMap.of(
+                "missingMandatoryColumns", missingMandatoryColumns
         ));
     }
 
@@ -97,21 +74,37 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
             throw forEmptyHeader(headerLine);
         }
         final ImmutableSet<String> actualColumnsAsSet = actualColumns.elementSet();
-        final Boolean givenColumnIsUnexpected = !(allowUnexpectedColumns || expectedColumns.containsAll(actualColumnsAsSet));
-        final Boolean mandatoryColumnIsMissing = !actualColumnsAsSet.containsAll(mandatoryColumns);
-        if (givenColumnIsUnexpected || mandatoryColumnIsMissing) {
-            if(!mandatoryColumnIsMissing && patternColumnFactory!=null) {
+        boolean areAllBasicColumns = expectedColumns.containsAll(actualColumnsAsSet);
+        final boolean givenColumnIsUnexpected = !(allowUnexpectedColumns || areAllBasicColumns);
+        final boolean mandatoryColumnIsMissing = !actualColumnsAsSet.containsAll(mandatoryColumns);
+        if (!areAllBasicColumns || mandatoryColumnIsMissing) {
+            if (!mandatoryColumnIsMissing && patternColumnFactory != null) {
                 List<ContextHeader> notOrdinaryColumns = headersForRow.stream()
                         .filter(column -> !expectedColumns.contains(column))
                         .map(columnHeader -> new ContextHeader(columnHeader, headersForRow))
                         .toList();
-                if(patternColumnFactory.test(notOrdinaryColumns)){
+                if (patternColumnFactory.test(notOrdinaryColumns)) {
                     return headersForRow;
                 }
+            } else if (mandatoryColumnIsMissing) {
+                Set<String> missingMandatoryColumns = mandatoryColumns.stream()
+                        .filter(Predicate.not(actualColumns::contains))
+                        .collect(Collectors.toUnmodifiableSet());
+                throw forMissingMandatoryColumns(missingMandatoryColumns, headerLine);
+            } else if (!givenColumnIsUnexpected) {
+                final ImmutableSet<String> duplicatedHeaders = actualColumns.entrySet().stream()
+                        .filter(column -> column.getCount() > 1)
+                        .map(Multiset.Entry::getElement)
+                        .collect(ImmutableSet.toImmutableSet());
+                if (!duplicatedHeaders.isEmpty()) {
+                    throw forDuplicatedHeaders(headerLine, duplicatedHeaders);
+                }
+                return headersForRow;
             }
 
             throw forInvalidHeaders(expectedColumns, mandatoryColumns, actualColumnsAsSet, headerLine);
         }
+
         final ImmutableSet<String> duplicatedHeaders = actualColumns.entrySet().stream()
                 .filter(column -> column.getCount() > 1)
                 .map(Multiset.Entry::getElement)
@@ -129,12 +122,6 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
     }
 
     public static void checkErrorsIsEmpty(final ReportErrors errors) {
-        if (!errors.isEmpty()) {
-            throw new InvalidDatasetContentException(errors);
-        }
-    }
-
-    public static void checkReferenceErrorsIsEmpty(final List<CsvRowValidationCheckResult> errors) {
         if (!errors.isEmpty()) {
             throw new InvalidDatasetContentException(errors);
         }

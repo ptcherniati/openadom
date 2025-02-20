@@ -15,8 +15,8 @@ class DateCheckerExampleBuilder {
     protected static final DateCheckerType DDMMYYYYHHMMSS = buildDateChecker("dd/MM/yyyy HH:mm:ss", null, null, null, Multiplicity.ONE);
 
     protected static DateCheckerType buildDateChecker(final String pattern, final String min, final String max, final String duration, final Multiplicity multiplicity) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<String, ConfigurationSchemaNodeType>();
-        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<String, ConfigurationSchemaNodeType>();
+        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<>();
         final EnumType oaMultiplicity = EnumExampleBuilder.buildMultiplicityType(multiplicity);
         params.put(ConfigurationSchemaNode.OA_MULTIPLICITY, oaMultiplicity);
         Optional.ofNullable(pattern)

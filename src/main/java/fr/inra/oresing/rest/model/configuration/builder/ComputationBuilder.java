@@ -39,7 +39,7 @@ public record ComputationBuilder(RootBuilder rootBuilder) {
 
         i18n = exceptionMessagesParsing.i18n();
         final Set<String> references = rootBuilder.getMapper().convertValue(computationNode.findPath(ConfigurationSchemaNode.OA_REFERENCES), Set.class);
-        return new Parsing<ComputationChecker>(i18n,
+        return new Parsing<>(i18n,
                 new ComputationChecker(
                         CheckerDescription.CheckerDescriptionType.ComputationChecker,
                         multiplicity,

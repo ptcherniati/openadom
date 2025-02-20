@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.groovy.predefined.script;
 
 import fr.inra.oresing.domain.groovy.predefined.builder.naturalkey.NaturalKeyBuilder;
 
-import java.util.List;
 import java.util.Map;
 
 /**

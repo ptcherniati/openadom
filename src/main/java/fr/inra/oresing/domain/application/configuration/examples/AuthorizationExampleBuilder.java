@@ -18,17 +18,17 @@ class AuthorizationExampleBuilder {
     protected static AuthorizationType buildAuthorization(
             List<StringType> authorizationsScope,
             StringType timeScope) {
+        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
+        children.put(ConfigurationSchemaNode.OA_AUTHORIZATION_SCOPES, new CollectionType.ArrayType(
+                authorizationsScope,
+                false,
+                false,
+                StringType.EMPTY_INSTANCE()
+        ));
+        children.put(ConfigurationSchemaNode.OA_TIME_SCOPE, timeScope);
+
         return new AuthorizationType(
-                new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
-                    put(ConfigurationSchemaNode.OA_AUTHORIZATION_SCOPES, new CollectionType.ArrayType(
-                            authorizationsScope,
-                            false,
-                            false,
-                            StringType.EMPTY_INSTANCE()
-                            )
-                    );
-                    put(ConfigurationSchemaNode.OA_TIME_SCOPE, timeScope);
-                }}
+                children
         );
     }
 }

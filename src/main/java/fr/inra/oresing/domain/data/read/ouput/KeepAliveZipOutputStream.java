@@ -1,5 +1,7 @@
 package fr.inra.oresing.domain.data.read.ouput;
 
+import lombok.extern.java.Log;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
@@ -7,6 +9,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.zip.ZipOutputStream;
 
+@Log
 public class KeepAliveZipOutputStream extends ZipOutputStream {
     private final Timer timer;
     private TimerTask currentTask;
@@ -28,7 +31,7 @@ public class KeepAliveZipOutputStream extends ZipOutputStream {
                 try {
                     sendKeepAliveBit();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    log.severe(e.getMessage());
                 }
             }
         };

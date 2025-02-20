@@ -1,0 +1,169 @@
+project:
+  type: website
+  output-dir: _site
+
+website:
+
+  page-navigation: true
+  back-to-top-navigation: true
+  bread-crumbs: true
+  repo-url: https://forgemia.inra.fr/anaee-dev/openadom/backend/-/tree/develop
+  repo-actions: [edit, source, issue]
+  title: "openadom"
+  description: "Documentation des fichiers de configuration pour OpenADOM"
+  favicon: /img/Logos_OA.svg  
+  site-url: https://dev.openadom.fr
+  sidebar:
+    logo: /img/Logos_OpernADOM.png
+    background: rgb(102, 196, 196)
+    page-navigation: true
+    back-to-top-navigation: true
+    reader-mode: true
+    search: true
+    collapse-level: 1
+    border: true
+    style: docked
+    contents:
+      - section: Introduction
+        contents:
+          - text: Introduction
+            href: fichiers/introduction/introduction.qmd
+          - text: Vocabulaire
+            href: fichiers/introduction/vocabulaire.qmd
+          - text: Fichier d'échange
+            href: fichiers/introduction/fichier_csv.qmd
+      - section: Fichiers d'échange
+        contents:
+          - text: Aide fichier
+            href: fichiers/fichier_echange/aide_fichier.qmd
+          - text: Application (OA_application)
+            href: fichiers/fichier_echange/application.qmd
+          - text: Etiquettes (OA_tags)
+            href: fichiers/fichier_echange/etiquettes.qmd
+          - section:
+            text: Données (OA_data)
+            href: fichiers/fichier_echange/data/data.qmd
+            contents: 
+              - section: Components
+                contents: 
+                  - text: introduction
+                    href: fichiers/fichier_echange/data/components/components.qmd
+                  - text: Basic Components
+                    href: fichiers/fichier_echange/data/components/basic_components.qmd
+                  - text: Computed Components
+                    href: fichiers/fichier_echange/data/components/computed_components.qmd
+                  - text: Dynamic Components
+                    href: fichiers/fichier_echange/data/components/dynamic_components.qmd
+                  - text: Constant Components
+                    href: fichiers/fichier_echange/data/components/constant_components.qmd
+                  - text: Pattern Components
+                    href: fichiers/fichier_echange/data/components/pattern_components.qmd
+                  - section:  Paramétrage des composants
+                    href: fichiers/fichier_echange/data/components/components_description.qmd
+                  - text: Verificateurs
+                    href: fichiers/fichier_echange/data/verificateurs.qmd                          
+                  - text: Validations
+                    href: fichiers/fichier_echange/data/validations.qmd
+                  - section: Dépôt de fichier (OA_submission)
+                    href: fichiers/fichier_echange/data/submission/submission.qmd
+                  - section: Autorisations (OA_autorisations)
+                    href: fichiers/fichier_echange/data/authorizations/authorizations.qmd
+              - section: Fichier additionnels
+                href: fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd
+              - section: Formulaire de demande de droits
+                href: fichiers/fichier_echange/rightsRequest/rightsRequest.qmd
+      - section: Pour aller plus loin
+        contents:
+          - text: Glossaire
+            href: fichiers/autres/glossaire.qmd
+          - text: Authorization
+            href: fichiers/pour_aller_plus_loin/authorization.md
+          - text: Component Qualifiers
+            href: fichiers/pour_aller_plus_loin/component_qualifiers.md
+          - text: Expression Groovy
+            href: fichiers/pour_aller_plus_loin/expressionGroovy.qmd
+          - text: Internationalisation i18n
+            href: fichiers/pour_aller_plus_loin/internationnalisation_i18n.md
+          - text: Submission
+            href: fichiers/pour_aller_plus_loin/submission.md
+      - section: Base de données
+        contents: 
+          - text: Introduction
+            href: fichiers/autres/database.qmd
+      - section: En réflexion
+        contents: 
+          - text: Verificateurs
+            href: fichiers/enReflexion/a_savoir.md
+          - text: Clefs étrangères 
+            href: fichiers/enReflexion/reference_checker.md
+      - section: Exemples
+        contents:
+          - text: Fichier de configuration minimale
+            href: fichiers/examples/configuration_min/description.qmd
+          - section: Composantes 
+            contents: 
+            - text: Example d'utilisation des composants
+              href: fichiers/examples/meteo/description.qmd
+            - text: Example d'utilisation des composantes dynamiques(sites)
+              href: fichiers/examples/dynamicComponant/description.qmd
+            - text: Example d'utilisation des composantes dynamiques (taxons)
+              href: fichiers/examples/taxons/description.qmd
+            - text: Example d'utilisation des composantes basiques
+              href: fichiers/examples/basicComponents/description.qmd
+  navbar:
+    search: true
+    background: rgb(102, 196, 196)
+    left: 
+      - href: index.qmd
+        text: Accueil
+      - href: fichiers/readme.md
+        text: Installation
+      - href: fichiers/schema-example.qmd
+        text: Fichier d'example
+      - href: fichiers/autres/lexique_yaml.qmd
+        text: Lexique
+      - href: about.md
+        text: A propos
+    right:
+      - icon: gitlab
+        href: https://forgemia.inra.fr/anaee-dev/openadom
+      - icon: oa
+        href: https://openadom.fr
+  page-footer: 
+    left: "Copyright 2025, OpenADOM"
+    right: 
+      - icon: gitlab
+        href: https://forgemia.inra.fr/anaee-dev/openadom
+        
+format:
+  html:
+    smooth-scroll: true
+    theme: 
+      - minty
+      - style/global.scss
+    template-partials:
+      - _extensions/section-meta/partials/title-block.html
+    toc: true
+    toc-expand: false
+    toc-depth: 3
+    number-sections: false
+    code-fold: true
+    code-tools: true
+    highlight-style: kate
+    mainfont: "Roboto, sans-serif"
+    monofont: "Fira Code, monospace"
+    include-in-header: 
+      text: |
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Fira+Code&display=swap" rel="stylesheet">
+    page-layout: full
+    link-external-newwindow: true
+    citations-hover: true
+    footnotes-hover: true
+    date-format: "DD MMMM YYYY"
+    lang: fr-FR
+    date: "last-modified"
+    anchor-sections: true
+    shift-heading-level-by: 1  # Convertit les h1 en h2 pour avoir des ancre
+
+execute:
+  freeze: auto

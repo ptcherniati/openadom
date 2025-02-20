@@ -37,6 +37,6 @@ public abstract class JsonTableInApplicationSchemaRepositoryTemplate<T extends O
     }
     static Map<String, ?> convertMapsqlparameterSourcetoMap(final MapSqlParameterSource sqlParameterSource){
         return Arrays.stream(Objects.requireNonNull(sqlParameterSource.getParameterNames()))
-                .collect(Collectors.toMap(param->param, param->sqlParameterSource.getValue(param)));
+                .collect(Collectors.toMap(param->param, sqlParameterSource::getValue));
     }
 }

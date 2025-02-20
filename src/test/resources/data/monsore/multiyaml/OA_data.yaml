@@ -1,0 +1,56 @@
+especes:
+  OA_tags: [ data ]
+  OA_i18n:
+    OA_title:
+      fr: Espèces
+      en: Species
+    OA_description:
+      fr: Description des espèces pêchées sur le bassin versant
+      en: Description of species fished in the watershed
+  OA_i18nDisplayPattern:
+    OA_title:
+      fr: "{esp_nom}"
+      en: "{esp_nom}"
+    OA_description:
+      fr: "{esp_definition_fr}"
+      en: "{esp_definition_en}"
+  OA_naturalKey:
+    - esp_nom
+  OA_basicComponents:
+    esp_nom:
+      OA_tags: [ test ]
+      OA_exportHeader:
+        OA_title:
+          fr: "code"
+          en: "code"
+        OA_description:
+          fr: "nom codique de l'espèce"
+          en: "code name of the species"
+    esp_definition_fr:
+      OA_exportHeader:
+        OA_title:
+          fr: "définition"
+        OA_description:
+          fr: "définition de l'espèce"
+      OA_langRestrictions: [fr]
+    esp_definition_en:
+      OA_exportHeader:
+        OA_title:
+          en: "definition"
+        OA_description:
+          en: "species definition"
+      OA_langRestrictions: [en]
+    colonne_homonyme_entre_referentiels: null
+  OA_computedComponents:
+    my_computed_column:
+      OA_tags: [ __HIDDEN__ ]
+      OA_exportHeader:
+        OA_title:
+          fr: "colonne calculée"
+          en: "computed column"
+        OA_description:
+          fr: "une colonne calculée retournant 'my value'"
+          en: "a calculated column returning 'my value'"
+      OA_computation:
+        OA_expression: >
+          return "my value";

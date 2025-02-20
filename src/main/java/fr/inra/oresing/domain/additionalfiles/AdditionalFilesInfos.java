@@ -37,10 +37,6 @@ public class AdditionalFilesInfos {
 
     }
 
-    public enum Order {
-        ASC, DESC
-    }
-
     @Getter
     @Setter
     public static class FieldFilters {
@@ -57,45 +53,13 @@ public class AdditionalFilesInfos {
         //@ApiModelProperty(notes = "true for regexp filter", required = false)
         public Boolean isRegExp = false;
 
-        public FieldFilters() {
-            super();
-        }
-
-        public FieldFilters(final String field, final String filter, final String type, final String format, final IntervalValues intervalValues, final Boolean isRegExp) {
-            super();
-            this.field = field;
-            this.filter = filter;
-            this.type = type;
-            this.format = format;
-            this.intervalValues = intervalValues;
-            this.isRegExp = isRegExp;
-        }
-
         public String getFilter() {
             return filter != null ? filter : null;
-        }
-
-        public Boolean isNumeric() {
-            return "numeric".equals(type);
-        }
-
-        public Boolean isdDate() {
-            return "date".equals(type);
         }
     }
 
     public static class IntervalValues {
         public String from;
         public String to;
-
-        public IntervalValues(final String from, final String to) {
-            super();
-            this.from = from;
-            this.to = to;
-        }
-
-        public IntervalValues() {
-            super();
-        }
     }
 }

@@ -58,7 +58,7 @@ public record ApplicationdescriptionBuilder(RootBuilder rootBuilder) {
             }
             return null;
         }
-        return new Parsing<ApplicationDescription>(
+        return new Parsing<>(
                 i18n1,
                 applicationDescription
         );

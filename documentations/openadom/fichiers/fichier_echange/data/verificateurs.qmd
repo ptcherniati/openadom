@@ -1,0 +1,398 @@
+---
+  title: Vérificateurs
+  subtitle: OA_checker
+  abstract: >
+    Les vérificateurs (checkers) permettent de vérifier l'entrée d'un "component" et éventuellement de spécifier son type (entier, valeur flottante, booolean, date, clef étrangère)
+---
+
+On peut poser des contraintes sur les différentes composantes des données
+
+# [Utilisation de vérificateurs (checker)]{#dataChecker}
+
+Pour chaque colonne, on peut ajouter des vérificateurs.
+
+-   vérifier la nature d'un champ (float, integer, date, boolean) et son interval de valeur (min, max)
+-   vérifier une expression régulière (String)
+-   ajouter un lien avec un référentiel (Reference)
+-   déclarer la récursivité d'un composant
+-   déclarer une hiérarchie entre composants
+-   vérifier la valeur en utilisant un script (le script renvoyant true) ( GroovyExpression)
+
+On précisera la nature du vérificateur en donnant son nom.
+
+::: {.callout-note title="Utilisation des vérificateurs (OA_checker)" collapse="false"}
+``` yaml
+
+        OA_checker:
+            OA_name: OA_date
+```
+
+```{r}
+#| echo: false
+
+types <- c("OA_float", "OA_integer", "OA_boolean", "OA_date", "OA_reference", "OA_groovyExpression")
+descriptions <- c("Valeur flottante", "Entier", "Booléen", "Date", "Clef étrangère", "Script de vérification")
+
+# Création du dataframe
+df <- data.frame(
+  Type = types,
+  Description = descriptions
+)
+
+# Affichage du tableau avec knitr::kable
+library(knitr)
+kable(df, caption = "type(OA_name) du vérificateur", format = "markdown")
+
+```
+:::
+
+::: {.callout-note title="Utilisation des vérificateurs (OA_checker)" collapse="false"}
+``` yaml
+  sites:
+  #donnée de référence avec une clef sur deux colonne
+    OA_naturalKey: 
+      - zet_chemin_parent
+      - zet_nom_key
+    OA_basicComponents:
+      zet_nom_key:
+        OA_headerName: nom du site
+        OA_mandatory: true # La colonne doit être présente
+        OA_required: true # Une valeur doit être fournie
+      tze_type_nom:
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference # un vérificateur de type référence
+          OA_params:
+            OA_reference:
+              OA_name: type_de_sites # Le référentiel ciblée
+              OA_isParent: true # indique que la colonne tze_type_nom contient une clef primaire du référentiel type_de_sites
+      zet_chemin_parent:
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference # vérificateur de type référentiel
+          OA_params:
+            OA_reference:
+              OA_name: sites # référetil ciblé
+              OA_isRecursive: true # la lien de référence est de type récursif
+      date:
+        OA_checker:
+            OA_required: true
+            OA_name: OA_date
+            OA_params:
+            OA_pattern: dd/MM/yyyy # pattern de date attendu
+            OA_min: 01/01/1980 # la valeur minimum acceptée
+            OA_max: 31/12/2014 # la valeur maximum acceptée
+      numero:
+        OA_headerName: "numéro:"
+        OA_checker:
+          OA_name: OA_integer # la valeur attendue est un entier
+          OA_min: 100 # la valeur minimum acceptée
+```
+:::
+
+### Paramétrage des vérificateurs {#params}
+
+On définit un vérificateur dans une section "**OA_checker**". Le type de vérificateur est défini par son nom (**OA_name**).
+
+On peut passer des paramètres au vérificateur en renseignant la section **OA_params**. Les différents paramètres dépendent du type de vérificateur utilisé.
+
+``` yaml
+    OA_checker:
+        OA_name: OA_integer
+        OA_params: 
+          OA_min: 0
+```
+
+Lorsque l'on utilise un vérificateur, sa première fonction est de vérifier le format de la valeur en entrée.
+
+Sa seconde fonction est de transformer cette valeur , dans le cas où cela est possible, dans une primitive acceptable dans un champ json (numeric, boolean). C'est cette valeur qui sera stockée dan le champ json en base, ou comme valeur dans les vues.
+
+::: {.callout-note title="enregistrement de clef étrangère" collapse="true"}
+Si le vérificateur est de type Reference, il existera en base de données une contrainte de type clef étrangère avec la ligne référencée.
+:::
+
+## Paramètres généraux
+
+::: {#multiplicity}
+-   OA_multiplicity : {#multiplicity}
+    -   MANY : La valeur est un ensemble (tableau) de valeurs. L'entrée est une chaîne ou chaque valeur est séparée par une virgule ','. Dans la base de donnée les valeurs de la chaîne seront enregistrées dans un tableau de valeur au format indiqué par le vérificateur. Par exemple la chaine "2,25.3,5.8" sera traitée comme un tableau de double \[2, 25.3, 5.8\] pour un vérificateur OA_float.
+    -   ONE : (valeur par défaut) La valeur en entrée est considéré comme une valeur simple.
+:::
+
+## Vérificateur de type 'Integer' et 'Float' {#numericchecker}
+
+Ces vérificateurs servent à vérifier que les valeurs en entrée sont des nombres (respectivement des entiers ou des nombres à valeur floattante).
+
+On peut préciser les valeurs minimum et maximum en précisant les paramètres OA_min et/ou OA_max. Les valeurs min et max doivent être du type indiqué par le vérificateur.
+
+``` yaml
+    OA_checker: 
+      OA_name: OA_float
+      OA_params: 
+        OA_min: 12.0une
+        OA_max: 25.0
+        OA_multiplicity: MANY
+```
+
+## Vérificateur de chaîne ('String') {#oa_string}
+
+Sans vérificateur, les entrées sont traitées comme des chaînes de caractères acceptant de valeurs vide. On peut toutefois rajouter un vérificateur chaîne pour préciser des contraintes sur la chaîne. (required, multiplicity, transformation, expression régulière)
+
+Le paramètre '**OA_pattern**' permet de préciser une [expression régulière](https://blog.paumard.org/cours/java-api/chap03-expression-regulieres-syntaxe.html) qui permet de vérifier un pattern de chaîne de caractères.
+
+``` yaml
+    OA_checker:
+        OA_name: OA_string
+        OA_params: 
+            OA_pattern: ^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2}))
+            OA_multiplicity: MANY
+```
+
+Ce vérificateur permet de vérifier que l'entrée est une liste d'adresse mail.
+
+## Vérificateur de date. ('Date') {#oa_date}
+
+Ce vérificateur permet de vérifier que la valeur en entrée est une date au format définit par le paramètre '[OA_pattern](https://docs.oracle.com/javase/8/docs/api/java/time/format/DateTimeFormatter.html)'
+
+En base de données,dans le champs json, la date sera stockée comme une chaîne de caractères qui supporte le tri. Dans les vues, le format timestamp sera utilisé.
+
+exemple la date 25/12/1984 au format 'dd/MM/yyyy' sera stockée comme chaîne "date:1984-12-25T00:00:00:dd/MM/yyyy".
+
+Les paramètres OA_min et OA_max permettent de spécifier l'intervale de valeur de la date. Il doivent être renseignés au même format de date.
+
+Le paramètre OA_duration permet de définir que la valeur en entrée est une durée. Une durée est définie au sens SQL d'un [interval](https://www.postgresql.org/docs/current/functions-datetime.html#OPERATORS-DATETIME-TABLE) ('1 HOUR', '2 WEEKS', '30 MINUTES').
+
+``` yaml
+    OA_checker:
+        OA_name: OA_date
+        OA_params: 
+            OA_pattern: dd/MM/yyyy
+            OA_min: 01/01/2004
+            OA_max: 31/12/2025
+            OA_duration: 1 DAY
+```
+
+::: {.callout-note title="enregistrement de date" collapse="true"}
+La date est stockée au format texte dans un format spécifique à l'application : "date:1984-01-05T00:00:00:dd/MM/yyyy". Elle peut alors être castée en utilisant le type "composite_date"
+
+``` postgresql
+  select ('date:1984-01-05T00:00:00:dd/MM/yyyy'::text::composite_date).*;
+  /*
+    datetimestamp formatteddate
+    1984-01-05 00:00:00 dd/MM/yyyy
+  */
+  select 'date:1984-01-05T00:00:00:dd/MM/yyyy'::text::composite_date::timestamp; -- 1984-01-05 00:00:00
+  select ('date:1984-01-05T00:00:00:dd/MM/yyyy'::text::composite_date)::text; --05/01/1984
+```
+:::
+
+## Vérificateur de Boolean. ('Boolean') {#oa_boolean}
+
+Permet de vérifier que la valeur en entrée est true ou false.
+
+Une valeur booléenne sera enregistrée dans le champ json en base de données et dans les vues.
+
+``` yaml
+    OA_checker:
+        OA_name: OA_boolean
+```
+
+## Vérificateur de référentiel. ('Reference') {#oa_reference}
+
+Ce vérificateur permet de vérifier que la valeur en entrée est un '\[Ltree'https://www.postgresql.org/docs/current/ltree.html\]'. Cette chaîne ne peut contenir que des termes contenant des minuscules/majuscules/chiffres/caractère_souligné(\_), séparés par des points (.).
+
+Elle doit correspondre à la clef naturelle ou la clef hiérarchique d'une référence de type définit par le paramètre 'refType'. La section {{< var  page-refs.vocab.link-code>}} explique comment les chaînes sont encodées pour définir des {{< var  page-refs.vocab.link-nk>}} ou des {{< var  page-refs.vocab.link-hk>}}.
+
+Le paramètre **OA_reference** permet de définir le référentiel contenant la ligne dont la clef naturelle est celle indiquée par la valeur en entrée.
+
+``` yaml
+        zones_etudes:
+          OA_required: true
+          OA_checker:
+              OA_name: OA_reference
+              OA_params:
+                  OA_reference: 
+                    OA_name: zones_etudes
+```
+
+Dans la section **OA_reference** on peut préciser les informations précédement contenue dans la section composite_references
+
+#### **OA_isRecursive** : le composant est récursive {#oa_isRecursive}
+
+``` yaml
+OA_data:
+    sites:
+        OA_basicComponents:
+          zet_chemin_parent:
+            OA_required: false
+            OA_checker:
+              OA_name: OA_reference
+              OA_params:
+                OA_reference:
+                  OA_name: sites
+                  OA_isRecursive: true
+```
+
+#### **OA_isParent** : la colonne fait référence à un référentiel parent {#oa_isParent}
+
+``` yaml
+OA_data:
+    sites:
+        OA_basicComponents:
+          tze_type_nom:
+            OA_required: true
+            OA_checker:
+              OA_name: OA_reference
+              OA_params:
+                OA_reference:
+                  OA_name: type_de_sites
+                  OA_isParent: true
+```
+
+::: callout-warning
+Il faut caster les valeurs du datum avant de les utiliser. Elles sont de type Object, et il faut les caster dans le type correspondant au checker. (par défaut String)
+:::
+
+## Vérificateur utilisant une [expression groovy](validation). ('GroovyExpression') {#oa_groovyExpression}
+
+L'expression définit dans le paramètre groovy → expression; L'expression doit envoyer une valeur true/false.
+
+``` yaml
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                Set.of("", "0", "1", "2").contains(datum.SWC.get("qualité"))
+```
+
+On vérifie que la composante 'qualité' de la variable 'SWC' est vide ou "0" "1" ou "2".
+
+## Ajout de transformation à la chaîne en entrée. {#transformation}
+
+Les references sont transformées en chaîne codifiée de manière transparente\
+Dans un script groovy vous pouvez utiliser la fonction
+
+``` groovy
+OA_escapeLabel('chaîne à échapper');
+```
+
+Il n'est pas possible de transformer directeme nt une valeur en entrée. Pour cela on doit définir un **OA_computedComponent**
+
+``` yaml
+OA_data:
+    t_variable_var
+        OA_computedComponents:
+          var_metadata:
+            OA_computation: # récupère les clés naturelles des métadonnées existantes pour chaque variable (en + de celles de ce référentiel)
+              OA_expression: >
+                String search_var_code = (String)datum.var_code;
+                return reference.tr_var_metadata_vmet
+                .findAll({it.refValues.vmet_var_code.equals(search_var_code)})
+                .collect({it.naturalKey})
+                .join(",");
+              OA_references:
+                - tr_var_metadata_vmet
+```
+
+Les sections acceptées sont:
+
+#### OA_expression :  {#oa_expression}
+
+une expression groovy (pour le checker GroovyExpression doit renvoyer true si la valeur est valide)
+
+#### OA_references  {#oa_references}
+
+une liste de référentiels (ou data) pour lesquels on veut disposer des valeurs dans l'expression
+
+::: {.callout-warning collapse="false"}
+La différence entre une section groovy de la section params d'un checker **groovy** et une section groovy de la section transformation de la section params, tient dans le fait que pour un checker groovy l'expression renvoyée est un booléen tandis que dans la transformation l'expression groovy renvoie une nouvelle valeur.
+:::
+
+Pour les checkers GroovyExpression et les transformations Groovy, on récupère dans le script des informations :
+
+```         
+datum : les valeurs de la ligne courante.
+  On récupère la valeur d'un variable-component →
+    datum.get("nom de la variable").get("nom du composant")
+application : le yaml de l'application
+references: les valeurs d'une donnée de référence spécifique;
+  Il faut renseigner dans params la clef "references" qui définit
+    les données de références accessibles dans references.
+  → references.get("nom de la reference") //reférentiel déclaré dans references. return une liste de références
+  → en itérant sur la liste  list.collect({it.refValues.nom_de_la_colonne})
+referencesValues : idem que references;
+  → referencesValues.get("nom de la reference").collect({it.get("nom de la colonne"))
+```
+
+::: {.callout-warning collapse="false"}
+Les valeurs récupérées dans references et referencesValues au type indiqué par le checker. Il peut être nécessaire de les 'caster' dans ce type pour les utiliser dans des méthodes. par exemple : (String)datum.date.day + ' ' + (String)datum.date.time
+:::
+
+::: {.callout-tip collapse="false"}
+On peut aussi passer des constantes dans le script
+
+``` yaml
+       OA_expression : >
+          import java.time.LocalDate
+          import java.time.format.DateTimeFormatter
+
+          LocalDate minDate = LocalDate.of(2014,1,1)
+          LocalDate maxDate = LocalDate.of(2022,1,1)
+          LocalDate date = LocalDate.parse(
+            datum.date,
+            DateTimeFormatter.ofPattern('dd/MM/yyyy')
+          )
+          return date.isBefore(maxDate) && date.isAfter(minDate)
+```
+:::
+
+## Valeur par défaut {#OA_defaultValue}
+
+On peut déclarer une valeur par défaut. Il s'agit d'une expression groovy sans contexte.
+
+``` yaml
+OA_data:
+    pem:
+        OA_basicComponents:      
+          individusNumbervalue:
+            OA_importHeader: "Nombre d'individus"
+            OA_exportHeader:
+              OA_title:
+            fr: Nombre d'individus
+            en: Number of individuals
+        OA_defaultValue:
+          OA_expression: return 0
+```
+
+## [Utilisation de validations portant sur une ou plusieurs colonnes](#dataChecker)
+
+Les contraintes se définissent pour chacune des données de référence. Soit dans la définition de la colonne elle-même, soit dans la section [validation](#referencesValidation).
+
+Chaque règle de validation peut porter sur plusieurs colonnes de la donnée de référence. Elle comporte une description et un [OA_checker](#dataChecker) (OA_eference, OA_integer, OA_float, OA_string, OA_date, OA_groovyExpression).
+
+``` yaml
+  site_theme_datatype:
+    OA_validations:
+      projetRef: # la clef d'une validation
+        OA_i18n:
+         fr: "référence au projet" # la description en français
+         en: "project reference" # la description en anglais
+        OA_checker: # le checker de validation
+          OA_name: OA_reference #Le checker à utiliser
+          OA_params: # liste de paramètres (dépend du checker choisi)
+            OA_reference: 
+                OA_name: projet #pour le checker référence la donnée référencée
+        OA_columns: [nom du projet]
+        # liste des colonnes sur lequel s'applique le checker
+      sitesRef:
+        OA_i18n:
+         fr: "référence au site" # la description en français
+         en: "site reference" # la description en anglais
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference: 
+                OA_name: sites
+        OA_columns: [nom du site]
+```

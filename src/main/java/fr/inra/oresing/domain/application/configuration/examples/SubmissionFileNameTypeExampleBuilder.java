@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.configuration.type.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SubmissionFileNameTypeExampleBuilder {
     public static final FileNameType DATA_FILE_NAME = buildFileName(
@@ -25,11 +26,11 @@ public class SubmissionFileNameTypeExampleBuilder {
             StringType fileNamePattern,
             CollectionType.ArrayType<StringType> referenceScopeType
     ) {
-        return new FileNameType(
-                new HashMap<>() {{
-                    put(ConfigurationSchemaNode.OA_FILE_PATTERN, fileNamePattern);
-                    put(ConfigurationSchemaNode.OA_MATCH_PATTERN_SCOPES, referenceScopeType);
-                }}
-        );
+        Map<String, ConfigurationSchemaNodeType> map = new HashMap<>();
+        map.put(ConfigurationSchemaNode.OA_FILE_PATTERN, fileNamePattern);
+        map.put(ConfigurationSchemaNode.OA_MATCH_PATTERN_SCOPES, referenceScopeType);
+
+        return new FileNameType(map);
     }
+
 }

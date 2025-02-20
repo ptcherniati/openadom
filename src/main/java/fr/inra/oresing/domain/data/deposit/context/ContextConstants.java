@@ -39,11 +39,10 @@ public record ContextConstants(
 
 
     static Optional<InternationalizationData> buildInternationalizationReferenceMap(final Configuration conf, final String refType) {
-        final Optional<InternationalizationData> internationalizationData = Optional.ofNullable(conf)
+        return Optional.ofNullable(conf)
                 .map(Configuration::i18n)
                 .map(Internationalizations::getData)
                 .map(references -> references.getOrDefault(refType, null));
-        return internationalizationData;
     }
 
     static Optional<InternationalizationTitle> buildDisplayPattern(final InternationalizationData internationalizationData) {
@@ -52,8 +51,7 @@ public record ContextConstants(
     }
 
     static HierarchicalKeyFactory buildHierarchicalKeyFactory(final Application application, final String refType) {
-        final HierarchicalKeyFactory hierarchicalKeyFactory = HierarchicalKeyFactory.build(application, refType);
-        return hierarchicalKeyFactory;
+        return HierarchicalKeyFactory.build(application, refType);
     }
 
     static Map<Locale, List<InternationalizationDisplay.PatternSection>> buildPatternSection(final InternationalizationTitle displayPattern) {

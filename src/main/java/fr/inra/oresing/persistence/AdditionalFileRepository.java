@@ -10,7 +10,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Component
@@ -35,91 +34,143 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
     public Optional<AdditionalBinaryFile> tryFindByIdWithData(final UUID id) {
         Preconditions.checkArgument(id != null);
         final String query = String.format("""
-                SELECT '%s' as "@class", to_jsonb(t) as json FROM (select id,creationdate,updatedate,creationuser,updateuser,\s
-                application,fileType, fileName,comment,size,convert_from(fileData, 'UTF8') as "data",fileinfos,associates,forapplication \s
-                 from %s  WHERE id = :id) t""", getEntityClass().getName(), getTable().getSqlIdentifier());
-        final Optional<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("id", id), getJsonRowMapper()).stream().findFirst();
-        return result;
+                        SELECT '%s' as "@class", to_jsonb(t) as json 
+                        FROM (
+                            SELECT 
+                                id,
+                                creationdate,
+                                updatedate,
+                                creationuser,
+                                updateuser,
+                                application,
+                                fileType,
+                                fileName,
+                                comment,
+                                size,
+                                convert_from(fileData, 'UTF8') as "data",
+                                fileinfos,
+                                associates,
+                                forapplication
+                            FROM %s
+                            WHERE id = :id
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier()
+        );
+        return getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("id", id), getJsonRowMapper()).stream().findFirst();
     }
 
+    @Override
     protected List<AdditionalBinaryFile> find(final String whereClause, final SqlParameterSource sqlParameterSource) {
-        String sql = """
-                SELECT '%s' as "@class",  to_jsonb(t) as json\s
-                FROM (select id,creationdate,updatedate,creationuser,updateuser,\s
-                application,fileType, fileName,comment,size,null as "data",fileinfos,associates,forapplication \s
-                from %s\s""";
-        if (whereClause != null) {
-            sql += " WHERE " + whereClause;
-        }
-        sql += ") t";
-        final String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
-        final List<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper());
-        return result;
+        String query = String.format("""
+                        SELECT '%1$s' as "@class", to_jsonb(t) as json
+                        FROM (
+                            SELECT 
+                                id,
+                                creationdate,
+                                updatedate,
+                                creationuser,
+                                updateuser,
+                                application,
+                                fileType,
+                                fileName,
+                                comment,
+                                size,
+                                null as "data",
+                                fileinfos,
+                                associates,
+                                forapplication
+                            FROM %2$s
+                            %3$s
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier(),
+                whereClause != null ? "WHERE " + whereClause : ""
+        );
+
+        return getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper());
     }
-    public List<String> getFileNamesForFiletype(final String fileType){
-        if(fileType==null){
+
+    public List<String> getFileNamesForFiletype(final String fileType) {
+        if (fileType == null) {
             return List.of();
         }
-        final String sql = "SELECT fileName \n" +
-                "from %s " +
-                "where fileType=:fileType;" ;
-        return  getNamedParameterJdbcTemplate().queryForList(
-                String.format(sql, getTable().getSqlIdentifier()),
-                Map.of("fileType", fileType) ,
-                String.class);
+
+        final String sql = String.format("""
+                        SELECT fileName
+                        FROM %1$s
+                        WHERE fileType = :fileType
+                        """,
+                getTable().getSqlIdentifier()
+        );
+
+        return getNamedParameterJdbcTemplate().queryForList(
+                sql,
+                Map.of("fileType", fileType),
+                String.class
+        );
     }
 
+
     public List<AdditionalBinaryFile> getAssociatedAdditionalFiles(final Set<UUID> dataIds) {
-        return getAssociatedAdditionalFilesStream(dataIds).collect(Collectors.toList());
+        return getAssociatedAdditionalFilesStream(dataIds).toList();
     }
+
     public Stream<AdditionalBinaryFile> getAssociatedAdditionalFilesStream(final Set<UUID> dataIds) {
         if (dataIds == null || dataIds.isEmpty()) {
             return Stream.of();
         }
-        final String sql = """
-                with associates as (
-                \tselect id associateid, unnest(associates) auth
-                 \tfrom %1$s t
-                ),
-                additionalFileAuthorizations as (
-                \tselect  distinct\s
-                \tassociateid,\s
-                \t(jsonb_populate_recordset(null::%2$s."authorization", (auth).authorizations #> '{pem, associate}')) auth
-                \tfrom associates
-                ),
-                aggregatedAdditionalFile as (
-                \tselect distinct associateid  , array_agg(auth) auth
-                \tfrom additionalFileAuthorizations
-                \tgroup by associateid
 
-                ),
-                additionalFileId as (
-
-                \tselect distinct associateid id\s
-                \t\tfrom %1$s bf
-                \t\tjoin aggregatedAdditionalFile aaf on aaf.associateid = bf.id
-                \t\tjoin %2$s.referencevalue d on d."authorization" @> aaf.auth
-                \twhere (d.id::uuid) in(:dataIds)
-                \tunion\s
-                \tselect id
-                \t\tfrom %1$s bf
-                \twhere forApplication
-                \t)
-                SELECT distinct '%3$s' as "@class", to_jsonb(t) as json FROM (select id,creationdate,updatedate,creationuser,updateuser,\s
-                application,fileType, fileName,comment,size,convert_from(data, 'UTF8') as "data",fileinfos,associates,forapplication \s
-                from additionalFileId join %1$s  using(id)) t""";
-        final String query = String.format(
-                sql,
+        final String sql = String.format("""
+                        WITH associates AS (
+                            SELECT id AS associateid, unnest(associates) AS auth
+                            FROM %1$s t
+                        ),
+                        additionalFileAuthorizations AS (
+                            SELECT DISTINCT
+                                associateid,
+                                (jsonb_populate_recordset(null::%2$s."authorization", (auth).authorizations #> '{pem, associate}')) AS auth
+                            FROM associates
+                        ),
+                        aggregatedAdditionalFile AS (
+                            SELECT DISTINCT associateid, array_agg(auth) AS auth
+                            FROM additionalFileAuthorizations
+                            GROUP BY associateid
+                        ),
+                        additionalFileId AS (
+                            SELECT DISTINCT associateid AS id
+                            FROM %1$s bf
+                            JOIN aggregatedAdditionalFile aaf ON aaf.associateid = bf.id
+                            JOIN %2$s.referencevalue d ON d."authorization" @> aaf.auth
+                            WHERE (d.id::uuid) IN (:dataIds)
+                            UNION
+                            SELECT id
+                            FROM %1$s bf
+                            WHERE forApplication
+                        )
+                        SELECT DISTINCT '%3$s' AS "@class", to_jsonb(t) AS json 
+                        FROM (
+                            SELECT 
+                                id, creationdate, updatedate, creationuser, updateuser,
+                                application, fileType, fileName, comment, size,
+                                convert_from(data, 'UTF8') AS "data", fileinfos,
+                                associates, forapplication
+                            FROM additionalFileId 
+                            JOIN %1$s USING (id)
+                        ) t
+                        """,
                 getTable().getSqlIdentifier(),
                 getSchema().getSqlIdentifier(),
                 getEntityClass().getName()
         );
-        final Stream<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().queryForStream(
-                query,
+
+        return getNamedParameterJdbcTemplate().queryForStream(
+                sql,
                 new MapSqlParameterSource("dataIds", dataIds),
                 getJsonRowMapper()
         );
-        return result;
     }
 
     @Override
@@ -172,7 +223,7 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
     }
 
     public List<AdditionalBinaryFile> findByCriteria(final AdditionalFileSearchHelper additionalFileSearchHelper) {
-        return findByCriteriaStream(additionalFileSearchHelper).collect(Collectors.toList());
+        return findByCriteriaStream(additionalFileSearchHelper).toList();
     }
 
     public Stream<AdditionalBinaryFile> findByCriteriaStream(final AdditionalFileSearchHelper additionalFileSearchHelper) {
@@ -181,19 +232,28 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         if (sqlParameterSource == null) {
             sqlParameterSource = new MapSqlParameterSource();
         }
-        String sql = """
-                SELECT '%s' as "@class",  to_jsonb(t) as json\s
-                FROM (select id,creationdate,updatedate,creationuser,updateuser,\s
-                application,fileType, fileName,comment,size, convert_from(data, 'UTF8') as "data",fileinfos,associates, forapplication \s
-                from %s\s""";
-        if (whereClause != null && !"()".equals(whereClause) && !whereClause.isEmpty()) {
-            sql += " WHERE " + whereClause;
-        }
-        sql += ") t";
-        final String query = String.format(sql, getEntityClass().getName(), getTable().getSqlIdentifier());
-        final Stream<AdditionalBinaryFile> result = getNamedParameterJdbcTemplate().queryForStream(query, sqlParameterSource, getJsonRowMapper());
-        return result;
+
+        String sql = String.format("""
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
+                        FROM (
+                            SELECT 
+                                id, creationdate, updatedate, creationuser, updateuser,
+                                application, fileType, fileName, comment, size,
+                                convert_from(data, 'UTF8') AS "data", fileinfos, associates, forapplication
+                            FROM %2$s
+                            %3$s
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier(),
+                (whereClause != null && !"()".equals(whereClause) && !whereClause.isEmpty())
+                        ? "WHERE " + whereClause
+                        : ""
+        );
+
+        return getNamedParameterJdbcTemplate().queryForStream(sql, sqlParameterSource, getJsonRowMapper());
     }
+
 
     public List<UUID> deleteByCriteria(final AdditionalFileSearchHelper additionalFileSearchHelper) {
         final String whereClause = additionalFileSearchHelper.buildWhereRequest();
@@ -201,22 +261,30 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         if (sqlParameterSource == null) {
             sqlParameterSource = new MapSqlParameterSource();
         }
-        String sql = "delete from %1$s";
-        if (whereClause != null && !"()".equals(whereClause) && !whereClause.isEmpty()) {
-            sql += " WHERE " + whereClause+"\n";
-        }else{
+
+        if (whereClause == null || "()".equals(whereClause) || whereClause.isEmpty()) {
             return List.of();
         }
-            sql += "returning  '%2$s' as \"@class\",  to_jsonb(" +
-                    "(id,creationdate,updatedate,creationuser,updateuser, \n" +
-                    "\"application\",fileType, fileName,comment,size, null,null,null,null" +
-                    ")::%1$s) as json";
 
-        final String query = String.format(sql, getTable().getSqlIdentifier(), getEntityClass().getName());
-        List<UUID> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper())
+        String sql = String.format("""
+                        DELETE FROM %1$s
+                        WHERE %2$s
+                        RETURNING '%3$s' AS "@class", 
+                        to_jsonb((
+                            id, creationdate, updatedate, creationuser, updateuser,
+                            application, fileType, fileName, comment, size,
+                            null, null, null, null
+                        )::%1$s) AS json
+                        """,
+                getTable().getSqlIdentifier(),
+                whereClause,
+                getEntityClass().getName()
+        );
+
+        return getNamedParameterJdbcTemplate().query(sql, sqlParameterSource, getJsonRowMapper())
                 .stream()
                 .map(AdditionalBinaryFile::getId)
-                .collect(Collectors.toList());
-        return result;
+                .toList();
     }
+
 }

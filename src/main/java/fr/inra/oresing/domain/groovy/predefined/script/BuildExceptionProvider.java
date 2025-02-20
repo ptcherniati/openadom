@@ -4,7 +4,6 @@ import fr.inra.oresing.domain.groovy.exception.GroovyException;
 import groovy.lang.Closure;
 
 import java.util.Map;
-import java.util.function.BiFunction;
 
 /**
  * Fournisseur de constantes pour la construction d'exceptions.

@@ -1,0 +1,134 @@
+nom de la variable_key;nom de la variable_fr;nom de la variable_en;affichage de la variable;définition_fr;définition_en;is qualitative
+al_ech;al_ech;al_ech;AL_ECH;Teneur en Aluminium échangeable;Teneur en Aluminium échangeable;false
+albedo;albedo;albedo;albedo;valeur calculée par la formule Rr/Rg;valeur calculée par la formule Rr/Rg;false
+c_org;c_org;c_org;C_ORG;Teneur en carbone (C ) organique;Teneur en carbone (C ) organique;false
+ca_ech;ca_ech;ca_ech;CA_ECH;Teneur en Calcium échangeable;Teneur en Calcium échangeable;false
+cec;cec;cec;CEC;Capacité d'échange cationique (CEC);Capacité d'échange cationique (CEC);false
+chaleur_latente;chaleur_latente;chaleur_latente;LE;chaleur latente;chaleur latente;false
+chaleur_sensible;chaleur_sensible;chaleur_sensible;H;chaleur sensible;chaleur sensible;false
+couvert_vegetal_du_semis;couvert_vegetal_du_semis;couvert_vegetal_du_semis;sem_couvert_vegetal;couvert végétal du semis;couvert végétal du semis;true
+culture_annuelle;culture_annuelle;culture_annuelle;sem_culture_annuelle;culture annuelle;culture annuelle;true
+densite_apparente_sol_global;densite_apparente_sol_global;densite_apparente_sol_global;Da_sg;Densité apparente sol global;Densité apparente sol global;false
+densite_apparente_terre_fine;densite_apparente_terre_fine;densite_apparente_terre_fine;Da_tf;Masse sèche de terre fine (<2mm) divisée par le volume occupé par la terre fine (les éléments grossiers du sol (>2mm) sont exclus en masse et en volume);Masse sèche de terre fine (<2mm) divisée par le volume occupé par la terre fine (les éléments grossiers du sol (>2mm) sont exclus en masse et en volume);false
+digestibilite_de_la_matiere_seche;digestibilite_de_la_matiere_seche;digestibilite_de_la_matiere_seche;DMS;Digestibilité de la Matière Sèche;Digestibilité de la Matière Sèche;false
+dioxyde_de_carbone;dioxyde_de_carbone;dioxyde_de_carbone;CO2;concentration du dioxyde de carbone;concentration du dioxyde de carbone;false
+direction_du_vent;direction_du_vent;direction_du_vent;WD;direction du vent en degré;direction du vent en degré;false
+dose_semee_en_gk/ha;dose_semee_en_gk/ha;dose_semee_en_gk/ha;sem_dose_kg;dose semée;dose semée;false
+dose_semee_en_grains/m2;dose_semee_en_grains/m2;dose_semee_en_grains/m2;sem_dose_gr;dose semée en grains/m2;dose semée en grains/m2;false
+duree_moyenne_de_presence_d_animaux_sur_la_parcelle;duree_moyenne_de_presence_d_animaux_sur_la_parcelle;duree_moyenne_de_presence_d_animaux_sur_la_parcelle;pat_duree_presence_animaux;durée moyenne de presence d'animaux sur la parcelle;durée moyenne de presence d'animaux sur la parcelle;false
+ecart_type_sur_la_concentration_en_dioxyde_de_carbone;ecart_type_sur_la_concentration_en_dioxyde_de_carbone;ecart_type_sur_la_concentration_en_dioxyde_de_carbone;sd CO2;écart type sur les concentrations en CO2  sur l'ensemble des enceintes d'un traitement pour une série de mesures;écart type sur les concentrations en CO2  sur l'ensemble des enceintes d'un traitement pour une série de mesures;false
+ecart_type_sur_la_concentration_en_protoxyde_d_azote;ecart_type_sur_la_concentration_en_protoxyde_d_azote;ecart_type_sur_la_concentration_en_protoxyde_d_azote;sd N2O;écart type sur les concentrations en NO2 sur l'ensemble des enceintes d'un traitement pour une série de mesures;écart type sur les concentrations en NO2 sur l'ensemble des enceintes d'un traitement pour une série de mesures;false
+ecart_type_sur_la_concentration_en_vapeur_d_eau;ecart_type_sur_la_concentration_en_vapeur_d_eau;ecart_type_sur_la_concentration_en_vapeur_d_eau;sd H2O;écart type sur les concentrations en H2O sur l'ensemble des enceintes d'un traitement pour une série de mesures;écart type sur les concentrations en H2O sur l'ensemble des enceintes d'un traitement pour une série de mesures;false
+ecart_type_sur_les_concentrations_en_methane;ecart_type_sur_les_concentrations_en_methane;ecart_type_sur_les_concentrations_en_methane;sd CH4;écart type sur les concentrations en CH4 sur l'ensemble des enceintes d'un traitement pour un cycle de mesures;écart type sur les concentrations en CH4 sur l'ensemble des enceintes d'un traitement pour un cycle de mesures;false
+enrobage;enrobage;enrobage;sem_enrob;enrobage;enrobage;true
+espece_semee;espece_semee;espece_semee;sem_espece;espèce semée;espèce semée;true
+estimation_des_quantites_ingerees;estimation_des_quantites_ingerees;estimation_des_quantites_ingerees;pat_Qtt_ingeree par parcelle;Estimation des quantités ingérées;Estimation des quantités ingérées;false
+fe_ech;fe_ech;fe_ech;FE_ECH;Teneur en Fer échangeable;Teneur en Fer échangeable;false
+flux_de_dioxyde_de_carbone_complete;flux_de_dioxyde_de_carbone_complete;flux_de_dioxyde_de_carbone_complete;Fc gf;données de flux de dioxyde de carbone complétées;données de flux de dioxyde de carbone complétées;false
+flux_du_dioxyde_de_carbone;flux_du_dioxyde_de_carbone;flux_du_dioxyde_de_carbone;Fc;flux de dioxyde de carbone;flux de dioxyde de carbone;false
+hauteur_de_coupe_de_fauche_non_exportee;hauteur_de_coupe_de_fauche_non_exportee;hauteur_de_coupe_de_fauche_non_exportee;fne_hcoupe;Hauteur de coupe de fauche non exportee;Hauteur de coupe de fauche non exportee;false
+hauteur_de_coupe_de_la_partie_recoltee;hauteur_de_coupe_de_la_partie_recoltee;hauteur_de_coupe_de_la_partie_recoltee;recFau_Hcoupe;Hauteur de coupe de la partie récoltée;Hauteur de coupe de la partie récoltée;false
+hauteur_vegetal;hauteur_vegetal;hauteur_vegetal;hav;Hauteur végétal;Hauteur végétal;false
+humidite_relative_de_l_air;humidite_relative_de_l_air;humidite_relative_de_l_air;Rh;humidité de l'air en pourcentage;humidité de l'air en pourcentage;false
+humidite_residuelle;humidite_residuelle;humidite_residuelle;Hum_Res;Eau extraite par séchage à 105°C de l'échantillon préalablement séché à l'air ou à basse température rapportée à la masse de cet échantillon séché à l'air ou à basse température.;Eau extraite par séchage à 105°C de l'échantillon préalablement séché à l'air ou à basse température rapportée à la masse de cet échantillon séché à l'air ou à basse température.;false
+humidite_residuelle_a_103°c;humidite_residuelle_a_103°c;humidite_residuelle_a_103°c;HUT;Humidité résiduelle à 103°C;Humidité résiduelle à 103°C;false
+humidite_volumique_du_sol;humidite_volumique_du_sol;humidite_volumique_du_sol;SWC;humidité volumique du sol;humidité volumique du sol;false
+increment_de_passage;increment_de_passage;increment_de_passage;pat_passage;incrément de passage;incrément de passage;false
+indice_de_surface_foliaire;indice_de_surface_foliaire;indice_de_surface_foliaire;lai;Indice de surface foliaire;Indice de surface foliaire;false
+indice_de_vegetation_par_difference_normalisee;indice_de_vegetation_par_difference_normalisee;indice_de_vegetation_par_difference_normalisee;NDVI;normalized difference vegetation index;normalized difference vegetation index;false
+indice_des_frequences_de_traitement;indice_des_frequences_de_traitement;indice_des_frequences_de_traitement;phyt_itf;Indice des Fréquences de Traitement;Indice des Fréquences de Traitement;false
+indices_de_qualite;indices_de_qualite;indices_de_qualite;qc;indices de qualités associés à certaines variables;indices de qualités associés à certaines variables;false
+k_ech;k_ech;k_ech;K_ECH;Teneur en Potassium échangeable;Teneur en Potassium échangeable;false
+masse_vegetale;masse_vegetale;masse_vegetale;mav;Masse végétale;Masse végétale;false
+mat_de_la_complementation_apportee_par_jour;mat_de_la_complementation_apportee_par_jour;mat_de_la_complementation_apportee_par_jour;pat_comp_mat;MAT de la complémentation apportée par jour;MAT de la complémentation apportée par jour;false
+mat_org;mat_org;mat_org;MAT_ORG;Teneur en matière organique;Teneur en matière organique;false
+mg_ech;mg_ech;mg_ech;MG_ECH;Teneur en Magnésium échangeable;Teneur en Magnésium échangeable;false
+mn_ech;mn_ech;mn_ech;MN_ECH;Teneur en Manganèse échangeable;Teneur en Manganèse échangeable;false
+momentum;momentum;momentum;T;notion mécanique exprimant la quantité de mouvement;notion mécanique exprimant la quantité de mouvement;false
+moyenne_de_la_concentration_en_methane_mesuree;moyenne_de_la_concentration_en_methane_mesuree;moyenne_de_la_concentration_en_methane_mesuree;F CH4;moyenne de la concentration en CH4 sur l'ensemble des enceintes d'un traitement pour un cycle de mesures;moyenne de la concentration en CH4 sur l'ensemble des enceintes d'un traitement pour un cycle de mesures;false
+moyenne_de_la_concentration_en_protoxyde_d_azote;moyenne_de_la_concentration_en_protoxyde_d_azote;moyenne_de_la_concentration_en_protoxyde_d_azote;F N2O;moyenne de la concentration en N2O sur l'ensemble des enceintes d'un traitement pour un cycle de mesures;moyenne de la concentration en N2O sur l'ensemble des enceintes d'un traitement pour un cycle de mesures;false
+moyenne_de_la_concentration_en_vapeur_d_eau;moyenne_de_la_concentration_en_vapeur_d_eau;moyenne_de_la_concentration_en_vapeur_d_eau;F H2O;moyenne de la concentration en H2O sur l'ensemble des enceintes d'un traitement pour un cycle de mesures;moyenne de la concentration en H2O sur l'ensemble des enceintes d'un traitement pour un cycle de mesures;false
+moyenne_des_flux_de_dioxyde_de_carbone;moyenne_des_flux_de_dioxyde_de_carbone;moyenne_des_flux_de_dioxyde_de_carbone;F CO2;moyenne de la concentration en CO2 sur l'ensemble des encientes d'un traitement pour un cycle de mesure;moyenne de la concentration en CO2 sur l'ensemble des encientes d'un traitement pour un cycle de mesure;false
+n_tot;n_tot;n_tot;N_TOT;Teneur en Azote (N) total;Teneur en Azote (N) total;false
+na_ech;na_ech;na_ech;NA_ECH;Teneur en Sodium échangeable;Teneur en Sodium échangeable;false
+namm_du_semis;namm_du_semis;namm_du_semis;namm;namm du semis;namm du semis;true
+nature_de_l_intervention;nature_de_l_intervention;nature_de_l_intervention;aut_nature;Nature de l'intervention;Nature de l'intervention;true
+nature_de_la_partie_de_la_plante_recoltee;nature_de_la_partie_de_la_plante_recoltee;nature_de_la_partie_de_la_plante_recoltee;recFau_nat_plte;Nature de la partie de la plante récoltée;Nature de la partie de la plante récoltée;true
+nombre_de_division_de_la_parcelle;nombre_de_division_de_la_parcelle;nombre_de_division_de_la_parcelle;pat_div;nombre de division de la parcelle;nombre de division de la parcelle;false
+nombre_de_jour_animal_de_paturage_par_ha_cumule_pour_le_passage_considere;nombre_de_jour_animal_de_paturage_par_ha_cumule_pour_le_passage_considere;nombre_de_jour_animal_de_paturage_par_ha_cumule_pour_le_passage_considere;pat_Nb_jAlpat_ parHa;Nombre de jour_animal de pâturage par ha cumulé pour le passage considéré;Nombre de jour_animal de pâturage par ha cumulé pour le passage considéré;false
+nombre_moyen_d_animaux_sur_la_parcelle;nombre_moyen_d_animaux_sur_la_parcelle;nombre_moyen_d_animaux_sur_la_parcelle;pat_Nb_Ax;Nombre moyen d'animaux sur la parcelle;Nombre moyen d'animaux sur la parcelle;false
+note_d_etat_corporel_moyenne_par_animal;note_d_etat_corporel_moyenne_par_animal;note_d_etat_corporel_moyenne_par_animal;pat_nec;note d'état corporel moyenne par animal;note d'état corporel moyenne par animal;false
+objectif_de_semis;objectif_de_semis;objectif_de_semis;sem_objectifs;objectif de semis;objectif de semis;true
+objectifs_de_l_intervention_phytosanitaire;objectifs_de_l_intervention_phytosanitaire;objectifs_de_l_intervention_phytosanitaire;phyt_objectifs;objectifs de l'intervention phytosanitaire;objectifs de l'intervention phytosanitaire;true
+objectifs_de_travail_du_sol;objectifs_de_travail_du_sol;objectifs_de_travail_du_sol;wsol_objectifs;Objectifs de travail du sol;Objectifs de travail du sol;true
+p_ass;p_ass;p_ass;P_ASS;Teneur en Phosphore (P2O5) assimilable;Teneur en Phosphore (P2O5) assimilable;false
+ph_eau;ph_eau;ph_eau;pH_eau;pH Eau;pH Eau;false
+plaque_de_flux_de_la_chaleur_du_sol;plaque_de_flux_de_la_chaleur_du_sol;plaque_de_flux_de_la_chaleur_du_sol;G;Plaque de flux de la chaleur du sol;Plaque de flux de la chaleur du sol;false
+poids_moyen_des_animaux;poids_moyen_des_animaux;poids_moyen_des_animaux;pat_Pds_Moy_Ax;Poids moyen des animaux;Poids moyen des animaux;false
+precipitation;precipitation;precipitation;P;précipitation (pluviométrie);précipitation (pluviométrie);false
+pression_atmospherique;pression_atmospherique;pression_atmospherique;Pa;pression atmosphérique;pression atmosphérique;false
+production_laitiere_moyenne_par_animal_par_jour_par_passage;production_laitiere_moyenne_par_animal_par_jour_par_passage;production_laitiere_moyenne_par_animal_par_jour_par_passage;pat_productionlait;production laitière moyenne par animal par jour par passage;production laitière moyenne par animal par jour par passage;false
+produit_phytosanitaire;produit_phytosanitaire;produit_phytosanitaire;phyt_produit;Produit phytosanitaire;Produit phytosanitaire;true
+profondeur_de_semis;profondeur_de_semis;profondeur_de_semis;sem_depth;profondeur de semis;profondeur de semis;false
+profondeur_de_travail;profondeur_de_travail;profondeur_de_travail;wsol_depth;profondeur de travail;profondeur de travail;false
+quantite_d_aluminium_par_ha;quantite_d_aluminium_par_ha;quantite_d_aluminium_par_ha;fert_Al;Quantité d'Aluminium par ha;Quantité d'Aluminium par ha;false
+quantite_d_azote_apporte_par_ha;quantite_d_azote_apporte_par_ha;quantite_d_azote_apporte_par_ha;fert_N;Quantité d'azote apporté par ha;Quantité d'azote apporté par ha;false
+quantite_de_calcium_par_ha;quantite_de_calcium_par_ha;quantite_de_calcium_par_ha;fert_Ca;Quantité de Calcium par ha;Quantité de Calcium par ha;false
+quantite_de_chlorure_par_ha;quantite_de_chlorure_par_ha;quantite_de_chlorure_par_ha;fert_Cl;Quantité de Chlorure par ha;Quantité de Chlorure par ha;false
+quantite_de_fer_par_ha;quantite_de_fer_par_ha;quantite_de_fer_par_ha;fert_Fe;Quantité de Fer par ha;Quantité de Fer par ha;false
+quantite_de_magnesium_par_ha;quantite_de_magnesium_par_ha;quantite_de_magnesium_par_ha;fert_Mg;Quantité de Magnesium par ha;Quantité de Magnesium par ha;false
+quantite_de_manganese_par_ha;quantite_de_manganese_par_ha;quantite_de_manganese_par_ha;fert_Mn;Quantité de Manganèse par ha;Quantité de Manganèse par ha;false
+quantite_de_matiere_seche_totale_recoltee_machine;quantite_de_matiere_seche_totale_recoltee_machine;quantite_de_matiere_seche_totale_recoltee_machine;recFau_qte_sec_mach;Quantité de matière sêche totale récoltée machine;Quantité de matière sêche totale récoltée machine;false
+quantite_de_phosphore_apporte_par_ha;quantite_de_phosphore_apporte_par_ha;quantite_de_phosphore_apporte_par_ha;fert_P;Quantité de phosphore apporté par ha;Quantité de phosphore apporté par ha;false
+quantite_de_phytosanitaire_associe_au_semis;quantite_de_phytosanitaire_associe_au_semis;quantite_de_phytosanitaire_associe_au_semis;sem_phyt;quantité de phytosanitaire associé au semis;quantité de phytosanitaire associé au semis;false
+quantite_de_potassium_apporte_par_ha;quantite_de_potassium_apporte_par_ha;quantite_de_potassium_apporte_par_ha;fert_K;Quantité de potassium apporté par ha;Quantité de potassium apporté par ha;false
+quantite_de_produit_phytosanitaire;quantite_de_produit_phytosanitaire;quantite_de_produit_phytosanitaire;phyt_qte;Quantité de produit phytosanitaire;Quantité de produit phytosanitaire;false
+quantite_de_sodium_par_ha;quantite_de_sodium_par_ha;quantite_de_sodium_par_ha;fert_Na;Quantité de Sodium par ha;Quantité de Sodium par ha;false
+quantite_de_soufre_par_ha;quantite_de_soufre_par_ha;quantite_de_soufre_par_ha;fert_Sa;Quantité de Soufre par ha;Quantité de Soufre par ha;false
+rayonnement_global_diffus;rayonnement_global_diffus;rayonnement_global_diffus;Rd;rayonnement global diffus;rayonnement global diffus;false
+rayonnement_global_incident;rayonnement_global_incident;rayonnement_global_incident;Rg;rayonnement global incident;rayonnement global incident;false
+rayonnement_global_reflechi;rayonnement_global_reflechi;rayonnement_global_reflechi;Rr;rayonnement global réfléchi;rayonnement global réfléchi;false
+rayonnement_infrarouge_incident;rayonnement_infrarouge_incident;rayonnement_infrarouge_incident;LWin;rayonnement infrarouge incident;rayonnement infrarouge incident;false
+rayonnement_infrarouge_reflechi;rayonnement_infrarouge_reflechi;rayonnement_infrarouge_reflechi;LWout;rayonnement infrarouge réfléchi;rayonnement infrarouge réfléchi;false
+rayonnement_photosynthetiquement_actif;rayonnement_photosynthetiquement_actif;rayonnement_photosynthetiquement_actif;PAR;rayonnement photosynthétiquement actif;rayonnement photosynthétiquement actif;false
+rayonnement_photosynthetiquement_actif_et_reflechi;rayonnement_photosynthetiquement_actif_et_reflechi;rayonnement_photosynthetiquement_actif_et_reflechi;PARr;rayonnement photosynthétiquement actif et réfléchi;rayonnement photosynthétiquement actif et réfléchi;false
+rayonnement_solaire_net;rayonnement_solaire_net;rayonnement_solaire_net;Rn;valeur calculée suivant la formule (Rg-Rr);valeur calculée suivant la formule (Rg-Rr);false
+repousse;repousse;repousse;recFau_repousse;Repousse;Repousse;true
+stabilite_de_l_atmosphere;stabilite_de_l_atmosphere;stabilite_de_l_atmosphere;ZL;paramètre de stabilité de l'atmosphère;paramètre de stabilité de l'atmosphère;false
+stock_de_chaleur_dans_la_canopee;stock_de_chaleur_dans_la_canopee;stock_de_chaleur_dans_la_canopee;Sb;stockage de chaleur dans la canopée;stockage de chaleur dans la canopée;false
+stock_de_chaleur_dans_la_couche_d_air_de_la_canopee;stock_de_chaleur_dans_la_couche_d_air_de_la_canopee;stock_de_chaleur_dans_la_couche_d_air_de_la_canopee;Sa;stockage de chaleur dans la couche d'air de la canopée;stockage de chaleur dans la couche d'air de la canopée;false
+stock_de_chaleur_latente_dans_la_couche_d_air_de_la_canopee;stock_de_chaleur_latente_dans_la_couche_d_air_de_la_canopee;stock_de_chaleur_latente_dans_la_couche_d_air_de_la_canopee;Sw;chaleur latente dans la couche d'air de la canopée;chaleur latente dans la couche d'air de la canopée;false
+stock_de_dioxyde_de_carbone_dans_la_couche_de_l_air_de_la_canopee;stock_de_dioxyde_de_carbone_dans_la_couche_de_l_air_de_la_canopee;stock_de_dioxyde_de_carbone_dans_la_couche_de_l_air_de_la_canopee;Sc;stockage de dioxyde de carbone  dans la couche d'air de la conopée;stockage de dioxyde de carbone  dans la couche d'air de la conopée;false
+surface_un_prelevement;surface_un_prelevement;surface_un_prelevement;soil_samples;Surface d'un prélèvement;Surface d'un prélèvement;false
+taux_moyen_de_matiere_seche_par_parcelle_a_la_recolte;taux_moyen_de_matiere_seche_par_parcelle_a_la_recolte;taux_moyen_de_matiere_seche_par_parcelle_a_la_recolte;recFau_Taux_MS_moy;Taux moyen de matière sèche par parcelle à la récolte;Taux moyen de matière sèche par parcelle à la récolte;false
+taux_volumique_elements_grossiers;taux_volumique_elements_grossiers;taux_volumique_elements_grossiers;Tx_Vol_EltsGr;On appelle éléments grossiers toute fraction granulométrique supérieure à 2 mm. Le taux  volumique d'éléments grossiers (>2mm) correspond au volume des éléments grossiers présents dans le sol (volume des éléments grossiers par volume de sol, cm³/cm³);On appelle éléments grossiers toute fraction granulométrique supérieure à 2 mm. Le taux  volumique d'éléments grossiers (>2mm) correspond au volume des éléments grossiers présents dans le sol (volume des éléments grossiers par volume de sol, cm³/cm³);false
+temperature_de_l_air;temperature_de_l_air;temperature_de_l_air;Ta;température de l'air;température de l'air;false
+temperature_de_la_surface_du_sol;temperature_de_la_surface_du_sol;temperature_de_la_surface_du_sol;Tg;ground temp;ground temp;false
+temperature_du_ciel;temperature_du_ciel;temperature_du_ciel;Ts;sky temp;sky temp;false
+temperature_du_sol;temperature_du_sol;temperature_du_sol;TS;température du sol;température du sol;false
+temperature_radiative_de_la_canopee;temperature_radiative_de_la_canopee;temperature_radiative_de_la_canopee;Tc;température radiative de la canopée;température radiative de la canopée;false
+teneur_en_azote;teneur_en_azote;teneur_en_azote;N;Teneur en Azote;Teneur en Azote;false
+teneur_en_bore;teneur_en_bore;teneur_en_bore;Bo;Teneur en Bore total;Teneur en Bore total;false
+teneur_en_calcium;teneur_en_calcium;teneur_en_calcium;Ca;Teneur en Calcium total;Teneur en Calcium total;false
+teneur_en_carbone;teneur_en_carbone;teneur_en_carbone;C;Teneur en Carbone;Teneur en Carbone;false
+teneur_en_cendres_brutes;teneur_en_cendres_brutes;teneur_en_cendres_brutes;CBR;Teneur en Cendres Brutes à 480°C;Teneur en Cendres Brutes à 480°C;false
+teneur_en_cuivre;teneur_en_cuivre;teneur_en_cuivre;Cu;Teneur en Cuivre total;Teneur en Cuivre total;false
+teneur_en_fer;teneur_en_fer;teneur_en_fer;Fe;Teneur en Fer total;Teneur en Fer total;false
+teneur_en_magnesium;teneur_en_magnesium;teneur_en_magnesium;Mg;Teneur en Magnésium total;Teneur en Magnésium total;false
+teneur_en_manganese;teneur_en_manganese;teneur_en_manganese;Mn;Teneur en Manganèse total;Teneur en Manganèse total;false
+teneur_en_matieres_organiques;teneur_en_matieres_organiques;teneur_en_matieres_organiques;MOR;Teneur en Matières Organiques par calcination;Teneur en Matières Organiques par calcination;false
+teneur_en_phosphore;teneur_en_phosphore;teneur_en_phosphore;Pho;Teneur en Phosphore total;Teneur en Phosphore total;false
+teneur_en_potassium;teneur_en_potassium;teneur_en_potassium;K;Teneur en Potassium total;Teneur en Potassium total;false
+teneur_en_sodium;teneur_en_sodium;teneur_en_sodium;Na;Teneur en Sodium total;Teneur en Sodium total;false
+teneur_en_zinc;teneur_en_zinc;teneur_en_zinc;Zn;Teneur en Zinc total;Teneur en Zinc total;false
+tension_de_l_eau_dans_le_sol;tension_de_l_eau_dans_le_sol;tension_de_l_eau_dans_le_sol;SMP;tension de l'eau dans le sol;tension de l'eau dans le sol;false
+transpiration_des_arbres;transpiration_des_arbres;transpiration_des_arbres;TR;transpiration des arbres;transpiration des arbres;false
+type_d_animaux;type_d_animaux;type_d_animaux;pat_type_animaux;type des animaux en pâture;type des animaux en pâture;true
+type_d_outil_de_travail_du_sol;type_d_outil_de_travail_du_sol;type_d_outil_de_travail_du_sol;wsol_type_outil;Type d'outil de travail du sol;Type d'outil de travail du sol;true
+type_de_complementation;type_de_complementation;type_de_complementation;pat_type_complementation;type de complémentation;type de complémentation;true
+type_de_fertilisant;type_de_fertilisant;type_de_fertilisant;fert_type;Type de fertilisant;Type de fertilisant;true
+ufl_de_la_complementation_apportee_par_jour;ufl_de_la_complementation_apportee_par_jour;ufl_de_la_complementation_apportee_par_jour;pat_comp_ufl;UFL de la complémentation apportée par jour;UFL de la complémentation apportée par jour;false
+vapeur_d_eau;vapeur_d_eau;vapeur_d_eau;H2O;concentration de la vapeur d'eau;concentration de la vapeur d'eau;false
+variete_semee;variete_semee;variete_semee;sem_variete;variété semée;variété semée;true
+vitesse_de_friction;vitesse_de_friction;vitesse_de_friction;u*;vitesse de friction;vitesse de friction;false
+vitesse_du_vent;vitesse_du_vent;vitesse_du_vent;WS;vitesse horizontale du vent;vitesse horizontale du vent;false

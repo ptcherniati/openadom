@@ -1,0 +1,6 @@
+---
+title: "Schéma d'exemple YAML"
+---
+```yaml
+{{< include schema_example.yaml >}}
+```

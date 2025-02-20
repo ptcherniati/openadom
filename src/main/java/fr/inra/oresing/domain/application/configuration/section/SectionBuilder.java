@@ -118,7 +118,7 @@ public class SectionBuilder {
             );
         }
         final Predicate<String> isMissingMandatorySection = s -> !givenSections.contains(s);
-        final Predicate<String> isInGiven = s -> givenSections.contains(s);
+        final Predicate<String> isInGiven = givenSections::contains;
         final Set<String> missingMandatorySections = getMandatorySections()
                 .stream()
                 .map(Section::label)

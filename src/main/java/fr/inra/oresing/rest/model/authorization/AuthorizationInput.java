@@ -18,6 +18,18 @@ import java.util.stream.Collectors;
 public class AuthorizationInput {
     LocalDateTimeRange timeScope = LocalDateTimeRange.always();
     private Map<String, List<Ltree>> requiredAuthorizations = new HashMap<>();
+
+    public void setOperationTypes(Set<OperationType> operationTypes) {
+
+        if(operationTypes.contains(OperationType.publication)){
+            operationTypes.add(OperationType.depot);
+        }
+        if(operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)){
+            operationTypes.add(OperationType.extraction);
+        }
+        this.operationTypes = operationTypes;
+    }
+
     Set<OperationType> operationTypes = new HashSet<>();
 
     public AuthorizationInput(Map<String, List<Ltree>> requiredAuthorizations,
@@ -25,12 +37,19 @@ public class AuthorizationInput {
                               Set<OperationType> operationTypes) {
         this.requiredAuthorizations = requiredAuthorizations;
         this.timeScope = timeScope;
+        operationTypes = new HashSet<>(operationTypes);
+        if(operationTypes.contains(OperationType.publication)){
+            operationTypes.add(OperationType.depot);
+            operationTypes.add(OperationType.delete);
+        }
+        if(operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)){
+            operationTypes.add(OperationType.extraction);
+        }
         this.operationTypes = operationTypes;
     }
 
     public void setTimeScope(final Map<String, LocalDate> dates) {
-        final LocalDateTimeRange timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
-        this.timeScope = timeScope;
+        this.timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
     }
 
     public AuthorizationInput() {
@@ -80,8 +99,7 @@ public class AuthorizationInput {
     }*/
 
     public void setIntervalDates(Map<String, LocalDate> dates) {
-        LocalDateTimeRange timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
-        this.timeScope = timeScope;
+        this.timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
     }
 
     /*public String toSQL(List<String> requiredAuthorizationsAttributes) {

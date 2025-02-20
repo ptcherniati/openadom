@@ -15,7 +15,7 @@ public record CurrentUserRolesResult(
         List<String> memberOf,
         boolean isDataBaseSuper
 ) {
-    public static final CurrentUserRolesResult of(CurrentUserRoles currentUserRoles) {
+    public static CurrentUserRolesResult of(CurrentUserRoles currentUserRoles) {
         return new CurrentUserRolesResult(
                 currentUserRoles.applicationRoles(),
                 currentUserRoles.userId(),

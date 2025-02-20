@@ -1,0 +1,84 @@
+---
+ title: Colonnes dynamiques
+ subtitle: OA_dynamicComponents
+ abstract: >
+  Les colonnes dynamiques permettent de traduire une relation n-n entre deux référentiels. Par exemple entre un objet et ses propriétés.
+---
+
+## Exemple
+
+{{< var  page-refs.example.link-taxons>}}
+
+## Description
+
+```{mermaid}
+  classDiagram
+      Taxon "*" -- "*" Proprietes_de_taxon
+```
+
+Dans le référentiel *Proprietes_de_taxon* on liste les différentes propriétés qui sont observées sur l'objet.
+
+::: {.callout-important collapse="false" title="Propriétés des taxons"}
+```{r}
+#| echo: false
+#| label: tr_sites_properties_spt.csv
+#| tbl-cap: "Propriétés des sites"
+#| code-fold: show
+knitr::kable(read.csv("../../../examples/taxons/fichiers/tr_taxon_properties_tpt.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+:::
+
+Dans le référentiel *Taxon*, on donne la liste des propriétés observées pour chacune des propriétés dans une colonne avec comme en-tête le nom de la propriété préfixée.
+
+::: {.callout-important collapse="false" title="Taxons"}
+```{r}
+#| echo: false
+#| label: tr_sites_sit.csv
+#| tbl-cap: "Zones d'études"
+#| code-fold: show
+knitr::kable(read.csv("../../../examples/taxons/fichiers/te_taxon_tax.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+:::
+
+On définira le référentiel objet de la manière suivante
+
+::: {.callout-important collapse="false" title="dynamicComponent.yaml"}
+``` yaml
+{{< include ../../../examples/taxons/configuration.yaml >}}
+```
+
+[dynamicComponent.yaml](../../../examples/taxons/configuration.yaml)
+:::
+
+### Préfixe {#OA_headerPrefix}
+
+On précise un préfixe en utilisant OA_headerPrefix
+
+``` yaml
+      tax_propriete_taxon: 
+        OA_headerPrefix: pt_
+```
+
+### Référentiel de propriétés {#OA_reference}
+
+On précise un préfixe le référentiel contenant les nom de colonnes en utilisant OA_reference
+
+``` yaml
+      tax_propriete_taxon: 
+        OA_reference: tr_propriete_taxon_ptx
+```
+
+### Colonne de propriétés {#OA_referenceColumnToLookForHeader}
+
+On précise dans ce référentiel la composante contenant les noms de colonnes en utilisant OA_referenceColumnToLookForHeader
+
+``` yaml
+      tax_propriete_taxon: 
+        OA_referenceColumnToLookForHeader: ptx_propriete_key
+```
+
+## Exemple
+
+voir {{< var  page-refs.example.link-dynamic>}}

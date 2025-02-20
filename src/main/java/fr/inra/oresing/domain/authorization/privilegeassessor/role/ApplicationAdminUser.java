@@ -5,15 +5,22 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.IllegalRoleToBeGranted;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.IllegalUserToBeGranted;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
-public record ApplicationAdminUser(Application application) implements ApplicationManager {
+public record ApplicationAdminUser(
+        Application application,
+        String dataName
+) implements ApplicationManager, ApplicationDataWriter, ApplicationDataDelete {
+    public ApplicationAdminUser(Application application) {
+        this(application, ApplicationManager.ALL_DATANAMES);
+    }
+
     @Override
     public boolean canUpdateApplication() {
         return true;
@@ -24,7 +31,7 @@ public record ApplicationAdminUser(Application application) implements Applicati
                 .map(OreSiUser::getChartes)
                 .map(chartes -> chartes.get(application().getId().toString()))
                 .isEmpty()) {
-            throw new IllegalUserToBeGranted(user, application().getName());
+            throw new IllegalUserToBeGranted(Objects.requireNonNull(user), application().getName());
         }
         OreSiRightOnApplicationRole userManager = OreSiRightOnApplicationRole.userAdminOn(application());
         OreSiRightOnApplicationRole applicationManager = OreSiRightOnApplicationRole.adminOn(application());
@@ -32,5 +39,25 @@ public record ApplicationAdminUser(Application application) implements Applicati
             throw new IllegalRoleToBeGranted(roleForUser.role());
         }
         return true;
+    }
+
+    @Override
+    public boolean canDelete(FileOrUUID fileOrUUID) {
+        return true;
+    }
+
+    @Override
+    public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
+        return true;
+    }
+
+    @Override
+    public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
+        return true;
+    }
+
+    @Override
+    public OreSiTechnicalException getException() {
+        return null;
     }
 }

@@ -2,8 +2,6 @@ package fr.inra.oresing.domain.groovy.predefined.script;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.checker.type.DateType;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import groovy.lang.Closure;
 
 import java.util.ArrayList;
@@ -26,7 +24,7 @@ public record BuildManyCompositeKey() implements ScriptConstantProvider {
                 List<List<String>> valuesList = labels.stream()
                         .map(label -> datum.getOrDefault(label, ""))
                         .map(value -> Arrays.asList(value.split(",")))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 // Trouver la taille maximale des listes de valeurs
                 int maxSize = valuesList.stream()

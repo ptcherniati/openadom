@@ -11,13 +11,13 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.3</version>
+        <version>3.3.6</version>
     </parent>
 
 
     <name>si-ore-ng</name>
     <description>SI ORE NG</description>
-    <url>http://gitlab.codelutin.com</url>
+    <url>https://backend-8d0b46.pages.mia.inra.fr</url>
     <inceptionYear>2018</inceptionYear>
     <licenses>
         <license>
@@ -52,15 +52,15 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git@gitlab.codelutin.com:inra/si-ore-ng.git</connection>
-        <developerConnection>scm:git:git@gitlab.codelutin.com:inra/si-ore-ng.git</developerConnection>
-        <url>https://gitlab.codelutin.com/inra/si-ore-ng</url>
+        <connection>scm:git:git@forgemia.inra.fr:anaee-dev/openadom/backend.git</connection>
+        <developerConnection>scm:git:git@forgemia.inra.fr:anaee-dev/openadom/backend.git</developerConnection>
+        <url>https://forgemia.inra.fr/anaee-dev/openadom/backend</url>
     </scm>
 
     <properties>
 
         <projectId>si-ore-ng</projectId>
-
+        <env.CI_PROJECT_ID>13383</env.CI_PROJECT_ID>
         <!-- license to use  -->
         <license.licenseName>lgpl_v3</license.licenseName>
 
@@ -70,22 +70,29 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
         <jwt.version>0.12.6</jwt.version>
+        <flyway.version>10.10.0</flyway.version>
+        <flyway.database.version>10.16.0</flyway.database.version>
         <flyway-spring-test.version>10.0.0</flyway-spring-test.version>
         <springdoc-openapi-starter-webmvc-ui.version>2.6.0</springdoc-openapi-starter-webmvc-ui.version>
-        <common-csv.version>1.11.0</common-csv.version>
-        <commons-io.version>2.16.1</commons-io.version>
+        <common-csv.version>1.12.0</common-csv.version>
+        <commons-io.version>2.18.0</commons-io.version>
         <guava.version>33.3.0-jre</guava.version>
         <opencsv.version>5.9</opencsv.version>
         <bcrypt.version>0.10.2</bcrypt.version>
         <vue.version>2.6.14</vue.version>
         <testcontainer.postgresql.version>1.20.1</testcontainer.postgresql.version>
         <groovy.version-jsr223>3.0.22</groovy.version-jsr223>
-        <!--
-                <flyway.version>10.16.0</flyway.version>
-        -->
         <!--Database infos -->
+        <java.version>21</java.version>
 
-
+        <!--sonar-->
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.language>java</sonar.language>
+        <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
+        <sonar.projectName>openADOM-backend</sonar.projectName>
+        <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
     </properties>
 
     <dependencies>
@@ -121,7 +128,7 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.6.0</version>
+            <version>${springdoc-openapi-starter-webmvc-ui.version}</version>
         </dependency>
 
         <dependency>
@@ -131,11 +138,12 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
+            <version>${flyway.version}</version>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-            <version>10.16.0</version>
+            <version>${flyway.database.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -153,11 +161,6 @@
         </dependency>
         <!-- ******************************************************* -->
         <!-- new dependencies-->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>${springdoc-openapi-starter-webmvc-ui.version}</version>
-        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -276,10 +279,6 @@
             <artifactId>mockito-core</artifactId>
             <version>5.13.0</version>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-actuator</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
@@ -296,6 +295,7 @@
             <artifactId>httpclient5</artifactId>
             <version>5.3.1</version>
         </dependency>
+
 
     </dependencies>
 
@@ -318,6 +318,25 @@
             </resource>
         </resources>
         <plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.11</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>report</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
                 <artifactId>git-commit-id-maven-plugin</artifactId>
@@ -433,6 +452,13 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <configuration>
                             <forkCount>4</forkCount>
+                            <parallel>classesAndMethods</parallel>
+                            <threadCount>4</threadCount>
+                            <perCoreThreadCount>true</perCoreThreadCount>
+                            <parallelTestsTimeoutInSeconds>300</parallelTestsTimeoutInSeconds>
+                            <parallelTestsTimeoutForcedInSeconds>600</parallelTestsTimeoutForcedInSeconds>
+                            <parallelOptimized>true</parallelOptimized>
+
                             <reuseForks>false</reuseForks>
                             <testSourceDirectory>src/test</testSourceDirectory>
                             <testFailureIgnore>false</testFailureIgnore>

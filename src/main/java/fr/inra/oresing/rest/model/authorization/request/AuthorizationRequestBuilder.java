@@ -7,9 +7,7 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
-import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.model.authorization.CreateAuthorizationRequest;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import org.apache.commons.collections4.CollectionUtils;
@@ -33,11 +31,11 @@ public class AuthorizationRequestBuilder {
     public static final String NAME = "name";
     static final YAMLMapper mapper = YAMLMapper.builder().build();
     private final Application application;
-    AuthorizationForAllBuilder authorizationForAllBuilder = new AuthorizationForAllBuilder(this);
-    AuthorizationWithRestrictionBuilder authorizationWithRestrictionBuilder = new AuthorizationWithRestrictionBuilder(this);
-    List<AuthorizationRequestError> errors = new ArrayList<>();
-    List<UUID> allUsers = List.of();
-    List<OreSiAuthorization> authorizationsForCurrentUser = List.of();
+    final AuthorizationForAllBuilder authorizationForAllBuilder = new AuthorizationForAllBuilder(this);
+    final AuthorizationWithRestrictionBuilder authorizationWithRestrictionBuilder = new AuthorizationWithRestrictionBuilder(this);
+    final List<AuthorizationRequestError> errors;
+    final List<UUID> allUsers;
+    final List<OreSiAuthorization> authorizationsForCurrentUser;
 
     public AuthorizationRequestBuilder(Application application,
                                        List<UUID> allUsers,

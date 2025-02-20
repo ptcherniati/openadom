@@ -1,0 +1,29 @@
+OA_version: 2.0.1
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: SOERE mon SOERE
+      en: SOERE my SOERE
+    OA_description:
+      fr: SOERE mon SOERE
+      en: SOERE my SOERE
+  OA_comment: Fichier de test de l'application brokenADOM version initiale
+  OA_name: monsore
+  OA_version: 3.0.1
+OA_tags:
+  context:
+    fr: contexte
+    en: context
+  data:
+    fr: données
+    en: data
+  test:
+    fr: test
+    en: test
+  unit:
+    fr: unité
+    en: unit
+  temporal:
+    fr: temporalité
+    en: temporality

@@ -14,7 +14,6 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Def
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DateValidationCheckResult;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.util.Supplier;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -26,6 +25,7 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,7 +68,6 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
         this.pattern = pattern;
         this.formatter = formatter;
         this.duration = duration;
-        final DatePattern<TemporalAccessor> datePattern = DatePattern.of(pattern);
         this.minDate = minDate;
         this.maxDate = maxDate;
     }
@@ -105,8 +104,7 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
             final String dateString = matcher.group(1);
             final String pattern = matcher.group(2);
             final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(pattern);
-            final DateType dateType = new DateType(pattern, LocalDateTime.parse(dateString, dateFormatter), dateFormatter, clone);
-            return dateType;
+            return new DateType(pattern, LocalDateTime.parse(dateString, dateFormatter), dateFormatter, clone);
         }
         return new DateType();
     }
@@ -133,18 +131,6 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
 
     public static String sortableDateToFormattedDate(final String formattedDate) {
         return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
-    }
-
-    public static boolean isValidPattern(final String pattern) {
-        if (StringUtils.isBlank(pattern)) {
-            return false;
-        }
-        try {
-            newDateTimeFormatter(pattern);
-            return true;
-        } catch (final IllegalArgumentException e) {
-            return false;
-        }
     }
 
     LocalDateTime value;

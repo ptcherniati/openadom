@@ -7,9 +7,8 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -29,15 +28,11 @@ public record AuthorizationParsed(
                         entry -> entry.getValue().stream().map(Ltree::getSql).collect(Collectors.toSet())
                 ));
 
-        LocalDate fromDate = Optional.ofNullable(authorizationForScope.timeScope())
-                .map(LocalDateTimeRange::getRange)
-                .map(range -> range.hasLowerBound() ? range.lowerEndpoint().toLocalDate() : LocalDate.MIN)
-                .orElse(LocalDate.MIN);
+        LocalDate fromDate = Optional.ofNullable(Objects.requireNonNull(authorizationForScope).timeScope())
+                .map(LocalDateTimeRange::getRange).filter(Range::hasLowerBound).map(range -> range.lowerEndpoint().toLocalDate()).orElse(LocalDate.MIN);
 
         LocalDate toDate = Optional.ofNullable(authorizationForScope.timeScope())
-                .map(LocalDateTimeRange::getRange)
-                .map(range -> range.hasUpperBound() ? range.upperEndpoint().toLocalDate() : LocalDate.MAX)
-                .orElse(LocalDate.MAX);
+                .map(LocalDateTimeRange::getRange).filter(Range::hasUpperBound).map(range -> range.upperEndpoint().toLocalDate()).orElse(LocalDate.MAX);
 
         return new AuthorizationParsed(
                 authorizationForScope.operationTypes(),

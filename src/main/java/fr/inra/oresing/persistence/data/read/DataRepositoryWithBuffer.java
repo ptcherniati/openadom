@@ -3,8 +3,10 @@ package fr.inra.oresing.persistence.data.read;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.Node;
+import fr.inra.oresing.domain.data.DataValue;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 
 import java.io.*;
 import java.nio.file.*;
@@ -14,7 +16,11 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public record DataRepositoryWithBuffer(Application application, DataRepository repository, Path tempDir)
+public record DataRepositoryWithBuffer(
+        Application application,
+        DataRepository repository,
+        Path tempDir
+)
         implements fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer {
 
     public static final String PREFIX_FOR_HIERARCHICAL = "hierarchical";
@@ -29,14 +35,16 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
             String uniqueId = UUID.randomUUID().toString();
             return Files.createTempDirectory("data_repo_buffer_" + uniqueId);
         } catch (IOException e) {
-            throw new RuntimeException("Impossible de créer le répertoire temporaire", e);
+            throw new OreSiTechnicalException("Impossible de créer le répertoire temporaire", e);
         }
     }
 
     @Override
     public Map<String, Map<String, String>> findDisplayByReferenceType(String referenceType) {
         return getDataFromFileOrRepository(fileWithPrefix(referenceType, PREFIX_FOR_DISPLAY),
-                stream -> stream.collect(Collectors.groupingBy(
+                stream -> stream
+                        .filter(parts->parts.length>3)
+                        .collect(Collectors.groupingBy(
                         parts -> parts[1],
                         Collectors.toMap(parts -> parts[2], parts -> parts[3])
                 ))
@@ -65,12 +73,17 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
         String referenceType = scopeEntry.getKey();
         List<String> availableKeys = new ArrayList<>();
 
-        List<Ltree> result = scopeEntry.getValue().stream()
+        // Collecter toutes les clés disponibles
+
+        return scopeEntry.getValue().stream()
                 .map(keyForScope -> {
                     String hierarchicalKey = getDataFromFileOrRepository(
                             fileWithPrefix(referenceType, PREFIX_FOR_HIERARCHICAL),
                             stream -> stream
-                                    .peek(parts -> availableKeys.add(parts[1])) // Collecter toutes les clés disponibles
+                                    .map(parts -> {
+                                        availableKeys.add(parts[1]);
+                                        return parts;
+                                    }) // Collecter toutes les clés disponibles
                                     .filter(parts -> parts[1].equals(keyForScope.toString()) || parts[2].equals(keyForScope.toString()))
                                     .map(parts -> parts[2])
                                     .findFirst()
@@ -79,7 +92,7 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
 
                     if (hierarchicalKey == null) {
                         String availableKeysMessage = String.join(", ", availableKeys);
-                        throw new IllegalArgumentException(
+                        throw new IllegalArgumentException(//TODO throw sioretechnicalException
                                 String.format("Clé non trouvée pour le type de référence: %s, clé: %s. Clés disponibles: %s",
                                         referenceType, keyForScope, availableKeysMessage)
                         );
@@ -88,8 +101,6 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
                     return Ltree.fromSql(hierarchicalKey);
                 })
                 .toList();
-
-        return result;
     }
 
     @Override
@@ -120,7 +131,7 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
             while(parentName!=null){
                 parents.add(parentName);
                 parentName = application().findParentNode(parentName).map(Node::nodeName).orElse(null);
-            };
+            }
 
 
             Map<String, String> data = repository.findHierarchicalKeysByKeyForReferenceTypes(parents);
@@ -191,13 +202,18 @@ public record DataRepositoryWithBuffer(Application application, DataRepository r
     }
 
     public void cleanup() {
-        try {
-            Files.walk(tempDir)
+        try(Stream<Path> pathStream = Files.walk(tempDir)) {
+            pathStream
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)
                     .forEach(File::delete);
         } catch (IOException e) {
             throw new UncheckedIOException("Erreur lors du nettoyage du répertoire temporaire", e);
         }
+    }
+
+    @Override
+    public Stream<DataValue> findAllByReferenceTypeStream(String referenceName) {
+        return repository().findAllByReferenceTypeStream(referenceName);
     }
 }

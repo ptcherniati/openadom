@@ -39,21 +39,21 @@ public record Configuration(Version version, Set<Tag> tags,
     }
 
     public Configuration configurationAccordingToRights() {
-        final Configuration configurationforNotAuthorized = new Configuration(
-                version(),
-                tags(),
-                i18n(),
-                applicationDescription(),
+        return new Configuration(
+                this.version(),
+                this.tags(),
+                this.i18n(),
+                this.applicationDescription(),
                 componentDescriptionAccordingToRights(),
-                rightsRequest(),
-                additionalFiles(),
-                hierarchicalNodes, requiredAuthorizationsAttributes()
+                this.rightsRequest(),
+                this.additionalFiles(),
+                hierarchicalNodes, this.requiredAuthorizationsAttributes()
         );
-        return configurationforNotAuthorized;
     }
 
     public LinkedHashMap<String, StandardDataDescription> componentDescriptionAccordingToRights() {
-        return dataDescription().entrySet().stream().peek(entry -> {
+        return dataDescription().entrySet().stream()
+                /*.peek(entry -> {
                     final String key = entry.getKey();
                     final StandardDataDescription componentDescription = entry.getValue();
                     ComponentDescription componentDescriptionccordingToRights = new FilteredDescriptionComponent(
@@ -63,7 +63,7 @@ public record Configuration(Version version, Set<Tag> tags,
                             null
 
                     );
-                })
+                })*/
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 
@@ -72,7 +72,7 @@ public record Configuration(Version version, Set<Tag> tags,
                 .map(node -> node.findNode(refType))
                 .filter(Objects::nonNull)
                 .findFirst()
-                .map(node -> new HierarchicalNode(node));
+                .map(HierarchicalNode::new);
     }
 
     public Set<String> getHiddenComponentsForData(final String dataName) {
@@ -82,7 +82,7 @@ public record Configuration(Version version, Set<Tag> tags,
                 .map(Map::values)
                 .map(values -> values.stream()
                         .filter(c -> c.tags() != null)
-                        .filter(c -> c.tags().contains(Tag.HiddenTag.INSTANCE()))
+                        .filter(c -> c.tags().contains(Tag.HiddenTag.instance()))
                         .map(ComponentDescription::componentKey)
                         .collect(Collectors.toSet()))
                 .orElseGet(Set::of
@@ -92,7 +92,7 @@ public record Configuration(Version version, Set<Tag> tags,
     public Set<String> getHiddenData() {
         return dataDescription().entrySet().stream()
                 .filter(entry -> entry.getValue().tags() != null)
-                .filter(entry -> entry.getValue().tags().contains(Tag.HiddenTag.INSTANCE()))
+                .filter(entry -> entry.getValue().tags().contains(Tag.HiddenTag.instance()))
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
     }
@@ -102,23 +102,6 @@ public record Configuration(Version version, Set<Tag> tags,
         return Optional.of(dataDescription())
                 .map(getDataDescription);
     }
-
-    public Optional<ComponentDescription> findComponentOfData(String dataName, String componentName) {
-        Function<Map<String, ComponentDescription>, ComponentDescription> getComponentDescription = components -> components.get(componentName);
-        return findData(dataName)
-                .map(StandardDataDescription::componentDescriptions)
-                .map(getComponentDescription);
-    }
-
-    public Map<String, Submission.SubmissionScope> findSubmission() {
-        Map<String, Submission.SubmissionScope> submissions = new HashMap<>();
-        dataDescription().forEach((dataName, dataDescription) -> {
-            dataDescription.findSubmissionScope()
-                    .ifPresent(authorizations -> submissions.put(dataName, authorizations));
-        });
-        return submissions;
-    }
-
 
     public TreeSet<Node> orderedNodes() {
         TreeSet<Node> nodes = new TreeSet<>();
@@ -147,7 +130,7 @@ public record Configuration(Version version, Set<Tag> tags,
             String dataname,
             String locale,
             LinkedList<String> elementsToBeSortedInFirst) {
-        StandardDataDescription dataDescription = findData(dataname).orElseThrow(() -> new IllegalArgumentException("no dataDescription for %".formatted(dataname)));
+        StandardDataDescription dataDescription = findData(dataname).orElseThrow(() -> new IllegalArgumentException("no dataDescription for %s".formatted(dataname)));
         Comparator<Map.Entry<String, InternationalizedSortedColumn>> comparator = (aEntry, bEntry) -> {
             InternationalizedSortedColumn a = aEntry.getValue();
             InternationalizedSortedColumn b = bEntry.getValue();
@@ -173,7 +156,7 @@ public record Configuration(Version version, Set<Tag> tags,
                 .collect(Collectors.toSet());
         boolean haveNoDefinedOrder = componentDescriptions.stream()
                 .allMatch(Predicate.not(ComponentDescription::hasOrderTag));
-        Function<String, ComponentType> getTypeForComponentKey = componentName -> dataDescription.getTypeForComponentKey(componentName);
+        Function<String, ComponentType> getTypeForComponentKey = dataDescription::getTypeForComponentKey;
         return haveNoDefinedOrder ?
                 getSortedColumnsWithKeyThenAlphabeticOrder(dataname, getTypeForComponentKey, locale, componentDescriptions, dataDescription.naturalKey()) :
                 getSortedColumnsWithOrderThenAlphabeticOrder(dataname, getTypeForComponentKey, locale, componentDescriptions)
@@ -213,22 +196,6 @@ public record Configuration(Version version, Set<Tag> tags,
                 ));
     }
 
-    public String getInternationalizedHeaderDescription(String dataName,
-                                             String componentName,
-                                             String locale) {
-        Optional<InternationalizationTitle> localizedExportHeaders = Optional.ofNullable(i18n())
-                .map(Internationalizations::getData)
-                .map(stringInternationalizationDataMap -> stringInternationalizationDataMap.get(dataName))
-                .map(InternationalizationData::getComponents)
-                .map(stringInternationalizationComponentMap -> stringInternationalizationComponentMap.get(componentName))
-                .map(InternationalizationComponent::getExportHeader);
-        return localizedExportHeaders
-                .map(exportHeaderI18n->exportHeaderI18n.getDescription())
-                .map(localizationMap -> localizationMap.get(locale))
-                .orElse(null);
-
-    }
-
     public String getInternationalizedHeader(String dataName,
                                              String componentName,
                                              String locale) {
@@ -239,9 +206,9 @@ public record Configuration(Version version, Set<Tag> tags,
                 .map(stringInternationalizationComponentMap -> stringInternationalizationComponentMap.get(componentName))
                 .map(InternationalizationComponent::getExportHeader);
         return localizedExportHeaders
-                .map(exportHeaderI18n->exportHeaderI18n.getTitle())
-                .map(localizationMap -> localizationMap.get(locale))
-                .orElse(localizedExportHeaders.map(localizationMap -> localizationMap.getTitle().get(applicationDescription().defaultLanguage().getLanguage())).orElse(componentName));
+                .map(InternationalizationTitle::getTitle)
+                .map(localizationMap -> localizationMap.get(Locale.of(locale)))
+                .orElse(localizedExportHeaders.map(localizationMap -> Objects.requireNonNull(localizationMap.getTitle()).get(applicationDescription().defaultLanguage())).orElse(componentName));
 
     }
 

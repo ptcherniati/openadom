@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultManyValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import lombok.Getter;
 
@@ -19,6 +18,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public non-sealed class ListType<FT extends FieldType> implements FieldType<List> {
+    public static final ListType<? extends FieldType> EMPTY_LIST =  new ListType(StringType.getStringTypeFromStringValue(""));
     @Getter
     private final FT fieldType;
     List<FT> value = new LinkedList<>();
@@ -66,16 +66,9 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     @Override
     public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         final FieldType underlyingType = lineChecker.fieldTypeForOne();
-        final List<UUID> uuids = new LinkedList<>();
         final List<ValidationCheckResult> collect = Arrays.stream(value.split(","))
                 .map(v -> underlyingType.check(v, lineChecker))
                 .peek(v -> this.value.add((FT) underlyingType.copy()))
-                .peek(v -> {
-                    if (v instanceof final ReferenceValidationCheckResult rvcr && rvcr!=null){
-                        uuids.addAll(rvcr.matchedReferenceId());
-                    }
-
-                })
                 .collect(Collectors.toList());
         return new DefaultManyValidationCheckResult(collect, lineChecker.target());
     }
@@ -101,13 +94,8 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
 
     @Override
     public String toString() {
-        Optional.ofNullable(value)
-                .map(fts -> fts.stream()
-                        .map(s -> s.toString())
-                        .collect(Collectors.joining(",")))
-                .orElse(null);
         return value.stream()
-                .map(s -> s.toString())
+                .map(Object::toString)
                 .collect(Collectors.joining(","));
     }
 
@@ -117,7 +105,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
         for (final FT ft : value) {
             ft.serializeAddArray(arrayNode);
         }
-        node.put(key, arrayNode);
+        node.set(key, arrayNode);
     }
 
     @Override
@@ -160,7 +148,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     }
 
     public static ListType<StringType> ofStringType() {
-        return new ListType<StringType>(new StringType(""));
+        return new ListType<>(new StringType(""));
     }
 
     public void add(final FT value) {

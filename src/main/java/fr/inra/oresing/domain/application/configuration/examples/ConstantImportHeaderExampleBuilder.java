@@ -18,16 +18,24 @@ class ConstantImportHeaderExampleBuilder {
                                                              final int columnNumber,
                                                              final String columnName,
                                                              CollectionType.ArrayType<StringType> langRestriction) {
-        return new ConstantImportHeaderType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
-            put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_ROW_NUMBER, new IntegerType(rowNumber));
-            if (columnName == null) {
-                put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_COLUMN_NUMBER, new IntegerType(columnNumber));
-            } else {
-                put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_COLUMN_NAME, new StringType(columnName));
-            }
-            if (langRestriction != null) {
-                put(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, langRestriction);
-            }
-        }});
+        return new ConstantImportHeaderType(createConstanteMap(rowNumber, columnNumber, columnName, langRestriction));
     }
+
+    private static Map<String, ConfigurationSchemaNodeType> createConstanteMap(int rowNumber, int columnNumber, String columnName, CollectionType.ArrayType<StringType> langRestriction) {
+        Map<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+        map.put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_ROW_NUMBER, new IntegerType(rowNumber));
+
+        if (columnName == null) {
+            map.put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_COLUMN_NUMBER, new IntegerType(columnNumber));
+        } else {
+            map.put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_COLUMN_NAME, new StringType(columnName));
+        }
+
+        if (langRestriction != null) {
+            map.put(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, langRestriction);
+        }
+
+        return map;
+    }
+
 }

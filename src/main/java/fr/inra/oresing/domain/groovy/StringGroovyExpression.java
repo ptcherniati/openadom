@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.groovy;
 import com.google.common.base.MoreObjects;
 import fr.inra.oresing.domain.checker.CheckerReturnType;
 
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -11,12 +10,10 @@ import java.util.Set;
 public final class StringGroovyExpression implements Expression<String> {
 
     private final GroovyExpression expression;
-    private final Set<String> exceptionMessages;
 
     private StringGroovyExpression(final GroovyExpression expression, Set<String> exceptionMessages) {
         super();
         this.expression = expression;
-        this.exceptionMessages = exceptionMessages;
     }
 
     public static StringGroovyExpression forExpression(final String expression, Set<String> exceptionMessages) {

@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 
-import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 

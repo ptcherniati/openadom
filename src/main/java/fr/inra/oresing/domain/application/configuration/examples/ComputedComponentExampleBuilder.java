@@ -33,7 +33,7 @@ class ComputedComponentExampleBuilder {
             final TitleType exportHeaderType,
             CollectionType.ArrayType<StringType> langRestriction) {
         return new ComputedComponentType(
-                new LinkedHashMap<String, ConfigurationSchemaNodeType>() {
+                new LinkedHashMap<>() {
                     {
                         put(ConfigurationSchemaNode.OA_COMPUTATION, new GroovyExpressionType(Map.of(ConfigurationSchemaNode.OA_EXPRESSION, computation)));
                         put(ConfigurationSchemaNode.OA_CHECKER, checker);
@@ -50,7 +50,7 @@ class ComputedComponentExampleBuilder {
                                                                              CollectionType.ArrayType<StringType> langRestriction) {
         CollectionType.ArrayType<StringType> naStringTypeArrayType = new CollectionType.ArrayType<>(naturalKeyColumns.stream().map(StringType::new).toList(), false, true, StringType.EMPTY_INSTANCE());
         return new ComputedComponentType(
-                new LinkedHashMap<String, ConfigurationSchemaNodeType>() {
+                new LinkedHashMap<>() {
                     {
                         put(ConfigurationSchemaNode.OA_WITH_NATURAL_KEY_COMPONENTS, naStringTypeArrayType);
                         put(ConfigurationSchemaNode.OA_CHECKER, checker);

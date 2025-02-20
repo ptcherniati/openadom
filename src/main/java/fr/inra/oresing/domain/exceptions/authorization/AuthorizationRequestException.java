@@ -17,7 +17,7 @@ public enum AuthorizationRequestException {
 
     BAD_FILE_NAME_START_DATE,
     BAD_FILE_NAME_END_DATE,
-    INVAALID_FILE_NAME,
+    INVALID_FILE_NAME,
 
     MISSING_REQUIRED_AUTHORIZATION,
     NO_RIGHT_ON_TABLE_FOR_DEPOSIT;
@@ -31,7 +31,7 @@ public enum AuthorizationRequestException {
 
     private static String toMessage(final String name) {
         final String message = Arrays.stream(name.split("_"))
-                .map(n -> n.substring(0, 1) + n.substring(1, n.length()).toLowerCase())
+                .map(n -> n.charAt(0) + n.substring(1).toLowerCase())
                 .collect(Collectors.joining());
         return message.replaceFirst("^.", message.substring(0, 1).toLowerCase());
     }

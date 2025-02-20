@@ -5,7 +5,7 @@ import lombok.Getter;
 
 @Getter
 public class NotApplicationUserManagerRightsException extends OreSiTechnicalException {
-    public final static String NO_RIGHT_FOR_APPLICATION_USER_MANAGEMENT = "NO_RIGHT_FOR_APPLICATION_USER_MANAGEMENT";
+    public static final String NO_RIGHT_FOR_APPLICATION_USER_MANAGEMENT = "NO_RIGHT_FOR_APPLICATION_USER_MANAGEMENT";
     public String applicationName;
 
     public NotApplicationUserManagerRightsException(final String applicationName) {

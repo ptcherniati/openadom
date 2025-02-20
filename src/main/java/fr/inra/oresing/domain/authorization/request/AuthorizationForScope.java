@@ -35,6 +35,6 @@ public sealed interface AuthorizationForScope  permits  AuthorizationNoRestricti
     }
     Set<OperationType> operationTypes();
     default LocalDateTimeRange timeScope(){return null;}
-    default Map<String,List<Ltree>> authorizationScope(){return null;};
+    default Map<String,List<Ltree>> authorizationScope(){return null;}
 
 }

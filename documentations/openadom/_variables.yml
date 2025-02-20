@@ -1,0 +1,247 @@
+openadom:
+  version: 2.0.1
+link-styles:
+  primary:
+    href: "{href}"
+    text: "{text}"
+    link: '[{text}]({href}){.btn .btn-primary}'
+  secondary:
+    href: "{href}"
+    text: "{text}"
+    link: '[{text}]({href}){.btn .btn-secondary}'
+  outline:
+    href: "{href}"
+    text: "{text}"
+    link: '[{text}]({href}){.btn .btn-outline-primary}'
+  badge:
+    href: "{href}"
+    text: "{text}"
+    link: '[{text}]({href}){.badge .bg-primary}'
+  icon:
+    href: "{href}"
+    text: "{text}"
+    link: '[:icon-{icon}:]({href}){.btn-icon}'
+  card:
+    href: "{href}"
+    text: "{text}"
+    link: '::: {.card} [{text}]({href}) :::'
+page-refs:
+  index: 
+    ancre:  "[Créer une ancre](/index.qmd)" #chemin absolu depuis openadom
+  openadom:
+    version: 2.0.1
+# Section Introduction
+  intro:
+    href: /fichiers/introduction/introduction.qmd
+    text: Introduction
+    link: "[Introduction](/fichiers/introduction/introduction.qmd)"
+  vocab:
+    href: /fichiers/introduction/vocabulaire.qmd
+    text: Vocabulaire
+    link: "[Vocabulaire](/fichiers/introduction/vocabulaire.qmd)"
+    link-code: "[code](/fichiers/introduction/vocabulaire.qmd#code)"
+    link-nk: "[clef naturelle](/fichiers/introduction/vocabulaire.qmd#clef-naturelle)"
+    link-hk: "[clef hierarchique](/fichiers/introduction/vocabulaire.qmd#clef-hierarchique)"
+    link-referentiels: "[données](/fichiers/introduction/vocabulaire.qmd#referentiels)"
+    link-references: "[référentiels](/fichiers/introduction/vocabulaire.qmd#references)"
+    link-data: "[données](/fichiers/introduction/vocabulaire.qmd#data)"
+    link-variable: "[variable](/fichiers/introduction/vocabulaire.qmd#variable)"
+    link-component: "[component](/fichiers/introduction/vocabulaire.qmd#component)"
+    link-authorizationScope: "[authorizationScope](/fichiers/introduction/vocabulaire.qmd#authorizationScope)"
+    link-timescope: "[timescope](/fichiers/introduction/vocabulaire.qmd#timescope)"
+    link-identificateurs: "[Identificateurs](/fichiers/introduction/vocabulaire.qmd#identificateurs)"
+  csv:
+    href: /fichiers/introduction/fichier_csv.qmd
+    text: Fichier d'échange
+    link: "[Fichier d'échange](/fichiers/introduction/fichier_csv.qmd)"
+  glossaire:
+    href: /fichiers/autres/glossaire.qmd
+    text: Glossaire
+    link: "[Glossaire](/fichiers/autres/glossaire.qmd)"
+
+  # Section Fichiers d'échange
+  application:
+    href: /fichiers/fichier_echange/application.qmd
+    text: Application (OA_application)
+    link: "[Application (OA_application)](/fichiers/fichier_echange/application.qmd)"
+    oa: "[OA_application](/fichiers/fichier_echange/application.qmd)"
+    oa-name: "[OA_application](/fichiers/fichier_echange/application.qmd#name)"
+    oa-version: "[OA_application](/fichiers/fichier_echange/application.qmd#version)"
+    oa-defaultLanguage: "[OA_application](/fichiers/fichier_echange/application.qmd#defaultLanguage)"
+    oa-comment: "[OA_application](/fichiers/fichier_echange/application.qmd#comment)"
+    oa-i18n: "[OA_i18n](/fichiers/fichier_echange/application.qmd#i18n)"
+  data:
+    href: /fichiers/fichier_echange/data/data.qmd
+    text: Données
+    link: "[Données](/fichiers/fichier_echange/data/data.qmd)"
+    oa: "[OA_data](/fichiers/fichier_echange/data/data.qmd)"
+    oa-nk: "[OA_naturalKey](/fichiers/fichier_echange/data/data.qmd#nk)"
+    oa-i18n: "[OA_i18n](/fichiers/fichier_echange/data/data.qmd#i18n)"
+    oa-displayPattern: "[OA_i18nDisplayPattern](/fichiers/fichier_echange/data/data.qmd#displayPattern)"
+    oa-components: "[Components](/fichiers/fichier_echange/data/data.qmd#components)"
+    oa-headerLine: "[OA_dataFirstLine](/fichiers/fichier_echange/data/data.qmd#headerLine)"
+    oa-firstLine: "[OA_dataHeadertLine](/fichiers/fichier_echange/data/data.qmd#firstLine)"
+    oa-unexpectedColumns: "[OA_AllowUnexpectedColumns](/fichiers/fichier_echange/data/data.qmd#unexpectedColumns)"
+    oa-separator: "[OA_separator](/fichiers/fichier_echange/data/data.qmd#separator)"
+    oa-validations: "[OA_validations](/fichiers/fichier_echange/data/data.qmd#validations)"
+    link-cartouche: "[cartouche](/fichiers/fichier_echange/data/data.qmd#cartouche)"
+  authorizations:
+    href: /fichiers/fichier_echange/data/authorizations/authorizations.qmd
+    text: Définition des composantes participant à la construction d'autorisations.
+    link: "[Authorizations](/fichiers/fichier_echange/data/authorizations/authorizations.qmd)"
+    oa: "[OA_authorizations](/fichiers/fichier_echange/data/authorizations/authorizations.qmd)"
+  submission:
+    href: /fichiers/fichier_echange/data/submission/submission.qmd
+    text: Stratégie de  dépôt
+    link: "[Stratégie de  dépôt](/fichiers/fichier_echange/data/submission/submission.qmd)"
+    oa: "[OA_submission](/fichiers/fichier_echange/data/submission/submission.qmd)"
+  validations:
+    href: /fichiers/fichier_echange/data/validations.qmd
+    text: Règles de validations
+    link: "[Règles de validations](/fichiers/fichier_echange/data/validations.qmd)"
+    oa: "[OA_validations](/fichiers/fichier_echange/data/validations.qmd)"
+  aide-fichier:
+    href: /fichiers/fichier_echange/aide_fichier.qmd
+    text: Aide fichier
+    link: "[Aide fichier](/fichiers/fichier_echange/aide_fichier.qmd)"
+    oa-version: "[OA_version](/fichiers/fichier_echange/aide_fichier.qmd#openadom_version)"
+  etiquettes:
+    href: /fichiers/fichier_echange/etiquettes.qmd
+    text: Etiquettes
+    link: "[Etiquettes](/fichiers/fichier_echange/etiquettes.qmd)"
+    oa: "[OA_tags](/fichiers/fichier_echange/etiquettes.qmd)"
+
+  # Components
+  desc-comp:
+    href: /fichiers/fichier_echange/data/components/components_description.qmd
+    text: "Description des components"
+    link: "[Description des components](/fichiers/fichier_echange/data/components/components_description.qmd)"
+  components:
+    href: /fichiers/fichier_echange/data/components/components.qmd
+    text: "Composantes"
+    link: "[Composantes](/fichiers/fichier_echange/data/components/components.qmd)"
+    OA_mandatory: "[OA_mandatory](/fichiers/fichier_echange/data/components/components.qmd#OA_mandatory)"
+    OA_required: "[OA_required](/fichiers/fichier_echange/data/components/components.qmd#OA_required)"
+  basic-comp:
+    href: /fichiers/fichier_echange/data/components/basic_components.qmd
+    text: Basic Components
+    link: "[Basic Components](/fichiers/fichier_echange/data/components/basic_components.qmd)"
+    oa: "[OA_basicComponents](/fichiers/fichier_echange/data/components/basic_components.qmd)"
+  computed-comp:
+    href: /fichiers/fichier_echange/data/components/computed_components.qmd
+    text: Computed Components
+    link: "[Computed Components](/fichiers/fichier_echange/data/components/computed_components.qmd)"
+    oa: "[OA_computedComponents](/fichiers/fichier_echange/data/components/computed_components.qmd)"
+  dynamic-comp:
+    href: /fichiers/fichier_echange/data/components/dynamic_components.qmd
+    text: Dynamic Components
+    link: "[Dynamic Components](/fichiers/fichier_echange/data/components/dynamic_components.qmd)"
+    oa: "[OA_dynamicComponents](/fichiers/fichier_echange/data/components/dynamic_components.qmd)"
+  constant-comp:
+    href: /fichiers/fichier_echange/data/components/constant_components.qmd
+    text: Constant Components
+    link: "[Constant Components](/fichiers/fichier_echange/data/components/constant_components.qmd)"
+    oa: "[OA_constantComponents](/fichiers/fichier_echange/data/components/constant_components.qmd)"
+    OA_preHeaderTarget: "[Constantes du pré en-tête](/fichiers/fichier_echange/data/components/constant_components.qmd#OA_preHeaderTarget)"
+    OA_postHeaderTarget: "[Constantes du post en-tête](/fichiers/fichier_echange/data/components/constant_components.qmd#OA_postHeaderTarget)"
+    OA_constantImportHeaderTarget: "[OA_constantImportHeaderTarget](/fichiers/fichier_echange/data/components/constant_components.qmd#OA_constantImportHeaderTarget)"
+  pattern-comp:
+    href: /fichiers/fichier_echange/data/components/pattern_components.qmd
+    text: Pattern Components
+    link: "[Pattern Components](/fichiers/fichier_echange/data/components/pattern_components.qmd)"
+    oa: "[OA_patternComponents](/fichiers/fichier_echange/data/components/pattern_components.qmd)"
+    OA_componentQualifiers: "[OA_componentQualifiers](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_componentQualifiers_def)"
+    OA_patternForComponents: "[OA_patternForComponents](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_patternForComponents_def)"
+    OA_componentAdjacents: "[OA_componentAdjacents](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_componentAdjacents_def)"
+    OA_importHeaderPattern: "[OA_importHeaderPattern](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_importHeaderPattern_def)"
+  checker: 
+    href: /fichiers/fichier_echange/data/verificateurs.qmd
+    text: Vérificateurs (OA_checker)
+    link: "[Vérificateurs (OA_checker)](/fichiers/fichier_echange/data/verificateurs.qmd)"
+    link-multiplicity: "[Multiplicity (OA_multiplicity)](/fichiers/fichier_echange/data/verificateurs.qmd#multiplicity)"
+    oa-multiplicity: "[OA_multiplicity](/fichiers/fichier_echange/data/verificateurs.qmd#multiplicity)"
+    link-numericchecker: "[Vérificateur de type 'Integer' et 'Float'](/fichiers/fichier_echange/data/verificateurs.qmd#numericchecker)"
+    oa: "[OA_checker](/fichiers/fichier_echange/data/verificateurs.qmd)"
+    oa-params: "[OA_params](/fichiers/fichier_echange/data/verificateurs.qmd#params)"
+    oa-string: "[OA_string](/fichiers/fichier_echange/data/verificateurs.qmd#oa_string)"
+    oa-reference: "[OA_reference](/fichiers/fichier_echange/data/verificateurs.qmd#oa_reference)"
+    oa-boolean: "[OA_boolean](/fichiers/fichier_echange/data/verificateurs.qmd#oa_boolean)"
+    oa-groovyExpression: "[OA_groovyExpression](/fichiers/fichier_echange/data/verificateurs.qmd#oa_groovyExpression)"
+    oa-date: "[OA_date](/fichiers/fichier_echange/data/verificateurs.qmd#oa_date)"
+    oa-isRecursive: "[OA_isRecursive](/fichiers/fichier_echange/data/verificateurs.qmd#oa_isRecursive)"
+    oa-isParent: "[OA_isParent](/fichiers/fichier_echange/data/verificateurs.qmd#oa_isParent)"
+    oa-expression: "[OA_expression](/fichiers/fichier_echange/data/verificateurs.qmd#oa_expression)"
+    oa-references: "[OA_references](/fichiers/fichier_echange/data/verificateurs.qmd#oa_references)"
+    oa-defaultValue: "[OA_defaultValue](/fichiers/fichier_echange/data/verificateurs.qmd##OA_defaultValue)"
+  # additionalFiles
+  additionalFiles: 
+    href: /fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd
+    text: Fichiers additionnels
+    link: "[Fichiers additionnels](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
+    oa: "[OA_additionalFiles](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
+  # rightsRequest
+  rightsRequest: 
+    href: /fichiers/fichier_echange/rightsRequest.qmd
+    text: Demandes de droits
+    link: "[Demandes de droits](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
+    oa: "[OA_rightsRequest](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
+  # section pour aller plus loin
+  authorization: 
+    text: Authorization
+    href: /fichiers/pour_aller_plus_loin/authorization.md
+    link: "[Authorization](/fichiers/pour_aller_plus_loin/authorization.md)"
+  qualifiers:
+    text: Component Qualifiers
+    href: /fichiers/pour_aller_plus_loin/component_qualifiers.md
+    link: "[Component Qualifiers](/fichiers/pour_aller_plus_loin/component_qualifiers.md)"
+  groovy:
+    href: /fichiers/pour_aller_plus_loin/expressionGroovy.qmd
+    text: Expression Groovy
+    link: "[Expression Groovy](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd)"
+    OA_expression: "[OA_expression](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd)"
+    OA_groovyExpression: "[OA_groovyExpression](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd)"
+    OA_naturalKeyBuilder: "[OA_naturalKeyBuilder](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd#OA_naturalKeyBuilder)"
+    OA_escapeLabel: "[OA_escapeLabel](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd#OA_escapeLabel)"
+    OA_buildException: "[OA_buildException](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd#OA_buildException)"
+    OA_buildCompositeKey: "[OA_buildCompositeKey](/fichiers/pour_aller_plus_loin/expressionGroovy.qmd#OA_buildCompositeKey)"
+  example:
+    href: /fichiers/examples
+    text: Exemples
+    link: "[Exemples](/fichiers/examples/index.qmd)"
+    link-minimal: "[Configuration minimale](/fichiers/examples/configuration_min/description.qmd)"
+    link-dynamic: "[Utilisation d'une composante dynamique (sites)](/fichiers/examples/dynamicComponant/description.qmd)"
+    link-taxons: "[Utilisation d'une composante dynamique (taxons)](/fichiers/examples/taxons/description.qmd)"
+    link-meteo: "[Cas complet (météorologie)](/fichiers/examples/meteo/description.qmd)"
+    link-basic: "[Composantes basiques](/fichiers/examples/basicComponents/description.qmd)"
+  i18n:
+    text: Internationalisation i18n
+    href: /fichiers/pour_aller_plus_loin/internationnalisation_i18n.md
+    link: "[Internationalisation i18n](/fichiers/pour_aller_plus_loin/internationnalisation_i18n.md)"
+
+
+  # Autres sections
+  database:
+    href: /fichiers/autres/database.qmd
+    text: Introduction Base de données
+    link: "[Introduction Base de données](/fichiers/autres/database.qmd)"
+
+  # Pages principales
+  accueil:
+    href: index.qmd
+    text: Accueil
+    link: "[Accueil](index.qmd)"
+  installation:
+    href: /fichiers/README.md
+    text: Installation
+    link: "[Installation](/fichiers/README.md)"
+  lexique:
+    href: /fichiers/autres/lexique_yaml.qmd
+    text: Lexique
+    link: "[Lexique](/fichiers/autres/lexique_yaml.qmd)"
+  about:
+    href: about.md
+    text: A propos
+    link: "[A propos](about.md)"
+# example
+  meteo:
+    link: "[Exemple de data complet](fichiers/examples/meteo/description.qmd)"

@@ -6,7 +6,7 @@ import lombok.Getter;
 
 @Getter
 public class IllegalUserToBeGranted extends OreSiTechnicalException {
-    public final static String ILLEGAL_ROLE_TO_BE_GRANTED = "ILLEGAL_ROLE_TO_BE_GRANTED";
+    public static final String ILLEGAL_ROLE_TO_BE_GRANTED = "ILLEGAL_ROLE_TO_BE_GRANTED";
     final String login;
     final String applicationName;
     public IllegalUserToBeGranted(final OreSiUser user, String applicationName) {

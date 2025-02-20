@@ -1,0 +1,146 @@
+---
+title: Description des colonnes 
+subtitle: OA_basicComponents
+abstract: >
+  Cette section permet de définir les colonnes de base de votre fichier de données.
+  Chaque colonne est associée à un type de données (texte, nombre, date, etc.) et peut avoir des contraintes spécifiques.
+sections:
+  mandatory:
+    - OA_name
+    - OA_type
+  optional:
+    - OA_label
+    - OA_description
+    - OA_pattern
+    - OA_format
+    - OA_nullable
+    - OA_defaultValue
+    - OA_values
+    - OA_referential
+    - OA_referentialFilter
+---
+
+Nous allons décrire la section OA_basicComponents pour le modèle de référentiels, ...
+
+```{mermaid}
+classDiagram
+    direction LR
+    tr_sites_sit *-- tr_parcelles_par:site
+    tr_type_de_sites_tds  *-- tr_sites_sit:type_de_sites
+    
+    class tr_type_de_sites_tds {
+        +String tds_nom PK
+    }
+    
+    class tr_sites_sit {
+        +String sit_nom_type_de_site PK
+        +String sit_nom_du_site PK
+        +tr_type_de_sites_tds type_de_sites FK
+    }
+    
+    class tr_parcelles_par {
+        +String par_nom_de_la_parcelle PK
+        +String par_nom_du_site PK
+        +tr_sites_sit site FK
+    }
+```
+
+... et pour les fichiers :
+
+```{r}
+#| echo: false
+#| label: tbl-type-de-sites
+#| tbl-cap: "tr_type_de_sites_tds.csv"
+knitr::kable(read.csv("../../../examples/basicComponents/fichiers/tr_type_de_sites_tds.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+
+```{r}
+#| echo: false
+#| label: tbl-sites
+#| tbl-cap: "tr_sites_sit.csv"
+knitr::kable(read.csv("../../../examples/basicComponents/fichiers/tr_sites_sit.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+
+```{r}
+#| echo: false
+#| label: tbl-parcelles
+#| tbl-cap: "tr_parcelles_par.csv"
+knitr::kable(read.csv("../../../examples/basicComponents/fichiers/tr_parcelles_par.csv", header = TRUE,  sep = ';',  stringsAsFactors = FALSE))
+
+```
+
+on aura le yaml suivant
+
+::: {.callout-note title="configuration.yaml" collapse="false"}
+``` yaml
+...
+OA_data:
+  tr_type_de_sites_tds: 
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - tds_nom
+    OA_basicComponents:
+      tds_nom: 
+        OA_importHeader: nom
+  tr_sites_sit:
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - sit_nom_type_de_site
+      - sit_nom_du_site
+    OA_basicComponents: 
+      sit_nom_type_de_site: 
+        OA_importHeader: nom_type_de_site
+      sit_nom_du_site:  
+        OA_importHeader: nom du site
+  tr_parcelles_par:
+    OA_dataHeaderLine: 1 
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - par_nom_de_la_parcelle
+      - par_nom_du_site
+    OA_basicComponents: 
+      par_nom_de_la_parcelle:
+        OA_importHeader: nom de la parcelle 
+      par_nom_du_site: 
+        OA_importHeader: nom du site
+```
+:::
+
+::: {.callout-caution collapse="true" title="Restriction des identificateurs de référentiel"}
+La clef du data est soumise à des restrictions. Voir la déclaration des [*identificateurs*](#identificateur)
+
+Si vous souhaitez toutefois avoir un nom plus explicite, utilisez la section OA_i18n
+
+``` yaml
+OA_data:
+    tr_type_de_site_tds:
+      OA_i18n:
+        OA_title:
+          fr: Type de site
+          en: Site type
+        OA_description:
+          fr: Le type de site
+          en: The site type
+```
+:::
+
+::: {.callout-caution collapse="true" title="Restriction des identificateurs de composant"}
+Il en est de même pour les clefs des components [(cf. *Identificateurs*)](#identificateur). De plus dans les vues, le nom de la component peut être utilisé en concaténation avec d'autres mots. Postgresql contraint ces noms à ne pas dépasser 63 caractères.
+
+Préférez des noms courts. Si ces noms ne correspondent pas à celui de l'en-tête de votre fichier, préciser le nom de l'en-tête dans le champ "OA_importHeader"
+
+exemple:
+
+``` yaml
+      parcelle:
+         OA_importHeader: nom de la parcelle
+```
+:::
+
+::: {.callout-note collapse="true" title="Indentation"}
+[*OA_data* n'est pas indenté. *tr_type_de_site_tds*, *tr_sites_sit* et *tr_parcelles_par* sont indentés de 1. *OA_dataHeaderLine*, *OA_dataFirstLine*, *OA_naturalKey* et *OA_basicComponents* sont indentés de 2. Le contenu de *OA_basicComponents* seront indenté de 3.]{style="color: orange"}
+:::

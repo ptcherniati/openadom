@@ -75,20 +75,18 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         final String query = "SELECT '" + getEntityClass().getName() + "' as \"@class\",  to_jsonb(t) as json FROM " + getTable().getSqlIdentifier() + " t " +
                 "WHERE lower(login) = lower(:login)";
 
-        final Optional<OreSiUser> result = getNamedParameterJdbcTemplate().query(query,
+        return getNamedParameterJdbcTemplate().query(query,
                         new MapSqlParameterSource("login", login), getJsonRowMapper()).stream()
                 .collect(MoreCollectors.toOptional());
-        return result;
     }
 
     public Optional<OreSiUser> findByEmail(final String email) {
         final String query = "SELECT '" + getEntityClass().getName() + "' as \"@class\",  to_jsonb(t) as json FROM " + getTable().getSqlIdentifier() + " t " +
                 "WHERE lower(email) = lower(:email)";
 
-        final Optional<OreSiUser> result = getNamedParameterJdbcTemplate().query(query,
+        return getNamedParameterJdbcTemplate().query(query,
                         new MapSqlParameterSource("email", email), getJsonRowMapper()).stream()
                 .collect(MoreCollectors.toOptional());
-        return result;
     }
 
     public Optional<OreSiUser> findByLoginAndEmail(final String login, final String email) {
@@ -97,10 +95,9 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
 
         final MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource("login", login);
         mapSqlParameterSource.addValue("email", email);
-        final Optional<OreSiUser> result = getNamedParameterJdbcTemplate().query(query,
+        return getNamedParameterJdbcTemplate().query(query,
                         mapSqlParameterSource, getJsonRowMapper()).stream()
                 .collect(MoreCollectors.toOptional());
-        return result;
     }
 
     public Map<String, List<String>> getRolesGrantedToRoles(List<String> roles) {
@@ -142,17 +139,12 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
 
     public CurrentUserRoles getRolesForRole(final String role) {
         final String roleParam = role == null ? "\"current_user\"()" : String.format("\"%s\"", role);
-        RowMapper<CurrentUserRoles> rowMapper = new RowMapper<>() {
-
-            @Override
-            public CurrentUserRoles mapRow(final ResultSet rs, final int rowNum) throws SQLException {
-                final String currentUser = rs.getString("currentUser");
-                final List<String> memberOf = Arrays.stream((String[]) rs.getArray("memberOf").getArray())
-                        .collect(Collectors.toList());
-                final boolean isSuper = rs.getBoolean("isSuper");
-                ;
-                return new CurrentUserRoles(memberOf, isSuper, findByLogin(currentUser).orElse(null));
-            }
+        RowMapper<CurrentUserRoles> rowMapper = (rs, rowNum) -> {
+            final String currentUser = rs.getString("currentUser");
+            final List<String> memberOf = Arrays.stream((String[]) rs.getArray("memberOf").getArray())
+                    .collect(Collectors.toList());
+            final boolean isSuper = rs.getBoolean("isSuper");
+            return new CurrentUserRoles(memberOf, isSuper, findByLogin(currentUser).orElse(null));
         };
         final String query = """
                 WITH RECURSIVE membership_tree(grpid, userid, issuper) AS (
@@ -183,7 +175,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         assert currentUserRoles != null;
         Optional<OreSiUser> oreSiUser = Optional.ofNullable(role)
                 .map(this::findByLoginOrId).orElse(null);
-        if(oreSiUser.isPresent()) {
+        if(Objects.requireNonNull(oreSiUser).isPresent()) {
             currentUserRoles = currentUserRoles.withUSer(oreSiUser.get());
         }
         return currentUserRoles;
@@ -217,10 +209,9 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     public Optional<OreSiUser> findByLoginOrEmail(final String loginOrEmail) {
         final String query = "SELECT '" + getEntityClass().getName() + "' as \"@class\",  to_jsonb(t) as json FROM " + getTable().getSqlIdentifier() + " t WHERE  login = :loginOrEmail or email = :loginOrEmail";
 
-        final Optional<OreSiUser> result = getNamedParameterJdbcTemplate().query(query,
+        return getNamedParameterJdbcTemplate().query(query,
                         new MapSqlParameterSource("loginOrEmail", loginOrEmail), getJsonRowMapper()).stream()
                 .collect(MoreCollectors.toOptional());
-        return result;
     }
 
     public OreSiUser setState(final UUID userId, final OreSiUser.OreSiUserStates accountstate) {

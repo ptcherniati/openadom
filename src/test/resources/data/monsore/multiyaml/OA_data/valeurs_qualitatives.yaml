@@ -1,0 +1,49 @@
+OA_tags: [ data ]
+OA_naturalKey:
+  - nom_key
+  - valeur_key
+OA_i18n:
+  OA_title:
+    fr: Valeurs qualitatives
+    en: Qualitative values
+  OA_description:
+    fr: Liste de liste de valeurs qualitatives
+    en: List of qualitative values list
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: "{valeur_fr}"
+    en: "{valeur_en}"
+  OA_description:
+    fr: "{valeur_fr} de {nom_fr}"
+    en: "{valeur_en} of {nom_en}"
+OA_basicComponents:
+  nom_key: null
+  nom_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "Nom"
+      OA_description:
+        fr: "Le nom de la liste"
+    OA_langRestrictions: [fr]
+  nom_en:
+    OA_exportHeader:
+      OA_title:
+        en: "name"
+      OA_description:
+        en: "The name list"
+    OA_langRestrictions: [en]
+  valeur_key:
+  valeur_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "valeur"
+      OA_description:
+        fr: "La valeur dans la liste"
+    OA_langRestrictions: [fr]
+  valeur_en:
+    OA_exportHeader:
+      OA_title:
+        en: "value"
+      OA_description:
+        en: "The value in list"
+    OA_langRestrictions: [en]

@@ -13,7 +13,7 @@ public record DatagroupType(SectionBuilder sectionBuilder, Map<String, Configura
         return SectionBuilder.getInstance()
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_I_18_N, TitleType.EMPTY_INSTANCE()),
-                        new LabelDescription(ConfigurationSchemaNode.OA_COMPONENTS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
+                        new LabelDescription(ConfigurationSchemaNode.OA_COMPONENTS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
                 );
     }
     public static DatagroupType  EMPTY_INSTANCE() {

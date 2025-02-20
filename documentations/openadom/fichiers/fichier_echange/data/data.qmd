@@ -1,0 +1,289 @@
+---
+title: Description des données
+subtitle: OA_Data
+abstract: > 
+    <p>Cette section permet de décrire vos données en les regroupant par type de données.
+    <p>Pour chaque tye de données on va décrire les données que l'on souhaite enregistrer et les modalités de dépôt et d'extraction de ces données.
+sections:
+    mandatory:
+        - OA_naturalKey
+    optional:
+        - OA_allowUnexpectedColumns
+        - OA_separator
+        - OA_tags
+        - OA_i18n
+        - OA_i18nDisplayPattern
+        - OA_dataHeaderLine
+        - OA_dataFirstLine
+        - OA_authorization
+        - OA_validations
+        - OA_submission
+    alternative:
+        - components:
+            - OA_basicComponents
+            - OA_computedComponents
+            - OA_dynamicComponents
+            - OA_patternComponents
+            - OA_constantComponents
+---
+
+# Types de données
+
+On appelera type de données un regroupement de données (variables) qui partage une même thématique et pouvant partager un modèle de {{< var  page-refs.csv.link>}} commun.
+
+Les types de données sont alimentés dans la base par des fichier au format csv.
+
+On définit aussi des données dites de références. Ce sont des données nécessaires à la description des données expérimentales (référentiels) ou d'observation (data). Il n'y a pas de différence dans l'application pour le traitement des référentiels et des data. Les seules différences se retrouvent dans la présentation au niveau de l'interface. 
+
+Pour définir un type de données "data", on ajoute dans la section {{< var  page-refs.etiquettes.oa>}} un tag  **__ DATA __**.
+
+On décrit les données de références et les types de données dans la partie **OA_data**, on y liste les noms des colonnes souhaitées (dans {{< var page-refs.basic-comp.link >}}, {{< var page-refs.pattern-comp.link >}} et {{< var page-refs.pattern-comp.link >}}, des constantes extraites du cartouche {{< var page-refs.constant-comp.link >}} et des valeurs calculées {{< var page-refs.computed-comp.link >}}
+
+Pour ajouter une référence, on ajoute dans la section "**OA_data**" une description de ce référentiel.
+
+## Déclaration d'un type de données
+
+Chaque type de donnée aura une entrée dans la section OA_data en utilisant les {{< var  page-refs.vocab.link-identificateurs>}}
+
+::: {.callout-note title="déclaration du type de données tr_sites_sit" collapse="false"}
+``` yaml
+OA_data:
+    tr_sites_site:
+        ....
+```
+:::
+
+## Clef naturelle (OA_naturalKey) {#nk}
+
+Vous devrez déclarer une {{< var page-refs.vocab.link-nk >}}.
+
+::: {.callout-note title="OA_naturalKey" collapse="false"}
+``` yaml
+OA_data:
+    tr_sites_site:
+        OA_naturalKey: [sit_site_key]
+```
+
+ou si vous préférez la notation en colonne
+
+``` yaml
+OA_data:
+    tr_sites_site:
+        OA_naturalKey: 
+            - sit_site_key
+```
+:::
+
+## Internationalisation (OA_i18n) {#i18n}
+
+Vous pouvez internationaliser votre type de données en rajoutant une section **OA_i18n** voir la section {{< var page-refs.i18n.link >}}.
+
+::: {.callout-note title="OA_i18n" collapse="false"}
+``` yaml
+
+OA_data:
+    tr_sites_site:
+        OA_i18n:
+            OA_title:
+                f
+    OA_validations:
+      sit_checkDateMiseEnService:
+        OA_i18n:
+          fr: "validation de date"
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern : "dd/MM/yyyy"
+        OA_components: [ sit_date_mise_en_service ]r: référence aux sites
+                en: reference to sites
+            OA_description:
+                fr: sites d'etudes
+                en: study sites
+```
+:::
+
+## Surcharge de la clef naturelle lors du référencement (OA_i18nDisplayPattern){#displayPattern}
+
+Lorsque dans un autre type de données vous ferez référence un ce tye de données, c'est la clef naturelle de la ligne référencée qui s'affichera.
+
+Vous pourrez surcharger cet affichage en déclarant un pattern d'affichage en utilisant les valeurs de la ligne référencée dans une section **OA_i18nDisplayPattern**
+
+::: {.callout-note title="OA_i18nDisplayPattern" collapse="false"}
+``` yaml
+
+OA_data:
+    tr_sites_site:
+        OA_i18nDisplayPattern:   #manda
+    OA_validations:
+      sit_checkDateMiseEnService:
+        OA_i18n:
+          fr: "validation de date"
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern : "dd/MM/yyyy"
+        OA_components: [ sit_date_mise_en_service ]tory
+            OA_title:   
+                fr: "{sit_site_fr} dans ({sit_agroecosystem})"
+                en: "{sit_site_en} in ({sit_agroecosystem})"
+```
+
+Ici {sit_site_fr} repésente la valeur de la colonne sit_site_fr et {sit_agroecosystem} la valeur de la colonne sit_agroecosystem.
+
+Si une colonne est aussi une référence, alors récursivement on calculera les inférences de OA_i18nDisplayPattern de tous ces référentiels.
+:::
+
+::: {.callout-warning title="Calcul de la valeur d'affichage d'une données" collapse="false"}
+Les inférences de OA_i18nDisplayPattern sont calculées au moment du dépôt de la données et stockées en base de données. S'il vous arrivait de modifier les colonnes de référentiels intervenant dans cette construction, alors vous devriez redéposer vos données pour recalculer les valeurs d'affichage.
+:::
+
+## Déclaration d'un cartouche {#cartouche}
+
+Par défaut la ligne 1 est la ligne d'en-tête et la ligne 2 celle de la première ligne de données.
+
+On peut changer ce comportement en précisant :
+
+-   [OA_dataHeaderLine]{#headerLine} la ligne d'en-tête
+-   [OA_dataFirstLine]{#firstLine} la ligne d'en-tête
+
+::: {.callout-note title="en-tête" collapse="false"}
+``` yaml
+
+OA_data:
+    tr_sites_site:
+        OA_DATA_HEADER_LINE: 1 
+        OA_DATA_FIRST_LINE: 2
+```
+:::
+
+## Colonnes non signifiantes (OA_allowUnexpectedColumns) {#unexpectedColumns}
+
+Par défaut, toutes les colonnes présentes dans le fichier de données doivent avoir été déclarées.
+
+Vous pouvez cependant modifier ce comportement en précisant OA_ALLOW_UNEXPECTED_COLUMNS à true
+
+::: {.callout-note title="OA_ALLOW_UNEXPECTED_COLUMNS" collapse="false"}
+``` yaml
+
+OA_data:
+    tr_sites_site:
+        OA_ALLOW_UNEXPECTED_COLUMNS: true # défaut à false
+```
+:::
+
+## Séparateur de champ (OA_separator){#separator}
+
+Par défaut le séparateur dans le fichier csv est le point-virgule (;). Vous pouvez changer ce séparateur en précisant OA_separator
+
+::: {.callout-note title="OA_separator" collapse="false"}
+``` yaml
+
+OA_data:
+    tr_sites_site:
+        OA_separator: , # défaut à ;
+```
+:::
+
+## Etiquettes ([OA_tags]{#tags})
+
+Vous pouvez étiquetter vos types de données voir {{< var  page-refs.etiquettes.oa>}}
+
+- soit pour pouvoir les filtrer dans l'interface 
+- soit pour ajouter un comportement -> **DATA** signifie que ce type de données est une données expérimentale ou d'observation. 
+- soit pour préciser un ordre d'affichage-> **__ ORDER_4__** donne un numéro d'ordre dans l'affichage des types de données.
+
+::: {.callout-note title="OA_separator" collapse="false"}
+``` yaml
+
+OA_data:
+    tr_sites_site:
+        OA_tags , [semi_horaire, flux, __REFERENCES__, __ORDER_2__] ;
+```
+:::
+
+## Déclaration des [composantes du type de données]{#components}
+
+-   un {{< var page-refs.basic-comp.link >}} est une colonne du fichier,
+-   un {{< var page-refs.computed-comp.link >}} est une colonne qui n’est pas présente dans le fichier et dont la valeur est une constante ou le résultat d'un calcul,
+-   un {{< var page-refs.dynamic-comp.link >}} est un ensemble de colonnes dont la clef est la concaténation d'un préfixe et d'une valeur d'un référentiel. Par exemple s’il existe un référentiel "propriétés" avec les valeurs (couleur, catégorie, obligatoire), on pourrait avoir dans un autre référentiel (en utilisant le préfixe "pts\_") pts\_couleur, pts\_catégorie et pts\_obligatoire, en les déclarant comme {{< var page-refs.dynamic-comp.link >}}
+-   un {{< var page-refs.pattern-comp.link >}} est un ensemble de colonnes dont le nom à un format commun et qui par conséquent répond à un pattern. Par exemple avec des colonnes dont le nom répond au pattern variable\_profondeur\_répétition : SWC\_(\[0-9\]\*)\_(\[0-9\]\*),
+-   un {{< var page-refs.constant-comp.link >}} Si le {{< var page-refs.data.link-cartouche >}} surcharge les valeur par défaut, alors on peut référencer des valeurs de l'en-tête du fichier csv. Soit des valeur avant l'en-tête (pre-header), soit des information sous l'en-tête et avant la première ligne de données. validations \## Validation [OA_validations]{#validations}
+
+Chaque composante peut contenir un vérificateur. Pour la lisibilité, il est conseiller de laisser ces vérificateurs dans la section du composant. Cependant vous pourriez vouloir croiser des informations pour effectuer une validation, ou valider un ensemble de composants de la même façon.
+
+En ce cas vous serez ammener à définir un certain nombre de règle dans la section
+
+::: {.callout-note title="OA_validations" collapse="false"}
+``` yaml
+
+OA_data:
+    tr_sites_site:
+        OA_validations:
+        sit_checkDateMiseEnService:
+            OA_i18n:
+                fr: "validation de date"
+            OA_checker:
+                OA_name: OA_date
+                OA_params:
+                    OA_pattern : "dd/MM/yyyy"
+                OA_components: [ sit_date_mise_en_service ]
+```
+:::
+
+## {{<var page-refs.submission.text>}} (OA_submission)
+
+Cette section vous permet de définir les composantes qui permettront de versionner les dépôts d'un type de données. voir {{< var  page-refs.submission.link>}}
+
+::: {.callout-note title="OA_validations" collapse="false"}
+``` yaml
+
+OA_data:
+    t_flux_tours_flx:     
+        OA_submission:   
+        OA_strategy: OA_VERSIONING  
+        OA_submissionScope:   #mandatory
+            OA_referenceScopes:   
+            -   
+                OA_component: voir {{<var page-refs.authorizations.link>}} sit_key  #mandatory
+                OA_reference: tr_sites_sit  
+                OA_i18n:   #mandatory
+                OA_title:   
+                    fr: Site
+                    en: Site
+                OA_description:   
+                    fr: Référentiel des Sites
+                    en: Site repository
+                OA_exportHeader:   #mandatory
+                OA_title:   
+                    fr: Site
+                    en: Site
+                OA_descriptio voir {{<var page-refs.authorizations.link>}}n:   
+                    fr: Référentiel des Sites
+                    en: Site repository
+            OA_timeScope:   
+            OA_component: flx_date  #mandatory
+        OA_fileName:   
+            OA_filePattern: (.*)_(.*)_(.*).csv  #mandatory
+            OA_matchPatternScopes:   
+            - sit_key  
+            - __START_DATE__  
+            - __END_DATE__        
+```
+:::
+
+## {{<var page-refs.authorizations.text>}} (OA_authorizations)
+
+Cette section vous permet de définir les composantes qui permettront de construire des autorisations voir {{<var page-refs.authorizations.link>}}
+
+::: {.callout-note title="OA_validations" collapse="false"}
+``` yaml
+
+OA_data:
+    t_piegeage_en_montee_pem:
+     OA_authorizations:
+      OA_authorizationScope:
+        - projet
+        - chemin
+      OA_timeScope: date       
+```
+:::

@@ -33,15 +33,9 @@ public record DataHeaderReader(DataDatum constantValues,
 
     private static void addConstants(final DataDatum constantValues, final ConstantComponent constant, final FieldType value) {
         switch (value) {
-            case final ListType listType -> {
-                constantValues.put(new DataColumn(constant.componentKey()), new DataColumnMultipleValue(listType.getValue()));
-            }
-            case final MapType mapType -> {
-                throw new IllegalArgumentException("NO MAP HERE");
-            }
-            case null, default -> {
-                constantValues.put(new DataColumn(constant.componentKey()), new DataColumnSingleValue(value));
-            }
+            case final ListType listType -> constantValues.put(new DataColumn(constant.componentKey()), new DataColumnMultipleValue(listType.getValue()));
+            case final MapType mapType -> throw new IllegalArgumentException("NO MAP HERE");
+            case null, default -> constantValues.put(new DataColumn(constant.componentKey()), new DataColumnSingleValue(value));
         }
     }
 
@@ -56,7 +50,7 @@ public record DataHeaderReader(DataDatum constantValues,
         for (int lineNumber = 1; lineNumber < headerLine; lineNumber++) {
             final CSVRecord row = linesIterator.next();
             final ImmutableSet<ConstantComponent> constantDescriptions = perRowNumberConstants.get(lineNumber);
-            preHeaderRows.add(row.stream().toList());
+            preHeaderRows.add(row.stream().map(String::trim).toList());
             constantDescriptions.forEach(constant -> {
                 final int columnNumber = ((FileColumnConstantHeader) constant.constantImportHeader()).columnNumber();
                 final String valueInFile = row.size() >= columnNumber ? row.get(columnNumber - 1) : "" .trim();
@@ -75,7 +69,7 @@ public record DataHeaderReader(DataDatum constantValues,
                                         .map(FileOrUUID::binaryfiledataset)
                                         .map(BinaryFileDataset::getRequiredAuthorizations)
                                         .map(requiredAuthorizations->requiredAuthorizations.get(constantComponent.componentKey()))
-                                        .map(list->list.get(0).getSql())
+                                        .map(list->list.getFirst().getSql())
                                         .orElseThrow(()->new IllegalArgumentException("no entry for constant submission"))
                                 )));
         publishContextBuilder().withPreHeaderRow(preHeaderRows);
@@ -116,7 +110,7 @@ public record DataHeaderReader(DataDatum constantValues,
         for (int lineNumber = headerLine + 1; lineNumber < firstRowLine; lineNumber++) {
             final CSVRecord row = linesIterator.next();
             final ImmutableSet<ConstantComponent> constantDescriptions = perRowNumberConstants.get(lineNumber);
-            postHeaderRows.add(row.stream().toList());
+            postHeaderRows.add(row.stream().map(String::trim).toList());
             constantDescriptions.forEach(constant -> {
                 final ColumnConstantHeader columnConstantHeader = (ColumnConstantHeader) constant.constantImportHeader();
                 final int columnNumber = switch (columnConstantHeader) {

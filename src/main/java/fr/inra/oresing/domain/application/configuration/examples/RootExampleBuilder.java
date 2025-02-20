@@ -8,14 +8,14 @@ import java.util.LinkedHashMap;
 
 public class RootExampleBuilder {
     public static RootType buildRootSchema() {
-        final RootType rootSchema = new RootType(new LinkedHashMap<String, ConfigurationSchemaNodeType>() {{
-            put(ConfigurationSchemaNode.OA_VERSION, StringExampleBuilder.OPENADOM_VERSION);
-            put(ConfigurationSchemaNode.OA_APPLICATION, ApplicationDescriptionExampleBuilder.buildApplicationDesriptionSchema());
-            put(ConfigurationSchemaNode.OA_TAGS, TagExampleBuilder.buildTagSchema());
-            put(ConfigurationSchemaNode.OA_DATA, DataExampleBuilder.buildDataType());
-            put(ConfigurationSchemaNode.OA_RIGHTS_REQUEST, RightRequestExampleBuilder.buildRightRequestSchema());
-            put(ConfigurationSchemaNode.OA_ADDITIONAL_FILES, CollectionExampleBuilder.ADITIONNAL_FILES);
-        }});
-        return rootSchema;
+        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
+        children.put(ConfigurationSchemaNode.OA_VERSION, StringExampleBuilder.OPENADOM_VERSION);
+        children.put(ConfigurationSchemaNode.OA_APPLICATION, ApplicationDescriptionExampleBuilder.buildApplicationDesriptionSchema());
+        children.put(ConfigurationSchemaNode.OA_TAGS, TagExampleBuilder.buildTagSchema());
+        children.put(ConfigurationSchemaNode.OA_DATA, DataExampleBuilder.buildDataType());
+        children.put(ConfigurationSchemaNode.OA_RIGHTS_REQUEST, RightRequestExampleBuilder.buildRightRequestSchema());
+        children.put(ConfigurationSchemaNode.OA_ADDITIONAL_FILES, CollectionExampleBuilder.ADITIONNAL_FILES);
+
+        return new RootType(children);
     }
 }

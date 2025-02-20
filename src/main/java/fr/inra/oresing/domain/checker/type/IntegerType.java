@@ -10,10 +10,11 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.IntegerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import org.apache.logging.log4j.util.Supplier;
+
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 
 public non-sealed class IntegerType implements FieldType<Integer> {
     public static final String LOWER_THAN_MIN = "LOWER_THAN_MIN";

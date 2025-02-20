@@ -33,7 +33,7 @@ public final class BooleanGroovyExpression implements Expression<Boolean> {
             return switch (evaluation) {
                 case Boolean isCorrect -> {
                     if (isCorrect) {
-                        yield isCorrect;
+                        yield true;
                     }
                     throw new GroovyException(GroovyException.DEFAULT_MESSAGE);
                 }

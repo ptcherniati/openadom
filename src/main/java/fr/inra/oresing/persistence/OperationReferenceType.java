@@ -17,8 +17,7 @@ public enum OperationReferenceType {
     OperationReferenceType(final String title, final boolean display, final Map<String, String> internationalizationName) {
 
         final Internationalization internationalization = new Internationalization();
-        internationalizationName.entrySet()
-                .forEach(entry->internationalization.put(Locale.forLanguageTag(entry.getKey()), entry.getValue()));
+        internationalizationName.forEach((key, value) -> internationalization.put(Locale.forLanguageTag(key), value));
         this.authorizationColumnsDescription = new AuthorizationColumnsDescription(
                 internationalization,
                 display,

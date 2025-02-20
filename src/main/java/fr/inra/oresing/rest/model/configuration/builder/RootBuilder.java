@@ -61,7 +61,6 @@ public class RootBuilder {
     private final AdditionalFilesBuilder additionalFilesBuilder = new AdditionalFilesBuilder(this);
 
     private final SubmissionComponentResolver submissionComponentResolver = new SubmissionComponentResolver(this);
-    private final DocumentContext documentContext;
     private final DataAndComponentTestDoublon dataAndComponentTestDoublon = new DataAndComponentTestDoublon(this);
     @Getter
     Set<Tag> domainTags = Set.of();
@@ -77,7 +76,6 @@ public class RootBuilder {
         super();
         this.progression = progression;
         this.rootNode = rootNode;
-        this.documentContext = documentContext;
     }
 
     static ComponentPresenceConstraint isMandatory(final JsonNode node) {
@@ -118,19 +116,17 @@ public class RootBuilder {
         progression = progression.incrementAndPush(operand -> 0D);
         progression.incrementAndPush(D -> 0D);
         I18n i18n = new I18n(new HashMap<>());
-        Parsing<ApplicationDescription> applicationDescription = null;
+        Parsing<ApplicationDescription> applicationDescription;
         final Optional<JsonNode> oaApplication = Optional.ofNullable(rootNode.get(OA_APPLICATION));
 
         applicationDescription = applicationdescriptionBuilder.build(
-                oaApplication.get(),
+                oaApplication.orElse(null),
                 i18n,
                 comment);
         i18n = Optional.ofNullable(applicationDescription).map(Parsing::i18n).orElse(i18n);
         final Parsing<Set<Tag>> tags = tagsBuilder.buildDomainTagsOfApplication(OA_TAGS, rootNode.get(OA_TAGS), i18n);
-        if (tags != null) {
-            i18n = tags.i18n();
-            domainTags = tags.result();
-        }
+        i18n = tags.i18n();
+        domainTags = tags.result();
         final Parsing<Map<String, StandardDataDescription>> data = buildAllData(OA_DATA, rootNode.findPath(OA_DATA), i18n);
         i18n = data.i18n();
         final Parsing<RightRequestDescription> rightRequest = rightsRequestBuilder.build(rootNode.findPath(OA_RIGHTS_REQUEST), i18n);
@@ -151,18 +147,17 @@ public class RootBuilder {
         if (hasErrors) {
             return null;
         }
-        final Configuration configuration = new Configuration(
+        return new Configuration(
                 version,
                 tags.result(),
                 internationalizations,
-                applicationDescription.result(),
+                Objects.requireNonNull(applicationDescription).result(),
                 data.result(),
                 rightRequest.result(),
                 aditionnalFiles.result(),
                 hierarchicalNodes,
                 SubmissionComponentResolver.build(getListDataKeys())
         );
-        return configuration;
     }
 
     @Nullable
@@ -181,9 +176,9 @@ public class RootBuilder {
                     OA_VERSION);
             return null;
         }
-        Version version = Version.BAD_VERSION;
+        Version version;
         try {
-            version = Optional.ofNullable(versionNode)
+            version = Optional.of(versionNode)
                     .filter(JsonNode::isTextual)
                     .map(JsonNode::asText)
                     .map(Version::new)
@@ -204,7 +199,7 @@ public class RootBuilder {
     Parsing<String> addExportHeaders(final String key, I18n i18n, final Map.Entry<String, JsonNode> componentEntry, final String componentSectionName) {
         final JsonNode exportHeaderNode = componentEntry.getValue().findPath(OA_EXPORT_HEADER);
         if (!exportHeaderNode.isMissingNode()) {
-            final Map oaI18n = Optional.ofNullable(exportHeaderNode)
+            final Map oaI18n = Optional.of(exportHeaderNode)
                     .map(eh -> getMapper().convertValue(eh, Map.class))
                     .orElse(null);
             if (oaI18n != null) {
@@ -231,9 +226,9 @@ public class RootBuilder {
                     );
                 }
             }
-            return new Parsing<String>(i18n, Optional.ofNullable(exportHeaderNode.get(OA_HEADER_NAME)).map(JsonNode::asText).orElse(componentEntry.getKey()));
+            return new Parsing<>(i18n, Optional.ofNullable(exportHeaderNode.get(OA_HEADER_NAME)).map(JsonNode::asText).orElse(componentEntry.getKey()));
         }
-        return null;
+        return new Parsing<>(i18n, null);
     }
 
     private Parsing<Map<String, StandardDataDescription>> buildAllData(final String path, final JsonNode oaData, I18n i18n) {
@@ -253,7 +248,7 @@ public class RootBuilder {
             i18n = component.i18n();
             result.put(key, component.result());
         }
-        return new Parsing<Map<String, StandardDataDescription>>(i18n, result);
+        return new Parsing<>(i18n, result);
     }
 
     ReactiveProgression.Progression getProgression() {
@@ -293,7 +288,7 @@ public class RootBuilder {
     private List<Locale> testLocales(String path, List list) {
         List<Locale> localesList = new ArrayList<>();
         for (Object o : list) {
-            Locale locale = (Locale) Locale.of(o.toString());
+            Locale locale = Locale.of(o.toString());
             if (locale == null) {
                 buildError(
                         ConfigurationException.BAD_LOCALE,

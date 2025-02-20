@@ -1,0 +1,112 @@
+---
+title: Colonnes constantes
+subtitle: OA_constantComponents
+abstract: >
+  Cette section permet de définir des colonnes dont les valeurs sont extraites directement
+  du fichier d'entrée, à des positions fixes. Ces colonnes peuvent avoir des valeurs par
+  défaut et des restrictions sur les langues supportées.
+sections:
+  mandatory:
+    - OA_constantImportHeaderTarget
+  optional:
+    - OA_tags
+    - OA_exportHeader
+    - OA_required
+    - OA_checker
+    - OA_defaultValue
+    - OA_langRestrictions
+---
+
+## Présentation
+
+Les constantes permettent de déclarer les données enregistrées dans les cartouches du fichier csv. Parfois on souhaite rajouter un {{< var page-refs.data.link-cartouche >}} pour définir des constantes liées au fichier.
+
+## Structure
+
+Voici un exemple de configuration pour une colonne constante :
+
+```yaml
+OA_constantComponents:
+  flj_site:
+    OA_exportHeader:
+      OA_title:
+        fr: Site
+        en: Site
+    OA_required: true
+    OA_constantImportHeaderTarget:  
+      OA_rowNumber: 1 
+      OA_columnNumber: 2 
+```
+
+::: {.callout-tip collapse="false" title="Référence au numéro de la colonne"}
+Le numéro de la colonne fait référence à la position dans le fichier CSV, en commençant par 1.
+:::
+
+## Constantes du pré en-tête {#OA_preHeaderTarget}
+
+Parfois on souhaite rajouter un {{< var page-refs.data.link-cartouche >}} pour définir des constantes liées au fichier.
+
+Pour récupérer les valeurs du pré en-tête, on définit dans la section **OA_constantHeader** une composante avec une section **OA_constantImportHeaderTarget**
+
+::: {.callout-tip collapse="false" title="Récupération d'une valeur dans une ligne et une colonne" #OA_rowNumber}
+
+```yaml
+OA_constantComponents:
+  flj_site:
+    OA_exportHeader:
+      OA_title:
+        fr: Site
+        en: Site
+    OA_required: true
+    OA_constantImportHeaderTarget:  
+      OA_rowNumber: 1 
+      OA_columnNumber: 2 
+```
+:::
+
+
+## Constantes du post en-tête {#OA_postHeaderTarget}
+
+Les colonnes constantes permettent de déclarer les données enregistrées dans les cartouches du fichier csv.
+
+::: {.callout-tip collapse="false" title="Référence au numéro de la colonne" #OA_columnNumber}
+
+```yaml
+      dat_end_date:   
+        OA_exportHeader:   
+          OA_title:   
+            fr: Date de fin
+            en: End date
+          OA_description:   
+            fr: Date de fin
+            en: End date
+        OA_required: false  
+        OA_constantImportHeaderTarget:   
+          OA_rowNumber: 6  
+          OA_columnNumber: 7  
+```
+:::
+
+::: {.callout-tip collapse="false" title="Référence au nom de la colonne" #OA_columnName}
+
+```yaml
+      dat_end_date:   
+        OA_exportHeader:   
+          OA_title:   
+            fr: Date de fin
+            en: End date
+          OA_description:   
+            fr: Date de fin
+            en: End date
+        OA_required: false  
+        OA_constantImportHeaderTarget:   
+          OA_rowNumber: 6  
+          OA_columnName: dat_date  
+```
+:::
+
+
+
+::: {.callout-tip }
+On peut définir les sections des composantes ({{<var page-refs.etiquettes.oa>}}, {{<var page-refs.checker.oa>}}, {{<var page-refs.components.OA_mandatory>}}, {{<var page-refs.components.OA_required>}}.)
+:::

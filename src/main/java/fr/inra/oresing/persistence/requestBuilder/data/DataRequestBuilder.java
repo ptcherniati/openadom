@@ -21,7 +21,7 @@ public class DataRequestBuilder {
 
     private final SqlSchemaForApplication schema;
     private final AtomicInteger atomicInteger = new AtomicInteger();
-    private MapSqlParameterSource paramSource = new MapSqlParameterSource();
+    private final MapSqlParameterSource paramSource = new MapSqlParameterSource();
 
     public DataRequestBuilder(final DownloadDatasetQuery downloadDatasetQuery) {
         super();
@@ -32,6 +32,7 @@ public class DataRequestBuilder {
     static String sanitize(final String key) {
         return Optional.ofNullable(key)
                 .map(s -> s.replaceAll("'", "''"))
+                .map(s -> s.replaceAll("::", "."))
                 .orElse(null);
     }
 
@@ -48,73 +49,71 @@ public class DataRequestBuilder {
     public static String filter(final ComponentFilters componentFilters) {
         return switch (componentFilters) {
             case final NoComponentFilters noComponentFilters -> null;
-            case final ComponentFilterForInterval componentFilterForInterval -> {
-                yield switch (componentFilterForInterval) {
+            case final ComponentFilterForInterval componentFilterForInterval -> switch (componentFilterForInterval) {
 
-                    case ComponentFiltersForIntervalByNumeric(
-                            String componentKey,
-                            List<IntervalValuesNumeric> intervalsValues,
-                            Multiplicity multiplicity
-                    ) -> switch (multiplicity) {
-                        case ONE -> """
-                                $.%1$s ? (%2$s)
-                                """
-                                .formatted(
-                                        sanitize(componentKey),
-                                        intervalsValues.stream()
-                                                        .map(intervalValues ->
-                                                            "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
-                                                                    intervalValues.fromFromNumeric(),
-                                                                    intervalValues.fromToNumeric()
-                                                            )
-                                                        )
-                                                .collect(Collectors.joining(DELIMITER_OR))
-                                );
-                        case MANY -> """
-                                $[*].%1$s  ? (%2$s)
-                                """
-                                .formatted(
-                                        sanitize(componentKey),
-                                        intervalsValues.stream()
-                                                .map(intervalValues ->
+                case ComponentFiltersForIntervalByNumeric(
+                        String componentKey,
+                        List<IntervalValuesNumeric> intervalsValues,
+                        Multiplicity multiplicity
+                ) -> switch (multiplicity) {
+                    case ONE -> """
+                            $.%1$s ? (%2$s)
+                            """
+                            .formatted(
+                                    sanitize(componentKey),
+                                    intervalsValues.stream()
+                                                    .map(intervalValues ->
                                                         "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
                                                                 intervalValues.fromFromNumeric(),
                                                                 intervalValues.fromToNumeric()
                                                         )
-                                                )
-                                                .collect(Collectors.joining(DELIMITER_OR))
-                                );
-                    };
-
-                    case final ComponentFiltersForIntervalByTemporal componentFiltersForIntervalByTemporal ->
-                            switch (componentFiltersForIntervalByTemporal.multiplicity()) {
-                                case ONE -> """
-                                        $.%1$s ?  (%2$s) 
-                                        """.formatted(
-                                        sanitize(componentFiltersForIntervalByTemporal.componentKey()),
-                                        componentFiltersForIntervalByTemporal.intervalsValues().stream()
-                                                .map(intervalvalues -> "(@ >= \"date:%1$s\" && @ < \"date:%2$s\")"
-                                                        .formatted(
-                                                                intervalvalues.getFromIsoString(),
-                                                                intervalvalues.getToIsoString()
-                                                        ))
-                                                .collect(Collectors.joining(DELIMITER_OR))
-                                );
-                                case MANY -> """
-                                        $[*].%1$s ?   (%2$s) 
-                                        """.formatted(
-                                        sanitize(componentFiltersForIntervalByTemporal.componentKey()),
-                                        componentFiltersForIntervalByTemporal.intervalsValues().stream()
-                                                .map(intervalvalues -> "(@ >= \"date:%1$s\" && @ < \"date:%2$s\")"
-                                                        .formatted(
-                                                                intervalvalues.getFromIsoString(),
-                                                                intervalvalues.getToIsoString()
-                                                        ))
-                                                .collect(Collectors.joining(DELIMITER_OR))
-                                );
-                            };
+                                                    )
+                                            .collect(Collectors.joining(DELIMITER_OR))
+                            );
+                    case MANY -> """
+                            $[*].%1$s  ? (%2$s)
+                            """
+                            .formatted(
+                                    sanitize(componentKey),
+                                    intervalsValues.stream()
+                                            .map(intervalValues ->
+                                                    "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
+                                                            intervalValues.fromFromNumeric(),
+                                                            intervalValues.fromToNumeric()
+                                                    )
+                                            )
+                                            .collect(Collectors.joining(DELIMITER_OR))
+                            );
                 };
-            }
+
+                case final ComponentFiltersForIntervalByTemporal componentFiltersForIntervalByTemporal ->
+                        switch (componentFiltersForIntervalByTemporal.multiplicity()) {
+                            case ONE -> """
+                                    $.%1$s ?  (%2$s)
+                                    """.formatted(
+                                    sanitize(componentFiltersForIntervalByTemporal.componentKey()),
+                                    componentFiltersForIntervalByTemporal.intervalsValues().stream()
+                                            .map(intervalvalues -> "(@ >= \"date:%1$s\" && @ < \"date:%2$s\")"
+                                                    .formatted(
+                                                            intervalvalues.getFromIsoString(),
+                                                            intervalvalues.getToIsoString()
+                                                    ))
+                                            .collect(Collectors.joining(DELIMITER_OR))
+                            );
+                            case MANY -> """
+                                    $[*].%1$s ?   (%2$s)
+                                    """.formatted(
+                                    sanitize(componentFiltersForIntervalByTemporal.componentKey()),
+                                    componentFiltersForIntervalByTemporal.intervalsValues().stream()
+                                            .map(intervalvalues -> "(@ >= \"date:%1$s\" && @ < \"date:%2$s\")"
+                                                    .formatted(
+                                                            intervalvalues.getFromIsoString(),
+                                                            intervalvalues.getToIsoString()
+                                                    ))
+                                            .collect(Collectors.joining(DELIMITER_OR))
+                            );
+                        };
+            };
             case final ComponentFilterSimpleSearch componentFilterSimpleSearch -> switch (componentFilterSimpleSearch) {
                 case ComponentFiltersByBoolean(
                         String componentkey,
@@ -239,7 +238,7 @@ public class DataRequestBuilder {
                 case WithFormatForFilterDate withFormatForFilterDate -> switch (componentFilters.multiplicity()) {
                     case ONE -> """
                             $.%1$s ? (%3$s)
-                                """.formatted(
+                            """.formatted(
                             sanitize(withFormatForFilterDate.componentKey()),
                             withFormatForFilterDate.format(),
                             withFormatForFilterDate.getIsoStrings().stream()
@@ -251,7 +250,7 @@ public class DataRequestBuilder {
                     );
                     case MANY -> """
                             $[*].%1$s ? (%3$s)
-                                """.formatted(
+                            """.formatted(
                             sanitize(withFormatForFilterDate.componentKey()),
                             withFormatForFilterDate.format(),
                             withFormatForFilterDate.getIsoStrings().stream()
@@ -302,7 +301,6 @@ public class DataRequestBuilder {
                         new SelectRequestWhereInSelect(() -> filter)
                 );
             }
-            case DownloadDatasetQueryOnlyMetadata downloadDatasetQueryOnlyMetadata -> throw new IllegalArgumentException("no request with onlyMetadata");
         };
 
     }
@@ -328,7 +326,7 @@ public class DataRequestBuilder {
                         .map(Ltree::getSql)
                         .toList());
                 final String filter = """
-                           \srs.naturalKey::text IN (:naturalKeys) or rs.hierarchicalKey::text IN (:naturalKeys)
+                            rs.naturalKey::text IN (:naturalKeys) or rs.hierarchicalKey::text IN (:naturalKeys)
                         """;
                 yield buildDownloadDatasetQuery(
                         downloadDatasetQueryByNaturalKey,
@@ -339,14 +337,13 @@ public class DataRequestBuilder {
                 paramSource.addValue("rowids", downloadDatasetQueryByRowId.rowIds().stream()
                         .map(DataRowIds::id).toList());
                 final String filter = """
-                           \s(rs.id::uuid IN (:rowids))
+                            (rs.id::uuid IN (:rowids))
                         """;
                 yield buildDownloadDatasetQuery(
                         downloadDatasetQueryByRowId,
                         new SelectRequestWhereInSelect(() -> filter)
                 );
             }
-            case DownloadDatasetQueryOnlyMetadata downloadDatasetQueryOnlyMetadata -> throw new IllegalArgumentException("no request with onlyMetadata");
         };
     }
 
@@ -386,7 +383,7 @@ public class DataRequestBuilder {
                 downloadDatasetQuery,
                 paramSource,
                 new SelectRequest.SelectRequestRequest(
-                        downloadDatasetQuery.hasPatternDefinition(),
+                        downloadDatasetQuery.patternDefinitionCount(),
                         downloadDatasetQuery.dataName(),
                         buildRemoveSqlSelectNotInValues,
                         schema.getSqlIdentifier(),

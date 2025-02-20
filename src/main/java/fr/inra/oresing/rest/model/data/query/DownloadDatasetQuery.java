@@ -2,18 +2,13 @@ package fr.inra.oresing.rest.model.data.query;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.application.configuration.PatternComponent;
-import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.data.read.query.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 
 import javax.annotation.Nullable;
-import java.util.Locale;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -21,7 +16,7 @@ import java.util.stream.Collectors;
 public class DownloadDatasetQuery {
     Application application;
     String dataName;
-    String locale;
+    OutPut outPut;
     Long offset;
     Long limit;
     Set<String> rowIds;
@@ -34,6 +29,7 @@ public class DownloadDatasetQuery {
     Set<ComponentOrderBy> componentOrderBy;
 
     Set<AuthorizationDescription> authorizationDescriptions;
+    boolean horizontalDisplay;
 
     public DownloadDatasetQuery() {
         super();
@@ -64,11 +60,9 @@ public class DownloadDatasetQuery {
 
     }
 
-    public boolean hasPatternDefinition() {
-        return application.hasPatternDefinition(dataName);
+    public long patternDefinitionCount() {
+        return application.patternDefinitionCount(dataName);
     }
-
-    ;
 
     public DownloadDatasetQuery(final Application application, final String dataType) {
         super();
@@ -80,12 +74,11 @@ public class DownloadDatasetQuery {
             final DownloadDatasetQuery downloadDatasetQuery) {
         if (CollectionUtils.isNotEmpty(downloadDatasetQuery.naturalKeys)) {
             return new DownloadDatasetQueryByNaturalKey(
-                    downloadDatasetQuery.hasPatternDefinition(),
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
-                            Optional.ofNullable(downloadDatasetQuery.getLocale())
-                                    .map(Locale::of)
+                            Optional.ofNullable(downloadDatasetQuery.getOutPut())
+                                    .map(OutPut::locale)
                                     .orElse(Locale.FRENCH),
                             downloadDatasetQuery.getOffset(),
                             downloadDatasetQuery.getLimit()
@@ -96,21 +89,21 @@ public class DownloadDatasetQuery {
                             .map(componentOrderBy -> componentOrderBy.stream()
                                     .map(componentOrderBy1 -> ComponentOrderBy.build(
                                             componentOrderBy1,
-                                            downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
+                                            Objects.requireNonNull(downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null))
                                     ))
                                     .collect(Collectors.toSet())
                             ).orElse(null),
-                    downloadDatasetQuery.naturalKeys
+                    downloadDatasetQuery.naturalKeys,
+                    downloadDatasetQuery.isHorizontalDisplay()
             );
         }
         if (CollectionUtils.isNotEmpty(downloadDatasetQuery.rowIds)) {
             return new DownloadDatasetQueryByRowId(
-                    downloadDatasetQuery.hasPatternDefinition(),
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
-                            Optional.ofNullable(downloadDatasetQuery.getLocale())
-                                    .map(Locale::of)
+                            Optional.ofNullable(downloadDatasetQuery.getOutPut())
+                                    .map(OutPut::locale)
                                     .orElse(Locale.FRENCH),
                             downloadDatasetQuery.getOffset(),
                             downloadDatasetQuery.getLimit()
@@ -121,24 +114,24 @@ public class DownloadDatasetQuery {
                             .map(componentOrderBy -> componentOrderBy.stream()
                                     .map(componentOrderBy1 -> ComponentOrderBy.build(
                                             componentOrderBy1,
-                                            downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
+                                            Objects.requireNonNull(downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null))
                                     ))
                                     .collect(Collectors.toSet())
                             ).orElse(null),
                     downloadDatasetQuery.rowIds.stream()
                             .map(UUID::fromString)
                             .map(DataRowIds::new)
-                            .collect(Collectors.toSet())
+                            .collect(Collectors.toSet()),
+                    downloadDatasetQuery.isHorizontalDisplay()
             );
         }
         if (CollectionUtils.isNotEmpty(downloadDatasetQuery.componentFilters)) {
             return new DownloadDatasetQueryAdvancedSearch(
-                    downloadDatasetQuery.hasPatternDefinition(),
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
                     new OutPut(
-                            Optional.ofNullable(downloadDatasetQuery.getLocale())
-                                    .map(Locale::of)
+                            Optional.ofNullable(downloadDatasetQuery.getOutPut())
+                                    .map(OutPut::locale)
                                     .orElse(Locale.FRENCH),
                             downloadDatasetQuery.getOffset(),
                             downloadDatasetQuery.getLimit()
@@ -153,19 +146,19 @@ public class DownloadDatasetQuery {
                             .map(componentOrderBy -> componentOrderBy.stream()
                                     .map(componentOrderBy1 -> ComponentOrderBy.build(
                                             componentOrderBy1,
-                                            downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
+                                            Objects.requireNonNull(downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null))
                                     ))
                                     .collect(Collectors.toSet())
-                            ).orElse(null)
+                            ).orElse(null),
+                    downloadDatasetQuery.isHorizontalDisplay()
             );
         }
         return new DownloadDatasetQueryNoFilter(
-                downloadDatasetQuery.hasPatternDefinition(),
                 downloadDatasetQuery.getApplication(),
                 downloadDatasetQuery.dataName,
                 new OutPut(
-                        Optional.ofNullable(downloadDatasetQuery.getLocale())
-                                .map(Locale::of)
+                        Optional.ofNullable(downloadDatasetQuery.getOutPut())
+                                .map(OutPut::locale)
                                 .orElse(Locale.FRENCH),
                         downloadDatasetQuery.getOffset(),
                         downloadDatasetQuery.getLimit()
@@ -175,10 +168,11 @@ public class DownloadDatasetQuery {
                         .map(componentOrderBy -> componentOrderBy.stream()
                                 .map(componentOrderBy1 -> ComponentOrderBy.build(
                                         componentOrderBy1,
-                                        downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)
+                                        Objects.requireNonNull(downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null))
                                 ))
                                 .collect(Collectors.toSet())
-                        ).orElse(null)
+                        ).orElse(null),
+                downloadDatasetQuery.isHorizontalDisplay()
         );
 
     }

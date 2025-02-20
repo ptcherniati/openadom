@@ -1,0 +1,72 @@
+---
+title: Colonnes calculées
+subtitle: OA_computedComponents
+abstract: >
+  Cette section permet de définir des colonnes dont les valeurs sont calculées automatiquement
+  à partir d'autres colonnes ou de données externes. Les calculs peuvent être effectués via
+  des expressions Groovy ou en utilisant les clés naturelles d'autres composants.
+sections:
+  alternative:
+    - components:
+      - OA_computation
+      - OA_withNaturalKeyComponents
+  optional:
+    - OA_required
+    - OA_tags
+    - OA_exportHeader
+    - OA_checker
+    - OA_langRestrictions
+---
+Par exemple on veut avoir la valeur de la date complète en concaténant la date (tds_date) et l'heure (tds_heure).
+
+Dans l'{{< var page-refs.groovy.link >}}, les valeurs sont dans une map datum :
+
+- datum.tds_date
+- datum.tds_heure
+
+On définit dans le fichier de configuration la section OA_data suivante:
+
+```yaml
+OA_data:
+  tr_type_de_site_tds:
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - tds_nom
+    OA_basicComponents:
+      tds_nom: 
+        OA_importHeader: Nom
+      tds_date: 
+        OA_importHeader: Date
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      tds_heure: 
+        OA_importHeader: Heure
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: HH:mm:ss
+    OA_computedComponents:
+      tds_date_heure:
+        OA_computation:
+          OA_expression: >
+            return datum.tds_date + " " + datum.tds_heure
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy HH:mm:ss
+            OA_multiplicity: ONE
+        OA_exportHeader:
+          OA_title:
+            fr: Date complète
+            en: Complete date
+```
+
+::: {.callout-important collapse="false" title="Expression multilignes"}
+
+Les expression groovy sont souvent sur plusieurs lignes. on utilise > pour commencer le texte mutilignes.
+
+Comme le texte de l'expression est échappé par la suite, il faut mettre un **;** à la fin de toutes les expressions y compris à la fin des blocs entre accolades.
+::: 

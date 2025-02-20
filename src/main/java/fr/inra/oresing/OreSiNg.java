@@ -2,20 +2,16 @@ package fr.inra.oresing;
 
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.OreSiHandler;
-import fr.inra.oresing.rest.filesenderclient.FileInfos;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
-import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
+import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.mockito.Mockito;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.actuate.info.GitInfoContributor;
 import org.springframework.boot.actuate.info.InfoContributor;
-import org.springframework.boot.actuate.info.InfoPropertiesInfoContributor;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -24,7 +20,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -34,6 +29,7 @@ import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
@@ -46,18 +42,20 @@ public class OreSiNg implements WebMvcConfigurer {
     @Value("${allowed.origin}")
     private String allowedOrigin;
 
+    public OreSiNg(OreSiHandler oreSiHandler, MigrateService migrate) {
+        this.oreSiHandler = oreSiHandler;
+        this.migrate = migrate;
+    }
+
     public static void main(final String[] args) {
         SpringApplication.run(OreSiNg.class, args);
     }
 
-    @Autowired
-    private OreSiHandler oreSiHandler;
-    @Autowired
-    private MigrateService migrate;
+    private final OreSiHandler oreSiHandler;
+    private final MigrateService migrate;
 
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
-        //registry.addResourceHandler("swagger-ui.html").addResourceLocations("classpath:/META-INF/resources/");
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
         registry
                 .addResourceHandler("/static/**")
@@ -71,7 +69,7 @@ public class OreSiNg implements WebMvcConfigurer {
 
         @Bean
         @ConditionalOnMissingBean
-        public GitProperties gitProperties() throws Exception {
+        public GitProperties gitProperties() throws IOException {
             Properties properties = new Properties();
             Resource resource = new ClassPathResource("git.properties");
             if (resource.exists()) {
@@ -129,8 +127,8 @@ public class OreSiNg implements WebMvcConfigurer {
 
         @Bean
         public OpenAPI customOpenAPI() {
-            System.out.println("demarrage de open api");
-            System.out.println("Allowed Origin: " + allowedOrigin);
+            log.info("demarrage de open api");
+            log.info("Allowed Origin: %1$s".formatted(allowedOrigin));
             return new OpenAPI()
                     .info(new Info()
                             .title("openadom-ng")
@@ -172,6 +170,7 @@ public class OreSiNg implements WebMvcConfigurer {
         return taskExecutor;
     }
 
+    @Override
     public void configureAsyncSupport(final AsyncSupportConfigurer configurer) {
         configurer.setTaskExecutor(mvcTaskExecutor());
     }

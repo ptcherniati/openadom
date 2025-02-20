@@ -1,53 +1,25 @@
-build_doc:
-  image:
-    name: registry.gitlab.com/vincenttam/pandoc-mermaid-docker
-    entrypoint: [""]
+build_openadom_doc:
+  image: rocker/rstudio:latest #rocker/r-rmd
   stage: build
   script:
-    - mkdir public
-    - cp documentations/warning.png warning.png
-    - cp documentations/services_model.* public/
-    - pandoc documentations/DOC.md -o public/doc.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
-    - pandoc documentations/Lexique_yaml.md -o public/lexique.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
-    - pandoc README.md documentations/doc_addon.md -o public/index0.html -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
-    - cat documentations/Documentation_fichier_Yaml/*.md > public/configuration.md
-    - pandoc -s -o public/fichier_de_configuration.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc --toc-depth=5 public/configuration.md
-    - cat documentations/headerhtml.html public/index0.html > public/index.html
-    - cat src/test/resources/data/configuration/schemaExample.yaml > public/schemaExample.yaml
-    - rm public/index0.html
-
-  artifacts:
-    paths:
-      - public
-
-build_broken_doc:
-  image:
-    name: registry.gitlab.com/vincenttam/pandoc-mermaid-docker
-    entrypoint: [""]
-  stage: build
-  script:
-    - mkdir public
-    - cp documentations/warning.png warning.png
-    - cp documentations/services_model.* public/
-    - pandoc documentations/DOC.md -o public/doc.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
-    - pandoc documentations/Lexique_yaml.md -o public/lexique.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
-    - pandoc README.md documentations/doc_addon.md -o public/index0.html -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc
-    - cat documentations/Documentation_fichier_Yaml_broken/*.md > public/configuration.md
-    - pandoc -s -o public/fichier_de_configuration_broken.pdf -V fontsize=12pt -V linestretch=1 -V linkcolor=blue -V urlcolor=red -V toccolor=gray --number-sections  -V documentclass=scrreprt -F mermaid-filter --toc --toc-depth=5 public/configuration.md
-    - cat documentations/headerhtml.html public/index0.html > public/index.html
-    - rm public/index0.html
-
+    - set -x
+    - Rscript -e "install.packages(c('rmarkdown', 'knitr'), repos='https://cloud.r-project.org')"
+    - cp README.md documentations/openadom/fichiers/readme.md
+    - cp src/test/resources/data/configuration/schemaExample.yaml documentations/openadom/fichiers/schema_example.yaml
+    - cd documentations/openadom
+    - quarto render
+    - cd ../..
+    - mkdir -p public
+    - mv documentations/openadom/_site/* public/
   artifacts:
     paths:
       - public
 
 pages:
   stage: pages
+  needs: ["build_openadom_doc"]
   script:
     - ls public
-
   artifacts:
     paths:
       - public
-  #rules:
-    #- if: ($CI_JOB_MANUAL== "true" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH)

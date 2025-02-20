@@ -1,0 +1,131 @@
+---
+title: Etiquettes
+subtitle: OA_tags
+abstract: >
+  Cette section permet de définir des étiquettes (tags) qui peuvent être réutiliser dans d'autres sections pour regrouper / filtrer des objets (données, composantes de données.. )
+---
+
+__OA_tags__: Création d'un regroupements sous une étiquette permettant de filtrer l'affichage des listes des {{<var page-refs.etiquettes.link>}}.
+
+Mais aussi les {{<var page-refs.basic-comp.link>}}, les {{<var page-refs.computed-comp.link>}}, les {{<var page-refs.dynamic-comp.link>}}, les  {{<var page-refs.basic-comp.link>}}, les  {{<var page-refs.pattern-comp.link>}} , les  {{<var page-refs.constant-comp.link>}} d'un  {{<var page-refs.data.oa>}}.
+
+::: {.callout-note collapse="false" title="Déclaration des étiquettes"}
+```yaml
+OA_tags:
+  profondeur:
+    fr: Profondeur
+    en: Profondeur
+  localisation:
+    fr: Localisation
+    en: Localization
+  taxon:
+    fr: Taxon
+    en: Taxa
+  context:
+    fr: Context
+    en: Context
+```
+:::
+
+Les étiquettes ```__DATA__```, ```__REFERENCE__```, ```__ORDER_([0-9]*)__```  et ```__HIDDEN__``` sont des étiquettes qui n'ont pas besoin d'êtres mise dans la liste de création.
+
+* ```__DATA__```: nous l'utiliserons pour les données qui ne sont pas des références (```__REFERENCE__``` est le tag par défault pour une data)
+* ```__ORDER_([0-9]*)__```: nous l'utiliserons pour ordonner l'affichage des colonnes dans un ordre voulu (autre qu'alphabétique qui est l'ordre par default) par exemple ```__ORDER_2__```
+* ```__HIDDEN__``` : nous l'utiliserons pour les données que l'on veux enregistrer en base mais que l'on ne veux pas rendre accessible à l'utilisateur.
+
+Pour lier une ou plusieurs étiquettes avec une *référence* ou une *colonne* il suffit d'ajouter une section *OA_tags* sous le nom de la *référence*, *type de de donnée*, *variable*/*component* ou *colonne* à lier.
+
+exemple d'utilisation des étiquettes (__OA_tags__) pour {{<var page-refs.data.oa>}} commun. :
+
+Pour une référence :
+
+::: {.callout-note collapse="false" title="Déclaration des étiquettes pour une référence"}
+
+```yaml
+OA_tags:
+  context:
+    fr: Context
+    en: Context
+OA_data:
+  tr_type_de_site_tds:
+    OA_tags: [__REFERENCE__, context] #context est un tag utilisateur déclaré dans la section **OA_tags** de premier niveau
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey:
+      - tds_nom
+    OA_basicComponents:
+      tds_nom: 
+        OA_tags: [localisation]
+        OA_importHeader: nom
+```
+:::
+
+::: {.callout-note collapse="false" title="Déclaration des étiquettes pour une donnée"}
+Pour une donnée :
+
+```yaml
+OA_tags:
+  context:
+    fr: taxon
+    en: taxa
+OA_data:
+  t_chlorophylle_chl:
+  OA_tags: [ taxon, __DATA__ ]
+  OA_i18n:
+    fr: Donnée de chlorophylle
+    en: Chlorophyll data
+  OA_dataHeaderLine: 1
+  OA_dataFirstLine: 2
+  OA_naturalKey:
+    - chl_date
+    - chl_projet
+    - chl_site
+    - chl_plateforme
+  OA_basicComponents:
+    chl_date:
+      OA_importHeader: Date de prelevement
+      OA_tags: [ __ORDER_1__ ]
+      OA_required: true
+    chl_projet:
+      OA_importHeader: nom du projet
+      OA_tags: [ __ORDER_2__, localisation ]
+      OA_required: true
+    chl_site:
+      OA_importHeader: nom du site
+      OA_tags: [ __ORDER_3__, localisation ]
+      OA_required: true
+    chl_plateforme:
+      OA_importHeader: nom de la plateforme
+      OA_tags: [ __ORDER_4__, localisation ]
+      OA_required: true
+    chl_profondeur_min:
+      OA_importHeader: profondeur min
+      OA_tags: [ __ORDER_5__, profondeur ]
+    chl_profondeur_max:
+      OA_importHeader: profondeur max
+      OA_tags: [ __ORDER_6__, profondeur ]
+    chl_profondeur_unit:
+      OA_tags: [ __ORDER_7__, profondeur ]
+    chl_a_strickland_parsons:
+      OA_importHeader: chlorophylle a strickland-parsons
+    chl_a_scor_unesco:
+      OA_importHeader: chlorophylle a scor-unesco
+    chl_c:
+      OA_importHeader: chlorophylle c
+    chl_carotenoide:
+      OA_importHeader: carotenoide
+    chl_pheopigments:
+      OA_importHeader: pheopigments
+    chl_unit:
+```
+:::
+
+:::{.callout-caution title="Le tag n'est pas obligatoire" collapse="false"}
+Si vous n'en mettez pas un, un tag par défaut se mettra.
+
+* Pour les components -> ```no-tag``` : sans étiquette. Ce qui permettra de filtré au même titre que ceux avec une étiquette créé par vous.
+* Pour les datas -> ```__REFERENCE__```. Ce qui permettra de filtré les datas par type.
+:::
+ 
+
+

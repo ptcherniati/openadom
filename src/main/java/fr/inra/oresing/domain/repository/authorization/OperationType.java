@@ -23,8 +23,7 @@ public enum OperationType {
 
     OperationType(final String title, final boolean display, final boolean withPeriods, final boolean withDataGroups, final boolean forPublic, final boolean forRequest, final Map<String, String> internationalizationName) {
         final Internationalization internationalization = new Internationalization();
-        internationalizationName.entrySet()
-                .forEach(entry->internationalization.put(Locale.forLanguageTag(entry.getKey()), entry.getValue()));
+        internationalizationName.forEach((key, value) -> internationalization.put(Locale.forLanguageTag(key), value));
         this.authorizationColumnsDescription = new AuthorizationColumnsDescription(
                 internationalization,
                 display,

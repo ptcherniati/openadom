@@ -34,15 +34,15 @@ public record ComputedComponentType(SectionBuilder sectionBuilder,
         return SectionBuilder.getInstance()
                 .withAnyOfMandatorySections(
                         new LabelDescription(ConfigurationSchemaNode.OA_COMPUTATION, GroovyExpressionType.EMPTY_INSTANCE()),
-                        new LabelDescription(ConfigurationSchemaNode.OA_WITH_NATURAL_KEY_COMPONENTS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
+                        new LabelDescription(ConfigurationSchemaNode.OA_WITH_NATURAL_KEY_COMPONENTS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
 
                 )
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(false)),
-                        new LabelDescription(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE())),
+                        new LabelDescription(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE())),
                         new LabelDescription(ConfigurationSchemaNode.OA_EXPORT_HEADER, TitleType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_CHECKER, CheckerType.EMPTY_INSTANCE()),
-                        new LabelDescription(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, new CollectionType.ArrayType<StringType>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
+                        new LabelDescription(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
                 );
     }
 }

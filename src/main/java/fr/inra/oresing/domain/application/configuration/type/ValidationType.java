@@ -18,7 +18,7 @@ public record ValidationType(SectionBuilder sectionBuilder,
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_I_18_N, I18nType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_REQUIRED, BooleanType.EMPTY_INSTANCE()),
-                        new LabelDescription(ConfigurationSchemaNode.OA_COMPONENTS, new CollectionType.ArrayType<StringType>(List.of(), false, false, StringType.EMPTY_INSTANCE()))
+                        new LabelDescription(ConfigurationSchemaNode.OA_COMPONENTS, new CollectionType.ArrayType<>(List.of(), false, false, StringType.EMPTY_INSTANCE()))
                 );
     }
 

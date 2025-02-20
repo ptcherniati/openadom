@@ -12,7 +12,7 @@ import fr.inra.oresing.persistence.SqlPrimitiveType;
 import java.io.IOException;
 import java.util.Map;
 
-public sealed interface FieldType<T>  extends SomethingToBeStoredAsJsonInDatabase, SomethingToBeSentToFrontend
+public sealed interface FieldType<T> extends SomethingToBeStoredAsJsonInDatabase, SomethingToBeSentToFrontend
         permits AbstractType,
         BooleanType,
         DateType,
@@ -20,6 +20,7 @@ public sealed interface FieldType<T>  extends SomethingToBeStoredAsJsonInDatabas
         IntegerType,
         ListType,
         MapType,
+        PatternType,
         NullType,
         StringType {
     T getValue();
@@ -47,4 +48,11 @@ public sealed interface FieldType<T>  extends SomethingToBeStoredAsJsonInDatabas
 
     void serializeAddArray(ArrayNode arrayNode);
 
+    default String toStringForComponentValue(){
+        return toString();
+    }
+
+    default CheckerValidationCheckResult postTreatment(CheckerValidationCheckResult checkerValidationCheckResult){
+        return checkerValidationCheckResult;
+    }
 }

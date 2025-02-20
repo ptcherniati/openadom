@@ -1,0 +1,45 @@
+OA_tags: [ data ]
+OA_naturalKey:
+  - nom_key
+OA_i18n:
+  OA_title:
+    fr: Unités
+    en: Units
+  OA_description:
+    fr: Liste des unités
+    en: Units list
+OA_i18nDisplayPattern:
+  OA_title:
+    fr: "{nom_fr} ({code_key})"
+    en: "{nom_en} ({code_key})"
+OA_basicComponents:
+  code_key: null
+  code_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "code"
+      OA_description:
+        fr: "Le code du unité"
+    OA_langRestrictions: [fr]
+  code_en:
+    OA_exportHeader:
+      OA_title:
+        en: "code"
+      OA_description:
+        en: "Unit code"
+    OA_langRestrictions: [en]
+  nom_key: null
+  nom_fr:
+    OA_exportHeader:
+      OA_title:
+        fr: "nom"
+      OA_description:
+        fr: "La nom de l'unité"
+    OA_langRestrictions: [fr]
+  nom_en:
+    OA_exportHeader:
+      OA_title:
+        en: "name"
+      OA_description:
+        en: "Unit name"
+    OA_langRestrictions: [en]

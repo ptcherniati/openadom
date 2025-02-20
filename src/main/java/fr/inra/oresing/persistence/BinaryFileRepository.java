@@ -35,50 +35,85 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     @Override
     public Optional<BinaryFile> findPublishedVersions(final BinaryFileDataset binaryFileDataset) {
         Preconditions.checkArgument(binaryFileDataset != null);
-        final String query = """
-                        SELECT '%s' as "@class", to_jsonb(t) as json FROM (select id, application, name, comment, size, params from %s  WHERE application = :application::uuid
-                        and (params->>'published' )::bool
-                        and params->'binaryfiledataset'->'requiredauthorizations'= :requiredAuthorizations::jsonb) t"""
-                .formatted(getEntityClass().getName(), getTable().getSqlIdentifier()
+
+        final String query = String.format("""
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json 
+                        FROM (
+                            SELECT id, application, name, comment, size, params 
+                            FROM %2$s  
+                            WHERE application = :application::uuid
+                              AND (params->>'published')::bool
+                              AND params->'binaryfiledataset'->'requiredauthorizations' = :requiredAuthorizations::jsonb
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier()
         );
-        final Optional<BinaryFile> result = getNamedParameterJdbcTemplate().query(
+
+        return getNamedParameterJdbcTemplate().query(
                 query,
                 new MapSqlParameterSource()
                         .addValue("application", getApplication().getId())
-                        .addValue("requiredAuthorizations",   getJsonRowMapper().toJson(binaryFileDataset.getRequiredAuthorizations())),
+                        .addValue("requiredAuthorizations", getJsonRowMapper().toJson(binaryFileDataset.getRequiredAuthorizations())),
                 getJsonRowMapper()
         ).stream().findFirst();
-        return result;
     }
+
 
     public Optional<BinaryFile> tryFindByIdWithData(final UUID id) {
         Preconditions.checkArgument(id != null);
-        final String query = """
-        SELECT 
-            '%1$s' as "@class", 
-            to_jsonb(t) as json 
-        FROM (select id, application, name, comment, size, convert_from(fileData, 'UTF8') as "fileData", 
-        params from %2$s  
-        WHERE id = :id) t"""
-                .formatted(getEntityClass().getName(), getTable().getSqlIdentifier());
-        final Optional<BinaryFile> result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("id", id), getJsonRowMapper()).stream().findFirst();
-        return result;
+
+        final String query = String.format("""
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
+                        FROM (
+                            SELECT 
+                                id, 
+                                application, 
+                                name, 
+                                comment, 
+                                size, 
+                                convert_from(fileData, 'UTF8') AS "fileData",
+                                params
+                            FROM %2$s
+                            WHERE id = :id
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier()
+        );
+
+        return getNamedParameterJdbcTemplate().query(
+                query,
+                new MapSqlParameterSource("id", id),
+                getJsonRowMapper()
+        ).stream().findFirst();
     }
 
+
     protected List<BinaryFile> find(final String whereClause, final SqlParameterSource sqlParameterSource) {
-        String sql = """
-                SELECT 
-                    '%1$s' as "@class",  
-                    to_jsonb(t) as json 
-                FROM (select id, application, name, comment, size, null as fileData, params from %2$s """;
-        if (whereClause != null) {
-            sql += "\nWHERE " + whereClause;
-        }
-        sql += ") t";
-        final String query = sql.formatted(getEntityClass().getName(), getTable().getSqlIdentifier());
-        final List<BinaryFile> result = getNamedParameterJdbcTemplate().query(query, sqlParameterSource, getJsonRowMapper());
-        return result;
+        final String sql = String.format("""
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
+                        FROM (
+                            SELECT 
+                                id, 
+                                application, 
+                                name, 
+                                comment, 
+                                size, 
+                                null AS fileData, 
+                                params 
+                            FROM %2$s
+                            %3$s
+                        ) t
+                        """,
+                getEntityClass().getName(),
+                getTable().getSqlIdentifier(),
+                whereClause != null ? "WHERE " + whereClause : ""
+        );
+
+        return getNamedParameterJdbcTemplate().query(sql, sqlParameterSource, getJsonRowMapper());
     }
+
 
     @Override
     public SqlTable getTable() {
@@ -117,7 +152,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     public List<BinaryFile> findByBinaryFileDataset(final String data, final BinaryFileDataset binaryFileDataset, final boolean overlap) {
         final MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource();
         final List<String> where = new LinkedList<>();
-        if (Optional.ofNullable(binaryFileDataset).map(bfd -> bfd.getRequiredAuthorizations()).isPresent()) {
+        if (Optional.ofNullable(binaryFileDataset).map(BinaryFileDataset::getRequiredAuthorizations).isPresent()) {
             for (final Map.Entry<String, List<Ltree>> entry : binaryFileDataset.getRequiredAuthorizations().entrySet()) {
                 final String t = String.format("params #> '{\"binaryfiledataset\", \"requiredauthorizations\", \"%1$s\"}' @@ ('$ == \"'||:%1$s||'\"')::jsonpath", entry.getKey());
                 mapSqlParameterSource.addValue(entry.getKey(), entry.getValue().getFirst().getSql());
@@ -143,13 +178,13 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             mapSqlParameterSource.addValue("from", binaryFileDataset.getFrom());
             mapSqlParameterSource.addValue("to", binaryFileDataset.getTo());
         } else {
-            if (Optional.ofNullable(binaryFileDataset).map(bfd -> bfd.getFrom()).isPresent()) {
+            if (Optional.ofNullable(binaryFileDataset).map(BinaryFileDataset::getFrom).isPresent()) {
                 final String from = binaryFileDataset.getFrom();
                 final String t = "params #> '{\"binaryfiledataset\", \"from\"}'  @@ ('$ == \"'||:from||'\"')::jsonpath";
                 mapSqlParameterSource.addValue("from", from);
                 where.add(t);
             }
-            if (Optional.ofNullable(binaryFileDataset).map(bfd -> bfd.getTo()).isPresent()) {
+            if (Optional.ofNullable(binaryFileDataset).map(BinaryFileDataset::getTo).isPresent()) {
                 final String to = binaryFileDataset.getTo();
                 final String t = "params #> '{\"binaryfiledataset\", \"to\"}'  @@ ('$ == \"'||:to||'\"')::jsonpath";
                 mapSqlParameterSource.addValue("to", to);

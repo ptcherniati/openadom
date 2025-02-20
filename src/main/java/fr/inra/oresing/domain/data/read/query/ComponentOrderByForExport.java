@@ -7,7 +7,7 @@ import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker
 import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.MapType;
-import fr.inra.oresing.domain.checker.type.StringType;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 
 import java.time.LocalDateTime;
@@ -19,19 +19,21 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public sealed interface ComponentOrderByForExport permits ComponentOrderBy, ComponentPatternOrderBy, DynamicComponentOrderBy {
-    Stream<String> toValue(String language, DataRepositoryWithBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription);
+public sealed interface ComponentOrderByForExport
+        permits ComponentOrderBy, ComponentPatternOrderBy, ComponentPatternValueOrderBy, DynamicComponentOrderBy {
+    Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription);
 
     String componentKey();
-    ComponentType sqlType ();
+
+    ComponentType sqlType();
 
     default String valueToString(
             String language,
-            DataRepositoryWithBuffer dataRepository,
+            DataRepositoryForBuffer dataRepository,
             StandardDataDescription dataDescription,
             FieldType fieldType) {
-        if(fieldType instanceof MapType mapType){
-           return "pas trouvé";
+        if (fieldType instanceof MapType mapType) {
+            return "pas trouvé";
         }
         return switch (sqlType()) {
             case null -> "";
@@ -42,48 +44,39 @@ public sealed interface ComponentOrderByForExport permits ComponentOrderBy, Comp
                 }
                 yield "";
             }
-            case ComponentReferenceType componentReferenceType -> {
-                yield Optional.ofNullable(dataDescription)
-                        .map(StandardDataDescription::componentDescriptions)
-                        .map(components -> components.get(componentKey()))
-                        .map(ComponentDescription::checker)
-                        .filter(ReferenceChecker.class::isInstance)
-                        .map(ReferenceChecker.class::cast)
-                        .map(ReferenceChecker::refType)
-                        .map(referencetype -> Optional.of(dataRepository)
-                                .map(repository -> repository.findDisplayByReferenceType(referencetype))
-                                .map(map -> map.get(fieldType.toString()))
-                                .map(map -> map.get(language))
-                                .orElse(null)
-                        )
-                        .orElse(fieldType.toString());
-            }
-            default -> fieldType.toString();
+            case ComponentReferenceType componentReferenceType -> Optional.ofNullable(dataDescription)
+                    .map(StandardDataDescription::componentDescriptions)
+                    .map(components -> components.get(componentKey()))
+                    .map(ComponentDescription::checker)
+                    .filter(ReferenceChecker.class::isInstance)
+                    .map(ReferenceChecker.class::cast)
+                    .map(ReferenceChecker::refType)
+                    .map(referencetype -> Optional.of(dataRepository)
+                            .map(repository -> repository.findDisplayByReferenceType(referencetype))
+                            .map(map -> map.get(fieldType.toString()))
+                            .map(map -> map.get(language))
+                            .orElse(null)
+                    )
+                    .orElse(fieldType == null ? "" : fieldType.toString());
+            default -> fieldType == null ? "" : fieldType.toString();
         };
     }
 
 
-    public static Comparator<ComponentOrderByForExport> getComparator(StandardDataDescription dataDescription) {
-        return new Comparator<ComponentOrderByForExport>() {
-            @Override
-            public int compare(ComponentOrderByForExport componentOrderBy1, ComponentOrderByForExport componentOrderBy2) {
-                return switch (componentOrderBy1) {
-                    case null -> 1;
-                    default -> {
-                        yield switch (componentOrderBy2) {
-                            case null -> -1;
-                            default -> {
-                                Integer component1Order = getComponentOrder(componentOrderBy1, dataDescription);
-                                Integer component2Order = getComponentOrder(componentOrderBy2, dataDescription);
-                                if (component1Order.equals(component2Order)) {
-                                    yield componentOrderBy1.componentKey().compareTo(componentOrderBy2.componentKey());
-                                }
-                                yield component1Order.compareTo(component2Order);
-                            }
-                        };
+    static Comparator<ComponentOrderByForExport> getComparator(StandardDataDescription dataDescription) {
+        return (componentOrderBy1, componentOrderBy2) -> switch (componentOrderBy1) {
+            case null -> 1;
+            default -> switch (componentOrderBy2) {
+                case null -> -1;
+                default -> {
+                    Integer component1Order = getComponentOrder(componentOrderBy1, dataDescription);
+                    Integer component2Order = getComponentOrder(componentOrderBy2, dataDescription);
+                    if (component1Order.equals(component2Order)) {
+                        yield componentOrderBy1.componentKey().compareTo(componentOrderBy2.componentKey());
                     }
-                };
-            }
+                    yield component1Order.compareTo(component2Order);
+                }
+            };
         };
     }
 

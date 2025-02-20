@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.checker;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
@@ -36,7 +35,6 @@ public class CheckerFactory {
     final ImmutableSet.Builder<LineChecker> checkers = ImmutableSet.builder();
     for (final Map.Entry<String, ComponentDescription> variableEntry : dataDescription.componentDescriptions().entrySet()) {
       final String column = variableEntry.getKey();
-      final DataColumn referenceColumn = new DataColumn(column);
       final ComponentDescription componentDescription = variableEntry.getValue();
       if (componentDescription.checker() != null) {
         checkers.addAll(LineChecker.toLineChecker(
@@ -48,30 +46,21 @@ public class CheckerFactory {
       }
     }
     Map<String, CheckerDescription> validationCheckers = dataDescription.findValidationCheckers();
-    validationCheckers.entrySet().stream()
-            .forEach(entry -> {
-              CheckerDescription checkerDescription = entry.getValue();
-              TransformationConfiguration transformation = null;
-              if (checkerDescription instanceof TransformationConfiguration tc) {
-                                transformation = tc;
-              }
-              checkers.addAll(
-                      LineChecker.toLineChecker(
-                              dataRepository,
-                              publishContextBuilder,
-                              transformation,
-                              entry.getKey(),
-                              checkerDescription
-                      )
-              );
-            });
+    validationCheckers.forEach((key, checkerDescription) -> {
+        TransformationConfiguration transformation = null;
+        if (checkerDescription instanceof TransformationConfiguration tc) {
+            transformation = tc;
+        }
+        checkers.addAll(
+                LineChecker.toLineChecker(
+                        dataRepository,
+                        publishContextBuilder,
+                        transformation,
+                        key,
+                        checkerDescription
+                )
+        );
+    });
     return checkers.build();
-  }
-
-  public Map<String, LineChecker> getReferenceCheckersByComponentname(final Application application, final String reference, final PublishContext.PublishContextBuilder publishContextBuilder) {
-    return getCheckers(application, reference, publishContextBuilder)
-            .stream()
-            .filter(lineChecker -> lineChecker.underlyingType() instanceof ReferenceType)
-            .collect(Collectors.toMap(lineChecker -> lineChecker.target().column(), Function.identity()));
   }
 }

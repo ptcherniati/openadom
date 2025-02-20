@@ -7,6 +7,7 @@ import com.google.common.collect.Iterators;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
+import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
@@ -16,7 +17,6 @@ import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
 import fr.inra.oresing.persistence.requestBuilder.data.DataRequestBuilder;
 import fr.inra.oresing.persistence.requestBuilder.data.SqlRequest;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import lombok.Value;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
@@ -36,11 +36,8 @@ import java.util.stream.Stream;
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DataRepository extends JsonTableInApplicationSchemaRepositoryTemplate<DataValue> implements fr.inra.oresing.domain.repository.data.DataRepository {
-
-    /*public static final String REFERENCE_FIELD_SEARCH = """
-            (lower(refvalues ->> '%1$s') ~ lower('%2$s'))
-            """;*/
-
+    public static final String APPLICATION_ID = "applicationId";
+    public static final String REF_TYPE = "refType";
 
     public DataRepository(final Application application) {
         super(application);
@@ -82,7 +79,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                     }
                     return e.getValue().stream().map(v -> String.format("lower(t.refvalues ->> '%s') ~ lower('.*%s.*')", k, v));
                 })
-                .filter(k -> k != null).
+                .filter(Objects::nonNull).
                 collect(Collectors.joining(" AND "));
 
         if (StringUtils.isNotBlank(cond)) {
@@ -100,15 +97,15 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     protected String getUpsertQuery() {
         return """
                 INSERT INTO %1$s
-                    (id, patternColumnName,  application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, \"authorization\")
-                SELECT id, patternColumnName, application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, \"authorization\"
+                    (id, patternColumnName,  application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, "authorization")
+                SELECT id, patternColumnName, application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, "authorization"
                 FROM json_populate_recordset(
                     NULL::%2$s,
                     :json::json
                 )
                 ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
-                DO UPDATE SET updateDate=current_timestamp, hierarchicalKey=EXCLUDED.hierarchicalKey, naturalKey=EXCLUDED.naturalKey, refsLinkedTo=EXCLUDED.refsLinkedTo, 
-                refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile, \"authorization\"=EXCLUDED.\"authorization\" RETURNING id
+                DO UPDATE SET updateDate=current_timestamp, hierarchicalKey=EXCLUDED.hierarchicalKey, naturalKey=EXCLUDED.naturalKey, refsLinkedTo=EXCLUDED.refsLinkedTo,
+                refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile, "authorization"=EXCLUDED."authorization" RETURNING id
                 """.formatted(getTable().getSqlIdentifier(), getTable().getSqlIdentifier());
     }
 
@@ -120,52 +117,71 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     @Override
 
     public int removeByFileId(final UUID fileId) {
-        final String query = "DELETE FROM " + getTable().getSqlIdentifier() +
-                "\n  WHERE binaryfile::text in( :binaryFile)";
-        ImmutableMap<String, List<String>> params = ImmutableMap.of("binaryFile", List.of(fileId.toString()));
-        int unPublishdLines = getNamedParameterJdbcTemplate().update(query, params);
+        final String query = String.format("""
+                        DELETE FROM %s
+                        WHERE binaryfile::text = :binaryFile
+                        """,
+                getTable().getSqlIdentifier()
+        );
+
+        Map<String, Object> params = Map.of("binaryFile", fileId.toString());
+        int unpublishedLines = getNamedParameterJdbcTemplate().update(query, params);
         flush();
-        return unPublishdLines;
+        return unpublishedLines;
     }
+
 
     @Override
     public Map<String, List<Ltree>> resolveRequiredAuthorizations(Map<String, List<Ltree>> requiredAuthorizations) {
+        if (requiredAuthorizations.isEmpty()) {
+            return Map.of();
+        }
         AtomicInteger counter = new AtomicInteger();
         MapSqlParameterSource parameterSource = new MapSqlParameterSource();
+
         String params = requiredAuthorizations.entrySet().stream()
                 .map(entry -> {
-                    String dataNameParam = "param%s".formatted(counter.incrementAndGet());
+                    String dataNameParam = "param%d".formatted(counter.incrementAndGet());
+                    String valueParam = "param%d".formatted(counter.incrementAndGet());
                     parameterSource.addValue(dataNameParam, entry.getKey());
-                    String valueParam = "param%s".formatted(counter.incrementAndGet());
-                    parameterSource.addValue(valueParam, entry.getValue().get(0).getSql());
+                    parameterSource.addValue(valueParam, entry.getValue().getFirst().getSql());
                     return "row(:%s,:%s::ltree)".formatted(dataNameParam, valueParam);
                 })
                 .collect(Collectors.joining(", "));
-        String sql = """
-                select 'java.util.Map' as "@class", 
-                to_jsonb(
-                    jsonb_populate_record(
-                        null::%1$s.requiredAuthorizations,
-                        jsonb_object_agg(
-                            jsonb_build_object(
-                                referencetype, 
-                                to_jsonb(ARRAY[hierarchicalkey])
+
+        String sql = String.format("""
+                        SELECT 'java.util.Map' AS "@class",
+                        to_jsonb(
+                            jsonb_populate_record(
+                                null::%1$s.requiredAuthorizations,
+                                jsonb_object_agg(
+                                    jsonb_build_object(
+                                        referencetype,
+                                        to_jsonb(ARRAY[hierarchicalkey])
+                                    )
+                                )
                             )
-                        )
-                    ) 
-                ) as json
-                from %1$s.referencevalue
-                where
-                    (referencetype, naturalkey) in (%2$s)
-                limit 1;""".formatted(getSchema().getSqlIdentifier(), params);
-        // row('projet','projet_manche'), row('sites','oir__p1')
-        return getNamedParameterJdbcTemplate().queryForObject(sql, parameterSource, new JsonRowMapper<Map>());
+                        ) AS json
+                        FROM %1$s.referencevalue
+                        WHERE (referencetype, naturalkey) IN (%2$s)
+                        LIMIT 1
+                        """,
+                getSchema().getSqlIdentifier(),
+                params
+        );
+
+        return getNamedParameterJdbcTemplate().
+                queryForObject(
+                        sql,
+                        parameterSource,
+                        new JsonRowMapper<Map>()
+                );
     }
+
 
     public List<UUID> delete(final DownloadDatasetQuery downloadDatasetQuery) {
         final SqlRequest sqlRequest = DataRequestBuilder.buildDeleteRequest(downloadDatasetQuery);
-        List<UUID> uuids = getNamedParameterJdbcTemplate().queryForList(sqlRequest.sql(), sqlRequest.parameterSource(), UUID.class);
-        return uuids;
+        return getNamedParameterJdbcTemplate().queryForList(sqlRequest.sql(), sqlRequest.parameterSource(), UUID.class);
     }
 
     /**
@@ -175,23 +191,19 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
      */
     public List<UUID> deleteReferenceType(final String refType, final MultiValueMap<String, String> params) {
         String sql = "delete from %1$s%n" +
-                "WHERE application=:applicationId::uuid AND ReferenceType=:refType%n";
-        final MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
-                .addValue("refType", refType);
-
-        final AtomicInteger i = new AtomicInteger();
-        // kv.value='LPF' OR t.refvalues @> '{"esp_nom":"ALO"}'::jsonb
+                     "WHERE application=:applicationId::uuid AND ReferenceType=:refType%n";
+        final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, refType);
 
         sql += addReferenceConditions(params, paramSource);
         sql += "%nreturning  id";
         final String query = String.format(sql, getTable().getSqlIdentifier(), getEntityClass().getName());
-        List<UUID> result = getNamedParameterJdbcTemplate().queryForList(query, paramSource, UUID.class);
-        return result;
+        return getNamedParameterJdbcTemplate().queryForList(query, paramSource, UUID.class);
     }
 
-    public Stream<DataValue> findAllByReferenceTypeStream(final String refType) {
+    public Stream<DataValue> findAllByReferenceTypeStream(final String referenceName) {
         String query = """
-                SELECT DISTINCT '%1$s' as "@class",  
+                SELECT DISTINCT '%1$s' as "@class",
                 to_jsonb(t)  as json
                 FROM
                 %2$s t
@@ -199,18 +211,17 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 
                 """
                 .formatted(DataValue.class.getName(), getTable().getSqlIdentifier());
-        final MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
-                .addValue("refType", refType);
-        Stream<DataValue> dataValueStream = getNamedParameterJdbcTemplate()
+        final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, referenceName);
+        return getNamedParameterJdbcTemplate()
                 .queryForStream(query, paramSource, getJsonRowMapper());
-        return dataValueStream;
     }
 
     public Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final MultiValueMap<String, String> params) {
         final int offset = Optional.of(params)
                 .map(m -> m.remove("_offset_"))
                 .filter(l -> !l.isEmpty())
-                .map(l -> l.get(0))
+                .map(List::getFirst)
                 .map(o -> {
                     try {
                         return Integer.valueOf(o);
@@ -222,7 +233,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         final String limit = Optional.of(params)
                 .map(m -> m.remove("_limit_"))
                 .filter(l -> !l.isEmpty())
-                .map(l -> l.get(0))
+                .map(List::getFirst)
                 .filter(o -> o.matches("[0-9]*|ALL"))
                 .orElse("ALL");
         String query = """
@@ -237,49 +248,74 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 )
                 """
                 .formatted(getSchema().getSqlIdentifier(), getTable().getSqlIdentifier());
-        query += """    
-                SELECT DISTINCT 
-                    '%1$s' as "@class",  
-                    to_jsonb(t) || 
+        query += """
+                SELECT DISTINCT
+                    '%1$s' as "@class",
+                    to_jsonb(t) ||
                         jsonb_build_object('referencingreferences',agg.agg) as json
                 FROM
                     %2$s t
                     left join agg on agg.referencesby = t.id,
                     jsonb_each_text(t.refvalues) kv
-                WHERE 
-                    application=:applicationId::uuid AND 
+                WHERE
+                    application=:applicationId::uuid AND
                     ReferenceType=:refType
                 """
                 .formatted(DataValue.class.getName(), getTable().getSqlIdentifier());
-        final MapSqlParameterSource paramSource = new MapSqlParameterSource("applicationId", getApplication().getId())
-                .addValue("refType", refType);
+        final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, refType);
 
         String cond = addReferenceConditions(params, paramSource);
         cond = String.format("%s offset %d  limit %s", cond, offset, limit);
-        Stream<DataValue> dataValueStream = getNamedParameterJdbcTemplate().queryForStream(query + cond, paramSource, getJsonRowMapper());
-        return dataValueStream;
+        return getNamedParameterJdbcTemplate().queryForStream(query + cond, paramSource, getJsonRowMapper());
     }
 
     public Map<String, Map<String, String>> findDisplayByNaturalKey(final String refType) {
-        final String query = "select 'java.util.Map' as \"@class\" , jsonb_build_object(naturalkey, jsonb_agg(display)) json\n" +
-                "           from " + getTable().getSqlIdentifier() + ",\n" +
-                "lateral\n" +
-                "(select  jsonb_build_object(\n" +
-                "                  replace(\n" +
-                "                      replace(jsonb_path_query(refvalues, '$.keyvalue()?(@.key like_regex \"__display.*\").key')::text, '__display_',''),\n" +
-                "                      '\"',''),\n" +
-                "                          trim('\"' FROM jsonb_path_query(refvalues, '$.keyvalue()?(@.key like_regex \"__display.*\").value')::text)\n" +
-                "                  ) as display\n" +
-                "    )displays\n" +
-                "where ReferenceType = :refType\n" +
-                "group by naturalkey";
+        final String query = String.format("""
+                        SELECT 'java.util.Map' AS "@class",
+                               jsonb_build_object(naturalkey, jsonb_agg(display)) AS json
+                        FROM %2$s,
+                        LATERAL (
+                            SELECT jsonb_build_object(
+                                replace(
+                                    replace(
+                                        jsonb_path_query(
+                                            refvalues,
+                                            '$.keyvalue()?(@.key like_regex "%1$s.*").key'
+                                        )::text,
+                                        '%1$s',
+                                        ''
+                                    ),
+                                    '"', ''
+                                ),
+                                TRIM('"' FROM
+                                    jsonb_path_query(
+                                        refvalues,
+                                        '$.keyvalue()?(@.key like_regex "%1$s.*").value'
+                                    )::text
+                                )
+                            ) AS display
+                        ) displays
+                        WHERE referencetype = :refType
+                        GROUP BY naturalkey
+                        """,
+                DataColumn.DISPLAY,
+                getTable().getSqlIdentifier()
+        );
+
         final Map<String, Map<String, String>> displayForNaturalKey = new HashMap<>();
-        final List result = getNamedParameterJdbcTemplate().query(query, new MapSqlParameterSource("refType", refType), getJsonRowMapper());
+        final List<?> result = getNamedParameterJdbcTemplate().query(
+                query,
+                new MapSqlParameterSource(REF_TYPE, refType),
+                getJsonRowMapper()
+        );
+
         for (final Object o : result) {
+            @SuppressWarnings("unchecked")
             Map<String, List<Map<String, String>>> o1 = (Map<String, List<Map<String, String>>>) o;
-            Map<String, Map<String, String>> collect = o1.entrySet()
-                    .stream().collect(Collectors.toMap(
-                            e -> e.getKey(),
+            Map<String, Map<String, String>> collect = o1.entrySet().stream()
+                    .collect(Collectors.toMap(
+                            Map.Entry::getKey,
                             e -> {
                                 final Map<String, String> displayMap = new HashMap<>();
                                 for (final Map<String, String> s : e.getValue()) {
@@ -290,28 +326,40 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                     ));
             displayForNaturalKey.putAll(collect);
         }
+
         return displayForNaturalKey;
     }
 
+
     public List<List<String>> findDataColumn(final String refType, final String column) {
         final AtomicInteger ai = new AtomicInteger(0);
-        MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource("applicationId", getApplication().getId()).addValue("refType", refType);
+        MapSqlParameterSource mapSqlParameterSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, refType);
+
         final String select = Stream.of(column.split(","))
                 .map(c -> {
-                    mapSqlParameterSource.addValue("v" + ai.get(), c);
-                    return "refValues->>:v" + ai.get() + " as \"%1$s" + ai.getAndIncrement() + "\"";
+                    String paramName = "v" + ai.get();
+                    mapSqlParameterSource.addValue(paramName, c);
+                    return String.format("refValues->>'%s' AS \"%s%d\"", paramName, DataColumn.DISPLAY, ai.getAndIncrement());
                 })
                 .collect(Collectors.joining(", "));
-        final String sqlPattern = " SELECT %s "
-                + " FROM " + getTable().getSqlIdentifier() + " t"
-                + " WHERE application=:applicationId::uuid AND ReferenceType=:refType";
-        final String query = String.format(sqlPattern, select);
-        final List<List<String>> result = getNamedParameterJdbcTemplate().queryForList(query, mapSqlParameterSource)
+
+        final String query = String.format("""
+                        SELECT %s
+                        FROM %s t
+                        WHERE application = :applicationId::uuid 
+                          AND ReferenceType = :refType
+                        """,
+                select,
+                getTable().getSqlIdentifier()
+        );
+
+        return getNamedParameterJdbcTemplate().queryForList(query, mapSqlParameterSource)
                 .stream()
-                .map(m -> m.values().stream().map(v -> (String) v).collect(Collectors.toList()))
-                .collect(Collectors.toList());
-        return result;
+                .map(m -> m.values().stream().map(v -> (String) v).toList())
+                .toList();
     }
+
 
     @Override
     public ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> getDataIdPerKeys(final String ReferenceType) {
@@ -325,65 +373,91 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     }
 
     public List<ApplicationResult.DataSynthesis> buildReferenceSynthesis() {
-        final String query = "select \n" +
-                "ReferenceType ReferenceType, count(*) lineCount \n" +
-                "from " + getTable().getSqlIdentifier() + "\n" +
-                "group by ReferenceType";
-        return getNamedParameterJdbcTemplate()
-                .query(query, ImmutableMap.of(),
-                        BeanPropertyRowMapper.newInstance(ApplicationResult.DataSynthesis.class
-                        ));
+        final String query = String.format("""
+                        SELECT 
+                            ReferenceType AS ReferenceType, 
+                            COUNT(*) AS lineCount 
+                        FROM %s
+                        GROUP BY ReferenceType
+                        """,
+                getTable().getSqlIdentifier()
+        );
+        return getNamedParameterJdbcTemplate().query(
+                query,
+                Map.of(),
+                BeanPropertyRowMapper.newInstance(ApplicationResult.DataSynthesis.class)
+        );
     }
 
     public void updateConstraintForeignReferences(final List<UUID> uuids) {
-        final String deleteSql = "DELETE FROM " + getTable().schema().getSqlIdentifier() + ".Reference_Reference WHERE referenceId in (:ids)";
-        final String insertSql = String.join(" "
-                , "INSERT INTO " + getTable().schema().getSqlIdentifier() + ".Reference_Reference(referenceId, referencesBy)"
-                , "select id referenceId, (jsonb_array_elements_text(jsonb_path_query(jsonb_path_query(refslinkedto, '$.*'), '$.*')#> '{uuids}'))::uuid referencesBy"
-                , "from " + getTable().getSqlIdentifier()
-                , "where id in (:ids)"
-                , "ON CONFLICT ON CONSTRAINT \"Reference_Reference_PK\" DO NOTHING"
+        final String deleteSql = String.format("""
+                        DELETE FROM %s.Reference_Reference 
+                        WHERE referenceId IN (:ids)
+                        """,
+                getTable().schema().getSqlIdentifier()
         );
-        final String sql = String.join(";", deleteSql, insertSql);
+        final String insertSql = String.format("""
+                        INSERT INTO %1$s.Reference_Reference(referenceId, referencesBy)
+                        SELECT 
+                            id AS referenceId, 
+                            (jsonb_array_elements_text(jsonb_path_query(jsonb_path_query(refslinkedto, '$.*'), '$.*')#> '{uuids}'))::uuid AS referencesBy
+                        FROM %2$s
+                        WHERE id IN (:ids)
+                        ON CONFLICT ON CONSTRAINT "Reference_Reference_PK" DO NOTHING
+                        """,
+                getTable().schema().getSqlIdentifier(),
+                getTable().getSqlIdentifier()
+        );
+        final String sql = deleteSql + ";" + insertSql;
         Iterators.partition(uuids.stream().iterator(), Short.MAX_VALUE - 1)
-                .forEachRemaining(uuidsByBatch -> getNamedParameterJdbcTemplate().execute(sql, ImmutableMap.of("ids", uuidsByBatch), PreparedStatement::execute));
+                .forEachRemaining(uuidsByBatch ->
+                        getNamedParameterJdbcTemplate().execute(
+                                sql,
+                                Map.of("ids", uuidsByBatch),
+                                PreparedStatement::execute
+                        )
+                );
     }
 
     public Map<Ltree, List<DataValue>> getReferenceDisplaysById(final Set<String> listOfIds) {
         if (listOfIds.isEmpty()) {
             return new HashMap<>();
         }
-        final String sql = "SELECT  DISTINCT '" + DataValue.class.getName() + "' as \"@class\",  to_jsonb(r) as json \n" +
-                "from " + getSchema().getSqlIdentifier() + ".reference_reference dr\n" +
-                "join " + getSchema().getSqlIdentifier() + ".\"referencevalue\" d on dr.referenceId = d.id\n" +
-                "join " + getTable().getSqlIdentifier() + " r on dr.referencesBy = r.id\n" +
-                "where d.id::text in (:list)";
-        List<DataValue> list = getNamedParameterJdbcTemplate()
-                .query(sql, new MapSqlParameterSource().addValue("list", listOfIds), getJsonRowMapper());
-        Map<Ltree, List<DataValue>> referencesValuesMap = list.stream()
-                .collect(Collectors.groupingBy(
-                                DataValue::getNaturalKey
-                        )
-                );
-        referencesValuesMap.putAll(list.stream()
-                .collect(Collectors.groupingBy(
-                                DataValue::getHierarchicalKey
-                        )
-                )
+        final String sql = String.format("""
+                        SELECT DISTINCT 
+                            '%1$s' AS "@class",  
+                            to_jsonb(r) AS json 
+                        FROM %2$s.reference_reference dr
+                        JOIN %2$s."referencevalue" d ON dr.referenceId = d.id
+                        JOIN %3$s r ON dr.referencesBy = r.id
+                        WHERE d.id::text IN (:list)
+                        """,
+                DataValue.class.getName(),
+                getSchema().getSqlIdentifier(),
+                getTable().getSqlIdentifier()
         );
+        List<DataValue> list = getNamedParameterJdbcTemplate().query(
+                sql,
+                new MapSqlParameterSource().addValue("list", listOfIds),
+                getJsonRowMapper()
+        );
+        Map<Ltree, List<DataValue>> referencesValuesMap = list.stream()
+                .collect(Collectors.groupingBy(DataValue::getNaturalKey));
+        referencesValuesMap.putAll(list.stream()
+                .collect(Collectors.groupingBy(DataValue::getHierarchicalKey)));
         return referencesValuesMap;
     }
 
     @Override
     public Map<String, String> findHierarchicalKeysByKeyForReferenceTypes(List<String> referenceTypes) {
-        if(CollectionUtils.isEmpty(referenceTypes)){
+        if (CollectionUtils.isEmpty(referenceTypes)) {
             return Collections.emptyMap();
         }
         String sql = """
-        SELECT naturalkey::text, hierarchicalkey::text
-        FROM %s
-        WHERE referencetype in (:referenceType)
-        """.formatted(getTable().getSqlIdentifier());
+                SELECT naturalkey::text, hierarchicalkey::text
+                FROM %s
+                WHERE referencetype in (:referenceType)
+                """.formatted(getTable().getSqlIdentifier());
 
         MapSqlParameterSource params = new MapSqlParameterSource("referenceType", referenceTypes);
 
@@ -400,11 +474,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         );
 
 // Collecter les nouvelles entrées dans une liste séparée
-        List<Map.Entry<String, String>> newEntries = hierarchicalKeyByNaturalKey.values().stream()
+        List<Map.Entry<String, String>> newEntries = Objects.requireNonNull(hierarchicalKeyByNaturalKey).values().stream()
                 .distinct()
                 .filter(hierarchicalKey -> !hierarchicalKeyByNaturalKey.containsKey(hierarchicalKey))
                 .map(hierarchicalKey -> Map.entry(hierarchicalKey, hierarchicalKey))
-                .collect(Collectors.toList());
+                .toList();
 
 // Ajouter les nouvelles entrées à la map
         hierarchicalKeyByNaturalKey.putAll(
@@ -414,106 +488,95 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return hierarchicalKeyByNaturalKey;
     }
 
-    @Value
-    public static class DataValuesByDataType {
-        String dataType;
-        Set<DataRowIds> ids;
+    public record DataValuesByDataType(String dataType, Set<DataRowIds> ids) {
     }
 
     public Stream<DataValuesByDataType> getLinkedReferenceValuesStream(final Set<UUID> ids) {
-
         if (ids == null || ids.isEmpty()) {
             return Stream.of();
         }
-        final String sql = """
+
+        final String sql = String.format("""
                         WITH RECURSIVE refs AS (
-                              SELECT * from %1$s rv\s
-                              WHERE rv.id in (:ids)\s
-                           UNION ALL
-                              SELECT rv.*\s
-                              FROM %2$s.reference_reference rr
-                                 JOIN refs ON rr.referenceid = refs.id\s
-                                 join %1$s rv on rv.id=rr.referencesby)
-                         SELECT
-                            '%3$s' as "@class", \s
+                            SELECT * FROM %1$s rv
+                            WHERE rv.id IN (:ids)
+                            UNION ALL
+                            SELECT rv.*
+                            FROM %2$s.reference_reference rr
+                            JOIN refs ON rr.referenceid = refs.id
+                            JOIN %1$s rv ON rv.id = rr.referencesby
+                        )
+                        SELECT
+                            '%3$s' AS "@class",
                             jsonb_build_object(
-                                   'dataType', rv.referencetype,
-                                   'ids', array_agg(distinct to_jsonb(rv.id))
-                                )                                       AS json_map
-                            FROM refs rv
-                            GROUP BY rv.referencetype;
-                """;
-        final String query = String.format(
-                sql,
+                                'dataType', rv.referencetype,
+                                'ids', array_agg(DISTINCT to_jsonb(rv.id))
+                            ) AS json_map
+                        FROM refs rv
+                        GROUP BY rv.referencetype
+                        """,
                 getTable().getSqlIdentifier(),
                 getTable().schema().getSqlIdentifier(),
                 DataValuesByDataType.class.getCanonicalName()
         );
-        final Stream<DataValuesByDataType> result = getNamedParameterJdbcTemplate()
-                .queryForStream(query, new MapSqlParameterSource("ids", ids), (rs, rowNum) -> {
+
+        return getNamedParameterJdbcTemplate()
+                .queryForStream(sql, new MapSqlParameterSource("ids", ids), (rs, rowNum) -> {
                     String jsonMap = rs.getString("json_map");
                     try {
                         JsonNode jsonNode = getJsonRowMapper().getJsonMapper().readTree(jsonMap);
                         String dataType = jsonNode.get("dataType").asText();
                         Set<UUID> dataValues = getJsonRowMapper().getJsonMapper().convertValue(
                                 jsonNode.get("ids"),
-                                new TypeReference<Set<UUID>>() {
+                                new TypeReference<>() {
                                 }
                         );
 
-                        return new DataValuesByDataType(dataType, dataValues.stream().map(DataRowIds::new).collect(Collectors.toSet()));
+                        return new DataValuesByDataType(dataType, dataValues.stream()
+                                .map(DataRowIds::new)
+                                .collect(Collectors.toSet()));
                     } catch (Exception e) {
                         return null;
                     }
                 });
-        return result;
     }
+
 
     public Flux<DataRows> findAllByDataTypeFlux(final DownloadDatasetQuery downloadDatasetQuery) {
         final Stream result;
         final SqlRequest sqlRequest = DataRequestBuilder.buildSelectRequest(downloadDatasetQuery);
         result = getNamedParameterJdbcTemplate().queryForStream(sqlRequest.sql(), sqlRequest.parameterSource(), new JsonRowMapper<DataRows>());
-
-        return Flux.<DataRows>fromStream(result.toList().stream());//Flux.<DataRows>fromStream(result.toList().stream());
+        return Flux.<DataRows>fromStream(result);
     }
 
     @Override
-    public List<ReferenceScope.NodeDescription>     getNodesForMenu(MenuType menuType) {
+    public List<ReferenceScope.NodeDescription> getNodesForMenu(MenuType menuType) {
         return getNamedParameterJdbcTemplate()
                 .query(
                         """
                                 SELECT DISTINCT '%1$s' as "@class",
-                                        to_jsonb( %2$s.getnodes('%3$s')) as json """
+                                        to_jsonb( %2$s.getnodes('%3$s')) as json"""
                                 .formatted(
                                         ReferenceScope.NodeDescription.class.getName(),
                                         getTable().schema().getSqlIdentifier(),
                                         menuType.getType()),
                         Map.of(),
-                        new JsonRowMapper<ReferenceScope.NodeDescription>()
+                        new JsonRowMapper<>()
                 );
     }
 
     @Override
-    public Flux<FileContent> getStoredData(String dataName, SubmissionType submissionType) {
-        String sql;
+    public Flux<FileContent> getStoredData(Application application, String dataName) {
         MapSqlParameterSource params = new MapSqlParameterSource();
+        String sql = FileContent.buildFileNameRequest(application, dataName);
 
-        switch (submissionType) {
-            case OA_VERSIONING -> {
-                sql = FileContent.EXPORT_PUBLISHED_DATA_AS_CSF_SQL;
-            }
-            case null, default -> {
-                sql = FileContent.EXPORT_REGISTER_DATA_CSV_SQL;
-            }
-        }
-        sql = sql.formatted(dataName, getTable().schema().getSqlIdentifier(),"%s");
-
-        return Flux.fromStream(getNamedParameterJdbcTemplate().queryForStream(
+        return Flux.fromStream(
+                getNamedParameterJdbcTemplate().queryForStream(
                                 sql,
                                 params,
                                 (rs, rowNum) -> new FileContent(rs.getString("fileName"), rs.getString("fileContent"))
                         )
-                        .map(FileContent.class::cast)
+                        .map(fileContent -> fileContent)
         );
     }
 

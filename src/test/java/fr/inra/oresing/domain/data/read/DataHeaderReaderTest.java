@@ -15,8 +15,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.io.Charsets;
-import org.junit.Assert;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -70,10 +69,12 @@ class DataHeaderReaderTest {
                 30/01/2014
                 21/01/2014;03:52:00;12.3;52.1;32.0""";
         final InputStream csv = new ByteArrayInputStream(file.getBytes());
-        final CSVFormat csvFormat = CSVFormat.DEFAULT
-                .withDelimiter(dataDescription.separator())
-                .withSkipHeaderRecord();
-        final CSVParser csvParser = CSVParser.parse(csv, Charsets.UTF_8, csvFormat);
+        final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+                .setDelimiter(dataDescription.separator())
+                .setSkipHeaderRecord(true)
+                .build();
+
+        final CSVParser csvParser = CSVParser.parse(csv, StandardCharsets.UTF_8, csvFormat);
         lineIterator = csvParser.iterator();
         final DataImporterContext dataImporterContext = Mockito.mock(DataImporterContext.class);
         Mockito.when(dataImporterContext.getDataDescription()).thenReturn(dataDescription);
@@ -97,54 +98,33 @@ class DataHeaderReaderTest {
     }
 
     private static void testDataDatum(final DataDatum constants) {
-        Assert.assertEquals(
-                "bassin_versant",
-                constants.get(new DataColumn("dat_type_site"))
-                        .toJsonForFrontend()
-                        .toString()
-        );
-        Assert.assertEquals(
-                "hesse",
-                constants.get(new DataColumn("dat_site"))
-                        .toJsonForFrontend()
-                        .toString()
-        );
-        Assert.assertEquals(
-                "20/01/2014",
-                constants.get(new DataColumn("dat_start_date"))
-                        .toJsonForFrontend()
-                        .toString()
-        );
-        Assert.assertEquals(
-                "30/01/2014",
-                constants.get(new DataColumn("dat_end_date"))
-                        .toJsonForFrontend()
-                        .toString()
-        );
+        Assertions.assertEquals("bassin_versant", constants.get(new DataColumn("dat_type_site"))
+                .toJsonForFrontend()
+                .toString());
+        Assertions.assertEquals("hesse", constants.get(new DataColumn("dat_site"))
+                .toJsonForFrontend()
+                .toString());
+        Assertions.assertEquals("20/01/2014", constants.get(new DataColumn("dat_start_date"))
+                .toJsonForFrontend()
+                .toString());
+        Assertions.assertEquals("30/01/2014", constants.get(new DataColumn("dat_end_date"))
+                .toJsonForFrontend()
+                .toString());
     }
 
     private static void testPostHeaderRows(final List<List<String>> postHeaderRows) {
-        Assert.assertEquals(
-                "[20/01/2014,],[30/01/2014]",
-                postHeaderRows.stream()
-                        .map(l->l.stream().collect(Collectors.joining(",", "[","]")))
-                        .collect(Collectors.joining(","))
-        );
+        Assertions.assertEquals("[20/01/2014,],[30/01/2014]", postHeaderRows.stream()
+                .map(l->l.stream().collect(Collectors.joining(",", "[","]")))
+                .collect(Collectors.joining(",")));
     }
 
     private static void testPreHeaderRows(final List<List<String>> preHeaderRows) {
-        Assert.assertEquals(
-                "[type de site,bassin_versant,],[site,hesse,],[comment,uncommentaire,]",
-                preHeaderRows.stream()
-                        .map(l->l.stream().collect(Collectors.joining(",", "[","]")))
-                        .collect(Collectors.joining(","))
-        );
+        Assertions.assertEquals("[type de site,bassin_versant,],[site,hesse,],[comment,uncommentaire,]", preHeaderRows.stream()
+                .map(l->l.stream().collect(Collectors.joining(",", "[","]")))
+                .collect(Collectors.joining(",")));
     }
 
     private static void testHeaderRow(final List<String> headerRows) {
-        Assert.assertEquals(
-                "dat_date,dat_heure,SMP_20_1,SMP_20_2,SMP_30_1",
-                String.join(",", headerRows)
-        );
+        Assertions.assertEquals("dat_date,dat_heure,SMP_20_1,SMP_20_2,SMP_30_1", String.join(",", headerRows));
     }
 }

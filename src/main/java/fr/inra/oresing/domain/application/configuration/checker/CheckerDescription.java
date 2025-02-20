@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 
 import java.time.format.DateTimeFormatter;
@@ -38,7 +37,7 @@ public sealed interface CheckerDescription permits
             case final ReferenceChecker referenceChecker -> {
                 final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys = repository.getDataIdPerKeys(referenceChecker.refType());
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = getUUidByNaturalKey(referenceIdPerKeys);
-                yield new ReferenceType(target, referenceChecker.refType(), referenceValues, transformer);
+                yield new ReferenceType(target, referenceChecker.refType(), referenceValues, transformer, null);
             }
             case final DateChecker dateChecker ->
                     new DateType(dateChecker.pattern(), DateTimeFormatter.ofPattern(dateChecker.pattern()), dateChecker.duration(), dateChecker.min(), dateChecker.max());
@@ -99,7 +98,7 @@ public sealed interface CheckerDescription permits
         GroovyExpressionChecker,
         IntegerChecker,
         ReferenceChecker,
-        StringChecker;
+        StringChecker
     }
 
     record ReferenceValueDecorator(DataValue decorated) {

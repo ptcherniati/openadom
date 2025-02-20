@@ -7,8 +7,6 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 
 import static fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery.*;

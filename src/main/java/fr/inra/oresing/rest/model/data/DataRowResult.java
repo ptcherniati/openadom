@@ -3,7 +3,9 @@ package fr.inra.oresing.rest.model.data;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.NullType;
+import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import org.apache.commons.collections.keyvalue.DefaultMapEntry;
@@ -12,29 +14,36 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
-public record DataRowResult(List<String> rowId, String naturalKey, String hierarchicalKey, Map<String, Object> values,
-                            Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo, Long totalRows, Long rowNumber,
-                            Map<Object, Object> displaysForRow,
-                            List<String> allPatternColumnName) {
+public record DataRowResult(
+        List<String> rowId,
+        String naturalKey,
+        String hierarchicalKey,
+        Map<String, Object> values,
+        Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
+        //Long totalRows,
+        //Long rowNumber,
+        Map<Object, Object> displaysForRow,
+        List<String> allPatternColumnName
+) {
 
     public static final String DEFAULT = "default";
 
     public static DataRowResult of(DataRow dataRow,
                                    ImmutableSet<String> variables,
                                    String locale,
-                                   DataRepositoryWithBuffer dataRepositoryWithBuffer) {
+                                   DataRepositoryForBuffer dataRepositoryWithBuffer) {
         final Map<String, Object> rows = new HashMap<>();
-        for (final Map.Entry<String, FieldType> componentEntry : dataRow.getValues().entrySet()) {
+        for (final Map.Entry<String, FieldType> componentEntry : dataRow.values().entrySet()) {
             final String component = componentEntry.getKey();
-            if (variables.contains(component)) {
+            if (variables.contains(component) || componentEntry.getKey().startsWith(DataColumn.DISPLAY)) {
                 rows
-                        .put(component, Optional.ofNullable(componentEntry)
+                        .put(component, Optional.of(componentEntry)
                                 .map(Map.Entry::getValue)
                                 .map(FieldType::toJsonForFrontend)
                                 .orElse(NullType.INSTANCE));
             }
         }
-        Map<Object, Object> displaysForRow = dataRow.getRefsLinkedTo().entrySet()
+        Map<Object, Object> displaysForRow = dataRow.refsLinkedTo().entrySet()
                 .stream()
                 .map(referenceEntry -> {
                     String referenceName = referenceEntry.getKey();
@@ -51,14 +60,14 @@ public record DataRowResult(List<String> rowId, String naturalKey, String hierar
                     return new DefaultMapEntry(referenceName, naturalKeysDisplay);
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> existing));
-        return new DataRowResult(dataRow.getRowId(),
-                dataRow.getNaturalKey().getSql(),
-                dataRow.getHierarchicalKey().getSql(),
+        return new DataRowResult(dataRow.rowId(),
+                dataRow.naturalKey().getSql(),
+                dataRow.hierarchicalKey().getSql(),
                 rows,
-                dataRow.getRefsLinkedTo(),
-                dataRow.getTotalRows(),
-                dataRow.getRowNumber(),
+                dataRow.refsLinkedTo(),
+                //dataRow.getTotalRows(),
+                //dataRow.getRowNumber(),
                 displaysForRow,
-                dataRow.getAllPatternColumnNames());
+                dataRow.allPatternColumnNames());
     }
 }

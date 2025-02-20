@@ -1,0 +1,8 @@
+---
+    title: Fichiers additionnels
+    subtitle: OA_additionalFiles
+    abstract: >
+        Cette section permet de déclarer des types de fichiers additionnels. Un fichier additionnel est un fichier qui sera dépsé dans l'application en remplissant un formulaire paramétrable dans cette section et que l'on pourra associer à des composantes de données de l'application pour qu'ils puissent être fournis en sortie en même temps que ces composantes de données.
+---
+
+TODO

@@ -1,0 +1,13 @@
+# Fichier de configuration minimal
+
+Un fichier de configuration doit au moins contenir la version du moteur openADom (OA_version), ainsi que la description de l'application (OA_application)
+
+- le nom de l'application respectant le pattern <code>[a-z_]*</code>
+- la version de l'application <code>(^(\\d+)\\.(\\d+)\.(\\d+)(_\\d+)?(-\\w+)?$)</code>
+
+
+``` yaml
+{{< include configuration_minimale.yaml >}}
+  ```
+[fichier de configuration](/fichiers/examples/configuration_min/configuration_minimale.yaml)
+
