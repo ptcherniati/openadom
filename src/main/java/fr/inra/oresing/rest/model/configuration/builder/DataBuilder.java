@@ -198,7 +198,8 @@ public record DataBuilder(RootBuilder rootBuilder) {
                 .map(m -> m.group(1))
                 .filter(Predicate.not(listComponentKeys::contains))
                 .toList();
-        list.stream().forEach(
+        list.stream()
+                .forEach(
                 badGroup -> rootBuilder.buildError(ConfigurationException.MISSING_COMPONENT_FOR_DISPLAY_PATTERN,
                         Map.of(
                                 "badGroup", badGroup,
