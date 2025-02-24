@@ -175,22 +175,20 @@ public record DataBuilder(RootBuilder rootBuilder) {
         if (MapUtils.isEmpty(localizationDisplay)) {
             return true;
         }
+        boolean isValid = true;
         for (String group : List.of(ConfigurationSchemaNode.OA_TITLE, ConfigurationSchemaNode.OA_DESCRIPTION)) {
             if (localizationDisplay.containsKey(group)) {
                 for (Object language : localizationDisplay.get(group).keySet()) {
-                    boolean test = testLocalizationDisplay(
+                    isValid = isValid && testLocalizationDisplay(
                             localizationDisplay.get(group).get(language).toString(),
                             listComponentKeys,
                             path,
                             group,
                             language.toString());
-                    if (!test) {
-                        return test;
-                    }
                 }
             }
         }
-        return true;
+        return isValid;
     }
 
     private boolean testLocalizationDisplay(String matchingGroup, List<String> listComponentKeys, String path, String group, String language) {
