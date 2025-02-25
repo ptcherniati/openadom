@@ -16,7 +16,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@Tag("MODEL_REQUEST_TEST")
+@Tag("integration.persistence\n")
 class DownloadDatasetQueryAdvancedSearchTest {
     public static JsonRowMapper mapper;
     public static final Set<String> rowIds = Set.of("addf3698-88f2-43f9-8926-0b64a86f3678", "0aef7ed1-1df9-4fbf-a676-1932e87ced9d", "2c527cbe-3ed7-4883-b7d1-8f29eff99eb1");

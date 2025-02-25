@@ -8,6 +8,7 @@ import fr.inra.oresing.rest.OreSiResourcesTest;
 import fr.inra.oresing.rest.ViewStrategy;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -66,6 +67,7 @@ public class RelationalServiceTest {
 
     @Test
     @Disabled
+    @Tag("integration.persistence\n")
     public void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
         final ImmutableSet<Fixtures.Application> applications = ImmutableSet

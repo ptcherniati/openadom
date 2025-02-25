@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("core.config")
 class BuilderNodeTest {
     final Map<String, BuilderNode> builderNodes = Arrays.stream(new JsonRowMapper<BuilderNode>().readValue("""
             [

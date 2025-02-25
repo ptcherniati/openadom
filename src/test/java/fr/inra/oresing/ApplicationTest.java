@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.UUID;
 
-@org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("core.basic")
 public class ApplicationTest {
     @Test
     public void test() {
