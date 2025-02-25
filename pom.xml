@@ -88,7 +88,8 @@
         <!--sonar-->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec</sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec
+        </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.language>java</sonar.language>
         <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
         <sonar.projectName>openADOM-backend</sonar.projectName>
@@ -400,6 +401,12 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <!-- Utilisez une version récente pour être certain du support adéquat de JUnit 5 -->
+                <version>3.0.0-M5</version>
+            </plugin>
         </plugins>
     </build>
     <profiles>
@@ -442,223 +449,344 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>core.basic</id>
+            <properties>
+                <junit.jupiter.tags>core.basic</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil pour les tests tagués "core.config" -->
+        <profile>
+            <id>core.config</id>
+            <properties>
+                <junit.jupiter.tags>core.config</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil pour les tests tagués "core.auth" -->
+        <profile>
+            <id>core.auth</id>
+            <properties>
+                <junit.jupiter.tags>core.auth</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil pour les tests tagués "domain.model" -->
+        <profile>
+            <id>domain.model</id>
+            <properties>
+                <junit.jupiter.tags>domain.model</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil pour les tests tagués "domain.checker" -->
+        <profile>
+            <id>domain.checker</id>
+            <properties>
+                <junit.jupiter.tags>domain.checker</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil pour les tests tagués "domain.i18n" -->
+        <profile>
+            <id>domain.i18n</id>
+            <properties>
+                <junit.jupiter.tags>domain.i18n</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil pour les tests tagués "integration.rest" -->
+        <profile>
+            <id>integration.rest</id>
+            <properties>
+                <junit.jupiter.tags>integration.rest</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil pour les tests tagués "integration.persistence" -->
+        <profile>
+            <id>integration.persistence</id>
+            <properties>
+                <junit.jupiter.tags>integration.persistence</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profils pour les tests applicatifs -->
+        <profile>
+            <id>app.monsoere</id>
+            <properties>
+                <junit.jupiter.tags>app.monsoere</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
         <profile>
-            <id>test_checker</id>
+            <id>app.haute_frequence</id>
+            <properties>
+                <junit.jupiter.tags>app.haute_frequence</junit.jupiter.tags>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
                         <configuration>
-                            <forkCount>4</forkCount>
-                            <parallel>classesAndMethods</parallel>
-                            <threadCount>4</threadCount>
-                            <perCoreThreadCount>true</perCoreThreadCount>
-                            <parallelTestsTimeoutInSeconds>300</parallelTestsTimeoutInSeconds>
-                            <parallelTestsTimeoutForcedInSeconds>600</parallelTestsTimeoutForcedInSeconds>
-                            <parallelOptimized>true</parallelOptimized>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <includes>
-                                <include>fr/inra/oresing/checker/**.java</include>
-                            </includes>
+        <profile>
+            <id>app.acbb</id>
+            <properties>
+                <junit.jupiter.tags>app.acbb</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>app.olac</id>
+            <properties>
+                <junit.jupiter.tags>app.olac</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>app.foret</id>
+            <properties>
+                <junit.jupiter.tags>app.foret</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>app.pattern</id>
+            <properties>
+                <junit.jupiter.tags>app.pattern</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>app.recursivity</id>
+            <properties>
+                <junit.jupiter.tags>app.recursivity</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <profile>
+            <id>app.teledetection</id>
+            <properties>
+                <junit.jupiter.tags>app.teledetection</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
         <profile>
-            <id>test_model</id>
+            <id>no-tags</id>
             <build>
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.0.0-M5</version>
                         <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <includes>
-                                <include>fr/inra/oresing/model/**Test.java</include>
-                                <include>fr/inra/oresing/model/**/**Test.java</include>
-                            </includes>
+                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>
+                                SUITE,core.basic,core.config,core.auth,
+                                domain.model,domain.checker,domain.i18n,
+                                integration.rest,integration.persistence,
+                                app.monsoere,app.haute_frequence,app.acbb,
+                                app.olac,app.foret,app.pattern,app.recursivity,app.teledetection
+                            </excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
         <profile>
-            <id>test_persistence</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <includes>
-                                <include>fr/inra/oresing/persistence/**Test.java</include>
-                            </includes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test_rest_1</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <includes>
-                                <include>fr/inra/oresing/rest/ApplicationConfigurationServiceTest.java</include>
-                                <include>fr/inra/oresing/rest/Migration.java</include>
-                                <include>fr/inra/oresing/rest/MultiYaml.java</include>
-                                <include>fr/inra/oresing/rest/RelationalService.java</include>
-                                <include>fr/inra/oresing/rest/TestReferencesErrors.java</include>
-                            </includes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test_rest_1_Haute_Frequence</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <groups>HAUTE_FREQUENCE_TEST</groups>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test_rest_1_ACBB</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <groups>ACBB_TEST</groups>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test_rest_2</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <includes>
-                            </includes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>swagger_build</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <groups>SWAGGER_BUILD</groups>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test_rest_others</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <groups>OTHERS_TEST</groups>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test_rest_model_request_test</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <forkCount>4</forkCount>
-                            <reuseForks>false</reuseForks>
-                            <testSourceDirectory>src/test</testSourceDirectory>
-                            <testFailureIgnore>false</testFailureIgnore>
-                            <groups>MODEL_REQUEST_TEST</groups>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>test_configuration_build</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-surefire-plugin</artifactId>
-                        <configuration>
-                            <includes>
-                                <include>TestConfigurationSuite</include>
-                            </includes>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
+            <id>all-tests</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
         </profile>
     </profiles>
 

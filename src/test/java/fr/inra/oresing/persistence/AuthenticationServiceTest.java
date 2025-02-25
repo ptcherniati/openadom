@@ -45,13 +45,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 @ActiveProfiles("testmail")
-@SpringBootTest(classes = {OreSiNg.class, OreSiNg.MailSenderForTest.class, TestDatabaseConfig.class})
+@SpringBootTest(classes = {OreSiNg.class, OreSiNg.MailSenderForTest.class, TestDatabaseConfig.class, OreSiNg.class, TestDatabaseConfig.class})
 
 @TestPropertySource(locations = "classpath:/application-tests.properties")
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Tag("SUITE")
+@Tag("core.auth")
 public class AuthenticationServiceTest {
     @Value("${spring.mail.from}")
     String mailFrom;

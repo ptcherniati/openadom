@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import org.assertj.core.api.AssertJProxySetup;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
@@ -14,6 +15,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("domain.model")
 class FileContentTest {
     final Submission submission = new Submission(
             SubmissionType.OA_VERSIONING,
