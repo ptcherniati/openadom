@@ -12,7 +12,7 @@ import org.mockito.Mockito;
 
 import java.util.*;
 
-@org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("core.config")
 class ConfigurationTest {
 
     public static final JsonRowMapper MAPPER = new JsonRowMapper<ComponentDescription>();

@@ -41,7 +41,15 @@ stages:
 maven_build:
   image: maven:3.9.4-amazoncorretto-21
   stage: build
-  script: mvn --batch-mode clean compile
+  script:
+    - mvn --batch-mode clean compile test-compile -DskipTests
+  cache:
+    key: ${CI_COMMIT_REF_SLUG}
+    paths:
+      - .m2/repository/
+  artifacts:
+    paths:
+      - target/
   tags:
     - docker
   rules:
@@ -53,6 +61,8 @@ include:
   # - local: .gitlab_package.yml
   - local: .gitlab_build_doc.yml
     path: .
+  - local: .gitlab_test_mvn.yml
+    path: .
   - local: .gitlab-ci_docker.yml
     path: .
   #- local: .gitlab-ci_sonar.yml
@@ -60,15 +70,3 @@ include:
 # - local: .gitlab_build_doc2.yml
 
 
-maven_test_configuration_build:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script: mvn --batch-mode clean test -Ptest_configuration_build
-  tags:
-    - docker
-  artifacts:
-    reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"

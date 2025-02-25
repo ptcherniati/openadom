@@ -16,7 +16,6 @@ import fr.inra.oresing.rest.services.ApplicationConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Slf4j
 @org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("core.config")
 public class ApplicationConfigurationServiceTest {
 
     public static final Map<String, List<ReactiveResult>> errors = new HashMap<>();

@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Tag("SUITE")
+@Tag("domain.model")
 class GroovyExpressionTest {
 
     private Map<String, Object> context;
