@@ -47,7 +47,7 @@
       "columnToLookUpForRecursive" : null,
       "parent" : "site_sit",
       "children" : [ ],
-      "depends" : [ "site_sit" ],
+      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
       "order" : 1,
       "isRecursive" : false
     }, {
@@ -63,11 +63,11 @@
         "columnToLookUpForRecursive" : null,
         "parent" : "parcelle_par",
         "children" : [ ],
-        "depends" : [ "parcelle_par" ],
+        "depends" : [ "parcelle_par", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
         "order" : 9999,
         "isRecursive" : false
       } ],
-      "depends" : [ "site_sit" ],
+      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
       "order" : 2,
       "isRecursive" : false
     } ],
@@ -85,7 +85,7 @@
   "columnToLookUpForRecursive" : null,
   "parent" : null,
   "children" : [ ],
-  "depends" : [ "plot_plo", "valeur_qualitative_vqe" ],
+  "depends" : [ "parcelle_par", "plot_plo", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
   "order" : 9999,
   "isRecursive" : false
 } ]
