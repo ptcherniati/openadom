@@ -36,7 +36,7 @@ public record BuilderNode(
                 .toList();
     }
 
-    protected BuilderNode withAllDepends(final Collection<? extends WithDepends> nodes) {
+    public BuilderNode withAllDepends(final Collection<? extends WithDepends> nodes) {
         final Set<String> depends = depends();
         int level = level();
         if (CollectionUtils.isEmpty(depends)) {

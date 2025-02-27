@@ -155,7 +155,7 @@ class BuilderNodeTest {
                         .filter(n -> "pem".equals(n.nodeName()))
                         .findFirst()
                         .map(BuilderNode::depends)
-                        .orElse(List.of()).toArray()
+                        .orElse(Set.of()).toArray()
         );
         Assertions.assertArrayEquals(
                 List.of("projet", "sites", "themes", "type_de_sites").toArray(),
@@ -163,7 +163,7 @@ class BuilderNodeTest {
                         .filter(n -> "site_theme_datatype".equals(n.nodeName()))
                         .findFirst()
                         .map(BuilderNode::depends)
-                        .orElse(List.of()).toArray()
+                        .orElse(Set.of()).toArray()
         );
     }
 
