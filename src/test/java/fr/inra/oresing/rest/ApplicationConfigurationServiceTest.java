@@ -16,7 +16,6 @@ import fr.inra.oresing.rest.services.ApplicationConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1529,9 +1528,7 @@ public class ApplicationConfigurationServiceTest {
                     default -> log.info("test terminé");
                 }
             } catch (final IOException e) {
-                throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
-            } catch (final BadApplicationConfigurationException e) {
-                //errors.put(methodName, e);
+                throw new BadApplicationConfigurationException("impossible de lire le fichier de test", ConfigurationException.IO_EXCEPTION);
             }
         }
 
