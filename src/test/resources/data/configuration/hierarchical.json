@@ -1,4 +1,5 @@
 [ {
+  "level" : 0,
   "nodeName" : "valeur_qualitative_vqe",
   "componentKey" : null,
   "columnToLookUpForRecursive" : null,
@@ -8,17 +9,19 @@
   "order" : 5,
   "isRecursive" : false
 }, {
+  "level" : 0,
   "nodeName" : "type_de_taxon_ttx",
   "componentKey" : null,
   "columnToLookUpForRecursive" : null,
   "parent" : null,
   "children" : [ {
+    "level" : 1,
     "nodeName" : "taxon_tax",
     "componentKey" : "ttx_nom",
     "columnToLookUpForRecursive" : null,
     "parent" : "type_de_taxon_ttx",
     "children" : [ ],
-    "depends" : [ "valeur_qualitative_vqe", "type_de_taxon_ttx" ],
+    "depends" : [ "type_de_taxon_ttx", "valeur_qualitative_vqe" ],
     "order" : 9999,
     "isRecursive" : false
   } ],
@@ -26,16 +29,19 @@
   "order" : 6,
   "isRecursive" : false
 }, {
+  "level" : 0,
   "nodeName" : "type_de_site_tsi",
   "componentKey" : null,
   "columnToLookUpForRecursive" : null,
   "parent" : null,
   "children" : [ {
+    "level" : 1,
     "nodeName" : "site_sit",
     "componentKey" : "sit_parent",
     "columnToLookUpForRecursive" : "sit_parent",
     "parent" : "type_de_site_tsi",
     "children" : [ {
+      "level" : 2,
       "nodeName" : "traitement_tra",
       "componentKey" : "sit_key",
       "columnToLookUpForRecursive" : null,
@@ -45,47 +51,13 @@
       "order" : 1,
       "isRecursive" : false
     }, {
+      "level" : 2,
       "nodeName" : "parcelle_par",
       "componentKey" : "sit_key",
       "columnToLookUpForRecursive" : null,
       "parent" : "site_sit",
       "children" : [ {
-        "nodeName" : "plot_plo",
-        "componentKey" : "sit_key",
-        "columnToLookUpForRecursive" : null,
-        "parent" : "parcelle_par",
-        "children" : [ ],
-        "depends" : [ "parcelle_par", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-        "order" : 9999,
-        "isRecursive" : false
-      } ],
-      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-      "order" : 2,
-      "isRecursive" : false
-    } ],
-    "depends" : [ "type_de_site_tsi", "valeur_qualitative_vqe" ],
-    "order" : 9999,
-    "isRecursive" : true
-  }, {
-    "nodeName" : "site_sit",
-    "componentKey" : "sit_parent",
-    "columnToLookUpForRecursive" : "sit_parent",
-    "parent" : "type_de_site_tsi",
-    "children" : [ {
-      "nodeName" : "traitement_tra",
-      "componentKey" : "sit_key",
-      "columnToLookUpForRecursive" : null,
-      "parent" : "site_sit",
-      "children" : [ ],
-      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-      "order" : 1,
-      "isRecursive" : false
-    }, {
-      "nodeName" : "parcelle_par",
-      "componentKey" : "sit_key",
-      "columnToLookUpForRecursive" : null,
-      "parent" : "site_sit",
-      "children" : [ {
+        "level" : 3,
         "nodeName" : "plot_plo",
         "componentKey" : "sit_key",
         "columnToLookUpForRecursive" : null,
@@ -107,93 +79,13 @@
   "order" : 9999,
   "isRecursive" : false
 }, {
-  "nodeName" : "type_de_site_tsi",
-  "componentKey" : null,
-  "columnToLookUpForRecursive" : null,
-  "parent" : null,
-  "children" : [ {
-    "nodeName" : "site_sit",
-    "componentKey" : "sit_parent",
-    "columnToLookUpForRecursive" : "sit_parent",
-    "parent" : "type_de_site_tsi",
-    "children" : [ {
-      "nodeName" : "traitement_tra",
-      "componentKey" : "sit_key",
-      "columnToLookUpForRecursive" : null,
-      "parent" : "site_sit",
-      "children" : [ ],
-      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-      "order" : 1,
-      "isRecursive" : false
-    }, {
-      "nodeName" : "parcelle_par",
-      "componentKey" : "sit_key",
-      "columnToLookUpForRecursive" : null,
-      "parent" : "site_sit",
-      "children" : [ {
-        "nodeName" : "plot_plo",
-        "componentKey" : "sit_key",
-        "columnToLookUpForRecursive" : null,
-        "parent" : "parcelle_par",
-        "children" : [ ],
-        "depends" : [ "parcelle_par", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-        "order" : 9999,
-        "isRecursive" : false
-      } ],
-      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-      "order" : 2,
-      "isRecursive" : false
-    } ],
-    "depends" : [ "type_de_site_tsi", "valeur_qualitative_vqe" ],
-    "order" : 9999,
-    "isRecursive" : true
-  }, {
-    "nodeName" : "site_sit",
-    "componentKey" : "sit_parent",
-    "columnToLookUpForRecursive" : "sit_parent",
-    "parent" : "type_de_site_tsi",
-    "children" : [ {
-      "nodeName" : "traitement_tra",
-      "componentKey" : "sit_key",
-      "columnToLookUpForRecursive" : null,
-      "parent" : "site_sit",
-      "children" : [ ],
-      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-      "order" : 1,
-      "isRecursive" : false
-    }, {
-      "nodeName" : "parcelle_par",
-      "componentKey" : "sit_key",
-      "columnToLookUpForRecursive" : null,
-      "parent" : "site_sit",
-      "children" : [ {
-        "nodeName" : "plot_plo",
-        "componentKey" : "sit_key",
-        "columnToLookUpForRecursive" : null,
-        "parent" : "parcelle_par",
-        "children" : [ ],
-        "depends" : [ "parcelle_par", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-        "order" : 9999,
-        "isRecursive" : false
-      } ],
-      "depends" : [ "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
-      "order" : 2,
-      "isRecursive" : false
-    } ],
-    "depends" : [ "type_de_site_tsi", "valeur_qualitative_vqe" ],
-    "order" : 9999,
-    "isRecursive" : true
-  } ],
-  "depends" : [ ],
-  "order" : 9999,
-  "isRecursive" : false
-}, {
+  "level" : 4,
   "nodeName" : "data",
   "componentKey" : "plo_key",
   "columnToLookUpForRecursive" : null,
   "parent" : null,
   "children" : [ ],
-  "depends" : [ "valeur_qualitative_vqe", "plot_plo", "parcelle_par", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
+  "depends" : [ "parcelle_par", "plot_plo", "site_sit", "type_de_site_tsi", "valeur_qualitative_vqe" ],
   "order" : 9999,
   "isRecursive" : false
 } ]

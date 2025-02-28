@@ -8,7 +8,7 @@ public class BadApplicationConfigurationException extends OreSiTechnicalExceptio
 
     private final ConfigurationException configurationException;
 
-    private BadApplicationConfigurationException(final String message, final ConfigurationException configurationException) {
+    public BadApplicationConfigurationException(final String message, final ConfigurationException configurationException) {
         super(message);
         this.configurationException = configurationException;
     }

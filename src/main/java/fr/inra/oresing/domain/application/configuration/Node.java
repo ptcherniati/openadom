@@ -5,15 +5,21 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public record Node(
+        Integer level,
         String nodeName,
         String componentKey,
         String columnToLookUpForRecursive,
         String parent,
         SortedSet<Node> children,
-        List<String> depends,
+        Set<String> depends,
         Integer order,
         boolean isRecursive
 ) implements Comparable<Node> {
+    public Node {
+        if(level==null){
+            level = 0;
+        }
+    }
 
     public static SortedSet<Node> buildNode(final Collection<BuilderNode> nodes, final Validation validation) {
         record Builder(Collection<BuilderNode> fromNodes, Set<Node> buildedNodes, Set<Node> currentParentsNodes,
@@ -24,6 +30,7 @@ public record Node(
                         .collect(Collectors.toMap(BuilderNode::nodeName, Function.identity()));
                 final Set<Node> buildedNodes = BuilderNode.getNodeLeaves(nodesWithAllDepends.values()).stream()
                         .map(node -> new Node(
+                                node.level(),
                                 node.nodeName(),
                                 node.componentKey(),
                                 node.columnToLookUpForRecursive(),
@@ -41,6 +48,7 @@ public record Node(
                         );
                 return buildNodesRecursively(buildedNodes, notBuildedNodes.values());
             }
+
             private static SortedSet<Node> buildNodesRecursively(Set<Node> buildedNodes, Collection<BuilderNode> notBuildedNodes) {
                 Map<Boolean, List<Node>> nodesByNoParent = buildedNodes.stream()
                         .collect(Collectors.partitioningBy(Node::isRoot));
@@ -48,6 +56,7 @@ public record Node(
                 Map<String, List<Node>> nodeWithParent = nodesByNoParent.get(false).stream()
                         .collect(Collectors.groupingBy(Node::parent));
                 Function<BuilderNode, Node> findNode = node -> new Node(
+                        node.level(),
                         node.nodeName(),
                         node.componentKey(),
                         node.columnToLookUpForRecursive(),
@@ -67,7 +76,7 @@ public record Node(
                                 .filter(node -> node.nodeName().equals(parentName))
                                 .findFirst()
                                 .orElse(null);
-                        if(parent ==null) {
+                        if (parent == null) {
                             parent = notBuildedNodes.stream()
                                     .filter(node -> node.nodeName().equals(parentName))
                                     .map(findNode)
@@ -89,20 +98,21 @@ public record Node(
 
                     }
                     nodesByNoParent = parentNodes.stream()
-                        .collect(Collectors.partitioningBy(Node::isRoot));
+                            .collect(Collectors.partitioningBy(Node::isRoot));
 
                     nodeWithParent = nodesByNoParent.get(false).stream()
                             .collect(Collectors.groupingBy(Node::parent));
                 }
                 notBuildedNodes.stream()
-                                .map(findNode)
-                                        .forEach(rootNodes::add);
+                        .map(findNode)
+                        .forEach(rootNodes::add);
                 return rootNodes;
             }
 
             private Node findNode(final String nodeName) {
                 return buildedNodes().stream().filter(node -> node.nodeName().equals(nodeName)).findFirst().orElse(null);
             }
+
             private Node findOrCreateNode(final String childNodeName) {
                 final Node childNode = findNode(childNodeName);
                 if (childNode != null) {
@@ -113,6 +123,7 @@ public record Node(
                         .findFirst()
                         .orElseThrow(() -> new IllegalArgumentException("pas ici"));
                 return new Node(
+                        builderNode.level(),
                         builderNode.nodeName(),
                         builderNode.componentKey(),
                         builderNode.columnToLookUpForRecursive(),
@@ -130,11 +141,11 @@ public record Node(
     }
 
 
-
     private boolean isRoot() {
         return Optional.ofNullable(parent()).map(String::isEmpty).orElse(true);
     }
-    private List<String> dependsRecursively(){
+
+    private List<String> dependsRecursively() {
         Set<String> result = new HashSet<>(depends());
         children().forEach(child -> result.addAll(child.dependsRecursively()));
         return new ArrayList<>(result);
@@ -145,17 +156,18 @@ public record Node(
         if (o == null) {
             return 1;
         }
-        if (o.dependsRecursively().contains(nodeName()) ) {
-            return -o.dependsRecursively().size();
+        int compareLevel = level().compareTo(o.level());
+        if (compareLevel != 0) {
+            return compareLevel;
         }
-        if (dependsRecursively().contains(o.nodeName())) {
-            return dependsRecursively().size();
-        }
+
+        if (depends().contains(o.nodeName())) return 1;
+        if (o.depends().contains(nodeName())) return -1;
         int compareOrder = Optional.ofNullable(order()).orElse(9999).compareTo(Optional.ofNullable(o.order()).orElse(9999));
-        if(compareOrder == 0){
-            return nodeName().compareTo(o.nodeName());
+        if (compareOrder != 0) {
+            return compareOrder;
         }
-        return compareOrder;
+        return nodeName().compareTo(o.nodeName());
     }
 
     public Node findNode(final String refType) {
