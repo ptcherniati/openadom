@@ -75,6 +75,8 @@ public class TestReferencesErrors {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private Cookie authCookie;
+    private static CreateUserResult authUser = null;
+    private static UUID userId;
     @AfterAll
     public static void registerErrors() throws IOException {
         String errorsAsString = new ObjectMapper().writeValueAsString(responses);
@@ -88,7 +90,7 @@ public class TestReferencesErrors {
     @BeforeEach
     public void createUser() throws Exception {
         try {
-            authUser = authenticationService.createUser("poussin", "xxxxxxxx", "poussin@inrae.fr");
+            authUser = authenticationService.createUser(LOGIN, PASSWORD, EMAIL);
             userId = authUser.userId();
             setToActive(authUser.userId());
         } catch (AuthenticationFailure e) {
