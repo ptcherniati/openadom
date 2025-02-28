@@ -27,7 +27,7 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
 
     private final List<CsvRowValidationCheckResult> errors;
 
-    private InvalidDatasetContentException(final List<CsvRowValidationCheckResult> errors) {
+    public InvalidDatasetContentException(final List<CsvRowValidationCheckResult> errors) {
         super("Erreurs rencontrées à l'import du fichier");
         this.errors = errors;
     }
