@@ -8,7 +8,8 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
-@org.junit.jupiter.api.Tag("SUITE")
+
+@org.junit.jupiter.api.Tag("core.config")
 
 class ConfigurationTest {
 

@@ -12,6 +12,7 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.type.RootType;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import lombok.Getter;
@@ -133,13 +134,20 @@ public class RootBuilder {
         i18n = rightRequest.i18n();
         final Parsing<Map<String, AdditionalFileDescription>> aditionnalFiles = additionalFilesBuilder.buildAdditionalFiles(rootNode.findPath(OA_ADDITIONAL_FILES), i18n);
         i18n = aditionnalFiles.i18n();
-
-        final SortedSet<Node> hierarchicalNodes = HierarchicalDependancesBuilder.of(
-                        checkers,
-                        data.result(),
-                        domainTags
-                )
-                .build(buildErrorWithValidationParams);
+        SortedSet<Node> hierarchicalNodes = new TreeSet<>();
+        try {
+            hierarchicalNodes = HierarchicalDependancesBuilder.of(
+                            checkers,
+                            data.result(),
+                            domainTags
+                    )
+                    .build(buildErrorWithValidationParams);
+        } catch (BadApplicationConfigurationException badApplicationConfigurationException) {
+            buildError(
+                    badApplicationConfigurationException.getConfigurationException(),
+                    Map.of("nodeName", badApplicationConfigurationException.getMessage()),
+                    OA_DATA);
+        }
         final Internationalizations internationalizations = mapper
                 .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
                 .convertValue(

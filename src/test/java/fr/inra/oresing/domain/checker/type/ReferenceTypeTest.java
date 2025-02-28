@@ -15,6 +15,7 @@ import org.mockito.Mockito;
 
 import java.util.UUID;
 
+@Tag("domain.checker")
 class ReferenceTypeTest {
     LineChecker.Transformer transformer;
     ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues;

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Objects;
 
-@org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("domain.model")
 class DatePatternTest {
     public static final String DATE = "12/01/1925";
     public static final String TIME = "12:23:56";

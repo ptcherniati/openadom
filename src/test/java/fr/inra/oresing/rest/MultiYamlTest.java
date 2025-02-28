@@ -12,7 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-@org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("core.basic")
 public class MultiYamlTest {
     @Test
     public void testYaml() throws IOException {

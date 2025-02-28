@@ -12,7 +12,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("core.config")
 class BuilderNodeTest {
     final Map<String, BuilderNode> builderNodes = Arrays.stream(new JsonRowMapper<BuilderNode>().readValue("""
             [
@@ -150,12 +150,12 @@ class BuilderNodeTest {
     public void TestBuildAllDepends() {
         final List<BuilderNode> withAllDepends = builderNodes.values().stream().map(node -> node.withAllDepends(builderNodes.values())).toList();
         Assertions.assertArrayEquals(
-                List.of("sites", "especes", "valeurs_qualitative", "unites", "type_de_sites", "variables").toArray(),
+                List.of("especes", "sites", "type_de_sites", "unites", "valeurs_qualitative", "variables").toArray(),
                 withAllDepends.stream()
                         .filter(n -> "pem".equals(n.nodeName()))
                         .findFirst()
                         .map(BuilderNode::depends)
-                        .orElse(List.of()).toArray()
+                        .orElse(Set.of()).toArray()
         );
         Assertions.assertArrayEquals(
                 List.of("projet", "sites", "themes", "type_de_sites").toArray(),
@@ -163,7 +163,7 @@ class BuilderNodeTest {
                         .filter(n -> "site_theme_datatype".equals(n.nodeName()))
                         .findFirst()
                         .map(BuilderNode::depends)
-                        .orElse(List.of()).toArray()
+                        .orElse(Set.of()).toArray()
         );
     }
 
@@ -182,15 +182,15 @@ class BuilderNodeTest {
                         projet
                         themes
                         type_de_sites
-                        site_theme_datatype
                         unites
                         variables
-                        variables_et_unites_par_types_de_donnees
-                        especes
                         valeurs_qualitative
                         valeurs_qualitatives
-                        pem
-                        type_de_fichiers""",
+                        type_de_fichiers
+                        variables_et_unites_par_types_de_donnees
+                        especes
+                        site_theme_datatype
+                        pem""",
                 orderedNodes.stream().map(Node::nodeName).collect(Collectors.joining("\n"))
         );
     }

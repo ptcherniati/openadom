@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;
@@ -13,10 +15,7 @@ import org.hamcrest.core.IsNull;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +55,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Slf4j
+@Tag("domain.model")
 public class TestReferencesErrors {
 
     public static final Map<String, String> responses = new HashMap<>();
@@ -76,7 +75,6 @@ public class TestReferencesErrors {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private Cookie authCookie;
-
     @AfterAll
     public static void registerErrors() throws IOException {
         String errorsAsString = new ObjectMapper().writeValueAsString(responses);
@@ -89,10 +87,22 @@ public class TestReferencesErrors {
 
     @BeforeEach
     public void createUser() throws Exception {
-        CreateUserResult authUser = authenticationService.createUser(LOGIN, PASSWORD, EMAIL);
-        final UUID userId = authUser.userId();
-        setToActive(userId);
-        final CreateUserResult lambdaUser = authenticationService.createUser("lambda", PASSWORD, "lamnda@inrae.fr");
+        try {
+            authUser = authenticationService.createUser("poussin", "xxxxxxxx", "poussin@inrae.fr");
+            userId = authUser.userId();
+            setToActive(authUser.userId());
+        } catch (AuthenticationFailure e) {
+            LoginAdminResult login = authenticationService.login("poussin", "xxxxxxxx");
+            authUser = CreateUserResult.of(authenticationService.getByIdOrLogin(login.id().toString()));
+            userId = authUser.userId();
+            setToActive(authUser.userId());
+            log.info("L'utilisateur existe déjà .... login");
+        }
+        try {
+            authenticationService.createUser("lambda", "xxxxxxxx", "lamnda@inrae.fr");
+        } catch (AuthenticationFailure e) {
+            log.info("L'utilisateur existe déjà .... login");
+        }
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", LOGIN)
                         .param("password", PASSWORD))
@@ -121,17 +131,6 @@ public class TestReferencesErrors {
                 """;
 
         namedParameterJdbcTemplate.update(sql, Map.of("id", userId));
-    }
-
-    @Transactional
-    void setToActive(final String login) {
-        String sql = """
-                UPDATE public.oresiuser 
-                SET accountstate = 'active' 
-                WHERE login = :login
-                """;
-
-        namedParameterJdbcTemplate.update(sql, Map.of("login", login));
     }
 
 

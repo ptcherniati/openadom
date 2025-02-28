@@ -46,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Slf4j
 @org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("core.config")
 public class ApplicationConfigurationServiceTest {
 
     public static final Map<String, List<ReactiveResult>> errors = new HashMap<>();
