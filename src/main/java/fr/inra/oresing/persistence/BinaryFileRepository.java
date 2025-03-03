@@ -96,6 +96,8 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                         FROM (
                             SELECT 
                                 id, 
+                                creationdate,
+                                updatedate,
                                 application, 
                                 name, 
                                 comment, 
@@ -127,7 +129,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                 "   id, application, name, comment, size, fileData, " +
                 "jsonb_set(jsonb_set((case when params is null then '{}' else params end ),\n" +
                 "\t'{createdate}',('\"' ||CURRENT_TIMESTAMP::text ||'\"')::jsonb),\n" +
-                "\t'{create_user}' , ('\"' ||current_role::text ||'\"')::jsonb)" +
+                "\t'{createuser}' , ('\"' ||current_role::text ||'\"')::jsonb)" +
                 "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
                 + " ON CONFLICT (id) " +
                 "DO UPDATE " +
@@ -192,7 +194,8 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             }
         }
         if (where.isEmpty()) {
-            return new LinkedList<>();
+            where.add( """
+                    params #> '{"binaryfiledataset", "requiredauthorizations"}'= '{}'::jsonb""");
         }
         final String t = "params #> '{\"binaryfiledataset\", \"datatype\"}'  @@ ('$ == \"'||:data||'\"')::jsonpath";
         where.add(t);

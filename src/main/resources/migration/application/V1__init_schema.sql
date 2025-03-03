@@ -168,8 +168,17 @@ with recursive d(key, "data") as (
                        d,
                        jsonb_to_recordset(
                            CASE
-                               WHEN treetype = 'authorization' then "configuration"#> array['datadescription', key, 'authorization', 'authorizationscope']
-                               WHEN treetype = 'submission' then "configuration"#> array['datadescription', key, 'submission', 'submissionscope', 'referencescopes']
+                               WHEN treetype = 'authorization' THEN
+                                    COALESCE (
+                                        "configuration"#> array['datadescription', key, 'authorization', 'authorizationscope'],
+                                        '[]'::jsonb
+                                        )
+                               WHEN treetype = 'submission' THEN
+                                    CASE
+                                        WHEN configuration #> Array['datadescription', key, 'submission', 'submissionscope'] @@ ('$.referencescopes == null')
+                                        THEN '[]'::jsonb
+                                        ELSE COALESCE("configuration"#> array['datadescription', key, 'submission', 'submissionscope', 'referencescopes'], '[]'::jsonb)
+                                    END
                                end
                        ) as authorizationscope(component text, reference text, "data" text)
                ),
