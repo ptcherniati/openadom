@@ -483,11 +483,9 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
         );
     }
 
-    public ImmutableSortedSet<GetGrantableResult.User> getGrantableUsers() {
+    public List<OreSiUser> getAllUsers() {
         final List<OreSiUser> allUsers = userRepository.findAll();
-        return allUsers.stream()
-                .map(oreSiUserEntity -> new GetGrantableResult.User(oreSiUserEntity.getId(), oreSiUserEntity.getLogin()))
-                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.User::label)));
+        return allUsers;
     }
 
     public ImmutableSortedSet<ApplicationUserResult> getGrantableUsers(Application application) {
@@ -584,8 +582,8 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     private OreSiUserResult deleteApplicationCreatorRoleUser(final OreSiRoleForUser oreSiUserRoleApplicationCreator) {
         //final boolean canAddApplicationCreatorRole = canAddApplicationCreatorRole(oreSiUserRoleApplicationCreator);
         //if (canAddApplicationCreatorRole) {
-            OreSiUser user = authenticationService.deleteUserRightCreateApplication(UUID.fromString(oreSiUserRoleApplicationCreator.userId()), oreSiUserRoleApplicationCreator.applicationPattern());
-            return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationCreator.userId()));
+        OreSiUser user = authenticationService.deleteUserRightCreateApplication(UUID.fromString(oreSiUserRoleApplicationCreator.userId()), oreSiUserRoleApplicationCreator.applicationPattern());
+        return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationCreator.userId()));
         /*}
         throw new NotopenAdomAdminException();*/
     }
@@ -643,8 +641,8 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     private OreSiUserResult addApplicationCreatorRoleUser(final OreSiRoleForUser oreSiUserRoleApplicationCreator) {
         //final boolean canAddApplicationCreatorRole = canAddApplicationCreatorRole(oreSiUserRoleApplicationCreator);
         //if (canAddApplicationCreatorRole) {
-            OreSiUser user = authenticationService.addUserRightCreateApplication(UUID.fromString(oreSiUserRoleApplicationCreator.userId()), oreSiUserRoleApplicationCreator.applicationPattern());
-            return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationCreator.userId()));
+        OreSiUser user = authenticationService.addUserRightCreateApplication(UUID.fromString(oreSiUserRoleApplicationCreator.userId()), oreSiUserRoleApplicationCreator.applicationPattern());
+        return new OreSiUserResult(user, userRepository.getRolesForRole(oreSiUserRoleApplicationCreator.userId()));
         /*}
         throw new NotOpenAdomAdminException();//TODO*/
     }
@@ -815,6 +813,12 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 )
                 .map(oreSiAuthorization -> toGetAdditionalFilesAuthorizationResult(oreSiAuthorization, publicAuthorizations, authorizationsForUser))
                 .collect(ImmutableSet.toImmutableSet());
+    }
+
+    public ImmutableSortedSet<GetGrantableResult.User> getGrantableUsers() {
+        return userRepository.findAll().stream()
+                .map(oreSiUserEntity -> new GetGrantableResult.User(oreSiUserEntity.getId(), oreSiUserEntity.getLogin()))
+                .collect(ImmutableSortedSet.toImmutableSortedSet(Comparator.comparing(GetGrantableResult.User::label)));
     }
 
     @Transactional

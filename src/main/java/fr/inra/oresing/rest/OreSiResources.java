@@ -31,6 +31,7 @@ import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuer
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
+import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
@@ -95,6 +96,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -205,7 +207,7 @@ public class OreSiResources implements ServiceContainerBean {
         if (!canDelete) {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
-        if(!storeFile.builder().getFileOrUUID().topublish()) {
+        if (!storeFile.builder().getFileOrUUID().topublish()) {
             if (!applicationDataDelete.hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
@@ -220,12 +222,32 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/filesOnRepository/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<BinaryFile>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
-                                                                 @PathVariable("dataType") final String dataType,
-                                                                 @RequestParam("repositoryId") final String repositoryId) {
+    public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
+                                                                       @PathVariable("dataType") final String dataType,
+                                                                       @RequestParam("repositoryId") final String repositoryId) {
         final BinaryFileDataset binaryFileDataset = BinaryFileService.deserialiseBinaryFileDatasetQuery(dataType, repositoryId);
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        final List<BinaryFile> files = serviceContainer.binaryFileService().getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false);
+        Map<UUID, UserDescriptionResult> users = serviceContainer.authorizationService().getAllUsers()
+                .stream()
+                .map(UserDescriptionResult::of)
+                .collect(Collectors.toMap(UserDescriptionResult::id, Function.identity()));
+        final List<BinaryFileResult> files =
+                serviceContainer.binaryFileService()
+                        .getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false).stream()
+                        .map(binaryFile -> BinaryFileResult.of(
+                                binaryFile,
+                                Optional.ofNullable(binaryFile)
+                                        .map(BinaryFile::getParams)
+                                        .map(BinaryFileInfos::createuser)
+                                        .map(users::get)
+                                        .orElse(null),
+                                Optional.ofNullable(binaryFile)
+                                        .map(BinaryFile::getParams)
+                                        .map(BinaryFileInfos::publisheduser)
+                                        .map(users::get)
+                                        .orElse(null)
+                        ))
+                        .toList();
         return ResponseEntity.ok(files);
     }
 
