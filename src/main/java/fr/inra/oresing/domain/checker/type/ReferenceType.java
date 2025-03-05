@@ -16,6 +16,8 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Che
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import lombok.Getter;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 
 import java.util.function.Supplier;
 
@@ -109,7 +111,14 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
         }
         return ReferenceValidationCheckResult.error(target, localRawValue, target.getInternationalizedKey("invalidReference"), ImmutableMap.of(
                         "target", target.toHumanReadableString(),
-                        "referenceValues", referenceValues == null ? new HashSet<>() : referenceValues.keySet().stream().map(DataValue.LineIdentityColumnName::naturalKey).map(Ltree::getSql).collect(Collectors.toSet()),
+                        "referenceValues", Optional.ofNullable(referenceValues)
+                                .filter(MapUtils::isNotEmpty)
+                                .map(Map::keySet)
+                                .orElseGet(HashSet::new)
+                                .stream()
+                                .map(DataValue.LineIdentityColumnName::naturalKey)
+                                .map(Ltree::getSql)
+                                .collect(Collectors.toSet()),
                         "refType", refType,
                         "value", rawValue),
                 this);

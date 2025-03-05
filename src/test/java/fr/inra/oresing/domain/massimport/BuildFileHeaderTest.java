@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.ConfigurationBuiderTestBuilder;
 import fr.inra.oresing.domain.application.configuration.*;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
+@Tag("domain.model")
 public class BuildFileHeaderTest {
     private static final Logger log = LoggerFactory.getLogger(BuildFileHeaderTest.class);
     static final String RESOURCE_PATH = "fr/inra/oresing/domain/massimport/massimport.yaml";

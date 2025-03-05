@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-@org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("domain.i18n")
 public class InternationalizationDisplayTest {
     final String pattern = "column 1 {column1} column 2 {column2} column 3 {column3} end";
 

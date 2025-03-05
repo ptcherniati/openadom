@@ -6,6 +6,7 @@ import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -151,6 +152,9 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         authenticationService.setRoleForClient();
         Application application= serviceContainer.applicationService().getApplication(nameOrId);
         DataRepositoryForBuffer dataRepositoryForBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
+        Submission.SubmissionScope submissionScope = application.findSubmission(datatype)
+                .map(Submission::submissionScope)
+                .orElse(null);
         return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepositoryForBuffer), overlap);
     }
 

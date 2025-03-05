@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Tag("SUITE")
+@Tag("domain.model")
 class DataHeaderReaderTest {
     Iterator<CSVRecord> lineIterator;
     DataHeaderReader reader;

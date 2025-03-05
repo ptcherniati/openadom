@@ -11,9 +11,13 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public record DataBuilder(RootBuilder rootBuilder) {
+
+    public static final Pattern DISPLAY_MATCHING_GROUP = Pattern.compile("\\{([^}]+)\\}");
 
     Parsing<StandardDataDescription> build(final String path, final String dataKey, final JsonNode jsonNode, I18n i18n) {
         final Set<Tag> tags = buildAndTestDomainTags(path, jsonNode);
@@ -71,8 +75,8 @@ public record DataBuilder(RootBuilder rootBuilder) {
         final List<String> listComponentKeys = rootBuilder.getListComponentKeys(dataKey);
 
         final Map<String, Map> localizationDisplay = rootBuilder.getMapper().convertValue(
-                jsonNode.findPath(ConfigurationSchemaNode.OA_I_18_N_DISPLAY_PATTERN)
-                        .findPath(ConfigurationSchemaNode.OA_PATTERN), Map.class);
+                jsonNode.findPath(ConfigurationSchemaNode.OA_I_18_N_DISPLAY_PATTERN), Map.class);
+        testLocalizationDisplay(localizationDisplay, listComponentKeys, path);
         try {
             i18n = i18n.add(
                     NodeSchemaValidator.joinI18nPath(
@@ -103,9 +107,9 @@ public record DataBuilder(RootBuilder rootBuilder) {
                         entry -> entry.getValue().importHeader()
                 )).entrySet().stream()
                 .filter(entry -> entry.getValue().size() > 1)
-                .filter(entry->!(entry.getValue().stream().allMatch(value-> (value.getValue() instanceof PatternComponentQualifiers) || (value.getValue() instanceof PatternComponentAdjacents))))
+                .filter(entry -> !(entry.getValue().stream().allMatch(value -> (value.getValue() instanceof PatternComponentQualifiers) || (value.getValue() instanceof PatternComponentAdjacents))))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-        if (MapUtils.isNotEmpty(duplicatedImportHeader)){
+        if (MapUtils.isNotEmpty(duplicatedImportHeader)) {
             duplicatedImportHeader.forEach((key, value) -> rootBuilder.buildError(ConfigurationException.DUPLICATED_COMPONENT_HEADER,
                     Map.of(
                             "data", dataKey,
@@ -124,10 +128,10 @@ public record DataBuilder(RootBuilder rootBuilder) {
         Map<CheckerDescription.CheckerDescriptionType, List<String>> componentValidationsByType = getComponentValidationsByType(validations);
         HashMap<String, ComponentDescription> localComponentDescription = new HashMap<>(componentDescriptions);
         final Parsing<Submission> submissionParsing = rootBuilder.getSubmissionBuilder().buildSubmission(i18n, dataKey, jsonNode, localComponentDescription);
-        if(
+        if (
                 tags.stream().noneMatch(Tag.DataTag.class::isInstance) &&
                 Optional.of(submissionParsing).map(Parsing::result).map(Submission::strategy).filter(SubmissionType.OA_VERSIONING::equals).isPresent()
-                ){
+        ) {
             rootBuilder.buildError(ConfigurationException.UNEXPECTED_SUBMISSION,
                     Map.of()
                     , path);
@@ -167,6 +171,50 @@ public record DataBuilder(RootBuilder rootBuilder) {
                 ));
     }
 
+    private boolean testLocalizationDisplay(Map<String, Map> localizationDisplay, List<String> listComponentKeys, String path) {
+        if (MapUtils.isEmpty(localizationDisplay)) {
+            return true;
+        }
+        boolean isValid = true;
+        for (String group : List.of(ConfigurationSchemaNode.OA_TITLE, ConfigurationSchemaNode.OA_DESCRIPTION)) {
+            if (localizationDisplay.containsKey(group)) {
+                for (Object language : localizationDisplay.get(group).keySet()) {
+                    isValid = isValid && testLocalizationDisplay(
+                            localizationDisplay.get(group).get(language).toString(),
+                            listComponentKeys,
+                            path,
+                            group,
+                            language.toString());
+                }
+            }
+        }
+        return isValid;
+    }
+
+    private boolean testLocalizationDisplay(String matchingGroup, List<String> listComponentKeys, String path, String group, String language) {
+        Pattern pattern = DISPLAY_MATCHING_GROUP;
+        List<String> list = pattern.matcher(matchingGroup)
+                .results()
+                .map(m -> m.group(1))
+                .filter(Predicate.not(listComponentKeys::contains))
+                .toList();
+        list.stream()
+                .forEach(
+                badGroup -> rootBuilder.buildError(ConfigurationException.MISSING_COMPONENT_FOR_DISPLAY_PATTERN,
+                        Map.of(
+                                "badGroup", badGroup,
+                                "expectedComponent", listComponentKeys
+                        ),
+                        NodeSchemaValidator.joinPath(
+                                path,
+                                group,
+                                language
+                        )
+                )
+        );
+        return list.isEmpty();
+    }
+
     private Map<CheckerDescription.CheckerDescriptionType, List<String>> getComponentValidationsByType(ImmutableMap<String, ValidationDescription> validations) {
         Map<CheckerDescription.CheckerDescriptionType, List<String>> componentValidationByType = new HashMap<>();
         for (ValidationDescription validation : validations.values()) {
@@ -185,7 +233,7 @@ public record DataBuilder(RootBuilder rootBuilder) {
 
 
     private Set<Tag> buildAndTestDomainTags(final String path, final JsonNode jsonNode) {
-        if(jsonNode.get(ConfigurationSchemaNode.OA_TAGS)==null){
+        if (jsonNode.get(ConfigurationSchemaNode.OA_TAGS) == null) {
             return Collections.emptySet();
         }
         final Set<String> domainTagNames = rootBuilder.getDomainTags().stream()

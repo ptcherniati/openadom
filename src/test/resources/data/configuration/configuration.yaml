@@ -97,7 +97,7 @@ OA_data:
         en: Sites list
     OA_i18nDisplayPattern:
       OA_title:
-        fr: '{zet_nom_fry}'
+        fr: '{zet_nom_fr}'
         en: '{zet_nom_en}'
       OA_description:
         fr: '{zet_description_fr}'
@@ -820,11 +820,11 @@ OA_data:
         en: remote sensing data plot
     OA_i18nDisplayPattern: # attention : avec un S ici car peut concerner plusieurs referentiels
       OA_title:
-          fr: "<em>[data display]</em>: {sit_code} ({sit_label_fr})"
-          en: "<em>[data display]</em>: {sit_code} ({sit_label_en})"
+          fr: "<em>[data display]</em>: {tel_experimental_site} ({tel_experimental_plot})"
+          en: "<em>[data display]</em>: {tel_experimental_site} ({tel_experimental_plot})"
       OA_description:
-          fr: "<em>[data display]</em>: {sit_code} ({sit_label_fr})"
-          en: "<em>[data display]</em>: {sit_code} ({sit_label_en})"
+          fr: "<em>[data display]</em>: {tel_experimental_site} ({tel_experimental_plot})"
+          en: "<em>[data display]</em>: {tel_experimental_site} ({tel_experimental_plot})"
     OA_naturalKey: # clé d'unicité pour chaque ligne de données
       - tel_experimental_plot
       - tel_experimental_site

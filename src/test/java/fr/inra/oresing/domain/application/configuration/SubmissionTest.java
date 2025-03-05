@@ -3,9 +3,7 @@ package fr.inra.oresing.domain.application.configuration;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
-import groovy.lang.Tuple;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
@@ -13,6 +11,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Tag("domain.model")
 class SubmissionTest {
     final Submission submission = new Submission(
             SubmissionType.OA_VERSIONING,

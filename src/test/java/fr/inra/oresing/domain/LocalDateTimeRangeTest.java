@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 
-@org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("domain.model")
 public class LocalDateTimeRangeTest {
 
     /*@Test

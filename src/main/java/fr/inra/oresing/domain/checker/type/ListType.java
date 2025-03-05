@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public non-sealed class ListType<FT extends FieldType> implements FieldType<List> {
+    public static final ListType<? extends FieldType> EMPTY_LIST =  new ListType(StringType.getStringTypeFromStringValue(""));
     @Getter
     private final FT fieldType;
     List<FT> value = new LinkedList<>();

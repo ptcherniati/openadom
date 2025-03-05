@@ -16,7 +16,6 @@ import fr.inra.oresing.rest.services.ApplicationConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +46,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Slf4j
 @org.junit.jupiter.api.Tag("SUITE")
+@org.junit.jupiter.api.Tag("core.config")
 public class ApplicationConfigurationServiceTest {
 
     public static final Map<String, List<ReactiveResult>> errors = new HashMap<>();
@@ -1357,8 +1357,8 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testduplicatedHeader() {
-        CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInValidation")
+    public void testDuplicatedHeader() {
+        CONFIGURATION_INSTANCE.builder("testDuplicatedHeader")
                 .withReplace("OA_headerName: \"Nom de la clé du site\"",
                         "OA_headerName: \"zet_chemin_parent\"")
                 .test(errors -> {
@@ -1376,8 +1376,8 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testduplicatedComponent() {
-        CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInValidation")
+    public void testDuplicatedComponent() {
+        CONFIGURATION_INSTANCE.builder("testDuplicatedComponent")
                 .withReplace("tel_value",
                         "tel_experimental_site")
                 .test(errors -> {
@@ -1389,6 +1389,31 @@ public class ApplicationConfigurationServiceTest {
                             (Iterable<String>) validationError.getParam("duplicatedPathes")
                     );
                     assertEquals("OA_data > pem > OA_patternComponents > tel_experimental_site", validationError.getParam("path"));
+                });
+    }
+
+    @Test
+    public void testMissingComponentForDisplayPattern() {
+        CONFIGURATION_INSTANCE.builder("testMissingComponentForDisplayPattern")
+                .withReplace("    OA_i18nDisplayPattern:\n" +
+                             "      OA_title:\n" +
+                             "        fr: \"{esp_nom}\"\n" +
+                             "        en: \"{esp_nom}\"",
+                        "    OA_i18nDisplayPattern:\n" +
+                        "      OA_title:\n" +
+                        "        fr: \"{esp_invalid_nom}\"\n" +
+                        "        en: \"{esp_nom}\"")
+                .test(errors -> {
+                    assertEquals(1, errors.size());
+                    final ValidationError validationError = errors.getFirst();
+                    assertEquals(ConfigurationException.MISSING_COMPONENT_FOR_DISPLAY_PATTERN.getMessage(), validationError.getMessage());
+
+                    final Set<String> expected = Arrays.stream(new String[]{"colonne_homonyme_entre_referentiels", "my_computed_column", "esp_definition_en", "esp_definition_fr", "esp_nom"})
+                            .collect(Collectors.toCollection(TreeSet::new));
+                    final Set<String> given = new TreeSet<>((Collection<? extends String>) validationError.getParam("expectedComponent"));
+                    assertEquals(expected, given);
+                    assertEquals("esp_invalid_nom", validationError.getParam("badGroup"));
+                    assertEquals("OA_data > especes > OA_title > fr", validationError.getParam("path"));
                 });
     }
 
@@ -1504,9 +1529,7 @@ public class ApplicationConfigurationServiceTest {
                     default -> log.info("test terminé");
                 }
             } catch (final IOException e) {
-                throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
-            } catch (final BadApplicationConfigurationException e) {
-                //errors.put(methodName, e);
+                throw new BadApplicationConfigurationException("impossible de lire le fichier de test", ConfigurationException.IO_EXCEPTION);
             }
         }
 

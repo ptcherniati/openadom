@@ -64,9 +64,11 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
     Test if is applicationUserForReadingData
      */
     public ApplicationDataReader forDataRead(String dataName) {
-        Optional.of(authorizations())
+        if(Optional.of(authorizations())
                 .filter(authorizationsForApplicationUser -> authorizationsForApplicationUser.canRead(dataName))
-                .orElseThrow(()->new NotApplicationDataReaderException(application().getName(), dataName));
+                .isEmpty()){
+            throw new NotApplicationDataReaderException(application().getName(), dataName);
+        }
         return new ApplicationDataReader(application());
     }
 
