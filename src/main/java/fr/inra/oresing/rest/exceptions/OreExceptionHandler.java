@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.exceptions;
 import com.google.common.base.Throwables;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
+import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
@@ -111,8 +112,15 @@ public class OreExceptionHandler {
     }
 
     @ExceptionHandler(InvalidDatasetContentException.class)
-    public ResponseEntity<List<CsvRowValidationCheckResult>> handle(final InvalidDatasetContentException invalidDatasetContentException) {
-        return ResponseEntity.badRequest().body(invalidDatasetContentException.getErrors());
+    public ResponseEntity<List<ValidationCheckResultRest>> handle(final InvalidDatasetContentException invalidDatasetContentException) {
+        List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
+                .stream()
+                .map(row -> {
+                    long lineNumber = row.lineNumber();
+                    return row.validationCheckResult().validationCheckResultToRest(row.lineNumber());
+                })
+                .toList();
+        return ResponseEntity.badRequest().body(validations);
     }
 
     @ExceptionHandler(BadBinaryFileDatasetQuery.class)

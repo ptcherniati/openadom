@@ -187,7 +187,7 @@ public class Application extends OreSiEntity {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .map(Node::depends)
-                .flatMap(List::stream)
+                .flatMap(Set::stream)
                 .collect(Collectors.toSet());
     }
 

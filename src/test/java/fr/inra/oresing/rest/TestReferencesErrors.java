@@ -59,6 +59,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TestReferencesErrors {
 
     public static final Map<String, String> responses = new HashMap<>();
+    public static final String LOGIN = "poussinreferenceserrors";
+    public static final String PASSWORD = "xxxxxxxx";
+    public static final String EMAIL = "poussinreferenceserrors@inrae.fr";
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
@@ -87,7 +90,7 @@ public class TestReferencesErrors {
     @BeforeEach
     public void createUser() throws Exception {
         try {
-            authUser = authenticationService.createUser("poussin", "xxxxxxxx", "poussin@inrae.fr");
+            authUser = authenticationService.createUser(LOGIN, PASSWORD, EMAIL);
             userId = authUser.userId();
             setToActive(authUser.userId());
         } catch (AuthenticationFailure e) {
@@ -103,8 +106,8 @@ public class TestReferencesErrors {
             log.info("L'utilisateur existe déjà .... login");
         }
         authCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", "poussin")
-                        .param("password", "xxxxxxxx"))
+                        .param("login", LOGIN)
+                        .param("password", PASSWORD))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
         addRoleAdmin(authUser);
     }
@@ -141,13 +144,13 @@ public class TestReferencesErrors {
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             //définition de l'application
-            CreateUserResult recursivityUser = authenticationService.createUser("recursivity", "xxxxxxxx", "recursivity@inrae.fr");
+            CreateUserResult recursivityUser = authenticationService.createUser("recursivity", PASSWORD, "recursivity@inrae.fr");
             setToActive(recursivityUser.userId());
             final UUID recursivityUserId = recursivityUser.userId();
             addUserRightCreateApplication(recursivityUserId, "recursivite");
             recursivityCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "recursivity")
-                            .param("password", "xxxxxxxx"))
+                            .param("password", PASSWORD))
                     .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, recursivityCookie, "recursivite", ""));
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
@@ -268,13 +271,13 @@ public class TestReferencesErrors {
         final Cookie repeatedColumnCookie;
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
-            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", "xxxxxxxx", "repeatedcolumns@inrae.fr");
+            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
             setToActive(recursivityUser.userId());
             final UUID recursivityUserId = recursivityUser.userId();
             addUserRightCreateApplication(recursivityUserId, "repeatedcolumns");
             repeatedColumnCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "repeatedcolumns")
-                            .param("password", "xxxxxxxx"))
+                            .param("password", PASSWORD))
                     .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnCookie, "repeatedcolumns", ""));
 
@@ -345,13 +348,13 @@ public class TestReferencesErrors {
         final Cookie repeatedColumnsCookie;
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
-            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", "xxxxxxxx", "repeatedcolumns@inrae.fr");
+            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
             setToActive(recursivityUser.userId());
             final UUID recursivityUserId = recursivityUser.userId();
             addUserRightCreateApplication(recursivityUserId, "repeatedcolumns");
             repeatedColumnsCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "repeatedcolumns")
-                            .param("password", "xxxxxxxx"))
+                            .param("password", PASSWORD))
                     .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnsCookie, "repeatedcolumns", ""));
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
