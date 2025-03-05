@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.Disconne
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.type.BooleanType;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.BooleanValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
@@ -186,7 +187,7 @@ class OreExceptionHandlerTest {
                 )
         );
         InvalidDatasetContentException exception = new InvalidDatasetContentException(errors);
-        ResponseEntity<List<CsvRowValidationCheckResult>> response = exceptionHandler.handle(exception);
+        ResponseEntity<List<ValidationCheckResultRest>> response = exceptionHandler.handle(exception);
 
         assertDoesNotThrow(() -> objectMapper.writeValueAsString(response.getBody()));
     }
