@@ -1734,7 +1734,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Tag("app.teledetection")
+    //@Tag("app.teledetection")
     @Disabled
     public void addApplicationTeledetection() throws Exception {
         final URL resource = getClass().getResource(Fixtures.getTeledetectionConfigurationResourceName());
