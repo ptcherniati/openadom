@@ -103,17 +103,21 @@ public class AuthHelper {
             //throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
         }
         final Date issuedAt = new Date();
-        final String token = Jwts.builder()
-                .subject(json)
-                .issuedAt(issuedAt)
-                .expiration(DateUtils.addSeconds(issuedAt, jwtExpiration))
-                .signWith(key)
-                .compact();
+        final String token = buildToken(json, issuedAt, jwtExpiration);
         final Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         cookie.setMaxAge(jwtExpiration);
         return cookie;
+    }
+
+    protected String buildToken(String json, Date issuedAt, int jwtExpiration) {
+        return Jwts.builder()
+                .subject(json)
+                .issuedAt(issuedAt)
+                .expiration(DateUtils.addSeconds(issuedAt, jwtExpiration))
+                .signWith(key)
+                .compact();
     }
 
 }

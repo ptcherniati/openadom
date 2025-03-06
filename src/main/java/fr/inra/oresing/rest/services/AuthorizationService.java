@@ -978,11 +978,23 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     public PrivilegeAssessorDomainForSystem getPrivilegeAssessorForSystem(
             PrivilegeSystemDomain privilegeDomain
     ) {
-        AuthorizationsForSystemUser authorizations = getAuthorizationsForSystemUser();
-        return PrivilegeAssessorBuilder.forSystem(
-                authorizations,
-                privilegeDomain
-        );
+        return switch (privilegeDomain){
+            case SYSTEM_ADMINISTRATION -> {
+                AuthorizationsForSystemUser authorizations = getAuthorizationsForSystemUser();
+                yield  PrivilegeAssessorBuilder.forSystem(
+                        authorizations,
+                        privilegeDomain
+                );
+            }
+            case SYSTEM_USER_CONNECTED -> {
+                AuthorizationsForSystemUser authorizations = getAuthorizationsForSystemUser();
+                yield PrivilegeAssessorBuilder.forUser(
+                        authorizations,
+                        privilegeDomain
+                );
+            }
+            case AUTHENTICATION_MANAGEMENT -> null;
+        };
     }
 
     @Override

@@ -102,6 +102,9 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_ADMINISTRATION;
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_USER_CONNECTED;
+
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
@@ -267,6 +270,8 @@ public class OreSiResources implements ServiceContainerBean {
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> getApplications(@RequestParam(required = false, defaultValue = "") final String[] filter) {
+
+        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
         final List<ApplicationInformation> filters = Arrays.stream(filter)
                 .map(ApplicationInformation::valueOf)
                 .collect(Collectors.toList());
