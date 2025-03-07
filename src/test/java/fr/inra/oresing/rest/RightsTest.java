@@ -238,4 +238,32 @@ public class RightsTest {
         );
     }
 
+    @Test
+    public void cookieMaxAgeIsResetOnEachCall() throws Exception {
+        // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
+        MvcResult result = mockMvc.perform(get("/api/v1/applications")
+                        .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Récupérer le cookie après le premier appel
+        authCookie = result.getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        Assertions.assertNotNull(authCookie, "Le cookie ne devrait pas être null");
+        Assertions.assertTrue(authCookie.getMaxAge() > 0, "Le cookie devrait avoir une durée de vie positive");
+
+        // Étape 2: Répéter l'appel pour vérifier que le maxAge est réinitialisé
+        result = mockMvc.perform(get("/api/v1/applications")
+                        .cookie(authCookie))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        // Récupérer le cookie après le deuxième appel
+        Cookie cookie2 = result.getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        Assertions.assertNotNull(cookie2, "Le cookie ne devrait pas être null");
+        Assertions.assertTrue(cookie2.getMaxAge() > 0, "Le cookie devrait avoir une durée de vie positive");
+
+        // Vérifier que le maxAge a été réinitialisé
+        Assertions.assertTrue(cookie2.getMaxAge() >= authCookie.getMaxAge(), "Le maxAge devrait être réinitialisé");
+    }
+
 }
