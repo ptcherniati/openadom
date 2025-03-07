@@ -76,12 +76,12 @@ public class AuthHelper {
             throw new SiOreIllegalArgumentException(
                     "jsonDeserializationError",
                     Map.of(
-                          "json",   json,
+                            "json", json,
                             "objectMapper", objectMapper,
                             "message", e.getLocalizedMessage()
                     )
             );
-           // throw new OreSiTechnicalException("impossible de désérialiser " + json + " avec " + objectMapper, e);
+            // throw new OreSiTechnicalException("impossible de désérialiser " + json + " avec " + objectMapper, e);
         }
         return requestClient;
     }
@@ -95,7 +95,7 @@ public class AuthHelper {
             throw new SiOreIllegalArgumentException(
                     "requestMapperSerializationError",
                     Map.of(
-                          "requestClient",   requestClient,
+                            "requestClient", requestClient,
                             "objectMapper", objectMapper,
                             "message", e.getLocalizedMessage()
                     )
@@ -120,4 +120,11 @@ public class AuthHelper {
                 .compact();
     }
 
+    public void invalidateCookie(HttpServletResponse response) {
+        Cookie cookie = new Cookie(JWT_COOKIE_NAME, null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);// Expire immédiatement
+    }
 }

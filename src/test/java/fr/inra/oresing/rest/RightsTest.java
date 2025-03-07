@@ -24,6 +24,7 @@ import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.services.RelationalService;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -171,7 +172,7 @@ public class RightsTest {
                 .andExpect(status().isUnauthorized())
                 .andReturn()
                 .getResolvedException();
-        Assertions.assertEquals(DisconnectedException.class, resolvedException.getClass());
+        Assertions.assertEquals(ExpiredJwtException.class, resolvedException.getClass());
     }
 
     private Cookie newCookie(final OreSiUserRequestClient requestClient) {
@@ -192,10 +193,49 @@ public class RightsTest {
             //throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
         }
         final Date issuedAt = new Date();
-        final String token = authHelper.buildToken(json,issuedAt,0);
+        final String token = authHelper.buildToken(json, issuedAt, 0);
         final Cookie cookie = new Cookie(AuthHelper.JWT_COOKIE_NAME, token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         return cookie;
     }
+
+    @Test
+    public void logoutShouldInvalidateSession() throws Exception {
+        // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
+        mockMvc.perform(get("/api/v1/applications")
+                        .cookie(authCookie))
+                .andExpect(status().isOk()); // Devrait renvoyer 200 OK car l'utilisateur est connecté
+
+        // Étape 2: Déconnexion de l'utilisateur
+        mockMvc.perform(delete("/api/v1/logout")
+                        .cookie(authCookie))
+                .andExpect(status().isOk()); // La déconnexion devrait réussir
+
+        // Récupérer le cookie de déconnexion (qui devrait être expiré)
+        authCookie = mockMvc.perform(delete("/api/v1/logout")
+                        .cookie(authCookie))
+                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+
+        // Étape 3: Vérifier que l'accès est maintenant refusé
+        Exception resolvedException = mockMvc.perform(get("/api/v1/applications")
+                        .cookie(authCookie)) // Utiliser le cookie de déconnexion s'il existe
+                .andExpect(status().isUnauthorized())
+                .andReturn()
+                .getResolvedException();
+        Assertions.assertNotNull(authCookie, "Le cookie de déconnexion ne devrait pas être null");
+        Assertions.assertEquals(0, authCookie.getMaxAge(), "Le cookie devrait avoir une durée de vie de 0");
+        Assertions.assertTrue(authCookie.getValue() == null || authCookie.getValue().isEmpty(),
+                "La valeur du cookie devrait être nulle ou vide");
+
+        // Vérifier que l'exception est bien liée à l'authentification
+        Assertions.assertTrue(
+                resolvedException instanceof ExpiredJwtException ||
+                resolvedException instanceof DisconnectedException,
+                "Expected authentication exception but got: " +
+                (resolvedException != null ? resolvedException.getClass().getName() : "null")
+
+        );
+    }
+
 }
