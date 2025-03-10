@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.JwtCookieValue;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -13,11 +14,14 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.web.util.WebUtils;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
@@ -56,8 +60,14 @@ public class AuthHelper {
     }
 
     public void refreshCookie(final HttpServletResponse response, final OreSiUserRequestClient requestClient) {
-        final Cookie cookie = newCookie(requestClient);
-        response.addCookie(cookie);
+
+        final Cookie cookie;
+        if (requestClient == null) {
+            invalidateCookie(requestClient, response);
+        } else {
+            cookie = newCookie(requestClient);
+            response.addCookie(cookie);
+        }
     }
 
     private OreSiUserRequestClient getRequestClientFromJwt(final Cookie cookie) {
@@ -120,11 +130,16 @@ public class AuthHelper {
                 .compact();
     }
 
-    public void invalidateCookie(HttpServletResponse response) {
-        Cookie cookie = new Cookie(JWT_COOKIE_NAME, null);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setMaxAge(0);
-        response.addCookie(cookie);// Expire immédiatement
+    public void invalidateCookie(OreSiUserRequestClient request, HttpServletResponse response) {
+        final String token = buildToken("", new Date(), 0);
+        // Créer le cookie d'invalidation
+        ResponseCookie invalidCookie = ResponseCookie.from(JWT_COOKIE_NAME, token)
+                .httpOnly(true)
+                .maxAge(0)
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, invalidCookie.toString());
     }
+
 }

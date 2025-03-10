@@ -49,7 +49,6 @@ public class AuthenticationResources {
 
     @DeleteMapping("/logout")
     public ResponseEntity logout(HttpServletResponse response) {
-        authHelper.invalidateCookie(response);
         request.reset();
         return ResponseEntity.ok().build();
     }

@@ -225,8 +225,6 @@ public class RightsTest {
                 .getResolvedException();
         Assertions.assertNotNull(authCookie, "Le cookie de déconnexion ne devrait pas être null");
         Assertions.assertEquals(0, authCookie.getMaxAge(), "Le cookie devrait avoir une durée de vie de 0");
-        Assertions.assertTrue(authCookie.getValue() == null || authCookie.getValue().isEmpty(),
-                "La valeur du cookie devrait être nulle ou vide");
 
         // Vérifier que l'exception est bien liée à l'authentification
         Assertions.assertTrue(
