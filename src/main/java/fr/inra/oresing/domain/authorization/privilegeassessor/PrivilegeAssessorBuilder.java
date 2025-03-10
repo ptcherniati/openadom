@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
+import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdministratorForSystemException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
@@ -40,4 +41,12 @@ public sealed interface PrivilegeAssessorBuilder<PrivilegeAssessorState>
     }
 
 
+    static PrivilegeAssessorDomainForSystem<PrivilegeAssessorStateDomain.PrivilegeAssessorStateSystemDomain> forUser(
+            AuthorizationsForSystemUser authorizations,
+            PrivilegeSystemDomain privilegeDomain) {
+        return new PrivilegeAssessorDomainForSystem(
+                authorizations,
+                privilegeDomain
+        );
+    }
 }
