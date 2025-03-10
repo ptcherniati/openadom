@@ -9,7 +9,9 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResult;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForSystem;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
@@ -31,6 +33,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.health.Health;
+import org.springframework.boot.actuate.health.HealthComponent;
+import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
@@ -46,6 +51,9 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1")
 public class AuthorizationResources implements ServiceContainerBean {
+
+    @Autowired
+    private HealthEndpoint healthEndpoint;
 
     private ServiceContainer serviceContainer;
     @Autowired
@@ -512,6 +520,15 @@ public class AuthorizationResources implements ServiceContainerBean {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
         final GetGrantableResult getGrantableResult = serviceContainer.authorizationService().getGrantable(applicationNameOrId, authorizationsForUser);
         return ResponseEntity.ok(getGrantableResult);
+    }
+
+    record Health(ConnectedUser connectedUser, HealthComponent health){};
+    @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Health> getStatus() {
+        ConnectedUser connectedUser = serviceContainer.authorizationService().getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED)
+                .connectedUser();
+        HealthComponent health = healthEndpoint.health();
+        return ResponseEntity.ok().body(new Health(connectedUser,health));
     }
 
     public void setServiceContainer(ServiceContainer serviceContainer) {

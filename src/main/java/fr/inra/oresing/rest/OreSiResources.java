@@ -11,6 +11,7 @@ import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
@@ -53,6 +54,7 @@ import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.synthesis.SynthesisResult;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
+import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
@@ -83,6 +85,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import org.springframework.web.util.UriUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.Mono;
 
 import java.io.*;
 import java.net.URI;
@@ -101,6 +104,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_ADMINISTRATION;
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_USER_CONNECTED;
 
 @Slf4j
 @RestController
@@ -133,7 +139,8 @@ public class OreSiResources implements ServiceContainerBean {
     @Autowired
     private OreSiApiRequestContext request;
 
-    private static Flux<ReactiveResult> buildFluxRequestJDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
+    private Flux<ReactiveResult> buildFluxRequestJDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
+        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
         return Flux.create(fluxSink);
     }
 

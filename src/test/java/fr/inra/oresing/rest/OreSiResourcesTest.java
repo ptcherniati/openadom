@@ -122,9 +122,9 @@ public class OreSiResourcesTest {
     private AuthenticationService authenticationService;
     @Autowired
     private Fixtures fixtures;
-    private Cookie authCookie;
     private Cookie lambdaCookie;
     private UUID authUserId;
+    private Cookie authCookie;
     private CreateUserResult lambdaUser;
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;

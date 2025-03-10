@@ -15,10 +15,14 @@ import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurati
 import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
+import fr.inra.oresing.rest.reactive.ReactiveTypeError;
+import io.jsonwebtoken.ExpiredJwtException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.postgresql.util.PSQLException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.validation.ObjectError;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;
@@ -41,8 +46,13 @@ public class OreExceptionHandler {
     }
 
     @ExceptionHandler(DisconnectedException.class)
-    public ResponseEntity<DisconnectedException> handle(final DisconnectedException eee) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
+    public ResponseEntity<?> handle(final DisconnectedException disconnectedException) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(disconnectedException);
+    }
+
+    @ExceptionHandler(ExpiredJwtException.class)
+    public ResponseEntity<ExpiredJwtException> handle(final ExpiredJwtException expiredJwtException) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(expiredJwtException);
     }
 
     @ExceptionHandler(SiOreIllegalArgumentException.class)
