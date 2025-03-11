@@ -402,30 +402,31 @@ public class AuthorizationResources implements ServiceContainerBean {
     public ResponseEntity<OreSiUser> addAuthorization(
             @Parameter(description = "The role to add", required = true,
                     examples = {
-                            @ExampleObject(name = "openAdomAdmin", value = "openAdomAdmin", description = "OpenAdom administrator role"),
-                            @ExampleObject(name = "applicationCreator", value = "applicationCreator", description = "Application creator role"),
-                            @ExampleObject(name = "applicationManager", value = "applicationManager", description = "Application manager role"),
-                            @ExampleObject(name = "userManager", value = "userManager", description = "User manager role")
+                            @ExampleObject(name = "openAdomAdmin", value = "\"openAdomAdmin\"", description = "OpenAdom administrator role"),
+                            @ExampleObject(name = "applicationCreator", value = "\"applicationCreator\"", description = "Application creator role"),
+                            @ExampleObject(name = "applicationManager", value = "\"applicationManager\"", description = "Application manager role"),
+                            @ExampleObject(name = "userManager", value = "\"userManager\"", description = "User manager role")
                     }
-            ) @PathVariable(name = "role") final String role,
+            )
+            @PathVariable(name = "role") final String role,
 
             @Parameter(description = "The user's ID or login", required = true,
                     examples = {
-                            @ExampleObject(name = "userId", value = "user123", description = "User ID"),
-                            @ExampleObject(name = "userLogin", value = "john.doe", description = "User login")
+                            @ExampleObject(name = "userId", value = "\"user123\"", description = "User ID"),
+                            @ExampleObject(name = "userLogin", value = "\"john.doe\"", description = "User login")
                     }
             ) @RequestParam(name = "userIdOrLogin") final String userIdOrLogin,
 
             @Parameter(description = "The application name or ID (if applicable) for grant of applicationManager et userManager of the application",
                     examples = {
-                            @ExampleObject(name = "applicationName", value = "SI_123", description = "Application name"),
-                            @ExampleObject(name = "applicationId", value = "app-456", description = "Application ID")
+                            @ExampleObject(name = "applicationName", value = "\"SI_123\"", description = "Application name"),
+                            @ExampleObject(name = "applicationId", value = "\"app-456\"", description = "Application ID")
                     }
             ) @RequestParam(name = "applicationNameOrId", required = false) final String applicationNameOrId,
 
             @Parameter(description = "The application pattern (if applicable) for grant of rôle applicationCreator",
                     examples = {
-                            @ExampleObject(name = "applicationPattern", value = "SI_*", description = "Pattern for SI applications")
+                            @ExampleObject(name = "applicationPattern", value = "\"SI_*\"", description = "Pattern for SI applications")
                     }
             ) @RequestParam(name = "applicationPattern", required = false) final List<String> applicationPattern
     ) throws JsonProcessingException {
@@ -462,30 +463,30 @@ public class AuthorizationResources implements ServiceContainerBean {
     public ResponseEntity<OreSiUser> deleteAuthorization(
             @Parameter(description = "The role to remove", required = true,
                     examples = {
-                            @ExampleObject(name = "openAdomAdmin", value = "openAdomAdmin", description = "Remove OpenAdom administrator role"),
-                            @ExampleObject(name = "applicationCreator", value = "applicationCreator", description = "Remove application creator role"),
-                            @ExampleObject(name = "applicationManager", value = "applicationManager", description = "Remove application manager role"),
-                            @ExampleObject(name = "userManager", value = "userManager", description = "Remove user manager role")
+                            @ExampleObject(name = "openAdomAdmin", value = "\"openAdomAdmin\"", description = "Remove OpenAdom administrator role"),
+                            @ExampleObject(name = "applicationCreator", value = "\"applicationCreator\"", description = "Remove application creator role"),
+                            @ExampleObject(name = "applicationManager", value = "\"applicationManager\"", description = "Remove application manager role"),
+                            @ExampleObject(name = "userManager", value = " \"userManager\"", description = "Remove user manager role")
                     }
             ) @PathVariable(name = "role") final String role,
 
             @Parameter(description = "The user's ID or login", required = true,
                     examples = {
-                            @ExampleObject(name = "userId", value = "user123", description = "User ID"),
-                            @ExampleObject(name = "userLogin", value = "john.doe", description = "User login")
+                            @ExampleObject(name = "userId", value = "\"user123\"", description = "User ID"),
+                            @ExampleObject(name = "userLogin", value = "\"john.doe\"", description = "User login")
                     }
             ) @RequestParam(name = "userIdOrLogin") final String userIdOrLogin,
 
             @Parameter(description = "The application name or ID (if applicable) for revoke of applicationManager et userManager of the application",
                     examples = {
-                            @ExampleObject(name = "applicationName", value = "SI_123", description = "Application name"),
-                            @ExampleObject(name = "applicationId", value = "app-456", description = "Application ID")
+                            @ExampleObject(name = "applicationName", value = "\"SI_123\"", description = "Application name"),
+                            @ExampleObject(name = "applicationId", value = "\"app-456\"", description = "Application ID")
                     }
             ) @RequestParam(name = "applicationNameOrId", required = false) final String applicationNameOrId,
 
             @Parameter(description = "The application pattern (if applicable) for revoke of an applicationCreator",
                     examples = {
-                            @ExampleObject(name = "applicationPattern", value = "SI_*", description = "Pattern for SI applications")
+                            @ExampleObject(name = "applicationPattern", value = "\"SI_*\"", description = "Pattern for SI applications")
                     }
             ) @RequestParam(name = "applicationPattern", required = false) final List<String> applicationPattern
     ) throws JsonProcessingException {
@@ -522,13 +523,17 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok(getGrantableResult);
     }
 
-    record Health(ConnectedUser connectedUser, HealthComponent health){};
+    record Health(ConnectedUser connectedUser, HealthComponent health) {
+    }
+
+    ;
+
     @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Health> getStatus() {
         ConnectedUser connectedUser = serviceContainer.authorizationService().getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED)
                 .connectedUser();
         HealthComponent health = healthEndpoint.health();
-        return ResponseEntity.ok().body(new Health(connectedUser,health));
+        return ResponseEntity.ok().body(new Health(connectedUser, health));
     }
 
     public void setServiceContainer(ServiceContainer serviceContainer) {
