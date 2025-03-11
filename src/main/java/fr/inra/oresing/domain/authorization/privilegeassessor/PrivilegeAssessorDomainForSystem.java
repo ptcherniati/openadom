@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.BadLoginForAction;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
@@ -38,5 +39,11 @@ public record PrivilegeAssessorDomainForSystem<PrivilegeSystemDomain>(
                 authorizations().currentUserRoles(),
                 authorizations().applicationCreator()
         );
+    }
+    public boolean is(String login){
+        if(!login.equals(connectedUser().getLogin())){
+            throw new BadLoginForAction(login);
+        }
+        return true;
     }
 }

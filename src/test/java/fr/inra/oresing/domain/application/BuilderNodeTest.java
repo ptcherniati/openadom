@@ -181,12 +181,12 @@ class BuilderNodeTest {
                 """
                         projet
                         themes
-                        type_de_sites
                         unites
                         variables
                         valeurs_qualitative
                         valeurs_qualitatives
                         type_de_fichiers
+                        type_de_sites
                         variables_et_unites_par_types_de_donnees
                         especes
                         site_theme_datatype
