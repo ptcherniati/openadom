@@ -18,6 +18,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@org.junit.jupiter.api.Tag("core.auth")
 class AuthorizationIndexTest {
 
     private AuthorizationIndex authorizationIndex;

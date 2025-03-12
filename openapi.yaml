@@ -1,0 +1,4006 @@
+openapi: 3.0.1
+info:
+  title: openadom-ng
+  description: Api Rest pour le stockage et la restitution de fichier CSV
+  version: "1.0"
+servers:
+- url: http://localhost:8080
+paths:
+  /api/v1/users:
+    put:
+      tags:
+      - authentication-resources
+      operationId: updateUser
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+        required: true
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateUserResult"
+    post:
+      tags:
+      - authentication-resources
+      operationId: createUser
+      parameters:
+      - name: login
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: password
+        in: query
+        required: true
+        schema:
+          type: string
+      - name: email
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+                  format: uuid
+  /api/v1/authorization/{role}:
+    put:
+      tags:
+      - authorization-resources
+      summary: Add an authorization for a user
+      description: This service allows adding a specific authorization for a given
+        user.
+      operationId: addAuthorization
+      parameters:
+      - name: role
+        in: path
+        description: The role to add
+        required: true
+        schema:
+          type: string
+        examples:
+          applicationManager:
+            description: Application manager role
+            value: applicationManager
+          userManager:
+            description: User manager role
+            value: userManager
+          openAdomAdmin:
+            description: OpenAdom administrator role
+            value: openAdomAdmin
+          applicationCreator:
+            description: Application creator role
+            value: applicationCreator
+      - name: userIdOrLogin
+        in: query
+        description: The user's ID or login
+        required: true
+        schema:
+          type: string
+        examples:
+          userLogin:
+            description: User login
+            value: john.doe
+          userId:
+            description: User ID
+            value: user123
+      - name: applicationNameOrId
+        in: query
+        description: The application name or ID (if applicable) for grant of applicationManager
+          et userManager of the application
+        required: false
+        schema:
+          type: string
+        examples:
+          applicationId:
+            description: Application ID
+            value: app-456
+          applicationName:
+            description: Application name
+            value: SI_123
+      - name: applicationPattern
+        in: query
+        description: The application pattern (if applicable) for grant of rôle applicationCreator
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        examples:
+          applicationPattern:
+            description: Pattern for SI applications
+            value: SI_*
+      responses:
+        "400":
+          description: Invalid request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OreSiUser"
+        "200":
+          description: Authorization successfully added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OreSiUser"
+        "404":
+          description: User or role not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OreSiUser"
+    delete:
+      tags:
+      - authorization-resources
+      summary: Remove an authorization for a user
+      description: This service allows removing a specific authorization for a given
+        user.
+      operationId: deleteAuthorization
+      parameters:
+      - name: role
+        in: path
+        description: The role to remove
+        required: true
+        schema:
+          type: string
+        examples:
+          applicationManager:
+            description: Remove application manager role
+            value: applicationManager
+          userManager:
+            description: Remove user manager role
+            value: userManager
+          openAdomAdmin:
+            description: Remove OpenAdom administrator role
+            value: openAdomAdmin
+          applicationCreator:
+            description: Remove application creator role
+            value: applicationCreator
+      - name: userIdOrLogin
+        in: query
+        description: The user's ID or login
+        required: true
+        schema:
+          type: string
+        examples:
+          userLogin:
+            description: User login
+            value: john.doe
+          userId:
+            description: User ID
+            value: user123
+      - name: applicationNameOrId
+        in: query
+        description: The application name or ID (if applicable) for revoke of applicationManager
+          et userManager of the application
+        required: false
+        schema:
+          type: string
+        examples:
+          applicationId:
+            description: Application ID
+            value: app-456
+          applicationName:
+            description: Application name
+            value: SI_123
+      - name: applicationPattern
+        in: query
+        description: The application pattern (if applicable) for revoke of an applicationCreator
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+        examples:
+          applicationPattern:
+            description: Pattern for SI applications
+            value: SI_*
+      responses:
+        "400":
+          description: Invalid request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "403":
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OreSiUser"
+        "404":
+          description: User or role not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OreSiUser"
+        "200":
+          description: Authorization successfully removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OreSiUser"
+  /api/v1/applications/{nameOrId}/synthesis/{dataType}:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getSynthesis
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataType
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      tags:
+      - ore-si-resources
+      operationId: buidSynthesis
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataType
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/applications/{nameOrId}/synthesis/{dataType}/{variable}:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getSynthesis_1
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: variable
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+    put:
+      tags:
+      - ore-si-resources
+      operationId: buidSynthesis_1
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: variable
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/validate-configuration:
+    post:
+      tags:
+      - ore-si-resources
+      operationId: validateConfiguration
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+              - file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/x-ndjson:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReactiveResultObject"
+  /api/v1/login:
+    post:
+      tags:
+      - authentication-resources
+      summary: Connexion utilisateur dans openadom
+      description: Authentifie un utilisateur et retourne un token JWTqr+
+      operationId: login
+      parameters:
+      - name: login
+        in: query
+        description: Identifiant de l'utilisateur
+        required: true
+        schema:
+          type: string
+        examples:
+          Utilisateur standard:
+            description: Utilisateur standard
+            value: user123
+          Admin:
+            description: Admin
+            value: admin
+      - name: password
+        in: query
+        description: Mot de passe de l'utilisateur
+        required: true
+        schema:
+          type: string
+          format: password
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: Authentification réussie
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginAdminResult"
+              examples:
+                ExempleAdmin:
+                  summary: Réponse typique pour un administrateur OpenAdom
+                  description: ExempleAdmin
+                  value:
+                    id: 35157557-616a-46b8-aee3-487d7450ec23
+                    login: admin_tech
+                    email: admin@example.org
+                    state: active
+                    authorizedForApplicationCreation: true
+                    openAdomAdmin: true
+                    authorizations:
+                    - appl.*
+                    - SI_.*
+                    - .*
+                    chartes:
+                      "1fd78157-8233-47b0-80bb-f2ffcb6e7b97": 2025-03-11T12:00:00Z
+                      "20ad5120-3a78-4026-944f-601297aced5f": 2025-03-10T09:30:45Z
+                    currentUserRoles:
+                      applicationRoles:
+                        "1fd78157-8233-47b0-80bb-f2ffcb6e7b97":
+                        - applicationManager
+                        - dataCurator
+                        - userManager
+                        "20ad5120-3a78-4026-944f-601297aced5f":
+                        - auditor
+                        - reviewer
+                      userId: 35157557-616a-46b8-aee3-487d7450ec23
+                      userLogin: admin_tech
+                      isOpenAdomAdmin: true
+                      isApplicationCreator: true
+                      memberOf:
+                      - 1fd78157-8233-47b0-80bb-f2ffcb6e7b97_applicationManager
+                      - 20ad5120-3a78-4026-944f-601297aced5f_auditor
+                      - openAdomAdmin
+                      isDataBaseSuper: false
+        "401":
+          description: Requête invalide
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LoginAdminResult"
+              example:
+                params: {}
+                message: BAD_LOGIN_PASSWORD
+                localizedMessage: BAD_LOGIN_PASSWORD
+  /api/v1/applications/{name}:
+    post:
+      tags:
+      - ore-si-resources
+      operationId: createApplication
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ""
+      - in: query
+        examples:
+          fichier de configuration:
+            description: <a href= 'https://anaee-dev.pages.mia.inra.fr/si-ore-v2/schemaExample.yaml'>Fichier
+              d'example</a>
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+              - file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/x-ndjson:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReactiveResultObject"
+  /api/v1/applications/{nameOrId}/rightsRequest:
+    get:
+      tags:
+      - ore-si-resources
+      description: Get a rightsRequest with their description using search params
+      operationId: listRightsRequest
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: params
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetRightsRequestResult"
+    post:
+      tags:
+      - ore-si-resources
+      operationId: createRightsRequest
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRightsRequestRequest"
+        required: true
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/v1/applications/{nameOrId}/data/{dataName}:
+    post:
+      tags:
+      - ore-si-resources
+      operationId: createData
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: params
+        in: query
+        required: false
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: object
+  /api/v1/applications/{nameOrId}/configuration:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getConfiguration
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: byte
+    post:
+      tags:
+      - ore-si-resources
+      operationId: changeConfiguration
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: comment
+        in: query
+        required: false
+        schema:
+          type: string
+          default: ""
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+              - file
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/x-ndjson:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReactiveResultObject"
+  /api/v1/applications/{nameOrId}/authorization:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getAdminAuthorizationsForOpenAdom_1
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAuthorizationResults"
+    post:
+      tags:
+      - authorization-resources
+      summary: Créer une nouvelle autorisation
+      description: Crée une nouvelle autorisation avec des permissions spécifiques
+        pour différents types de données.
+      operationId: addAuthorization_1
+      parameters:
+      - name: nameOrId
+        in: path
+        description: Nom ou ID de l'application
+        required: true
+        schema:
+          type: string
+      requestBody:
+        description: Détails de l'autorisation à créer ou à mettre à jour
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAuthorizationRequest"
+            examples:
+              Autorisation complexe:
+                summary: Exemple d'autorisation avec permissions générales et restrictions
+                  spécifiques
+                description: Autorisation complexe
+                value:
+                  uuid: null
+                  name: atlantique extraction nivelle p1
+                  description: une extraction sur nivelle
+                  authorizationForAll:
+                    sites:
+                    - depot
+                    - suppression
+                  authorizationsWithRestriction:
+                    pem:
+                      operationTypes:
+                      - extraction
+                      requiredAuthorizations:
+                        projet:
+                        - projet_manche
+                        - projet_atlantique
+                        sites:
+                        - oir__p1
+                        - nivelle
+                      timeScope:
+                        fromDay: 1984-01-02
+              Autorisation dépôt sur sites:
+                summary: Autorisation pour le droit de dépôt sur sites
+                description: Autorisation dépôt sur sites
+                value:
+                  uuid: null
+                  name: Dépôt sur sites
+                  description: Autorisation pour le dépôt sur tous les sites
+                  authorizationForAll:
+                    sites:
+                    - depot
+              Autorisation extraction PEM:
+                summary: Autorisation pour le droit d'extraction sur PEM
+                description: Autorisation extraction PEM
+                value:
+                  uuid: null
+                  name: Extraction PEM
+                  description: Autorisation pour l'extraction des données PEM
+                  authorizationsWithRestriction:
+                    pem:
+                      operationTypes:
+                      - extraction
+              Autorisation extraction PEM avec période spécifique:
+                summary: Autorisation pour l'extraction des données PEM entre deux
+                  dates spécifiques
+                description: Autorisation extraction PEM avec période spécifique
+                value:
+                  uuid: null
+                  name: Extraction PEM période spécifique
+                  description: Extraction PEM du 01/01/1984 au 02/01/1984
+                  authorizationsWithRestriction:
+                    pem:
+                      operationTypes:
+                      - extraction
+                      timeScope:
+                        fromDay: 1984-01-01
+                        toDay: 1984-01-02
+              Autorisation PEM bassin versant Nivelle:
+                summary: Autorisation pour les données PEM du bassin versant de Nivelle
+                description: Autorisation PEM bassin versant Nivelle
+                value:
+                  uuid: null
+                  name: PEM Nivelle
+                  description: Autorisation pour les données PEM du bassin versant
+                    de Nivelle
+                  authorizationsWithRestriction:
+                    pem:
+                      operationTypes:
+                      - read
+                      - extraction
+                      requiredAuthorizations:
+                        sites:
+                        - nivelle
+              Mise à jour d'une autorisation existante:
+                summary: Exemple de mise à jour d'une autorisation existante
+                description: Mise à jour d'une autorisation existante
+                value:
+                  uuid: b4a865cb-12a0-4688-b9d6-1385a65c52c1
+                  name: Mise à jour autorisation
+                  description: Mise à jour d'une autorisation existante
+                  authorizationForAll:
+                    sites:
+                    - extraction
+                  authorizationsWithRestriction:
+                    pem:
+                      operationTypes:
+                      - depot
+                      requiredAuthorizations:
+                        projet:
+                        - projet_atlantique
+        required: true
+      responses:
+        "400":
+          description: Requête invalide
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "404":
+          description: Application non trouvée
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+        "200":
+          description: Autorisation créée ou mise à jour avec succès
+          content:
+            application/json:
+              schema:
+                type: string
+              examples:
+                Réponse standard:
+                  description: Réponse standard
+                  value:
+                    message: Autorisation créée avec succès
+                    id: b4a865cb-12a0-4688-b9d6-1385a65c52c1
+  /api/v1/applications/{nameOrId}/additionalFiles/{additionalFileName}:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: listAdditionalFilesNames
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: additionalFileName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: params
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAdditionalFilesResult"
+    post:
+      tags:
+      - ore-si-resources
+      operationId: createAdditionalFile
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: additionalFileName
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: params
+        in: query
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+  /api/v1/applications/{nameOrId}/additionalFiles/authorization:
+    post:
+      tags:
+      - authorization-resources
+      operationId: addAdditionalFileAuthorization
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateAdditionalFileAuthorizationRequest"
+        required: true
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: string
+  /api/v1/{nameOrId}/authorizationAdminForApplication:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getAdminAuthorizationsForApplication
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LoginApplicationResult"
+  /api/v1/users/{userLoginOrId}:
+    get:
+      tags:
+      - authentication-resources
+      operationId: getByIdOrLogin
+      parameters:
+      - name: userLoginOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OreSiUser"
+  /api/v1/status:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getStatus
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Health"
+  /api/v1/authorizationForAdmin:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getAdminAuthorizationsForOpenAdom
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LoginAdminResult"
+  /api/v1/applications:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getApplications
+      parameters:
+      - name: filter
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          default: []
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/x-ndjson:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReactiveResultObject"
+  /api/v1/applications/{name}/file/{id}:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getFile
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: byte
+    delete:
+      tags:
+      - ore-si-resources
+      operationId: removeFile
+      parameters:
+      - name: name
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/v1/applications/{nameOrId}:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getApplication
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: filter
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            type: string
+          default: []
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApplicationResult"
+  /api/v1/applications/{nameOrId}/upload-bundle:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getUploadBundle
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: withData
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/StreamingResponseBody"
+  /api/v1/applications/{nameOrId}/references:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: listNameReferences
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /api/v1/applications/{nameOrId}/references/{refType}:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: listDataForColumn
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: refType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: params
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/MultiValueMapStringString"
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetReferenceResult"
+  /api/v1/applications/{nameOrId}/grantable:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getGrantable
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetGrantableResult"
+  /api/v1/applications/{nameOrId}/filesOnRepository/{dataType}:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getFilesOnRepository
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: repositoryId
+        in: query
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/BinaryFileResult"
+  /api/v1/applications/{nameOrId}/data:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: listData
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /api/v1/applications/{nameOrId}/data/{refType}/{column}:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: listDataForColumn_1
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: refType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: column
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: array
+                  items:
+                    type: string
+  /api/v1/applications/{nameOrId}/data/{refType}/csv:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: listDataCsv
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: refType
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/StreamingResponseBody"
+  /api/v1/applications/{nameOrId}/data/{dataType}/zip:
+    get:
+      tags:
+      - ore-si-resources
+      operationId: getAllDataZip
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: downloadDatasetQuery
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/StreamingResponseBody"
+  /api/v1/applications/{nameOrId}/data/{dataType}/json:
+    get:
+      tags:
+      - ore-si-resources
+      description: Return an extraction of data of datatType 'dataName' of application
+        'nameOrId'
+      operationId: getAllDataJson
+      parameters:
+      - name: downloadDatasetQuery
+        in: query
+        description: "An object for reduce, filter and order result"
+        required: false
+        $ref: fr.inra.oresing.persistence.requestBuilder.datatype.DownloadDatasetQuery
+        schema:
+          type: string
+        examples:
+          select filter by filter numeric):
+            description: |2
+                      {
+                              "componentSelects": ["individusNumbervalue"],
+                              "componentFilters": [
+                                        {
+                                          "componentKey": "individusNumbervalue",
+                                          "filters": [41]
+                                        }
+                             ]
+                           }
+            value: Select by numeric. You can provide an optional json with componentFiltersé
+            $ref: fr.inra.oresing.model.data.authorizationDescriptions.class
+          select by rowIds:
+            description: |2
+                      {
+                          "rowIds" : [ "59ae5fec-8ed5-495b-b201-5475ea50906e"]
+                      }
+            value: Find by RowIds. You can provide an optional json with rowIds
+            $ref: fr.inra.oresing.model.data.read.DownloadDatasetQuery.class
+          reduce by select:
+            description: |2
+                      {
+                          "componentSelects": [sites, date]
+                      }
+            value: Select by. You can provide an optional json with componentSelects
+            $ref: fr.inra.oresing.model.data.read.DownloadDatasetQuery.class
+          select filter by filter date by interval (With declared pattern):
+            description: |2
+                      {
+                          "componentFilters": [
+                             {
+                                   "componentKey": "date",
+                                   "intervalsValues": [
+                                      "from": "01/01/1984",
+                                      "to": "04/01/1984"
+                                   ]
+                                 }
+                          ]
+                      }
+            value: Select by interval of date. You can provide an optional json with
+              componentFilters
+            $ref: fr.inra.oresing.model.data.authorizationDescriptions.class
+          general case:
+            description: |2
+                      {
+                          "componentSelects": [...],
+                          "componentFilters": [...],
+                          "componentOrderBy": [...]
+                      }
+            value: "General case. You can provide an optional json with componentSelects,\
+              \ rowIds, authorizationDescriptions, componentFilters, componentOrderBy"
+            $ref: fr.inra.oresing.model.data.read.DownloadDatasetQuery.class
+          select filter by filter numeric by interval):
+            description: |2
+                      {
+                          "componentFilters": [
+                             {
+                               "componentKey": {
+                                 "variable": "Nombre d'individus",
+                                 "component": "value"
+                               },
+                               "intervalsValues":[ {
+                                  "from": 25,
+                                  "to": 30
+                               }]
+                             }
+                          ]
+                      }
+            value: Select by interval of numeric. You can provide an optional json
+              with componentFilters
+            $ref: fr.inra.oresing.model.data.authorizationDescriptions.class
+          select by submissionScope:
+            description: |2
+                      {
+                              "authorizationDescriptions": [
+                                        {
+                                          "timeScope": {
+                                            "from": "1984-01-01",
+                                            "to": "1984-01-02"
+                                          },
+                                          "requiredAuthorizations": {
+                                              "projet": "projetKprojet_manche",
+                                              "sites": "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1"
+                                            }
+                                        },
+                                        {
+                                          "timeScope": {
+                                            "from": "1984-01-03",
+                                            "to": "1984-01-04"
+                                          },
+                                          "requiredAuthorizations": {
+                                              "projet": "projetKprojet_atlantique",
+                                              "sites": "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1"
+                                            }
+                                        }
+                             ]
+                           }
+            value: Find by authorizations. You can provide an optional json with submissionScope
+            $ref: fr.inra.oresing.model.data.authorizationDescriptions.class
+          select filter by filter (like '%filter%'):
+            description: |2
+                      {
+                          "componentFilters": [
+                             {
+                               "componentKey": "bassin",
+                               "filters": ["nivelle"]
+                             },
+                             {
+                               "componentKey": "espece",,
+                               "filters": ["tr"]
+                             }
+                          ]
+                      }
+            value: Select by filter. You can provide an optional json with componentFilters
+            $ref: fr.inra.oresing.model.data.authorizationDescriptions.class
+          select by hierarchicalKey:
+            description: |2
+                      {
+                          "naturalKey" : ["pemKprojet_manche__oir__p1__03_01_1984__lpm"]
+                      }
+            value: Find by naturalKeys. You can provide an optional json with naturalKeys
+            $ref: fr.inra.oresing.model.data.read.DownloadDatasetQuery.class
+          select filter by filter with regexp (~ '^[ao]m+):
+            description: |2
+                      {
+                          "componentFilters": [
+                             "componentFilters": [
+                                   {
+                                     "componentKey": "espece",
+                                     "filters": ["^[ao]m+"],
+                                     "isRegExp": "true"
+                                   }
+                          ]
+                      }
+            value: Select by RegExp. You can provide an optional json with componentFilters.
+              Can be apply only on text not for reference.
+            $ref: fr.inra.oresing.model.data.authorizationDescriptions.class
+          select filter by filter date (With declared pattern):
+            description: |2
+                      {
+                          "componentFilters": [
+                             {
+                               "componentKey":"date",,
+                               "filters": ["12:45:00"]
+                             }
+                          ]
+                      }
+            value: Select by date. You can provide an optional json with componentFilters
+            $ref: fr.inra.oresing.model.data.authorizationDescriptions.class
+          order by:
+            description: |2
+                      {
+                          "componentOrderBy": [
+                                {
+                                   "componentKey": "espece",,
+                                   "order": "ASC"
+                                }
+                            ]
+                      }
+            value: Order by. You can provide an optional json with componentOrderBy
+            $ref: fr.inra.oresing.model.data.read.DownloadDatasetQuery.class
+          select by naturalKeys:
+            description: |2
+                      {
+                          "naturalKey" : ["projet_manche__oir__p1__03_01_1984__lpm"]
+                      }
+            value: Find by naturalKeys. You can provide an optional json with naturalKeys
+            $ref: fr.inra.oresing.model.data.read.DownloadDatasetQuery.class
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: loadExample
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetDataResult"
+  /api/v1/applications/{nameOrId}/authorization/{authorizationId}:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getAuthorizationById
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: authorizationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAuthorizationResult"
+    delete:
+      tags:
+      - authorization-resources
+      operationId: revokeAuthorization
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: authorizationId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+                format: uuid
+  /api/v1/applications/{nameOrId}/additionalfiles/authorization:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getAdditionalFilesAuthorizations
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: params
+        in: query
+        required: true
+        schema:
+          $ref: "#/components/schemas/MultiValueMapStringString"
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GetAuthorizationAdditionalFilesResults"
+  /api/v1/applications/{nameOrId}/additionalFiles:
+    get:
+      tags:
+      - ore-si-resources
+      summary: Returns a zip containing additional files and their description
+      description: Get a additionalFiles with their description using search params
+      operationId: getAdditionalFilesNamesZip
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: params
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/octet-stream:
+              schema:
+                $ref: "#/components/schemas/StreamingResponseBody"
+    delete:
+      tags:
+      - ore-si-resources
+      summary: Delete additional file based on params search
+      description: 'Delete a additionalFiles '
+      operationId: removeAdditionalFiles
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: params
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/v1/applications/{applicationNameOrId}/authorization/user/{userLoginOrId}:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getAuthorizationsForUser
+      parameters:
+      - name: applicationNameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userLoginOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorizationsResult"
+  /api/v1/applications/{applicationNameOrId}/additionalFiles/authorization/{userLoginOrId}:
+    get:
+      tags:
+      - authorization-resources
+      operationId: getAdditionalFilesAuthorizationsForUser
+      parameters:
+      - name: applicationNameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: userLoginOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorizationsAdditionalFilesResult"
+  /:
+    get:
+      tags:
+      - home-resources
+      operationId: home
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/hal+json:
+              schema:
+                $ref: "#/components/schemas/RedirectView"
+  /api/v1/logout:
+    delete:
+      tags:
+      - authentication-resources
+      operationId: logout
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/hal+json:
+              schema:
+                type: string
+  /api/v1/applications/{nameOrId}/data/{dataType}:
+    delete:
+      tags:
+      - ore-si-resources
+      operationId: deleteData
+      parameters:
+      - name: nameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: dataType
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: downloadDatasetQuery
+        in: query
+        required: false
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+  /api/v1/applications/{applicationNameOrId}/additionalFiles/authorization/{authorizationId}:
+    delete:
+      tags:
+      - authorization-resources
+      operationId: revokeAdditionalFilesAuthorization
+      parameters:
+      - name: applicationNameOrId
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: authorizationId
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "400":
+          description: Bad Request
+          content:
+            application/hal+json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ObjectError"
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: string
+components:
+  schemas:
+    ObjectError:
+      type: object
+      properties:
+        codes:
+          type: array
+          items:
+            type: string
+        arguments:
+          type: array
+          items:
+            type: object
+        defaultMessage:
+          type: string
+        objectName:
+          type: string
+        code:
+          type: string
+    CreateUserRequest:
+      type: object
+      properties:
+        login:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+        newPassword:
+          type: string
+        newPasswordConfirm:
+          type: string
+        verificationKey:
+          type: string
+        charte:
+          type: string
+    CreateUserResult:
+      type: object
+      properties:
+        userId:
+          type: string
+          format: uuid
+        login:
+          type: string
+        email:
+          type: string
+        accountState:
+          type: string
+          enum:
+          - idle
+          - active
+          - pending
+          - closed
+        chartes:
+          type: object
+          additionalProperties:
+            type: string
+            format: date-time
+    OreSiUser:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        creationDate:
+          type: string
+          format: date-time
+        updateDate:
+          type: string
+          format: date-time
+        login:
+          type: string
+        password:
+          type: string
+        email:
+          type: string
+        authorizations:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        accountstate:
+          type: string
+          enum:
+          - idle
+          - active
+          - pending
+          - closed
+        chartes:
+          type: object
+          additionalProperties:
+            type: string
+            format: date-time
+    ReactiveResultObject:
+      type: object
+    CurrentUserRolesResult:
+      type: object
+      properties:
+        applicationRoles:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        userId:
+          type: string
+          format: uuid
+        userLogin:
+          type: string
+        isOpenAdomAdmin:
+          type: boolean
+        isApplicationCreator:
+          type: boolean
+        memberOf:
+          type: array
+          items:
+            type: string
+        isDataBaseSuper:
+          type: boolean
+    LoginAdminResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        login:
+          type: string
+        email:
+          type: string
+        state:
+          type: string
+        authorizedForApplicationCreation:
+          type: boolean
+        openAdomAdmin:
+          type: boolean
+        authorizations:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        chartes:
+          type: object
+          additionalProperties:
+            type: string
+            format: date-time
+        currentUserRoles:
+          $ref: "#/components/schemas/CurrentUserRolesResult"
+    AuthorizationInput:
+      type: object
+      properties:
+        timeScope:
+          $ref: "#/components/schemas/LocalDateTimeRange"
+        requiredAuthorizations:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/Ltree"
+        operationTypes:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+            - depot
+            - delete
+            - publication
+            - extraction
+            - associate
+        intervalDates:
+          type: object
+          additionalProperties:
+            type: string
+            format: date
+          writeOnly: true
+    CreateAuthorizationRequest:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        usersId:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            format: uuid
+        authorizationForAll:
+          type: object
+          additionalProperties:
+            uniqueItems: true
+            type: array
+            items:
+              type: string
+              enum:
+              - depot
+              - delete
+              - publication
+              - extraction
+              - associate
+        authorizationsWithRestriction:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AuthorizationInput"
+    CreateRightsRequestRequest:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        fields:
+          type: object
+          additionalProperties:
+            type: string
+        rightsRequest:
+          $ref: "#/components/schemas/CreateAuthorizationRequest"
+        setted:
+          type: boolean
+        comment:
+          type: string
+    LocalDateTimeRange:
+      type: object
+      properties:
+        range:
+          $ref: "#/components/schemas/RangeLocalDateTime"
+    Ltree:
+      type: object
+      properties:
+        sql:
+          type: string
+    RangeLocalDateTime:
+      type: object
+      properties:
+        empty:
+          type: boolean
+    CreateAdditionalFileAuthorizationRequest:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        usersId:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            format: uuid
+        applicationNameOrId:
+          type: string
+        additionalFiles:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    LoginApplicationResult:
+      type: object
+      properties:
+        applicationName:
+          type: string
+        id:
+          type: string
+          format: uuid
+        login:
+          type: string
+        email:
+          type: string
+        state:
+          type: string
+        applicationManager:
+          type: boolean
+        userManager:
+          type: boolean
+        authorizations:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        isValidCharte:
+          type: boolean
+        isApplicationUser:
+          type: boolean
+    ConnectedUser:
+      type: object
+      properties:
+        roles:
+          $ref: "#/components/schemas/CurrentUserRoles"
+        applicationCreator:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        login:
+          type: string
+    CurrentUserRoles:
+      type: object
+      properties:
+        memberOf:
+          type: array
+          items:
+            type: string
+        isDataBaseSuper:
+          type: boolean
+        user:
+          $ref: "#/components/schemas/OreSiUser"
+        openAdomAdmin:
+          type: boolean
+        applicationCreator:
+          type: boolean
+    Health:
+      type: object
+      properties:
+        connectedUser:
+          $ref: "#/components/schemas/ConnectedUser"
+        health:
+          $ref: "#/components/schemas/HealthComponent"
+    HealthComponent:
+      type: object
+    AdditionalFile:
+      type: object
+      properties:
+        fields:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    AdditionalFileDescription:
+      type: object
+      properties:
+        formFields:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/FieldDescription"
+    ApplicationDescription:
+      type: object
+      properties:
+        name:
+          type: string
+        version:
+          $ref: "#/components/schemas/Version"
+        defaultLanguage:
+          type: object
+          properties:
+            language:
+              type: string
+            displayName:
+              type: string
+            country:
+              type: string
+            variant:
+              type: string
+            script:
+              type: string
+            unicodeLocaleAttributes:
+              uniqueItems: true
+              type: array
+              items:
+                type: string
+            unicodeLocaleKeys:
+              uniqueItems: true
+              type: array
+              items:
+                type: string
+            displayLanguage:
+              type: string
+            displayScript:
+              type: string
+            displayCountry:
+              type: string
+            displayVariant:
+              type: string
+            extensionKeys:
+              uniqueItems: true
+              type: array
+              items:
+                type: string
+            iso3Language:
+              type: string
+            iso3Country:
+              type: string
+        comment:
+          type: string
+    ApplicationResult:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        comment:
+          type: string
+        configFile:
+          type: string
+          format: uuid
+        internationalization:
+          $ref: "#/components/schemas/Internationalizations"
+        data:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/StandardDataDescription"
+        references:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Node"
+        authorizations:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: boolean
+        referenceSynthesis:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataSynthesis"
+        dataTypes:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/Node"
+        additionalFiles:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AdditionalFile"
+        rightsRequest:
+          $ref: "#/components/schemas/RightsRequest"
+        configuration:
+          $ref: "#/components/schemas/Configuration"
+        currentApplicationUserRolesResult:
+          $ref: "#/components/schemas/CurrentApplicationUserRolesResult"
+        dependantNodesByDataName:
+          type: object
+          additionalProperties:
+            uniqueItems: true
+            type: array
+            items:
+              type: string
+        orderedReferences:
+          type: array
+          items:
+            type: string
+    Authorization:
+      type: object
+      properties:
+        authorizationScope:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuthorizationScopeComponentData"
+        timeScope:
+          type: string
+    AuthorizationScopeComponentData:
+      type: object
+      properties:
+        component:
+          type: string
+        data:
+          type: string
+    ChartDescription:
+      type: object
+    CheckerDescription:
+      type: object
+    ComponentDescription:
+      type: object
+      properties:
+        hidden:
+          type: boolean
+        referenceCheckerType:
+          type: string
+        chartDescription:
+          $ref: "#/components/schemas/ChartDescription"
+        reference:
+          type: boolean
+    Configuration:
+      type: object
+      properties:
+        version:
+          $ref: "#/components/schemas/Version"
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+        i18n:
+          $ref: "#/components/schemas/Internationalizations"
+        applicationDescription:
+          $ref: "#/components/schemas/ApplicationDescription"
+        dataDescription:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/StandardDataDescription"
+        rightsRequest:
+          $ref: "#/components/schemas/RightRequestDescription"
+        additionalFiles:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AdditionalFileDescription"
+        hierarchicalNodes:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/Node"
+        requiredAuthorizationsAttributes:
+          type: array
+          items:
+            type: string
+        hiddenData:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+    CurrentApplicationUserRolesResult:
+      type: object
+      properties:
+        applicationRoles:
+          type: array
+          items:
+            type: string
+        userId:
+          type: string
+          format: uuid
+        userLogin:
+          type: string
+        isOpenAdomAdmin:
+          type: boolean
+        isApplicationCreator:
+          type: boolean
+        memberOf:
+          type: array
+          items:
+            type: string
+        isDataBaseSuper:
+          type: boolean
+    DataSynthesis:
+      type: object
+      properties:
+        lineCount:
+          type: integer
+          format: int32
+        referenceType:
+          type: string
+    Depends:
+      type: object
+    FieldDescription:
+      type: object
+    InternationalizationAdditionalFile:
+      type: object
+      properties:
+        i18n:
+          $ref: "#/components/schemas/InternationalizationTitle"
+        fields:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/InternationalizationTitle"
+    InternationalizationComponent:
+      type: object
+      properties:
+        exportHeader:
+          $ref: "#/components/schemas/InternationalizationTitle"
+    InternationalizationData:
+      type: object
+      properties:
+        validations:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: string
+        exceptions:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              type: object
+              additionalProperties:
+                type: string
+        components:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/InternationalizationComponent"
+        submissions:
+          $ref: "#/components/schemas/InternationalizationSubmissionComponent"
+        i18nDisplayPattern:
+          $ref: "#/components/schemas/InternationalizationTitle"
+        i18n:
+          $ref: "#/components/schemas/InternationalizationTitle"
+    InternationalizationRightrequest:
+      type: object
+      properties:
+        fields:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/InternationalizationTitle"
+        i18n:
+          $ref: "#/components/schemas/InternationalizationTitle"
+    InternationalizationSubmissionComponent:
+      type: object
+      properties:
+        referenceScopes:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/InternationalizationTitle"
+    InternationalizationTitle:
+      type: object
+      properties:
+        title:
+          type: object
+          additionalProperties:
+            type: string
+        description:
+          type: object
+          additionalProperties:
+            type: string
+    Internationalizations:
+      type: object
+      properties:
+        tags:
+          type: object
+          additionalProperties:
+            type: object
+        application:
+          $ref: "#/components/schemas/InternationalizationTitle"
+        data:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/InternationalizationData"
+        rightsrequest:
+          $ref: "#/components/schemas/InternationalizationRightrequest"
+        additionalFiles:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/InternationalizationAdditionalFile"
+    MigrationDescription:
+      type: object
+      properties:
+        components:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ComponentDescription"
+        dataGroup:
+          type: string
+    Node:
+      type: object
+      properties:
+        level:
+          type: integer
+          format: int32
+        nodeName:
+          type: string
+        componentKey:
+          type: string
+        columnToLookUpForRecursive:
+          type: string
+        parent:
+          type: string
+        children:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/Node"
+        depends:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        order:
+          type: integer
+          format: int32
+        isRecursive:
+          type: boolean
+    ReferenceScope:
+      type: object
+      properties:
+        reference:
+          type: string
+        component:
+          type: string
+    RightRequestDescription:
+      type: object
+      properties:
+        formFields:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/FieldDescription"
+    RightsRequest:
+      type: object
+      properties:
+        description:
+          $ref: "#/components/schemas/RightRequestDescription"
+    StandardDataDescription:
+      type: object
+      properties:
+        separator:
+          type: string
+        headerLine:
+          type: integer
+          format: int32
+        firstRowLine:
+          type: integer
+          format: int32
+        allowUnexpectedColumns:
+          type: boolean
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+        naturalKey:
+          type: array
+          items:
+            type: string
+        componentDescriptions:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ComponentDescription"
+        submission:
+          $ref: "#/components/schemas/Submission"
+        authorization:
+          $ref: "#/components/schemas/Authorization"
+        validations:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ValidationDescription"
+        depends:
+          type: array
+          items:
+            $ref: "#/components/schemas/Depends"
+        migrations:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/MigrationDescription"
+        hidden:
+          type: boolean
+        order:
+          type: integer
+          format: int32
+    Submission:
+      type: object
+      properties:
+        strategy:
+          type: string
+          enum:
+          - OA_VERSIONING
+          - OA_INSERTION
+        fileNameParsing:
+          $ref: "#/components/schemas/SubmissionFileNameParsing"
+        submissionScope:
+          $ref: "#/components/schemas/SubmissionScope"
+    SubmissionFileNameParsing:
+      type: object
+      properties:
+        pattern:
+          type: string
+        authorizationScopes:
+          type: array
+          items:
+            type: string
+        startDate:
+          type: integer
+          format: int32
+        endDate:
+          type: integer
+          format: int32
+    SubmissionScope:
+      type: object
+      properties:
+        referenceScopes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReferenceScope"
+        timescope:
+          $ref: "#/components/schemas/TimeScope"
+    Tag:
+      type: object
+    TimeScope:
+      type: object
+      properties:
+        component:
+          type: string
+    ValidationDescription:
+      type: object
+      properties:
+        checkers:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/CheckerDescription"
+        tags:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/Tag"
+        columns:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        required:
+          type: boolean
+        mandatory:
+          type: string
+          enum:
+          - MANDATORY
+          - OPTIONAL
+          - ABSENT
+    Version:
+      type: object
+      properties:
+        version:
+          type: string
+        runTimeVersion:
+          $ref: "#/components/schemas/Version"
+    StreamingResponseBody:
+      type: object
+    AuthorizationParsed:
+      type: object
+      properties:
+        operationTypes:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+            - depot
+            - delete
+            - publication
+            - extraction
+            - associate
+        requiredAuthorizations:
+          type: object
+          additionalProperties:
+            uniqueItems: true
+            type: array
+            items:
+              type: string
+        fromDay:
+          type: string
+          format: date
+        toDay:
+          type: string
+          format: date
+    GetRightsRequestResult:
+      type: object
+      properties:
+        users:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        rightsRequests:
+          type: array
+          items:
+            $ref: "#/components/schemas/RightsRequestResult"
+        description:
+          $ref: "#/components/schemas/RightRequestDescription"
+    RightsRequestResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        application:
+          type: string
+          format: uuid
+        user:
+          type: string
+          format: uuid
+        createDate:
+          type: string
+          format: date-time
+        updateDate:
+          type: string
+          format: date-time
+        comment:
+          type: string
+        rightsRequestForm:
+          type: object
+          additionalProperties:
+            type: string
+        rightsRequest:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/AuthorizationParsed"
+        setted:
+          type: boolean
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+    MultiValueMapStringString:
+      type: object
+      properties:
+        all:
+          type: object
+          additionalProperties:
+            type: string
+          writeOnly: true
+        empty:
+          type: boolean
+      additionalProperties:
+        type: array
+        items:
+          type: string
+    GetReferenceResult:
+      type: object
+      properties:
+        referenceValues:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/ReferenceValue"
+        referenceTypeForReferencingColumns:
+          type: object
+          additionalProperties:
+            type: string
+    ReferenceValue:
+      type: object
+      properties:
+        id:
+          type: string
+        patternColumnName:
+          type: string
+        hierarchicalKey:
+          type: string
+        naturalKey:
+          type: string
+        values:
+          type: object
+        refsLinkedTo:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: "#/components/schemas/RefsLinkedToValue"
+        referencingReference:
+          type: object
+          additionalProperties:
+            type: object
+    RefsLinkedToValue:
+      type: object
+      properties:
+        uuids:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            format: uuid
+        hierarchicalKey:
+          $ref: "#/components/schemas/Ltree"
+    ApplicationUserResult:
+      type: object
+      properties:
+        applicationId:
+          type: string
+          format: uuid
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        email:
+          type: string
+        isApplicationManager:
+          type: boolean
+        isUserManager:
+          type: boolean
+        isApplicationUser:
+          type: boolean
+        isActiveApplicationUser:
+          type: boolean
+    AuthorizationForScope:
+      type: object
+    AuthorizationsResult:
+      type: object
+      properties:
+        userAuthorization:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/AuthorizationParsed"
+        publicAuthorization:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AuthorizationParsed"
+        applicationName:
+          type: string
+        applicationCreator:
+          type: boolean
+        applicationManager:
+          type: boolean
+        isAdministrator:
+          type: boolean
+        userManager:
+          type: boolean
+        applicationUser:
+          type: boolean
+        activeApplicationUser:
+          type: boolean
+    ColumnDescription:
+      type: object
+      properties:
+        display:
+          type: boolean
+        title:
+          type: string
+        withPeriods:
+          type: boolean
+        withDataGroups:
+          type: boolean
+        forPublic:
+          type: boolean
+        forRequest:
+          type: boolean
+        internationalizationName:
+          type: object
+          properties:
+            empty:
+              type: boolean
+          additionalProperties:
+            type: string
+    GetGrantableResult:
+      type: object
+      properties:
+        users:
+          type: array
+          properties:
+            first:
+              $ref: "#/components/schemas/ApplicationUserResult"
+            last:
+              $ref: "#/components/schemas/ApplicationUserResult"
+            empty:
+              type: boolean
+          items:
+            $ref: "#/components/schemas/ApplicationUserResult"
+        referenceScopes:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/ReferenceScope"
+        columnsDescription:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: "#/components/schemas/ColumnDescription"
+        authorizationsForUser:
+          $ref: "#/components/schemas/AuthorizationsResult"
+        publicAuthorizations:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/AuthorizationForScope"
+    BinaryFileDatasetResult:
+      type: object
+      properties:
+        datatype:
+          type: string
+        requiredAuthorizations:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        from:
+          type: string
+        to:
+          type: string
+    BinaryFileInfosResult:
+      type: object
+      properties:
+        binaryFileDataset:
+          $ref: "#/components/schemas/BinaryFileDatasetResult"
+        comment:
+          type: string
+        createdate:
+          type: string
+        createuser:
+          $ref: "#/components/schemas/UserDescriptionResult"
+        published:
+          type: boolean
+        publisheddate:
+          type: string
+        publisheduser:
+          $ref: "#/components/schemas/UserDescriptionResult"
+    BinaryFileResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        comment:
+          type: string
+        size:
+          type: integer
+          format: int64
+        params:
+          $ref: "#/components/schemas/BinaryFileInfosResult"
+    UserDescriptionResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        login:
+          type: string
+        email:
+          type: string
+    DataRowResult:
+      type: object
+      properties:
+        rowId:
+          type: array
+          items:
+            type: string
+        naturalKey:
+          type: string
+        hierarchicalKey:
+          type: string
+        values:
+          type: object
+          additionalProperties:
+            type: object
+        refsLinkedTo:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: "#/components/schemas/RefsLinkedToValue"
+        displaysForRow:
+          type: object
+          additionalProperties:
+            type: object
+        allPatternColumnName:
+          type: array
+          items:
+            type: string
+    GetDataResult:
+      type: object
+      properties:
+        patternDefinitionCount:
+          type: integer
+          format: int64
+        variables:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+        rows:
+          type: array
+          items:
+            $ref: "#/components/schemas/DataRowResult"
+        checkedFormatComponents:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties:
+              $ref: "#/components/schemas/LineCheckerResult"
+        referenceTypeForReferencingColumns:
+          type: object
+          additionalProperties:
+            type: string
+        referenceScopes:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/ReferenceScope"
+    LineCheckerResult:
+      type: object
+    GetAuthorizationResult:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        users:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/OreSiUser"
+        authorizations:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/AuthorizationParsed"
+        authorizationforPublic:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/AuthorizationParsed"
+        authorizationsForUser:
+          $ref: "#/components/schemas/AuthorizationsResult"
+    GetAuthorizationResults:
+      type: object
+      properties:
+        authorizationResults:
+          uniqueItems: true
+          type: array
+          properties:
+            empty:
+              type: boolean
+          items:
+            $ref: "#/components/schemas/GetAuthorizationResult"
+        authorizationsForUser:
+          $ref: "#/components/schemas/AuthorizationsResult"
+    AuthorizationsAdditionalFilesResult:
+      type: object
+      properties:
+        authorizationResults:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+        applicationName:
+          type: string
+        isAdministrator:
+          type: boolean
+    GetAuthorizationAdditionalFilesResult:
+      type: object
+      properties:
+        uuid:
+          type: string
+          format: uuid
+        name:
+          type: string
+        users:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/OreSiUser"
+        application:
+          type: string
+          format: uuid
+        authorizations:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: string
+    GetAuthorizationAdditionalFilesResults:
+      type: object
+      properties:
+        authorizationResults:
+          uniqueItems: true
+          type: array
+          properties:
+            empty:
+              type: boolean
+          items:
+            $ref: "#/components/schemas/GetAuthorizationAdditionalFilesResult"
+        authorizationsForUser:
+          $ref: "#/components/schemas/AuthorizationsAdditionalFilesResult"
+        users:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+    AdditionalBinaryFileResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        application:
+          type: string
+          format: uuid
+        user:
+          type: string
+          format: uuid
+        updateUser:
+          type: string
+          format: uuid
+        additionalBinaryFileType:
+          type: string
+        comment:
+          type: string
+        fileName:
+          type: string
+        fileType:
+          type: string
+        size:
+          type: integer
+          format: int64
+        additionalBinaryFileForm:
+          type: object
+          additionalProperties:
+            type: string
+        associates:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              $ref: "#/components/schemas/AuthorizationParsed"
+        updateDate:
+          type: string
+          format: date-time
+        forApplication:
+          type: boolean
+    GetAdditionalFilesResult:
+      type: object
+      properties:
+        users:
+          uniqueItems: true
+          type: array
+          items:
+            $ref: "#/components/schemas/User"
+        additionalFileName:
+          type: string
+        additionalBinaryFiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/AdditionalBinaryFileResult"
+        description:
+          $ref: "#/components/schemas/AdditionalFileDescription"
+        fileNames:
+          type: array
+          items:
+            type: string
+    ApplicationContext:
+      type: object
+      properties:
+        parent:
+          $ref: "#/components/schemas/ApplicationContext"
+        id:
+          type: string
+        displayName:
+          type: string
+        applicationName:
+          type: string
+        startupDate:
+          type: integer
+          format: int64
+        autowireCapableBeanFactory:
+          $ref: "#/components/schemas/AutowireCapableBeanFactory"
+        environment:
+          $ref: "#/components/schemas/Environment"
+        beanDefinitionCount:
+          type: integer
+          format: int32
+        beanDefinitionNames:
+          type: array
+          items:
+            type: string
+        parentBeanFactory:
+          $ref: "#/components/schemas/BeanFactory"
+        classLoader:
+          type: object
+          properties:
+            name:
+              type: string
+            registeredAsParallelCapable:
+              type: boolean
+            parent:
+              type: object
+              properties:
+                name:
+                  type: string
+                registeredAsParallelCapable:
+                  type: boolean
+                unnamedModule:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    classLoader:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        registeredAsParallelCapable:
+                          type: boolean
+                        definedPackages:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              name:
+                                type: string
+                              annotations:
+                                type: array
+                                items:
+                                  type: object
+                              declaredAnnotations:
+                                type: array
+                                items:
+                                  type: object
+                              sealed:
+                                type: boolean
+                              specificationTitle:
+                                type: string
+                              specificationVersion:
+                                type: string
+                              specificationVendor:
+                                type: string
+                              implementationTitle:
+                                type: string
+                              implementationVersion:
+                                type: string
+                              implementationVendor:
+                                type: string
+                        defaultAssertionStatus:
+                          type: boolean
+                          writeOnly: true
+                    descriptor:
+                      type: object
+                      properties:
+                        open:
+                          type: boolean
+                        automatic:
+                          type: boolean
+                    named:
+                      type: boolean
+                    annotations:
+                      type: array
+                      items:
+                        type: object
+                    declaredAnnotations:
+                      type: array
+                      items:
+                        type: object
+                    packages:
+                      uniqueItems: true
+                      type: array
+                      items:
+                        type: string
+                    nativeAccessEnabled:
+                      type: boolean
+                    layer:
+                      type: object
+                definedPackages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      name:
+                        type: string
+                      annotations:
+                        type: array
+                        items:
+                          type: object
+                      declaredAnnotations:
+                        type: array
+                        items:
+                          type: object
+                      sealed:
+                        type: boolean
+                      specificationTitle:
+                        type: string
+                      specificationVersion:
+                        type: string
+                      specificationVendor:
+                        type: string
+                      implementationTitle:
+                        type: string
+                      implementationVersion:
+                        type: string
+                      implementationVendor:
+                        type: string
+                defaultAssertionStatus:
+                  type: boolean
+                  writeOnly: true
+            unnamedModule:
+              type: object
+              properties:
+                name:
+                  type: string
+                classLoader:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    registeredAsParallelCapable:
+                      type: boolean
+                    definedPackages:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                          annotations:
+                            type: array
+                            items:
+                              type: object
+                          declaredAnnotations:
+                            type: array
+                            items:
+                              type: object
+                          sealed:
+                            type: boolean
+                          specificationTitle:
+                            type: string
+                          specificationVersion:
+                            type: string
+                          specificationVendor:
+                            type: string
+                          implementationTitle:
+                            type: string
+                          implementationVersion:
+                            type: string
+                          implementationVendor:
+                            type: string
+                    defaultAssertionStatus:
+                      type: boolean
+                      writeOnly: true
+                descriptor:
+                  type: object
+                  properties:
+                    open:
+                      type: boolean
+                    automatic:
+                      type: boolean
+                named:
+                  type: boolean
+                annotations:
+                  type: array
+                  items:
+                    type: object
+                declaredAnnotations:
+                  type: array
+                  items:
+                    type: object
+                packages:
+                  uniqueItems: true
+                  type: array
+                  items:
+                    type: string
+                nativeAccessEnabled:
+                  type: boolean
+                layer:
+                  type: object
+            definedPackages:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  annotations:
+                    type: array
+                    items:
+                      type: object
+                  declaredAnnotations:
+                    type: array
+                    items:
+                      type: object
+                  sealed:
+                    type: boolean
+                  specificationTitle:
+                    type: string
+                  specificationVersion:
+                    type: string
+                  specificationVendor:
+                    type: string
+                  implementationTitle:
+                    type: string
+                  implementationVersion:
+                    type: string
+                  implementationVendor:
+                    type: string
+            defaultAssertionStatus:
+              type: boolean
+              writeOnly: true
+    AutowireCapableBeanFactory:
+      type: object
+    BeanFactory:
+      type: object
+    Environment:
+      type: object
+      properties:
+        activeProfiles:
+          type: array
+          items:
+            type: string
+        defaultProfiles:
+          type: array
+          items:
+            type: string
+    FilterRegistration:
+      type: object
+      properties:
+        servletNameMappings:
+          type: array
+          items:
+            type: string
+        urlPatternMappings:
+          type: array
+          items:
+            type: string
+        initParameters:
+          type: object
+          additionalProperties:
+            type: string
+        name:
+          type: string
+        className:
+          type: string
+    HttpStatusCode:
+      type: object
+      properties:
+        error:
+          type: boolean
+        is4xxClientError:
+          type: boolean
+        is2xxSuccessful:
+          type: boolean
+        is5xxServerError:
+          type: boolean
+        is1xxInformational:
+          type: boolean
+        is3xxRedirection:
+          type: boolean
+    JspConfigDescriptor:
+      type: object
+      properties:
+        taglibs:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaglibDescriptor"
+        jspPropertyGroups:
+          type: array
+          items:
+            $ref: "#/components/schemas/JspPropertyGroupDescriptor"
+    JspPropertyGroupDescriptor:
+      type: object
+      properties:
+        deferredSyntaxAllowedAsLiteral:
+          type: string
+        isXml:
+          type: string
+        elIgnored:
+          type: string
+        errorOnELNotFound:
+          type: string
+        pageEncoding:
+          type: string
+        scriptingInvalid:
+          type: string
+        includePreludes:
+          type: array
+          items:
+            type: string
+        includeCodas:
+          type: array
+          items:
+            type: string
+        trimDirectiveWhitespaces:
+          type: string
+        errorOnUndeclaredNamespace:
+          type: string
+        defaultContentType:
+          type: string
+        buffer:
+          type: string
+        urlPatterns:
+          type: array
+          items:
+            type: string
+    RedirectView:
+      type: object
+      properties:
+        applicationContext:
+          $ref: "#/components/schemas/ApplicationContext"
+        servletContext:
+          $ref: "#/components/schemas/ServletContext"
+        contentType:
+          type: string
+        requestContextAttribute:
+          type: string
+        staticAttributes:
+          type: object
+          additionalProperties:
+            type: object
+        exposePathVariables:
+          type: boolean
+        exposeContextBeansAsAttributes:
+          type: boolean
+          writeOnly: true
+        exposedContextBeanNames:
+          type: array
+          writeOnly: true
+          items:
+            type: string
+        beanName:
+          type: string
+        url:
+          type: string
+        contextRelative:
+          type: boolean
+          writeOnly: true
+        http10Compatible:
+          type: boolean
+          writeOnly: true
+        exposeModelAttributes:
+          type: boolean
+          writeOnly: true
+        encodingScheme:
+          type: string
+          writeOnly: true
+        statusCode:
+          $ref: "#/components/schemas/HttpStatusCode"
+        expandUriTemplateVariables:
+          type: boolean
+          writeOnly: true
+        propagateQueryParams:
+          type: boolean
+          writeOnly: true
+        hosts:
+          type: array
+          items:
+            type: string
+        propagateQueryProperties:
+          type: boolean
+        redirectView:
+          type: boolean
+        attributesCSV:
+          type: string
+          writeOnly: true
+        attributesMap:
+          type: object
+          additionalProperties:
+            type: object
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+          writeOnly: true
+    ServletContext:
+      type: object
+      properties:
+        classLoader:
+          type: object
+          properties:
+            name:
+              type: string
+            registeredAsParallelCapable:
+              type: boolean
+            definedPackages:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  annotations:
+                    type: array
+                    items:
+                      type: object
+                  declaredAnnotations:
+                    type: array
+                    items:
+                      type: object
+                  sealed:
+                    type: boolean
+                  specificationTitle:
+                    type: string
+                  specificationVersion:
+                    type: string
+                  specificationVendor:
+                    type: string
+                  implementationTitle:
+                    type: string
+                  implementationVersion:
+                    type: string
+                  implementationVendor:
+                    type: string
+            defaultAssertionStatus:
+              type: boolean
+              writeOnly: true
+        majorVersion:
+          type: integer
+          format: int32
+        minorVersion:
+          type: integer
+          format: int32
+        attributeNames:
+          type: object
+        contextPath:
+          type: string
+        effectiveMajorVersion:
+          type: integer
+          format: int32
+        effectiveMinorVersion:
+          type: integer
+          format: int32
+        serverInfo:
+          type: string
+        servletContextName:
+          type: string
+        requestCharacterEncoding:
+          type: string
+        servletRegistrations:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/ServletRegistration"
+        filterRegistrations:
+          type: object
+          additionalProperties:
+            $ref: "#/components/schemas/FilterRegistration"
+        sessionCookieConfig:
+          $ref: "#/components/schemas/SessionCookieConfig"
+        sessionTrackingModes:
+          uniqueItems: true
+          type: array
+          writeOnly: true
+          items:
+            type: string
+            enum:
+            - COOKIE
+            - URL
+            - SSL
+        defaultSessionTrackingModes:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+            - COOKIE
+            - URL
+            - SSL
+        effectiveSessionTrackingModes:
+          uniqueItems: true
+          type: array
+          items:
+            type: string
+            enum:
+            - COOKIE
+            - URL
+            - SSL
+        jspConfigDescriptor:
+          $ref: "#/components/schemas/JspConfigDescriptor"
+        virtualServerName:
+          type: string
+        sessionTimeout:
+          type: integer
+          format: int32
+        responseCharacterEncoding:
+          type: string
+        initParameterNames:
+          type: object
+    ServletRegistration:
+      type: object
+      properties:
+        runAsRole:
+          type: string
+        mappings:
+          type: array
+          items:
+            type: string
+        initParameters:
+          type: object
+          additionalProperties:
+            type: string
+        name:
+          type: string
+        className:
+          type: string
+    SessionCookieConfig:
+      type: object
+      properties:
+        maxAge:
+          type: integer
+          format: int32
+        path:
+          type: string
+        domain:
+          type: string
+        name:
+          type: string
+        attributes:
+          type: object
+          additionalProperties:
+            type: string
+        comment:
+          type: string
+          deprecated: true
+        secure:
+          type: boolean
+        httpOnly:
+          type: boolean
+    TaglibDescriptor:
+      type: object
+      properties:
+        taglibURI:
+          type: string
+        taglibLocation:
+          type: string

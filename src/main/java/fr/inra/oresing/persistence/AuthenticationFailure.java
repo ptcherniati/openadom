@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import fr.inra.oresing.OreSiException;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import lombok.Getter;
 
@@ -29,6 +30,17 @@ public class AuthenticationFailure extends OreSiException {
     public static final String BAD_PASSWORDS = "BAD_PASSWORDS";
 
     private final Map params;
+
+    public AuthenticationFailure(String message, CreateUserRequest userRequest) {
+        super(message);
+        params = Optional.ofNullable(userRequest)
+                .map(lr -> Map.of(
+                                "login", lr.getLogin(),
+                                "email", lr.getEmail()
+                        )
+                )
+                .orElseGet(Map::of);
+    }
 
 
     private static Map getParams(final LoginAdminResult loginAdminResult) {

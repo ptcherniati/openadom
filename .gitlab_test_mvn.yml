@@ -1,118 +1,71 @@
-maven_test_rest_1:
+.st_test_template: &test_template
   image: maven:3.9.4-amazoncorretto-21
   stage: test
-  script: mvn --batch-mode clean test -Ptest_rest_1
-  tags:
-    - docker
   artifacts:
+    when: always
     reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
-
-maven_test_rest_1_ACBB:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script: mvn --batch-mode clean test -Ptest_rest_1_ACBB
-  tags:
-    - docker
-  artifacts:
-    reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
-
-maven_test_rest_1_Haute_Frequence:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script: mvn --batch-mode clean test -Ptest_rest_1_Haute_Frequence
-  tags:
-    - docker
-  artifacts:
-    reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
-
-maven_test_rest_2:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script: mvn --batch-mode clean test -Ptest_rest_2
-  tags:
-    - docker
-  artifacts:
-    reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
-
-maven_test_rest_others:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script: mvn --batch-mode clean test -Ptest_rest_others
-  tags:
-    - docker
-  artifacts:
-    reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
-
-maven_test_checker:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script: mvn --batch-mode clean test -Ptest_checker
-  tags:
-    - docker
-  artifacts:
-    reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
-
-maven_test_model:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script: mvn --batch-mode clean test -Ptest_model
-  tags:
-    - docker
-  artifacts:
-    reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
-
-maven_test_persistence:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script: mvn --batch-mode clean test -Ptest_persistence
-  tags:
-    - docker
-  artifacts:
-    reports:
-      junit:
-        - target/surefire-reports/TEST-*.xml
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
-
-
-
-maven_swagger_build:
-  image: maven:3.9.4-amazoncorretto-21
-  stage: test
-  script:
-    - mvn --batch-mode clean test -Pswagger_build
-  tags:
-    - docker
-  artifacts:
+      junit: target/surefire-reports/*.xml
     paths:
-      - documentations/
-  rules:
-    - if: $CI_JOB_MANUAL!= "true"
+      - target/surefire-reports/
+  script:
+    - |
+      # Par défaut, si le job est nommé "test_all" on ne filtre pas (profil all-tests)
+      # Sinon, on retire le préfixe "test_" et on remplace le premier underscore par un point.
+      if [[ "$CI_JOB_NAME" == "test_all" ]]; then
+          export MAVEN_PROFILE=all-tests
+      else
+          export MAVEN_PROFILE=$(echo "$CI_JOB_NAME" | sed -e 's/^test_//' -e 's/_/./')
+      fi
+      echo "Utilisation du profil Maven: $MAVEN_PROFILE"
+    - mvn test -P$MAVEN_PROFILE
+
+test_core_basic:
+  <<: *test_template
+
+test_core_config:
+  <<: *test_template
+
+test_core_auth:
+  <<: *test_template
+
+test_domain_model:
+  <<: *test_template
+
+test_domain_checker:
+  <<: *test_template
+
+test_domain_i18n:
+  <<: *test_template
+
+test_integration_rest:
+  <<: *test_template
+
+test_integration_persistence:
+  <<: *test_template
+
+test_app_monsoere:
+  <<: *test_template
+
+test_app_haute_frequence:
+  <<: *test_template
+
+test_app_acbb:
+  <<: *test_template
+
+test_app_olac:
+  <<: *test_template
+
+test_app_foret:
+  <<: *test_template
+
+test_app_pattern:
+  <<: *test_template
+
+test_app_recursivity:
+  <<: *test_template
+
+test_app_teledetection:
+  <<: *test_template
+
+test_no-tags:
+  <<: *test_template

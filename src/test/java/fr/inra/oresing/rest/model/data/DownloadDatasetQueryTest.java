@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-@Tag("MODEL_REQUEST_TEST")
+@Tag("integration.persistence\n")
 @Disabled
 class DownloadDatasetQueryTest {
     final String simpleSearchJson = """

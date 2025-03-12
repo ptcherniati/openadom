@@ -113,7 +113,6 @@ public class OreSiNg implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(final CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOrigins("http://localhost:8080")
                 .allowedOrigins(allowedOrigin)
                 .allowedMethods("POST", "PUT", "GET", "DELETE")
                 .allowCredentials(true);

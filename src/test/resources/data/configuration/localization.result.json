@@ -218,7 +218,7 @@
       "i18nDisplayPattern" : {
         "title" : {
           "en" : "{zet_nom_en}",
-          "fr" : "{zet_nom_fry}"
+          "fr" : "{zet_nom_fr}"
         },
         "description" : {
           "en" : "{zet_description_en}",
@@ -379,12 +379,12 @@
       },
       "i18nDisplayPattern" : {
         "title" : {
-          "en" : "<em>[data display]</em>: {sit_code} ({sit_label_en})",
-          "fr" : "<em>[data display]</em>: {sit_code} ({sit_label_fr})"
+          "en" : "<em>[data display]</em>: {tel_experimental_site} ({tel_experimental_plot})",
+          "fr" : "<em>[data display]</em>: {tel_experimental_site} ({tel_experimental_plot})"
         },
         "description" : {
-          "en" : "<em>[data display]</em>: {sit_code} ({sit_label_en})",
-          "fr" : "<em>[data display]</em>: {sit_code} ({sit_label_fr})"
+          "en" : "<em>[data display]</em>: {tel_experimental_site} ({tel_experimental_plot})",
+          "fr" : "<em>[data display]</em>: {tel_experimental_site} ({tel_experimental_plot})"
         }
       },
       "i18n" : {

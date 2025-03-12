@@ -454,7 +454,7 @@ public class Fixtures {
         DataTypeErrors.put("missingMandatoryColumns", List.of(
                 "\"Nom parcelle\";\"Nom traitement\";\"Date\";\"Time\";\"SWC_1_15\";\"qc\";\"SWC_2_15\";\"qc\";\"SWC_1_45\";\"qc\";\"SWC_2_45\";\"qc\";\"SWC_1_75\";\"qc\";\"SWC_2_75\";\"qc\";\"SWC_1_105\";\"qc\";\"SWC_2_105\";\"qc\";\"SWC_1_135\";\"qc\";\"SWC_2_135\";\"qc\";\"SWC_1_165\";\"qc\";\"SWC_2_165\";\"qc\";\"SWC_1_195\";\"qc\";\"SWC_2_195\";\"qc\";\"SWC_1_235\";\"qc\";\"DateTime\";\"SWC_2_235\";\"qc\"",
                 "\"Nom parcelle\";\"Nom traitement\";\"Dates\";\"Time\";\"SWC_1_15\";\"qc\";\"SWC_2_15\";\"qc\";\"SWC_1_45\";\"qc\";\"SWC_2_45\";\"qc\";\"SWC_1_75\";\"qc\";\"SWC_2_75\";\"qc\";\"SWC_1_105\";\"qc\";\"SWC_2_105\";\"qc\";\"SWC_1_135\";\"qc\";\"SWC_2_135\";\"qc\";\"SWC_1_165\";\"qc\";\"SWC_2_165\";\"qc\";\"SWC_1_195\";\"qc\";\"SWC_2_195\";\"qc\";\"SWC_1_235\";\"qc\";\"DateTime\";\"SWC_2_235\";\"qc\"",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"missingMandatoryColumns\",\"messageParams\":{\"missingMandatoryColumns\":[\"Date\"]},\"target\":null},\"lineNumber\":7}]"
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"missingMandatoryColumns\",\"params\":{\"missingMandatoryColumns\":[\"Date\"]},\"lineNumber\":7}]"
         ));
         return DataTypeErrors;
     }
@@ -483,7 +483,7 @@ public class Fixtures {
         DataTypeErrors.put("unexpectedHeaderColumnsInList", List.of(
                 "\"Nom parcelle\";\"Nom traitement\";\"Date\";\"Time\";\"SWC_1_15\";\"qc\";\"SWC_2_15\";\"qc\";\"SWC_1_45\";\"qc\";\"SWC_2_45\";\"qc\";\"SWC_1_75\";\"qc\";\"SWC_2_75\";\"qc\";\"SWC_1_105\";\"qc\";\"SWC_2_105\";\"qc\";\"SWC_1_135\";\"qc\";\"SWC_2_135\";\"qc\";\"SWC_1_165\";\"qc\";\"SWC_2_165\";\"qc\";\"SWC_1_195\";\"qc\";\"SWC_2_195\";\"qc\";\"SWC_1_235\";\"qc\";\"DateTime\";\"SWC_2_235\";\"qc\"",
                 "\"Nom parcelle\";\"Nom traitement\";\"Dates\";\"Time\";\"SWC_1_15\";\"qc\";\"SWC_2_15\";\"qc\";\"SWC_1_45\";\"qc\";\"SWC_2_45\";\"qc\";\"SWC_1_75\";\"qc\";\"SWC_2_75\";\"qc\";\"SWC_1_105\";\"qc\";\"SWC_2_105\";\"qc\";\"SWC_1_135\";\"qc\";\"SWC_2_135\";\"qc\";\"SWC_1_165\";\"qc\";\"SWC_2_165\";\"qc\";\"SWC_1_195\";\"qc\";\"SWC_2_195\";\"qc\";\"SWC_1_235\";\"qc\";\"DateTime\";\"SWC_2_235\";\"qc\"",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"missingMandatoryColumns\",\"messageParams\":{\"missingMandatoryColumns\":[\"Date\"]},\"target\":null},\"lineNumber\":7}]"
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"missingMandatoryColumns\",\"params\":{\"missingMandatoryColumns\":[\"Date\"]},\"lineNumber\":7}]"
         ));
         return DataTypeErrors;
     }
@@ -507,53 +507,53 @@ public class Fixtures {
         referentielErrors.put("invalidHeaders", List.of(
                 "définition_en",
                 "définition_en;définition_es",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"isQualitative\",\"nom de la propriété_key\",\"ordre d'affichage\"],\"actualColumns\":[\"Date\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_en\",\"définition_es\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingComponents\":[],\"unknownComponents\":[\"définition_es\"]},\"target\":null},\"lineNumber\":1}]"
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"invalidHeaders\",\"params\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"isQualitative\",\"nom de la propriété_key\",\"ordre d'affichage\"],\"actualColumns\":[\"Date\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_en\",\"définition_es\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingComponents\":[],\"unknownComponents\":[\"définition_es\"]},\"lineNumber\":1}]"
         ));
         referentielErrors.put("emptyHeader", List.of(
                 "définition_en",
                 "",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"emptyHeader\",\"messageParams\":{\"headerLine\":1},\"target\":null},\"lineNumber\":1}]"
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"emptyHeader\",\"params\":{\"headerLine\":1},\"lineNumber\":1}]"
         ));
         referentielErrors.put("duplicatedHeaders", List.of(
                 "définition_en",
                 "définition_en;définition_fr",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedHeaders\",\"messageParams\":{\"duplicatedHeaders\":[\"définition_fr\"]},\"target\":null},\"lineNumber\":1}]"
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"duplicatedHeaders\",\"params\":{\"duplicatedHeaders\":[\"définition_fr\"]},\"lineNumber\":1}]"
         ));
         referentielErrors.put("invalidDateWithComponent", List.of(
                 "02/01/2016",
                 "01/01/16",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithComponent\",\"messageParams\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\"},\"target\":{\"column\":\"date\"},\"date\":null,\"localDateTime\":null,\"value\":null},\"lineNumber\":2}]"
+                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\"},\"lineNumber\":2}]"
         ));
         referentielErrors.put("invalidFloatWithColumn", List.of(
                 "55,22",
                 "x",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloatWithComponent\",\"messageParams\":{\"target\":{\"column\":\"isFloatValue\"},\"value\":\"x\"},\"target\":{\"column\":\"isFloatValue\"},\"value\":null},\"lineNumber\":5}]"
+                "[{\"type\":\"FloatValidationCheckResult\",\"message\":\"invalidFloatWithComponent\",\"params\":{\"target\":{\"column\":\"isFloatValue\"},\"value\":\"x\"},\"lineNumber\":5}]"
         ));
         referentielErrors.put("invalidIntegerWithComponent", List.of(
                 "4",
                 "x",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidIntegerWithComponent\",\"messageParams\":{\"target\":{\"column\":\"ordre_affichage\"},\"value\":\"x\"},\"target\":{\"column\":\"ordre_affichage\"},\"value\":null},\"lineNumber\":5}]"
+                "[{\"type\":\"IntegerValidationCheckResult\",\"message\":\"invalidIntegerWithComponent\",\"params\":{\"target\":{\"column\":\"ordre_affichage\"},\"value\":\"x\"},\"lineNumber\":5}]"
         ));
         referentielErrors.put("duplicatedLineInReference", List.of(
                 "01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;39,22;false;Phytoplancton;38",
                 "01/01/2016;Notes libres;Notes libres;Free notes;;;39,22;false;Phytoplancton;39",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInReference\",\"messageParams\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"proprietes_taxonKnotes_libres\"},\"target\":null},\"lineNumber\":40}]"
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"duplicatedLineInReference\",\"params\":{\"file\":\"proprietes_taxon\",\"lineNumber\":40,\"otherLines\":[39,40],\"duplicateKey\":\"proprietes_taxonKnotes_libres\"},\"lineNumber\":40}]"
         ));
         // me renvois une erreur "invalidHeaders"
         referentielErrors.put("unexpectedHeaderColumn", List.of(
                 "Date",
                 "Date;martin",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidHeaders\",\"messageParams\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"isQualitative\",\"nom de la propriété_key\",\"ordre d'affichage\"],\"actualColumns\":[\"Date\",\"martin\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_en\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingComponents\":[],\"unknownComponents\":[\"martin\"]},\"target\":null},\"lineNumber\":1}]"
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"invalidHeaders\",\"params\":{\"expectedColumns\":[\"Date\",\"site\",\"isFloatValue\",\"nom de la propriété_en\",\"nom de la propriété_fr\",\"type associé\",\"définition_en\",\"définition_fr\",\"isQualitative\",\"nom de la propriété_key\",\"ordre d'affichage\"],\"actualColumns\":[\"Date\",\"martin\",\"nom de la propriété_key\",\"nom de la propriété_fr\",\"nom de la propriété_en\",\"définition_fr\",\"définition_en\",\"isFloatValue\",\"isQualitative\",\"type associé\",\"ordre d'affichage\",\"site\"],\"missingComponents\":[],\"unknownComponents\":[\"martin\"]},\"lineNumber\":1}]"
         ));
         referentielErrors.put("invalidReferenceWithComponent", List.of(
                 "38;",
                 "38;martin",
-                "[{\"validationCheckResult\":{\"target\":{\"column\":\"site\"},\"level\":\"ERROR\",\"rawValue\":\"martin\",\"matchedReferenceHierarchicalKey\":null,\"message\":\"invalidReferenceWithComponent\",\"messageParams\":{\"target\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"},\"value\":{\"refType\":\"site\",\"referenceValues\":{},\"value\":{\"sql\":\"martin\"},\"hierarchicalKey\":{\"sql\":\"martin\"},\"sqlType\":\"LTREE\"}},\"lineNumber\":39}]"
+                "[{\"type\":\"ReferenceValidationCheckResult\",\"message\":\"invalidReferenceWithComponent\",\"params\":{\"target\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"},\"lineNumber\":39}]"
         ));
         referentielErrors.put("patternNotMatchedWithComponent", List.of(
                 "02/01/2016",
                 "12:00:00",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithComponent\",\"messageParams\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"target\":{\"column\":\"date\"},\"date\":null,\"localDateTime\":null,\"value\":null},\"lineNumber\":2}]"
+                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"lineNumber\":2}]"
         ));
         return referentielErrors;
     }
@@ -564,27 +564,27 @@ public class Fixtures {
         DataTypeErrors.put("invalidDate", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;x24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidDateWithComponent\",\"messageParams\":{\"target\":{\"column\":\"date_day\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"x24/02/2020\"},\"target\":{\"column\":\"date_day\"},\"date\":null,\"localDateTime\":null,\"value\":null},\"lineNumber\":3}]"
+                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"target\":{\"column\":\"date_day\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"x24/02/2020\"},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("invalidInt", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;x8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidIntegerWithComponent\",\"messageParams\":{\"target\":{\"column\":\"temperatureDeLAir\"},\"value\":\"x8\"},\"target\":{\"column\":\"temperatureDeLAir\"},\"value\":null},\"lineNumber\":3}]"
+                "[{\"type\":\"IntegerValidationCheckResult\",\"message\":\"invalidIntegerWithComponent\",\"params\":{\"target\":{\"column\":\"temperatureDeLAir\"},\"value\":\"x8\"},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("invalidFloat", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;x10;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"invalidFloatWithComponent\",\"messageParams\":{\"target\":{\"column\":\"transparenceParSecchi\"},\"value\":\"x10\"},\"target\":{\"column\":\"transparenceParSecchi\"},\"value\":null},\"lineNumber\":3}]"
+                "[{\"type\":\"FloatValidationCheckResult\",\"message\":\"invalidFloatWithComponent\",\"params\":{\"target\":{\"column\":\"transparenceParSecchi\"},\"value\":\"x10\"},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("requiredValue", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"requiredValueWithComponent\",\"messageParams\":{\"target\":{\"column\":\"date_day\"}}},\"lineNumber\":3}]"
+                "[{\"type\":\"DefaultCheckerValidationCheckResult\",\"message\":\"requiredValueWithComponent\",\"params\":{\"target\":{\"column\":\"date_day\"}},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("duplicatedLineInDatatype", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;22/01/2020;08:45:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "[{\"validationCheckResult\":{\"level\":\"ERROR\",\"message\":\"duplicatedLineInReference\",\"messageParams\":{\"file\":\"condition_prelevements\",\"lineNumber\":3,\"otherLines\":[2,3],\"duplicateKey\":\"condition_prelevementsK22_01_2020__08COLON45COLON00__leman\"},\"target\":null},\"lineNumber\":3}]"
+                "[{\"type\":\"DefaultValidationCheckResult\",\"message\":\"duplicatedLineInReference\",\"params\":{\"file\":\"condition_prelevements\",\"lineNumber\":3,\"otherLines\":[2,3],\"duplicateKey\":\"condition_prelevementsK22_01_2020__08COLON45COLON00__leman\"},\"lineNumber\":3}]"
         ));
         return DataTypeErrors;
     }

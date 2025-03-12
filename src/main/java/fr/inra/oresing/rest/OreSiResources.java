@@ -11,6 +11,7 @@ import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
@@ -31,6 +32,7 @@ import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuer
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
+import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
@@ -52,6 +54,7 @@ import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.synthesis.SynthesisResult;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
+import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
@@ -82,6 +85,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import org.springframework.web.util.UriUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.Mono;
 
 import java.io.*;
 import java.net.URI;
@@ -95,10 +99,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_ADMINISTRATION;
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_USER_CONNECTED;
 
 @Slf4j
 @RestController
@@ -131,7 +139,8 @@ public class OreSiResources implements ServiceContainerBean {
     @Autowired
     private OreSiApiRequestContext request;
 
-    private static Flux<ReactiveResult> buildFluxRequestJDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
+    private Flux<ReactiveResult> buildFluxRequestJDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
+        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
         return Flux.create(fluxSink);
     }
 
@@ -205,7 +214,7 @@ public class OreSiResources implements ServiceContainerBean {
         if (!canDelete) {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
-        if(!storeFile.builder().getFileOrUUID().topublish()) {
+        if (!storeFile.builder().getFileOrUUID().topublish()) {
             if (!applicationDataDelete.hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
@@ -220,12 +229,32 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/filesOnRepository/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<BinaryFile>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
-                                                                 @PathVariable("dataType") final String dataType,
-                                                                 @RequestParam("repositoryId") final String repositoryId) {
+    public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
+                                                                       @PathVariable("dataType") final String dataType,
+                                                                       @RequestParam("repositoryId") final String repositoryId) {
         final BinaryFileDataset binaryFileDataset = BinaryFileService.deserialiseBinaryFileDatasetQuery(dataType, repositoryId);
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        final List<BinaryFile> files = serviceContainer.binaryFileService().getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false);
+        Map<UUID, UserDescriptionResult> users = serviceContainer.authorizationService().getAllUsers()
+                .stream()
+                .map(UserDescriptionResult::of)
+                .collect(Collectors.toMap(UserDescriptionResult::id, Function.identity()));
+        final List<BinaryFileResult> files =
+                serviceContainer.binaryFileService()
+                        .getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false).stream()
+                        .map(binaryFile -> BinaryFileResult.of(
+                                binaryFile,
+                                Optional.ofNullable(binaryFile)
+                                        .map(BinaryFile::getParams)
+                                        .map(BinaryFileInfos::createuser)
+                                        .map(users::get)
+                                        .orElse(null),
+                                Optional.ofNullable(binaryFile)
+                                        .map(BinaryFile::getParams)
+                                        .map(BinaryFileInfos::publisheduser)
+                                        .map(users::get)
+                                        .orElse(null)
+                        ))
+                        .toList();
         return ResponseEntity.ok(files);
     }
 
@@ -588,7 +617,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "general case",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = "General case. You can provide an optional json with componentSelects, rowIds, authorizationDescriptions, componentFilters, componentOrderBy",
+                                    value = """
+                                    "General case. You can provide an optional json with componentSelects, rowIds, authorizationDescriptions, componentFilters, componentOrderBy" """,
                                     description =
                                             """
                                                             {
@@ -600,7 +630,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "reduce by select",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = "Select by. You can provide an optional json with componentSelects",
+                                    value = """
+                                    "Select by. You can provide an optional json with componentSelects" """,
                                     description =
                                             """
                                                             {
@@ -610,7 +641,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "order by",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = "Order by. You can provide an optional json with componentOrderBy",
+                                    value = """
+                                    "Order by. You can provide an optional json with componentOrderBy" """,
                                     description =
                                             """
                                                             {
@@ -625,7 +657,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select by rowIds",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = "Find by RowIds. You can provide an optional json with rowIds",
+                                    value = """
+                                    "Find by RowIds. You can provide an optional json with rowIds" """,
                                     description =
                                             """
                                                             {
@@ -635,7 +668,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select by naturalKeys",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = "Find by naturalKeys. You can provide an optional json with naturalKeys",
+                                    value = """
+                                    "Find by naturalKeys. You can provide an optional json with naturalKeys" """,
                                     description =
                                             """
                                                             {
@@ -645,7 +679,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select by hierarchicalKey",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = "Find by naturalKeys. You can provide an optional json with naturalKeys",
+                                    value = """
+                                    "Find by naturalKeys. You can provide an optional json with naturalKeys" """,
                                     description =
                                             """
                                                             {
@@ -655,7 +690,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select by submissionScope",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = "Find by authorizations. You can provide an optional json with submissionScope",
+                                    value = """
+                                    "Find by authorizations. You can provide an optional json with submissionScope" """,
                                     description =
                                             """
                                                             {
@@ -686,7 +722,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select filter by filter (like '%filter%')",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = "Select by filter. You can provide an optional json with componentFilters",
+                                    value = """
+                                    "Select by filter. You can provide an optional json with componentFilters" """,
                                     description =
                                             """
                                                             {
@@ -705,7 +742,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select filter by filter with regexp (~ '^[ao]m+)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = "Select by RegExp. You can provide an optional json with componentFilters. Can be apply only on text not for reference.",
+                                    value = """
+                                    "Select by RegExp. You can provide an optional json with componentFilters. Can be apply only on text not for reference." """,
                                     description =
                                             """
                                                             {
@@ -722,7 +760,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select filter by filter date (With declared pattern)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = "Select by date. You can provide an optional json with componentFilters",
+                                    value = """
+                                    "Select by date. You can provide an optional json with componentFilters" """,
                                     description =
                                             """
                                                             {
@@ -737,7 +776,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select filter by filter date by interval (With declared pattern)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = "Select by interval of date. You can provide an optional json with componentFilters",
+                                    value = """
+                                    "Select by interval of date. You can provide an optional json with componentFilters" """,
                                     description =
                                             """
                                                             {
@@ -755,7 +795,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select filter by filter numeric)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = "Select by numeric. You can provide an optional json with componentFilters",
+                                    value = """
+                                    "Select by numeric. You can provide an optional json with componentFiltersé" """,
                                     description =
                                             """
                                                             {
@@ -771,7 +812,8 @@ public class OreSiResources implements ServiceContainerBean {
                             @ExampleObject(
                                     name = "select filter by filter numeric by interval)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = "Select by interval of numeric. You can provide an optional json with componentFilters",
+                                    value = """
+                                    "Select by interval of numeric. You can provide an optional json with componentFilters" """,
                                     description =
                                             """
                                                             {

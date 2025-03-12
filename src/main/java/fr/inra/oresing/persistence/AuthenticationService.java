@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.mail.EmailService;
 import fr.inra.oresing.domain.OreSiUser;
@@ -13,7 +14,7 @@ import fr.inra.oresing.rest.model.authorization.CurrentUserRolesResult;
 import fr.inra.oresing.rest.CreateUserResult;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
-import fr.inra.oresing.rest.model.authorization.LoginApplicationResult;
+import fr.inra.oresing.rest.model.authorization.UserAuthorizationForApplication;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
-public class AuthenticationService implements ServiceContainerBean {
+public class AuthenticationService implements ServiceContainerBean, fr.inra.oresing.domain.authorization.AuthenticationService {
     private ServiceContainer serviceContainer;
 
     @Autowired
@@ -103,16 +104,16 @@ public class AuthenticationService implements ServiceContainerBean {
      * @return l'objet OreSiUser contenant les informations sur l'utilisateur identifié
      */
     @Transactional
-    public LoginAdminResult login(final String login, final String password) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    public LoginAdminResult login(final String login, final String password) throws AuthenticationFailure {
         LoginAdminResult loginAdminResult = checkLoginPassword(login, password);
         return switch (loginAdminResult.state()) {
             case "active" -> loginAdminResult;
             case "idle" -> {
-                sendValidationKey(userRepository.findByLogin(login));
+                sendValidationKey(userRepository.findByLogin(login).orElse(null));
                 throw new AuthenticationFailure(AuthenticationFailure.INACTIVE_ACCOUNT, loginAdminResult);
             }
             case "pending" -> {
-                sendValidationKey(userRepository.findByLogin(login));
+                sendValidationKey(userRepository.findByLogin(login).orElse(null));
                 throw new AuthenticationFailure(AuthenticationFailure.PENDING_ACCOUNT, loginAdminResult);
             }
             default -> throw new AuthenticationFailure(AuthenticationFailure.CLOSED_ACCOUNT, loginAdminResult);
@@ -120,7 +121,7 @@ public class AuthenticationService implements ServiceContainerBean {
         };
     }
 
-    private LoginAdminResult checkLoginPassword(final String login, final String password) throws AuthenticationFailure {
+    public LoginAdminResult checkLoginPassword(final String login, final String password) throws AuthenticationFailure {
         final Predicate<OreSiUser> checkPassword = user -> BCrypt.verifyer()
                 .verify(password.toCharArray(), user.getPassword().toCharArray())
                 .verified;
@@ -144,17 +145,17 @@ public class AuthenticationService implements ServiceContainerBean {
         return oreSiUser;
     }
 
-    public OreSiUser sendEmailValidation(final Optional<OreSiUser> loginResult, final EmailService.MESSAGES messages) throws AuthenticationFailure, JsonProcessingException {
+    public OreSiUser sendEmailValidation(final OreSiUser loginResult, final EmailService.MESSAGES messages) throws AuthenticationFailure {
         setRoleAdmin();
         final Date updateDate = new Date();
-        final OreSiUser oreSiUser = loginResult
+        final OreSiUser oreSiUser = Optional.ofNullable(loginResult)
                 .map(user -> userRepository.setState(user.getId(), user.getAccountstate()))
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.STATE_ERROR,
-                        loginResult.orElse(null)));
+                        loginResult));
         final String verificationKey = generateVerificationKey(oreSiUser);
         userRepository.updateNewDate(oreSiUser, updateDate);
         setRoleForClient();
-        serviceContainer.emailService().sendEmailValidation(loginResult.get().getLogin(), loginResult.get().getEmail(), verificationKey, messages);
+        serviceContainer.emailService().sendEmailValidation(loginResult.getLogin(), loginResult.getEmail(), verificationKey, messages);
         return oreSiUser;
     }
 
@@ -165,7 +166,7 @@ public class AuthenticationService implements ServiceContainerBean {
         final LocalDateTime updateDate = oreSiUser1.getUpdateDate();
         final Duration duration = Duration.between(updateDate, now);
         if (!verificationKey.equals(validationKey)) {
-            sendValidationKey(Optional.of(oreSiUser1));
+            sendValidationKey(oreSiUser1);
             throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, oreSiUser1);
         }
         if (duration.compareTo(Duration.ofMinutes(10)) < 0) {
@@ -174,7 +175,7 @@ public class AuthenticationService implements ServiceContainerBean {
             oreSiUser1 = userRepository.setState(oreSiUser1.getId(), OreSiUser.OreSiUserStates.active);
             setRoleForClient();
         } else {
-            sendValidationKey(Optional.of(oreSiUser1));
+            sendValidationKey(oreSiUser1);
             throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, oreSiUser1);
         }
         return userRepository.findById(oreSiUser1.getId());
@@ -458,7 +459,7 @@ public class AuthenticationService implements ServiceContainerBean {
         return OreSiUserRole.forUser(user);
     }
 
-    public List<LoginApplicationResult> getApplicationAuthorizations(Application application) {
+    public List<UserAuthorizationForApplication> getApplicationAuthorizations(Application application) {
         Function<Map<String, Timestamp>, Timestamp> getCharteTimestamp = chartes -> chartes.get(application.getId().toString());
         CurrentUserRoles currentUserRolesForCurrentUser = getCurrentUserRoles();
         if (currentUserRolesForCurrentUser.applicationManagerOf(application)) {
@@ -468,7 +469,7 @@ public class AuthenticationService implements ServiceContainerBean {
                         Optional<Timestamp> timestampOpt = Optional.ofNullable(oreSiUser.getChartes())
                                 .map(getCharteTimestamp);
                         CurrentUserRoles currentUserRoles = getCurrentUserRoles(oreSiUser.getId().toString());
-                        return new LoginApplicationResult(
+                        return new UserAuthorizationForApplication(
                                 application.getName(),
                                 oreSiUser.getId(),
                                 oreSiUser.getLogin(),
@@ -488,7 +489,7 @@ public class AuthenticationService implements ServiceContainerBean {
                     .map(oreSiUser -> {
                         Optional<Timestamp> timestampOpt = Optional.ofNullable(oreSiUser.getChartes())
                                 .map(getCharteTimestamp);
-                        return new LoginApplicationResult(
+                        return new UserAuthorizationForApplication(
                                 application.getName(),
                                 oreSiUser.getId(),
                                 oreSiUser.getLogin(),
@@ -543,47 +544,22 @@ public class AuthenticationService implements ServiceContainerBean {
     }
 
     @Transactional
-    public OreSiUser updateUser(final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        final String login = createUserRequest.getLogin();
-        final String password = createUserRequest.getPassword();
-        final String email = createUserRequest.getEmail();
-        final String verificationKey = createUserRequest.getVerificationKey();
-        final String charte = createUserRequest.getCharte();
-        if (!Strings.isNullOrEmpty(login) && !Strings.isNullOrEmpty(password)) {
-            final LoginAdminResult loginAdminResult = checkLoginPassword(login, password);
-            final OreSiUser user = userRepository.findById(loginAdminResult.id());
-            if (Strings.isNullOrEmpty(verificationKey)) {
-                return updateAccount(user, createUserRequest);
-            } else if (OreSiUser.OreSiUserStates.active == OreSiUser.OreSiUserStates.valueOf(loginAdminResult.state())) {
-                return updateAccount(user, createUserRequest);
-            } else {
-                return activeAccount(loginAdminResult, verificationKey);
-            }
-        } else if (!Strings.isNullOrEmpty(login) && !Strings.isNullOrEmpty(email)) {
-            final Optional<OreSiUser> loginResult = userRepository.findByLoginAndEmail(login, email);
-            loginResult.orElseThrow(() -> new AuthenticationFailure(
-                    AuthenticationFailure.INVALID_ACCOUNT,
-                    new LoginAdminResult(null,
-                            login,
-                            email,
-                            "",
-                            null,
-                            Set.of(),
-                            Map.of()
-                    )));
-            if (!Strings.isNullOrEmpty(charte)) {
-                return setCharteAsValidated(loginResult, createUserRequest, charte);
-            } else if (!Strings.isNullOrEmpty(verificationKey)) {
-                return updatePasswordLost(loginResult, createUserRequest);
-            } else {
-                return sendValidationKey(loginResult);
-            }
-        }
-        return null;
+    public OreSiUser updateUser(NotConnectedUser notConnectedUser) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        return switch (notConnectedUser){
+            case NotConnectedAuthentifiedActiveUser notConnectedAuthentifiedActiveUser -> updateAccount(
+                    notConnectedAuthentifiedActiveUser.user(), notConnectedAuthentifiedActiveUser.createUserRequest());
+            case NotConnectedAuthentifiedActiveUserNotSignedCharte notConnectedAuthentifiedActiveUserNotSignedCharte ->
+                    setCharteAsValidated(notConnectedAuthentifiedActiveUserNotSignedCharte.user(), notConnectedAuthentifiedActiveUserNotSignedCharte.createUserRequest(), notConnectedAuthentifiedActiveUserNotSignedCharte.charte());
+            case NotConnectedAuthentifiedClosedUser notConnectedAuthentifiedClosedUser -> throw  new AuthenticationFailure(AuthenticationFailure.CLOSED_ACCOUNT, notConnectedAuthentifiedClosedUser.loginAdminResult());
+            case NotConnectedAuthentifiedIdleUser notConnectedAuthentifiedIdleUser -> activeAccount(notConnectedAuthentifiedIdleUser.user(), notConnectedAuthentifiedIdleUser.createUserRequest().getVerificationKey());
+            case NotConnectedAuthentifiedMissingPasswordUser notConnectedAuthentifiedMissingPasswordUser -> updatePasswordLost(notConnectedAuthentifiedMissingPasswordUser.oreSiUser(), notConnectedAuthentifiedMissingPasswordUser.createUserRequest());
+            case NotConnectedAuthentifiedPendingUser notConnectedAuthentifiedPendingUser -> sendValidationKey(notConnectedAuthentifiedPendingUser.user());
+            case NotConnectedUnauthentifiedUser notConnectedUnauthentifiedUser -> throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, notConnectedUnauthentifiedUser.createUserRequest());
+        };
     }
 
-    private OreSiUser setCharteAsValidated(final Optional<OreSiUser> loginResult, final CreateUserRequest createUserRequest, final String charte) {
-        return loginResult
+    private OreSiUser setCharteAsValidated(final OreSiUser loginResult, final CreateUserRequest createUserRequest, final String charte) {
+        return Optional.ofNullable(loginResult)
                 .map(oreSiUser -> {
                     final Map<String, Timestamp> chartes = oreSiUser.getChartes() == null ? new HashMap<>() : oreSiUser.getChartes();
                     chartes.put(charte, Timestamp.from(Instant.now()));
@@ -597,12 +573,12 @@ public class AuthenticationService implements ServiceContainerBean {
                 .orElse(new OreSiUser());
     }
 
-    private OreSiUser sendValidationKey(final Optional<OreSiUser> loginResult) throws AuthenticationFailure, JsonProcessingException {
+    private OreSiUser sendValidationKey(final OreSiUser loginResult) throws AuthenticationFailure {
         return sendEmailValidation(loginResult, EmailService.MESSAGES.VALIDATION_KEY);
     }
 
-    private OreSiUser updatePasswordLost(final Optional<OreSiUser> loginResult, final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        final OreSiUser oreSiUser = loginResult
+    private OreSiUser updatePasswordLost(final OreSiUser loginResult, final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        final OreSiUser oreSiUser = Optional.ofNullable(loginResult)
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
         validateValidationKey(oreSiUser, createUserRequest.getVerificationKey());
         Optional.ofNullable(createUserRequest.getNewPassword())
@@ -638,16 +614,15 @@ public class AuthenticationService implements ServiceContainerBean {
         setRoleAdmin();
         final OreSiUser updateUser = userRepository.update(user);
         if (emailChanged) {
-            sendEmailValidation(Optional.of(updateUser), EmailService.MESSAGES.NEW_EMAIL);
+            sendEmailValidation(updateUser, EmailService.MESSAGES.NEW_EMAIL);
         }
         setRoleForClient();
         return updateUser;
     }
 
-    private OreSiUser activeAccount(final LoginAdminResult loginAdminResult, final String verificationKey) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        OreSiUser user = userRepository.findById(loginAdminResult.id());
-        user = validateValidationKey(user, verificationKey);
-        return user;
+    private OreSiUser activeAccount(final OreSiUser oreSiUser, final String verificationKey) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        validateValidationKey(oreSiUser, verificationKey);
+        return oreSiUser;
     }
 
     public void setServiceContainer(ServiceContainer serviceContainer) {

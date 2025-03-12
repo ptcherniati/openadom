@@ -16,7 +16,6 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
-import lombok.SneakyThrows;
 import org.json.JSONException;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
@@ -29,7 +28,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 class CreateAuthorizationRequestTest {
     static String createAuthorization;
@@ -41,7 +39,7 @@ class CreateAuthorizationRequestTest {
     }
 
     @Test
-    @Tag("SUITE")
+    @Tag("core.auth")
     void toAuthorizationRequest() throws IOException {
         CreateAuthorizationRequest createAuthorizationRequest1 = new CreateAuthorizationRequest(
                 UUID.fromString("e7570009-35fb-489d-ad3b-5bb335e7c5d5"),

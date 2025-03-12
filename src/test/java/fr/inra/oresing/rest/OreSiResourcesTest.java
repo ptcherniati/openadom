@@ -90,6 +90,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Tag("integration.rest")
 @Slf4j
 public class OreSiResourcesTest {
 
@@ -121,9 +122,9 @@ public class OreSiResourcesTest {
     private AuthenticationService authenticationService;
     @Autowired
     private Fixtures fixtures;
-    private Cookie authCookie;
     private Cookie lambdaCookie;
     private UUID authUserId;
+    private Cookie authCookie;
     private CreateUserResult lambdaUser;
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -168,7 +169,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Tag("SUITE")
+    @Tag("core.basic")
     public void testDatabaseUser() throws SQLException {
         String currentUser = getCurrentDatabaseUser();
         Assertions.assertEquals("openAdomTechUser", currentUser, "Le test devrait être exécuté en tant qu'openadomTechUser");
@@ -187,16 +188,16 @@ public class OreSiResourcesTest {
 
     @Test
     @Tag("SWAGGER_BUILD")
-    @Tag("SUITE")
+    @Tag("integration.rest")
     public void services_model() throws Exception {
-        final String services_model = mockMvc.perform(get("/api-docs")
-                        .accept(MediaType.APPLICATION_JSON_VALUE)
-                )
+        final String services_model = mockMvc.perform(get("/api-docs.yaml")
+                        .accept(MediaType.parseMediaType("application/vnd.oai.openapi")
+                ))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        registerFile("documentations/services_model.json", services_model);
+        registerFile("documentations/openapi.yaml", services_model);
 
     }
 
@@ -248,7 +249,7 @@ public class OreSiResourcesTest {
 
     @Test
     @Tag("OTHERS_TEST")
-    @Tag("SUITE")
+    @Tag("app.monsoere")
     @Tag("MONSOERE")
     public void addApplicationMonsore() throws Exception {
         final String appId;
@@ -808,14 +809,14 @@ public class OreSiResourcesTest {
 
     @Test
     @Tag("OTHERS_TEST")
-    @Tag("SUITE")
+    @Tag("integration.rest")
     public void buildSwaggerApi() throws Exception {
         mockMvc.perform(get("/v2/api-docs"));
     }
 
     @Test
     @Tag("OTHERS_TEST")
-    @Tag("SUITE")
+    @Tag("domain.model")
     public void testMultiplicityMany() throws Exception {
         final URL resource = getClass().getResource(Fixtures.getMultiplicityMany());
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
@@ -887,7 +888,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Tag("OTHERS_TEST")
+    @Tag("core.config")
     @Disabled
     public void addApplicationWithComputedComponentsWithReferences() throws Exception {
         final URL resource = getClass().getResource(Fixtures.getApplicationWithComputedComponentsWithReferences());
@@ -950,7 +951,7 @@ public class OreSiResourcesTest {
 
     @Test
     @Tag("OTHERS_TEST")
-    @Tag("SUITE")
+    @Tag("app.monsoere")
     @Tag("MONSOERE")
     public void addApplicationMonsoreWithRepository() throws Exception {
         URL resource = getClass().getResource(Fixtures.getMonsoreApplicationConfigurationWithRepositoryResourceName());
@@ -1733,6 +1734,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
+    //@Tag("app.teledetection")
     @Disabled
     public void addApplicationTeledetection() throws Exception {
         final URL resource = getClass().getResource(Fixtures.getTeledetectionConfigurationResourceName());
@@ -1993,6 +1995,7 @@ public class OreSiResourcesTest {
      * The only authorizations that can be put on are on none or all values.
      */
     @Test
+    @Tag("core.config")
     @Disabled
     public void testProgressiveYamlWithoutAuthorization() throws Exception {
         final String authorizationId;
@@ -2099,6 +2102,7 @@ public class OreSiResourcesTest {
 
     @Test
     @Disabled
+    @Tag("core.config")
     public void testProgressiveYamlWithEmptyDatagroup() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getProgressiveYaml().get("yamlWithEmptyDatagroup"));
@@ -2121,6 +2125,7 @@ public class OreSiResourcesTest {
      */
     @Test
     @Disabled
+    @Tag("core.config")
     public void testProgressiveYamlWithNoReference() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getProgressiveYaml().get("testAuthorizationScopeWithoutReference"));
@@ -2146,6 +2151,7 @@ public class OreSiResourcesTest {
 
     @Test
     @Disabled
+    @Tag("core.config")
     public void testProgressiveYamlWithoutAuthorizationScope() {
 
         final URL resource = getClass().getResource(Fixtures.getProgressiveYaml().get("testProgressiveYamlWithoutAuthorizationScope"));
@@ -2165,6 +2171,7 @@ public class OreSiResourcesTest {
 
     @Test
     @Disabled
+    @Tag("core.config")
     public void testProgressiveYamlWithoutTimescopeScope() {
 
         final URL resource = getClass().getResource(Fixtures.getProgressiveYaml().get("testProgressiveYamlWithoutTimescopeScope"));
@@ -2188,6 +2195,7 @@ public class OreSiResourcesTest {
      */
     @Test
     @Disabled
+    @Tag("core.config")
     public void testProgressiveWithReferenceAndNoHierarchicalReferenceYaml() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getProgressiveYaml().get("testAuthorizationScopeWithReferenceAndNoHierarchicalReference"));
@@ -2242,8 +2250,7 @@ public class OreSiResourcesTest {
 
     @Test
     @Tag("SUITE")
-
-
+    @Tag("app.recursivity")
     public void testRecursivity() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getRecursivityApplicationConfigurationResourceName());
@@ -2329,6 +2336,7 @@ public class OreSiResourcesTest {
 
     @Test
     @Tag("SUITE")
+    @Tag("app.pattern")
     public void testPattern() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getPatternApplicationConfigurationResourceName());
@@ -2443,6 +2451,7 @@ public class OreSiResourcesTest {
 
     @Test
     @Tag("SUITE")
+    @Tag("core.config")
     public void testComputedWithNaturalKeyColumns() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getComputedWithNaturalKeyColumns());
@@ -2539,7 +2548,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Tag("ACBB_TEST")
+    @Tag("app.acbb")
     public void addApplicationAcbb() throws Exception {
         addUserRightCreateApplication(authUserId, "acbb");
         final URL resource = getClass().getResource(Fixtures.getAcbbApplicationConfigurationResourceName());
@@ -2772,7 +2781,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Tag("HAUTE_FREQUENCE_TEST")
+    @Tag("app.haute_frequence")
     @Disabled
     public void addApplicationHauteFrequence() throws Throwable {
         addUserRightCreateApplication(authUserId, "hautefrequence");
@@ -2803,7 +2812,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Tag("OTHERS_TEST")
+    @Tag("domain.model")
     @Disabled
     public void addDuplicatedTest() throws Throwable {
         addUserRightCreateApplication(authUserId, "duplicated");
@@ -3056,7 +3065,7 @@ on test le dépôt d'un fichier récursif
     }
 
     @Test
-    @Tag("OTHERS_TEST")
+    @Tag("app.olac")
     @Disabled
     public void addApplicationOLAC() throws Exception {
         addUserRightCreateApplication(authUserId, "olac");
@@ -3151,7 +3160,7 @@ on test le dépôt d'un fichier récursif
     }
 
     @Test
-    @Tag("OTHERS_TEST")
+    @Tag("app.foret")
     @Disabled
     public void addApplicationFORET_essai() throws Exception {
         addUserRightCreateApplication(authUserId, "foret");
@@ -3201,7 +3210,7 @@ on test le dépôt d'un fichier récursif
     }
 
     @Test
-    @Tag("OTHERS_TEST")
+    @Tag("app.foret")
     @Disabled
     public void addApplicationFORET() throws Exception {
         addUserRightCreateApplication(authUserId, "foret");
@@ -3236,6 +3245,7 @@ on test le dépôt d'un fichier récursif
 
     @Test
     @Disabled("utile comme benchmark, ne vérifie rien")
+    @Tag("integration.persistence")
     public void benchmarkImportData() throws Exception {
         addApplicationAcbb();
         try (final InputStream in = fixtures.openSwcDataResourceName(false)) {
@@ -3252,6 +3262,7 @@ on test le dépôt d'un fichier récursif
     @Test
     @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
     @Disabled
+    @Tag("integration.rest")
     public void testGetUploadBundle() throws Exception {
         URL resource = getClass().getResource(Fixtures.getMonsoreApplicationConfigurationWithRepositoryResourceName());
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {

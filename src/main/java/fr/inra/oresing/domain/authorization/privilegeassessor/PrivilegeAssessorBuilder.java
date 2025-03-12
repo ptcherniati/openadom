@@ -1,9 +1,11 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.authorization.AuthenticationService;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdministratorForSystemException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
+import fr.inra.oresing.domain.repository.user.file.UserRepository;
 import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -40,4 +42,20 @@ public sealed interface PrivilegeAssessorBuilder<PrivilegeAssessorState>
     }
 
 
+    static PrivilegeAssessorDomainForSystem<PrivilegeAssessorStateDomain.PrivilegeAssessorStateSystemDomain> forUser(
+            AuthorizationsForSystemUser authorizations,
+            PrivilegeSystemDomain privilegeDomain) {
+        return new PrivilegeAssessorDomainForSystem(
+                authorizations,
+                privilegeDomain
+        );
+    }
+
+    static PrivilegeAssessorDomainForNotConnectedUser forNotConnectedUser(AuthenticationService authenticationService, UserRepository userRepository, PrivilegeSystemDomain privilegeDomain) {
+        return new PrivilegeAssessorDomainForNotConnectedUser(
+                authenticationService,
+                userRepository,
+                privilegeDomain
+        );
+    }
 }

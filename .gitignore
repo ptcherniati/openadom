@@ -12,7 +12,7 @@ target
 /ui/html/
 mermaid-filter.err
 .env
-/documentations/services_model.json
+/documentations/openapi.yaml
 # /ui/cypress/fixtures/applications/errors/errors.json
 # /ui/cypress/fixtures/applications/ore/monsore/**
 # /ui/cypress/fixtures/applications/ore/monsore/validateMonsore.txt

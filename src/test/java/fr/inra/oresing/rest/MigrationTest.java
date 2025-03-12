@@ -5,6 +5,7 @@ import fr.inra.oresing.TestDatabaseConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -25,12 +26,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("testmail")
+@Tag("integration.persistence")
 @SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
 
 @TestPropertySource(locations = "classpath:/application-tests.properties")
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Slf4j
 public class MigrationTest {
 

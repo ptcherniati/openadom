@@ -4,8 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;
@@ -13,10 +15,7 @@ import org.hamcrest.core.IsNull;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +29,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,9 +55,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Slf4j
+@Tag("domain.model")
 public class TestReferencesErrors {
 
     public static final Map<String, String> responses = new HashMap<>();
+    public static final String LOGIN = "poussinreferenceserrors";
+    public static final String PASSWORD = "xxxxxxxx";
+    public static final String EMAIL = "poussinreferenceserrors@inrae.fr";
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
@@ -73,7 +75,8 @@ public class TestReferencesErrors {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private Cookie authCookie;
-
+    private static CreateUserResult authUser = null;
+    private static UUID userId;
     @AfterAll
     public static void registerErrors() throws IOException {
         String errorsAsString = new ObjectMapper().writeValueAsString(responses);
@@ -86,13 +89,25 @@ public class TestReferencesErrors {
 
     @BeforeEach
     public void createUser() throws Exception {
-        CreateUserResult authUser = authenticationService.createUser("poussin", "xxxxxxxx", "poussin@inrae.fr");
-        final UUID userId = authUser.userId();
-        setToActive(userId);
-        final CreateUserResult lambdaUser = authenticationService.createUser("lambda", "xxxxxxxx", "lamnda@inrae.fr");
+        try {
+            authUser = authenticationService.createUser(LOGIN, PASSWORD, EMAIL);
+            userId = authUser.userId();
+            setToActive(authUser.userId());
+        } catch (AuthenticationFailure e) {
+            LoginAdminResult login = authenticationService.login("poussin", "xxxxxxxx");
+            authUser = CreateUserResult.of(authenticationService.getByIdOrLogin(login.id().toString()));
+            userId = authUser.userId();
+            setToActive(authUser.userId());
+            log.info("L'utilisateur existe déjà .... login");
+        }
+        try {
+            authenticationService.createUser("lambda", "xxxxxxxx", "lamnda@inrae.fr");
+        } catch (AuthenticationFailure e) {
+            log.info("L'utilisateur existe déjà .... login");
+        }
         authCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", "poussin")
-                        .param("password", "xxxxxxxx"))
+                        .param("login", LOGIN)
+                        .param("password", PASSWORD))
                 .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
         addRoleAdmin(authUser);
     }
@@ -120,17 +135,6 @@ public class TestReferencesErrors {
         namedParameterJdbcTemplate.update(sql, Map.of("id", userId));
     }
 
-    @Transactional
-    void setToActive(final String login) {
-        String sql = """
-                UPDATE public.oresiuser 
-                SET accountstate = 'active' 
-                WHERE login = :login
-                """;
-
-        namedParameterJdbcTemplate.update(sql, Map.of("login", login));
-    }
-
 
     @Test
     public void testRecursivity() throws Exception {
@@ -140,13 +144,13 @@ public class TestReferencesErrors {
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             //définition de l'application
-            CreateUserResult recursivityUser = authenticationService.createUser("recursivity", "xxxxxxxx", "recursivity@inrae.fr");
+            CreateUserResult recursivityUser = authenticationService.createUser("recursivity", PASSWORD, "recursivity@inrae.fr");
             setToActive(recursivityUser.userId());
             final UUID recursivityUserId = recursivityUser.userId();
             addUserRightCreateApplication(recursivityUserId, "recursivite");
             recursivityCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "recursivity")
-                            .param("password", "xxxxxxxx"))
+                            .param("password", PASSWORD))
                     .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, recursivityCookie, "recursivite", ""));
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
@@ -192,6 +196,7 @@ public class TestReferencesErrors {
                 responses.put(e.getKey(), response);
             }
         }
+        //System.out.println(responses);
         for (final Map.Entry<String, String> e : Fixtures.getRecursiviteReferentielOrderFiles().entrySet()) {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
@@ -246,6 +251,7 @@ public class TestReferencesErrors {
                 assertEquals(e.getValue().get(2), response);
             }
         }
+        //System.out.println(responses);
     }
 
     private void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
@@ -267,13 +273,13 @@ public class TestReferencesErrors {
         final Cookie repeatedColumnCookie;
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
-            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", "xxxxxxxx", "repeatedcolumns@inrae.fr");
+            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
             setToActive(recursivityUser.userId());
             final UUID recursivityUserId = recursivityUser.userId();
             addUserRightCreateApplication(recursivityUserId, "repeatedcolumns");
             repeatedColumnCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "repeatedcolumns")
-                            .param("password", "xxxxxxxx"))
+                            .param("password", PASSWORD))
                     .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnCookie, "repeatedcolumns", ""));
 
@@ -344,13 +350,13 @@ public class TestReferencesErrors {
         final Cookie repeatedColumnsCookie;
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
-            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", "xxxxxxxx", "repeatedcolumns@inrae.fr");
+            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
             setToActive(recursivityUser.userId());
             final UUID recursivityUserId = recursivityUser.userId();
             addUserRightCreateApplication(recursivityUserId, "repeatedcolumns");
             repeatedColumnsCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "repeatedcolumns")
-                            .param("password", "xxxxxxxx"))
+                            .param("password", PASSWORD))
                     .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnsCookie, "repeatedcolumns", ""));
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
