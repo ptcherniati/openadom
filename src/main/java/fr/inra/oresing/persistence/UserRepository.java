@@ -225,7 +225,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         return findById(userId);
     }
 
-    public OreSiUser updateNewDate(final OreSiUser oreSiUser, final Date newDate) throws JsonProcessingException {
+    public OreSiUser updateNewDate(final OreSiUser oreSiUser, final Date newDate) {
         final String query = "update " + getTable().getSqlIdentifier() + " o\n" +
                 "set  accountstate = :accountstate::account_state,\n" +
                 "updatedate = :updateDate,\n" +
@@ -234,7 +234,12 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                 "password = :password\n" +
                 "where id = :uuid::uuid\n";
         final ObjectWriter ow = new ObjectMapper().writer().withDefaultPrettyPrinter();
-        final String charte = ow.writeValueAsString(oreSiUser.getChartes());
+        final String charte;
+        try {
+            charte = ow.writeValueAsString(oreSiUser.getChartes());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
         getNamedParameterJdbcTemplate().update(
                 query,
                 new MapSqlParameterSource("accountstate", oreSiUser.getAccountstate().name())

@@ -3,6 +3,9 @@ package fr.inra.oresing.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForNotConnectedUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
@@ -53,7 +56,8 @@ public class AuthenticationResources implements ServiceContainerBean {
 
     @Operation(
             summary = "Connexion utilisateur",
-            description = "Authentifie un utilisateur et retourne un token JWT dans le cookie. Ce cookie est à passer dans tout appel au serveur",
+            description = "Authentifie un utilisateur et retourne un token JWT dans le cookie. " +
+                          "Ce cookie est à passer dans tout appel au serveur",
             tags = {"authentication-resources"},
             parameters = {
                     @Parameter(
@@ -146,8 +150,8 @@ public class AuthenticationResources implements ServiceContainerBean {
     })
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoginAdminResult login(final HttpServletResponse response, @RequestParam("login") final String login, @RequestParam("password") final String password) throws Throwable {
-        final LoginAdminResult loginAdminResult = authenticationService.login(login, password);
-        // l'authentification a fonctionné, on change dans le context
+        final LoginAdminResult loginAdminResult = serviceContainer.authorizationService().getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
+                .forLoginPassword(login, password);
         final OreSiUserRole userRole = authenticationService.getUserRole(loginAdminResult.id());
         final OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(loginAdminResult.id(), userRole);
         authHelper.refreshCookie(response, requestClient);
@@ -248,7 +252,7 @@ public class AuthenticationResources implements ServiceContainerBean {
                     1. **Activation de compte** (login + password + verificationKey)  
                     2. **Changement d'email** (login + email → envoi d'une verificationKey)  
                     3. **Réinitialisation de mot de passe** (login + email + verificationKey + newPassword + newPasswordConfirm)
-                    
+                    4. **Modification mot de passe** (login + password + active)
                     Transitions d'état du compte : idle → pending → active""",
             tags = {"Utilisateurs"})
     @ApiResponses({
@@ -283,7 +287,10 @@ public class AuthenticationResources implements ServiceContainerBean {
     @PutMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<CreateUserResult> updateUser(final HttpServletResponse response,
                                                        @RequestBody() final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        final OreSiUser oreSiUser = authenticationService.updateUser(createUserRequest);
+        NotConnectedUser notConnectedUser = serviceContainer.authorizationService()
+                .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
+                .forUpdateUser(createUserRequest);
+        final OreSiUser oreSiUser = authenticationService.updateUser(notConnectedUser);
         final String uri = UriUtils.encodePath("/users/" + Optional.ofNullable(oreSiUser)
                         .map(OreSiUser::getId)
                         .map(UUID::toString)

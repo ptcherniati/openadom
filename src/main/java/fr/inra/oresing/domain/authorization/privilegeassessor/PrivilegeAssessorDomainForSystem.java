@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCr
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreatorUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
+import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Optional;
@@ -14,8 +15,11 @@ import java.util.Set;
 
 public record PrivilegeAssessorDomainForSystem<PrivilegeSystemDomain>(
         AuthorizationsForSystemUser authorizations,
-        fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain domain
+        PrivilegeSystemDomain domain
 ) implements PrivilegeAssessorDomain {
+    public PrivilegeAssessorDomainForSystem(PrivilegeSystemDomain privilegeDomain) {
+        this(null, privilegeDomain);
+    }
     public OpenAdomAdmin forAdministrationManagement() {
         return Optional.of(authorizations())
                 .filter(authorizationsForSystemUser -> authorizationsForSystemUser.currentUserRoles().isOpenAdomAdmin())

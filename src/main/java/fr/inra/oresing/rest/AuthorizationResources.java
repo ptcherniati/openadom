@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResult;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForSystem;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
@@ -33,7 +32,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.http.MediaType;
@@ -71,9 +69,67 @@ public class AuthorizationResources implements ServiceContainerBean {
         return serviceContainer.authenticationService().getAdminAuthorizations();
     }
 
+    @GetMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<GetAuthorizationResult> getAuthorizationById(
+            @PathVariable("nameOrId") final String applicationNameOrId,
+            @PathVariable("authorizationId") final UUID authorizationId) {
+        AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
+        Application application = serviceContainer.authorizationService().getApplication(applicationNameOrId);
+        final GetAuthorizationResult getAuthorizationResult = serviceContainer.authorizationService().getAuthorization(
+                new AuthorizationRequest(
+                        authorizationId,
+                        "",
+                        "",
+                        application.getId(),
+                        Set.of(),
+                        null,
+                        null
+                ),
+                authorizationsForUser);
+        return ResponseEntity.ok(getAuthorizationResult);
+    }
+
+
+    /*
+    Récupère une liste d'utilisateurs avec leurs authorisations  pour l'application nameOrId
+     */
+    @Operation(
+            summary = "Récupérer les utilisateurs avec leurs autorisations pour une application",
+            description = "Liste les utilisateurs avec leurs droits d'accès aux données au SI pour une application spécifique identifiée par son nom ou son UUID",
+            tags = {"Autorisations"})
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Liste des utilisateurs avec leurs autorisations récupérées avec succès pour l'application  nameOrId",
+                    content = @Content(
+                            schema = @Schema(implementation = UserAuthorizationForApplication[].class),
+                            examples = @ExampleObject(
+                                    name = "exemple_autorisations",
+                                    value = """
+                                            [{
+                                                "applicationName": "ClimateApp",
+                                                "id": "550e8400-e29b-41d4-a716-446655440000",
+                                                "login": "admin_eco",
+                                                "email": "admin@inrae.fr",
+                                                "state": "active",
+                                                "applicationManager": true,
+                                                "userManager": false,
+                                                "authorizations": ["DATA_CURATION","USER_ADMIN"],
+                                                "isValidCharte": true,
+                                                "isApplicationUser": true
+                                            }]"""
+                            ))),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Application non trouvée"),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Format d'identifiant invalide")
+    })
     @GetMapping(value = "/{nameOrId}/authorizationAdminForApplication", produces = MediaType.APPLICATION_JSON_VALUE)
-    public List<LoginApplicationResult> getAdminAuthorizationsForApplication(@PathVariable("nameOrId") final String applicationNameOrId) {
+    public List<UserAuthorizationForApplication> getAdminAuthorizationsForApplication(@PathVariable("nameOrId") final String applicationNameOrId) {
         Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
+        serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT, application);
         return serviceContainer.authenticationService().getApplicationAuthorizations(application);
     }
 
@@ -277,26 +333,6 @@ public class AuthorizationResources implements ServiceContainerBean {
         serviceContainer.authorizationService().updateRoleForManagement(oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
-    }
-
-    @GetMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetAuthorizationResult> getAuthorizationById(
-            @PathVariable("nameOrId") final String applicationNameOrId,
-            @PathVariable("authorizationId") final UUID authorizationId) {
-        AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
-        Application application = serviceContainer.authorizationService().getApplication(applicationNameOrId);
-        final GetAuthorizationResult getAuthorizationResult = serviceContainer.authorizationService().getAuthorization(
-                new AuthorizationRequest(
-                        authorizationId,
-                        "",
-                        "",
-                        application.getId(),
-                        Set.of(),
-                        null,
-                        null
-                ),
-                authorizationsForUser);
-        return ResponseEntity.ok(getAuthorizationResult);
     }
 
     @GetMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
