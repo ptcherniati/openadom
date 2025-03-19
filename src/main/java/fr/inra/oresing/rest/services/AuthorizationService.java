@@ -42,6 +42,7 @@ import org.springframework.util.MultiValueMap;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -63,6 +64,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     private UserRepository userRepository;
     @Autowired
     private OreSiApiRequestContext request;
+    private ServiceContainer serviceContainer;
 
     private static void testAuthorizationArguments(final Authorization authorizationDescription, final AuthorizationForScope authByType) {
         final Set<String> labels = Optional.ofNullable(authorizationDescription)
@@ -250,7 +252,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
 
     @Override
     public void setServiceContainer(ServiceContainer serviceContainer) {
-
+        this.serviceContainer = serviceContainer;
     }
 
     public record Authorizations(OreSiAuthorization previous, OreSiAuthorization next) {
@@ -978,9 +980,30 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     public PrivilegeAssessorDomainForSystem getPrivilegeAssessorForSystem(
             PrivilegeSystemDomain privilegeDomain
     ) {
-        AuthorizationsForSystemUser authorizations = getAuthorizationsForSystemUser();
-        return PrivilegeAssessorBuilder.forSystem(
-                authorizations,
+        return switch (privilegeDomain) {
+            case SYSTEM_ADMINISTRATION -> {
+                AuthorizationsForSystemUser authorizations = getAuthorizationsForSystemUser();
+                yield PrivilegeAssessorBuilder.forSystem(
+                        authorizations,
+                        privilegeDomain
+                );
+            }
+            case SYSTEM_USER_CONNECTED -> {
+                AuthorizationsForSystemUser authorizations = getAuthorizationsForSystemUser();
+                yield PrivilegeAssessorBuilder.forUser(
+                        authorizations,
+                        privilegeDomain
+                );
+            }
+            case SYSTEM_USER_NOT_CONNECTED -> throw new RuntimeException();
+            case AUTHENTICATION_MANAGEMENT -> null;
+        };
+    }
+
+    public PrivilegeAssessorDomainForNotConnectedUser getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain privilegeDomain) {
+        return PrivilegeAssessorBuilder.forNotConnectedUser(
+                serviceContainer.authenticationService(),
+                userRepository,
                 privilegeDomain
         );
     }

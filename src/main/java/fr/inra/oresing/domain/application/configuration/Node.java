@@ -1,5 +1,7 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import org.apache.commons.collections4.CollectionUtils;
+
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -156,6 +158,10 @@ public record Node(
         if (o == null) {
             return 1;
         }
+        int compareDeepLevel = deepLevel(level(), children()).compareTo(o.deepLevel(o.level(), o.children()));
+        if (compareDeepLevel != 0) {
+            return compareDeepLevel;
+        }
         int compareLevel = level().compareTo(o.level());
         if (compareLevel != 0) {
             return compareLevel;
@@ -168,6 +174,16 @@ public record Node(
             return compareOrder;
         }
         return nodeName().compareTo(o.nodeName());
+    }
+
+    private Integer deepLevel(int deepLevel, SortedSet<Node> childrenLevel) {
+        if(CollectionUtils.isEmpty(children())){
+            return deepLevel;
+        }
+        return childrenLevel.stream()
+                .map(child->deepLevel(child.level(), child.children()))
+                .max(Integer::compareTo)
+                .orElse(deepLevel);
     }
 
     public Node findNode(final String refType) {

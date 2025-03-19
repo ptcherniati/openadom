@@ -1,404 +1,651 @@
-version: 1 #obligatoire, version de l'application OpenADOM
-application: #obligatoire
-  name: damienbastedeccinq #obligatoire
-  defaultLanguage: fr
-  internationalizationName:
-    fr: BAS Damien UC Teledec Scen 5
-    en: BAS Damien UC Teledec Scen 5
-  version: 1 #obligatoire, version de l'application créée avec OpenADOM
-references:
-  tr_variable_standard_vstd: # 0.tr_variable_standard_vstd.csv
-    internationalizationName:
-      fr: (0.tr_variable_standard_vstd.csv) Référentiel des variables standard
-      en: (0.tr_variable_standard_vstd.csv)Standard variable reference
-    allowUnexpectedColumns: false
-    keyColumns: [vstd_code]
-    columns:
-      vstd_code:
-      vstd_shortname_fr:
-      vstd_shortname_en:
-      vstd_label_fr:
-      vstd_label_en:
-      vstd_description_fr:
-      vstd_description_en:
-      vstd_ref:
-  tr_metadata_entity_ment: # 1.tr_metadata_entity_ment.csv
-    internationalizationName:
-      fr: (1.tr_metadata_entity_ment.csv) Liste des entités utilisables dans le référentiel des métadonnées des variables locales (r_variable_local_metadata_vlm)
-      en : (1.tr_metadata_entity_ment.csv) List of entities usable in the metadata reference of the local variable names
-    internationalizationDisplay: #tout computationChecker (dans les ddr et dans les data ?) referencant tr_metadata_entity_ment dans un autre referentiel ou les données est censé récupérer le pattern suivant en lieu et place de la keyColumns --> non fonctionnel actuellement (voir pour ce cas le referentiel ref_datafile_variable_metadata)
-      pattern:
+OA_version: 2.0.1 #obligatoire, version de l'application OpenADOM
+OA_application: #obligatoire
+  OA_name: ateledec #obligatoire
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: SI AnAEE-fr télédétection
+      en: SI AnAEE-fr remote sensing
+  OA_version: 1.0.1 #obligatoire, version de l'application créée avec OpenADOM
+  OA_comment: version 1.0.1 de la config du SI Teledec AnaEE-Fr OpenADOM v2
+OA_tags:
+  metadata:
+    en: metadata
+    fr: métadonnées
+  location:
+    en: location
+    fr: localisation
+  teledec:
+    en: remote sensing
+    fr: télédétection
+OA_data:
+  tr_datatype_dty: # tr_datatype_dty.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des types de données
+        en: List of datatypes
+    OA_tags:
+      - __REFERENCE__
+      - metadata
+    OA_naturalKey:
+      - dty_code
+    OA_i18nDisplayPattern:
+      OA_title:
+        en: "{dty_name_en}"
+        fr: "{dty_name_fr}"
+    OA_basicComponents:
+      dty_code:
+        OA_importHeader: datatype_code
+        OA_required: true
+        OA_tags: [ __ORDER_1__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: "datatype"
+      dty_name_fr:
+        OA_importHeader: datatype_name_fr
+        OA_tags: [ __ORDER_2__ ]
+      dty_name_en:
+        OA_importHeader: datatype_name_en
+        OA_tags: [ __ORDER_3__ ]
+      dty_description_fr:
+        OA_importHeader: datatype_description_fr
+        OA_tags: [ __ORDER_4__ ]
+      dty_description_en:
+        OA_importHeader: datatype_description_en
+        OA_tags: [ __ORDER_5__ ]
+  tr_file_type_fty: # tr_file_type_fty.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des référentiel des types de fichiers (tr_file_type_fty.csv)
+        en: List of file type reference (tr_file_type_fty.csv)
+    OA_tags:
+      - __REFERENCE__
+    OA_naturalKey:
+      - fty_code
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{fty_extension}"
+        en: "{fty_extension}"
+    OA_basicComponents:
+      fty_code:
+        OA_importHeader: "filetype_code"
+        OA_tags: [ __ORDER_1__ ]
+      fty_extension:
+        OA_importHeader: "filetype_extension"
+        OA_tags: [ __ORDER_2__ ]
+      fty_description:
+        OA_importHeader: "filetype_description"
+        OA_tags: [ __ORDER_3__ ]
+      fty_comment:
+        OA_importHeader: "filetype_comment"
+        OA_tags: [ __ORDER_4__ ]
+  tr_metadata_entity_ment: # tr_metadata_entity_ment.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des entités utilisables dans le référentiel des métadonnées des variables locales (tr_metadata_entity_ment.csv)
+        en: List of entities usable in the metadata reference of the local variable names (tr_metadata_entity_ment.csv)
+    OA_tags:
+      - __REFERENCE__
+      - metadata
+    OA_naturalKey:
+      - ment_code
+    OA_i18nDisplayPattern:
+      OA_title:
         fr: "{ment_name_fr}"
         en: "{ment_name_en}"
-    allowUnexpectedColumns: false
-    keyColumns: [ment_code]
-    columns:
+    OA_basicComponents:
       ment_code:
+        OA_importHeader: "entity_code"
+        OA_tags: [ __ORDER_1__ ]
       ment_name_fr:
+        OA_importHeader: "entity_name_fr"
+        OA_tags: [ __ORDER_2__ ]
       ment_name_en:
+        OA_importHeader: "entity_name_en"
+        OA_tags: [ __ORDER_3__ ]
       ment_uri:
-  tr_variable_local_vloc: # 3.tr_variable_local_vloc.csv
-    internationalizationName:
-      fr: (3.tr_variable_local_vloc.csv) Liste des noms locaux des variables
-      en: (3.tr_variable_local_vloc.csv) List of local variable names
-    keyColumns: [vloc_code]
-    columns:
-      vloc_code:
-      vloc_vstd_code:
-        checker:
-          name: Reference
-          params:
-            refType: tr_variable_standard_vstd
-            required: false
-            transformation:
-              codify: true
-      vloc_qualifier:
-      vloc_context:
-      vloc_entity:
-      vloc_characteristic:
-      vloc_category:
-      vloc_unit:
-    computedColumns:
-      vloc_metadata:
-        computation:
-          expression: >
-            String search_vloc_code = (String)datum.vloc_code;
-            references.tr_variable_local_metadata_vlm
-            .findAll({it.refValues.vlm_vloc_code.equals(search_vloc_code)})
+        OA_importHeader: "entity_uri"
+        OA_tags: [ __ORDER_4__ ]
+  tr_variable_var: # tr_variable_var.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des noms des colonnes de variables dans les fichiers de données (tr_variable_var.csv)
+        en: List of variable column names of data files (tr_variable_var.csv)
+    OA_tags:
+      - __REFERENCE__
+      - metadata
+    OA_naturalKey:
+      - var_code
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{var_code}"
+        en: "{var_code}"
+    OA_basicComponents:
+      var_code:
+        OA_importHeader: "var_code"
+        OA_tags: [ __ORDER_1__ ]
+      var_label_fr:
+        OA_importHeader: "var_label_fr"
+        OA_tags: [ __ORDER_2__ ]
+      var_label_en:
+        OA_importHeader: "var_label_en"
+        OA_tags: [ __ORDER_3__ ]
+      var_datatype:
+        OA_importHeader: "var_datatype"
+        OA_tags: [ __ORDER_4__ ]
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_datatype_dty
+      var_std_name:
+        OA_importHeader: "var_standard_name"
+        OA_tags: [ __ORDER_5__ ]
+      var_std_name_uri:
+        OA_importHeader: "var_standard_name_uri"
+        OA_tags: [ __ORDER_6__ ]
+      var_std_entity:
+        OA_importHeader: "var_standard_entity"
+        OA_tags: [ __ORDER_7__ ]
+      var_std_entity_uri:
+        OA_importHeader: "var_standard_entity_uri"
+        OA_tags: [ __ORDER_8__ ]
+      var_std_characteristic:
+        OA_importHeader: "var_standard_characteristic"
+        OA_tags: [ __ORDER_9__ ]
+      var_std_characteristic_uri:
+        OA_importHeader: "var_standard_characteristic_uri"
+        OA_tags: [ __ORDER_10__ ]
+      var_std_category:
+        OA_importHeader: "var_standard_category"
+        OA_tags: [ __ORDER_11__ ]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_multiplicity: MANY
+      var_std_category_uri:
+        OA_importHeader: "var_standard_category_uri"
+        OA_tags: [ __ORDER_12__ ]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_multiplicity: MANY
+      var_std_context:
+        OA_importHeader: "var_standard_context"
+        OA_tags: [ __ORDER_13__ ]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_multiplicity: MANY
+      var_std_context_uri:
+        OA_importHeader: "var_standard_context_uri"
+        OA_tags: [ __ORDER_14__ ]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_string
+          OA_params:
+            OA_multiplicity: MANY
+      var_std_qualifier:
+        OA_importHeader: "var_standard_qualifier"
+        OA_tags: [ __ORDER_15__ ]
+      var_std_qualifier_uri:
+        OA_importHeader: "var_standard_qualifier_uri"
+        OA_tags: [ __ORDER_16__ ]
+      var_std_unit:
+        OA_importHeader: "var_standard_unit"
+        OA_tags: [ __ORDER_17__ ]
+      var_std_unit_uri:
+        OA_importHeader: "var_standard_unit_uri"
+        OA_tags: [ __ORDER_18__ ]
+    OA_computedComponents:
+      var_metadata:
+        OA_computation: # récupère les clés naturelles des métadonnées existantes pour chaque variable (en + de celles de ce référentiel)
+          OA_expression: >
+            String search_var_code = (String)datum.var_code;
+            return reference.tr_var_metadata_vmet
+            .findAll({it.refValues.vmet_var_code.equals(search_var_code)})
             .collect({it.naturalKey})
             .join(",");
-          references:
-            - tr_variable_local_metadata_vlm
-        checker:
-          name: Reference
-          params:
-            multiplicity: MANY
-            refType: tr_variable_local_metadata_vlm
-            required: false
-  tr_variable_local_metadata_vlm: # 2.tr_variable_local_metadata_vlm.csv
-    internationalizationName:
-      fr: (2.tr_variable_local_metadata_vlm.csv) Liste des métadonnées des variables locales
-      en: (2.tr_variable_local_metadata_vlm.csv) local variable metadata
-    allowUnexpectedColumns: false
-    internationalizationDisplay: #pour récupérer ces patterns en lieu et place de la clé naturelle de tr_variable_local_metadata_vlm --> non fonctionel pr le moment (voir la computedColumn vloc_metadata du referentiel tr_variable_local_vloc)
-      pattern:
-        fr: "{vlm_ment_code} : {vlm_ment_value} ({vlm_ment_value_unit_code})" # vlm_ment_code pourrait etre remplacé ici par son internationalizationDisplay ?
-        en: "{vlm_ment_code} : {vlm_ment_value} ({vlm_ment_value_unit_code})"
-    keyColumns: [vlm_vloc_code,vlm_ment_code,vlm_ment_value]
-    columns:
-      vlm_vloc_code:
-      ## computationChecker commenté car référence croisée avec celui de la colonne calculée vloc_metadata du référentiel r_variable_local_vloc
-      # computationChecker:
-      #   name: Reference #contrainte de type référentiel
-      #   params:
-      #     refType: r_variable_local_vloc #a priori on fait toujours refererence à un referentiel avec sa clé naturelle
-      #     required: true # obligatoirement dans le referentiel
-      #     transformation:
-      #       codify: true
-      vlm_ment_code:
-        checker:
-          name: Reference #contrainte de type référentiel
-          params:
-            refType: tr_metadata_entity_ment #a priori on fait toujours refrerence à un referentiel avec sa clé naturelle (ment_code ici)
-            required: true # obligatoirement dans le referentiel
-            transformation:
-              codify: true
-      vlm_ment_value:
-      vlm_ment_type:
-      vlm_ment_value_unit_code:
-      vlm_ment_value_uri:
-      vlm_ment_value_unit_code_uri:
-  tr_site_sit: # 4.tr_site_sit.csv
-    internationalizationName:
-      fr: (4.tr_site_sit.csv) Liste des sites d'étude
-      en: (4.tr_site_sit.csv) List of study sites
-    allowUnexpectedColumns: false
-    internationalizedColumns: # pour l'instant, aucun effet constaté sans l'usage associé de internationalizationDisplay --> à discuter
-      sit_label_fr:
-        fr: sit_label_en
-        en: sit_label_en
-    internationalizationDisplay:
-      pattern:
-        fr: "{sit_code} ({sit_label_fr})"
-        en: "{sit_code} ({sit_label_en})"
-    keyColumns: [sit_code]
-    columns:
+          OA_references:
+            - tr_var_metadata_vmet
+        OA_required: false # toutes les variables n'ont pas des métadonnées supplémentaires à celles spécifiées dans ce référentiel
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_multiplicity: MANY
+            OA_reference:
+              OA_name: tr_var_metadata_vmet
+        OA_exportHeader:
+          OA_title: #optional
+            fr: métadonnées supplémentaires sur la variable
+            en: extra variable metadata
+        OA_tags: [ __ORDER_19__ ]
+  tr_var_metadata_vmet: # tr_var_metadata_vmet.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des métadonnées supplémentaires des variables(tr_var_metadata_vmet.csv)
+        en: List of extra variable metadata (tr_var_metadata_vmet.csv)
+    OA_tags:
+      - __REFERENCE__
+      - metadata
+    OA_naturalKey:
+      - vmet_var_code
+      - vmet_ment_code
+      - vmet_ment_value
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{vmet_ment_code} : {vmet_ment_value} {vmet_ment_value_unit_code}"
+        en: "{vmet_ment_code} : {vmet_ment_value} {vmet_ment_value_unit_code}"
+    OA_basicComponents:
+      vmet_var_code:
+        OA_importHeader: "variable_code"
+        OA_tags: [ __ORDER_1__ ]
+        ## checker commenté car référence croisée avec celui de la colonne calculée var_metadata du référentiel tr_variable_var
+        # checker:
+        #   name: Reference #contrainte de type référentiel
+        #   params:
+        #     refType: tr_variable_var #a priori on fait toujours refererence à un referentiel avec sa clé naturelle
+        #     required: true # obligatoirement dans le referentiel
+        #     transformation:
+        #       codify: true
+      vmet_ment_code:
+        OA_importHeader: "entity_code"
+        OA_tags: [ __ORDER_2__ ]
+        OA_required: true # obligatoirement dans le referentiel
+        OA_checker:
+          OA_name: OA_reference #contrainte de type référentiel
+          OA_params:
+            OA_reference:
+              OA_name: tr_metadata_entity_ment   # a priori on fait toujours reference à un referentiel avec sa clé naturelle (entity_code ici)
+      vmet_ment_value:
+        OA_importHeader: "entity_value"
+        OA_tags: [ __ORDER_3__ ]
+      vmet_ment_value_uri:
+        OA_importHeader: "entity_value_uri"
+        OA_tags: [ __ORDER_4__ ]
+      vmet_ment_value_type:
+        OA_importHeader: "entity_value_type"
+        OA_tags: [ __ORDER_5__ ]
+      vmet_ment_value_unit_code:
+        OA_importHeader: "entity_value_unit_code"
+        OA_tags: [ __ORDER_6__ ]
+      vmet_ment_value_unit_code_uri:
+        OA_importHeader: "entity_value_unit_uri"
+        OA_tags: [ __ORDER_7__ ]
+  tr_site_sit: # tr_site_sit.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des sites d'étude (tr_site_sit.csv)
+        en: List of study sites (tr_site_sit.csv)
+    OA_tags:
+      - __REFERENCE__
+      - location
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{sit_code}"
+        en: "{sit_code}"
+    OA_naturalKey:
+      - sit_code
+    OA_basicComponents:
       sit_code:
+        OA_importHeader: "site_code"
+        OA_tags: [ __ORDER_1__ ]
       sit_label_fr:
+        OA_importHeader: "site_label_fr"
+        OA_tags: [ __ORDER_2__ ]
       sit_label_en:
+        OA_importHeader: "site_label_en"
+        OA_tags: [ __ORDER_3__ ]
       sit_description_fr:
+        OA_importHeader: "site_description_fr"
+        OA_tags: [ __ORDER_4__ ]
       sit_description_en:
+        OA_importHeader: "site_description_en"
+        OA_tags: [ __ORDER_5__ ]
       sit_uri:
+        OA_importHeader: "site_uri"
+        OA_tags: [ __ORDER_6__ ]
       sit_net_code:
-        headerName: "sit_network_code"
-  tr_plot_type_pty: # 5.tr_plot_type_pty.csv
-    internationalizationName:
-      fr: (5.tr_plot_type_pty.csv) Liste des types de parcelles expérimentales
-      en: (5.tr_plot_type_pty.csv) List of experimental plot types
-    allowUnexpectedColumns: false
-    keyColumns: [pty_code]
-    columns:
+        OA_importHeader: "network_code"
+        OA_tags: [ __ORDER_7__ ]
+      sit_net_uri:
+        OA_importHeader: "network_uri"
+        OA_tags: [ __ORDER_8__ ]
+  tr_plot_type_pty: # tr_plot_type_pty.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des types de parcelles expérimentales (tr_plot_type_pty.csv)
+        en: List of experimental plot types (tr_plot_type_pty.csv)
+    OA_tags:
+      - __REFERENCE__
+      - location
+    OA_naturalKey:
+      - pty_code
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{pty_code}"
+        en: "{pty_code}"
+    OA_basicComponents:
       pty_code:
+        OA_importHeader: "plot_type_code"
+        OA_tags: [ __ORDER_1__ ]
       pty_label_fr:
+        OA_importHeader: "plot_type_label_fr"
+        OA_tags: [ __ORDER_2__ ]
       pty_label_en:
+        OA_importHeader: "plot_type_label_en"
+        OA_tags: [ __ORDER_3__ ]
       pty_description_fr:
+        OA_importHeader: "plot_type_description_fr"
+        OA_tags: [ __ORDER_4__ ]
       pty_description_en:
+        OA_importHeader: "plot_type_description_en"
+        OA_tags: [ __ORDER_5__ ]
       pty_uri:
-  tr_treatment_tre: # 6.tr_treatment_tre.csv
-    internationalizationName:
-      fr: (6.tr_treatment_tre.csv) Liste des traitements
-      en: (6.tr_treatment_tre.csv) list of treatments
-    allowUnexpectedColumns: false
-    keyColumns: [tre_code]
-    columns:
+        OA_importHeader: "plot_type_uri"
+        OA_tags: [ __ORDER_6__ ]
+  tr_treatment_tre: # tr_treatment_tre.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des traitements (tr_treatment_tre.csv)
+        en: list of treatments (tr_treatment_tre.csv)
+    OA_tags:
+      - __REFERENCE__
+    OA_naturalKey:
+      - tre_code
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{tre_code}"
+        en: "{tre_code}"
+    OA_basicComponents:
       tre_code:
-        headerName: "treatment_code"
+        OA_importHeader: "treatment_code"
+        OA_tags: [ __ORDER_1__ ]
       tre_label_fr:
-        headerName: "treatment_label_fr"
+        OA_importHeader: "treatment_label_fr"
+        OA_tags: [ __ORDER_2__ ]
       tre_label_en:
-        headerName: "treatment_label_en"
+        OA_importHeader: "treatment_label_en"
+        OA_tags: [ __ORDER_3__ ]
       tre_desciption_fr:
-        headerName: "treatment_description_fr"
+        OA_importHeader: "treatment_description_fr"
+        OA_tags: [ __ORDER_4__ ]
       tre_description_en:
-        headerName: "treatment_description_en"
+        OA_importHeader: "treatment_description_en"
+        OA_tags: [ __ORDER_5__ ]
       tre_uri:
-        headerName: "treatment_uri"
-  tr_plot_plo: # 7.tr_plot_plo.csv
-    internationalizationName:
-      fr: (7.tr_plot_plo.csv) Liste des parcelles expérimentales
-      en: (7.tr_plot_plo.csv) List of experimental plots
-    allowUnexpectedColumns: false
-    # internationalizationDisplay:
-    #   pattern:
-    #     fr: "{plot_label_fr}"
-    #     en: "{plot_label_en}"
-    keyColumns: [plo_code]
-    columns:
+        OA_importHeader: "treatment_uri"
+        OA_tags: [ __ORDER_6__ ]
+  tr_plot_plo: # tr_plot_plo.csv
+    OA_i18n:
+      OA_title:
+        fr: Liste des parcelles expérimentales (tr_plot_plo.csv)
+        en: List of experimental plots (tr_plot_plo.csv)
+    OA_tags:
+      - __REFERENCE__
+      - location
+    OA_naturalKey:
+      - plo_code
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{plo_code}"
+        en: "{plo_code}"
+    OA_basicComponents:
       plo_code:
-        headerName: "plot_code"
+        OA_importHeader: "plot_code"
+        OA_tags: [ __ORDER_1__ ]
       plo_label_fr:
-        headerName: "plot_label_fr"
+        OA_importHeader: "plot_label_fr"
+        OA_tags: [ __ORDER_2__ ]
       plo_label_en:
-        headerName: "plot_label_en"
+        OA_importHeader: "plot_label_en"
+        OA_tags: [ __ORDER_3__ ]
       plo_desciption_fr:
-        headerName: "plot_description_fr"
+        OA_importHeader: "plot_description_fr"
+        OA_tags: [ __ORDER_4__ ]
       plo_description_en:
-        headerName: "plot_description_en"
+        OA_importHeader: "plot_description_en"
+        OA_tags: [ __ORDER_5__ ]
       plo_pty_code:
-        headerName: "plot_type_code"
-        checker:
-          name: Reference #contrainte de type référentiel
-          params:
-            refType: tr_plot_type_pty
-            required: true # valeur obligatoire (clé étrangère NON null)
-            transformation:
-              codify: true
+        OA_importHeader: "plot_type_code"
+        OA_tags: [ __ORDER_6__ ]
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_plot_type_pty
       plo_uri:
-        headerName: "plot_uri"
+        OA_importHeader: "plot_uri"
+        OA_tags: [ __ORDER_7__ ]
       plo_plo_parent_code:
-        headerName: "plot_parent_code"
-        checker:
-          name: Reference #contrainte de type référentiel
-          params:
-            refType: tr_plot_plo
-            required: false #valeur pouvant être absente (clé étrangère null)
-            transformation:
-              codify: true
+        OA_importHeader: "plot_parent_code"
+        OA_tags: [ __ORDER_8__ ]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_plot_plo
+              OA_isRecursive: true
       plo_sit_code:
-        headerName: "site_code"
-        checker:
-          name: Reference #contrainte de type référentiel
-          params:
-            refType: tr_site_sit
-            required: false #valeur pouvant être absente (clé étrangère null)
-            transformation:
-              codify: true
+        OA_importHeader: "site_code"
+        OA_tags: [ __ORDER_9__ ]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_site_sit
+              OA_isParent: true
       plo_tre_code:
-        headerName: "treatment_code"
-        checker:
-          name: Reference #contrainte de type référentiel
-          params:
-            refType: tr_treatment_tre
-            required: false #valeur pouvant être absente (clé étrangère null)
-            transformation:
-              codify: true
-compositeReferences:
-  # cref_ref_plot_ref_plot:
-  #   components:
-  #     - parentRecursiveKey: plot_code_parent
-  #       reference: ref_plot
-  cref_plo_sit:
-    components:
-      - reference: tr_site_sit
-      - reference: tr_plot_plo
-        parentKeyColumn: "plo_sit_code"
-dataTypes: # types de données à gérer (un type = un modèle de fichier csv)
+        OA_importHeader: "treatment_code"
+        OA_tags: [ __ORDER_10__ ]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_treatment_tre
+  tr_flag_fla: # tr_flag_fla.csv 
+    OA_i18n:
+      OA_title:
+        fr: Liste des drapeaux (tr_flag_fla.csv)
+        en: List of flags (tr_flag_fla.csv)
+    OA_tags:
+      - __REFERENCE__
+    OA_naturalKey:
+      - fla_code
+    OA_i18nDisplayPattern:
+      OA_title:
+        fr: "{fla_code} ({fla_label_fr})"
+        en: "{fla_code} ({fla_label_en})"
+    OA_basicComponents:
+      fla_code:
+        OA_importHeader: "quality_flag_code"
+        OA_tags: [ __ORDER_1__ ]
+      fla_label_fr:
+        OA_importHeader: "quality_flag_label_fr"
+        OA_tags: [ __ORDER_2__ ]
+      fla_label_en:
+        OA_importHeader: "quality_flag_label_en"
+        OA_tags: [ __ORDER_3__ ]
   t_teledetection_tel: # solutions avec colonnes organisées verticalement et une colonne meta_info
-    # manquent sections repository, submissionScope> dataGroups, authoriationScopes, timeScope
-    internationalizationName:
-      fr: données de télédétection sans repeated columns
-      en: teledetection data
-    internationalizationDisplays: # attention : avec un S ici car peut concerner plusieurs referentiels
-      tr_site_sit: # censé surcharger l'affichage de la clé naturelle de tr_site_sit définit dan la section reference ; tr_site_sit est utilisé ici dans un computationChecker de component (section data) de ce type de données.
-        pattern:
-          fr: "<em>[data display]</em>: {sit_code} ({sit_label_fr})"
-          en: "<em>[data display]</em>: {sit_code} ({sit_label_en})"
-    uniqueness: # clé d'unicité pour chaque ligne de données
-      - variable: location
-        component: tel_experimental_plot
-      - variable: location
-        component: tel_experimental_site
-      - variable: location
-        component: tel_experimental_network
-      - variable: date
-        component: tel_date
-      - variable: date
-        component: tel_hour
-      - variable: data
-        component: tel_variable
-    data: # le format en base du type de données
-      date: # nom (libre) de variable dans la base
-        components: # section composante
-          tel_date:  # nom libre de composante en base pour la variable date
-            checker:
-              name: Date
-              params:
-                required: true
-                pattern: dd/MM/yyyy
-          tel_hour:  # nom libre de composante en base pour la variable date
-            checker:
-              name: Date
-              params:
-                required: true
-                pattern: HH:mm
-      location: # nom (libre) de variable dans la base
-        components: # section composante
-          tel_experimental_network:
-          tel_experimental_site:
-            checker:
-              name: Reference # un computationChecker de type reference
-              params:
-                required: true # la valeur ne peut être vide
-                refType: tr_site_sit
-                transformation: # a faire avant de vérifier
-                  codify: true
-          tel_experimental_plot:
-            checker:
-              name: Reference # un computationChecker de type reference
-              params:
-                required: true # la valeur ne peut être vide
-                refType: tr_plot_plo
-                transformation: # a faire avant de vérifier
-                  codify: true
-      treatment: # nom (libre) de variable dans la base
-        components: # section composante
-          tel_experimental_treatment:
-            checker:
-              name: Reference # un computationChecker de type reference
-              params:
-                required: true # la valeur ne peut être vide
-                refType: tr_treatment_tre
-                transformation: # a faire avant de vérifier
-                  codify: true
-      pixel_count:
-        computedComponents:
-          tel_pixel_count:
-            computation:
-              expression: >
-                StringToTest=(String)datum.data.get("tel_variable");
-                if(StringToTest.indexOf("10m") == -1) {return datum.get("pixel_count").get("tel_pixel_count_20m");
-                } else {
-                return datum.get("pixel_count").get("tel_pixel_count_10m");
-                }
-        components: # section composante
-          tel_pixel_count_10m:
-            tags: [__hidden__]
-          tel_pixel_count_20m:
-            tags: [__hidden__]
-      data:
-        components:
-          tel_variable:
-            checker:
-              name: Reference # un computationChecker de type reference
-              params:
-                required: true # la valeur ne peut être vide
-                refType: tr_variable_local_vloc
-                transformation: # à faire avant de vérifier
-                  codify: true
-          tel_value:
-    format:  # comment remplir les données décrites dans la section data à partir du fichier csv de ce type de données
-      allowUnexpectedColumns: true #pas d'erreur avec colonnes suppléméntaires non traitées ("Date & Heure") --> ne fonctionne pas actuellement
-      headerLine: 11 #numéro de la ligne contenant les en-têtes de colonnes
-      firstRowLine: 12 # numéro de la première ligne de données
-      separator: ";"
-      constants: # définition des constantes du fichier = valeurs d'entêtes
-        - rowNumber: 1
-          columnNumber: 2
-          boundTo: # liens avec la section data
-            variable: location # variable de la section data à associer
-            component: tel_experimental_network # composante à associer pour la variable de la section data associée
-          exportHeader: experimental network # nom de l'en-tête de colonne à utiliser pour l'export
-        - rowNumber: 2
-          columnNumber: 2
-          boundTo: # liens avec la section data
-            variable: location # variable de la section data à associer
-            component: tel_experimental_site # composante à associer pour la variable de la section data associée
-          exportHeader: experimental site # nom de l'en-tête de colonne à utiliser pour l'export
-        - rowNumber: 3
-          columnNumber: 2
-          boundTo: # liens avec la section /applicationsdata
-            variable: location # variable de la section data à associer
-            component: tel_experimental_plot # composante à associer pour la variable de la section data associée
-          exportHeader: experimental plot # nom de l'en-tête de colonne à utiliser pour l'export
-        - rowNumber: 4
-          columnNumber: 2
-          boundTo: # liens avec la section data
-            variable: treatment # variable de la section data à associer
-            component: tel_experimental_treatment # composante à associer pour la variable de la section data associée
-          exportHeader: experimental treatment # nom de l'en-tête de colonne à utiliser pour l'export
-        - rowNumber: 5
-          columnNumber: 2
-          boundTo: # liens avec la section data
-            variable: pixel_count # variable de la section data à associer
-            component: tel_pixel_count_10m # composante à associer pour la variable de la section data associée
-          #exportHeader: pixel_count_10m # nom de l'en-tête de colonne à utiliser pour l'export
-        - rowNumber: 6
-          columnNumber: 2
-          boundTo: # liens avec la section data
-            variable: pixel_count # variable de la section data à associer
-            component: tel_pixel_count_20m # composante à associer pour la variable de la section data associée
-          exportHeader: pixel_count_20m # nom de l'en-tête de colonne à utiliser pour l'export
-      repeatedColumns:
-        - headerPattern: "(.*)"
-          tokens:
-            - boundTo:
-                variable: data
-                component: tel_variable
-              exportHeader: "variable"
-          boundTo:
-            variable: data
-            component: tel_value
-          exportHeader: "value"
-        # - headerPattern: "(.*)_S2_(.*)_(.*)"
-        #   tokens:
-        #     - boundTo:
-        #         variable: teledec_data
-        #         component: variable
-        #     - boundTo:
-        #         variable: teledec_data
-        #         component: qualifier
-        #     - boundTo:
-        #         variable: teledec_data
-        #         component: spatial_resolution
-        #   boundTo:
-        #     variable: teledec_data
-        #     component: value
-      columns:
-        - header: "Date"
-          boundTo:
-            variable: date
-            component: tel_date
-        - header: "Heure"
-          boundTo:
-            variable: date
-            component: tel_hour
+    OA_i18n:
+      OA_title:
+        fr: données de télédétection
+        en: remote sensing data
+    OA_tags:
+      - __DATA__
+    OA_naturalKey:
+      - tel_plot
+      - tel_site
+      - tel_network
+      - tel_date
+      - tel_hour
+      - tel_variable
+    OA_dataHeaderLine: 11
+    OA_dataFirstLine: 12
+    OA_basicComponents:
+      tel_date:
+        OA_tags: [ __ORDER_1__ ]
+        OA_importHeader: Date
+        OA_exportHeader:
+          OA_title:
+            fr: Date
+            en: Date
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      tel_hour:
+        OA_tags: [ __ORDER_2__ ]
+        OA_importHeader: Heure
+        OA_exportHeader:
+          OA_title:
+            fr: Heure
+            en: Hour
+        OA_required: true
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: HH:mm
+      tel_flag:
+        OA_tags: [ __ORDER_10__ ]
+        OA_importHeader: quality_flag_code
+        OA_exportHeader:
+          OA_title:
+            fr: code qualité
+            en: quality flag
+        OA_required: true
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_flag_fla
+    OA_constantComponents:
+      tel_network:
+        OA_tags: [ __ORDER_3__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: réseau
+            en: network
+        OA_required: true
+        OA_importHeaderTarget:
+          OA_rowNumber: 1
+          OA_columnNumber: 2
+      tel_site:
+        OA_tags: [ __ORDER_4__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: plateforme (site)
+            en: platform (site)
+        OA_required: true
+        OA_importHeaderTarget:
+          OA_rowNumber: 2
+          OA_columnNumber: 2
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_site_sit
+      tel_plot:
+        OA_tags: [ __ORDER_5__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: plot
+            en: plot
+        OA_required: true
+        OA_importHeaderTarget:
+          OA_rowNumber: 3
+          OA_columnNumber: 2
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_plot_plo
+      tel_treatment:
+        OA_tags: [ __ORDER_6__ ]
+        OA_exportHeader:
+          OA_title:
+            fr: traitement
+            en: treatment
+        OA_required: true
+        OA_importHeaderTarget:
+          OA_rowNumber: 4
+          OA_columnNumber: 2
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: tr_treatment_tre
+      tel_pixel_count_10m:
+        OA_tags:
+          - __HIDDEN__
+        OA_required: true
+        OA_importHeaderTarget:
+          OA_rowNumber: 5
+          OA_columnNumber: 2
+      tel_pixel_count_20m:
+        OA_tags:
+          - __HIDDEN__
+        OA_required: true
+        OA_importHeaderTarget:
+          OA_rowNumber: 6
+          OA_columnNumber: 2
+    OA_computedComponents:
+      tel_pixel_count:
+        OA_computation:
+          OA_expression: >
+            String StringToTest = (String)datum.tel_variable;
+            if(StringToTest.indexOf("10m") == -1) {return datum.tel_pixel_count_20m;
+            } else {
+            return datum.tel_pixel_count_10m;
+            }
+        OA_exportHeader:
+          OA_title:
+            fr: nombre de pixels
+            en: pixel count
+        OA_tags: [ __ORDER_7__ ]
+    OA_patternComponents:
+      tel_value:
+        OA_patternForComponents: "(.*)"
+        OA_exportHeader:
+          OA_title:
+            fr: valeur
+            en: value
+        OA_tags: [ __ORDER_8__ ]
+        OA_required: false
+        OA_checker:
+          OA_name: OA_float
+        OA_components:
+          - tel_variable:
+              OA_exportHeader:
+                OA_title:
+                  fr: index
+                  en: index
+              OA_tags: [ __ORDER_9__ ]
+              OA_required: true
+              OA_checker:
+                OA_name: OA_reference
+                OA_params:
+                  OA_reference:
+                    OA_name: tr_variable_var
+    OA_validations:
+      v_treatment_plot: # vérifie que la combinaison plot-treatment à enregistrer existe bien dans le referentiel tr_plot_plo
+        OA_required: true
+        OA_checker:
+          OA_name: OA_groovyExpression
+          OA_params:
+            OA_groovy:
+              OA_expression: >
+                String plotInput = (String)datum.tel_plot;
+                if (references.tr_plot_plo.find({it.refValues.get("plo_code").equals(plotInput)}).refValues.get("plo_tre_code").equals(datum.tel_treatment)) {return true;}
+                else {return false;}
+              OA_references:
+                - tr_plot_plo

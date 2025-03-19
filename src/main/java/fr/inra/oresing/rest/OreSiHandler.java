@@ -56,7 +56,9 @@ public class OreSiHandler implements HandlerInterceptor {
         final Optional<OreSiUserRequestClient> userRequestClient = authHelper.initContext(request);
 
         // s'il est authentifié, on met à jours son cookie
-        userRequestClient.ifPresent(authenticatedUser -> authHelper.refreshCookie(response, authenticatedUser));
+        userRequestClient
+                .ifPresent(authenticatedUser -> authHelper
+                        .refreshCookie(response, isLogoutRequest(request)?null:authenticatedUser));
 
         // quoiqu'il en soit, on doit avoir un role pour accéder à la base
         final OreSiRequestClient requestClient;
@@ -66,7 +68,11 @@ public class OreSiHandler implements HandlerInterceptor {
             requestClient = OreSiAnonymousRequestClient.ANONYMOUS;
         }
         requestContext.setRequestClient(requestClient);
-    }
+    }private boolean isLogoutRequest(HttpServletRequest request) {
+    return "DELETE".equalsIgnoreCase(request.getMethod())
+           && request.getRequestURI().matches(".*/logout/?$");
+}
+
 
     /**
      * On enregistre dans le contexte l'identifiant de correlation

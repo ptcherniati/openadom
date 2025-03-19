@@ -9,6 +9,7 @@ import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnMultipleValue;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.apache.commons.collections.CollectionUtils;

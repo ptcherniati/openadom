@@ -122,9 +122,9 @@ public class OreSiResourcesTest {
     private AuthenticationService authenticationService;
     @Autowired
     private Fixtures fixtures;
-    private Cookie authCookie;
     private Cookie lambdaCookie;
     private UUID authUserId;
+    private Cookie authCookie;
     private CreateUserResult lambdaUser;
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
@@ -190,14 +190,14 @@ public class OreSiResourcesTest {
     @Tag("SWAGGER_BUILD")
     @Tag("integration.rest")
     public void services_model() throws Exception {
-        final String services_model = mockMvc.perform(get("/api-docs")
-                        .accept(MediaType.APPLICATION_JSON_VALUE)
-                )
+        final String services_model = mockMvc.perform(get("/api-docs.yaml")
+                        .accept(MediaType.parseMediaType("application/vnd.oai.openapi")
+                ))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn()
                 .getResponse()
                 .getContentAsString();
-        registerFile("documentations/services_model.json", services_model);
+        registerFile("documentations/openapi.yaml", services_model);
 
     }
 
@@ -1734,7 +1734,7 @@ public class OreSiResourcesTest {
     }
 
     @Test
-    @Tag("app.teledetection")
+    //@Tag("app.teledetection")
     @Disabled
     public void addApplicationTeledetection() throws Exception {
         final URL resource = getClass().getResource(Fixtures.getTeledetectionConfigurationResourceName());

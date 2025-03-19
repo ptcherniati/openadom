@@ -1,10 +1,13 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.BadLoginForAction;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreatorUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
+import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Optional;
@@ -12,8 +15,11 @@ import java.util.Set;
 
 public record PrivilegeAssessorDomainForSystem<PrivilegeSystemDomain>(
         AuthorizationsForSystemUser authorizations,
-        fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain domain
+        PrivilegeSystemDomain domain
 ) implements PrivilegeAssessorDomain {
+    public PrivilegeAssessorDomainForSystem(PrivilegeSystemDomain privilegeDomain) {
+        this(null, privilegeDomain);
+    }
     public OpenAdomAdmin forAdministrationManagement() {
         return Optional.of(authorizations())
                 .filter(authorizationsForSystemUser -> authorizationsForSystemUser.currentUserRoles().isOpenAdomAdmin())
@@ -30,5 +36,18 @@ public record PrivilegeAssessorDomainForSystem<PrivilegeSystemDomain>(
             return new OpenAdomAdmin();
         }
         return new ApplicationCreatorUser(applicationCreatorPatterns);
+    }
+
+    public ConnectedUser connectedUser() {
+        return new ConnectedUser(
+                authorizations().currentUserRoles(),
+                authorizations().applicationCreator()
+        );
+    }
+    public boolean is(String login){
+        if(!login.equals(connectedUser().getLogin())){
+            throw new BadLoginForAction(login);
+        }
+        return true;
     }
 }

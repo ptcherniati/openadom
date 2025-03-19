@@ -26,8 +26,21 @@ public interface ValidationCheckResult {
     }
 
     CheckerTarget target();
+
     @JsonIgnore
-    default List<ValidationCheckResult> getValidations(){
+    default List<ValidationCheckResult> getValidations() {
         return List.of(this);
     }
+
+
+    default ValidationCheckResultRest validationCheckResultToRest(long lineNumber) {
+        return new ValidationCheckResultRest(
+                getClass().getSimpleName(),
+                message(),
+                messageParams(),
+                lineNumber
+        );
+    }
+
+    ;
 }

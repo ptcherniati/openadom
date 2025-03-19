@@ -1,5 +1,5 @@
 ### login
-POST localhost:8081/api/v1/login?login=poussin&password=xxxx
+POST localhost:8081/api/v1/login?login=philippe&password=pfsp
 Content-Type: application/json
 
 {}
@@ -20,9 +20,6 @@ Content-Type: application/json
 < ../../data/monsore/monsore-with-repository.yaml
 --WebAppBoundary--
 
-
-        referentielFiles.put("variables", "/data/monsore/refdatas/variables.csv");
-        referentielFiles.put("variables_et_unites_par_types_de_donnees", "/data/monsore/refdatas/variables_et_unites_par_types_de_donnees.csv");
 
 ### add type_de_sites
 POST localhost:8081/api/v1/applications/monsore/data/type_de_sites

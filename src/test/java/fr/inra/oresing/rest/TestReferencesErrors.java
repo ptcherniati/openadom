@@ -196,6 +196,7 @@ public class TestReferencesErrors {
                 responses.put(e.getKey(), response);
             }
         }
+        //System.out.println(responses);
         for (final Map.Entry<String, String> e : Fixtures.getRecursiviteReferentielOrderFiles().entrySet()) {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
@@ -250,6 +251,7 @@ public class TestReferencesErrors {
                 assertEquals(e.getValue().get(2), response);
             }
         }
+        //System.out.println(responses);
     }
 
     private void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
