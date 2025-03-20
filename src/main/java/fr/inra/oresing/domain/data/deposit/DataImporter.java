@@ -794,7 +794,9 @@ public class DataImporter {
             if (!Strings.isNullOrEmpty(parentKeyAsString)) {
                 final Ltree parentKey = Ltree.fromUnescapedString(parentKeyAsString);
                 parentReferenceMap().putIfAbsent(naturalKey, parentKey);
-                if (afterPreloadReferenceUuids().keySet().stream().map(DataValue.LineIdentityColumnName::naturalKey).noneMatch(nk -> nk.equals(parentKey))) {
+                if (afterPreloadReferenceUuids().keySet().stream()
+                        .map(DataValue.LineIdentityColumnName::naturalKey)
+                        .noneMatch(nk -> nk.equals(parentKey))) {
                     UUID uuid = UUID.randomUUID();
                     DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(parentKey, parentKey);
                     if (afterPreloadReferenceUuids().keySet().stream()
@@ -823,7 +825,7 @@ public class DataImporter {
                     .map(DataColumnSingleValue.class::cast)
                     .map(DataColumnSingleValue::getValue)
                     .map(Object::toString)
-                    .filter(StringUtils::isNotEmpty)
+                    .map(s -> Strings.isNullOrEmpty(s)?Ltree.NULL_KEY:s)
                     .map(Ltree::escapeToLabel)
                     .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
             Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
