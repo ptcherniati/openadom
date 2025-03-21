@@ -353,12 +353,6 @@ public class OreSiResourcesTest {
                                     System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                                 }
                             })
-                            .andDo(result -> {
-                                final int status = result.getResponse().getStatus();
-                                if (status > 300) {
-                                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                                }
-                            })
                             .andExpect(status().isCreated())
                             .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                             .andReturn().getResponse().getContentAsString();
@@ -399,8 +393,8 @@ public class OreSiResourcesTest {
                                 "Watershed";"";"Watershed Scarff";"Scarff";"scarff"
                                 "Platform";"- Nivelle";"";"P1";"p1"
                                 "Platform";"- Oir";"";"P1";"p1"
-                                "Platform";"oir - P1";"";"A";"a"
-                                "Platform";"oir - P1";"";"B";"b"
+                                "Platform";"NULL_KEY__oir - P1";"";"A";"a"
+                                "Platform";"NULL_KEY__oir - P1";"";"B";"b"
                                 "Platform";"- Oir";"";"P2";"p2"
                                 "Platform";"- Scarff";"";"P1";"p1\""""
                                 .lines().collect(Collectors.toCollection(LinkedList::new));
@@ -448,7 +442,7 @@ public class OreSiResourcesTest {
             String jsonRightsForMonsoere = getJsonRightsforRestrictions(withRigthsUserId,
                     List.of(OperationType.publication.name()),
                     "pem",
-                    "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1",
+                    "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1",
                     "1984,1,1",
                     "1984,1,5",
                     monsoreCookie);
@@ -1455,7 +1449,7 @@ public class OreSiResourcesTest {
         // ajout de data
         final String projet = "manche";
         final String plateforme = "plateforme";
-        final String site = "oir";
+        final String site = "NULL_KEY__oir";
         resource = getClass().getResource(Fixtures.getPemRepositoryDataResourceName(projet, site));
 
         /*if(true){
@@ -1494,7 +1488,7 @@ public class OreSiResourcesTest {
                     withRigthsUserId,
                     List.of(OperationType.depot.name()),
                     "pem",
-                    "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1",
+                    "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1",
                     "1984,1,1",
                     "1984,1,5",
                     authCookie);
@@ -1555,7 +1549,7 @@ public class OreSiResourcesTest {
 
 
             getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.publication.name()),
-                    "pem", "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1", "1984,1,1", "1984,1,6", authCookie);
+                    "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "1984,1,1", "1984,1,6", authCookie);
 
 
             // on publie le dernier fichier déposé
@@ -1588,7 +1582,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.rows", hasSize(34)))
                     //.andExpect(jsonPath("$.rows[*]", hasSize(34)))
-                    .andExpect(jsonPath("$.rows[*].values[? (@.chemin == 'oir__p1' && @.projet == 'projet_manche')]", hasSize(34)))
+                    .andExpect(jsonPath("$.rows[*].values[? (@.chemin == 'NULL_KEY__oir__p1' && @.projet == 'projet_manche')]", hasSize(34)))
                     .andReturn().getResponse().getContentAsString();
             log.debug(StringUtils.abbreviate(response, 50));
 
@@ -1618,12 +1612,12 @@ public class OreSiResourcesTest {
         }
         //on publie 4 fichiers
 
-        publishOrDepublish(authCookie, "manche", "plateforme", "scarff", 68, true, 1, true);
-        publishOrDepublish(authCookie, "atlantique", "plateforme", "scarff", 34, true, 1, true);
-        publishOrDepublish(authCookie, "atlantique", "plateforme", "nivelle", 34, true, 1, true);
-        publishOrDepublish(authCookie, "manche", "plateforme", "nivelle", 34, true, 1, true);
+        publishOrDepublish(authCookie, "manche", "plateforme", "NULL_KEY__scarff", 68, true, 1, true);
+        publishOrDepublish(authCookie, "atlantique", "plateforme", "NULL_KEY__scarff", 34, true, 1, true);
+        publishOrDepublish(authCookie, "atlantique", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
+        publishOrDepublish(authCookie, "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
         //on publie une autre version
-        final String fileUUID = publishOrDepublish(authCookie, "manche", "plateforme", "nivelle", 34, true, 2, true);
+        final String fileUUID = publishOrDepublish(authCookie, "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true);
         // on supprime l'application publiée
         response = mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID)
                         .cookie(authCookie))
@@ -1632,19 +1626,19 @@ public class OreSiResourcesTest {
         Assertions.assertEquals(response, fileUUID);
         log.debug(StringUtils.abbreviate(response, 50));
         try {
-            publishOrDepublish(withRigthsCookie, "manche", "plateforme", "nivelle", 34, true, 1, true);
+            publishOrDepublish(withRigthsCookie, "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
 
         } catch (final NotApplicationDataWriterForDepositException e) {
             Assertions.assertEquals(NotApplicationDataWriterForDepositException.NO_RIGHT_FOR_USER_DATA_WRITER_FOR_DEPOSIT, e.getMessage());
             Assertions.assertEquals("pem", e.dataName);
         }
         getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.publication.name()),
-                "pem", "type_de_sitesKplateforme.sitesKnivelle.sitesKnivelle__p1", "1984,1,1", "1984,1,6", authCookie);
+                "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "1984,1,1", "1984,1,6", authCookie);
 
         //les droit s de publication permettent aussi le dépôt
-        String fileUUID2 = publishOrDepublish(withRigthsCookie, "manche", "plateforme", "nivelle", 34, true, 2, true);
+        String fileUUID2 = publishOrDepublish(withRigthsCookie, "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true);
 
-        testFilesAndDataOnServer(plateforme, "manche", "nivelle", 0, 2, fileUUID2, true);
+        testFilesAndDataOnServer(plateforme, "manche", "NULL_KEY__nivelle", 0, 2, fileUUID2, true);
 
 
         // on depublie le fichier oir déposé (les droits publication valent dépublication
@@ -1674,10 +1668,10 @@ public class OreSiResourcesTest {
         mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
 
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='oir__p1')].chemin", hasSize(0)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0)))
                 .andExpect(jsonPath("$.rows.length()").value(136))
                 .andExpect(jsonPath("$.rows[*]", hasSize(136)))
                 .andReturn().getResponse().getContentAsString();
@@ -1686,9 +1680,9 @@ public class OreSiResourcesTest {
         mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='oir__p1')].chemin", hasSize(0)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0)))
                 .andExpect(jsonPath("$.rows.length()").value(136))
                 .andExpect(jsonPath("$.rows[*]", hasSize(136)))
                 .andReturn().getResponse().getContentAsString();
@@ -1696,13 +1690,13 @@ public class OreSiResourcesTest {
         response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='scarff__p1')].chemin", hasSize(68)))
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='scarff__p1')].chemin", hasSize(68)))
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='nivelle__p1')].chemin", hasSize(68)))
-                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='oir__p1')].chemin", hasSize(0)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1')].chemin", hasSize(68)))
+                .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0)))
                 .andExpect(jsonPath("$.rows.length()").value(136))
                 .andExpect(jsonPath("$.rows[*]", hasSize(136)))
-                .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'oir__p1')][? (@.projet.value == 'projet_manche')]", hasSize(0)))
+                .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'NULL_KEY__oir__p1')][? (@.projet.value == 'projet_manche')]", hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
         log.debug(StringUtils.abbreviate(response, 50));
         // on supprime le fichier on peut dépublier mais pas supprimer le fichier
@@ -1725,7 +1719,7 @@ public class OreSiResourcesTest {
         //on donne les droits de suppression
 
         getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.delete.name()),
-                "pem", "type_de_sitesKplateforme.sitesKnivelle.sitesKnivelle__p1", "1984,1,1", "1984,1,6", authCookie);
+                "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "1984,1,1", "1984,1,6", authCookie);
 
         // on supprime le fichier a les droits car à les droits de publication
         mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)

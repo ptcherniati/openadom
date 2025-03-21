@@ -303,7 +303,9 @@ public class Fixtures {
     }
 
     public static String getPemRepositoryDataResourceName(final String projet, final String site) {
-        return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, site);
+        String localSite = site
+                .replaceAll("^NULL_KEY__", "");
+        return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, localSite);
     }
 
     public static String getForetRepositoryParams(final String fileName, final String datatype) {
