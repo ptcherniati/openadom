@@ -4,24 +4,17 @@ subtitle: OA_application
 abstract: >
     Cette section définit un certain nombre d'informations et de paramètres de l'ensemble du système d'information
 mandatories: OA_version, 
-alternatives:
-optionals: OA_defaultLanguage
+
+sections:
+    mandatory: 
+        - OA_name
+        - OA_version
+    optional:
+        - OA_i18n
+        - OA_comment
+        - OA_defaultLanguage
 ---
 
-
-# Déclaration d'une donnée
-
-``` yaml 
-OA_data:
-    tr_donnee_de_reference_ddr:
-        ...
-    t_donne_dat:
-        ...
-```
-::: {.callout-caution}
-Pour déclarer une donnée vous devez fournir un {{<var page-refs.vocab.link-identificateurs>}}
-
-:::
 
 ::: {.callout-note title="example de section application" collapse="false"}
 ``` yaml
