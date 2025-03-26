@@ -1,17 +1,17 @@
-{"result":0.0,"time":[2025,3,21,10,7,40,613897843],"type":"REACTIVE_PROGRESS"}
-{"result":"application.ChangeConfiguration.configuration.rights.checking","params":{"applicationName":"monsore"},"time":[2025,3,21,10,7,40,615640072],"type":"REACTIVE_INFO"}
-{"result":0.02,"time":[2025,3,21,10,7,40,615702261],"type":"REACTIVE_PROGRESS"}
-{"result":"application.ChangeConfiguration.configuration.parsingConfiguration.forSingle","params":{"applicationName":"monsore"},"time":[2025,3,21,10,7,40,615754110],"type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.testYamlIsvalid","params":null,"time":[2025,3,21,10,7,40,615784521],"type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.yamlIsvalid","params":null,"time":[2025,3,21,10,7,40,617228039],"type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.versionIsValid","params":null,"time":[2025,3,21,10,7,40,617271081],"type":"REACTIVE_INFO"}
-{"result":0.03,"time":[2025,3,21,10,7,40,617285945],"type":"REACTIVE_PROGRESS"}
-{"result":"application.ChangeConfiguration.configuration.Starting parsing of configuration","params":{},"time":[2025,3,21,10,7,40,731637550],"type":"REACTIVE_INFO"}
-{"result":0.0,"time":[2025,3,21,10,7,40,731694986],"type":"REACTIVE_PROGRESS"}
-{"result":0.0,"time":[2025,3,21,10,7,40,731725028],"type":"REACTIVE_PROGRESS"}
-{"result":"application.ChangeConfiguration.configuration.CheckSyntax.startValidation.start","params":{"applicationName":"monsore"},"time":[2025,3,21,10,7,40,762601438],"type":"REACTIVE_INFO"}
-{"result":"application.configuration.create.register.start","params":{"applicationName":"monsore"},"time":[2025,3,21,10,7,40,762669728],"type":"REACTIVE_INFO"}
-{"result":"application.ChangeConfiguration.configuration.parsingConfiguration.endparsing","params":{"applicationName":"monsore"},"time":[2025,3,21,10,7,40,762705592],"type":"REACTIVE_INFO"}
-{"result":"application.register","params":{"applicationName":"monsore"},"time":[2025,3,21,10,7,40,806975355],"type":"REACTIVE_INFO"}
-{"result":"b64a0275-b77e-4080-98d4-35ef0e5b15cf","time":[2025,3,21,10,7,40,819014116],"type":"REACTIVE_RESULT"}
-{"result":1.0,"time":[2025,3,21,10,7,40,819098398],"type":"REACTIVE_PROGRESS"}
+{"result":0.0,"time":[2025,3,26,10,28,48,885188646],"type":"REACTIVE_PROGRESS"}
+{"result":"application.ChangeConfiguration.configuration.rights.checking","params":{"applicationName":"monsore"},"time":[2025,3,26,10,28,48,887284784],"type":"REACTIVE_INFO"}
+{"result":0.02,"time":[2025,3,26,10,28,48,887348942],"type":"REACTIVE_PROGRESS"}
+{"result":"application.ChangeConfiguration.configuration.parsingConfiguration.forSingle","params":{"applicationName":"monsore"},"time":[2025,3,26,10,28,48,887374092],"type":"REACTIVE_INFO"}
+{"result":"application.ChangeConfiguration.configuration.testYamlIsvalid","params":null,"time":[2025,3,26,10,28,48,887396088],"type":"REACTIVE_INFO"}
+{"result":"application.ChangeConfiguration.configuration.yamlIsvalid","params":null,"time":[2025,3,26,10,28,48,888641110],"type":"REACTIVE_INFO"}
+{"result":"application.ChangeConfiguration.configuration.versionIsValid","params":null,"time":[2025,3,26,10,28,48,888671646],"type":"REACTIVE_INFO"}
+{"result":0.03,"time":[2025,3,26,10,28,48,888684955],"type":"REACTIVE_PROGRESS"}
+{"result":"application.ChangeConfiguration.configuration.Starting parsing of configuration","params":{},"time":[2025,3,26,10,28,49,14035095],"type":"REACTIVE_INFO"}
+{"result":0.0,"time":[2025,3,26,10,28,49,14096858],"type":"REACTIVE_PROGRESS"}
+{"result":0.0,"time":[2025,3,26,10,28,49,14108894],"type":"REACTIVE_PROGRESS"}
+{"result":"application.ChangeConfiguration.configuration.CheckSyntax.startValidation.start","params":{"applicationName":"monsore"},"time":[2025,3,26,10,28,49,39469302],"type":"REACTIVE_INFO"}
+{"result":"application.configuration.create.register.start","params":{"applicationName":"monsore"},"time":[2025,3,26,10,28,49,39529940],"type":"REACTIVE_INFO"}
+{"result":"application.ChangeConfiguration.configuration.parsingConfiguration.endparsing","params":{"applicationName":"monsore"},"time":[2025,3,26,10,28,49,39559477],"type":"REACTIVE_INFO"}
+{"result":"application.register","params":{"applicationName":"monsore"},"time":[2025,3,26,10,28,49,79205576],"type":"REACTIVE_INFO"}
+{"result":"711da67b-7c02-433d-9ab3-1c426786c6fe","time":[2025,3,26,10,28,49,89595539],"type":"REACTIVE_RESULT"}
+{"result":1.0,"time":[2025,3,26,10,28,49,89654950],"type":"REACTIVE_PROGRESS"}

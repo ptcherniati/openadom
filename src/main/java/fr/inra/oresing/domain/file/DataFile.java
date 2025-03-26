@@ -1,3 +1,5 @@
 package fr.inra.oresing.domain.file;
 
-public record DataFile(FileOrUUID params, byte[] data){}
+import java.io.InputStream;
+
+public record DataFile(FileOrUUID params, InputStream inputData){}

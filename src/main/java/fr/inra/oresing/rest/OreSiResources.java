@@ -618,7 +618,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "general case",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                    "General case. You can provide an optional json with componentSelects, rowIds, authorizationDescriptions, componentFilters, componentOrderBy" """,
+                                            "General case. You can provide an optional json with componentSelects, rowIds, authorizationDescriptions, componentFilters, componentOrderBy" """,
                                     description =
                                             """
                                                             {
@@ -631,7 +631,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "reduce by select",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                    "Select by. You can provide an optional json with componentSelects" """,
+                                            "Select by. You can provide an optional json with componentSelects" """,
                                     description =
                                             """
                                                             {
@@ -642,7 +642,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "order by",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                    "Order by. You can provide an optional json with componentOrderBy" """,
+                                            "Order by. You can provide an optional json with componentOrderBy" """,
                                     description =
                                             """
                                                             {
@@ -658,7 +658,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select by rowIds",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                    "Find by RowIds. You can provide an optional json with rowIds" """,
+                                            "Find by RowIds. You can provide an optional json with rowIds" """,
                                     description =
                                             """
                                                             {
@@ -669,7 +669,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select by naturalKeys",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                    "Find by naturalKeys. You can provide an optional json with naturalKeys" """,
+                                            "Find by naturalKeys. You can provide an optional json with naturalKeys" """,
                                     description =
                                             """
                                                             {
@@ -680,7 +680,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select by hierarchicalKey",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                    "Find by naturalKeys. You can provide an optional json with naturalKeys" """,
+                                            "Find by naturalKeys. You can provide an optional json with naturalKeys" """,
                                     description =
                                             """
                                                             {
@@ -691,7 +691,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select by submissionScope",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                    "Find by authorizations. You can provide an optional json with submissionScope" """,
+                                            "Find by authorizations. You can provide an optional json with submissionScope" """,
                                     description =
                                             """
                                                             {
@@ -723,7 +723,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter (like '%filter%')",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                    "Select by filter. You can provide an optional json with componentFilters" """,
+                                            "Select by filter. You can provide an optional json with componentFilters" """,
                                     description =
                                             """
                                                             {
@@ -743,7 +743,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter with regexp (~ '^[ao]m+)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                    "Select by RegExp. You can provide an optional json with componentFilters. Can be apply only on text not for reference." """,
+                                            "Select by RegExp. You can provide an optional json with componentFilters. Can be apply only on text not for reference." """,
                                     description =
                                             """
                                                             {
@@ -761,7 +761,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter date (With declared pattern)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                    "Select by date. You can provide an optional json with componentFilters" """,
+                                            "Select by date. You can provide an optional json with componentFilters" """,
                                     description =
                                             """
                                                             {
@@ -777,7 +777,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter date by interval (With declared pattern)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                    "Select by interval of date. You can provide an optional json with componentFilters" """,
+                                            "Select by interval of date. You can provide an optional json with componentFilters" """,
                                     description =
                                             """
                                                             {
@@ -796,7 +796,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter numeric)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                    "Select by numeric. You can provide an optional json with componentFiltersé" """,
+                                            "Select by numeric. You can provide an optional json with componentFiltersé" """,
                                     description =
                                             """
                                                             {
@@ -813,7 +813,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter numeric by interval)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                    "Select by interval of numeric. You can provide an optional json with componentFilters" """,
+                                            "Select by interval of numeric. You can provide an optional json with componentFilters" """,
                                     description =
                                             """
                                                             {

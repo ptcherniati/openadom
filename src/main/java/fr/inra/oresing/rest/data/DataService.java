@@ -136,11 +136,7 @@ public class DataService implements ServiceContainerBean {
                         final String dataName,
                         final DataFile file) throws IOException {
         serviceContainer.authenticationService().setRoleForClient();
-        try (final InputStream csv = new ByteArrayInputStream(file.data())) {
-            addData(application, dataName, csv, file.params());
-        } catch (InvalidDatasetContentException invalidDatasetContentException) {
-            throw invalidDatasetContentException;
-        }
+        addData(application, dataName, file.inputData(), file.params());
         return file.params().fileid();
     }
 
@@ -875,7 +871,7 @@ public class DataService implements ServiceContainerBean {
     private void writeGroovyClient(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
         writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_GROOVY, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_GROOVY));
         fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
-                        .add(OPEN_ADOM_CLIENT_GROOVY);
+                .add(OPEN_ADOM_CLIENT_GROOVY);
     }
 
     private void writeConfiguration(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres, String instanceUrl, String dataName) throws IOException {
@@ -942,73 +938,73 @@ public class DataService implements ServiceContainerBean {
         String setupScriptName = SETUP_SCRIPT_NAME;
         writeStringToZip(zipOutputStream, setupScriptName, buildScriptSh());
         fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
-                        .add(SETUP_SCRIPT_NAME);
+                .add(SETUP_SCRIPT_NAME);
     }
 
     private String buildScriptSh() {
         return """
-        #!/bin/bash
-
-        # Vérification de la présence de Docker
-        check_docker() {
-            if ! docker --version > /dev/null 2>&1; then
-                echo "Docker n'est pas installé sur votre système."
-                echo "Veuillez installer Docker en visitant : https://docs.docker.com/get-docker/"
-                exit 1
-            fi
-
-            if ! docker info > /dev/null 2>&1; then
-                echo "Le daemon Docker n'est pas en cours d'exécution."
-                echo "Veuillez démarrer Docker et réessayer."
-                exit 1
-            fi
-        }
-
-        # Lecture de la configuration
-        INSTANCE_URL=$(cat %1$s | sed -n 's/.*"instanceUrl" *: *"\\([^"]*\\)".*/\\1/p')
-        PROTOCOL=$(echo $INSTANCE_URL | cut -d: -f1)
-        DOMAIN=$(echo $INSTANCE_URL | cut -d/ -f3 | cut -d: -f1)
-        PORT=$(echo $INSTANCE_URL | grep -o ':[0-9][0-9]*' || echo "")
-
-        if [ -z "$PORT" ]; then
-            if [ "$PROTOCOL" = "https" ]; then
-                PORT=":443"
-            else
-                PORT=":80"
-            fi
-        fi
-        
-        # Création du Dockerfile
-        cat > Dockerfile << EOF
-        FROM groovy:4.0-jdk21
-        USER root
-        RUN apt-get update && apt-get install -y openssl
-        RUN if [ "${PROTOCOL}" = "https" ]; then \\
-                openssl s_client -connect ${DOMAIN}${PORT} -showcerts </dev/null 2>/dev/null | \\
-                openssl x509 -outform PEM > /tmp/cert.pem && \\
-                keytool -import -noprompt -trustcacerts \\
-                -alias openadom \\
-                -file /tmp/cert.pem \\
-                -keystore \\$JAVA_HOME/lib/security/cacerts \\
-                -storepass changeit; \\
-            else \\
-                echo "Connexion HTTP : pas de certificat à installer"; \\
-            fi
-        EOF
+                #!/bin/bash
                 
-
-        # Construction de l'image Docker
-        echo "Construction de l'image Docker..."
-        docker build -t openadomgroovy .
-
-        # Lancement du conteneur
-        echo "Lancement du conteneur..."
-        docker run --rm -it --net host \\
-            -v "$PWD":/home/groovy/scripts \\
-            -w /home/groovy/scripts \\
-            openadomgroovy \\
-            groovy OpenAdomClient.groovy
-        """.formatted(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
+                # Vérification de la présence de Docker
+                check_docker() {
+                    if ! docker --version > /dev/null 2>&1; then
+                        echo "Docker n'est pas installé sur votre système."
+                        echo "Veuillez installer Docker en visitant : https://docs.docker.com/get-docker/"
+                        exit 1
+                    fi
+                
+                    if ! docker info > /dev/null 2>&1; then
+                        echo "Le daemon Docker n'est pas en cours d'exécution."
+                        echo "Veuillez démarrer Docker et réessayer."
+                        exit 1
+                    fi
+                }
+                
+                # Lecture de la configuration
+                INSTANCE_URL=$(cat %1$s | sed -n 's/.*"instanceUrl" *: *"\\([^"]*\\)".*/\\1/p')
+                PROTOCOL=$(echo $INSTANCE_URL | cut -d: -f1)
+                DOMAIN=$(echo $INSTANCE_URL | cut -d/ -f3 | cut -d: -f1)
+                PORT=$(echo $INSTANCE_URL | grep -o ':[0-9][0-9]*' || echo "")
+                
+                if [ -z "$PORT" ]; then
+                    if [ "$PROTOCOL" = "https" ]; then
+                        PORT=":443"
+                    else
+                        PORT=":80"
+                    fi
+                fi
+                
+                # Création du Dockerfile
+                cat > Dockerfile << EOF
+                FROM groovy:4.0-jdk21
+                USER root
+                RUN apt-get update && apt-get install -y openssl
+                RUN if [ "${PROTOCOL}" = "https" ]; then \\
+                        openssl s_client -connect ${DOMAIN}${PORT} -showcerts </dev/null 2>/dev/null | \\
+                        openssl x509 -outform PEM > /tmp/cert.pem && \\
+                        keytool -import -noprompt -trustcacerts \\
+                        -alias openadom \\
+                        -file /tmp/cert.pem \\
+                        -keystore \\$JAVA_HOME/lib/security/cacerts \\
+                        -storepass changeit; \\
+                    else \\
+                        echo "Connexion HTTP : pas de certificat à installer"; \\
+                    fi
+                EOF
+                
+                
+                # Construction de l'image Docker
+                echo "Construction de l'image Docker..."
+                docker build -t openadomgroovy .
+                
+                # Lancement du conteneur
+                echo "Lancement du conteneur..."
+                docker run --rm -it --net host \\
+                    -v "$PWD":/home/groovy/scripts \\
+                    -w /home/groovy/scripts \\
+                    openadomgroovy \\
+                    groovy OpenAdomClient.groovy
+                """.formatted(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
     }
 
 

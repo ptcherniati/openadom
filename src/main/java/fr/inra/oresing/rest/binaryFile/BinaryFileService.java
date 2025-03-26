@@ -74,7 +74,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         binaryFile.setComment(comment);
         binaryFile.setName(file.getOriginalFilename() != null ? file.getOriginalFilename() : "charte.pdf");
         binaryFile.setSize(file.getSize());
-        binaryFile.setFileData(file.getBytes());
+        binaryFile.setFileData(file.getInputStream());
         final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, request.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
         binaryFile.setParams(binaryFileInfos);
         return getBinaryFileRepository(application).store(binaryFile);
