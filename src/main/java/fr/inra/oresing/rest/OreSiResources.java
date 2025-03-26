@@ -81,6 +81,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.LocaleResolver;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.util.UriUtils;
 import reactor.core.publisher.Flux;
@@ -112,6 +113,8 @@ import static fr.inra.oresing.domain.authorization.privilegeassessor.role.Privil
 @RestController
 @RequestMapping("/api/v1")
 public class OreSiResources implements ServiceContainerBean {
+    @Autowired
+    LocaleResolver localeResolver;
 
     public static Locale getDefaultLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -179,8 +182,11 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @DeleteMapping(value = "/applications/{name}/file/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> removeFile(@PathVariable("name") final String applicationName,
-                                             @PathVariable("id") final UUID id) {
+    public ResponseEntity<String> removeFile(
+            HttpServletRequest request,
+            @PathVariable("name") final String applicationName,
+            @PathVariable("id") final UUID id) {
+        Locale locale = localeResolver.resolveLocale(request);
         Application application = serviceContainer.applicationService().getApplication(applicationName);
         StoreFile storeFile = serviceContainer.versioningService().getStoreFile(
                 application,
@@ -218,7 +224,8 @@ public class OreSiResources implements ServiceContainerBean {
             if (!applicationDataDelete.hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
-            DataVersioningResult dataVersioningResult = serviceContainer.versioningService().unPublishVersionBeforeDelete(applicationName, id);
+            DataVersioningResult dataVersioningResult = serviceContainer.versioningService()
+                    .unPublishVersionBeforeDelete(locale, applicationName, id);
         }
         Optional<UUID> uuid = serviceContainer.binaryFileService().removeFile(application, id);
         if (uuid.isPresent()) {
@@ -478,11 +485,13 @@ public class OreSiResources implements ServiceContainerBean {
 
     @PostMapping(value = "/applications/{nameOrId}/data/{dataName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> createData(
+            HttpServletRequest request,
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataName") final String dataName,
             @RequestParam(value = "file", required = false) final MultipartFile file,
             @RequestParam(value = "params", required = false) final String params) throws IOException {
-        DataVersioningResult dataVersioningResult = serviceContainer.versioningService().createData(nameOrId, dataName, file, params);
+        Locale locale = localeResolver.resolveLocale(request);
+        DataVersioningResult dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, params, false);
         return ResponseEntity.created(URI.create(dataVersioningResult.uri())).body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
     }
 

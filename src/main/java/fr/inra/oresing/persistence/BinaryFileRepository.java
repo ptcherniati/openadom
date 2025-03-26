@@ -246,6 +246,9 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     }
 
     public void storeFileContent(UUID fileId, InputStream inputStream, long fileSize) {
+        if(fileSize==0L){
+            return;
+        }
         String query = "UPDATE %s SET fileData = ?, size = ? WHERE id = ?::uuid".formatted(getTable().getSqlIdentifier());
 
         jdbcTemplate.execute(query, (PreparedStatementCallback<Void>) ps -> {
