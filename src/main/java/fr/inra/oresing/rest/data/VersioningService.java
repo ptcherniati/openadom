@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForApplication;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -47,6 +48,7 @@ public class VersioningService implements ServiceContainerBean {
     @Transactional
     public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, MultipartFile file, String params, boolean beforeDelete) throws IOException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, application);
         String fileName = file == null ? null : file.getOriginalFilename();
         Optional<FileOrUUID> fileOrUUIDOpt = Optional.ofNullable(params)
                 .filter(Objects::nonNull)
@@ -61,7 +63,7 @@ public class VersioningService implements ServiceContainerBean {
         Boolean toPublish = fileOrUUIDOpt
                 .map(FileOrUUID::topublish)
                 .orElse(false);
-        ApplicationDataWriter applicationDataWriter = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, application)
+        ApplicationDataWriter applicationDataWriter = privilegeAssessorForApplication
                 .forDataWrite(dataName, toPublish);
         Set<BinaryFile> filesToStore = new HashSet<>();
         DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
@@ -82,7 +84,7 @@ public class VersioningService implements ServiceContainerBean {
             } else {
                 uploadState = EmailService.UPLOAD_STATE.UPLOADED;
             }
-            serviceContainer.emailService().sendUpoadSuccesmail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+            serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
             return dataVersioningResult;
         }
         if (state instanceof JustStoredFile justStoredFile && file == null) {
@@ -92,7 +94,7 @@ public class VersioningService implements ServiceContainerBean {
         }
         final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
         DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
-        serviceContainer.emailService().sendUpoadSuccesmail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+        serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
         return dataVersioningResult;
 
     }

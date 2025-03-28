@@ -205,4 +205,13 @@ public class Application extends OreSiEntity {
                 .map(StandardDataDescription::patternDefinitionCount)
                 .orElse(0L);
     }
+
+    public String getLocalizedLocalName(Locale locale) {
+        String localizedApplicationName = getConfiguration().i18n().getApplication().getTitle().get(locale);
+        return localizedApplicationName == null ? getName() : localizedApplicationName;
+    }
+
+    public String getLocalizedDataName(Locale locale, String dataName) {
+        return getConfiguration().i18n().getData().get(dataName).getI18n().getTitle().get(locale);
+    }
 }

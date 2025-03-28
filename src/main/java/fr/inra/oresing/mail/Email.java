@@ -24,5 +24,7 @@ public interface Email {
             String internationnalizedDataName);
 
     @Async
-    void sendUpoadSuccesmail(Application application, String dataName, EmailService.UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser);
+    void sendUpoadSuccessMail(Application application, String dataName, EmailService.UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser);
+
+    void sendUpoadErrorsMail(Locale application, String dataName, String locale, OreSiUser body, String currentUser);
 }

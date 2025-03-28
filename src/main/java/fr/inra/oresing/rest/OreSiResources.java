@@ -11,7 +11,6 @@ import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
@@ -23,6 +22,7 @@ import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
 import fr.inra.oresing.domain.data.read.query.OutPut;
@@ -54,7 +54,6 @@ import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.synthesis.SynthesisResult;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
-import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
@@ -86,7 +85,6 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import org.springframework.web.util.UriUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
-import reactor.core.publisher.Mono;
 
 import java.io.*;
 import java.net.URI;
@@ -106,7 +104,6 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_ADMINISTRATION;
 import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_USER_CONNECTED;
 
 @Slf4j
@@ -491,7 +488,31 @@ public class OreSiResources implements ServiceContainerBean {
             @RequestParam(value = "file", required = false) final MultipartFile file,
             @RequestParam(value = "params", required = false) final String params) throws IOException {
         Locale locale = localeResolver.resolveLocale(request);
-        DataVersioningResult dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, params, false);
+        DataVersioningResult dataVersioningResult;
+        try {
+            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, params, false);
+        }catch (InvalidDatasetContentException invalidDatasetContentException){
+            List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
+                    .stream()
+                    .map(row -> {
+                        long lineNumber = row.lineNumber();
+                        return row.validationCheckResult().validationCheckResultToRest(row.lineNumber());
+                    })
+                    .toList();
+            Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
+            String errorsToJson = new ObjectMapper().writeValueAsString(validations);
+            String localizedApplicationName = application.getLocalizedLocalName(locale);
+            String localizedDataName = application.getLocalizedDataName(locale, dataName);
+            OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
+            serviceContainer.emailService().sendUpoadErrorsMail(
+                    locale,
+                    localizedApplicationName,
+                    localizedDataName,
+                    currentUser,
+                    errorsToJson
+            );
+            throw invalidDatasetContentException;
+        }
         return ResponseEntity.created(URI.create(dataVersioningResult.uri())).body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
     }
 

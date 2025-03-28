@@ -524,7 +524,7 @@ public class Fixtures {
         referentielErrors.put("invalidDateWithComponent", List.of(
                 "02/01/2016",
                 "01/01/16",
-                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\"},\"lineNumber\":2}]"
+                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\",\"target\":{\"column\":\"date\"}},\"lineNumber\":2}]"
         ));
         referentielErrors.put("invalidFloatWithColumn", List.of(
                 "55,22",

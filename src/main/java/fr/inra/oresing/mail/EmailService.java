@@ -11,6 +11,7 @@ import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
@@ -29,77 +30,9 @@ public class EmailService implements Email, ServiceContainerBean {
     String mailFrom;
     @Autowired
     private final JavaMailSender mailSender;
-    private static final String NEW_ACCOUNT_SUBJECT = "Création de compte / Account creation";
-    private static final String NEW_ACCOUNT_FR = "Vous venez de créer un compte sur l'application OPENAdom. %n" +
-                                                 "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
-    private static final String NEW_ACCOUNT_EN = "You have just created an account on the OPENAdomoresie application. %n" +
-                                                 "To validate your e-mail, enter the validation key when connecting.%n\n";
-    private static final String EMAIL_CHANGED_SUBJECT = "Validation email / Email validation";
-    private static final String EMAIL_CHANGED_FR = "Vous venez de modifier votre email. %n" +
-                                                   "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
-    private static final String EMAIL_CHANGED_EN = "You have just changed your email. %n" +
-                                                   "To validate your e-maioresil, enter the validation key when connecting.%n\n";
-    private static final String VALIDATION_KEY_SUBJECT = "Clef de validation / Validation key";
-    private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_SUBJECTS = Map.of(
-            UNPUBLISHED, Map.<Locale, String>of(
-                    Locale.FRENCH, "Votre fichier a bien été dépublié",
-                    Locale.ENGLISH, "Your file has been unpublished"
-            ),
-            UPLOAD_STATE.PUBLISHED, Map.<Locale, String>of(
-                    Locale.FRENCH, "Votre fichier a bien été publié",
-                    Locale.ENGLISH, "Your file has been published"
-            ),
-            UPLOAD_STATE.UPLOADED, Map.<Locale, String>of(
-                    Locale.FRENCH, "Votre fichier a bien été enregistré",
-                    Locale.ENGLISH, "Your file has been register"
-            ),
-            UPLOAD_STATE.DELETED, Map.<Locale, String>of(
-                    Locale.FRENCH, "Votre fichier a bien été supprimé",
-                    Locale.ENGLISH, "Your file has been deleted"
-            )
-    );
-    private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_TEXTS = Map.of(
-            UNPUBLISHED, Map.<Locale, String>of(
-                    Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été dépublié pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
-                    Locale.ENGLISH, """
-                            The data file %1$s has been successfully unpublished for the application %2$s.
-                            %1$s continent %3$s record(s)"""
-            ),
-            UPLOAD_STATE.PUBLISHED, Map.<Locale, String>of(
-                    Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été publié pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
-                    Locale.ENGLISH, """
-                            The data file %1$s has been successfully published for the application %2$s.
-                            %1$s continent %3$s record(s)"""
-            ),
-            UPLOAD_STATE.UPLOADED, Map.<Locale, String>of(
-                    Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été enregistré pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
-                    Locale.ENGLISH, """
-                            The data file %1$s has been successfully register for the application %2$s.
-                            %1$s continent %3$s record(s)"""
-            ),
-            UPLOAD_STATE.DELETED, Map.<Locale, String>of(
-                    Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été supprimé pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
-                    Locale.ENGLISH, """
-                            The data file %1$s has been successfully deleted for the application %2$s.
-                            %1$s continent %3$s record(s)"""
-            )
-    );
-    private static final String MAIL_VERIFICATION_TEMPLATE = """
-            %2$s%n%nVotre clé de connexion est : %n%1$s
-            %3$sYour connection key is: %n%1$s
-            """;
-    private static final String MAIL_MESSAGE_TEMPLATE =
-            "Bonjour %1$s%n%n" +
-            "%2$s%n" +
-            "L'équipe d'OpenAdom";
+    @Autowired
+    private MessageSource messageSource;
+
     @Autowired
     private LocaleResolver localeResolver;
 
@@ -110,13 +43,13 @@ public class EmailService implements Email, ServiceContainerBean {
         mailMessage.setTo(to);
         mailMessage.setFrom(mailFrom);
         mailMessage.setSubject(subject);
-        mailMessage.setText(String.format(MAIL_MESSAGE_TEMPLATE, login, message));
+        mailMessage.setText(String.format(messageSource.getMessage("mail.messageTemplate", null, Locale.getDefault()), login, message));
         mailSender.send(mailMessage);
     }
 
     @Override
     public void sendEmailValidation(final String login, final String email, final String verificationKey, final MESSAGES messages) {
-        String message = String.format(MAIL_VERIFICATION_TEMPLATE, verificationKey, messages.title_fr, messages.title_en);
+        String message = String.format(messageSource.getMessage("mail.verificationTemplate", null, Locale.getDefault()), verificationKey, messageSource.getMessage(messages.title_fr, null, Locale.getDefault()), messageSource.getMessage(messages.title_en, null, Locale.getDefault()));
         sendEmail(login, email, messages.subject, message);
     }
 
@@ -134,9 +67,9 @@ public class EmailService implements Email, ServiceContainerBean {
 
     public enum MESSAGES {
 
-        NEW_ACCOUNT(NEW_ACCOUNT_SUBJECT, NEW_ACCOUNT_FR, NEW_ACCOUNT_EN),
-        NEW_EMAIL(EMAIL_CHANGED_SUBJECT, EMAIL_CHANGED_FR, EMAIL_CHANGED_EN),
-        VALIDATION_KEY(VALIDATION_KEY_SUBJECT, "", "");
+        NEW_ACCOUNT("mail.newAccount.subject", "mail.newAccount.body.fr", "mail.newAccount.body.en"),
+        NEW_EMAIL("mail.emailChanged.subject", "mail.emailChanged.body.fr", "mail.emailChanged.body.en"),
+        VALIDATION_KEY("mail.validationKey.subject", "", "");
 
         MESSAGES(final String subject, final String title_fr, final String title_en) {
             this.subject = subject;
@@ -147,7 +80,21 @@ public class EmailService implements Email, ServiceContainerBean {
         final String subject;
         final String title_fr;
         final String title_en;
-        }
+    }
+
+    private static final Map<UPLOAD_STATE, String> SUCCESS_UPLOAD_SUBJECTS = Map.of(
+            UPLOAD_STATE.UNPUBLISHED, "mail.upload.unpublished.subject",
+            UPLOAD_STATE.PUBLISHED, "mail.upload.published.subject",
+            UPLOAD_STATE.UPLOADED, "mail.upload.uploaded.subject",
+            UPLOAD_STATE.DELETED, "mail.upload.deleted.subject"
+    );
+
+    private static final Map<UPLOAD_STATE, String> SUCCESS_UPLOAD_TEXTS = Map.of(
+            UPLOAD_STATE.UNPUBLISHED, "mail.upload.unpublished.body",
+            UPLOAD_STATE.PUBLISHED, "mail.upload.published.body",
+            UPLOAD_STATE.UPLOADED, "mail.upload.uploaded.body",
+            UPLOAD_STATE.DELETED, "mail.upload.deleted.body"
+    );
 
     @Async
     @Override
@@ -172,36 +119,42 @@ public class EmailService implements Email, ServiceContainerBean {
     }
 
     @Override
-    public void sendUpoadSuccesmail(Application application, String dataName, UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser) {
+    public void sendUpoadSuccessMail(Application application, String dataName, UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser) {
         long count = dataVersioningResult.dataSynthesis().stream()
                 .filter(dataSynthesis -> dataSynthesis.getReferenceType().equals(dataName))
                 .findFirst()
                 .map(ApplicationResult.DataSynthesis::getLineCount)
                 .orElse(0);
 
-        String localizedApplicationName = application.getConfiguration().i18n().getApplication().getTitle().get(locale);
-        localizedApplicationName = localizedApplicationName == null ? application.getName() : localizedApplicationName;
-        String localizedDataName = application.getConfiguration().i18n().getData().get(dataName).getI18n().getTitle().get(locale);
+        String localizedApplicationName = application.getLocalizedLocalName(locale);
+        String localizedDataName = application.getLocalizedDataName(locale, dataName);
         localizedDataName = localizedDataName == null ? dataName : localizedDataName;
-        String subject = SUCCESS_UPLOAD_SUBJECTS.get(uploadState)
-                .get(locale.equals(Locale.ENGLISH) ? Locale.ENGLISH : Locale.FRENCH);
-        String text = SUCCESS_UPLOAD_TEXTS.get(uploadState)
-                .get(locale.equals(Locale.ENGLISH) ? Locale.ENGLISH : Locale.FRENCH)
-                .formatted(
-                        localizedDataName,
-                        localizedApplicationName,
-                        count
-                );
+
+        // Récupération des clés des messages à partir des maps
+        String subjectKey = SUCCESS_UPLOAD_SUBJECTS.get(uploadState);
+        String textKey = SUCCESS_UPLOAD_TEXTS.get(uploadState);
+
+        // Récupération des messages à partir des fichiers de propriétés
+        String subject = messageSource.getMessage(subjectKey, null, locale);
+        String text = String.format(messageSource.getMessage(textKey, null, locale), localizedDataName, localizedApplicationName, count);
+
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
         mailMessage.setFrom("openadom@inrae.fr");
         mailMessage.setSubject(subject);
         mailMessage.setText(text);
-        /*System.out.println("""
-                    sujet: %s
-                    text: %s
-                """.formatted(subject, text));*/
 
+        mailSender.send(mailMessage);
+    }
+
+    @Override
+    public void sendUpoadErrorsMail(Locale application, String dataName, String locale, OreSiUser currentUser, String body) {
+        final SimpleMailMessage mailMessage = new SimpleMailMessage();
+        mailMessage.setTo(currentUser.getEmail());
+        mailMessage.setFrom("openadom@inrae.fr");
+        String subject = messageSource.getMessage("mail.error.subject", new Object[]{dataName, application}, new Locale(locale));
+        mailMessage.setSubject(subject);
+        mailMessage.setText(body);
         mailSender.send(mailMessage);
     }
 
