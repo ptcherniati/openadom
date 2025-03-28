@@ -731,7 +731,7 @@ public class DataImporter {
             });
             final ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
             final List<RowWithReferenceDatum> collect = streamBeforePreloading
-                    .peek(rowWithReferenceDatum -> {
+                    .map(rowWithReferenceDatum -> {
                         final DataDatum referenceDatum = rowWithReferenceDatum.referenceDatum();
                         final DataValue.LineIdentityColumnName naturalKey = computeIdentityKey(referenceDatum);
                         if (afterPreloadReferenceUuids().keySet().stream()
@@ -754,6 +754,7 @@ public class DataImporter {
                             default -> throw new IllegalStateException("Unexpected value: " + parentDataColumnValue);
                         }
                         missingParentReferences.removeAll(naturalKey.naturalKey());
+                        return rowWithReferenceDatum;
                     })
                     .toList();
             Map<DataValue.LineIdentityColumnName, UUID> resolvedDuringPreloadReferenceUuids = afterPreloadReferenceUuids().entrySet().stream()
