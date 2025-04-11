@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.OreSiEntity;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
+import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import lombok.Getter;
 import lombok.Setter;
@@ -212,6 +213,12 @@ public class Application extends OreSiEntity {
     }
 
     public String getLocalizedDataName(Locale locale, String dataName) {
-        return getConfiguration().i18n().getData().get(dataName).getI18n().getTitle().get(locale);
+        return Optional.ofNullable(getConfiguration().i18n())
+                .map(Internationalizations::getData)
+                .map(data->data.get(dataName))
+                .map(InternationalizationData::getI18n)
+                .map(InternationalizationTitle::getTitle)
+                .map(title->title.get(locale))
+                .orElse(null);
     }
 }
