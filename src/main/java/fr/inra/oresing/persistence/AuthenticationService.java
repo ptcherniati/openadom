@@ -555,6 +555,7 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
             case NotConnectedAuthentifiedMissingPasswordUser notConnectedAuthentifiedMissingPasswordUser -> updatePasswordLost(notConnectedAuthentifiedMissingPasswordUser.oreSiUser(), notConnectedAuthentifiedMissingPasswordUser.createUserRequest());
             case NotConnectedAuthentifiedPendingUser notConnectedAuthentifiedPendingUser -> sendValidationKey(notConnectedAuthentifiedPendingUser.user());
             case NotConnectedUnauthentifiedUser notConnectedUnauthentifiedUser -> throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, notConnectedUnauthentifiedUser.createUserRequest());
+            case NotConnectedUnauthentifiedUserForCreate notConnectedUnauthentifiedUserForCreate -> null;//TODO;
         };
     }
 

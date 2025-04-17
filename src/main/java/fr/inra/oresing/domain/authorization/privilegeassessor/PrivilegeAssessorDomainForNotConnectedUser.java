@@ -62,4 +62,8 @@ public record PrivilegeAssessorDomainForNotConnectedUser<PrivilegeSystemDomain>(
         }
         return new NotConnectedUnauthentifiedUser(createUserRequest);
     }
+
+    public NotConnectedUnauthentifiedUserForCreate forCreateUser() {
+        return new NotConnectedUnauthentifiedUserForCreate();
+    }
 }

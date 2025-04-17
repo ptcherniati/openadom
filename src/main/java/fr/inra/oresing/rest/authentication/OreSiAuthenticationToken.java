@@ -1,0 +1,79 @@
+package fr.inra.oresing.rest.authentication;
+
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
+import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.rest.security.OreSiAuthorizationManager;
+import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
+import java.util.Optional;
+
+public class OreSiAuthenticationToken  extends AbstractAuthenticationToken implements Authentication {
+
+    private final Object principal;
+    private Object credentials;
+
+    public OreSiAuthenticationToken(Object principal, String credentials, Collection<? extends GrantedAuthority> authorities) {
+        super(authorities);
+        this.principal = principal;
+        this.credentials = credentials;
+        super.setAuthenticated(true);
+    }
+
+    public boolean isLogin(){
+        return getPath()
+                .stream().anyMatch(s->s.endsWith("/login"));
+    }
+
+    public boolean isUpdate(){
+        return getPath()
+                .stream()
+                .anyMatch(s->s.endsWith("/users")) &&
+                getAuthorities().contains(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_UPDATE_USER);
+    }
+
+    public boolean isCreate(){
+        return getPath()
+                .stream()
+                .anyMatch(s->s.endsWith("/users"))&&
+                getAuthorities().contains(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_CREATE_USER);
+    }
+
+    private Optional<String> getPath() {
+        return Optional.ofNullable(credentials)
+                .filter(String.class::isInstance)
+                .map(String.class::cast);
+    }
+
+    @Override
+    public Object getPrincipal() {
+        return principal;
+    }
+
+    @Override
+    public Object getCredentials() {
+        return credentials;
+    }
+
+    public LoginAdminResult getLoginAdminResult(){
+        return Optional.ofNullable(getPrincipal())
+                .filter(LoginAdminResult.class::isInstance)
+                .map(LoginAdminResult.class::cast)
+                .orElse(null);
+    }
+
+    public NotConnectedUser getNotConnectedUser(){
+        return Optional.ofNullable(getPrincipal())
+                .filter(NotConnectedUser.class::isInstance)
+                .map(NotConnectedUser.class::cast)
+                .orElse(null);
+    }
+
+    @Override
+    public boolean isAuthenticated() {
+        return true;
+    }
+}
+

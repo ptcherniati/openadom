@@ -112,14 +112,6 @@ public class OreSiNg implements WebMvcConfigurer {
         }
     }
 
-    @Override
-    public void addCorsMappings(final CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins(allowedOrigin)
-                .allowedMethods("POST", "PUT", "GET", "DELETE")
-                .allowCredentials(true);
-    }
-
     @Configuration
     public class OpenApiConfig {
 
