@@ -303,7 +303,9 @@ public class Fixtures {
     }
 
     public static String getPemRepositoryDataResourceName(final String projet, final String site) {
-        return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, site);
+        String localSite = site
+                .replaceAll("^NULL_KEY__", "");
+        return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, localSite);
     }
 
     public static String getForetRepositoryParams(final String fileName, final String datatype) {
@@ -522,7 +524,7 @@ public class Fixtures {
         referentielErrors.put("invalidDateWithComponent", List.of(
                 "02/01/2016",
                 "01/01/16",
-                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\"},\"lineNumber\":2}]"
+                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\",\"target\":{\"column\":\"date\"}},\"lineNumber\":2}]"
         ));
         referentielErrors.put("invalidFloatWithColumn", List.of(
                 "55,22",

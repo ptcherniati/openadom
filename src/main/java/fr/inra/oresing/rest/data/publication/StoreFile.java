@@ -11,6 +11,7 @@ import fr.inra.oresing.rest.exceptions.OreSiIOException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,9 +24,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
     ) {
 
         try {
-            byte[] bytes = file == null ? null : FileBomResolver.of(file.getInputStream()).readAllBytes();
-
-            byte[] finalBytes = bytes;
+            InputStream inputStream = file==null?null:file.getInputStream();
             builder().binaryFile = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::fileid)
                     .flatMap(binaryFileRepository::tryFindByIdWithData)
                     .orElseGet(() -> {
@@ -47,9 +46,8 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
                         if (fileOrUuid() != null) {
                             binaryFile.withBinaryFileDataset(fileOrUuid().binaryfiledataset());
                         }
-                        binaryFile.setFileData(finalBytes);
-                        binaryFileRepository.store(binaryFile);
-                        return binaryFile;
+                        binaryFileRepository.storeFileContent(fileId, inputStream, (int) file.getSize());
+                        return binaryFileRepository.tryFindByIdWithData(fileId).orElse(null);
                     });
             if (builder().fileMustBeJustStored()) {
                 return new JustStoredFile(builder());
@@ -64,7 +62,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
         boolean newFileOrUUID = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::fileid).isEmpty();
         boolean publishing = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::topublish).orElse(false) ||
                              newFileOrUUID && !builder().isRepository();
-        publishing = !application().isData(dataName()) || publishing ;
+        publishing = !application().isData(dataName()) || publishing;
         if (newFileOrUUID && !builder().applicationDataWriter().hasRightForDeposit(fileOrUuid())) {
             throw new NotApplicationDataWriterForDepositException(application().getName(), dataName());
         } else {

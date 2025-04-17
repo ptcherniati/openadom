@@ -5,17 +5,34 @@ import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.jdbc.core.support.AbstractLobCreatingPreparedStatementCallback;
+import org.springframework.jdbc.support.lob.DefaultLobHandler;
+import org.springframework.jdbc.support.lob.LobCreator;
+import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class BinaryFileRepository extends JsonTableInApplicationSchemaRepositoryTemplate<BinaryFile> implements fr.inra.oresing.domain.repository.file.BinaryFileRepository {
+
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public BinaryFileRepository(final Application application) {
         super(application);
@@ -59,20 +76,18 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         ).stream().findFirst();
     }
 
-
     public Optional<BinaryFile> tryFindByIdWithData(final UUID id) {
         Preconditions.checkArgument(id != null);
-
         final String query = String.format("""
                         SELECT '%1$s' AS "@class", to_jsonb(t) AS json
                         FROM (
-                            SELECT 
-                                id, 
-                                application, 
-                                name, 
-                                comment, 
-                                size, 
-                                convert_from(fileData, 'UTF8') AS "fileData",
+                            SELECT
+                                id,
+                                application,
+                                name,
+                                comment,
+                                size,
+                                null as fileData,
                                 params
                             FROM %2$s
                             WHERE id = :id
@@ -85,8 +100,17 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         return getNamedParameterJdbcTemplate().query(
                 query,
                 new MapSqlParameterSource("id", id),
-                getJsonRowMapper()
-        ).stream().findFirst();
+                rs -> {
+                    if (rs.next()) {
+                        BinaryFile binaryFile = getJsonRowMapper().mapRow(rs, 0);
+                        if (binaryFile != null) {
+                            binaryFile.setFileData(retrieveFileContentAsInputStream(binaryFile.getId()));
+                        }
+                        return Optional.of(binaryFile);
+                    }
+                    return Optional.empty();
+                }
+        );
     }
 
 
@@ -124,31 +148,31 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
 
     @Override
     protected String getUpsertQuery() {
-        return "INSERT INTO " + getTable().getSqlIdentifier() + "(id, application, name, comment, size, fileData, params) " +
-                "SELECT " +
-                "   id, application, name, comment, size, fileData, " +
-                "jsonb_set(jsonb_set((case when params is null then '{}' else params end ),\n" +
-                "\t'{createdate}',('\"' ||CURRENT_TIMESTAMP::text ||'\"')::jsonb),\n" +
-                "\t'{createuser}' , ('\"' ||current_role::text ||'\"')::jsonb)" +
-                "FROM json_populate_recordset(NULL::" + getTable().getSqlIdentifier() + ", :json::json) "
-                + " ON CONFLICT (id) " +
-                "DO UPDATE " +
-                "SET " +
-                "   updateDate=current_timestamp, " +
-                "   application=EXCLUDED.application, " +
-                "   comment=EXCLUDED.comment, " +
-                "   name=EXCLUDED.name, " +
-                "   size=EXCLUDED.size, " +
-                "   fileData=CASE WHEN EXCLUDED.fileData IS NULL THEN " + getTable().getSqlIdentifier() + ".fileData ELSE EXCLUDED.fileData END, " +
-                "   params=case \n" +
-                "\t\twhen EXCLUDED.params is not null and  not((EXCLUDED.params->>'published')::boolean )\n" +
-                "\t\t\tthen EXCLUDED.params\n" +
-                "\t\telse \n" +
-                "\t\t\tjsonb_set(jsonb_set((case when EXCLUDED.params is null then '{}' else EXCLUDED.params end),\n" +
-                "\t\t\t\t'{publisheddate}',('\"' ||CURRENT_TIMESTAMP::text ||'\"')::jsonb),\n" +
-                "\t\t\t\t'{publisheduser}' , ('\"' ||current_role::text ||'\"')::jsonb)\n" +
-                "\t\tend"
-                + " RETURNING id";
+        return """
+                    INSERT INTO %1$s (id, application, name, comment, size, fileData, params)
+                    SELECT
+                        id, application, name, comment, size, NULL,
+                        jsonb_set(jsonb_set(COALESCE(params, '{}'),
+                            '{createdate}', ('"' || CURRENT_TIMESTAMP::text || '"')::jsonb),
+                            '{createuser}', ('"' || current_role::text || '"')::jsonb)
+                    FROM json_populate_recordset(NULL::%1$s, :json::json)
+                    ON CONFLICT (id)
+                    DO UPDATE SET
+                        updateDate = current_timestamp,
+                        application = EXCLUDED.application,
+                        comment = EXCLUDED.comment,
+                        name = EXCLUDED.name,
+                        size = EXCLUDED.size,
+                        params = CASE
+                            WHEN EXCLUDED.params IS NOT NULL AND NOT (EXCLUDED.params ->> 'published')::boolean
+                                THEN EXCLUDED.params
+                            ELSE
+                                jsonb_set(jsonb_set(COALESCE(EXCLUDED.params, '{}'),
+                                    '{publisheddate}', ('"' || CURRENT_TIMESTAMP::text || '"')::jsonb),
+                                    '{publisheduser}', ('"' || current_role::text || '"')::jsonb)
+                        END
+                    RETURNING id
+                """.formatted(getTable().getSqlIdentifier());
     }
 
     public List<BinaryFile> findByBinaryFileDataset(final String data, final BinaryFileDataset binaryFileDataset, final boolean overlap) {
@@ -194,13 +218,61 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             }
         }
         if (where.isEmpty()) {
-            where.add( """
+            where.add("""
                     params #> '{"binaryfiledataset", "requiredauthorizations"}'= '{}'::jsonb""");
         }
         final String t = "params #> '{\"binaryfiledataset\", \"datatype\"}'  @@ ('$ == \"'||:data||'\"')::jsonpath";
         where.add(t);
         mapSqlParameterSource.addValue("data", data);
         return find(String.join(" AND ", where), mapSqlParameterSource);
+    }
+
+    @Override
+    public UUID store(BinaryFile entity) {
+        Optional<InputStream> inputStreamOpt = Optional.ofNullable(entity)
+                .map(BinaryFile::getFileData);
+        entity.setFileData(null);
+        UUID fileId = super.store(entity);
+
+        inputStreamOpt.ifPresent(inputStream -> {
+            try {
+                storeFileContent(fileId, inputStream, inputStream.available());
+            } catch (IOException e) {
+                throw new RuntimeException("Error storing file content", e);
+            }
+        });
+
+        return fileId;
+    }
+
+    public void storeFileContent(UUID fileId, InputStream inputStream, long fileSize) {
+        if(fileSize==0L){
+            return;
+        }
+        String query = "UPDATE %s SET fileData = ?, size = ? WHERE id = ?::uuid".formatted(getTable().getSqlIdentifier());
+
+        jdbcTemplate.execute(query, (PreparedStatementCallback<Void>) ps -> {
+            ps.setBinaryStream(1, inputStream, fileSize);
+            ps.setLong(2, fileSize);
+            ps.setObject(3, fileId.toString());
+            ps.executeUpdate();
+            return null;
+        });
+    }
+
+
+    public InputStream retrieveFileContentAsInputStream(UUID fileId) {
+        String query = "SELECT fileData FROM %s WHERE id = ?::uuid".formatted(getTable().getSqlIdentifier());
+        LobHandler lobHandler = new DefaultLobHandler();
+
+        return jdbcTemplate.execute(query, (PreparedStatementCallback<InputStream>) ps -> {
+            ps.setObject(1, fileId.toString());
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return lobHandler.getBlobAsBinaryStream(rs, "fileData");
+            }
+            return null;
+        });
     }
 
     @Override

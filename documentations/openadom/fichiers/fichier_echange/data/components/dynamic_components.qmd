@@ -3,13 +3,24 @@
  subtitle: OA_dynamicComponents
  abstract: >
   Les colonnes dynamiques permettent de traduire une relation n-n entre deux référentiels. Par exemple entre un objet et ses propriétés.
+
+ sections:
+  mandatory:
+      - OA_headerPrefix
+      - OA_reference
+      - OA_referenceComponentToLookForHeader
+  optional:
+      - OA_tags
+      - OA_exportHeader
+      - OA_checker
+      - OA_langRestrictions
 ---
 
-## Exemple
+## Exemple
 
 {{< var  page-refs.example.link-taxons>}}
 
-## Description
+## Description
 
 ```{mermaid}
   classDiagram

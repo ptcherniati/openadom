@@ -250,16 +250,16 @@ class GroovyExpressionTest {
     void testBuildManyCompositeKeyWithNullValue() {
         context = Map.of("datum",
                 Map.of(
-                      "agroecosystem" ,  "Agroécosysteme 1",
+                      "agroecosystem" ,  "Agroécosysteme 1,",
                       "site" ,  "Site expérimental 1, Site expérimental 1",
-                      "plot" ,  ""
+                      "plot" ,  ",parcelle 1"
                 )
         );
         String expression = "OA_buildManyCompositeKey(['agroecosystem', 'site', 'plot'])";
         GroovyExpression groovyExpression = GroovyExpression.forExpression(expression);
         Object result = groovyExpression.evaluate(context);
 
-        assertEquals("agroecosysteme_1__site_experimental_1__NULL_KEY,NULL_KEY__site_experimental_1__NULL_KEY", result);
+        assertEquals("agroecosysteme_1__site_experimental_1__NULL_KEY,NULL_KEY__site_experimental_1__parcelle_1", result);
     }
 
 

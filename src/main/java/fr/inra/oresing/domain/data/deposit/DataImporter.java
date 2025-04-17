@@ -657,7 +657,7 @@ public class DataImporter {
                     .map(nullOrEmptyToNull)
                     .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
             Preconditions.checkState(!naturalKey.isEmpty(), ExceptionMessage.NULL_NATURAL_KEY.toMessage(), referenceDatumAfterChecking.lineNumber(), String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
-            return Ltree.fromSql(naturalKey.replaceAll("^%s__".formatted(Ltree.NULL_KEY), ""));
+            return Ltree.fromSql(naturalKey/*.replaceAll("^%s__".formatted(Ltree.NULL_KEY) "")*/);
         }
 
         String getEscapedValueFromColumnRegardingColumnIsReferenceType(DataColumn dataColumn, DataDatum referenceDatum) {
@@ -731,7 +731,7 @@ public class DataImporter {
             });
             final ListMultimap<Ltree, Long> missingParentReferences = LinkedListMultimap.create();
             final List<RowWithReferenceDatum> collect = streamBeforePreloading
-                    .peek(rowWithReferenceDatum -> {
+                    .map(rowWithReferenceDatum -> {
                         final DataDatum referenceDatum = rowWithReferenceDatum.referenceDatum();
                         final DataValue.LineIdentityColumnName naturalKey = computeIdentityKey(referenceDatum);
                         if (afterPreloadReferenceUuids().keySet().stream()
@@ -754,6 +754,7 @@ public class DataImporter {
                             default -> throw new IllegalStateException("Unexpected value: " + parentDataColumnValue);
                         }
                         missingParentReferences.removeAll(naturalKey.naturalKey());
+                        return rowWithReferenceDatum;
                     })
                     .toList();
             Map<DataValue.LineIdentityColumnName, UUID> resolvedDuringPreloadReferenceUuids = afterPreloadReferenceUuids().entrySet().stream()
@@ -794,7 +795,9 @@ public class DataImporter {
             if (!Strings.isNullOrEmpty(parentKeyAsString)) {
                 final Ltree parentKey = Ltree.fromUnescapedString(parentKeyAsString);
                 parentReferenceMap().putIfAbsent(naturalKey, parentKey);
-                if (afterPreloadReferenceUuids().keySet().stream().map(DataValue.LineIdentityColumnName::naturalKey).noneMatch(nk -> nk.equals(parentKey))) {
+                if (afterPreloadReferenceUuids().keySet().stream()
+                        .map(DataValue.LineIdentityColumnName::naturalKey)
+                        .noneMatch(nk -> nk.equals(parentKey))) {
                     UUID uuid = UUID.randomUUID();
                     DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(parentKey, parentKey);
                     if (afterPreloadReferenceUuids().keySet().stream()
@@ -823,7 +826,7 @@ public class DataImporter {
                     .map(DataColumnSingleValue.class::cast)
                     .map(DataColumnSingleValue::getValue)
                     .map(Object::toString)
-                    .filter(StringUtils::isNotEmpty)
+                    .map(s -> Strings.isNullOrEmpty(s)?Ltree.NULL_KEY:s)
                     .map(Ltree::escapeToLabel)
                     .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
             Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);

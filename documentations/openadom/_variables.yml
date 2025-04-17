@@ -122,6 +122,7 @@ page-refs:
     link: "[Composantes](/fichiers/fichier_echange/data/components/components.qmd)"
     OA_mandatory: "[OA_mandatory](/fichiers/fichier_echange/data/components/components.qmd#OA_mandatory)"
     OA_required: "[OA_required](/fichiers/fichier_echange/data/components/components.qmd#OA_required)"
+    OA_importHeader: "[OA_importHeader](/fichiers/fichier_echange/data/components/components.qmd#OA_importHeader)"
   basic-comp:
     href: /fichiers/fichier_echange/data/components/basic_components.qmd
     text: Basic Components

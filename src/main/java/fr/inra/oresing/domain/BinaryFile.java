@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.InputStream;
 import java.util.UUID;
 
 @Getter
@@ -15,7 +16,7 @@ public class BinaryFile extends OreSiEntity {
     private String name;
     private String comment;
     private long size;
-    private byte[] fileData;
+    private InputStream fileData;
     private BinaryFileInfos params;
 
     public void withBinaryFileDataset(BinaryFileDataset binaryfiledataset) {

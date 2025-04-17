@@ -50,13 +50,12 @@ public class Ltree implements Comparable<Ltree> {
         return new Ltree(text);
     }
 
-    public Ltree last(){
-        return Ltree.fromSql(getSql().replaceAll(".*\\.",""));
+    public Ltree last() {
+        return Ltree.fromSql(getSql().replaceAll(".*\\.", ""));
     }
 
     /**
      * Construire à partir d'un ltree tel qu'il a pu existé en base (donc déjà échappé et syntaxiquement correct)
-     *
      */
     public static Ltree fromSql(final String sql) {
         checkSyntax(sql);
@@ -65,7 +64,6 @@ public class Ltree implements Comparable<Ltree> {
 
     /**
      * Constuire en concaténant deux ltree pour en former un
-     *
      */
     public static Ltree join(final Ltree prefix, final Ltree suffix) {
         return fromSql(prefix.sql + SEPARATOR + suffix.sql);
@@ -83,9 +81,9 @@ public class Ltree implements Comparable<Ltree> {
         return extracttolabelFromStringWithSpecialCharacters(key);
     }
 
-    
+
     private static String extracttolabelFromStringWithSpecialCharacters(String key) {
-        final String lowerCased = key.toLowerCase();
+        final String lowerCased = key.replace(Ltree.NULL_KEY, "____").toLowerCase();
         final String withAccentsStripped = StringUtils.stripAccents(lowerCased);
         final String withoutSpace = StringUtils.replace(withAccentsStripped, " ", "_");
         final String toEscape = StringUtils.remove(withoutSpace, "-");
@@ -94,12 +92,14 @@ public class Ltree implements Comparable<Ltree> {
                 .map(Ltree::escapeSymbolFromKeyComponent)
                 .collect(Collectors.joining());
         checkLabelSyntax(escaped);
-        return escaped;
+        return escaped
+                .replaceAll("________", "__NULL_KEY__")
+                .replaceAll("^______", "NULL_KEY__")
+                .replaceAll("______$", "__NULL_KEY");
     }
 
     /**
      * Échapper une chaîne pour former un label.
-     *
      */
     public static String escapeToLabel(final String key) {
         if (VALID_LABEL_REGEX.asMatchPredicate().test(key) && isEncodedString(key)) {
@@ -134,7 +134,7 @@ public class Ltree implements Comparable<Ltree> {
     }
 
     public static boolean isEncodedString(String label, Set<String> knownSpecialCharacters) {
-        if(knownSpecialCharacters.isEmpty() || label.matches("^[a-z0-9_]*$")){
+        if (knownSpecialCharacters.isEmpty() || label.matches("^[a-z0-9_]*$")) {
             return false;
         }
         return knownSpecialCharacters.stream()

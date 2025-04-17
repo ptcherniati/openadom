@@ -4,9 +4,9 @@
         <p>Cette section vous permet de péciser vos "compoànents". Par défaut, votre composant n'a pas besoin de description il vous suffit de le déclarer.
         <p>Par exemple date: suffit pour déclarer un composant pour la colonne date au format texte.
 ---
+
 # OA_tags
-    {{ <import }}
-# OA_importHeader
+# OA_importHeader {#OA_importHeader}
 # OA_required
 # OA_mandatory
 # OA_checker

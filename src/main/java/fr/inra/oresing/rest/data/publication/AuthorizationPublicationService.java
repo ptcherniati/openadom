@@ -36,6 +36,7 @@ public class AuthorizationPublicationService {
     public String getDataName() {
         return this.dataName;
     }
+
     public ApplicationDataWriter applicationDataWriter() {
         return this.applicationDataWriter;
     }

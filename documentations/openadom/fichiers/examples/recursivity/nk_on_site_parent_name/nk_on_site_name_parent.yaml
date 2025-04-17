@@ -1,0 +1,92 @@
+OA_version: 2.0.1
+OA_application:
+  OA_defaultLanguage: fr
+  OA_i18n:
+    OA_title:
+      fr: "Clef naturelle sur colonne site, nom et colonne parent"
+    # OA_description:
+    #   fr: "Agroécosystèmes, Cycles Biogéochimiques et Biodiversité"
+    #   en: "Agroecosystems, Biogeochemical Cycles and Biodiversity"
+  OA_comment: "Recursif avec clé composite"
+  OA_name: jerome_nk_on_site_parent_name
+  OA_version: 1.0.3
+
+OA_tags:   #optional
+  data:   #optional
+    fr: "données"
+    en: "data"
+  metadata:
+    fr: "Métadonnées"
+    en: "Metadata"
+  description:   #optional
+    fr: "description"
+    en: "description"
+  location:
+    fr: "localisation"
+    en: "location"
+  partages:
+    fr: "Partagées"
+    en: "Shared"
+
+OA_data:
+  ##### >>>>>>>>>>REFERENTIELS<<<<<<<<<< #####
+  tr_sites_sit:
+    OA_tags:
+      - description
+    OA_i18n:
+      OA_title:
+        fr: "Sites expérimentaux"
+        en: "Experimental sites"
+      OA_description:
+        fr: sites d'etudes
+        en: study sites
+    OA_naturalKey: [sit_id]
+    OA_basicComponents:
+      sit_id:
+        OA_tags: [ __ORDER_1__ ]
+
+  ##### >>>>>>>>>>DATA<<<<<<<<<< #####
+  t_zone_etude_zet:   #mandatory
+    OA_dataHeaderLine: 1  #optional
+    OA_dataFirstLine: 2  #optional
+    OA_naturalKey:   #mandatory
+       - sit_id
+       - zet_parent
+       - zet_id
+    OA_tags:   #optional
+      - __DATA__
+      - location
+    OA_i18n:   #mandatory
+      OA_title:   #optional
+        fr: "Zone d'étude"
+        en: "Study area"
+      OA_description:   #optional
+        fr: "Référentiel des zones d'études"
+        en: "Study area repository"
+    OA_basicComponents:   #optional
+      sit_id:   #optional
+        OA_tags: [ __ORDER_1__ ]
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              #OA_isParent: true  #optional
+              OA_name: tr_sites_sit  #mandatory
+            #OA_multiplicity: ONE  #optional
+        OA_required: true  #optional
+      zet_id:   #optional
+        OA_tags: [ __ORDER_2__ ]
+        OA_required: true  #optional
+
+      zet_parent:   #optional
+        OA_tags: [ __ORDER_3__ ]
+        OA_checker:   #mandatory
+          OA_name: OA_reference  #mandatory
+          OA_params:   #optional
+            OA_reference:   #mandatory
+              OA_isRecursive: true  #optional
+              OA_name: t_zone_etude_zet  #mandatory
+            #OA_multiplicity: ONE  #optional
+        OA_required: false  #optional
+
+  

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForApplication;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -14,6 +15,7 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
+import fr.inra.oresing.mail.EmailService;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.data.publication.*;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
@@ -44,8 +46,9 @@ public class VersioningService implements ServiceContainerBean {
     private JsonRowMapper jsonRowMapper;
 
     @Transactional
-    public DataVersioningResult createData(String nameOrId, String dataName, MultipartFile file, String params) throws IOException {
+    public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, MultipartFile file, String params, boolean beforeDelete) throws IOException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, application);
         String fileName = file == null ? null : file.getOriginalFilename();
         Optional<FileOrUUID> fileOrUUIDOpt = Optional.ofNullable(params)
                 .filter(Objects::nonNull)
@@ -60,12 +63,13 @@ public class VersioningService implements ServiceContainerBean {
         Boolean toPublish = fileOrUUIDOpt
                 .map(FileOrUUID::topublish)
                 .orElse(false);
-        ApplicationDataWriter applicationDataWriter = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, application)
+        ApplicationDataWriter applicationDataWriter = privilegeAssessorForApplication
                 .forDataWrite(dataName, toPublish);
         Set<BinaryFile> filesToStore = new HashSet<>();
         DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
         State state = getStoreFile(application, dataName, fileOrUUIDOpt.orElse(null), fileName, applicationDataWriter)
                 .loadOrCreateFile(file, binaryFileRepository(application), serviceContainer.binaryFileService());
+        EmailService.UPLOAD_STATE uploadState = null;
         if (state instanceof UnPublishedVersions unPublishedVersions) {
             FileOrUUID fileOrUUID = unPublishedVersions
                     .unPublishVersions(filesToStore, dataRepository(application), binaryFileRepository(application), serviceContainer.synthesisService())
@@ -73,10 +77,25 @@ public class VersioningService implements ServiceContainerBean {
 
             UUID dataId = publishData(dataName, fileOrUUID, application, state);
             final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
-            return DataVersioningResult.of(nameOrId, dataName, dataId, dataSynthesis);
+            DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, dataId, dataSynthesis);
+            if (unPublishedVersions.isRepository()) {
+                uploadState = toPublish ? EmailService.UPLOAD_STATE.PUBLISHED :
+                        (beforeDelete ? EmailService.UPLOAD_STATE.DELETED : EmailService.UPLOAD_STATE.UNPUBLISHED);
+            } else {
+                uploadState = EmailService.UPLOAD_STATE.UPLOADED;
+            }
+            serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+            return dataVersioningResult;
+        }
+        if (state instanceof JustStoredFile justStoredFile && file == null) {
+            uploadState = EmailService.UPLOAD_STATE.DELETED;
+        } else {
+            uploadState = EmailService.UPLOAD_STATE.UPLOADED;
         }
         final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
-        return DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
+        DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
+        serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+        return dataVersioningResult;
 
     }
 
@@ -118,13 +137,17 @@ public class VersioningService implements ServiceContainerBean {
     }
 
     @Transactional
-    public DataVersioningResult unPublishVersionBeforeDelete(String applicationName, UUID id) {
+    public DataVersioningResult unPublishVersionBeforeDelete(Locale locale, String applicationName, UUID id) {
         Optional<BinaryFile> storedFile = serviceContainer.binaryFileService().getFile(applicationName, id);
         if (storedFile.isPresent()) {
-            Optional<String> dataName = storedFile.map(BinaryFile::getParams).map(BinaryFileInfos::binaryFiledataset).map(BinaryFileDataset::getDatatype);
+            Optional<String> dataName = storedFile
+                    .map(BinaryFile::getParams)
+                    .map(BinaryFileInfos::binaryFiledataset)
+                    .map(BinaryFileDataset::getDatatype);
             if (dataName.isPresent()) {
                 try {
                     return createData(
+                            locale,
                             applicationName,
                             dataName.get(),
                             null,
@@ -132,7 +155,8 @@ public class VersioningService implements ServiceContainerBean {
                                     {
                                        "fileid":"%1$s",
                                        "topublish":false
-                                    }""".formatted(id)
+                                    }""".formatted(id),
+                            true
                     );
                 } catch (IOException e) {
                     throw new RuntimeException(e);
