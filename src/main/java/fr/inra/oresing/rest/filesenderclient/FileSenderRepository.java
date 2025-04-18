@@ -4,17 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.xml.bind.DatatypeConverter;
 import lombok.extern.java.Log;
-import org.apache.http.HttpEntity;
-import org.apache.http.client.CookieStore;
-import org.apache.http.client.methods.*;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.entity.ByteArrayEntity;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.util.EntityUtils;
+
+import org.apache.hc.client5.http.cookie.BasicCookieStore;
+import org.apache.hc.client5.http.cookie.CookieStore;
+
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
@@ -22,7 +16,6 @@ import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -33,6 +26,27 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.client5.http.classic.methods.HttpGet;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPut;
+import org.apache.hc.client5.http.classic.methods.HttpDelete;
+
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
+import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
+
+
+
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.ContentType;
+import org.json.JSONObject;
 
 /**
  * @author jrobert
@@ -221,7 +235,63 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         return call("put", "/transfer/" + transfer.getInt("id"), params, content, null, new HashMap<>());
     }
 
-    private JSONObject call(String method, String path, Map<String, String> params, JSONObject content, byte[] rawContent, Map<String, String> headers) throws Exception {
+//    private JSONObject call(String method, String path, Map<String, String> params, JSONObject content, byte[] rawContent, Map<String, String> headers) throws Exception {
+//        params.put("remote_user", USERNAME);
+//        params.put("timestamp", String.valueOf(Math.round(System.currentTimeMillis() / 1000.0)));
+//
+//        String signature = generateSignature(method, path, params, content, rawContent);
+//        params.put("signature", signature);
+//
+//        String url = BASE_URL + path + "?" + flattenParams(params);
+//
+//        log.info("URL: %s%n Signature: %s".formatted(url, signature));
+//
+//        try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build()) {
+//            HttpRequestBase request = switch (method.toLowerCase()) {
+//                case "get" -> new HttpGet(url);
+//                case "post" -> new HttpPost(url);
+//                case "put" -> new HttpPut(url);
+//                case "delete" -> new HttpDelete(url);
+//                default -> throw new IllegalArgumentException("Méthode HTTP non supportée: " + method);
+//            };
+//
+//            request.setHeader("Accept", "application/json");
+//            request.setHeader("Content-Type", headers.getOrDefault("Content-Type", "application/json"));
+//
+//            for (Map.Entry<String, String> header : headers.entrySet()) {
+//                request.setHeader(header.getKey(), header.getValue());
+//            }
+//
+//            if (content != null) {
+//                System.out.println("JSON Content: " + content.toString(4)); // Pretty print the JSON
+//
+//
+//                ((HttpEntityEnclosingRequestBase) request).setEntity(new StringEntity(content.toString(), StandardCharsets.UTF_8));
+//            } else if (rawContent != null) {
+//                ((HttpEntityEnclosingRequestBase) request).setEntity(new ByteArrayEntity(rawContent));
+//            }
+//
+//            try (CloseableHttpResponse response = client.execute(request)) {
+//                HttpEntity entity = response.getEntity();
+//                String responseBody = EntityUtils.toString(entity);
+//
+//                int statusCode = response.getStatusLine().getStatusCode();
+//                if (statusCode != 200 && (method.equals("post") && statusCode != 201)) {
+//                    throw new Exception("Erreur HTTP " + statusCode + ": " + responseBody);
+//                }
+//
+//                if (responseBody.isEmpty()) {
+//                    throw new Exception("Erreur HTTP " + statusCode + " Réponse vide");
+//                }
+//
+//                log.info("Response: " + responseBody);
+//
+//                return responseBody.startsWith("{") ? new JSONObject(responseBody) : new JSONObject(String.format("{\"success\": %s}", responseBody));
+//            }
+//        }
+//    }
+
+    public JSONObject call(String method, String path, Map<String, String> params, JSONObject content, byte[] rawContent, Map<String, String> headers) throws Exception {
         params.put("remote_user", USERNAME);
         params.put("timestamp", String.valueOf(Math.round(System.currentTimeMillis() / 1000.0)));
 
@@ -232,36 +302,40 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
         log.info("URL: %s%n Signature: %s".formatted(url, signature));
 
-        try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build()) {
-            HttpRequestBase request = switch (method.toLowerCase()) {
-                case "get" -> new HttpGet(url);
-                case "post" -> new HttpPost(url);
-                case "put" -> new HttpPut(url);
-                case "delete" -> new HttpDelete(url);
+        try (CloseableHttpClient client = HttpClients.custom().setDefaultCookieStore(cookieStore).build()) {
+            HttpUriRequest request;
+
+            switch (method.toLowerCase()) {
+                case "get" -> request = new HttpGet(url);
+                case "post" -> request = new HttpPost(url);
+                case "put" -> request = new HttpPut(url);
+                case "delete" -> request = new HttpDelete(url);
                 default -> throw new IllegalArgumentException("Méthode HTTP non supportée: " + method);
-            };
+            }
 
             request.setHeader("Accept", "application/json");
             request.setHeader("Content-Type", headers.getOrDefault("Content-Type", "application/json"));
 
+            // Set custom headers
             for (Map.Entry<String, String> header : headers.entrySet()) {
                 request.setHeader(header.getKey(), header.getValue());
             }
 
+            // Ajouter le contenu à la requête, si présent
             if (content != null) {
                 System.out.println("JSON Content: " + content.toString(4)); // Pretty print the JSON
-
-
-                ((HttpEntityEnclosingRequestBase) request).setEntity(new StringEntity(content.toString(), StandardCharsets.UTF_8));
+                ((HttpUriRequestBase) request).setEntity(new StringEntity(content.toString(), StandardCharsets.UTF_8));
             } else if (rawContent != null) {
-                ((HttpEntityEnclosingRequestBase) request).setEntity(new ByteArrayEntity(rawContent));
+                // Utilisation de ContentType pour spécifier le type des données
+                ((HttpUriRequestBase) request).setEntity(new ByteArrayEntity(rawContent, ContentType.APPLICATION_OCTET_STREAM));
             }
 
+            // Exécution de la requête
             try (CloseableHttpResponse response = client.execute(request)) {
                 HttpEntity entity = response.getEntity();
                 String responseBody = EntityUtils.toString(entity);
 
-                int statusCode = response.getStatusLine().getStatusCode();
+                int statusCode = response.getCode();  // Utilise response.getCode() au lieu de getStatusLine().getStatusCode()
                 if (statusCode != 200 && (method.equals("post") && statusCode != 201)) {
                     throw new Exception("Erreur HTTP " + statusCode + ": " + responseBody);
                 }
@@ -276,6 +350,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
             }
         }
     }
+
 
     private String flattenParams(Map<String, String> params) {
         List<String> flatParams = new ArrayList<>();
