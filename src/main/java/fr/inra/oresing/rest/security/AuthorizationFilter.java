@@ -5,10 +5,7 @@ import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.OreSiRoleForUser;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedAuthentifiedIdleUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUnauthentifiedUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
@@ -16,6 +13,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
+import fr.inra.oresing.rest.exceptions.OreExceptionHandler;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
@@ -33,6 +31,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -49,22 +48,20 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
     private ServiceContainer serviceContainer;
-    private AuthenticationService authenticationService;
     private OreSiApiRequestContext requestContext;
     private static JsonRowMapper mapper;
     private static SecretKey key;
     private static int jwtExpiration;
+    private OreExceptionHandler exceptionHandler;
 
     @Autowired
     public AuthorizationFilter(
-            JsonRowMapper mapper,
-            AuthenticationService authenticationService,
             OreSiApiRequestContext requestContext,
             JsonRowMapper jsonRowMapper,
             @Value("${jwt.expiration:3600}") int jwtExpiration,
-            @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret) {
-
-        this.serviceContainer = serviceContainer;
+            @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret,
+            OreExceptionHandler exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
         this.requestContext = requestContext;
         this.mapper = jsonRowMapper;
         this.jwtExpiration = jwtExpiration;
@@ -81,6 +78,7 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
                 path.startsWith("/api/public") ||
                 path.startsWith("/api-docs.yaml")) {
             chain.doFilter(request, response); // Skip le filtre
+            return;
         }
         if (path.endsWith("/logout")) {
             return;
@@ -99,17 +97,37 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
             );
             saveToContext(token);
         } catch (AuthenticationFailure e) {
-            throw new RuntimeException(e);
+            ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
+            response.setStatus(handle.getStatusCodeValue());
+            response.setContentType("application/json");
+            String body = mapper.toJson(handle.getBody());
+            response.getWriter().write(body);
+            response.getWriter().flush();
+            return;
         }
         chain.doFilter(request, response);
     }
 
     private void saveToContext(OreSiAuthenticationToken token) {
         OreSiRequestClient requestClient = switch (token.getPrincipal()){
+            case NotConnectedUnauthentifiedUserForCreate notConnected ->null;
             case NotConnectedAuthentifiedIdleUser notConnectedUser-> new OreSiUserRequestClient(
                     notConnectedUser.user().getId(),
-                    authenticationService.getCurrentUserRoles(notConnectedUser.user().getId().toString())
+                    OreSiUserRole.forUser(notConnectedUser.user())
             );
+            case NotConnectedAuthentifiedPendingUser notConnectedUser-> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.user())
+            );
+            case NotConnectedAuthentifiedActiveUser notConnectedUser-> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.user())
+            );
+            case NotConnectedAuthentifiedMissingPasswordUser notConnectedUser-> new OreSiUserRequestClient(
+                    notConnectedUser.oreSiUser().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.oreSiUser())
+            );
+            case OreSiRequestClient requestClient1-> requestClient1;
             default -> null;
         };
         if(requestClient != null) {
