@@ -9,6 +9,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.ReactiveTypeError;
+import fr.inra.oresing.rest.security.AuthorizationFilter;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -89,34 +90,34 @@ public class AuthorizationResourcesTest {
         final Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
         final CreateUserResult withAdminRightsUserResult = authenticationService.createUser("withadminrigths", "xxxxxxxx", "withadminrights@inrae.fr");
         fixtures.setToActive(withAdminRightsUserResult.userId());
         final String withAdminRigthsUserId = withAdminRightsUserResult.userId().toString();
         final Cookie withAdminRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withadminrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
         final CreateUserResult withBadAdminRightsUserResult = authenticationService.createUser("withbadadminrigths", "xxxxxxxx", "withbadadminrigths@inrae.fr");
         fixtures.setToActive(withBadAdminRightsUserResult.userId());
         final String withBadAdminRigthsUserId = withBadAdminRightsUserResult.userId().toString();
         final Cookie withBadAdminRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withbadadminrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
         final CreateUserResult lamdaUserResult = authenticationService.createUser("lambda", "xxxxxxxx", "lambda@inrae.fr");
         fixtures.setToActive(lamdaUserResult.userId());
         final String lambdaUserId = lamdaUserResult.userId().toString();
         final Cookie lambdaCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
         final CreateUserResult readerUserResult = authenticationService.createUser("UnReader", "xxxxxxxx", "UnReader@inrae.fr");
         fixtures.setToActive(readerUserResult.userId());
         final Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "UnReader")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
 
         final String readerUserId = readerUserResult.userId().toString();
 
@@ -372,7 +373,7 @@ public class AuthorizationResourcesTest {
         final Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "UnReader")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
 
         final String authorizationId;
 
@@ -490,7 +491,7 @@ public class AuthorizationResourcesTest {
             Cookie dbUserCookies = mockMvc.perform(post("/api/v1/login")
                             .param("login", TEST)
                             .param("password", TEST))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
             addRoleAdmin(dbUserResult);
             final String applicationCreatorLogin = "applicationCreator";
             final String applicationCreatorPassword = "xxxxxxxx";
@@ -499,7 +500,7 @@ public class AuthorizationResourcesTest {
             Cookie applicationCreatorCookies = mockMvc.perform(post("/api/v1/login")
                             .param("login", applicationCreatorLogin)
                             .param("password", applicationCreatorPassword))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
             final String lambdaLogin = "lambda";
             final String lambdaPassword = "xxxxxxxx";
             final CreateUserResult lambdaResult = authenticationService.createUser(lambdaLogin, lambdaPassword, "lambdaLogin@inrae.fr");
@@ -507,7 +508,7 @@ public class AuthorizationResourcesTest {
             Cookie lambdaCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", lambdaLogin)
                             .param("password", lambdaPassword))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
 
             {
                 //l'administrateur peut créer des applications.

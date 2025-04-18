@@ -23,6 +23,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
+import fr.inra.oresing.rest.security.AuthorizationFilter;
 import fr.inra.oresing.rest.services.RelationalService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -104,8 +105,6 @@ public class RightsTest {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private UUID authUserId;
     private Cookie authCookie;
-    @Autowired
-    private AuthHelper authHelper;
 
     @BeforeEach
     public void createUser() throws Exception {
@@ -121,7 +120,7 @@ public class RightsTest {
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "poussin")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
         addRoleAdmin(authUser);
     }
 
@@ -193,8 +192,8 @@ public class RightsTest {
             //throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
         }
         final Date issuedAt = new Date();
-        final String token = authHelper.buildToken(json, issuedAt, 0);
-        final Cookie cookie = new Cookie(AuthHelper.JWT_COOKIE_NAME, token);
+        final String token = AuthorizationFilter.buildToken(json, issuedAt, 0);
+        final Cookie cookie = new Cookie(AuthorizationFilter.JWT_COOKIE_NAME, token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         return cookie;
@@ -215,7 +214,7 @@ public class RightsTest {
         // Récupérer le cookie de déconnexion (qui devrait être expiré)
         authCookie = mockMvc.perform(delete("/api/v1/logout")
                         .cookie(authCookie))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
 
         // Étape 3: Vérifier que l'accès est maintenant refusé
         Exception resolvedException = mockMvc.perform(get("/api/v1/applications")
@@ -245,7 +244,7 @@ public class RightsTest {
                 .andReturn();
 
         // Récupérer le cookie après le premier appel
-        authCookie = result.getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        authCookie = result.getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
         Assertions.assertNotNull(authCookie, "Le cookie ne devrait pas être null");
         Assertions.assertTrue(authCookie.getMaxAge() > 0, "Le cookie devrait avoir une durée de vie positive");
 
@@ -256,7 +255,7 @@ public class RightsTest {
                 .andReturn();
 
         // Récupérer le cookie après le deuxième appel
-        Cookie cookie2 = result.getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+        Cookie cookie2 = result.getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
         Assertions.assertNotNull(cookie2, "Le cookie ne devrait pas être null");
         Assertions.assertTrue(cookie2.getMaxAge() > 0, "Le cookie devrait avoir une durée de vie positive");
 

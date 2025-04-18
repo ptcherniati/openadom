@@ -1,12 +1,10 @@
 package fr.inra.oresing;
 
 import fr.inra.oresing.persistence.flyway.MigrateService;
-import fr.inra.oresing.rest.OreSiHandler;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,8 +42,7 @@ public class OreSiNg implements WebMvcConfigurer {
     @Value("${allowed.origin}")
     private String allowedOrigin;
 
-    public OreSiNg(OreSiHandler oreSiHandler, MigrateService migrate) {
-        this.oreSiHandler = oreSiHandler;
+    public OreSiNg(MigrateService migrate) {
         this.migrate = migrate;
     }
 
@@ -53,7 +50,6 @@ public class OreSiNg implements WebMvcConfigurer {
         SpringApplication.run(OreSiNg.class, args);
     }
 
-    private final OreSiHandler oreSiHandler;
     private final MigrateService migrate;
 
     @Override
@@ -129,11 +125,6 @@ public class OreSiNg implements WebMvcConfigurer {
                             .description("Api Rest pour le stockage et la restitution de fichier CSV"))
                     .servers(List.of(new Server().url(allowedOrigin)));
         }
-    }
-
-    @Override
-    public void addInterceptors(final InterceptorRegistry registry) {
-        registry.addInterceptor(oreSiHandler);
     }
 
     @EventListener(ApplicationReadyEvent.class)

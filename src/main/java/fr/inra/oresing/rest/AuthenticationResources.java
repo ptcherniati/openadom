@@ -30,6 +30,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
+import reactor.core.publisher.Mono;
 
 import java.net.URI;
 import java.nio.charset.Charset;
@@ -46,9 +47,6 @@ import static fr.inra.oresing.domain.authorization.privilegeassessor.role.Privil
 @RequestMapping("/api/v1")
 public class AuthenticationResources implements ServiceContainerBean {
     private ServiceContainer serviceContainer;
-
-    @Autowired
-    private AuthHelper authHelper;
 
     @Autowired
     protected AuthenticationService authenticationService;
@@ -230,7 +228,6 @@ public class AuthenticationResources implements ServiceContainerBean {
                     example = "\"user@inrae.fr\"",
                     required = true)
             @RequestParam("email") final String email) throws AuthenticationFailure {
-
         final CreateUserResult createUserResult = authenticationService.createUser(login, password, email);
         try {
             authenticationService.sendEmailValidation(login, password);
@@ -287,11 +284,16 @@ public class AuthenticationResources implements ServiceContainerBean {
                     description = "Échec d'authentification ou clé de vérification invalide")
     })
     @PutMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CreateUserResult> updateUser(final HttpServletResponse response,
-                                                       @RequestBody() final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        NotConnectedUser notConnectedUser = serviceContainer.authorizationService()
-                .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
-                .forUpdateUser(createUserRequest);
+    public ResponseEntity<CreateUserResult> updateUser(
+            final HttpServletResponse response/*,
+            @RequestBody() final Mono<CreateUserRequest> createUserRequest*/
+    ) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        NotConnectedUser notConnectedUser = Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getPrincipal)
+                .filter(NotConnectedUser.class::isInstance)
+                .map(NotConnectedUser.class::cast)
+                .orElse(null);
         final OreSiUser oreSiUser = authenticationService.updateUser(notConnectedUser);
         final String uri = UriUtils.encodePath("/users/" + Optional.ofNullable(oreSiUser)
                         .map(OreSiUser::getId)

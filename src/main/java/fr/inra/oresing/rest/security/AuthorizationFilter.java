@@ -3,11 +3,15 @@ package fr.inra.oresing.rest.security;
 import fr.inra.oresing.JwtCookieValue;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.domain.OreSiRoleForUser;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedAuthentifiedIdleUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUnauthentifiedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.AuthenticationFailure;
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
@@ -44,16 +48,17 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
     private static final String HTTP_CORRELATION_ID = "X-Correlation-ID";
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
-
     private ServiceContainer serviceContainer;
-    private final OreSiApiRequestContext requestContext;
-    private final JsonRowMapper mapper;
-    private final SecretKey key;
-    private final int jwtExpiration;
+    private AuthenticationService authenticationService;
+    private OreSiApiRequestContext requestContext;
+    private static JsonRowMapper mapper;
+    private static SecretKey key;
+    private static int jwtExpiration;
 
     @Autowired
     public AuthorizationFilter(
             JsonRowMapper mapper,
+            AuthenticationService authenticationService,
             OreSiApiRequestContext requestContext,
             JsonRowMapper jsonRowMapper,
             @Value("${jwt.expiration:3600}") int jwtExpiration,
@@ -90,13 +95,26 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(token);
             SecurityContextHolder.getContextHolderStrategy().setContext(
-                   context
+                    context
             );
-
+            saveToContext(token);
         } catch (AuthenticationFailure e) {
             throw new RuntimeException(e);
         }
         chain.doFilter(request, response);
+    }
+
+    private void saveToContext(OreSiAuthenticationToken token) {
+        OreSiRequestClient requestClient = switch (token.getPrincipal()){
+            case NotConnectedAuthentifiedIdleUser notConnectedUser-> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    authenticationService.getCurrentUserRoles(notConnectedUser.user().getId().toString())
+            );
+            default -> null;
+        };
+        if(requestClient != null) {
+            requestContext.setRequestClient(requestClient);
+        }
     }
 
 
@@ -108,9 +126,9 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
         }
         if (HttpMethod.POST.name().equals(method) && path.endsWith("/login")) {
             return buildLoginAuthentication(request, response);
-        } else if (HttpMethod.POST.equals(method) && path.endsWith("/users")) {
+        } else if (HttpMethod.POST.name().equals(method) && path.endsWith("/users")) {
             return buildCreateUserAuthentication();
-        } else if (HttpMethod.PUT.equals(method) && path.endsWith("/users")) {
+        } else if (HttpMethod.PUT.name().equals(method) && path.endsWith("/users")) {
             return buildUpdateUserAuthentication(request);
         } else {
             return handleJwtAuthentication(request, response);
@@ -216,7 +234,7 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
         }
     }
 
-    public String buildToken(OreSiUserRequestClient requestClient) {
+    public static String buildToken(OreSiUserRequestClient requestClient) {
         JwtCookieValue jwtCookieValue = new JwtCookieValue(requestClient);
         String json = mapper.toJson(jwtCookieValue);
         return Jwts.builder()
@@ -227,14 +245,14 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
                 .compact();
     }
 
-    private Cookie newCookie(final OreSiUserRequestClient requestClient) {
+    public static Cookie newCookie(final OreSiUserRequestClient requestClient) {
         final String json;
         final JwtCookieValue jwtCookieValue = new JwtCookieValue(requestClient);
         json = mapper.toJson(jwtCookieValue);
         return getCookie(json, jwtExpiration);
     }
 
-    private Cookie getCookie(String json, int maxAge) {
+    public static Cookie getCookie(String json, int maxAge) {
         final Date issuedAt = new Date();
         final String token = buildToken(json, issuedAt, jwtExpiration);
         final Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
@@ -244,7 +262,7 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
         return cookie;
     }
 
-    protected String buildToken(String json, Date issuedAt, int jwtExpiration) {
+    public static String buildToken(String json, Date issuedAt, int jwtExpiration) {
         return Jwts.builder()
                 .subject(json)
                 .issuedAt(issuedAt)
