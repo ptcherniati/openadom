@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 public class Application extends OreSiEntity {
     public Timestamp getLastChartes() {
-        return lastChartes==null?Timestamp.from(Instant.MIN):lastChartes;
+        return lastChartes==null?(new Timestamp(Long.MIN_VALUE)):lastChartes;
     }
 
     private Timestamp lastChartes;

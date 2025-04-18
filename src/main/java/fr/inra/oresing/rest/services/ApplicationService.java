@@ -379,7 +379,7 @@ public class ApplicationService implements ServiceContainerBean{
             Timestamp charteLastTimestamp = Optional.ofNullable(serviceContainer.additionalFileService().findCharte(application))
                     .map(AdditionalBinaryFile::getUpdateDate)
                     .map(Timestamp::valueOf)
-                    .orElse(Timestamp.from(Instant.MIN));
+                    .orElse((new Timestamp(Long.MIN_VALUE)));
             application.setLastChartes(charteLastTimestamp);
             final UUID appId = repository.application().store(application);
             final ReactiveProgression.ChangeOrCreateApplicationProgression progressionRegister = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForParsingConfiguration.up();
