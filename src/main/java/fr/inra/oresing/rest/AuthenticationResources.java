@@ -26,6 +26,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
@@ -58,7 +60,7 @@ public class AuthenticationResources implements ServiceContainerBean {
     @Operation(
             summary = "Connexion utilisateur",
             description = "Authentifie un utilisateur et retourne un token JWT dans le cookie. " +
-                          "Ce cookie est à passer dans tout appel au serveur",
+                    "Ce cookie est à passer dans tout appel au serveur",
             tags = {"authentication-resources"},
             parameters = {
                     @Parameter(
@@ -151,13 +153,12 @@ public class AuthenticationResources implements ServiceContainerBean {
     })
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoginAdminResult login(final HttpServletResponse response, @RequestParam("login") final String login, @RequestParam("password") final String password) throws Throwable {
-        final LoginAdminResult loginAdminResult = serviceContainer.authorizationService().getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
-                .forLoginPassword(login, password);
-        final OreSiUserRole userRole = authenticationService.getUserRole(loginAdminResult.id());
-        final OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(loginAdminResult.id(), userRole);
-        authHelper.refreshCookie(response, requestClient);
-        request.setRequestClient(requestClient);
-        return loginAdminResult;
+        return Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getPrincipal)
+                .filter(LoginAdminResult.class::isInstance)
+                .map(LoginAdminResult.class::cast)
+                .orElse(null);
     }
 
     @Operation(

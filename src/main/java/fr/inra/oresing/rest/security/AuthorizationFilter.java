@@ -86,6 +86,7 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
         request.setAttribute(AUTHORIZATION_ALREADY_DONE, true);
         try {
             OreSiAuthenticationToken token = buildAuthentication(request, response);
+            //SecurityContextHolder.getContext().setAuthentication(token);
             SecurityContext context = SecurityContextHolder.createEmptyContext();
             context.setAuthentication(token);
             SecurityContextHolder.getContextHolderStrategy().setContext(

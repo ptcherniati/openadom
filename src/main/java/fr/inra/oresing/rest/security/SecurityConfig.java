@@ -2,11 +2,11 @@ package fr.inra.oresing.rest.security;
 
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
-import jakarta.servlet.Filter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -14,10 +14,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.AnonymousAuthenticationFilter;
-import org.springframework.security.web.context.DelegatingSecurityContextRepository;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -45,13 +42,12 @@ public class SecurityConfig implements ServiceContainerBean {
     }
 
     @Bean
+    @Primary
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder =
-            http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.authenticationProvider(authenticationProvider);
-        return authenticationManagerBuilder.build();
+        return http.getSharedObject(AuthenticationManagerBuilder.class)
+                .authenticationProvider(authenticationProvider)
+                .build();
     }
-
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -71,8 +67,7 @@ public class SecurityConfig implements ServiceContainerBean {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users").hasAuthority(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
                                 .anyRequest().authenticated())
-                //.anonymous(AbstractHttpConfigurer::disable)
-                .addFilterBefore(authorizationFilter, AnonymousAuthenticationFilter.class);
+                .addFilterAfter(authorizationFilter, BasicAuthenticationFilter.class);
         return http.build();
     }
 
@@ -80,7 +75,6 @@ public class SecurityConfig implements ServiceContainerBean {
     @Configuration
     public class CorsConfig implements WebMvcConfigurer {
 
-        private final String allowedOrigin = "*"; // Remplacez par votre ou vos origines autorisées
         private static final long MAX_AGE = 3600;
 
         @Override
