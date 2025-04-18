@@ -11,7 +11,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.6</version>
+        <version>3.4.4</version>
     </parent>
 
 
@@ -65,9 +65,7 @@
         <license.licenseName>lgpl_v3</license.licenseName>
 
         <!-- Java Version -->
-        <java.version>21</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <java.version>22</java.version>
 
         <jwt.version>0.12.6</jwt.version>
         <flyway.version>10.10.0</flyway.version>
@@ -82,9 +80,7 @@
         <vue.version>2.6.14</vue.version>
         <testcontainer.postgresql.version>1.20.1</testcontainer.postgresql.version>
         <groovy.version-jsr223>3.0.22</groovy.version-jsr223>
-        <!--Database infos -->
-        <java.version>21</java.version>
-
+        
         <!--sonar-->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
@@ -139,12 +135,10 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>${flyway.version}</version>
         </dependency>
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-            <version>${flyway.database.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -182,12 +176,13 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
         </dependency>
-        <!-- Apache HttpClient -->
+        
+        <!-- Apache HttpClient 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.14</version>
-        </dependency>
+        </dependency> -->
 
         <!-- JSON in Java -->
         <dependency>
@@ -278,13 +273,11 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.13.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>${testcontainer.postgresql.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -294,9 +287,8 @@
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
-            <version>5.3.1</version>
         </dependency>
-
+        
 
     </dependencies>
 
@@ -341,7 +333,6 @@
             <plugin>
                 <groupId>io.github.git-commit-id</groupId>
                 <artifactId>git-commit-id-maven-plugin</artifactId>
-                <version>9.0.1</version>
                 <executions>
                     <execution>
                         <id>get-the-git-infos</id>
@@ -373,8 +364,8 @@
                     <compilerArgs>
                         <arg>-parameters</arg>
                     </compilerArgs>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>21</source>
+                    <target>21</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -405,7 +396,7 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <!-- Utilisez une version récente pour être certain du support adéquat de JUnit 5 -->
-                <version>3.0.0-M5</version>
+                <version>3.2.5</version>
             </plugin>
         </plugins>
     </build>
@@ -459,7 +450,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -479,7 +470,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -499,7 +490,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -519,7 +510,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -539,7 +530,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -559,7 +550,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -579,7 +570,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -599,7 +590,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -619,7 +610,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -638,7 +629,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -657,7 +648,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -676,7 +667,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -695,7 +686,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -714,7 +705,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -733,7 +724,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -752,7 +743,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -767,7 +758,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>3.2.5</version>
                         <configuration>
                             <argLine>-XX:+EnableDynamicAgentLoading</argLine>
                             <excludedGroups>
