@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
@@ -190,5 +191,23 @@ public class Ltree implements Comparable<Ltree> {
     @Override
     public int compareTo(Ltree o) {
         return getSql().compareTo(o.getSql());
+    }
+    
+    /**
+     *  Ajouter l’annotation @JsonCreator pour indiquer à Jackson 
+     *  comment construire un Ltree à partir d’un String.
+     */
+     
+    /**
+     * @param value
+     * @return 
+     **/
+    @JsonCreator
+    public static Ltree fromJson(String value) {
+        return Ltree.fromSql(value);
+    }
+
+    public String toJson() {
+        return sql;
     }
 }
