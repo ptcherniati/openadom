@@ -7,20 +7,17 @@ import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.annotation.RequestScope;
 
 import java.util.Optional;
 import java.util.UUID;
 
 @Component
-@RequestScope
 public class OreSiApiRequestContext {
     public OreSiAuthenticationToken getAuthenticationToken() {
-        return authenticationToken;
+        return getAuthenticationTokenOptional().orElse(null);
     }
 
     public void setAuthenticationToken(OreSiAuthenticationToken authenticationToken) {
-        this.authenticationToken = authenticationToken;
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authenticationToken);
         SecurityContextHolder.getContextHolderStrategy().setContext(
@@ -28,16 +25,21 @@ public class OreSiApiRequestContext {
         );
     }
 
-    private OreSiAuthenticationToken authenticationToken;
-
     public OreSiRequestClient getRequestClient() {
         return getRequestClientOptional()
                 .orElse(null);
     }
 
     private Optional<OreSiUserRequestClient> getRequestClientOptional() {
-        return Optional.ofNullable(authenticationToken)
+        return getAuthenticationTokenOptional()
                 .map(OreSiAuthenticationToken::getrequestClient);
+    }
+
+    private static Optional<OreSiAuthenticationToken> getAuthenticationTokenOptional() {
+        return Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .filter(OreSiAuthenticationToken.class::isInstance)
+                .map(OreSiAuthenticationToken.class::cast);
     }
 
     public UUID getRequestUserId(){
