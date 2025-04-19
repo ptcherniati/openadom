@@ -1041,7 +1041,7 @@ public class OreSiResources implements ServiceContainerBean {
             ZipOutputStream zipOutputStream = null;
             Path tempFile;
             try {
-                user.set(userRepository.findById(request.getRequestClient().id()));
+                user.set(userRepository.findById(request.getRequestUserId()));
                 tempFile = Files.createTempFile(Paths.get("/tmp"), "data-" + UUID.randomUUID(), ".zip");
 
                 try (OutputStream fileOutputStream = Files.newOutputStream(tempFile);
@@ -1218,7 +1218,7 @@ public class OreSiResources implements ServiceContainerBean {
             Path tempFile;
             AtomicReference<OreSiUser> user = new AtomicReference<>();
             try {
-                user.set(userRepository.findById(this.request.getRequestClient().id()));
+                user.set(userRepository.findById(this.request.getRequestUserId()));
                 tempFile = Files.createTempFile(Paths.get("/tmp"), "upload-bundle-" + UUID.randomUUID(), ".zip");
 
                 try (OutputStream fileOutputStream = Files.newOutputStream(tempFile);

@@ -245,7 +245,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     }
 
     public List<OreSiAuthorization> findUserAuthorizationsForApplication(final Application application) {
-        UUID currentUserId = request.getRequestClient().id();
+        UUID currentUserId = request.getRequestUserId();
         final AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         return authorizationRepository.findAuthorizationsByUserId(currentUserId);
     }
@@ -885,13 +885,13 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     }
 
     public List<OreSiAdditionalFileAuthorization> findUserAdditionalFilesAuthorizationsForApplication(final Application application) {
-        UUID currentUserId = request.getRequestClient().id();
+        UUID currentUserId = request.getRequestUserId();
         final AuthorizationAdditionalFilesRepository authorizationRepository = repository.getRepository(application).authorizationAdditionalFiles();
         return authorizationRepository.findAuthorizations(currentUserId, application);
     }
 
     public List<OreSiAdditionalFileAuthorization> findUserAdditionalFilesAuthorizationsForApplicationAndDataType(final Application application) {
-        UUID currentUserId = request.getRequestClient().id();
+        UUID currentUserId = request.getRequestUserId();
         final AuthorizationAdditionalFilesRepository authorizationRepository = repository.getRepository(application).authorizationAdditionalFiles();
         return authorizationRepository.findAuthorizations(currentUserId, application);
     }
@@ -949,7 +949,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
 
 
     public OreSiUser getCurrentUser() {
-        return userRepository.findById(request.getRequestClient().id());
+        return userRepository.findById(request.getRequestUserId());
     }
 
     private AuthorizationsForApplicationUser getAuthorizationsForApplicationUser(Application application) {

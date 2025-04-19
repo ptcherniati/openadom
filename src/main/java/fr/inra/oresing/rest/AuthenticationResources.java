@@ -182,7 +182,7 @@ public class AuthenticationResources implements ServiceContainerBean {
     @DeleteMapping("/logout")
     public ResponseEntity logout(HttpServletResponse response) {
         serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
-        request.reset();
+        SecurityContextHolder.clearContext();
         return ResponseEntity.ok().build();
     }
 

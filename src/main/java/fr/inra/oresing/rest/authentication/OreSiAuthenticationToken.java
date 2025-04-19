@@ -1,6 +1,9 @@
 package fr.inra.oresing.rest.authentication;
 
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
+import fr.inra.oresing.OreSiRequestClient;
+import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.security.OreSiAuthorizationManager;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -51,6 +54,30 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
     public Object getPrincipal() {
         return principal;
     }
+    public static OreSiUserRequestClient getrequestClient(OreSiAuthenticationToken token) {
+        return switch (token.getPrincipal()){
+            case NotConnectedUnauthentifiedUserForCreate notConnected ->null;
+            case NotConnectedAuthentifiedIdleUser notConnectedUser-> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.user())
+            );
+            case NotConnectedAuthentifiedPendingUser notConnectedUser-> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.user())
+            );
+            case NotConnectedAuthentifiedActiveUser notConnectedUser-> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.user())
+            );
+            case NotConnectedAuthentifiedMissingPasswordUser notConnectedUser-> new OreSiUserRequestClient(
+                    notConnectedUser.oreSiUser().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.oreSiUser())
+            );
+            case OreSiUserRequestClient requestClient1-> requestClient1;
+            default -> null;
+        };
+    }
+
 
     @Override
     public Object getCredentials() {

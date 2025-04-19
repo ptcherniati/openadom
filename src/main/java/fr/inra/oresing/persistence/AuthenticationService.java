@@ -72,13 +72,13 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
      * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
      */
     public OreSiRoleToAccessDatabase setRoleForClient() {
-        final OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClient().role();
+        final OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClientRole();
         setRole(roleToAccessDatabase);
         return roleToAccessDatabase;
     }
 
     public OreSiUser getCurrentUser() {
-        return userRepository.findById(request.getRequestClient().id());
+        return userRepository.findById(request.getRequestUserId());
     }
 
     /**

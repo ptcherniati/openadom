@@ -89,13 +89,7 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
         request.setAttribute(AUTHORIZATION_ALREADY_DONE, true);
         try {
             OreSiAuthenticationToken token = buildAuthentication(request, response);
-            //SecurityContextHolder.getContext().setAuthentication(token);
-            SecurityContext context = SecurityContextHolder.createEmptyContext();
-            context.setAuthentication(token);
-            SecurityContextHolder.getContextHolderStrategy().setContext(
-                    context
-            );
-            saveToContext(token);
+            requestContext.setAuthenticationToken(token);
         } catch (AuthenticationFailure e) {
             ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCodeValue());
@@ -108,32 +102,6 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
         chain.doFilter(request, response);
     }
 
-    private void saveToContext(OreSiAuthenticationToken token) {
-        OreSiRequestClient requestClient = switch (token.getPrincipal()){
-            case NotConnectedUnauthentifiedUserForCreate notConnected ->null;
-            case NotConnectedAuthentifiedIdleUser notConnectedUser-> new OreSiUserRequestClient(
-                    notConnectedUser.user().getId(),
-                    OreSiUserRole.forUser(notConnectedUser.user())
-            );
-            case NotConnectedAuthentifiedPendingUser notConnectedUser-> new OreSiUserRequestClient(
-                    notConnectedUser.user().getId(),
-                    OreSiUserRole.forUser(notConnectedUser.user())
-            );
-            case NotConnectedAuthentifiedActiveUser notConnectedUser-> new OreSiUserRequestClient(
-                    notConnectedUser.user().getId(),
-                    OreSiUserRole.forUser(notConnectedUser.user())
-            );
-            case NotConnectedAuthentifiedMissingPasswordUser notConnectedUser-> new OreSiUserRequestClient(
-                    notConnectedUser.oreSiUser().getId(),
-                    OreSiUserRole.forUser(notConnectedUser.oreSiUser())
-            );
-            case OreSiRequestClient requestClient1-> requestClient1;
-            default -> null;
-        };
-        if(requestClient != null) {
-            requestContext.setRequestClient(requestClient);
-        }
-    }
 
 
     private OreSiAuthenticationToken buildAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationFailure, IOException {
