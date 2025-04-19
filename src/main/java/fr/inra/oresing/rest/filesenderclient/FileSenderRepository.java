@@ -38,8 +38,6 @@ import java.util.Map;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
 import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
 
-
-
 import org.apache.hc.client5.http.impl.classic.HttpClients;
 import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.apache.hc.core5.http.io.entity.StringEntity;
@@ -91,7 +89,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
             return -1;
         }
     }
-
 
     @Override
     public String postTransfer(FileInfos fileInfos) throws Exception {
@@ -235,62 +232,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         return call("put", "/transfer/" + transfer.getInt("id"), params, content, null, new HashMap<>());
     }
 
-//    private JSONObject call(String method, String path, Map<String, String> params, JSONObject content, byte[] rawContent, Map<String, String> headers) throws Exception {
-//        params.put("remote_user", USERNAME);
-//        params.put("timestamp", String.valueOf(Math.round(System.currentTimeMillis() / 1000.0)));
-//
-//        String signature = generateSignature(method, path, params, content, rawContent);
-//        params.put("signature", signature);
-//
-//        String url = BASE_URL + path + "?" + flattenParams(params);
-//
-//        log.info("URL: %s%n Signature: %s".formatted(url, signature));
-//
-//        try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).build()) {
-//            HttpRequestBase request = switch (method.toLowerCase()) {
-//                case "get" -> new HttpGet(url);
-//                case "post" -> new HttpPost(url);
-//                case "put" -> new HttpPut(url);
-//                case "delete" -> new HttpDelete(url);
-//                default -> throw new IllegalArgumentException("Méthode HTTP non supportée: " + method);
-//            };
-//
-//            request.setHeader("Accept", "application/json");
-//            request.setHeader("Content-Type", headers.getOrDefault("Content-Type", "application/json"));
-//
-//            for (Map.Entry<String, String> header : headers.entrySet()) {
-//                request.setHeader(header.getKey(), header.getValue());
-//            }
-//
-//            if (content != null) {
-//                System.out.println("JSON Content: " + content.toString(4)); // Pretty print the JSON
-//
-//
-//                ((HttpEntityEnclosingRequestBase) request).setEntity(new StringEntity(content.toString(), StandardCharsets.UTF_8));
-//            } else if (rawContent != null) {
-//                ((HttpEntityEnclosingRequestBase) request).setEntity(new ByteArrayEntity(rawContent));
-//            }
-//
-//            try (CloseableHttpResponse response = client.execute(request)) {
-//                HttpEntity entity = response.getEntity();
-//                String responseBody = EntityUtils.toString(entity);
-//
-//                int statusCode = response.getStatusLine().getStatusCode();
-//                if (statusCode != 200 && (method.equals("post") && statusCode != 201)) {
-//                    throw new Exception("Erreur HTTP " + statusCode + ": " + responseBody);
-//                }
-//
-//                if (responseBody.isEmpty()) {
-//                    throw new Exception("Erreur HTTP " + statusCode + " Réponse vide");
-//                }
-//
-//                log.info("Response: " + responseBody);
-//
-//                return responseBody.startsWith("{") ? new JSONObject(responseBody) : new JSONObject(String.format("{\"success\": %s}", responseBody));
-//            }
-//        }
-//    }
-
     public JSONObject call(String method, String path, Map<String, String> params, JSONObject content, byte[] rawContent, Map<String, String> headers) throws Exception {
         params.put("remote_user", USERNAME);
         params.put("timestamp", String.valueOf(Math.round(System.currentTimeMillis() / 1000.0)));
@@ -351,7 +292,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         }
     }
 
-
     private String flattenParams(Map<String, String> params) {
         List<String> flatParams = new ArrayList<>();
         for (Map.Entry<String, String> entry : params.entrySet()) {
@@ -360,7 +300,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         Collections.sort(flatParams);
         return String.join("&", flatParams);
     }
-
 
     private static byte[] concatByteArrays(byte[] first, byte[] second) {
         byte[] combined = new byte[first.length + second.length];
