@@ -76,7 +76,7 @@
         <guava.version>33.4.8-jre</guava.version>
         <opencsv.version>5.10</opencsv.version>
         <bcrypt.version>0.10.2</bcrypt.version>
-        <!--<vue.version>2.6.14</vue.version>-->
+        <vue.version>2.6.14</vue.version>
         <testcontainer.postgresql.version>1.20.1</testcontainer.postgresql.version>
         <groovy.version-jsr223>3.0.24</groovy.version-jsr223>
         
@@ -256,12 +256,12 @@
             <version>2.5.3</version>
         </dependency>
 
-        <!-- UI WHY ?-->
-        <!--<dependency>
+        <!-- UI -->
+        <dependency>
             <groupId>org.webjars.bowergithub.vuejs</groupId>
             <artifactId>vue</artifactId>
             <version>${vue.version}</version>
-        </dependency>-->
+        </dependency>
 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
