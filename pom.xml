@@ -76,7 +76,7 @@
         <guava.version>33.4.8-jre</guava.version>
         <opencsv.version>5.10</opencsv.version>
         <bcrypt.version>0.10.2</bcrypt.version>
-        <vue.version>2.6.14</vue.version>
+        <vue.version>3.5.13</vue.version>
         <testcontainer.postgresql.version>1.20.1</testcontainer.postgresql.version>
         <groovy.version-jsr223>3.0.24</groovy.version-jsr223>
         
@@ -115,7 +115,7 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-<!--        <dependency>
+        <!--        <dependency>
             <groupId>pl.project13.maven</groupId>
             <artifactId>git-commit-id-plugin</artifactId>
             <version>4.9.10</version>
@@ -257,12 +257,17 @@
         </dependency>
 
         <!-- UI -->
-        <dependency>
+        <!-- <dependency>
             <groupId>org.webjars.bowergithub.vuejs</groupId>
+            <artifactId>vue</artifactId>
+            <version>${vue.version}</version> 
+        </dependency> -->
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
             <artifactId>vue</artifactId>
             <version>${vue.version}</version>
         </dependency>
-
+ 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-jsr223</artifactId>
