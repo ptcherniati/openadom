@@ -72,19 +72,18 @@
         <flyway-spring-test.version>10.0.0</flyway-spring-test.version>
         <springdoc-openapi-starter-webmvc-ui.version>2.8.6</springdoc-openapi-starter-webmvc-ui.version>
         <common-csv.version>1.14.0</common-csv.version>
-        <commons-io.version>2.19.0</commons-io.version>
+        <!--<commons-io.version>2.19.0</commons-io.version>-->
         <guava.version>33.4.8-jre</guava.version>
         <opencsv.version>5.10</opencsv.version>
         <bcrypt.version>0.10.2</bcrypt.version>
-        <vue.version>2.6.14</vue.version>
+        <!--<vue.version>2.6.14</vue.version>-->
         <testcontainer.postgresql.version>1.20.1</testcontainer.postgresql.version>
         <groovy.version-jsr223>3.0.24</groovy.version-jsr223>
         
         <!--sonar-->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec
-        </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.language>java</sonar.language>
         <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
         <sonar.projectName>openADOM-backend</sonar.projectName>
@@ -132,14 +131,6 @@
             <artifactId>postgresql</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
@@ -162,7 +153,7 @@
         </dependency>
         <!-- ******************************************************* -->
 
-        <dependency>
+        <!-- <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-csv</artifactId>
         </dependency>
@@ -174,7 +165,7 @@
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
-        </dependency>
+        </dependency>-->
         
         <!-- Apache HttpClient 
         <dependency>
@@ -196,16 +187,16 @@
             <version>${common-csv.version}</version>
         </dependency>
 
-        <dependency>
+        <!-- <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-        </dependency>
+        </dependency>-->
 
-        <dependency>
+        <!-- <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons-io.version}</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -242,6 +233,14 @@
             <artifactId>flyway-spring-test</artifactId>
             <version>${flyway-spring-test.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
