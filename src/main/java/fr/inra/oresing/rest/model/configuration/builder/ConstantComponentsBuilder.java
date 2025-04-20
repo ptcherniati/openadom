@@ -9,8 +9,8 @@ import fr.inra.oresing.domain.application.configuration.checker.CheckerDescripti
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
+import jakarta.annotation.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public record ConstantComponentsBuilder(RootBuilder rootBuilder) {

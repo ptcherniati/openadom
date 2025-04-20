@@ -17,7 +17,7 @@ import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import lombok.Getter;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 

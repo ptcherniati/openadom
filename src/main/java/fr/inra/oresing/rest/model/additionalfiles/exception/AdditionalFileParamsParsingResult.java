@@ -6,9 +6,9 @@ import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.persistence.AdditionalFileSearchHelper;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
+import jakarta.annotation.Nullable;
 import lombok.Value;
 
-import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;

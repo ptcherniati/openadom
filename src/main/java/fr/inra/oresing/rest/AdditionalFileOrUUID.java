@@ -1,10 +1,10 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
