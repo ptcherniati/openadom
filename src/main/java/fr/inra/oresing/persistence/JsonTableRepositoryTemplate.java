@@ -63,7 +63,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
                     e.setId(UUID.randomUUID());
                 }
             });
-            jsonRowMapper.getJsonMapper().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE);
+            //jsonRowMapper.getJsonMapper().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE);
             final String json = jsonRowMapper.toJson(entities);
             try{
                 uuids.addAll(namedParameterJdbcTemplate.queryForList(

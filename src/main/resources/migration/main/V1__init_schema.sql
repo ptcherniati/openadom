@@ -157,7 +157,7 @@ create table Application
     additionalFiles text[],
     configuration jsonb,  -- le fichier de configuration sous forme json
     configFile    uuid CHECK (fk_check(name || '.BinaryFile', configFile)),
-    version varchar NOT NULL GENERATED ALWAYS AS ((configuration->'applicationDescription'->'version'->>'version')::varchar) STORED
+    version varchar NOT NULL
 );
 
 CREATE INDEX application_data_gin_idx ON application USING gin (data);

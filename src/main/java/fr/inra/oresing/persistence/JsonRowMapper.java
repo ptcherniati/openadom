@@ -25,6 +25,7 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
+import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +41,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Component
+@Primary
 public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
+    private PropertyNamingStrategy strategies = PropertyNamingStrategies.LOWER_CASE;
+
+    public JsonRowMapper(PropertyNamingStrategy strategies) {
+        this.strategies = strategies;
+        buildMapper();
+    }
 
     public ObjectMapper getJsonMapper() {
         return jsonMapper;
@@ -52,6 +60,10 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
     private ObjectMapper jsonMapper;
 
     public JsonRowMapper() {
+        buildMapper();
+    }
+
+    private void buildMapper() {
         this.jsonMapper = JsonMapper.builder()
                 .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
                 .enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
@@ -97,7 +109,6 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 return super.handleUnexpectedToken(ctxt, targetType, t, p, failureMsg);
             }
         });
-
     }
 
     private static JsonSerializer<StringGroovyExpression> getStringGroovyExpressionJsonSerializer() {

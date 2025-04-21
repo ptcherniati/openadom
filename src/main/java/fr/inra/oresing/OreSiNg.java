@@ -1,5 +1,7 @@
 package fr.inra.oresing;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -62,6 +64,7 @@ public class OreSiNg implements WebMvcConfigurer {
                 .resourceChain(false)
                 .addResolver(new PathResourceResolver());
     }
+
     @Configuration
     public class GitInfoConfig {
 
@@ -152,6 +155,12 @@ public class OreSiNg implements WebMvcConfigurer {
         messageSource.setBasenames("emailMessage"); // Nom de base des fichiers de propriétés
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
+    }
+
+    @Bean("camelCaseJsonRowMapper")
+    public JsonRowMapper<?> camelCaseJsonRowMapper() {
+        JsonRowMapper<?> mapper = new JsonRowMapper<>(PropertyNamingStrategies.LOWER_CAMEL_CASE);
+        return mapper;
     }
 
 }

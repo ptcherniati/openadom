@@ -30,11 +30,18 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
     protected String getUpsertQuery() {
         return """
                 INSERT INTO %1$s
-                (id, name, "data", additionalFiles, configuration, configFile)
-                SELECT id, name,  "data", additionalFiles, configuration, configFile
+                (id, name, "data", additionalFiles, configuration, configFile, version)
+                SELECT id, name,  "data", additionalFiles, configuration, configFile,
+                (configuration->'applicationdescription'->>'version')::VARCHAR
                 FROM json_populate_recordset(NULL::%1$s, :json::json)
-                ON CONFLICT (id) DO UPDATE
-                SET updateDate=current_timestamp, name=EXCLUDED.name, "data"=EXCLUDED."data", additionalFiles=EXCLUDED.additionalFiles, configuration=EXCLUDED.configuration, configFile=EXCLUDED.configFile
+                ON CONFLICT (id) DO UPDATE SET
+                    updateDate = CURRENT_TIMESTAMP,
+                    name = EXCLUDED.name,
+                    data = EXCLUDED.data,
+                    additionalFiles = EXCLUDED.additionalFiles,
+                    configuration = EXCLUDED.configuration,
+                    configFile = EXCLUDED.configFile,
+                    version = EXCLUDED.version
                 RETURNING id""".formatted(getTable().getSqlIdentifier());
 
     }

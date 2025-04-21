@@ -73,6 +73,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -115,7 +116,8 @@ public class OreSiResources implements ServiceContainerBean {
     @Autowired
     LocaleResolver localeResolver;
     @Autowired
-    private JsonRowMapper mapper;
+    @Qualifier("camelCaseJsonRowMapper")
+    private JsonRowMapper camelCaseJsonRowMapper;
 
     @PostConstruct
     public void init() {
@@ -152,40 +154,52 @@ public class OreSiResources implements ServiceContainerBean {
 
 
     private ResponseEntity<StreamingResponseBody> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink, final HttpServletResponse response) {
-        mapper.getJsonMapper().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE);
-        final StreamingResponseBody streamResponseBody = out -> {
-            Flux.create(fluxSink)
-                    .map(mapper::toJson)
-                    .doOnError(e -> {
-                        try {
-                            out.write(("{\"error\": \"" + e.getMessage() + "\"}\n").getBytes());
-                            out.flush();
-                        } catch (IOException ex) {
-                            throw new RuntimeException(ex);
-                        }
-                    })
-                    .onErrorResume(e -> Flux.empty())
-                    .doOnComplete(() -> {
-                        try {
-                            out.close();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
+        try {
+            final StreamingResponseBody streamResponseBody = out -> {
+                Flux.create(fluxSink)
+                        .map(camelCaseJsonRowMapper::toJson)
+                        .doOnTerminate(() -> {
+                            try {
+                                if (!out.toString().contains("error")) {
+                                    out.write("\n".getBytes());
+                                }
+                                out.close();
+                            } catch (Exception e) {
+                                log.error("Erreur fermeture flux", e);
+                            }
+                        })
                         .subscribe(message -> {
-                        try {
-                            out.write(message.getBytes(StandardCharsets.UTF_8));
-                            out.write(10);
-                            out.flush();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    });
-        };
+                                    try {
+                                        out.write(message.getBytes(StandardCharsets.UTF_8));
+                                        out.write(10);
+                                        out.flush();
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    }
+                                },
+                                error -> handleError(out, error),
+                                () -> closeStream(out)
+                        );
+            };
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_NDJSON)
+                    .body(streamResponseBody);
+        } catch (Exception ex) {
+            log.error("Error writing error response", ex);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_NDJSON)
-                .body(streamResponseBody);
+    private void closeStream(OutputStream out) {
+        try {
+            out.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void handleError(OutputStream out, Throwable error) {
+        log.error("Error writing response", error);
     }
 
 

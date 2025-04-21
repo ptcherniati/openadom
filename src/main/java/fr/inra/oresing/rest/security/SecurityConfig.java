@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
+import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -48,7 +49,7 @@ public class SecurityConfig implements ServiceContainerBean {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAccessDeniedHandler  accessDeniedHandler) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)// Optionnel : désactive la protection CSRF pour simplifier les tests d'API
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
@@ -65,8 +66,11 @@ public class SecurityConfig implements ServiceContainerBean {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users").hasAuthority(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
                                 .anyRequest().authenticated())
-                .exceptionHandling(configurer -> configurer.accessDeniedHandler(accessDeniedHandler))
-                .addFilterAfter(authorizationFilter, BasicAuthenticationFilter.class);
+                .addFilterAfter(authorizationFilter, BasicAuthenticationFilter.class)
+                .securityContext(security -> security
+                        .securityContextRepository(new RequestAttributeSecurityContextRepository())
+                );
+        ;
         return http.build();
     }
 
