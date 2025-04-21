@@ -92,9 +92,6 @@ public class ApplicationService implements ServiceContainerBean{
             final String name,
             final MultipartFile configurationFile,
             final String comment) {
-        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_ADMINISTRATION)
-                .forCreateApplication()
-                .canCreateApplication(name);
         final ReactiveProgression.CreateApplicationProgressionMessagesLabel baseMessage = new ReactiveProgression.CreateApplicationProgressionMessagesLabel();
         progression.pushProgression();
         OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();

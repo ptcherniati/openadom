@@ -78,6 +78,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -107,6 +108,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_USER_CONNECTED;
 
 @Slf4j
 @RestController
@@ -154,6 +157,7 @@ public class OreSiResources implements ServiceContainerBean {
 
 
     private ResponseEntity<StreamingResponseBody> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink, final HttpServletResponse response) {
+        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
         try {
             final StreamingResponseBody streamResponseBody = out -> {
                 Flux.create(fluxSink)
@@ -366,17 +370,12 @@ public class OreSiResources implements ServiceContainerBean {
             name = "fichier de configuration",
             description = "<a href= 'https://anaee-dev.pages.mia.inra.fr/si-ore-v2/schemaExample.yaml'>Fichier d'example</a>"
     ))
+
+    @PreAuthorize("@authorizationService.getPrivilegeAssessorForSystem(T(fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain).SYSTEM_ADMINISTRATION).forCreateApplication().canCreateApplication(#name)")
     public ResponseEntity<StreamingResponseBody> createApplication(@PathVariable("name") final String name,
                                                                    @RequestParam(name = "comment", defaultValue = "") final String comment,
                                                                    @RequestParam("file") final MultipartFile file,
                                                                    HttpServletResponse response) throws BadApplicationConfigurationException {
-        /*try {
-            log.info("Modification de l'application %s".formatted(name));
-            return changeConfiguration(name, file, comment);
-        } catch (final Exception e) {
-            log.info("Création de l'application %s".formatted(name));
-        }*/
-
         if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
             //TODO test à faire
             throw new BadLabelNameException(BadLabelNameException.LabelType.APPLICATION, name);

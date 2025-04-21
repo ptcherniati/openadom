@@ -3,12 +3,10 @@ package fr.inra.oresing.rest.security;
 import fr.inra.oresing.JwtCookieValue;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
-import fr.inra.oresing.domain.OreSiRoleForUser;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.AuthenticationFailure;
-import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
@@ -17,10 +15,13 @@ import fr.inra.oresing.rest.exceptions.OreExceptionHandler;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,10 +33,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
-import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.filter.GenericFilterBean;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
@@ -43,7 +45,7 @@ import java.util.*;
 
 @Slf4j
 @Component
-public class AuthorizationFilter extends OncePerRequestFilter implements ServiceContainerBean {
+public class AuthorizationFilter extends GenericFilterBean implements ServiceContainerBean {
     private static final String HTTP_CORRELATION_ID = "X-Correlation-ID";
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
@@ -70,14 +72,18 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
     }
 
     @Override
-    protected boolean isAsyncDispatch(HttpServletRequest request) {
-        return super.isAsyncDispatch(request);
-    }
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
-
+    public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain chain) throws IOException, ServletException {
+        HttpServletRequest request = (HttpServletRequest) servletRequest;
+        HttpServletResponse response = (HttpServletResponse) servletResponse;
         String path = request.getRequestURI();
+        OreSiAuthenticationToken authenticationToken = requestContext.getAuthenticationToken();
+        if (authenticationToken != null) {
+            chain.doFilter(request, response);
+            return;
+        }
+        if(response.isCommitted()){
+            return;
+        };
         if (path.startsWith("/swagger-ui") ||
                 path.startsWith("/v3/api-docs") ||
                 path.startsWith("/api/public") ||
@@ -96,7 +102,7 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
             OreSiAuthenticationToken token = buildAuthentication(request, response);
             requestContext.setAuthenticationToken(token);
             System.out.println("""
-        Voici SecurityContextHolder.getContext() pour %s : %s %n%s""".formatted(request.getMethod(), path, SecurityContextHolder.getContext().toString()));
+                    Voici SecurityContextHolder.getContext() pour %s : %s %n%s""".formatted(request.getMethod(), path, SecurityContextHolder.getContext().toString()));
         } catch (AuthenticationFailure e) {
             ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCodeValue());
@@ -108,7 +114,6 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
         }
         chain.doFilter(request, response);
     }
-
 
 
     private OreSiAuthenticationToken buildAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationFailure, IOException {
@@ -205,12 +210,24 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
     }
 
     private OreSiUserRequestClient getRequestClientFromJwt(String token) throws IOException {
-        String json = Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload()
-                .getSubject();
+
+        String json =null;
+        try {
+           json = Jwts.parser()
+                   .verifyWith(key)
+                   .build()
+                   .parseSignedClaims(token)
+                   .getPayload()
+                   .getSubject();
+       } catch (ExpiredJwtException ex) {
+           throw new AuthenticationCredentialsNotFoundException("JWT expiré", ex);
+       } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
+           throw new BadCredentialsException("JWT invalide", ex);
+       } catch (SignatureException ex) {
+           throw new BadCredentialsException("Signature JWT invalide", ex);
+       } catch (JwtException ex) {
+           throw new AuthenticationCredentialsNotFoundException("Erreur d'authentification JWT", ex);
+       }
 
         return ((JwtCookieValue) mapper.readValue(json, JwtCookieValue.class)).requestClient();
     }
@@ -268,4 +285,5 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
     public void setServiceContainer(ServiceContainer serviceContainer) {
         this.serviceContainer = serviceContainer;
     }
+
 }

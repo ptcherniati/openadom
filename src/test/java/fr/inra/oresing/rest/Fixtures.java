@@ -128,17 +128,12 @@ public class Fixtures {
     public Exception loadApplicationWithError(final MockMultipartFile file,
                                               final Cookie cookie,
                                               final String applicationName) throws Exception {
-        final MvcResult result = mockMvc
+        return mockMvc
                 .perform(multipart("/api/v1/applications/{applicationName}", applicationName)
                         .file(file)
                         .cookie(cookie)
                 )
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        if (result.getAsyncResult() instanceof Exception) {
-            return (Exception) result.getAsyncResult();
-        }
-        return mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().is(401))
                 .andReturn()
                 .getResolvedException();
     }
