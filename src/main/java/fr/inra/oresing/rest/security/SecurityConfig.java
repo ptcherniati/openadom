@@ -1,16 +1,11 @@
 package fr.inra.oresing.rest.security;
 
-import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -29,11 +24,7 @@ public class SecurityConfig  {
     private AuthorizationFilter authorizationFilter;
     @Value("${allowed.origin}")
     String allowedOrigin;
-    private final AuthenticationProvider authenticationProvider;
 
-    public SecurityConfig(OreSiAuthorizationManager authenticationProvider) {
-        this.authenticationProvider = authenticationProvider;
-    }
 
     /*@Bean
     @Primary
@@ -57,9 +48,9 @@ public class SecurityConfig  {
                                         "/v3/api-docs/**",
                                         "/api/public/**",
                                         "/api-docs.yaml").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/v1/login").hasAuthority(OreSiAuthorizationManager.ROLE_AUTHENTIFIED_USER.getAuthority())
-                                .requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
-                                .requestMatchers(HttpMethod.PUT, "/api/v1/users").hasAuthority(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
+                                .requestMatchers(HttpMethod.POST, "/api/v1/login").hasAuthority(AuthorizationFilter.ROLE_AUTHENTIFIED_USER.getAuthority())
+                                .requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
+                                .requestMatchers(HttpMethod.PUT, "/api/v1/users").hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
                                 .anyRequest().authenticated())
                 .addFilterAfter(authorizationFilter, BasicAuthenticationFilter.class)
                 .securityContext(security -> security

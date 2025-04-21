@@ -1,11 +1,10 @@
 package fr.inra.oresing.rest.authentication;
 
-import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
-import fr.inra.oresing.rest.security.OreSiAuthorizationManager;
+import fr.inra.oresing.rest.security.AuthorizationFilter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -34,14 +33,14 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
         return getPath()
                 .stream()
                 .anyMatch(s->s.endsWith("/users")) &&
-                getAuthorities().contains(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_UPDATE_USER);
+                getAuthorities().contains(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER);
     }
 
     public boolean isCreate(){
         return getPath()
                 .stream()
                 .anyMatch(s->s.endsWith("/users"))&&
-                getAuthorities().contains(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_CREATE_USER);
+                getAuthorities().contains(AuthorizationFilter.ROLE_UNAUTHENTIFIED_CREATE_USER);
     }
 
     private Optional<String> getPath() {

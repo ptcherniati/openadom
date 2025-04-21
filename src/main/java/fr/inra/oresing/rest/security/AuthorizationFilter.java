@@ -35,6 +35,8 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
@@ -46,6 +48,9 @@ import java.util.*;
 @Slf4j
 @Component
 public class AuthorizationFilter extends GenericFilterBean implements ServiceContainerBean {
+    public static final GrantedAuthority ROLE_AUTHENTIFIED_USER = new SimpleGrantedAuthority("ROLE_AUTHENTIFIED_USER");
+    public static final GrantedAuthority ROLE_UNAUTHENTIFIED_UPDATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_UPDATE_USER");
+    public static final GrantedAuthority ROLE_UNAUTHENTIFIED_CREATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_CREATE_USER");
     private static final String HTTP_CORRELATION_ID = "X-Correlation-ID";
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
@@ -146,7 +151,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                 OreSiAuthenticationToken token = new OreSiAuthenticationToken(
                         loginAdminResult,
                         request.getRequestURI(),
-                        List.of(OreSiAuthorizationManager.ROLE_AUTHENTIFIED_USER)
+                        List.of(ROLE_AUTHENTIFIED_USER)
                 );
                 return token;
             } catch (AuthenticationFailure e) {
@@ -163,7 +168,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                         .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
                         .forCreateUser(),
                 "",
-                List.of(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_CREATE_USER)
+                List.of(ROLE_UNAUTHENTIFIED_CREATE_USER)
         );
     }
 
@@ -175,7 +180,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         return new OreSiAuthenticationToken(
                 updateUser,
                 request.getRequestURI(),
-                List.of(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_UPDATE_USER)
+                List.of(ROLE_UNAUTHENTIFIED_UPDATE_USER)
         );
     }
 
@@ -189,7 +194,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         return new OreSiAuthenticationToken(
                 requestClient,
                 request.getRequestURI(),
-                List.of(OreSiAuthorizationManager.ROLE_AUTHENTIFIED_USER)
+                List.of(ROLE_AUTHENTIFIED_USER)
         );
     }
 
