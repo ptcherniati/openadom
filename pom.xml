@@ -115,17 +115,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-        <!--        <dependency>
-            <groupId>pl.project13.maven</groupId>
-            <artifactId>git-commit-id-plugin</artifactId>
-            <version>4.9.10</version>
-        </dependency>-->
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc-openapi-starter-webmvc-ui.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
@@ -153,27 +147,6 @@
         </dependency>
         <!-- ******************************************************* -->
 
-        <!-- <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-csv</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-        </dependency>-->
-        
-        <!-- Apache HttpClient 
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.14</version>
-        </dependency> -->
-
         <!-- JSON in Java -->
         <dependency>
             <groupId>org.json</groupId>
@@ -186,17 +159,6 @@
             <artifactId>commons-csv</artifactId>
             <version>${common-csv.version}</version>
         </dependency>
-
-        <!-- <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>-->
-
-        <!-- <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
-        </dependency>-->
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -256,18 +218,6 @@
             <version>2.5.3</version>
         </dependency>
 
-        <!-- UI -->
-        <!-- <dependency>
-            <groupId>org.webjars.bowergithub.vuejs</groupId>
-            <artifactId>vue</artifactId>
-            <version>${vue.version}</version> 
-        </dependency> -->
-        <dependency>
-            <groupId>org.webjars.npm</groupId>
-            <artifactId>vue</artifactId>
-            <version>${vue.version}</version>
-        </dependency>
- 
         <dependency>
             <groupId>org.codehaus.groovy</groupId>
             <artifactId>groovy-jsr223</artifactId>
@@ -293,19 +243,87 @@
             <artifactId>httpclient5</artifactId>
         </dependency>
         
-        <!--        <dependency>
+        <!-- UI    -->
+        <!-- Vue 3 -->
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vue</artifactId>
+            <version>${vue.version}</version>
+        </dependency>
+        
+        <!-- Old Vue 2 
+        <dependency> 
+            <groupId>org.webjars.bowergithub.vuejs</groupId>
+            <artifactId>vue</artifactId>
+            <version>${vue.version}</version> 
+        </dependency> -->
+        <!-- Latest Vue 2 Version
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vue</artifactId>
+            <version>2.7.14</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.webjars.npm</groupId>
+                    <artifactId>vue__compiler-sfc</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency> -->
+        
+        <!-- 
+        <dependency>
+            <groupId>pl.project13.maven</groupId>
+            <artifactId>git-commit-id-plugin</artifactId>
+            <version>4.9.10</version>
+        </dependency> -->
+        
+        <!-- 
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-csv</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency> -->
+        
+        <!-- Apache HttpClient 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.14</version>
+        </dependency> -->
+        
+        <!-- <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency> -->
+
+        <!-- <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
+        </dependency> -->
+ 
+        <!--
+        <dependency>
             <groupId>org.apache.httpcomponents.core5</groupId>
             <artifactId>httpcore5</artifactId>
-        </dependency>-->
+        </dependency> -->
         
-        <!--        <dependency>
+        <!--
+        <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.14</version> 
-        </dependency>-->
+        </dependency> -->
 
     </dependencies>
-
 
     <build>
         <resources>
