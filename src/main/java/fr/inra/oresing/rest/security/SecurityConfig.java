@@ -17,13 +17,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig implements ServiceContainerBean {
+public class SecurityConfig  {
 
     public static final long MAX_AGE = 3600L;
     @Autowired
@@ -31,24 +30,18 @@ public class SecurityConfig implements ServiceContainerBean {
     @Value("${allowed.origin}")
     String allowedOrigin;
     private final AuthenticationProvider authenticationProvider;
-    private ServiceContainer serviceContainer;
 
     public SecurityConfig(OreSiAuthorizationManager authenticationProvider) {
         this.authenticationProvider = authenticationProvider;
     }
 
-    @Bean
-    public RestTemplate restTemplate() {
-        return new RestTemplate();
-    }
-
-    @Bean
+    /*@Bean
     @Primary
     public AuthenticationManager authManager(HttpSecurity http) throws Exception {
         return http.getSharedObject(AuthenticationManagerBuilder.class)
                 .authenticationProvider(authenticationProvider)
                 .build();
-    }
+    }*/
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -90,10 +83,5 @@ public class SecurityConfig implements ServiceContainerBean {
                     .allowCredentials(true)
                     .maxAge(MAX_AGE);
         }
-    }
-
-    @Override
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
     }
 }

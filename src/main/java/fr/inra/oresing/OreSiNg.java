@@ -155,12 +155,12 @@ public class OreSiNg implements WebMvcConfigurer {
         messageSource.setBasenames("emailMessage"); // Nom de base des fichiers de propriétés
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
-    }
+    }/*
 
     @Bean("camelCaseJsonRowMapper")
     public JsonRowMapper<?> camelCaseJsonRowMapper() {
         JsonRowMapper<?> mapper = new JsonRowMapper<>(PropertyNamingStrategies.LOWER_CAMEL_CASE);
         return mapper;
-    }
+    }*/
 
 }
