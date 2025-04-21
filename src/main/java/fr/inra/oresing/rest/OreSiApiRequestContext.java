@@ -23,6 +23,7 @@ public class OreSiApiRequestContext {
         SecurityContextHolder.getContextHolderStrategy().setContext(
                 context
         );
+        //SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
     }
 
     public OreSiRequestClient getRequestClient() {

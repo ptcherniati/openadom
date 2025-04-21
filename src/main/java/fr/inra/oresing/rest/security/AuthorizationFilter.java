@@ -70,6 +70,11 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
     }
 
     @Override
+    protected boolean isAsyncDispatch(HttpServletRequest request) {
+        return super.isAsyncDispatch(request);
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws ServletException, IOException {
 
         String path = request.getRequestURI();
@@ -90,6 +95,8 @@ public class AuthorizationFilter extends OncePerRequestFilter implements Service
         try {
             OreSiAuthenticationToken token = buildAuthentication(request, response);
             requestContext.setAuthenticationToken(token);
+            System.out.println("""
+        Voici SecurityContextHolder.getContext() pour %s : %s %n%s""".formatted(request.getMethod(), path, SecurityContextHolder.getContext().toString()));
         } catch (AuthenticationFailure e) {
             ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCodeValue());

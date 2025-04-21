@@ -17,13 +17,13 @@ import org.springframework.boot.info.GitProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.resource.PathResourceResolver;
@@ -145,20 +145,6 @@ public class OreSiNg implements WebMvcConfigurer {
             return fileInfos -> "mockedWebAddress";
         }
     }
-
-    @Bean
-    public ThreadPoolTaskExecutor mvcTaskExecutor() {
-        final ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(10);
-        taskExecutor.setMaxPoolSize(10);
-        return taskExecutor;
-    }
-
-    @Override
-    public void configureAsyncSupport(final AsyncSupportConfigurer configurer) {
-        configurer.setTaskExecutor(mvcTaskExecutor());
-    }
-
 
     @Bean
     public MessageSource emailMessageSource() {

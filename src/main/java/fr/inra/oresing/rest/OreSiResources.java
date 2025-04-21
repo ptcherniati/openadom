@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -65,6 +66,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -85,6 +87,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import org.springframework.web.util.UriUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
+import reactor.core.publisher.Hooks;
 
 import java.io.*;
 import java.net.URI;
@@ -104,14 +107,21 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_USER_CONNECTED;
-
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
 public class OreSiResources implements ServiceContainerBean {
+    public static final String OPEN_ADOM_SECURITY_CONTEXT = "OPEN_ADOM_SECURITY_CONTEXT";
     @Autowired
     LocaleResolver localeResolver;
+    @Autowired
+    private JsonRowMapper mapper;
+
+    @PostConstruct
+    public void init() {
+        Hooks.enableAutomaticContextPropagation();
+    }
+
 
     public static Locale getDefaultLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -138,11 +148,46 @@ public class OreSiResources implements ServiceContainerBean {
 
     @Autowired
     private OreSiApiRequestContext request;
+    private static final String SECURITY_CONTEXT_KEY = "OPEN_ADOM_SECURITY_CONTEXT";
 
-    private Flux<ReactiveResult> buildFluxRequestJDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
-        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
-        return Flux.create(fluxSink);
+
+    private ResponseEntity<StreamingResponseBody> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink, final HttpServletResponse response) {
+        mapper.getJsonMapper().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE);
+        final StreamingResponseBody streamResponseBody = out -> {
+            Flux.create(fluxSink)
+                    .map(mapper::toJson)
+                    .doOnError(e -> {
+                        try {
+                            out.write(("{\"error\": \"" + e.getMessage() + "\"}\n").getBytes());
+                            out.flush();
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    })
+                    .onErrorResume(e -> Flux.empty())
+                    .doOnComplete(() -> {
+                        try {
+                            out.close();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    })
+                        .subscribe(message -> {
+                        try {
+                            out.write(message.getBytes(StandardCharsets.UTF_8));
+                            out.write(10);
+                            out.flush();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        };
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_NDJSON)
+                .body(streamResponseBody);
     }
+
 
     private static CreateRightsRequestRequest deserialiseRightsRequestOrUUIDQuery(final String params) {
         try {
@@ -233,9 +278,10 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/filesOnRepository/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
-                                                                       @PathVariable("dataType") final String dataType,
-                                                                       @RequestParam("repositoryId") final String repositoryId) {
+    public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(
+            @PathVariable("nameOrId") final String nameOrId,
+            @PathVariable("dataType") final String dataType,
+            @RequestParam("repositoryId") final String repositoryId) {
         final BinaryFileDataset binaryFileDataset = BinaryFileService.deserialiseBinaryFileDatasetQuery(dataType, repositoryId);
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         Map<UUID, UserDescriptionResult> users = serviceContainer.authorizationService().getAllUsers()
@@ -263,7 +309,8 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<byte[]> getFile(@PathVariable("name") final String name, @PathVariable("id") final UUID id) {
+    public ResponseEntity<byte[]> getFile(@PathVariable("name") final String name,
+                                          @PathVariable("id") final UUID id) {
         final Optional<BinaryFile> optionalBinaryFile = serviceContainer.binaryFileService().getFileWithData(name, id);
         if (optionalBinaryFile.isPresent()) {
             final BinaryFile binaryFile = optionalBinaryFile.get();
@@ -277,24 +324,27 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<ReactiveResult> getApplications(@RequestParam(required = false, defaultValue = "") final String[] filter) {
+    public ResponseEntity<StreamingResponseBody> getApplications(
+            @RequestParam(required = false, defaultValue = "") final String[] filter,
+            HttpServletResponse response) {
         final List<ApplicationInformation> filters = Arrays.stream(filter)
                 .map(ApplicationInformation::valueOf)
                 .collect(Collectors.toList());
-        return buildFluxRequestJDJson(fluxSink -> {
+        return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.GetApplicationProgression progression = new ReactiveProgression.GetApplicationProgression(0L, fluxSink);
             serviceContainer.applicationService().getApplications(progression, filters);
-        });
+        }, response);
     }
 
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) {
-        return buildFluxRequestJDJson(fluxSink -> {
+    public ResponseEntity<StreamingResponseBody> validateConfiguration(@RequestParam("file") final MultipartFile file,
+                                                                       HttpServletResponse response) {
+        return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
             final Application application = serviceContainer.applicationService().validateConfiguration(progression, file);
             fluxSink.next(new ReactiveTypeResult(application));
             progression.complete();
-        });
+        }, response);
     }
 
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_NDJSON_VALUE)
@@ -302,35 +352,35 @@ public class OreSiResources implements ServiceContainerBean {
             name = "fichier de configuration",
             description = "<a href= 'https://anaee-dev.pages.mia.inra.fr/si-ore-v2/schemaExample.yaml'>Fichier d'example</a>"
     ))
-    public Flux<ReactiveResult> createApplication(@PathVariable("name") final String name,
-                                                  @RequestParam(name = "comment", defaultValue = "") final String comment,
-                                                  @RequestParam("file") final MultipartFile file) throws BadApplicationConfigurationException {
-
-        final Application application;
-        try {
-            serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(name);
+    public ResponseEntity<StreamingResponseBody> createApplication(@PathVariable("name") final String name,
+                                                                   @RequestParam(name = "comment", defaultValue = "") final String comment,
+                                                                   @RequestParam("file") final MultipartFile file,
+                                                                   HttpServletResponse response) throws BadApplicationConfigurationException {
+        /*try {
             log.info("Modification de l'application %s".formatted(name));
             return changeConfiguration(name, file, comment);
         } catch (final Exception e) {
             log.info("Création de l'application %s".formatted(name));
-        }
+        }*/
 
         if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
             //TODO test à faire
             throw new BadLabelNameException(BadLabelNameException.LabelType.APPLICATION, name);
         }
-        return buildFluxRequestJDJson(fluxSink -> {
+
+        return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
             try {
                 serviceContainer.applicationService().createApplication(progression, name, file, comment);
             } catch (Exception technicalException) {
                 fluxSink.error(technicalException);
             }
-        });
+        }, response);
     }
 
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApplicationResult getApplication(@PathVariable("nameOrId") final String nameOrId, @RequestParam(required = false, defaultValue = "") final String[] filter) {
+    public ApplicationResult getApplication(@PathVariable("nameOrId") final String nameOrId,
+                                            @RequestParam(required = false, defaultValue = "") final String[] filter) {
         final Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
         return serviceContainer.applicationService().buildOpenAdom(application, filter);
     }
@@ -343,11 +393,13 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<ReactiveResult> changeConfiguration(@PathVariable("nameOrId") final String nameOrId,
-                                                    @RequestParam("file") final MultipartFile file,
-                                                    @RequestParam(name = "comment", defaultValue = "") final String comment) throws BadApplicationConfigurationException {
+    public ResponseEntity<StreamingResponseBody> changeConfiguration(@PathVariable("nameOrId") final String nameOrId,
+                                                                     @RequestParam("file") final MultipartFile file,
+                                                                     @RequestParam(name = "comment", defaultValue = "") final String comment,
+                                                                     HttpServletResponse response) throws
+            BadApplicationConfigurationException {
 
-        return buildFluxRequestJDJson(fluxSink -> {
+        return buildFluxRequestNDJson(fluxSink -> {
             if (file.isEmpty()) {
                 fluxSink.error(new IllegalArgumentException("EmptyFile"));
             }
@@ -355,7 +407,7 @@ public class OreSiResources implements ServiceContainerBean {
             final UUID uuid = serviceContainer.applicationService().changeApplicationConfiguration(progression, nameOrId, file, comment);
             progression.fluxSink().next(new ReactiveTypeResult(uuid));
             progression.complete();
-        });
+        }, response);
     }
 
     /**
@@ -474,7 +526,8 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<List<String>>> listDataForColumn(@PathVariable("nameOrId") final String nameOrId, @PathVariable("refType") final String refType, @PathVariable("column") final String column) {
+    public ResponseEntity<List<List<String>>> listDataForColumn(@PathVariable("nameOrId") final String nameOrId,
+                                                                @PathVariable("refType") final String refType, @PathVariable("column") final String column) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
         final List<List<String>> result = serviceContainer.dataService().getDataColumn(application, refType, column);
         return ResponseEntity.ok(result);
@@ -491,7 +544,7 @@ public class OreSiResources implements ServiceContainerBean {
         DataVersioningResult dataVersioningResult;
         try {
             dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, params, false);
-        }catch (InvalidDatasetContentException invalidDatasetContentException){
+        } catch (InvalidDatasetContentException invalidDatasetContentException) {
             List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                     .stream()
                     .map(row -> {

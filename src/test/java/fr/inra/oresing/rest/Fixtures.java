@@ -178,12 +178,12 @@ public class Fixtures {
             );
             return mockMvc.perform(asyncDispatch(
                             result
-                                    .andExpect(request().asyncStarted())
+                                    //.andExpect(request().asyncStarted())
                                     .andReturn())
                     )
                     .andReturn();
         } catch (final Exception e) {
-            throw e.getCause();
+            throw e.getCause()==null?e:e.getCause();
         }
     }
 

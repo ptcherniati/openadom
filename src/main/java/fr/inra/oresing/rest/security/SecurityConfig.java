@@ -19,8 +19,6 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.util.List;
-
 @Configuration
 public class SecurityConfig implements ServiceContainerBean {
 
@@ -50,7 +48,7 @@ public class SecurityConfig implements ServiceContainerBean {
     }
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, CustomAccessDeniedHandler  accessDeniedHandler) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable)// Optionnel : désactive la protection CSRF pour simplifier les tests d'API
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
@@ -67,6 +65,7 @@ public class SecurityConfig implements ServiceContainerBean {
                                 .requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users").hasAuthority(OreSiAuthorizationManager.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
                                 .anyRequest().authenticated())
+                .exceptionHandling(configurer -> configurer.accessDeniedHandler(accessDeniedHandler))
                 .addFilterAfter(authorizationFilter, BasicAuthenticationFilter.class);
         return http.build();
     }

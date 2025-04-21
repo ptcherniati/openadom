@@ -80,6 +80,7 @@ public class ApplicationConfigurationService {
         final String applicationName = configuration.applicationDescription().name();
         final ReactiveProgression.ChangeOrCreateApplicationProgression progressionValidation = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression.withSubLabel("startValidation");
         progressionValidation.pushMessage("start", Map.of("applicationName", applicationName));
+        application.setVersion(application.getConfiguration().applicationDescription().version().version());
         return application;
     }
 
