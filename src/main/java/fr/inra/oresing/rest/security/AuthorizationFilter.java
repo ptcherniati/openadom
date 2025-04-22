@@ -4,17 +4,22 @@ import fr.inra.oresing.JwtCookieValue;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
+import fr.inra.oresing.rest.data.publication.AuthorizationPublicationService;
+import fr.inra.oresing.rest.data.publication.StoreFile;
 import fr.inra.oresing.rest.exceptions.OreExceptionHandler;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
+import fr.inra.oresing.rest.services.ServiceContainerInjector;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
@@ -44,6 +49,7 @@ import org.springframework.web.filter.GenericFilterBean;
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @Slf4j
 @Component
@@ -54,12 +60,12 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     private static final String HTTP_CORRELATION_ID = "X-Correlation-ID";
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
-    private ServiceContainer serviceContainer;
     private OreSiApiRequestContext requestContext;
     private static JsonRowMapper mapper;
     private static SecretKey key;
     private static int jwtExpiration;
     private OreExceptionHandler exceptionHandler;
+    private ServiceContainer serviceContainer;
 
     @Autowired
     public AuthorizationFilter(
@@ -86,11 +92,12 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             chain.doFilter(request, response);
             return;
         }
-        if(response.isCommitted()){
+        if (response.isCommitted()) {
             return;
-        };
+        }
+        ;
         if (path.startsWith("/swagger-ui") ||
-                path.startsWith("/v3/api-docs") ||
+                path.startsWith("/v2/api-docs") ||
                 path.startsWith("/api/public") ||
                 path.startsWith("/api-docs.yaml")) {
             chain.doFilter(request, response); // Skip le filtre
@@ -106,8 +113,6 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         try {
             OreSiAuthenticationToken token = buildAuthentication(request, response);
             requestContext.setAuthenticationToken(token);
-            System.out.println("""
-                    Voici SecurityContextHolder.getContext() pour %s : %s %n%s""".formatted(request.getMethod(), path, SecurityContextHolder.getContext().toString()));
         } catch (AuthenticationFailure e) {
             ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCodeValue());
@@ -134,7 +139,48 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         } else if (HttpMethod.PUT.name().equals(method) && path.endsWith("/users")) {
             return buildUpdateUserAuthentication(request);
         } else {
-            return handleJwtAuthentication(request, response);
+            OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response);
+            if(oreSiAuthenticationToken==null){
+                return null;
+            }
+            Optional.ofNullable(path)
+                    .map(p -> p.split("/"))
+                    .map(Arrays::asList)
+                    .filter(list -> list.size()>4 && "applications".equals(list.get(3)))
+                    .map(list -> list.get(4))
+                    .ifPresent(oreSiAuthenticationToken::setApplicationName);
+            Optional.ofNullable(path)
+                    .map(p -> p.split("/"))
+                    .map(Arrays::asList)
+                    .filter(list -> list.size()>3 && "applications".equals(list.get(3)))
+                    .filter(list -> list.size()>6 && List.of("data", "synthesis", "filesOnRepository").contains(list.get(5)))
+                    .map(list -> list.get(6))
+                    .or(() -> {
+                        Pattern pattern = Pattern
+                                .compile("/api/v1/applications/%s/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
+                        return Optional.ofNullable(path)
+                                .map(pattern::matcher)
+                                .map(m -> m.matches() ? m.group(1) : null)
+                                .map(UUID::fromString)
+                                .map(fileId -> {
+                                    requestContext.setAuthenticationToken(oreSiAuthenticationToken);
+                                    Application applicationOrApplicationAccordingToRights = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(oreSiAuthenticationToken.getApplicationName());
+                                    return Optional.ofNullable(serviceContainer.versioningService()
+                                                    .getStoreFile(applicationOrApplicationAccordingToRights,
+                                                            null,
+                                                            FileOrUUID.forUUID(fileId),
+                                                            null,
+                                                            null))
+                                            .map(oreSiAuthenticationToken::setStoreFile)
+                                            .map(StoreFile::builder)
+                                            .map(AuthorizationPublicationService::getDataName)
+                                            .orElse(null);
+
+                                });
+                    })
+                    .ifPresent(oreSiAuthenticationToken::setDataName);
+            ;
+            return oreSiAuthenticationToken;
         }
     }
 
@@ -216,23 +262,23 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
 
     private OreSiUserRequestClient getRequestClientFromJwt(String token) throws IOException {
 
-        String json =null;
+        String json = null;
         try {
-           json = Jwts.parser()
-                   .verifyWith(key)
-                   .build()
-                   .parseSignedClaims(token)
-                   .getPayload()
-                   .getSubject();
-       } catch (ExpiredJwtException ex) {
-           throw new AuthenticationCredentialsNotFoundException("JWT expiré", ex);
-       } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
-           throw new BadCredentialsException("JWT invalide", ex);
-       } catch (SignatureException ex) {
-           throw new BadCredentialsException("Signature JWT invalide", ex);
-       } catch (JwtException ex) {
-           throw new AuthenticationCredentialsNotFoundException("Erreur d'authentification JWT", ex);
-       }
+            json = Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .getSubject();
+        } catch (ExpiredJwtException ex) {
+            throw new AuthenticationCredentialsNotFoundException("JWT expiré", ex);
+        } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
+            throw new BadCredentialsException("JWT invalide", ex);
+        } catch (SignatureException ex) {
+            throw new BadCredentialsException("Signature JWT invalide", ex);
+        } catch (JwtException ex) {
+            throw new AuthenticationCredentialsNotFoundException("Erreur d'authentification JWT", ex);
+        }
 
         return ((JwtCookieValue) mapper.readValue(json, JwtCookieValue.class)).requestClient();
     }
@@ -290,5 +336,4 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     public void setServiceContainer(ServiceContainer serviceContainer) {
         this.serviceContainer = serviceContainer;
     }
-
 }

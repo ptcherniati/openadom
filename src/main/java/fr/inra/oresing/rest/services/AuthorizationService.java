@@ -1011,8 +1011,9 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     @Override
     public PrivilegeAssessorDomainForApplication getPrivilegeAssessorForApplication(
             PrivilegeApplicationDomain privilegeDomain,
-            Application application
+            String applicationNameOrUuid
     ) {
+        Application application = repository.application().findApplication(applicationNameOrUuid);
         AuthorizationsForApplicationUser authorizations = getAuthorizationsForApplicationUser(application);
         GetGrantableResult grantable = getGrantable(
                 application.getName(),
@@ -1033,7 +1034,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     public Map<String, Map<AuthorizationsForUserResult.Roles, Boolean>> getAuthorizationsDataRights(
             final Application application,
             final Set<String> datatypes) {
-        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = getPrivilegeAssessorForApplication(DATA_ACCESS, application);
+        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = getPrivilegeAssessorForApplication(DATA_ACCESS, application.getName());
         return datatypes.stream()
                 .map(dty -> getAuthorizationsDataRights(application, dty, request.getRequestUserId().toString(), privilegeAssessorForApplication))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));

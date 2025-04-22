@@ -48,7 +48,7 @@ public class VersioningService implements ServiceContainerBean {
     @Transactional
     public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, MultipartFile file, String params, boolean beforeDelete) throws IOException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, application);
+        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, application.getName());
         String fileName = file == null ? null : file.getOriginalFilename();
         Optional<FileOrUUID> fileOrUUIDOpt = Optional.ofNullable(params)
                 .filter(Objects::nonNull)

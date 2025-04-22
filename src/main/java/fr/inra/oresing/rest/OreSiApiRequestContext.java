@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUnauthentifiedUserForCreate;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -13,6 +14,13 @@ import java.util.UUID;
 
 @Component
 public class OreSiApiRequestContext {
+    public static final Optional<OreSiAuthenticationToken> getAuthentication(){
+        return Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .filter(OreSiAuthenticationToken.class::isInstance)
+                .map(OreSiAuthenticationToken.class::cast);
+    }
+
     public OreSiAuthenticationToken getAuthenticationToken() {
         return getAuthenticationTokenOptional().orElse(null);
     }

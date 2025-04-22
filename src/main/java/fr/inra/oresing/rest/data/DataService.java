@@ -719,7 +719,7 @@ public class DataService implements ServiceContainerBean {
 
     public List<DataRow> findData(final DownloadDatasetQuery downloadDatasetQuery) {
         ApplicationDataReader applicationReader = serviceContainer.authorizationService()
-                .getPrivilegeAssessorForApplication(DATA_READ, downloadDatasetQuery.application())
+                .getPrivilegeAssessorForApplication(DATA_READ, downloadDatasetQuery.application().getName())
                 .forDataRead(downloadDatasetQuery.dataName());
         return serviceContainer.dataService().findDataFlux(downloadDatasetQuery).collectList().block();
     }

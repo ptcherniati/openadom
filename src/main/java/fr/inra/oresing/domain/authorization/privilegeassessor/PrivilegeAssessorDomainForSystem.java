@@ -17,9 +17,6 @@ public record PrivilegeAssessorDomainForSystem<PrivilegeSystemDomain>(
         AuthorizationsForSystemUser authorizations,
         PrivilegeSystemDomain domain
 ) implements PrivilegeAssessorDomain {
-    public PrivilegeAssessorDomainForSystem(PrivilegeSystemDomain privilegeDomain) {
-        this(null, privilegeDomain);
-    }
     public OpenAdomAdmin forAdministrationManagement() {
         return Optional.of(authorizations())
                 .filter(authorizationsForSystemUser -> authorizationsForSystemUser.currentUserRoles().isOpenAdomAdmin())
