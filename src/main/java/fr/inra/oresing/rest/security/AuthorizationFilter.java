@@ -19,7 +19,6 @@ import fr.inra.oresing.rest.exceptions.OreExceptionHandler;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
-import fr.inra.oresing.rest.services.ServiceContainerInjector;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
@@ -42,7 +41,6 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
@@ -57,29 +55,30 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     public static final GrantedAuthority ROLE_AUTHENTIFIED_USER = new SimpleGrantedAuthority("ROLE_AUTHENTIFIED_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_UPDATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_UPDATE_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_CREATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_CREATE_USER");
-    private static final String HTTP_CORRELATION_ID = "X-Correlation-ID";
+    public static final String AUTHORIZATION = "Authorization";
+    public static final String BEARER_ = "Bearer ";
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
-    private OreSiApiRequestContext requestContext;
-    private static JsonRowMapper mapper;
+    private final OreSiApiRequestContext requestContext;
+    private static JsonRowMapper<OreSiApiRequestContext> mapper;
     private static SecretKey key;
     private static int jwtExpiration;
-    private OreExceptionHandler exceptionHandler;
+    private final OreExceptionHandler exceptionHandler;
     private ServiceContainer serviceContainer;
 
     @Autowired
     public AuthorizationFilter(
             OreSiApiRequestContext requestContext,
-            JsonRowMapper jsonRowMapper,
+            JsonRowMapper<OreSiApiRequestContext> jsonRowMapper,
             @Value("${jwt.expiration:3600}") int jwtExpiration,
             @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret,
             OreExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
         this.requestContext = requestContext;
-        this.mapper = jsonRowMapper;
-        this.jwtExpiration = jwtExpiration;
+        mapper = jsonRowMapper;
+        AuthorizationFilter.jwtExpiration = jwtExpiration;
         String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
-        this.key = Keys.hmacShaKeyFor(secureEnoughJwtSecret.getBytes());
+        key = Keys.hmacShaKeyFor(secureEnoughJwtSecret.getBytes());
     }
 
     @Override
@@ -95,7 +94,6 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         if (response.isCommitted()) {
             return;
         }
-        ;
         if (path.startsWith("/swagger-ui") ||
                 path.startsWith("/v2/api-docs") ||
                 path.startsWith("/api/public") ||
@@ -115,7 +113,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             requestContext.setAuthenticationToken(token);
         } catch (AuthenticationFailure e) {
             ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
-            response.setStatus(handle.getStatusCodeValue());
+            response.setStatus(handle.getStatusCode().value());
             response.setContentType("application/json");
             String body = mapper.toJson(handle.getBody());
             response.getWriter().write(body);
@@ -140,20 +138,20 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             return buildUpdateUserAuthentication(request);
         } else {
             OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response);
-            if(oreSiAuthenticationToken==null){
+            if (oreSiAuthenticationToken == null) {
                 return null;
             }
             Optional.ofNullable(path)
                     .map(p -> p.split("/"))
                     .map(Arrays::asList)
-                    .filter(list -> list.size()>4 && "applications".equals(list.get(3)))
+                    .filter(list -> list.size() > 4 && "applications".equals(list.get(3)))
                     .map(list -> list.get(4))
                     .ifPresent(oreSiAuthenticationToken::setApplicationName);
             Optional.ofNullable(path)
                     .map(p -> p.split("/"))
                     .map(Arrays::asList)
-                    .filter(list -> list.size()>3 && "applications".equals(list.get(3)))
-                    .filter(list -> list.size()>6 && List.of("data", "synthesis", "filesOnRepository").contains(list.get(5)))
+                    .filter(list -> list.size() > 3 && "applications".equals(list.get(3)))
+                    .filter(list -> list.size() > 6 && List.of("data", "synthesis", "filesOnRepository").contains(list.get(5)))
                     .map(list -> list.get(6))
                     .or(() -> {
                         Pattern pattern = Pattern
@@ -179,7 +177,6 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                                 });
                     })
                     .ifPresent(oreSiAuthenticationToken::setDataName);
-            ;
             return oreSiAuthenticationToken;
         }
     }
@@ -193,13 +190,12 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                 LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
                         .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
                         .forLoginPassword(loginValue, passwordValue);
-                refreshCookie(response, loginAdminResult.id());
-                OreSiAuthenticationToken token = new OreSiAuthenticationToken(
+                refreshJwtInResponse(response, loginAdminResult.id());
+                return new OreSiAuthenticationToken(
                         loginAdminResult,
                         request.getRequestURI(),
                         List.of(ROLE_AUTHENTIFIED_USER)
                 );
-                return token;
             } catch (AuthenticationFailure e) {
                 throw new AuthenticationFailure("Échec technique", (OreSiUser) null);
             }
@@ -219,7 +215,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     }
 
     public OreSiAuthenticationToken buildUpdateUserAuthentication(HttpServletRequest request) throws IOException, AuthenticationFailure {
-        CreateUserRequest createUserRequest = (CreateUserRequest) mapper.readStream(request.getInputStream(), CreateUserRequest.class);
+        CreateUserRequest createUserRequest = mapper.readStream(request.getInputStream(), CreateUserRequest.class);
         NotConnectedUser updateUser = serviceContainer.authorizationService()
                 .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
                 .forUpdateUser(createUserRequest);
@@ -236,7 +232,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             return null;
         }
         OreSiRequestClient requestClient = getRequestClientFromJwt(jwtCookie);
-        refreshCookie(response, requestClient.id());
+        refreshJwtInResponse(response, requestClient.id());
         return new OreSiAuthenticationToken(
                 requestClient,
                 request.getRequestURI(),
@@ -244,12 +240,11 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         );
     }
 
-    /*private void handleCorrelation(ServerWebExchange exchange) {
-        String correlationId = exchange.getRequest().getHeaders().getFirst(HTTP_CORRELATION_ID);
-        requestContext.setClientCorrelationId(correlationId);
-    }*/
-
     private String extractJwtCookie(HttpServletRequest request) {
+        String authHeader = request.getHeader(AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith(BEARER_)) {
+            return authHeader.substring(7);
+        }
         return Optional.ofNullable(request.getCookies())
                 .map(Arrays::asList)
                 .stream()
@@ -262,7 +257,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
 
     private OreSiUserRequestClient getRequestClientFromJwt(String token) throws IOException {
 
-        String json = null;
+        String json;
         try {
             json = Jwts.parser()
                     .verifyWith(key)
@@ -280,50 +275,42 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             throw new AuthenticationCredentialsNotFoundException("Erreur d'authentification JWT", ex);
         }
 
-        return ((JwtCookieValue) mapper.readValue(json, JwtCookieValue.class)).requestClient();
+        return mapper.readValue(json, JwtCookieValue.class).requestClient();
     }
 
-    private void refreshCookie(HttpServletResponse response, UUID id) {
+    private void refreshJwtInResponse(HttpServletResponse response, UUID id) {
         OreSiUserRole userRole = serviceContainer.authenticationService()
                 .getUserRole(id);
         OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(id, userRole);
-        Cookie cookie = newCookie(requestClient);
+        String json = mapper.toJson(requestClient);
+        String jwt = buildToken(json);
         try {
-            response.addCookie(cookie);
+            addCookie(jwt, response);
+            addJwtHeader(response, jwt);
         } catch (Exception e) {
             log.trace("pas grave");
         }
     }
 
-    public static String buildToken(OreSiUserRequestClient requestClient) {
-        JwtCookieValue jwtCookieValue = new JwtCookieValue(requestClient);
-        String json = mapper.toJson(jwtCookieValue);
-        return Jwts.builder()
-                .subject(json)
-                .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpiration * 1000L))
-                .signWith(key)
-                .compact();
+    private static void addJwtHeader(HttpServletResponse response, String jwt) {
+        response.setHeader("Authorization", "Bearer " + jwt);
     }
 
-    public static Cookie newCookie(final OreSiUserRequestClient requestClient) {
-        final String json;
-        final JwtCookieValue jwtCookieValue = new JwtCookieValue(requestClient);
-        json = mapper.toJson(jwtCookieValue);
-        return getCookie(json, jwtExpiration);
+    public static void addCookie(String jwt, HttpServletResponse response) {
+        Cookie cookie = getCookie(jwt);
+        response.addCookie(cookie);
     }
 
-    public static Cookie getCookie(String json, int maxAge) {
-        final Date issuedAt = new Date();
-        final String token = buildToken(json, issuedAt, jwtExpiration);
-        final Cookie cookie = new Cookie(JWT_COOKIE_NAME, token);
-        cookie.setPath("/");
+    public static Cookie getCookie(String jwt) {
+        final Cookie cookie = new Cookie(JWT_COOKIE_NAME, jwt);
         cookie.setHttpOnly(true);
-        cookie.setMaxAge(maxAge);
+        cookie.setPath("/");
+        cookie.setMaxAge(jwtExpiration);
         return cookie;
     }
 
-    public static String buildToken(String json, Date issuedAt, int jwtExpiration) {
+    public static String buildToken(String json) {
+        Date issuedAt = new Date();
         return Jwts.builder()
                 .subject(json)
                 .issuedAt(issuedAt)

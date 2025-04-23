@@ -27,6 +27,7 @@ import fr.inra.oresing.rest.security.AuthorizationFilter;
 import fr.inra.oresing.rest.services.RelationalService;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ import org.hamcrest.core.IsNull;
 import org.json.JSONArray;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
@@ -62,6 +64,7 @@ import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.SecretKey;
 import javax.sql.DataSource;
 import java.io.*;
 import java.net.URL;
@@ -108,9 +111,14 @@ public class RightsTest {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private UUID authUserId;
     private Cookie authCookie;
+    @Value("${jwt.secret:1234567890AZERTYUIOP}")
+    String jwtSecret;
+    SecretKey key;
+    String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
 
     @BeforeEach
     public void createUser() throws Exception {
+        this.key = Keys.hmacShaKeyFor(secureEnoughJwtSecret.getBytes());
         CreateUserResult authUser;
         try {
             final OreSiUser user = authenticationService.getByIdOrLogin("poussin");
@@ -131,8 +139,8 @@ public class RightsTest {
         if (mockMvc.perform(post("/api/v1/login")
                         .param("login", login)
                         .param("password", password))
-                    .andReturn()
-                    .getResponse().getStatus() > 300) {
+                .andReturn()
+                .getResponse().getStatus() > 300) {
             return authenticationService.createUser(login, password, mail);
         } else {
             OreSiUser userByLogin = userRepository.findByLogin(login).orElse(null);
@@ -168,9 +176,9 @@ public class RightsTest {
         Cookie cookie = newCookie(oreSiUserRequestClient);
         try {
             mockMvc.perform(get("/api/v1/applications")
-                            .cookie(cookie));
+                    .cookie(cookie));
             fail();
-        }catch (AuthenticationCredentialsNotFoundException e ){
+        } catch (AuthenticationCredentialsNotFoundException e) {
             assertTrue(e.getCause() instanceof ExpiredJwtException);
         }
     }
@@ -193,7 +201,14 @@ public class RightsTest {
             //throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
         }
         final Date issuedAt = new Date();
-        final String token = AuthorizationFilter.buildToken(json, issuedAt, 0);
+
+        final String token =  Jwts.builder()
+                .subject(json)
+                .issuedAt(issuedAt)
+                .expiration(DateUtils.addSeconds(issuedAt, 0))
+                .signWith(key)
+                .compact();
+
         final Cookie cookie = new Cookie(AuthorizationFilter.JWT_COOKIE_NAME, token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
@@ -217,7 +232,8 @@ public class RightsTest {
                         .cookie(authCookie))
                 .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
 
-        Assertions.assertNull(authCookie, "Le cookie de déconnexion dpit être null");  }
+        Assertions.assertNull(authCookie, "Le cookie de déconnexion dpit être null");
+    }
 
     @Test
     public void cookieMaxAgeIsResetOnEachCall() throws Exception {
