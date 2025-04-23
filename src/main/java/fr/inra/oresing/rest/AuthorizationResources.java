@@ -35,6 +35,7 @@ import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -593,12 +594,14 @@ public class AuthorizationResources implements ServiceContainerBean {
     record Health(ConnectedUser connectedUser, HealthComponent health) {
     }
 
-    ;
-
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_USER')")
     @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Health> getStatus() {
-        ConnectedUser connectedUser = serviceContainer.authorizationService().getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED)
-                .connectedUser();
+        ConnectedUser connectedUser = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getSystemPersona)
+                .filter(ConnectedUser.class::isInstance)
+                .map(ConnectedUser.class::cast)
+                .orElse(null);
         HealthComponent health = healthEndpoint.health();
         return ResponseEntity.ok().body(new Health(connectedUser, health));
     }

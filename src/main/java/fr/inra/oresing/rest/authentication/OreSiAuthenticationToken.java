@@ -2,6 +2,7 @@ package fr.inra.oresing.rest.authentication;
 
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.data.publication.StoreFile;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
@@ -17,11 +18,12 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
 
     private final Object principal;
     private Object credentials;
-    private ApplicationPersona applicationUser;
+    private ApplicationPersona applicationPersona;
     private SystemPersona systemPersona;
     private String applicationName;
     private String dataName;
     private StoreFile storeFile;
+    private FileOrUUID fileOrUUID;
 
     public OreSiAuthenticationToken(Object principal, String credentials, Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
@@ -109,7 +111,7 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
     }
 
     public void setApplicationPersonna(ApplicationPersona applicationUser) {
-        this.applicationUser=applicationUser;
+        this.applicationPersona =applicationUser;
     }
 
     public void setApplicationName(String applicationName){
@@ -142,11 +144,19 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
     }
 
     public ApplicationPersona getApplicationPersona() {
-        return applicationUser;
+        return applicationPersona;
     }
 
     public SystemPersona getSystemPersona() {
         return systemPersona;
+    }
+
+    public FileOrUUID getFileOrUUID() {
+        return fileOrUUID;
+    }
+
+    public void setFileOrUUID(FileOrUUID fileOrUUIDOpt) {
+        this.fileOrUUID = fileOrUUIDOpt;
     }
 }
 

@@ -25,6 +25,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -180,10 +181,8 @@ public class AuthenticationResources implements ServiceContainerBean {
                     description = "Non authentifié (si la protection est activée)")
     })
     @DeleteMapping("/logout")
-    public ResponseEntity logout(HttpServletResponse response) {
-        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
-        SecurityContextHolder.clearContext();
-        return ResponseEntity.ok().build();
+    public void logout(HttpServletResponse response) {
+        // repone envoyer par AuthorizationFilter
     }
 
     @Operation(
@@ -335,9 +334,9 @@ public class AuthenticationResources implements ServiceContainerBean {
                     responseCode = "400",
                     description = "Format d'ID invalide")
     })
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_USER_READER')")
     @GetMapping(value = "/users/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public OreSiUser getByIdOrLogin(@PathVariable(name = "userLoginOrId") final String userLoginOrId) {
-        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
         return authenticationService.getByIdOrLogin(userLoginOrId);
     }
 

@@ -3,10 +3,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.BadLoginForAction;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreatorUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import org.apache.commons.collections4.CollectionUtils;
 

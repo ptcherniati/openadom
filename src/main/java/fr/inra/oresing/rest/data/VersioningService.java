@@ -17,6 +17,8 @@ import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.mail.EmailService;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.data.publication.*;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
@@ -48,24 +50,16 @@ public class VersioningService implements ServiceContainerBean {
     @Transactional
     public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, MultipartFile file, String params, boolean beforeDelete) throws IOException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        PrivilegeAssessorDomainForApplication privilegeAssessorForApplication = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, application.getName());
         String fileName = file == null ? null : file.getOriginalFilename();
-        Optional<FileOrUUID> fileOrUUIDOpt = Optional.ofNullable(params)
-                .filter(Objects::nonNull)
-                .filter(Predicate.not("undefined"::equals))
-                .map(json -> {
-                    try {
-                        return new ObjectMapper().readValue(params, FileOrUUID.class);
-                    } catch (JsonProcessingException e) {
-                        throw new BadFileOrUUIDQuery(e.getMessage());
-                    }
-                });
-        Boolean toPublish = fileOrUUIDOpt
-                .map(FileOrUUID::topublish)
-                .orElse(false);
-        ApplicationDataWriter applicationDataWriter = privilegeAssessorForApplication
-                .forDataWrite(dataName, toPublish);
+        Optional<FileOrUUID> fileOrUUIDOpt = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getFileOrUUID);
         Set<BinaryFile> filesToStore = new HashSet<>();
+        ApplicationDataWriter applicationDataWriter = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getApplicationPersona)
+                .filter(ApplicationDataWriter.class::isInstance)
+                .map(ApplicationDataWriter.class::cast)
+                .orElse(null);
+
         DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
         State state = getStoreFile(application, dataName, fileOrUUIDOpt.orElse(null), fileName, applicationDataWriter)
                 .loadOrCreateFile(file, binaryFileRepository(application), serviceContainer.binaryFileService());
@@ -79,7 +73,7 @@ public class VersioningService implements ServiceContainerBean {
             final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
             DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, dataId, dataSynthesis);
             if (unPublishedVersions.isRepository()) {
-                uploadState = toPublish ? EmailService.UPLOAD_STATE.PUBLISHED :
+                uploadState = fileOrUUIDOpt.map(FileOrUUID::topublish).orElse(false) ? EmailService.UPLOAD_STATE.PUBLISHED :
                         (beforeDelete ? EmailService.UPLOAD_STATE.DELETED : EmailService.UPLOAD_STATE.UNPUBLISHED);
             } else {
                 uploadState = EmailService.UPLOAD_STATE.UPLOADED;

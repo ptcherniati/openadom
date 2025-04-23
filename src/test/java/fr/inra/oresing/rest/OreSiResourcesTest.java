@@ -51,6 +51,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -192,7 +193,7 @@ public class OreSiResourcesTest {
     public void services_model() throws Exception {
         final String services_model = mockMvc.perform(get("/api-docs.yaml")
                         .accept(MediaType.parseMediaType("application/vnd.oai.openapi")
-                ))
+                        ))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn()
                 .getResponse()
@@ -508,12 +509,12 @@ public class OreSiResourcesTest {
         final String contentAsString = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
                         .cookie(monsoreCookie))
                 .andExpect(jsonPath("$.rows[*].values" +
-                                    "[?(@.projet.value=='projet_atlantique' )]" +
-                                    "[?(@.date.value=='date:1984-01-01T00:00:00:dd/MM/yyyy' )]" +
-                                    "[?(@.site.chemin=='plateforme.nivelle.nivelle__p1' )]" +
-                                    "[?(@.espece.value=='lpf' )]" +
-                                    "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
-                                    "['Nombre d\\'individus'].value",
+                                "[?(@.projet.value=='projet_atlantique' )]" +
+                                "[?(@.date.value=='date:1984-01-01T00:00:00:dd/MM/yyyy' )]" +
+                                "[?(@.site.chemin=='plateforme.nivelle.nivelle__p1' )]" +
+                                "[?(@.espece.value=='lpf' )]" +
+                                "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
+                                "['Nombre d\\'individus'].value",
                         hasItems(54)))
                 .andReturn().getResponse().getContentAsString();
 
@@ -771,8 +772,8 @@ public class OreSiResourcesTest {
         if (mockMvc.perform(post("/api/v1/login")
                         .param("login", login)
                         .param("password", password))
-                    .andReturn()
-                    .getResponse().getStatus() > 300) {
+                .andReturn()
+                .getResponse().getStatus() > 300) {
             return authenticationService.createUser(login, password, mail);
         } else {
             OreSiUser userByLogin = userRepository.findByLogin(login).orElse(null);
@@ -1094,22 +1095,26 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
 
-            mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
-                            .file(refFile)
-                            .cookie(withRigthsCookie))
-                    .andExpect(status().is4xxClientError())
-                    .andExpect(content().string("application inconnue 'monsore'"))
-                    .andReturn().getResponse().getContentAsString();
+            Assertions.assertInstanceOf(
+                    NotApplicationDataWriterException.class,
+                    mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
+                                    .file(refFile)
+                                    .cookie(withRigthsCookie))
+                            .andExpect(status().is4xxClientError())
+                            .andReturn()
+                            .getResolvedException());
         }
         try (final InputStream refStream = getClass().getResourceAsStream(sites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", sites, "text/plain", refStream);
 
-            mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites")
-                            .file(refFile)
-                            .cookie(withRigthsCookie))
-                    .andExpect(status().is4xxClientError())
-                    .andExpect(content().string("application inconnue 'monsore'"))
-                    .andReturn().getResponse().getContentAsString();
+            Assertions.assertInstanceOf(
+                    NotApplicationDataWriterException.class,
+                    mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites")
+                                    .file(refFile)
+                                    .cookie(withRigthsCookie))
+                            .andExpect(status().is4xxClientError())
+                            .andReturn()
+                            .getResolvedException());
         }
 
         String referencesRight = getJsonRightForAll(withRigthsUserId, List.of(List.of("sites", "publication"), List.of("type_de_sites", "publication")));

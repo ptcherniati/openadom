@@ -1,12 +1,18 @@
 package fr.inra.oresing.rest.security;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.domain.BinaryFile;
+import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.AuthenticationFailure;
+import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
@@ -36,6 +42,8 @@ import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Predicate;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -125,6 +133,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             return buildUpdateUserAuthentication(request);
         } else {
             OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response);
+            requestContext.setAuthenticationToken(oreSiAuthenticationToken); //premier stockage pour certaines méthodes
             if (oreSiAuthenticationToken == null) {
                 return null;
             }
@@ -148,7 +157,6 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                                 .map(m -> m.matches() ? m.group(1) : null)
                                 .map(UUID::fromString)
                                 .map(fileId -> {
-                                    requestContext.setAuthenticationToken(oreSiAuthenticationToken);
                                     Application applicationOrApplicationAccordingToRights = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(oreSiAuthenticationToken.getApplicationName());
                                     return Optional.ofNullable(serviceContainer.versioningService()
                                                     .getStoreFile(applicationOrApplicationAccordingToRights,
@@ -163,9 +171,48 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
 
                                 });
                     })
-                    .ifPresent(oreSiAuthenticationToken::setDataName);
+                    .ifPresent(dataName -> {
+                        addFilleOrUUID(request, oreSiAuthenticationToken, dataName, path);
+                        oreSiAuthenticationToken.setDataName(dataName);
+                    });
+
             return oreSiAuthenticationToken;
         }
+    }
+
+    private void addFilleOrUUID(HttpServletRequest request, OreSiAuthenticationToken oreSiAuthenticationToken, String dataName, String path) {
+        if (HttpMethod.POST.name().equals(request.getMethod()) && "/api/v1/applications/%1$s/data/%2$s".formatted(oreSiAuthenticationToken.getApplicationName(), dataName).equals(path)) {
+            String params = request.getParameter("params");
+            Optional.ofNullable(params)
+                    .filter(Objects::nonNull)
+                    .filter(Predicate.not("undefined"::equals))
+                    .map(json -> {
+                        try {
+                            return new ObjectMapper().readValue(params, FileOrUUID.class);
+                        } catch (JsonProcessingException e) {
+                            throw new BadFileOrUUIDQuery(e.getMessage());
+                        }
+                    })
+                    .ifPresent(oreSiAuthenticationToken::setFileOrUUID);
+            return;
+        }
+        Matcher matcher = Pattern.compile("/api/v1/applications/%s/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName())).matcher(path);
+        if(HttpMethod.DELETE.name().equals(request.getMethod()) && matcher.matches()) {
+            UUID fileId= UUID.fromString(matcher.group(1));
+            serviceContainer.binaryFileService().getFile(oreSiAuthenticationToken.getApplicationName(), fileId)
+                    .map(BinaryFile::getParams)
+                    .map(BinaryFileInfos::binaryFiledataset)
+                    .map(binaryFileDataset -> new FileOrUUID(
+                            fileId,
+                            binaryFileDataset,
+                            false
+                    ))
+                    .ifPresent(oreSiAuthenticationToken::setFileOrUUID);
+        }
+    }
+
+    private OreSiAuthenticationToken addFileOrUUIDIfCreateData(OreSiAuthenticationToken authenticationToken, String dataName) {
+        return authenticationToken;
     }
 
     private OreSiAuthenticationToken buildLoginAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationFailure {
