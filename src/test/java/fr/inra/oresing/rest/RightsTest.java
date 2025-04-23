@@ -63,7 +63,7 @@ public class RightsTest {
     private UUID authUserId;
     private Cookie authCookie;
     @Value("${jwt.secret:1234567890AZERTYUIOP}")
-    String jwtSecret;
+    String jwtSecret ="1234567890AZERTYUIOP";
     SecretKey key;
     String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
 

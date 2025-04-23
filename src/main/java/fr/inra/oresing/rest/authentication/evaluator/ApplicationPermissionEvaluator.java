@@ -1,5 +1,7 @@
 package fr.inra.oresing.rest.authentication.evaluator;
 
+import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForApplication;
+import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForSystem;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.services.authorization.AuthorizationService;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
@@ -8,6 +10,8 @@ import org.springframework.security.core.Authentication;
 
 import java.io.Serializable;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     public static final String SYSTEM = "SYSTEM";
@@ -29,11 +33,35 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     public static final String APPLICATION_WRITE_PUBLISH = "APPLICATION_WRITE_PUBLISH";
     public static final String APPLICATION_DELETE_FILE = "APPLICATION_DELETE_FILE";
 
+    public Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_USER_CONNECTED;
+    public Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_ADMINISTRATION;
+
+    public Function<String, PrivilegeAssessorDomainForApplication> APPLICATION_MANAGER;
+    public Function<String, PrivilegeAssessorDomainForApplication> DATA_MANAGEMENT;
+    public Function<String, PrivilegeAssessorDomainForApplication> DATA_READ;
+    public Function<String, PrivilegeAssessorDomainForApplication> DATA_WRITE;
+    public Function<String, PrivilegeAssessorDomainForApplication> DATA_ACCESS;
+
+
 
     private final AuthorizationService authorizationService;
 
     public ApplicationPermissionEvaluator(AuthorizationService authorizationService) {
         this.authorizationService = authorizationService;
+        this.SYSTEM_USER_CONNECTED = ()->authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED);
+        this.SYSTEM_ADMINISTRATION = ()->authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION);
+
+        this.APPLICATION_MANAGER = applicationName -> authorizationService
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, applicationName);
+        this.DATA_MANAGEMENT = applicationName -> authorizationService
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_MANAGEMENT, applicationName);
+        this.DATA_READ = applicationName -> authorizationService
+
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName);
+        this.DATA_WRITE = applicationName -> authorizationService
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, applicationName);
+        this.DATA_ACCESS = applicationName -> authorizationService
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_ACCESS, applicationName);
     }
 
     @Override
@@ -57,19 +85,19 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                 .map(oreSiAuthenticationToken -> {
                     SystemPersona persona = switch (permission) {
                         case String roleDelete when SYSTEM_MANAGE_ROLE_FOR_DELETE.equals(roleDelete) ->
-                                authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED)
+                                SYSTEM_USER_CONNECTED.get()
                                         .forAdministrationManagement();
                         case String roleUpdate when SYSTEM_MANAGE_ROLE_FOR_UPDATE.equals(roleUpdate) ->
-                                authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED)
+                                SYSTEM_USER_CONNECTED.get()
                                         .forAdministrationManagement();
                         case String connectedUser when SYSTEM_USER.equals(connectedUser) ->
-                                authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED)
+                                SYSTEM_USER_CONNECTED.get()
                                         .connectedUser();
                         case String openAdomAdmin when SYSTEM_OPENADOM_ADMIN.equals(openAdomAdmin) ->
-                                authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION)
+                                SYSTEM_ADMINISTRATION.get()
                                         .forAdministrationManagement();
                         case String applicationCreator when SYSTEM_APPLICATION_CREATOR.equals(applicationCreator) ->
-                                authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION)
+                                SYSTEM_ADMINISTRATION.get()
                                         .forCreateApplication();
                         default -> null;
                     };
@@ -95,44 +123,35 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                 .flatMap(applicationName -> {
                     return switch (permission) {
                         case String applicationDeleteRole when APPLICATION_ROLE_MANAGEMENT_FOR_DELETE.equals(applicationDeleteRole) ->
-                                Optional.of(authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, applicationName)
+                                Optional.of(APPLICATION_MANAGER.apply(applicationName)
                                         .forManageAdministrator());
                         case String applicationUpdateRole when APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE.equals(applicationUpdateRole) ->
-                                Optional.of(authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, applicationName)
+                                Optional.of(APPLICATION_MANAGER.apply(applicationName)
                                         .forManageAdministrator());
                         case String applicationAdminForRead when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ.equals(applicationAdminForRead) ->
-                                Optional.of(authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_MANAGEMENT, applicationName)
+                                Optional.of(DATA_MANAGEMENT.apply(applicationName)
                                         .forManageAuthorizations());
                         case String applicationAdminForDelete when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE.equals(applicationAdminForDelete) ->
-                                Optional.of(authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_MANAGEMENT, applicationName)
+                                Optional.of(DATA_MANAGEMENT.apply(applicationName)
                                         .forDeleteAuthorization());
                         case String applicationAdminForUpdate when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE.equals(applicationAdminForUpdate) ->
-                                Optional.of(authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_MANAGEMENT, applicationName)
+                                Optional.of(DATA_MANAGEMENT.apply(applicationName)
                                         .forManageAuthorizations());
                         case String applicationAdminForAdd when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD.equals(applicationAdminForAdd) ->
-                                Optional.of(authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_MANAGEMENT, applicationName)
+                                Optional.of(DATA_MANAGEMENT.apply(applicationName)
                                         .forManageAuthorizations());
                         case String read when APPLICATION_READ.equals(read) -> dataNameOpt
                                 .map(authorizationService
                                         .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
                                         ::forDataRead);
                         case String writeFile when APPLICATION_WRITE_FILE.equals(writeFile) -> dataNameOpt
-                                .map(dataName -> authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, applicationName)
+                                .map(dataName -> DATA_WRITE.apply(applicationName)
                                         .forDataWrite(dataName, false));
                         case String writePublish when APPLICATION_WRITE_PUBLISH.equals(writePublish) -> dataNameOpt
-                                .map(dataName -> authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, applicationName)
+                                .map(dataName -> DATA_WRITE.apply(applicationName)
                                         .forDataWrite(dataName, true));
                         case String deleteFile when APPLICATION_DELETE_FILE.equals(deleteFile) -> dataNameOpt
-                                .map(dataName -> authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
+                                .map(dataName -> DATA_READ.apply(applicationName)
                                         .forDataDelete(dataName));
                         default -> Optional.empty();
                     };
