@@ -8,10 +8,7 @@ import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdministratorForSystemException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.*;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
@@ -279,8 +276,8 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "monsoresimple.yaml", "text/plain", in);
 
             // on n'a pas le droit de creer de nouvelle application
-            NotOpenAdomAdministratorForSystemException resolvedException =
-                    (NotOpenAdomAdministratorForSystemException) fixtures.loadApplicationWithError(
+            NotApplicationCreatorRightsException resolvedException =
+                    (NotApplicationCreatorRightsException) fixtures.loadApplicationWithError(
                             configuration,
                             monsoreCookie,
                             "monsoresimple"
@@ -423,7 +420,7 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             // sans droit on ne peut pas
-            mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
+            Assertions.assertInstanceOf(NotApplicationDataWriterException.class, mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
                             .file(refFile)
                             .cookie(withRigthsCookie))
                     .andDo(result -> {
@@ -433,8 +430,7 @@ public class OreSiResourcesTest {
                         }
                     })
                     .andExpect(status().is4xxClientError())
-                    .andExpect(content().string("application inconnue 'monsoresimple'"))
-                    .andReturn().getResponse().getContentAsString();
+                            .andReturn().getResolvedException());
             //ajout de droits withRignesthsUserId
             if (true) {// TODO remove
                 return;
