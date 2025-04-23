@@ -7,7 +7,7 @@ import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
-import fr.inra.oresing.rest.security.AuthorizationFilter;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import org.hamcrest.Matchers;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -92,7 +92,7 @@ public class AuthenticationServiceTest {
                                 .param("email", email)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
-        Cookie cookie = response.getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+        Cookie cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
 /*
         final String authUserId = JsonPath.parse(response.getContentAsString()).read("$.id", String.class);
 */

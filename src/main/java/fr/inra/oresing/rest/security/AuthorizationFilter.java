@@ -1,13 +1,11 @@
 package fr.inra.oresing.rest.security;
 
-import fr.inra.oresing.JwtCookieValue;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.CreateUserRequest;
@@ -19,32 +17,23 @@ import fr.inra.oresing.rest.exceptions.OreExceptionHandler;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
-import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -55,30 +44,28 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     public static final GrantedAuthority ROLE_AUTHENTIFIED_USER = new SimpleGrantedAuthority("ROLE_AUTHENTIFIED_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_UPDATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_UPDATE_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_CREATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_CREATE_USER");
-    public static final String AUTHORIZATION = "Authorization";
-    public static final String BEARER_ = "Bearer ";
-    public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
     private final OreSiApiRequestContext requestContext;
-    private static JsonRowMapper<OreSiApiRequestContext> mapper;
-    private static SecretKey key;
-    private static int jwtExpiration;
+    private static JsonRowMapper<OreSiUserRequestClient> mapper;
     private final OreExceptionHandler exceptionHandler;
+    private final JWTExtractor JWTExtractor;
     private ServiceContainer serviceContainer;
 
     @Autowired
     public AuthorizationFilter(
             OreSiApiRequestContext requestContext,
-            JsonRowMapper<OreSiApiRequestContext> jsonRowMapper,
+            JsonRowMapper<OreSiUserRequestClient> jsonRowMapper,
             @Value("${jwt.expiration:3600}") int jwtExpiration,
             @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret,
             OreExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
         this.requestContext = requestContext;
-        mapper = jsonRowMapper;
-        AuthorizationFilter.jwtExpiration = jwtExpiration;
-        String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
-        key = Keys.hmacShaKeyFor(secureEnoughJwtSecret.getBytes());
+        this.mapper = jsonRowMapper;
+        this.JWTExtractor = new JWTExtractor(
+                mapper,
+                jwtExpiration,
+                jwtSecret
+        );
     }
 
     @Override
@@ -190,7 +177,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                 LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
                         .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
                         .forLoginPassword(loginValue, passwordValue);
-                refreshJwtInResponse(response, loginAdminResult.id());
+                JWTExtractor.refreshJwtInResponse(response, loginAdminResult.id());
                 return new OreSiAuthenticationToken(
                         loginAdminResult,
                         request.getRequestURI(),
@@ -227,12 +214,12 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     }
 
     private OreSiAuthenticationToken handleJwtAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String jwtCookie = extractJwtCookie(request);
+        String jwtCookie = JWTExtractor.extractJwtCookie(request);
         if (jwtCookie == null) {
             return null;
         }
-        OreSiRequestClient requestClient = getRequestClientFromJwt(jwtCookie);
-        refreshJwtInResponse(response, requestClient.id());
+        OreSiRequestClient requestClient = JWTExtractor.getRequestClientFromJwt(jwtCookie);
+        JWTExtractor.refreshJwtInResponse(response, requestClient.id());
         return new OreSiAuthenticationToken(
                 requestClient,
                 request.getRequestURI(),
@@ -240,87 +227,9 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         );
     }
 
-    private String extractJwtCookie(HttpServletRequest request) {
-        String authHeader = request.getHeader(AUTHORIZATION);
-        if (authHeader != null && authHeader.startsWith(BEARER_)) {
-            return authHeader.substring(7);
-        }
-        return Optional.ofNullable(request.getCookies())
-                .map(Arrays::asList)
-                .stream()
-                .flatMap(List::stream)
-                .filter(cookie -> cookie.getName().equals(JWT_COOKIE_NAME))
-                .map(Cookie::getValue)
-                .findFirst()
-                .orElse(null);
-    }
-
-    private OreSiUserRequestClient getRequestClientFromJwt(String token) throws IOException {
-
-        String json;
-        try {
-            json = Jwts.parser()
-                    .verifyWith(key)
-                    .build()
-                    .parseSignedClaims(token)
-                    .getPayload()
-                    .getSubject();
-        } catch (ExpiredJwtException ex) {
-            throw new AuthenticationCredentialsNotFoundException("JWT expiré", ex);
-        } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
-            throw new BadCredentialsException("JWT invalide", ex);
-        } catch (SignatureException ex) {
-            throw new BadCredentialsException("Signature JWT invalide", ex);
-        } catch (JwtException ex) {
-            throw new AuthenticationCredentialsNotFoundException("Erreur d'authentification JWT", ex);
-        }
-
-        return mapper.readValue(json, JwtCookieValue.class).requestClient();
-    }
-
-    private void refreshJwtInResponse(HttpServletResponse response, UUID id) {
-        OreSiUserRole userRole = serviceContainer.authenticationService()
-                .getUserRole(id);
-        OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(id, userRole);
-        String json = mapper.toJson(requestClient);
-        String jwt = buildToken(json);
-        try {
-            addCookie(jwt, response);
-            addJwtHeader(response, jwt);
-        } catch (Exception e) {
-            log.trace("pas grave");
-        }
-    }
-
-    private static void addJwtHeader(HttpServletResponse response, String jwt) {
-        response.setHeader("Authorization", "Bearer " + jwt);
-    }
-
-    public static void addCookie(String jwt, HttpServletResponse response) {
-        Cookie cookie = getCookie(jwt);
-        response.addCookie(cookie);
-    }
-
-    public static Cookie getCookie(String jwt) {
-        final Cookie cookie = new Cookie(JWT_COOKIE_NAME, jwt);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(jwtExpiration);
-        return cookie;
-    }
-
-    public static String buildToken(String json) {
-        Date issuedAt = new Date();
-        return Jwts.builder()
-                .subject(json)
-                .issuedAt(issuedAt)
-                .expiration(DateUtils.addSeconds(issuedAt, jwtExpiration))
-                .signWith(key)
-                .compact();
-    }
-
     @Override
     public void setServiceContainer(ServiceContainer serviceContainer) {
+        JWTExtractor.setSetGetUserRole(serviceContainer.authenticationService()::getUserRole);
         this.serviceContainer = serviceContainer;
     }
 }

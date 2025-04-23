@@ -10,7 +10,7 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.*;
-import fr.inra.oresing.rest.security.AuthorizationFilter;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import jakarta.servlet.http.Cookie;
 import lombok.Getter;
 import org.apache.commons.io.IOUtils;
@@ -657,7 +657,7 @@ public class Fixtures {
             cookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", aLogin)
                             .param("password", aPassword))
-                    .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         }
         return cookie;
     }@Transactional
@@ -698,7 +698,7 @@ public class Fixtures {
                             .param("login", aLogin)
                             .param("password", aPassword))
                     .andReturn().getResponse();
-            cookie = response.getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+            cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
         }
         final String aPassword = "xxxxxxxx";
         final CreateUserResult createUserResult = authenticationService.createUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
@@ -719,7 +719,7 @@ public class Fixtures {
         return mockMvc.perform(post("/api/v1/login")
                         .param("login", applicationPattern)
                         .param("password", aPassword))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
     }
 
     public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {

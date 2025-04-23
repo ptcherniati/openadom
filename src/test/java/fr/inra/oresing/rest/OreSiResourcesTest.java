@@ -26,7 +26,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
-import fr.inra.oresing.rest.security.AuthorizationFilter;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import fr.inra.oresing.rest.services.RelationalService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -38,7 +38,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
@@ -52,7 +51,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -218,7 +216,7 @@ public class OreSiResourcesTest {
         lambdaCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         CreateUserResult authUser;
         try {
             final OreSiUser user = authenticationService.getByIdOrLogin("poussin");
@@ -231,7 +229,7 @@ public class OreSiResourcesTest {
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "poussin")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         addRoleAdmin(authUser);
     }
 
@@ -266,14 +264,14 @@ public class OreSiResourcesTest {
         final Cookie monsoreCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "monsoresimple")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         final CreateUserResult withRightsUserResult = createUserIfNotExists("withrigths", "xxxxxxxx", "withrigths@inrae.fr");
         final String withRigthsUserId = withRightsUserResult.userId().toString();
         setToActive(withRightsUserResult.userId());
         final Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
         URL resource = getClass().getResource(Fixtures.getMonsoreApplicationConfigurationResourceName());
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
@@ -1000,7 +998,7 @@ public class OreSiResourcesTest {
         final Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
         String typeDeSites = Fixtures.getMonsoreReferentielFiles().get("type_de_sites");
 
@@ -2011,7 +2009,7 @@ public class OreSiResourcesTest {
         final Cookie readerCookies = mockMvc.perform(post("/api/v1/login")
                         .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
 
         {

@@ -8,7 +8,7 @@ import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
-import fr.inra.oresing.rest.security.AuthorizationFilter;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;
@@ -109,7 +109,7 @@ public class TestReferencesErrors {
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", LOGIN)
                         .param("password", PASSWORD))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         addRoleAdmin(authUser);
     }
 
@@ -152,7 +152,7 @@ public class TestReferencesErrors {
             recursivityCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "recursivity")
                             .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, recursivityCookie, "recursivite", ""));
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
                             .param("filter", "ALL")
@@ -281,7 +281,7 @@ public class TestReferencesErrors {
             repeatedColumnCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "repeatedcolumns")
                             .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnCookie, "repeatedcolumns", ""));
 
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
@@ -358,7 +358,7 @@ public class TestReferencesErrors {
             repeatedColumnsCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "repeatedcolumns")
                             .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnsCookie, "repeatedcolumns", ""));
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
                             .param("filter", "ALL")

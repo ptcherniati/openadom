@@ -2,47 +2,20 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.Resources;
-import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.*;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.*;
-import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
-import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
-import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
-import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
-import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
-import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
-import fr.inra.oresing.rest.model.application.ApplicationResult;
-import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
-import fr.inra.oresing.rest.security.AuthorizationFilter;
-import fr.inra.oresing.rest.services.RelationalService;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.core.Is;
-import org.hamcrest.core.IsEqual;
-import org.hamcrest.core.IsNull;
-import org.json.JSONArray;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,43 +23,21 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
-import org.springframework.test.web.servlet.ResultMatcher;
-import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
-import javax.sql.DataSource;
-import java.io.*;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
 
-import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @ActiveProfiles("testmail")
@@ -131,7 +82,7 @@ public class RightsTest {
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "poussin")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         addRoleAdmin(authUser);
     }
 
@@ -187,7 +138,7 @@ public class RightsTest {
         final String json;
         ObjectMapper objectMapper = new ObjectMapper();
         try {
-            final JwtCookieValue jwtCookieValue = new JwtCookieValue(requestClient);
+            final OpenAdomJwtValue jwtCookieValue = new OpenAdomJwtValue(requestClient);
             json = objectMapper.writeValueAsString(jwtCookieValue);
         } catch (final JsonProcessingException e) {
             throw new SiOreIllegalArgumentException(
@@ -209,7 +160,7 @@ public class RightsTest {
                 .signWith(key)
                 .compact();
 
-        final Cookie cookie = new Cookie(AuthorizationFilter.JWT_COOKIE_NAME, token);
+        final Cookie cookie = new Cookie(JWTExtractor.JWT_COOKIE_NAME, token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
         return cookie;
@@ -230,7 +181,7 @@ public class RightsTest {
         // Récupérer le cookie de déconnexion (qui devrait être expiré)
         authCookie = mockMvc.perform(delete("/api/v1/logout")
                         .cookie(authCookie))
-                .andReturn().getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
         Assertions.assertNull(authCookie, "Le cookie de déconnexion dpit être null");
     }
@@ -244,7 +195,7 @@ public class RightsTest {
                 .andReturn();
 
         // Récupérer le cookie après le premier appel
-        authCookie = result.getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+        authCookie = result.getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         Assertions.assertNotNull(authCookie, "Le cookie ne devrait pas être null");
         Assertions.assertTrue(authCookie.getMaxAge() > 0, "Le cookie devrait avoir une durée de vie positive");
 
@@ -255,7 +206,7 @@ public class RightsTest {
                 .andReturn();
 
         // Récupérer le cookie après le deuxième appel
-        Cookie cookie2 = result.getResponse().getCookie(AuthorizationFilter.JWT_COOKIE_NAME);
+        Cookie cookie2 = result.getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         Assertions.assertNotNull(cookie2, "Le cookie ne devrait pas être null");
         Assertions.assertTrue(cookie2.getMaxAge() > 0, "Le cookie devrait avoir une durée de vie positive");
 
