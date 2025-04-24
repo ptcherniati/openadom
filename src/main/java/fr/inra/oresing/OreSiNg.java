@@ -1,12 +1,12 @@
 package fr.inra.oresing;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.flyway.MigrateService;
-import fr.inra.oresing.rest.OreSiHandler;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
-import lombok.extern.java.Log;
 import lombok.extern.slf4j.Slf4j;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,13 +19,13 @@ import org.springframework.boot.info.GitProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.config.annotation.*;
 import org.springframework.web.servlet.resource.PathResourceResolver;
@@ -44,8 +44,7 @@ public class OreSiNg implements WebMvcConfigurer {
     @Value("${allowed.origin}")
     private String allowedOrigin;
 
-    public OreSiNg(OreSiHandler oreSiHandler, MigrateService migrate) {
-        this.oreSiHandler = oreSiHandler;
+    public OreSiNg(MigrateService migrate) {
         this.migrate = migrate;
     }
 
@@ -53,7 +52,6 @@ public class OreSiNg implements WebMvcConfigurer {
         SpringApplication.run(OreSiNg.class, args);
     }
 
-    private final OreSiHandler oreSiHandler;
     private final MigrateService migrate;
 
     @Override
@@ -66,6 +64,7 @@ public class OreSiNg implements WebMvcConfigurer {
                 .resourceChain(false)
                 .addResolver(new PathResourceResolver());
     }
+
     @Configuration
     public class GitInfoConfig {
 
@@ -112,14 +111,6 @@ public class OreSiNg implements WebMvcConfigurer {
         }
     }
 
-    @Override
-    public void addCorsMappings(final CorsRegistry registry) {
-        registry.addMapping("/api/**")
-                .allowedOrigins(allowedOrigin)
-                .allowedMethods("POST", "PUT", "GET", "DELETE")
-                .allowCredentials(true);
-    }
-
     @Configuration
     public class OpenApiConfig {
 
@@ -137,11 +128,6 @@ public class OreSiNg implements WebMvcConfigurer {
                             .description("Api Rest pour le stockage et la restitution de fichier CSV"))
                     .servers(List.of(new Server().url(allowedOrigin)));
         }
-    }
-
-    @Override
-    public void addInterceptors(final InterceptorRegistry registry) {
-        registry.addInterceptor(oreSiHandler);
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -164,25 +150,17 @@ public class OreSiNg implements WebMvcConfigurer {
     }
 
     @Bean
-    public ThreadPoolTaskExecutor mvcTaskExecutor() {
-        final ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
-        taskExecutor.setCorePoolSize(10);
-        taskExecutor.setMaxPoolSize(10);
-        return taskExecutor;
-    }
-
-    @Override
-    public void configureAsyncSupport(final AsyncSupportConfigurer configurer) {
-        configurer.setTaskExecutor(mvcTaskExecutor());
-    }
-
-
-    @Bean
     public MessageSource emailMessageSource() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
         messageSource.setBasenames("emailMessage"); // Nom de base des fichiers de propriétés
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
-    }
+    }/*
+
+    @Bean("camelCaseJsonRowMapper")
+    public JsonRowMapper<?> camelCaseJsonRowMapper() {
+        JsonRowMapper<?> mapper = new JsonRowMapper<>(PropertyNamingStrategies.LOWER_CAMEL_CASE);
+        return mapper;
+    }*/
 
 }

@@ -17,7 +17,7 @@ services:
       - "5433:5432"
     environment:
       - POSTGRES_USER=dbuser
-      - POSTGRES_PASSWORD=xxxxxxxx
+        - POSTGRES_PASSWORD=xxxxxxxx
       - POSTGRES_DB=openadom
     networks:
       - default

@@ -106,7 +106,6 @@ public class EmailService implements Email, ServiceContainerBean {
     @Autowired
     private LocaleResolver localeResolver;
 
-    @Async
     @Override
     public void sendEmail(final String login, final String to, final String subject, final String message) {
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
@@ -152,7 +151,6 @@ public class EmailService implements Email, ServiceContainerBean {
         final String title_en;
         }
 
-    @Async
     @Override
     public void sendUploadZipEmail(
             final String to,

@@ -16,6 +16,6 @@ public interface AuthorizationService {
 
     PrivilegeAssessorDomainForApplication getPrivilegeAssessorForApplication(
             PrivilegeApplicationDomain privilegeDomain,
-            Application application
+            String applicationNameOrId
     );
 }

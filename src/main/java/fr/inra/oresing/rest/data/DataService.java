@@ -41,6 +41,8 @@ import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.groovy.StringSetGroovyExpression;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
@@ -718,9 +720,6 @@ public class DataService implements ServiceContainerBean {
     }
 
     public List<DataRow> findData(final DownloadDatasetQuery downloadDatasetQuery) {
-        ApplicationDataReader applicationReader = serviceContainer.authorizationService()
-                .getPrivilegeAssessorForApplication(DATA_READ, downloadDatasetQuery.application())
-                .forDataRead(downloadDatasetQuery.dataName());
         return serviceContainer.dataService().findDataFlux(downloadDatasetQuery).collectList().block();
     }
 

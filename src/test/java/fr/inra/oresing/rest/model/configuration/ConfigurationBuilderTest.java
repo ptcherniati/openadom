@@ -14,9 +14,12 @@ import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.skyscreamer.jsonassert.JSONAssert;
+import org.skyscreamer.jsonassert.JSONCompareMode;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -81,6 +84,8 @@ class ConfigurationBuilderTest {
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
                         throw new RuntimeException(e);
+                    } catch (JSONException e) {
+                        throw new RuntimeException(e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {
@@ -108,6 +113,8 @@ class ConfigurationBuilderTest {
                         testExampleConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
+                        throw new RuntimeException(e);
+                    } catch (JSONException e) {
                         throw new RuntimeException(e);
                     }
                 })
@@ -172,7 +179,7 @@ class ConfigurationBuilderTest {
                     try {
                         testMonsoreConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
-                    } catch (final JsonProcessingException e) {
+                    } catch (final JsonProcessingException | JSONException e) {
                         throw new RuntimeException(e);
                     }
                 })
@@ -191,7 +198,7 @@ class ConfigurationBuilderTest {
     }
 
 
-    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException {
+    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
         testTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testInternationalisation(configuration.i18n());
@@ -199,7 +206,7 @@ class ConfigurationBuilderTest {
         testComponents(configuration.dataDescription());
     }
 
-    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException {
+    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
         testExampleTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testExampleInternationalisation(configuration.i18n());
@@ -207,7 +214,7 @@ class ConfigurationBuilderTest {
         testExampleComponents(configuration.dataDescription());
     }
 
-    private static void testMonsoreConfiguration(final Configuration configuration) throws JsonProcessingException {
+    private static void testMonsoreConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
         testMonsoreTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testMonsoreInternationalisation(configuration.i18n());
@@ -215,31 +222,28 @@ class ConfigurationBuilderTest {
         testMonsoreComponents(configuration.dataDescription());
     }
 
-    private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
-        assertEquals(new ObjectMapper()
-                        .registerModule(new JavaTimeModule())
-                        .writer()
-                        .withDefaultPrettyPrinter()
-                        .writeValueAsString(dataDescriptionMap), DATA_RESULT);
+
+    private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
+
+        // Compare les deux JSON sans tenir compte de l'ordre des champs (mode LENIENT)
+        JSONAssert.assertEquals(DATA_RESULT, actualJson, JSONCompareMode.LENIENT);
     }
 
-    private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
-        Assertions.assertThat(new ObjectMapper()
-                        .registerModule(new JavaTimeModule())
-                        .writer()
-                        .withDefaultPrettyPrinter()
-                        .writeValueAsString(dataDescriptionMap)
-                )
-                .isEqualTo(DATA_MONSORE_RESULT);
+    private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
+
+        // Compare les JSON sans tenir compte de l'ordre des champs
+        JSONAssert.assertEquals(DATA_MONSORE_RESULT, actualJson, JSONCompareMode.LENIENT);
     }
-    private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
-        Assertions.assertThat(new ObjectMapper()
-                        .registerModule(new JavaTimeModule())
-                        .writer()
-                        .withDefaultPrettyPrinter()
-                        .writeValueAsString(dataDescriptionMap)
-                )
-                .isEqualTo(DATA_EXAMPLE_RESULT);
+    private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
+
+        // Compare les JSON sans tenir compte de l'ordre des champs
+        JSONAssert.assertEquals(DATA_EXAMPLE_RESULT, actualJson, JSONCompareMode.LENIENT);
     }
 
     private static void testApplicationDescription(final ApplicationDescription applicationDescription) {

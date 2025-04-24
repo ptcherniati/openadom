@@ -8,51 +8,71 @@ import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.VersioningService;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.BeanPostProcessor;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.core.Ordered;
+import org.springframework.core.PriorityOrdered;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
-public class ServiceContainerInjector implements BeanPostProcessor, ApplicationListener<ContextRefreshedEvent> {
+public class ServiceContainerInjector implements ApplicationContextAware, PriorityOrdered {
 
-    private final Map<String, Object> services = new HashMap<>();
+    private ConfigurableListableBeanFactory services;
+
+    public ServiceContainer getServiceContainer() {
+        return serviceContainer;
+    }
+
     private ServiceContainer serviceContainer;
 
-    @Override
-    public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-        if (bean instanceof ServiceContainerBean) {
-            services.put(beanName, bean);
-        }
-        return bean;
-    }
-
-    @Override
-    public void onApplicationEvent(ContextRefreshedEvent event) {
-        injectServiceContainer();
-    }
 
     private void injectServiceContainer() {
+        Map<String, Object> serviceContainerBeans = Arrays.asList(services.getBeanNamesForType(ServiceContainerBean.class)).stream()
+                .collect(Collectors.toMap(
+                        Function.identity(),
+                        services::getBean
+                ));
         serviceContainer = new ServiceContainer(
-                (ApplicationService) services.get("applicationService"),
-                (AuthorizationService) services.get("authorizationService"),
-                (AuthenticationService) services.get("authenticationService"),
-                (DataService) services.get("dataService"),
-                (VersioningService) services.get("versioningService"),
-                (SynthesisService) services.get("synthesisService"),
-                (BinaryFileService) services.get("binaryFileService"),
-                (AdditionalFileService) services.get("additionalFileService"),
-                (RightsRequestService) services.get("rightsRequestService"),
-                (RelationalService) services.get("relationalService"),
-                (Email) services.get("emailService")
+                (ApplicationService) serviceContainerBeans.get("applicationService"),
+                (AuthorizationService) serviceContainerBeans.get("authorizationService"),
+                (AuthenticationService) serviceContainerBeans.get("authenticationService"),
+                (DataService) serviceContainerBeans.get("dataService"),
+                (VersioningService) serviceContainerBeans.get("versioningService"),
+                (SynthesisService) serviceContainerBeans.get("synthesisService"),
+                (BinaryFileService) serviceContainerBeans.get("binaryFileService"),
+                (AdditionalFileService) serviceContainerBeans.get("additionalFileService"),
+                (RightsRequestService) serviceContainerBeans.get("rightsRequestService"),
+                (RelationalService) serviceContainerBeans.get("relationalService"),
+                (Email) serviceContainerBeans.get("emailService")
         );
 
-        services.values().forEach(service -> {
+        serviceContainerBeans.values().forEach(service -> {
             if (service instanceof ServiceContainerBean) {
                 ((ServiceContainerBean) service).setServiceContainer(serviceContainer);
             }
         });
+    }
+
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        this.services = ((ConfigurableApplicationContext) applicationContext).getBeanFactory();
+        injectServiceContainer();
+
+    }
+
+    @Override
+    public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE;
     }
 }
