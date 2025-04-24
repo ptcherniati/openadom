@@ -89,10 +89,12 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         if (response.isCommitted()) {
             return;
         }
-        if (path.startsWith("/swagger-ui") ||
-                path.startsWith("/v2/api-docs") ||
-                path.startsWith("/api/public") ||
-                path.startsWith("/api-docs.yaml")) {
+        if (
+                path.startsWith("/actuator") ||
+                        path.startsWith("/swagger-ui") ||
+                        path.startsWith("/v2/api-docs") ||
+                        path.startsWith("/api/public") ||
+                        path.startsWith("/api-docs.yaml")) {
             chain.doFilter(request, response); // Skip le filtre
             return;
         }
@@ -197,8 +199,8 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             return;
         }
         Matcher matcher = Pattern.compile("/api/v1/applications/%s/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName())).matcher(path);
-        if(HttpMethod.DELETE.name().equals(request.getMethod()) && matcher.matches()) {
-            UUID fileId= UUID.fromString(matcher.group(1));
+        if (HttpMethod.DELETE.name().equals(request.getMethod()) && matcher.matches()) {
+            UUID fileId = UUID.fromString(matcher.group(1));
             serviceContainer.binaryFileService().getFile(oreSiAuthenticationToken.getApplicationName(), fileId)
                     .map(BinaryFile::getParams)
                     .map(BinaryFileInfos::binaryFiledataset)
