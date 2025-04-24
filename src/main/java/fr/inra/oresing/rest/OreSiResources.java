@@ -280,7 +280,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("isFullyAuthenticated()")
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> getApplications(@RequestParam(required = false, defaultValue = "") final String[] filter) {
         final List<ApplicationInformation> filters = Arrays.stream(filter)
