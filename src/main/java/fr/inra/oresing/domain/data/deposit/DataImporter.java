@@ -32,7 +32,6 @@ import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,7 +40,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -86,7 +84,7 @@ public class DataImporter {
      *     <li>détecter les référentiels utilisés (et conserver les clés vers ceux utilisés pour fixer le refsLinkedTo)</li>
      * </ul>
      */
-    private static ReferenceDatumAfterChecking check(
+    private static List<ReferenceDatumAfterChecking> check(
             final RowWithReferenceDatum rowWithReferenceDatum,
             final ImmutableSet<LineChecker> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder) {
@@ -95,68 +93,15 @@ public class DataImporter {
         final ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder = ImmutableList.builder();
         final DataDatum referenceDatum = DataDatum.copyOf(referenceDatumBeforeChecking);
         for (final LineChecker lineChecker : transformedLineCheckers) {
-            boolean matchingTarget = rowWithReferenceDatum.referenceDatum().values()
-                    .entrySet()
-                    .stream()
-                    .flatMap(entry -> {
-                        if (entry.getValue() instanceof DataColumnPatternValue(Map<DataColumn, DataColumnValue> values)) {
-                            return values.keySet().stream()
-                                    .map(dataColumn -> dataColumn.column().equals(Column.__VALUE__) ?
-                                            entry.getKey() :
-                                            new DataColumn(
-                                                    Column.COLUMN_IN_COLUMN_PATTERN.formatted(
-                                                            entry.getKey().column(),
-                                                            dataColumn.column()
-                                                    )
-                                            )
-                                    );
-                        }
-                        return Stream.of(entry.getKey());
-                    }).noneMatch(column -> column.equals(lineChecker.target()) ||
-                            column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
-            if (matchingTarget) {
+            if (matchingTarget(rowWithReferenceDatum, lineChecker)) {
                 continue;
             }
             if (lineChecker instanceof final LineChecker.ManyChecker manyChecker) {
                 manyChecker.value().getValue().clear();
             }
             Map<String, Object> context = new HashMap<>();
-            switch (lineChecker.transformer()) {
-                case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {
-                    for (LineChecker.LineTransformer transformer : transformers.transformers()) {
-                        switch (transformer) {
-                            case LineChecker.LineTransformer.TransformOneLineElementTransformer.GroovyExpressionOnOneLineElementTransformer groovyExpressionOnOneLineElementTransformer -> {
-                                Set<String> groovyReferences = groovyExpressionOnOneLineElementTransformer.references();
-                                context = publishContextBuilder.getGroovyContextForReferences(
-                                        groovyReferences,
-                                        new PublishContext.RowInfos(
-                                                rowWithReferenceDatum.referenceDatum.values().values().stream()
-                                                        .map(DataColumnValue::getValuesToCheck)
-                                                        .map(FieldType::toString).toList(),
-                                                rowWithReferenceDatum.lineNumber
-                                        )
-                                );
-                            }
-                            default -> {
-                            }
-                        }
-                    }
-                }
-                default -> {
-                    if (lineChecker.checkerDescription() instanceof GroovyExpressionChecker groovyExpressionChecker) {
-                        Set<String> groovyReferences = groovyExpressionChecker.references();
-                        context = publishContextBuilder.getGroovyContextForReferences(
-                                groovyReferences,
-                                new PublishContext.RowInfos(
-                                        rowWithReferenceDatum.referenceDatum.values().values().stream().map(DataColumnValue::getValuesToCheck).map(FieldType::toString).toList(),
-                                        rowWithReferenceDatum.lineNumber
-                                )
-                        );
-                    }
-                }
-            }
-            //}
-            final CheckerValidationCheckResult validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking, context);
+
+            final CheckerValidationCheckResult validationCheckResults = testValues(rowWithReferenceDatum, publishContextBuilder, lineChecker, context, referenceDatumBeforeChecking);
             Optional.ofNullable(validationCheckResults)
                     .filter(ValidationCheckResult::isSuccess)
                     .ifPresent(validationCheckResult -> {
@@ -189,23 +134,92 @@ public class DataImporter {
                             }
                     );
 
-            Optional.ofNullable(validationCheckResults)
-                    .filter(validationCheckResult -> !validationCheckResult.isSuccess())
-                    .map(validationCheckResult -> validationCheckResult.getValidations().stream().filter(ValidationCheckResult::isError).toList())
-                    .ifPresent(vcrs -> vcrs.stream()
-                            .map(vcr -> new CsvRowValidationCheckResult(vcr, rowWithReferenceDatum.lineNumber()))
-                            .forEach(allCheckerErrorsBuilder::add)
-                    );
+            if (validationCheckResults != null && !validationCheckResults.isSuccess()) {
+                List<ValidationCheckResult> vcrs = validationCheckResults.getValidations().stream().filter(ValidationCheckResult::isError).toList();
+                vcrs.stream()
+                        .map(vcr -> new CsvRowValidationCheckResult(vcr, rowWithReferenceDatum.lineNumber()))
+                        .forEach(element -> {
+                            allCheckerErrorsBuilder.add(element);
+                        });
+            }
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
-        return new ReferenceDatumAfterChecking(
-                rowWithReferenceDatum.lineNumber(),
-                rowWithReferenceDatum.patternColumnName(),
-                rowWithReferenceDatum.referenceDatum(),
-                referenceDatum,
-                ImmutableMap.copyOf(refsLinkedTo),
-                allCheckerErrorsBuilder.build()
+        return List.of(
+                new ReferenceDatumAfterChecking(
+                        rowWithReferenceDatum.lineNumber(),
+                        rowWithReferenceDatum.patternColumnName(),
+                        rowWithReferenceDatum.referenceDatum(),
+                        referenceDatum,
+                        ImmutableMap.copyOf(refsLinkedTo),
+                        allCheckerErrorsBuilder.build()
+                )
         );
+    }
+
+    private static CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
+        switch (lineChecker.transformer()) {
+            case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {
+                for (LineChecker.LineTransformer transformer : transformers.transformers()) {
+                    switch (transformer) {
+                        case LineChecker.LineTransformer.TransformOneLineElementTransformer.GroovyExpressionOnOneLineElementTransformer groovyExpressionOnOneLineElementTransformer -> {
+                            Set<String> groovyReferences = groovyExpressionOnOneLineElementTransformer.references();
+                            context = publishContextBuilder.getGroovyContextForReferences(
+                                    groovyReferences,
+                                    new PublishContext.RowInfos(
+                                            rowWithReferenceDatum.referenceDatum.values().values().stream()
+                                                    .map(DataColumnValue::getValuesToCheck)
+                                                    .map(FieldType::toString).toList(),
+                                            rowWithReferenceDatum.lineNumber
+                                    )
+                            );
+                        }
+                        default -> {
+                        }
+                    }
+                }
+            }
+            default -> {
+                if (lineChecker.checkerDescription() instanceof GroovyExpressionChecker groovyExpressionChecker) {
+                    Set<String> groovyReferences = groovyExpressionChecker.references();
+                    context = publishContextBuilder.getGroovyContextForReferences(
+                            groovyReferences,
+                            new PublishContext.RowInfos(
+                                    rowWithReferenceDatum.referenceDatum.values().values().stream().map(DataColumnValue::getValuesToCheck).map(FieldType::toString).toList(),
+                                    rowWithReferenceDatum.lineNumber
+                            )
+                    );
+                }
+            }
+        }
+        //}
+        final CheckerValidationCheckResult validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking, context);
+        return validationCheckResults;
+    }
+
+    private static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker) {
+        boolean matchingTarget = rowWithReferenceDatum.referenceDatum().values()
+                .entrySet()
+                .stream()
+                .flatMap(entry -> {
+                    if (entry.getValue() instanceof DataColumnPatternValue(Map<DataColumn, DataColumnValue> values)) {
+                        return values.keySet().stream()
+                                .map(dataColumn -> dataColumn.column().equals(Column.__VALUE__) ?
+                                        entry.getKey() :
+                                        new DataColumn(
+                                                Column.COLUMN_IN_COLUMN_PATTERN.formatted(
+                                                        entry.getKey().column(),
+                                                        dataColumn.column()
+                                                )
+                                        )
+                                );
+                    }
+                    return Stream.of(entry.getKey());
+                }).noneMatch(column -> column.equals(lineChecker.target()) ||
+                        column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
+        if (matchingTarget) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -244,12 +258,13 @@ public class DataImporter {
                         .flatMap(csvRecordToReferenceDatumFn)
                         .map(dataHeaderReader::addConstantsToRow)
                         .map(this::computeComputedColumns);
-        Stream<RowWithReferenceDatum> recordStream = recursionStrategy.firstPass(recordStreamBeforePreloading);
+        Stream<RowWithReferenceDatum> recordStream = recordStreamBeforePreloading;//recursionStrategy.firstPass(recordStreamBeforePreloading);
         final ImmutableSet<LineChecker> transformedLineCheckers = buildLineCheckers(dataHeaderReader.constantValues().values());
         Stream<DataValue> referenceValuesStream = recordStream
                 //.parallel()
                 .filter(rowWithReferenceDatum -> allErrors.canRegisterErrors())
                 .map(rowWithReferenceDatum -> check(rowWithReferenceDatum, transformedLineCheckers, dataImporterContext.getPublishContextBuilder()))
+                .flatMap(List::stream)
                 .peek(referenceDatumAfterChecking -> allErrors.addAll(referenceDatumAfterChecking.errors()))
                 .filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.errors().isEmpty())
                 .map(this::computeKeys)
@@ -741,12 +756,13 @@ public class DataImporter {
                         }
                         DataColumnValue parentDataColumnValue = referenceDatum.get(columnToLookForParentKey);
                         switch (parentDataColumnValue) {
-                            case DataColumnMultipleValue dataColumnMultipleValue -> ((Collection<? extends FieldType>) dataColumnMultipleValue.getValues().getValue())
-                                    .stream()
-                                    .map(FieldType::getValue)
-                                    .map(Object::toString)
-                                    .flatMap(multi -> Arrays.stream(multi.split(",")))
-                                    .forEach(parentKey -> testIfMissingParentKey(rowWithReferenceDatum, parentKey, naturalKey, missingParentReferences));
+                            case DataColumnMultipleValue dataColumnMultipleValue ->
+                                    ((Collection<? extends FieldType>) dataColumnMultipleValue.getValues().getValue())
+                                            .stream()
+                                            .map(FieldType::getValue)
+                                            .map(Object::toString)
+                                            .flatMap(multi -> Arrays.stream(multi.split(",")))
+                                            .forEach(parentKey -> testIfMissingParentKey(rowWithReferenceDatum, parentKey, naturalKey, missingParentReferences));
                             case DataColumnSingleValue dataColumnSingleValue -> {
                                 final String parentKey = dataColumnSingleValue.getValue().toString();
                                 testIfMissingParentKey(rowWithReferenceDatum, parentKey, naturalKey, missingParentReferences);
@@ -826,7 +842,7 @@ public class DataImporter {
                     .map(DataColumnSingleValue.class::cast)
                     .map(DataColumnSingleValue::getValue)
                     .map(Object::toString)
-                    .map(s -> Strings.isNullOrEmpty(s)?Ltree.NULL_KEY:s)
+                    .map(s -> Strings.isNullOrEmpty(s) ? Ltree.NULL_KEY : s)
                     .map(Ltree::escapeToLabel)
                     .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
             Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
