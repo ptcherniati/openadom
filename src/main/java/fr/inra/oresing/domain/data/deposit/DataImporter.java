@@ -137,6 +137,16 @@ public class DataImporter {
                     );
 
             if (validationCheckResults != null && !validationCheckResults.isSuccess()) {
+                boolean isLineCheckerRecusrsiveReference = Optional.ofNullable(lineChecker.checkerDescription())
+                        .filter(ReferenceChecker.class::isInstance)
+                        .map(ReferenceChecker.class::cast)
+                        .stream().anyMatch(ReferenceChecker::isRecursive);
+                boolean isErrorInvalidReferenceWithComponent = validationCheckResults.getValidations().stream()
+                        .map(ValidationCheckResult::message)
+                        .anyMatch("invalidReferenceWithComponent"::equals);
+                if(isLineCheckerRecusrsiveReference && isErrorInvalidReferenceWithComponent){
+                    return List.of();
+                }
                 List<ValidationCheckResult> vcrs = validationCheckResults.getValidations().stream().filter(ValidationCheckResult::isError).toList();
                 vcrs.stream()
                         .map(vcr -> new CsvRowValidationCheckResult(vcr, rowWithReferenceDatum.lineNumber()))
