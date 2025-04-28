@@ -386,14 +386,14 @@ public class OreSiResourcesTest {
                     .andExpect(result -> {
                         final List<String> expected = """
                                 "tze_type_nom";"zet_chemin_parent";"definition";"Site name";"zet_nom_key"
-                                "Watershed";"";"Watershed Nivelle";"Nivelle";"nivelle"
                                 "Watershed";"";"Oir catchment";"Oir";"oir"
+                                "Watershed";"";"Watershed Nivelle";"Nivelle";"nivelle"
                                 "Watershed";"";"Watershed Scarff";"Scarff";"scarff"
-                                "Platform";"- Nivelle";"";"P1";"p1"
+                                "Platform";"- Oir";"";"P2";"p2"
                                 "Platform";"- Oir";"";"P1";"p1"
                                 "Platform";"NULL_KEY__oir - P1";"";"A";"a"
                                 "Platform";"NULL_KEY__oir - P1";"";"B";"b"
-                                "Platform";"- Oir";"";"P2";"p2"
+                                "Platform";"- Nivelle";"";"P1";"p1"
                                 "Platform";"- Scarff";"";"P1";"p1\""""
                                 .lines().collect(Collectors.toCollection(LinkedList::new));
                         final List<String> actual = new String(result.getResponse().getContentAsByteArray())

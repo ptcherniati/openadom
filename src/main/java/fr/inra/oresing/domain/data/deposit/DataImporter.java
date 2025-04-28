@@ -85,6 +85,8 @@ public class DataImporter {
      * </ul>
      */
     private static List<ReferenceDatumAfterChecking> check(
+            Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
+            RecursionStrategy recursionStrategy,
             final RowWithReferenceDatum rowWithReferenceDatum,
             final ImmutableSet<LineChecker> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder) {
@@ -144,16 +146,15 @@ public class DataImporter {
             }
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
-        return List.of(
-                new ReferenceDatumAfterChecking(
-                        rowWithReferenceDatum.lineNumber(),
-                        rowWithReferenceDatum.patternColumnName(),
-                        rowWithReferenceDatum.referenceDatum(),
-                        referenceDatum,
-                        ImmutableMap.copyOf(refsLinkedTo),
-                        allCheckerErrorsBuilder.build()
-                )
+        ReferenceDatumAfterChecking referenceDatumAfterChecking = new ReferenceDatumAfterChecking(
+                rowWithReferenceDatum.lineNumber(),
+                rowWithReferenceDatum.patternColumnName(),
+                rowWithReferenceDatum.referenceDatum(),
+                referenceDatum,
+                ImmutableMap.copyOf(refsLinkedTo),
+                allCheckerErrorsBuilder.build()
         );
+        return recursionStrategy.testHasParent(buildKey, recursionStrategy, referenceDatumAfterChecking);
     }
 
     private static CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
@@ -259,11 +260,18 @@ public class DataImporter {
                         .map(dataHeaderReader::addConstantsToRow)
                         .map(this::computeComputedColumns);
         Stream<RowWithReferenceDatum> recordStream = recordStreamBeforePreloading;//recursionStrategy.firstPass(recordStreamBeforePreloading);
-        final ImmutableSet<LineChecker> transformedLineCheckers = buildLineCheckers(dataHeaderReader.constantValues().values());
+        dataImporterContext.setTransformedLineCheckers(buildLineCheckers(dataHeaderReader.constantValues().values()));
         Stream<DataValue> referenceValuesStream = recordStream
                 //.parallel()
                 .filter(rowWithReferenceDatum -> allErrors.canRegisterErrors())
-                .map(rowWithReferenceDatum -> check(rowWithReferenceDatum, transformedLineCheckers, dataImporterContext.getPublishContextBuilder()))
+                .map(rowWithReferenceDatum -> check(
+                                this::computeKeys,
+                                recursionStrategy,
+                                rowWithReferenceDatum,
+                                dataImporterContext.getTransformedLineCheckers(),
+                                dataImporterContext.getPublishContextBuilder()
+                        )
+                )
                 .flatMap(List::stream)
                 .peek(referenceDatumAfterChecking -> allErrors.addAll(referenceDatumAfterChecking.errors()))
                 .filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.errors().isEmpty())
@@ -274,9 +282,9 @@ public class DataImporter {
                     return encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                 })
                 .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
-        if (dataImporterContext.isRecursive()) {
+        /*if (dataImporterContext.isRecursive()) {
             referenceValuesStream = referenceValuesStream.sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
-        }
+        }*/
         //referenceValuesStream.sequential();
         storeAll(referenceValuesStream);
 
@@ -603,7 +611,8 @@ public class DataImporter {
                 final String parentColumn = parentNode.get().node().componentKey();
                 if (referenceDatum.contains(new DataColumn(parentColumn))) {
                     final DataColumnValue referenceParentColumn = referenceDatum.get(new DataColumn(parentColumn));
-                    return getHierarchicalNodeFromNatural(((DataColumnSingleValue) referenceParentColumn).getValue().getValue().toString(), parentReference);
+                    String hierarchicParentNode = ((DataColumnSingleValue) referenceParentColumn).getValue().getValue().toString();
+                    return Strings.isNullOrEmpty(hierarchicParentNode)?null:getHierarchicalNodeFromNatural(hierarchicParentNode, parentReference);
                 }
             }
             return null;
@@ -615,6 +624,7 @@ public class DataImporter {
 
         Stream<RowWithReferenceDatum> firstPass(Stream<RowWithReferenceDatum> streamBeforePreloading);
 
+        List<ReferenceDatumAfterChecking> testHasParent(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ReferenceDatumAfterChecking referenceDatumAfterChecking);
     }
 
     public record PatternValueForHeader(String header, String cellContent, List<String> adjacentCellContent,
@@ -646,7 +656,7 @@ public class DataImporter {
          * When we have the hierarchical key, we can recover the natural key as the leaf of the ltree.
          * In this case you must remove the reference to the data type "[^\\.][a-z][a-z]*K"
          */
-        public static final Function<Ltree, Ltree> fromNaturalKey = nk -> Ltree.fromSql(nk.getSql().replaceAll("[^\\.][a-z][a-z]*K", ""));
+        //public static final Function<Ltree, Ltree> fromNaturalKey = nk -> Ltree.fromSql(nk.getSql().replaceAll("[^\\.][a-z][a-z]*K", ""));
 
         public WithRecursion(final DataImporterContext dataImporterContext) {
             this(dataImporterContext, new HashMap<>(), new HashMap<>());
@@ -694,14 +704,21 @@ public class DataImporter {
         @Override
         public Optional<UUID> getKnownId(final Ltree naturalKey) {
             return afterPreloadReferenceUuids().entrySet().stream()
-                    .filter(entry -> entry.getKey().naturalKey().equals(fromNaturalKey.apply(naturalKey)))
+                    .filter(entry -> entry.getKey().naturalKey().equals(naturalKey))
                     .map(Map.Entry::getValue)
                     .findFirst();
         }
 
         @Override
         public Ltree getHierarchicalKey(final Ltree naturalKey, final DataDatum referenceDatum, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-            final Ltree recursiveNaturalKey = getRecursiveNaturalKey(naturalKey);
+            Optional<DataValue.LineIdentityColumnName> registerId = afterPreloadReferenceUuids().keySet()
+                    .stream()
+                    .filter(lineIdentityColumnName -> lineIdentityColumnName.naturalKey().equals(naturalKey))
+                    .findFirst();
+            if(registerId.isPresent()) {
+                return registerId.get().hierarchicalKey();
+            }
+            final Ltree recursiveNodeHierarchicalKey = recursiveNodeHierarchicalKey(naturalKey);
             String parentType = dataImporterContext()
                     .getDataDescription()
                     .findParentDescription(dataImporterContext().getRefType())
@@ -719,19 +736,20 @@ public class DataImporter {
                     .map(Object::toString)
                     .map(Ltree::fromSql)
                     .map(toNaturalKey(parentType));
-            Ltree hierarchicalKey = recursiveNaturalKey;
+            Ltree parentRecursiveValue =
+                    getParentNaturalKey(dataImporterContext().getRefType(), referenceDatumAfterChecking.referenceDatumBeforeChecking());
+            Ltree hierarchicalKey = recursiveNodeHierarchicalKey;
+            if(parentRecursiveValue!=null){
+                hierarchicalKey = Ltree.join(parentRecursiveValue, hierarchicalKey);
+            }
             if (parentValue.isPresent()) {
-                hierarchicalKey = Ltree.join(parentValue.get(), recursiveNaturalKey);
+                hierarchicalKey = Ltree.join(parentValue.get(), hierarchicalKey);
             }
             return hierarchicalKey;
         }
 
-        private Ltree getRecursiveNaturalKey(final Ltree naturalKey) {
-            return afterPreloadReferenceUuids().keySet().stream()
-                    .filter(lineIdentityColumnName -> fromNaturalKey.apply(naturalKey).equals(lineIdentityColumnName.naturalKey()))
-                    .map(DataValue.LineIdentityColumnName::hierarchicalKey)
-                    .findFirst()
-                    .orElse(naturalKey);
+        private Ltree recursiveNodeHierarchicalKey(final Ltree naturalKey) {
+            return Ltree.fromSql("%sK%s".formatted(dataImporterContext().getRefType(), naturalKey));
         }
 
         @Override
@@ -787,12 +805,53 @@ public class DataImporter {
             return collect.stream();
         }
 
+        @Override
+        public List<ReferenceDatumAfterChecking> testHasParent(
+                Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
+                RecursionStrategy recursionStrategy,
+                ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+            KeysAndReferenceDatumAfterChecking keys = buildKey.apply(referenceDatumAfterChecking);
+            Optional<UUID> knownId = recursionStrategy.getKnownId(keys.naturalKey());
+            DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keys.naturalKey(), keys.hierarchicalKey());
+            if (knownId.isEmpty()) {
+                afterPreloadReferenceUuids().put(key, UUID.randomUUID());
+                knownId = recursionStrategy.getKnownId(keys.naturalKey());
+            }
+            final UUID uuid = knownId.orElse(null);
+            ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues =
+                    dataImporterContext().getTransformedLineCheckers().stream()
+                    .filter(lineChecker -> {
+                        if(lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker){
+                            return referenceChecker.isRecursive();
+                        }
+                        return false;
+                    })
+                    .map(LineChecker::fieldTypeForOne)
+                    .filter(ReferenceType.class::isInstance)
+                    .map(ReferenceType.class::cast)
+                    .findFirst()
+                    .map(referenceType ->
+                            ImmutableMap.<DataValue.LineIdentityColumnName, ImmutableSet<UUID>>builder()
+                                    .putAll(referenceType.getReferenceValues())
+                                    .put(key, ImmutableSet.of(uuid))
+                                    .build()
+                    )
+                    .orElse(null);
+            for (LineChecker lineChecker : dataImporterContext().getTransformedLineCheckers()){
+                if(lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.isRecursive()){
+                    ReferenceType fieldType = (ReferenceType) lineChecker.fieldTypeForOne();
+                    fieldType.setReferenceValues(referenceValues);
+                }
+            }
+            return List.of(referenceDatumAfterChecking);
+        }
+
         private Map.Entry<DataValue.LineIdentityColumnName, UUID> buildEntryWithHierarchicalKey(Map.Entry<DataValue.LineIdentityColumnName, UUID> lineIdentityColumnNameUUIDEntry) {
             Ltree child = lineIdentityColumnNameUUIDEntry.getKey().naturalKey();
             Ltree currentChild = toNaturalKey(dataImporterContext().getRefType()).apply(child);
             Ltree hierarchicalKey = currentChild;
             Function<Ltree, Ltree> getParent = achild -> parentReferenceMap().entrySet().stream()
-                    .filter(entry -> entry.getKey().naturalKey().equals(fromNaturalKey.apply(achild)))
+                    .filter(entry -> entry.getKey().naturalKey().equals(achild))
                     .map(Map.Entry::getValue)
                     .map(toNaturalKey(dataImporterContext().getRefType()))
                     .findFirst()
@@ -909,6 +968,11 @@ public class DataImporter {
         @Override
         public Stream<RowWithReferenceDatum> firstPass(final Stream<RowWithReferenceDatum> streamBeforePreloading) {
             return streamBeforePreloading;
+        }
+
+        @Override
+        public List<ReferenceDatumAfterChecking> testHasParent(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+            return List.of(referenceDatumAfterChecking);
         }
     }
 }

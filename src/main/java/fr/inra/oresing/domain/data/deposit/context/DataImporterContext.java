@@ -44,6 +44,7 @@ public class DataImporterContext {
      */
     private final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences;
     private final ImmutableSet<Column> columns;
+    private ImmutableSet<LineChecker> transformedLineCheckers;
 
     public List<ReferenceScope.NodeDescription> getNodesForMenu() {
         return nodesForMenu;
@@ -304,5 +305,13 @@ public class DataImporterContext {
                 .stream()
                 .map(getimportHeader)
                 .toList();
+    }
+
+    public void setTransformedLineCheckers(ImmutableSet<LineChecker> transformedLineCheckers) {
+        this.transformedLineCheckers= lineCheckers;
+    }
+
+    public ImmutableSet<LineChecker> getTransformedLineCheckers() {
+        return transformedLineCheckers;
     }
 }

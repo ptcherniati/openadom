@@ -95,7 +95,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
         final CheckerTarget target = lineChecker.target();
 
         value = Ltree.fromSql(localRawValue);
-        Predicate<DataValue.LineIdentityColumnName> matchesValue = v -> DataImporter.WithRecursion.fromNaturalKey.apply(v.naturalKey()).equals(value);
+        Predicate<DataValue.LineIdentityColumnName> matchesValue = v -> v.naturalKey().equals(value);
         Optional<DataValue.LineIdentityColumnName> optionalKey = referenceValues.keySet().stream()
                 .filter(matchesValue)
                 .findFirst();
