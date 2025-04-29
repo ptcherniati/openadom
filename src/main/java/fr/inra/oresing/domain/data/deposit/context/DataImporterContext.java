@@ -7,10 +7,12 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.context.column.PatternColumnFactory;
@@ -46,6 +48,10 @@ public class DataImporterContext {
     private final ImmutableSet<Column> columns;
     private ImmutableSet<LineChecker> transformedLineCheckers;
 
+    public void setReferenceValuesForSelfType(Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType) {
+        this.referenceValuesForSelfType = referenceValuesForSelfType;
+    }
+
     public Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType() {
         return referenceValuesForSelfType;
     }
@@ -71,6 +77,24 @@ public class DataImporterContext {
     final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey;
     final boolean allowUnexpectedColumns;
     private final PublishContext.PublishContextBuilder publishContextBuilder;
+    private final Map<Ltree, List<DataImporter.RowWithReferenceDatum>> missingParentLines = new HashMap<>();
+
+    public Map<DataValue.LineIdentityColumnName, UUID> getAfterPreloadReferenceUuids() {
+        return afterPreloadReferenceUuids;
+    }
+
+    public Optional<UUID> getKnownId(final Ltree naturalKey) {
+        return getAfterPreloadReferenceUuids().entrySet().stream()
+                .filter(entry -> entry.getKey().naturalKey().equals(naturalKey))
+                .map(Map.Entry::getValue)
+                .findFirst();
+    }
+
+    public void setAfterPreloadReferenceUuids(Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids) {
+        this.afterPreloadReferenceUuids = afterPreloadReferenceUuids;
+    }
+
+    private Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = new HashMap<>();
 
     public DataImporterContext(final ContextConstants constants,
                                final ImmutableSet<LineChecker> lineCheckers,
@@ -321,5 +345,30 @@ public class DataImporterContext {
 
     public ImmutableSet<LineChecker> getTransformedLineCheckers() {
         return transformedLineCheckers;
+    }
+
+    public void addKnownIdToReferenceValues(DataValue.LineIdentityColumnName key, UUID uuid) {
+        Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType = getReferenceValuesForSelfType();
+        Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = new HashMap<>(referenceValuesForSelfType);
+        if (!referenceValues.containsKey(key)) {
+            referenceValues.put(key, ImmutableSet.of(uuid));
+        }
+        setReferenceValuesForSelfType(ImmutableMap.copyOf(referenceValues));
+        for (LineChecker lineChecker : getTransformedLineCheckers()) {
+            if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(getRefType())) {
+                ReferenceType fieldType = (ReferenceType) lineChecker.fieldTypeForOne();
+                fieldType.setReferenceValues(ImmutableMap.copyOf(referenceValues));
+            }
+        }
+    }
+
+    public void registerMissingLine(Ltree hierarchicalParentKey, DataImporter.RowWithReferenceDatum rowWithReferenceDatum) {
+        this.missingParentLines
+                .computeIfAbsent(hierarchicalParentKey, k -> new LinkedList<>())
+                .add(rowWithReferenceDatum);
+    }
+
+    public Map<Ltree, List<DataImporter.RowWithReferenceDatum>> getMissingLines() {
+        return this.missingParentLines;
     }
 }

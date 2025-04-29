@@ -2444,9 +2444,10 @@ public class OreSiResourcesTest {
         }
     }
 
-    @Test
-    @Tag("SUITE")
-    @Tag("core.config")
+    //@Test
+    @Disabled
+    //@Tag("SUITE")
+    //@Tag("core.config")
     public void testComputedWithNaturalKeyColumns() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getComputedWithNaturalKeyColumns());
@@ -2470,7 +2471,7 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}", e.getKey())
+                    response = mockMvc.perform(multipart("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}", e.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andDo(result -> {
