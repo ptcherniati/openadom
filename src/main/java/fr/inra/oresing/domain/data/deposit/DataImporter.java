@@ -10,6 +10,7 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.GroovyExpressionChecker;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
+import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.DateType;
@@ -30,7 +31,6 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.internationalization.InternationalizationDisplay;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -157,19 +157,15 @@ public class DataImporter {
                             .map(FieldType::getValue)
                             .map(Object::toString)
                             .map(Ltree::fromUnescapedString)
-                            .ifPresent(hierarchicalParentKey -> {
-                                        recursionStrategy.dataImporterContext()
-                                                .registerMissingLine(hierarchicalParentKey, rowWithReferenceDatum);
-                                    }
+                            .ifPresent(hierarchicalParentKey -> recursionStrategy.dataImporterContext()
+                                    .registerMissingLine(hierarchicalParentKey, rowWithReferenceDatum)
                             );
                     return List.of();
                 }
                 List<ValidationCheckResult> vcrs = validationCheckResults.getValidations().stream().filter(ValidationCheckResult::isError).toList();
                 vcrs.stream()
                         .map(vcr -> new CsvRowValidationCheckResult(vcr, rowWithReferenceDatum.lineNumber()))
-                        .forEach(element -> {
-                            allCheckerErrorsBuilder.add(element);
-                        });
+                        .forEach(allCheckerErrorsBuilder::add);
             }
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
@@ -188,13 +184,13 @@ public class DataImporter {
                 .build();
         addBuildedLineKeysToReferenceValues(buildKey, recursionStrategy, referenceDatumAfterCheckings, referenceDatumAfterChecking);
         recursionStrategy.dataImporterContext().getMissingLines().remove(referenceDatumAfterChecking);
-        referenceDatumAfterCheckings.stream()
+        referenceDatumAfterCheckings
                 .forEach(recursionStrategy.dataImporterContext().getMissingLines()::remove);
         return referenceDatumAfterCheckings;
     }
 
     private static List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        if (recursionStrategy instanceof WithRecursion withRecursion) {
+        if (recursionStrategy instanceof WithRecursion) {
             List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = recursionStrategy.testHasParent(buildKey, recursionStrategy, referenceDatumAfterChecking);
             KeysAndReferenceDatumAfterChecking lineKey = buildKey.apply(referenceDatumAfterChecking);
             Map<Ltree, List<RowWithReferenceDatum>> missingLines = recursionStrategy.dataImporterContext().getMissingLines();
@@ -383,24 +379,29 @@ public class DataImporter {
         final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         if (!recursionStrategy.dataImporterContext().getMissingLines().isEmpty()) {
-            recursionStrategy.dataImporterContext()
-                    .getTransformedLineCheckers().stream()
-                    .filter(lineChecker -> lineChecker.fieldTypeForOne() instanceof ReferenceType referenceType)
-                    .filter(lineChecker -> lineChecker.target().column().equals(Column.__VALUE__));
-            /*ReferenceValidationCheckResult.error(
-                    null,//target,
-                    null,//localRawValue,
-                    null,//target.getInternationalizedKey("invalidReference"),
+            Optional<ReferenceType> referenceType = dataImporterContext.getTransformedLineCheckers().stream()
+                    .filter(lineChecker -> lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.isRecursive())
+                    .map(LineChecker::fieldTypeForOne)
+                    .filter(ReferenceType.class::isInstance)
+                    .map(ReferenceType.class::cast)
+                    .filter(rt -> rt.getRefType().equals(dataImporterContext.getRefType()))
+                    .findAny();
+            CheckerTarget target = referenceType.get().target();
+            ReferenceValidationCheckResult error = ReferenceValidationCheckResult.error(
+                    target,//target,
+                    recursionStrategy.dataImporterContext().getMissingLines().keySet().toString(),//localRawValue,
+                    target.getInternationalizedKey("missingrecursiveParentReference"),
                     ImmutableMap.of(
-                            "target", null,//target.toHumanReadableString(),
-                            "referenceValues", recursionStrategy.dataImporterContext().getReferenceValuesForSelfType(),
+                            "target", target,//target.toHumanReadableString(),
+                            "referenceValues", recursionStrategy.dataImporterContext().getReferenceValuesForSelfType()
+                                    .keySet()
+                                    .stream()
+                                    .map(DataValue.LineIdentityColumnName::naturalKey)
+                                    .collect(Collectors.toSet()),
                             "refType", recursionStrategy.dataImporterContext().getRefType(),
                             "values", recursionStrategy.dataImporterContext().getMissingLines().keySet()),
-                    null);*/
-            for (Ltree ltree : recursionStrategy.dataImporterContext().getMissingLines().keySet()) {
-                System.out.println("oulala pas bon du tour ca");
-
-            }
+                    null);
+            allErrors.add(new CsvRowValidationCheckResult(error, -1));
         }
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
     }
@@ -715,6 +716,7 @@ public class DataImporter {
         DataImporterContext dataImporterContext();
 
         Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking);
+
         List<ReferenceDatumAfterChecking> testHasParent(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ReferenceDatumAfterChecking referenceDatumAfterChecking);
     }
 
@@ -861,48 +863,7 @@ public class DataImporter {
                 dataImporterContext().getAfterPreloadReferenceUuids().put(key, UUID.randomUUID());
                 knownId = dataImporterContext().getKnownId(keys.naturalKey());
             }
-            final UUID uuid = knownId.orElse(null);
-            //addKnownIdToreferenceValues(key, uuid);
             return List.of(referenceDatumAfterChecking);
-        }
-
-        private Map.Entry<DataValue.LineIdentityColumnName, UUID> buildEntryWithHierarchicalKey(Map.Entry<DataValue.LineIdentityColumnName, UUID> lineIdentityColumnNameUUIDEntry) {
-            Ltree child = lineIdentityColumnNameUUIDEntry.getKey().naturalKey();
-            Ltree currentChild = toNaturalKey(dataImporterContext().getRefType()).apply(child);
-            Ltree hierarchicalKey = currentChild;
-            Function<Ltree, Ltree> getParent = achild -> parentReferenceMap().entrySet().stream()
-                    .filter(entry -> entry.getKey().naturalKey().equals(achild))
-                    .map(Map.Entry::getValue)
-                    .map(toNaturalKey(dataImporterContext().getRefType()))
-                    .findFirst()
-                    .orElse(null);
-            Ltree parent = getParent.apply(child);
-            while (parent != null) {
-                hierarchicalKey = Ltree.join(parent, hierarchicalKey);
-                currentChild = parent;
-                parent = getParent.apply(currentChild);
-            }
-            DataValue.LineIdentityColumnName lineIdentityColumnName = new DataValue.LineIdentityColumnName(child, hierarchicalKey);
-            return new AbstractMap.SimpleEntry<>(lineIdentityColumnName, lineIdentityColumnNameUUIDEntry.getValue());
-        }
-
-        private void testIfMissingParentKey(RowWithReferenceDatum rowWithReferenceDatum, String parentKeyAsString, DataValue.LineIdentityColumnName naturalKey, ListMultimap<Ltree, Long> missingParentReferences) {
-            if (!Strings.isNullOrEmpty(parentKeyAsString)) {
-                final Ltree parentKey = Ltree.fromUnescapedString(parentKeyAsString);
-                parentReferenceMap().putIfAbsent(naturalKey, parentKey);
-                if (dataImporterContext().getAfterPreloadReferenceUuids().keySet().stream()
-                        .map(DataValue.LineIdentityColumnName::naturalKey)
-                        .noneMatch(nk -> nk.equals(parentKey))) {
-                    UUID uuid = UUID.randomUUID();
-                    DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(parentKey, parentKey);
-                    if (dataImporterContext().getAfterPreloadReferenceUuids().keySet().stream()
-                            .map(DataValue.LineIdentityColumnName::naturalKey)
-                            .noneMatch(nk -> naturalKey.naturalKey().equals(key.naturalKey()))) {
-                        dataImporterContext().getAfterPreloadReferenceUuids().putIfAbsent(key, uuid);//TODO
-                    }
-                    missingParentReferences.put(parentKey, rowWithReferenceDatum.lineNumber());
-                }
-            }
         }
 
         /**
