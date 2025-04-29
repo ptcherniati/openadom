@@ -177,14 +177,19 @@ public class DataImporter {
                 ImmutableMap.copyOf(refsLinkedTo),
                 allCheckerErrorsBuilder.build()
         );
-        addBuildedLineKeysToReferenceValues(buildKey, recursionStrategy, referenceDatumAfterChecking);
-        List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = testLinesRegardingRecursivity(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
+        List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = List.of();
+        if (recursionStrategy instanceof WithRecursion) {
+            addBuildedLineKeysToReferenceValues(buildKey, recursionStrategy, referenceDatumAfterChecking);
+            referenceDatumAfterCheckings = testLinesRegardingRecursivity(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
+        }
         referenceDatumAfterCheckings = ImmutableList.<ReferenceDatumAfterChecking>builder()
                 .add(referenceDatumAfterChecking)
                 .addAll(referenceDatumAfterCheckings)
                 .build();
-        recursionStrategy.dataImporterContext() .getMissingLines()
-                .remove(buildKey.apply(referenceDatumAfterChecking).naturalKey());
+        if (recursionStrategy instanceof WithRecursion) {
+            recursionStrategy.dataImporterContext().getMissingLines()
+                    .remove(buildKey.apply(referenceDatumAfterChecking).naturalKey());
+        }
         return referenceDatumAfterCheckings;
     }
 
