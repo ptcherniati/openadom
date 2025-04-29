@@ -23,6 +23,8 @@ import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.codehaus.groovy.util.SingleKeyHashMap;
 
 import java.util.*;
 import java.util.function.Function;
@@ -48,26 +50,6 @@ public class DataImporterContext {
     private final ImmutableSet<Column> columns;
     private ImmutableSet<LineChecker> transformedLineCheckers;
 
-    public void setReferenceValuesForSelfType(Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType) {
-        this.referenceValuesForSelfType = referenceValuesForSelfType;
-    }
-
-    public Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType() {
-        return referenceValuesForSelfType;
-    }
-
-    private Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType = Map.of();
-
-    public List<ReferenceScope.NodeDescription> getNodesForMenu() {
-        return nodesForMenu;
-    }
-
-    private final List<ReferenceScope.NodeDescription> nodesForMenu;
-
-    public ImmutableSet<Column> getColumnsWithPatternColumns() {
-        return columnsWithPatternColumns;
-    }
-
     private ImmutableSet<Column> columnsWithPatternColumns;
     @Getter
     private final PatternColumnFactory patternColumnFactory;
@@ -76,8 +58,10 @@ public class DataImporterContext {
     final Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey;
     final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey;
     final boolean allowUnexpectedColumns;
+    private final List<ReferenceScope.NodeDescription> nodesForMenu;
     private final PublishContext.PublishContextBuilder publishContextBuilder;
     private final Map<Ltree, List<DataImporter.RowWithReferenceDatum>> missingParentLines = new HashMap<>();
+    private Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = new HashMap<>();
 
     public Map<DataValue.LineIdentityColumnName, UUID> getAfterPreloadReferenceUuids() {
         return afterPreloadReferenceUuids;
@@ -94,7 +78,31 @@ public class DataImporterContext {
         this.afterPreloadReferenceUuids = afterPreloadReferenceUuids;
     }
 
-    private Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = new HashMap<>();
+    public void setReferenceValuesForSelfType(Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType) {
+        Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = referenceValuesForSelfType.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream().findFirst().orElse(UUID.randomUUID())
+                ));
+        setAfterPreloadReferenceUuids(afterPreloadReferenceUuids);
+    }
+
+    public Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType() {
+        return getAfterPreloadReferenceUuids().entrySet()
+                .stream().collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> ImmutableSet.of(entry.getValue())
+                ));
+    }
+
+
+    public List<ReferenceScope.NodeDescription> getNodesForMenu() {
+        return nodesForMenu;
+    }
+
+    public ImmutableSet<Column> getColumnsWithPatternColumns() {
+        return columnsWithPatternColumns;
+    }
 
     public DataImporterContext(final ContextConstants constants,
                                final ImmutableSet<LineChecker> lineCheckers,
@@ -331,15 +339,15 @@ public class DataImporterContext {
     }
 
     public void setTransformedLineCheckers(ImmutableSet<LineChecker> transformedLineCheckers) {
-        this.referenceValuesForSelfType =
-                transformedLineCheckers.stream()
-                        .map(LineChecker::fieldTypeForOne)
-                        .filter(ReferenceType.class::isInstance)
-                        .map(ReferenceType.class::cast)
-                        .filter(referenceType -> referenceType.getRefType().equals(getRefType()))
-                        .findAny()
-                        .map(ReferenceType::getReferenceValues)
-                        .orElseGet(ImmutableMap::of);
+        ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = transformedLineCheckers.stream()
+                .map(LineChecker::fieldTypeForOne)
+                .filter(ReferenceType.class::isInstance)
+                .map(ReferenceType.class::cast)
+                .filter(referenceType -> referenceType.getRefType().equals(getRefType()))
+                .findAny()
+                .map(ReferenceType::getReferenceValues)
+                .orElseGet(ImmutableMap::of);
+        setReferenceValuesForSelfType(referenceValues);
         this.transformedLineCheckers = lineCheckers;
     }
 

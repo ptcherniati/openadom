@@ -177,15 +177,14 @@ public class DataImporter {
                 ImmutableMap.copyOf(refsLinkedTo),
                 allCheckerErrorsBuilder.build()
         );
+        addBuildedLineKeysToReferenceValues(buildKey, recursionStrategy, referenceDatumAfterChecking);
         List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = testLinesRegardingRecursivity(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
         referenceDatumAfterCheckings = ImmutableList.<ReferenceDatumAfterChecking>builder()
                 .add(referenceDatumAfterChecking)
                 .addAll(referenceDatumAfterCheckings)
                 .build();
-        addBuildedLineKeysToReferenceValues(buildKey, recursionStrategy, referenceDatumAfterCheckings, referenceDatumAfterChecking);
-        recursionStrategy.dataImporterContext().getMissingLines().remove(referenceDatumAfterChecking);
-        referenceDatumAfterCheckings
-                .forEach(recursionStrategy.dataImporterContext().getMissingLines()::remove);
+        recursionStrategy.dataImporterContext() .getMissingLines()
+                .remove(buildKey.apply(referenceDatumAfterChecking).naturalKey());
         return referenceDatumAfterCheckings;
     }
 
@@ -222,28 +221,25 @@ public class DataImporter {
 
     private static void addBuildedLineKeysToReferenceValues(
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
-            RecursionStrategy recursionStrategy, List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings,
+            RecursionStrategy recursionStrategy,
             ReferenceDatumAfterChecking referenceDatumAfterChecking
     ) {
-        referenceDatumAfterCheckings.stream()
-                .forEach(referenceDatumAfterChecking1 -> {
-                    KeysAndReferenceDatumAfterChecking keyForLine = buildKey.apply(referenceDatumAfterChecking);
-                    DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keyForLine.naturalKey(), keyForLine.hierarchicalKey());
+        KeysAndReferenceDatumAfterChecking keyForLine = buildKey.apply(referenceDatumAfterChecking);
+        DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keyForLine.naturalKey(), keyForLine.hierarchicalKey());
 
-                    recursionStrategy.dataImporterContext().getKnownId(keyForLine.naturalKey())
-                            .or(() -> {
-                                UUID newUuid = UUID.randomUUID();
-                                recursionStrategy.dataImporterContext().addKnownIdToReferenceValues(
-                                        key,
-                                        newUuid
-                                );
-                                return Optional.of(newUuid);
-                            })
-                            .ifPresent(uuid -> recursionStrategy.dataImporterContext().addKnownIdToReferenceValues(
-                                    key,
-                                    uuid
-                            ));
-                });
+        recursionStrategy.dataImporterContext().getKnownId(keyForLine.naturalKey())
+                .or(() -> {
+                    UUID newUuid = UUID.randomUUID();
+                    recursionStrategy.dataImporterContext().addKnownIdToReferenceValues(
+                            key,
+                            newUuid
+                    );
+                    return Optional.of(newUuid);
+                })
+                .ifPresent(uuid -> recursionStrategy.dataImporterContext().addKnownIdToReferenceValues(
+                        key,
+                        uuid
+                ));
     }
 
     private static CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
