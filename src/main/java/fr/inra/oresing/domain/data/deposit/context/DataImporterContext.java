@@ -46,6 +46,12 @@ public class DataImporterContext {
     private final ImmutableSet<Column> columns;
     private ImmutableSet<LineChecker> transformedLineCheckers;
 
+    public Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType() {
+        return referenceValuesForSelfType;
+    }
+
+    private Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType = Map.of();
+
     public List<ReferenceScope.NodeDescription> getNodesForMenu() {
         return nodesForMenu;
     }
@@ -106,7 +112,6 @@ public class DataImporterContext {
 
     /**
      * Séparateur pour les clés naturelles composites.
-     *
      */
     public static String getCompositeNaturalKeyComponentsSeparator() {
         return COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR;
@@ -118,7 +123,6 @@ public class DataImporterContext {
 
     /**
      * Crée une clé hiérarchique
-     *
      */
     public Ltree newHierarchicalKey(final Ltree recursiveNaturalKey, final DataDatum referenceDatum) {
         return getHierarchicalKeyFactory().newHierarchicalKey(recursiveNaturalKey, referenceDatum);
@@ -130,7 +134,6 @@ public class DataImporterContext {
 
     /**
      * Les colonnes dont les valeurs composent la clé naturelle composite de chaque ligne pour ce référentiel
-     *
      */
     public ImmutableList<DataColumn> getKeyColumns() {
         Preconditions.checkState(CollectionUtils.isNotEmpty(getDataDescription().naturalKey()), ExceptionMessage.MISSING_PRIMARY_KEY_COMPONENT.toMessage(), getRefType());
@@ -151,7 +154,6 @@ public class DataImporterContext {
 
     /**
      * Si le référentiel contient des colonnes qui font références à d'autres lignes de ce même référentiel
-     *
      */
     public boolean isRecursive() {
         return getRecursiveComponentDescription().isPresent();
@@ -159,7 +161,6 @@ public class DataImporterContext {
 
     /**
      * Pour un référentiel récursif, indique la colonne dans laquelle la valeur est la clé vers le parent de la ligne courante
-     *
      */
     public DataColumn getColumnToLookForParentKey() {
         Preconditions.checkState(isRecursive());
@@ -172,7 +173,6 @@ public class DataImporterContext {
 
     /**
      * Le séparateur à utiliser pour distinguer les cellules du fichier CSV
-     *
      */
     public char getCsvSeparator() {
         return getDataDescription().separator();
@@ -184,7 +184,6 @@ public class DataImporterContext {
 
     /**
      * Dans le cas d'un référentiel récursif, le {@link ReferenceType} qui porte sur la colonne contenant des valeurs faisant référence à d'autres lignes du référentiel.
-     *
      */
     public LineChecker getReferenceLineChecker() {
         Preconditions.checkState(isRecursive());
@@ -201,7 +200,7 @@ public class DataImporterContext {
     }
 
     public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(final Ltree hierarchicalKey) {
-        if(storedReferences==null){
+        if (storedReferences == null) {
             return Optional.empty();
         }
         return storedReferences.entrySet().stream()
@@ -267,14 +266,14 @@ public class DataImporterContext {
         return Optional.ofNullable(constants.displayPattern());
     }
 
-       public String getParent() {
+    public String getParent() {
         return constants.hierarchicalKeyFactory().parent();
     }
 
     public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue> constantColumnsValues) {
         return columnsWithPatternColumns.stream()
-                .map(registeredColumn->registeredColumn.as(column.column()))
-                .anyMatch(Objects::nonNull)||
+                .map(registeredColumn -> registeredColumn.as(column.column()))
+                .anyMatch(Objects::nonNull) ||
                 constantColumnsValues.keySet().stream()
                         .map(DataColumn::column)
                         .anyMatch(c -> c.equals(column.column()));
@@ -308,7 +307,16 @@ public class DataImporterContext {
     }
 
     public void setTransformedLineCheckers(ImmutableSet<LineChecker> transformedLineCheckers) {
-        this.transformedLineCheckers= lineCheckers;
+        this.referenceValuesForSelfType =
+                transformedLineCheckers.stream()
+                        .map(LineChecker::fieldTypeForOne)
+                        .filter(ReferenceType.class::isInstance)
+                        .map(ReferenceType.class::cast)
+                        .filter(referenceType -> referenceType.getRefType().equals(getRefType()))
+                        .findAny()
+                        .map(ReferenceType::getReferenceValues)
+                        .orElseGet(ImmutableMap::of);
+        this.transformedLineCheckers = lineCheckers;
     }
 
     public ImmutableSet<LineChecker> getTransformedLineCheckers() {
