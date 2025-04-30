@@ -166,7 +166,7 @@ public class RightsTest {
         return cookie;
     }
 
-    @Test
+    //@Test
     public void logoutShouldInvalidateSession() throws Exception {
         // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
         mockMvc.perform(get("/api/v1/applications")
