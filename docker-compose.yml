@@ -22,7 +22,7 @@ services:
     networks:
       - default
   pgadmin:
-    image: dpage/pgadmin4:9.1
+    image: dpage/pgadmin4:9.2
     ports:
       - "8083:80"
     volumes:
@@ -41,7 +41,7 @@ services:
   grafana:
     image: grafana/grafana:10.4.4-ubuntu
     ports:
-      - 3000:3000
+      - "3000:3000"
     environment:
       GF_LOG_LEVEL: debug
       GF_AUTH_POSTGRES_ENABLED: "true"
@@ -70,7 +70,7 @@ services:
   renderer:
     image: grafana/grafana-image-renderer:latest
     ports:
-      - 8081
+      - "8081"
     networks:
       - default
 volumes:

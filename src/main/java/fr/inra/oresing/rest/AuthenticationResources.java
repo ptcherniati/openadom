@@ -1,14 +1,10 @@
 package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForNotConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
@@ -25,9 +21,14 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
@@ -37,15 +38,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
-import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_USER_CONNECTED;
-
 @RestController
 @RequestMapping("/api/v1")
 public class AuthenticationResources implements ServiceContainerBean {
     private ServiceContainer serviceContainer;
-
-    @Autowired
-    private AuthHelper authHelper;
 
     @Autowired
     protected AuthenticationService authenticationService;
@@ -57,7 +53,7 @@ public class AuthenticationResources implements ServiceContainerBean {
     @Operation(
             summary = "Connexion utilisateur",
             description = "Authentifie un utilisateur et retourne un token JWT dans le cookie. " +
-                          "Ce cookie est à passer dans tout appel au serveur",
+                    "Ce cookie est à passer dans tout appel au serveur",
             tags = {"authentication-resources"},
             parameters = {
                     @Parameter(
@@ -148,15 +144,15 @@ public class AuthenticationResources implements ServiceContainerBean {
                     )
             )
     })
+
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
     public LoginAdminResult login(final HttpServletResponse response, @RequestParam("login") final String login, @RequestParam("password") final String password) throws Throwable {
-        final LoginAdminResult loginAdminResult = serviceContainer.authorizationService().getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
-                .forLoginPassword(login, password);
-        final OreSiUserRole userRole = authenticationService.getUserRole(loginAdminResult.id());
-        final OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(loginAdminResult.id(), userRole);
-        authHelper.refreshCookie(response, requestClient);
-        request.setRequestClient(requestClient);
-        return loginAdminResult;
+        return Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getPrincipal)
+                .filter(LoginAdminResult.class::isInstance)
+                .map(LoginAdminResult.class::cast)
+                .orElse(null);
     }
 
     @Operation(
@@ -179,11 +175,11 @@ public class AuthenticationResources implements ServiceContainerBean {
                     responseCode = "401",
                     description = "Non authentifié (si la protection est activée)")
     })
+
     @DeleteMapping("/logout")
-    public ResponseEntity logout(HttpServletResponse response) {
-        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
-        request.reset();
-        return ResponseEntity.ok().build();
+    public ResponseEntity<String> logout(HttpServletResponse response) throws IOException {
+        return ResponseEntity
+                .ok("{\"message\": \"Disconnected\"}");
     }
 
     @Operation(
@@ -206,6 +202,7 @@ public class AuthenticationResources implements ServiceContainerBean {
                     responseCode = "409",
                     description = "L'utilisateur existe déjà")
     })
+    @PreAuthorize("isAnonymous() || isAuthenticated()")
     @PostMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, UUID>> createUser(
             @Parameter(
@@ -228,7 +225,6 @@ public class AuthenticationResources implements ServiceContainerBean {
                     example = "\"user@inrae.fr\"",
                     required = true)
             @RequestParam("email") final String email) throws AuthenticationFailure {
-
         final CreateUserResult createUserResult = authenticationService.createUser(login, password, email);
         try {
             authenticationService.sendEmailValidation(login, password);
@@ -284,12 +280,19 @@ public class AuthenticationResources implements ServiceContainerBean {
                     responseCode = "401",
                     description = "Échec d'authentification ou clé de vérification invalide")
     })
+
+    @PreAuthorize("isAnonymous() || isAuthenticated()")
     @PutMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<CreateUserResult> updateUser(final HttpServletResponse response,
-                                                       @RequestBody() final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        NotConnectedUser notConnectedUser = serviceContainer.authorizationService()
-                .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
-                .forUpdateUser(createUserRequest);
+    public ResponseEntity<CreateUserResult> updateUser(
+            final HttpServletResponse response/*,
+            @RequestBody() final Mono<CreateUserRequest> createUserRequest*/
+    ) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+        NotConnectedUser notConnectedUser = Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .map(Authentication::getPrincipal)
+                .filter(NotConnectedUser.class::isInstance)
+                .map(NotConnectedUser.class::cast)
+                .orElse(null);
         final OreSiUser oreSiUser = authenticationService.updateUser(notConnectedUser);
         final String uri = UriUtils.encodePath("/users/" + Optional.ofNullable(oreSiUser)
                         .map(OreSiUser::getId)
@@ -331,9 +334,10 @@ public class AuthenticationResources implements ServiceContainerBean {
                     responseCode = "400",
                     description = "Format d'ID invalide")
     })
+
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_USER_READER')")
     @GetMapping(value = "/users/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public OreSiUser getByIdOrLogin(@PathVariable(name = "userLoginOrId") final String userLoginOrId) {
-        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
         return authenticationService.getByIdOrLogin(userLoginOrId);
     }
 

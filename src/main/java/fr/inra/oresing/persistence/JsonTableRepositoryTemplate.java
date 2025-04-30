@@ -1,5 +1,6 @@
 package fr.inra.oresing.persistence;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Iterators;
 import com.google.common.collect.UnmodifiableIterator;
@@ -62,6 +63,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
                     e.setId(UUID.randomUUID());
                 }
             });
+            //jsonRowMapper.getJsonMapper().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE);
             final String json = jsonRowMapper.toJson(entities);
             try{
                 uuids.addAll(namedParameterJdbcTemplate.queryForList(

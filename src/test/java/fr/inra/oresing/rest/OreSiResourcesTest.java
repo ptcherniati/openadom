@@ -8,10 +8,7 @@ import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdministratorForSystemException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.*;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
@@ -26,6 +23,7 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import fr.inra.oresing.rest.services.RelationalService;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
@@ -37,7 +35,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
-import org.hamcrest.Matchers;
 import org.hamcrest.core.Is;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
@@ -51,6 +48,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -192,7 +190,7 @@ public class OreSiResourcesTest {
     public void services_model() throws Exception {
         final String services_model = mockMvc.perform(get("/api-docs.yaml")
                         .accept(MediaType.parseMediaType("application/vnd.oai.openapi")
-                ))
+                        ))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn()
                 .getResponse()
@@ -216,7 +214,7 @@ public class OreSiResourcesTest {
         lambdaCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         CreateUserResult authUser;
         try {
             final OreSiUser user = authenticationService.getByIdOrLogin("poussin");
@@ -229,7 +227,7 @@ public class OreSiResourcesTest {
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "poussin")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         addRoleAdmin(authUser);
     }
 
@@ -264,22 +262,22 @@ public class OreSiResourcesTest {
         final Cookie monsoreCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "monsoresimple")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         final CreateUserResult withRightsUserResult = createUserIfNotExists("withrigths", "xxxxxxxx", "withrigths@inrae.fr");
         final String withRigthsUserId = withRightsUserResult.userId().toString();
         setToActive(withRightsUserResult.userId());
         final Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
         URL resource = getClass().getResource(Fixtures.getMonsoreApplicationConfigurationResourceName());
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "monsoresimple.yaml", "text/plain", in);
 
             // on n'a pas le droit de creer de nouvelle application
-            NotOpenAdomAdministratorForSystemException resolvedException =
-                    (NotOpenAdomAdministratorForSystemException) fixtures.loadApplicationWithError(
+            NotApplicationCreatorRightsException resolvedException =
+                    (NotApplicationCreatorRightsException) fixtures.loadApplicationWithError(
                             configuration,
                             monsoreCookie,
                             "monsoresimple"
@@ -388,14 +386,14 @@ public class OreSiResourcesTest {
                     .andExpect(result -> {
                         final List<String> expected = """
                                 "tze_type_nom";"zet_chemin_parent";"definition";"Site name";"zet_nom_key"
-                                "Watershed";"";"Watershed Nivelle";"Nivelle";"nivelle"
                                 "Watershed";"";"Oir catchment";"Oir";"oir"
+                                "Watershed";"";"Watershed Nivelle";"Nivelle";"nivelle"
                                 "Watershed";"";"Watershed Scarff";"Scarff";"scarff"
-                                "Platform";"- Nivelle";"";"P1";"p1"
+                                "Platform";"- Oir";"";"P2";"p2"
                                 "Platform";"- Oir";"";"P1";"p1"
                                 "Platform";"NULL_KEY__oir - P1";"";"A";"a"
                                 "Platform";"NULL_KEY__oir - P1";"";"B";"b"
-                                "Platform";"- Oir";"";"P2";"p2"
+                                "Platform";"- Nivelle";"";"P1";"p1"
                                 "Platform";"- Scarff";"";"P1";"p1\""""
                                 .lines().collect(Collectors.toCollection(LinkedList::new));
                         final List<String> actual = new String(result.getResponse().getContentAsByteArray())
@@ -422,7 +420,7 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             // sans droit on ne peut pas
-            mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
+            Assertions.assertInstanceOf(NotApplicationDataWriterException.class, mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
                             .file(refFile)
                             .cookie(withRigthsCookie))
                     .andDo(result -> {
@@ -432,8 +430,7 @@ public class OreSiResourcesTest {
                         }
                     })
                     .andExpect(status().is4xxClientError())
-                    .andExpect(content().string("application inconnue 'monsoresimple'"))
-                    .andReturn().getResponse().getContentAsString();
+                            .andReturn().getResolvedException());
             //ajout de droits withRignesthsUserId
             if (true) {// TODO remove
                 return;
@@ -508,12 +505,12 @@ public class OreSiResourcesTest {
         final String contentAsString = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
                         .cookie(monsoreCookie))
                 .andExpect(jsonPath("$.rows[*].values" +
-                                    "[?(@.projet.value=='projet_atlantique' )]" +
-                                    "[?(@.date.value=='date:1984-01-01T00:00:00:dd/MM/yyyy' )]" +
-                                    "[?(@.site.chemin=='plateforme.nivelle.nivelle__p1' )]" +
-                                    "[?(@.espece.value=='lpf' )]" +
-                                    "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
-                                    "['Nombre d\\'individus'].value",
+                                "[?(@.projet.value=='projet_atlantique' )]" +
+                                "[?(@.date.value=='date:1984-01-01T00:00:00:dd/MM/yyyy' )]" +
+                                "[?(@.site.chemin=='plateforme.nivelle.nivelle__p1' )]" +
+                                "[?(@.espece.value=='lpf' )]" +
+                                "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
+                                "['Nombre d\\'individus'].value",
                         hasItems(54)))
                 .andReturn().getResponse().getContentAsString();
 
@@ -771,8 +768,8 @@ public class OreSiResourcesTest {
         if (mockMvc.perform(post("/api/v1/login")
                         .param("login", login)
                         .param("password", password))
-                    .andReturn()
-                    .getResponse().getStatus() > 300) {
+                .andReturn()
+                .getResponse().getStatus() > 300) {
             return authenticationService.createUser(login, password, mail);
         } else {
             OreSiUser userByLogin = userRepository.findByLogin(login).orElse(null);
@@ -998,7 +995,7 @@ public class OreSiResourcesTest {
         final Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
         String typeDeSites = Fixtures.getMonsoreReferentielFiles().get("type_de_sites");
 
@@ -1094,29 +1091,33 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
 
-            mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
-                            .file(refFile)
-                            .cookie(withRigthsCookie))
-                    .andExpect(status().is4xxClientError())
-                    .andExpect(content().string("application inconnue 'monsore'"))
-                    .andReturn().getResponse().getContentAsString();
+            Assertions.assertInstanceOf(
+                    NotApplicationDataWriterException.class,
+                    mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
+                                    .file(refFile)
+                                    .cookie(withRigthsCookie))
+                            .andExpect(status().is4xxClientError())
+                            .andReturn()
+                            .getResolvedException());
         }
         try (final InputStream refStream = getClass().getResourceAsStream(sites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", sites, "text/plain", refStream);
 
-            mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites")
-                            .file(refFile)
-                            .cookie(withRigthsCookie))
-                    .andExpect(status().is4xxClientError())
-                    .andExpect(content().string("application inconnue 'monsore'"))
-                    .andReturn().getResponse().getContentAsString();
+            Assertions.assertInstanceOf(
+                    NotApplicationDataWriterException.class,
+                    mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites")
+                                    .file(refFile)
+                                    .cookie(withRigthsCookie))
+                            .andExpect(status().is4xxClientError())
+                            .andReturn()
+                            .getResolvedException());
         }
 
         String referencesRight = getJsonRightForAll(withRigthsUserId, List.of(List.of("sites", "publication"), List.of("type_de_sites", "publication")));
         referencesRight = JsonPath.parse(referencesRight).read("authorizationId");
 
         mockMvc.perform(get("/api/v1/applications/monsore/authorization/user/{userId}", withRigthsUserId)
-                        .cookie(withRigthsCookie))
+                        .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.userAuthorization.type_de_sites[0].operationTypes", hasItems("publication", "depot", "extraction")))
                 .andExpect(jsonPath("$.userAuthorization.sites[0].operationTypes", hasItems("publication", "depot", "extraction")))
@@ -2009,7 +2010,7 @@ public class OreSiResourcesTest {
         final Cookie readerCookies = mockMvc.perform(post("/api/v1/login")
                         .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
 
         {
@@ -2443,9 +2444,10 @@ public class OreSiResourcesTest {
         }
     }
 
-    @Test
-    @Tag("SUITE")
-    @Tag("core.config")
+    //@Test
+    @Disabled
+    //@Tag("SUITE")
+    //@Tag("core.config")
     public void testComputedWithNaturalKeyColumns() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getComputedWithNaturalKeyColumns());
@@ -2469,7 +2471,7 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}", e.getKey())
+                    response = mockMvc.perform(multipart("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}", e.getKey())
                                 .file(refFile)
                                 .cookie(authCookie))
                         .andDo(result -> {

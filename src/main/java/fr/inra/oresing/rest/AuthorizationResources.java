@@ -9,15 +9,13 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResult;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.services.AuthorizationService;
@@ -36,6 +34,8 @@ import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -64,11 +64,13 @@ public class AuthorizationResources implements ServiceContainerBean {
     private OreSiRepository repo;
 
 
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @GetMapping(value = "/authorizationForAdmin", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<LoginAdminResult> getAdminAuthorizationsForOpenAdom() {
         return serviceContainer.authenticationService().getAdminAuthorizations();
     }
 
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @GetMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResult> getAuthorizationById(
             @PathVariable("nameOrId") final String applicationNameOrId,
@@ -126,11 +128,15 @@ public class AuthorizationResources implements ServiceContainerBean {
                     responseCode = "400",
                     description = "Format d'identifiant invalide")
     })
+
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ')")
     @GetMapping(value = "/{nameOrId}/authorizationAdminForApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<UserAuthorizationForApplication> getAdminAuthorizationsForApplication(@PathVariable("nameOrId") final String applicationNameOrId) {
-        Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
-        serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT, application);
-        return serviceContainer.authenticationService().getApplicationAuthorizations(application);
+        return OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getApplicationPersona)
+                .map(ApplicationPersona::application)
+                .map(serviceContainer.authenticationService()::getApplicationAuthorizations)
+                .orElse(List.of());
     }
 
     @Operation(
@@ -293,13 +299,15 @@ public class AuthorizationResources implements ServiceContainerBean {
     @Parameters({
             @Parameter(name = "nameOrId", description = "Nom ou ID de l'application", required = true)
     })
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @PostMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addAuthorization(
             @PathVariable(name = "nameOrId") final String nameOrId,
             @RequestBody final CreateAuthorizationRequest createAuthorizationRequest) {
-        Application application = repo.application().findApplication(nameOrId);
-        serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT, application)
-                .forAddAuthorization();
+        Application application = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getApplicationPersona)
+                .map(ApplicationPersona::application)
+                .orElse(null);
         List<AuthorizationRequestError> errors = new ArrayList<>();
         CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization = serviceContainer.authorizationService()
                 .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
@@ -335,6 +343,7 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResults> getAdminAuthorizationsForOpenAdom(@PathVariable("nameOrId") final String applicationNameOrId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
@@ -343,23 +352,27 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{applicationNameOrId}/authorization/user/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") final String applicationNameOrId, @PathVariable(name = "userLoginOrId") final String userLoginOrId) {
         return serviceContainer.authorizationService().getAuthorizationsForUserAndPublic(applicationNameOrId, userLoginOrId);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE')")
     @DeleteMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UUID> revokeAuthorization(
             @PathVariable("nameOrId") final String applicationNameOrId,
             @PathVariable("authorizationId") final UUID authorizationId) {
-        Application application = serviceContainer.authorizationService().getApplication(applicationNameOrId);
-        ApplicationAdminUser applicationAdminUser = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(
-                        PrivilegeApplicationDomain.AUTHORIZATION_MANAGEMENT,
-                        application
-                )
-                .forDeleteAuthorization();
+        Application application = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getApplicationPersona)
+                .map(ApplicationPersona::application)
+                .orElse(null);
+        Optional<ApplicationAdminUser> applicationAdminUser = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getApplicationPersona)
+                .filter(ApplicationAdminUser.class::isInstance)
+                .map(ApplicationAdminUser.class::cast);
         UUID revokeId = serviceContainer.authorizationService().revoke(
-                applicationAdminUser,
+                applicationAdminUser.get(),
                 applicationNameOrId,
                 new AuthorizationRequest(
                         authorizationId,
@@ -425,7 +438,11 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
-
+    @PreAuthorize("""
+                #applicationNameOrId == null ? 
+                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE') : 
+                hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE')
+            """)
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an authorization for a user",
             description = "This service allows adding a specific authorization for a given user.")
@@ -469,19 +486,24 @@ public class AuthorizationResources implements ServiceContainerBean {
         OreSiUser user = serviceContainer.authenticationService().getByIdOrLogin(userIdOrLogin);
         OreSiRoleForUser roleForUser = new OreSiRoleForUser(user.getId().toString(), role, "");
         if (Strings.isNullOrEmpty(applicationNameOrId)) {
-            serviceContainer.authorizationService().getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION)
-                    .forAdministrationManagement()
-                    .canManagerRightForRole(roleForUser);
+            OreSiApiRequestContext.getAuthentication()
+                    .map(OreSiAuthenticationToken::getSystemPersona)
+                    .filter(OpenAdomAdmin.class::isInstance)
+                    .map(OpenAdomAdmin.class::cast)
+                    .ifPresent(openAdomAdmin -> openAdomAdmin.canManagerRightForRole(roleForUser));
             if (!CollectionUtils.isEmpty(applicationPattern)) {
                 user.getAuthorizations().addAll(applicationPattern);
                 userRepository.update(user);
                 user = serviceContainer.authorizationService().addSystemRoleUser(roleForUser);
             }
         } else {
+            OreSiUser finalUser = user;
+            OreSiApiRequestContext.getAuthentication()
+                    .map(OreSiAuthenticationToken::getApplicationPersona)
+                    .filter(ApplicationAdminUser.class::isInstance)
+                    .map(ApplicationAdminUser.class::cast)
+                    .ifPresent(persona -> persona.canManagerRightOfUserForRole(finalUser, roleForUser));
             Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
-            serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, application)
-                    .forManageAdministrator()
-                    .canManagerRightOfUserForRole(user, roleForUser);
             user = serviceContainer.authorizationService().addApplicationRoleUser(roleForUser, application);
         }
         return ResponseEntity.ok(user);
@@ -496,6 +518,13 @@ public class AuthorizationResources implements ServiceContainerBean {
             @ApiResponse(responseCode = "403", description = "Access denied"),
             @ApiResponse(responseCode = "404", description = "User or role not found")
     })
+
+
+    @PreAuthorize("""
+                #applicationNameOrId == null ? 
+                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_DELETE') : 
+                hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_DELETE')
+            """)
     public ResponseEntity<OreSiUser> deleteAuthorization(
             @Parameter(description = "The role to remove", required = true,
                     examples = {
@@ -529,9 +558,11 @@ public class AuthorizationResources implements ServiceContainerBean {
         OreSiUser user = serviceContainer.authenticationService().getByIdOrLogin(userIdOrLogin);
         OreSiRoleForUser roleForUser = new OreSiRoleForUser(user.getId().toString(), role, "");
         if (Strings.isNullOrEmpty(applicationNameOrId)) {
-            serviceContainer.authorizationService().getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION)
-                    .forAdministrationManagement()
-                    .canManagerRightForRole(roleForUser);
+            OreSiApiRequestContext.getAuthentication()
+                    .map(OreSiAuthenticationToken::getSystemPersona)
+                    .filter(OpenAdomAdmin.class::isInstance)
+                    .map(OpenAdomAdmin.class::cast)
+                    .ifPresent(openAdomAdmin -> openAdomAdmin.canManagerRightForRole(roleForUser));
             if (!CollectionUtils.isEmpty(applicationPattern)) {
                 applicationPattern.forEach(user.getAuthorizations()::remove);
                 user = userRepository.update(user);
@@ -541,9 +572,13 @@ public class AuthorizationResources implements ServiceContainerBean {
             }
         } else {
             Application application = serviceContainer.applicationService().getApplication(applicationNameOrId);
-            serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, application)
-                    .forManageAdministrator()
-                    .canManagerRightOfUserForRole(user, roleForUser);
+            OreSiUser finalUser = user;
+            OreSiApiRequestContext.getAuthentication()
+                    .map(OreSiAuthenticationToken::getApplicationPersona)
+                    .filter(ApplicationAdminUser.class::isInstance)
+                    .map(ApplicationAdminUser.class::cast)
+                    .ifPresent(persona -> persona.canManagerRightOfUserForRole(finalUser, roleForUser));
+
             user = serviceContainer.authorizationService().deleteApplicationRoleUser(
                     roleForUser,
                     application
@@ -552,6 +587,7 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok(user);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") final String applicationNameOrId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
@@ -562,12 +598,14 @@ public class AuthorizationResources implements ServiceContainerBean {
     record Health(ConnectedUser connectedUser, HealthComponent health) {
     }
 
-    ;
-
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_USER')")
     @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Health> getStatus() {
-        ConnectedUser connectedUser = serviceContainer.authorizationService().getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED)
-                .connectedUser();
+        ConnectedUser connectedUser = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getSystemPersona)
+                .filter(ConnectedUser.class::isInstance)
+                .map(ConnectedUser.class::cast)
+                .orElse(null);
         HealthComponent health = healthEndpoint.health();
         return ResponseEntity.ok().body(new Health(connectedUser, health));
     }

@@ -296,7 +296,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
     private String generateSignature(String method, String path, Map<String, String> params,
                                      JSONObject content, byte[] rawContent) throws NoSuchAlgorithmException, InvalidKeyException {
-        //RestTemplate restTemplate = new RestTemplateBuilder().build();
         var charset = StandardCharsets.UTF_8;
 
         /*HttpHeaders headers = new HttpHeaders();

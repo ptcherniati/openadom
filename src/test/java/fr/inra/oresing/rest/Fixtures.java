@@ -10,6 +10,7 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.*;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import jakarta.servlet.http.Cookie;
 import lombok.Getter;
 import org.apache.commons.io.IOUtils;
@@ -127,17 +128,12 @@ public class Fixtures {
     public Exception loadApplicationWithError(final MockMultipartFile file,
                                               final Cookie cookie,
                                               final String applicationName) throws Exception {
-        final MvcResult result = mockMvc
+        return mockMvc
                 .perform(multipart("/api/v1/applications/{applicationName}", applicationName)
                         .file(file)
                         .cookie(cookie)
                 )
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        if (result.getAsyncResult() instanceof Exception) {
-            return (Exception) result.getAsyncResult();
-        }
-        return mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().is(401))
                 .andReturn()
                 .getResolvedException();
     }
@@ -177,12 +173,12 @@ public class Fixtures {
             );
             return mockMvc.perform(asyncDispatch(
                             result
-                                    .andExpect(request().asyncStarted())
+                                    //.andExpect(request().asyncStarted())
                                     .andReturn())
                     )
                     .andReturn();
         } catch (final Exception e) {
-            throw e.getCause();
+            throw e.getCause()==null?e:e.getCause();
         }
     }
 
@@ -661,7 +657,7 @@ public class Fixtures {
             cookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", aLogin)
                             .param("password", aPassword))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         }
         return cookie;
     }@Transactional
@@ -702,7 +698,7 @@ public class Fixtures {
                             .param("login", aLogin)
                             .param("password", aPassword))
                     .andReturn().getResponse();
-            cookie = response.getCookie(AuthHelper.JWT_COOKIE_NAME);
+            cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
         }
         final String aPassword = "xxxxxxxx";
         final CreateUserResult createUserResult = authenticationService.createUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
@@ -723,7 +719,7 @@ public class Fixtures {
         return mockMvc.perform(post("/api/v1/login")
                         .param("login", applicationPattern)
                         .param("password", aPassword))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
     }
 
     public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {

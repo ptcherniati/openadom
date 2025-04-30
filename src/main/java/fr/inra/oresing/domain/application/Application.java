@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 @ToString(callSuper = true)
 public class Application extends OreSiEntity {
     public Timestamp getLastChartes() {
-        return lastChartes==null?Timestamp.from(Instant.MIN):lastChartes;
+        return lastChartes==null?(new Timestamp(Long.MIN_VALUE)):lastChartes;
     }
 
     private Timestamp lastChartes;
@@ -208,7 +208,12 @@ public class Application extends OreSiEntity {
     }
 
     public String getLocalizedLocalName(Locale locale) {
-        String localizedApplicationName = getConfiguration().i18n().getApplication().getTitle().get(locale);
+        String localizedApplicationName = Optional.ofNullable(getConfiguration())
+                .map(Configuration::i18n)
+                .map(Internationalizations::getApplication)
+                .map(InternationalizationTitle::getTitle)
+                .map(title->title.get(locale) )
+                .orElse(getConfiguration().applicationDescription().name());
         return localizedApplicationName == null ? getName() : localizedApplicationName;
     }
 

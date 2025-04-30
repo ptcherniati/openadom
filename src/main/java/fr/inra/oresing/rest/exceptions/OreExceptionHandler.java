@@ -20,25 +20,38 @@ import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.postgresql.util.PSQLException;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.ErrorResponse;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
+import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 @RestControllerAdvice
 @Slf4j
-public class OreExceptionHandler {
+public class OreExceptionHandler extends ResponseEntityExceptionHandler {
+
+    // Ajoutez cette méthode pour les erreurs Spring Security
+    @ExceptionHandler(AccessDeniedException.class)
+    public ErrorResponse handleAccessDenied(AccessDeniedException ex) {
+        return ErrorResponse
+                .builder(ex, HttpStatus.UNAUTHORIZED, ex.getMessage())
+                .title("Accès refusé")
+                .detail(ex.getMessage())
+                .property("code", "SEC-403")
+                .property("timestamp", Instant.now())
+                .build();
+    }
 
     @ExceptionHandler(ValidationError.class)
     public ResponseEntity<ValidationError> handle(final ValidationError eee) {
@@ -73,7 +86,7 @@ public class OreExceptionHandler {
                         .headers(responseHeaders)
                         .body(eee);
             }
-            case "EXISTING_LOGIN"->ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(eee);
+            case "EXISTING_LOGIN" -> ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(eee);
             case "BAD_LOGIN_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
             case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
             case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
@@ -113,8 +126,8 @@ public class OreExceptionHandler {
 
     @ExceptionHandler(OreSiTechnicalException.class)
     public ResponseEntity<OreSiTechnicalException> handle(final OreSiTechnicalException oreSiTechnicalException) {
-        if("fr.inra.oresing.domain.authorization.privilegeassessor.exception"
-                .equals(oreSiTechnicalException.getClass().getPackage().getName())){
+        if ("fr.inra.oresing.domain.authorization.privilegeassessor.exception"
+                .equals(oreSiTechnicalException.getClass().getPackage().getName())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(oreSiTechnicalException);
         }
         log.error("Technical Exception not resolved", oreSiTechnicalException);

@@ -9,12 +9,10 @@ import org.springframework.scheduling.annotation.Async;
 import java.util.Locale;
 
 public interface Email {
-    @Async
     void sendEmail(String login, String to, String subject, String message);
 
     void sendEmailValidation(String login, String email, String verificationKey, EmailService.MESSAGES messages);
 
-    @Async
     void sendUploadZipEmail(
             String to,
             String subject,
@@ -23,7 +21,6 @@ public interface Email {
             FileSenderInternationalisation fileSenderInternationalisation,
             String internationnalizedDataName);
 
-    @Async
     void sendUpoadSuccessMail(Application application, String dataName, EmailService.UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser);
 
     void sendUpoadErrorsMail(Locale application, String dataName, String locale, OreSiUser body, String currentUser);

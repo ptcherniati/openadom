@@ -13,14 +13,14 @@ public sealed interface WithFormatForIntervalDate extends WithFormat, WithInterv
         return Optional.ofNullable(from())
                 .map(f -> DateType.valueToDate(DateTimeFormatter.ofPattern(format()), f))
                 .map(Timestamp::valueOf)
-                .orElse(Timestamp.from(Instant.MIN));
+                .orElse((new Timestamp(Long.MIN_VALUE)));
     }
 
     default Timestamp toTimestamp() {
         return Optional.ofNullable(to())
                 .map(f -> DateType.valueToDate(DateTimeFormatter.ofPattern(format()), f))
                 .map(Timestamp::valueOf)
-                .orElse(Timestamp.from(Instant.MAX));
+                .orElse((new Timestamp(Long.MAX_VALUE)));
     }
 
     default String getFromIsoString() {

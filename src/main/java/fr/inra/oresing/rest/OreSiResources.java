@@ -14,6 +14,7 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
@@ -36,6 +37,7 @@ import fr.inra.oresing.persistence.BinaryFileInfos;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.binaryFile.BinaryFileService;
 import fr.inra.oresing.rest.data.publication.*;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
@@ -75,6 +77,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -103,8 +106,6 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-
-import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_USER_CONNECTED;
 
 @Slf4j
 @RestController
@@ -139,8 +140,7 @@ public class OreSiResources implements ServiceContainerBean {
     @Autowired
     private OreSiApiRequestContext request;
 
-    private Flux<ReactiveResult> buildFluxRequestJDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
-        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_USER_CONNECTED);
+    private Flux<ReactiveResult> buildFluxRequestNDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
         return Flux.create(fluxSink);
     }
 
@@ -178,47 +178,50 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DELETE_FILE')")
     @DeleteMapping(value = "/applications/{name}/file/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> removeFile(
             HttpServletRequest request,
             @PathVariable("name") final String applicationName,
             @PathVariable("id") final UUID id) {
+
         Locale locale = localeResolver.resolveLocale(request);
-        Application application = serviceContainer.applicationService().getApplication(applicationName);
-        StoreFile storeFile = serviceContainer.versioningService().getStoreFile(
-                application,
-                null,
-                FileOrUUID.forUUID(id),
-                null,
-                null
-        );
-        Optional<UUID> fileId = Optional.ofNullable(storeFile)
-                .map(State::fileOrUuid)
-                .map(FileOrUUID::fileid);
+
+        Optional<FileOrUUID> fileId = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getStoreFile)
+                .map(State::fileOrUuid);
         if (fileId.isEmpty()) {
             throw new SiOreIllegalArgumentException(SiOreIllegalArgumentException.NO_FILE_To_DELETE, Map.of("fileId", id));
         }
-        String dataName = Optional.of(storeFile)
-                .map(StoreFile::builder)
-                .map(AuthorizationPublicationService::getDataName)
+        String dataName = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getDataName)
                 .orElse("notFoundDataName");
-        ApplicationDataDelete applicationDataDelete = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_ACCESS, application)
-                .forDataDelete(dataName);
-        storeFile = serviceContainer.versioningService().getStoreFile(
+        Optional<ApplicationUser> applicationUser = OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getApplicationPersona)
+                .filter(ApplicationUser.class::isInstance)
+                .map(ApplicationUser.class::cast);
+        Application application = applicationUser
+                .map(ApplicationUser::application)
+                .orElse(null);
+        Optional<ApplicationDataDelete> applicationDataDelete = applicationUser
+                .filter(ApplicationDataDelete.class::isInstance)
+                .map(ApplicationDataDelete.class::cast);
+        StoreFile storeFile = serviceContainer.versioningService().getStoreFile(
                 application,
                 dataName,
-                storeFile.fileOrUuid(),
+                fileId.orElse(null),
                 null,
                 applicationDataDelete
+                        .orElse(null)
         );
 
         StoreFile finalStoreFile = storeFile;
-        Boolean canDelete = applicationDataDelete.canDelete(finalStoreFile.fileOrUuid());
+        Boolean canDelete = applicationDataDelete.get().canDelete(finalStoreFile.fileOrUuid());
         if (!canDelete) {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
         if (!storeFile.builder().getFileOrUUID().topublish()) {
-            if (!applicationDataDelete.hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
+            if (!applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
             DataVersioningResult dataVersioningResult = serviceContainer.versioningService()
@@ -232,12 +235,12 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/filesOnRepository/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
                                                                        @PathVariable("dataType") final String dataType,
                                                                        @RequestParam("repositoryId") final String repositoryId) {
         final BinaryFileDataset binaryFileDataset = BinaryFileService.deserialiseBinaryFileDatasetQuery(dataType, repositoryId);
-        Application application = serviceContainer.applicationService().getApplication(nameOrId);
         Map<UUID, UserDescriptionResult> users = serviceContainer.authorizationService().getAllUsers()
                 .stream()
                 .map(UserDescriptionResult::of)
@@ -262,6 +265,7 @@ public class OreSiResources implements ServiceContainerBean {
         return ResponseEntity.ok(files);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getFile(@PathVariable("name") final String name, @PathVariable("id") final UUID id) {
         final Optional<BinaryFile> optionalBinaryFile = serviceContainer.binaryFileService().getFileWithData(name, id);
@@ -276,20 +280,22 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("isFullyAuthenticated()")
     @GetMapping(value = "/applications", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> getApplications(@RequestParam(required = false, defaultValue = "") final String[] filter) {
         final List<ApplicationInformation> filters = Arrays.stream(filter)
                 .map(ApplicationInformation::valueOf)
                 .collect(Collectors.toList());
-        return buildFluxRequestJDJson(fluxSink -> {
+        return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.GetApplicationProgression progression = new ReactiveProgression.GetApplicationProgression(0L, fluxSink);
             serviceContainer.applicationService().getApplications(progression, filters);
         });
     }
 
+    @PreAuthorize("isFullyAuthenticated()")
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) {
-        return buildFluxRequestJDJson(fluxSink -> {
+        return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
             final Application application = serviceContainer.applicationService().validateConfiguration(progression, file);
             fluxSink.next(new ReactiveTypeResult(application));
@@ -297,6 +303,7 @@ public class OreSiResources implements ServiceContainerBean {
         });
     }
 
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_APPLICATION_CREATE')")
     @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_NDJSON_VALUE)
     @Parameter(examples = @ExampleObject(
             name = "fichier de configuration",
@@ -307,19 +314,18 @@ public class OreSiResources implements ServiceContainerBean {
                                                   @RequestParam("file") final MultipartFile file) throws BadApplicationConfigurationException {
 
         final Application application;
-        try {
-            serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(name);
+        /*try {
             log.info("Modification de l'application %s".formatted(name));
             return changeConfiguration(name, file, comment);
         } catch (final Exception e) {
             log.info("Création de l'application %s".formatted(name));
-        }
+        }*/
 
         if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
             //TODO test à faire
             throw new BadLabelNameException(BadLabelNameException.LabelType.APPLICATION, name);
         }
-        return buildFluxRequestJDJson(fluxSink -> {
+        return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
             try {
                 serviceContainer.applicationService().createApplication(progression, name, file, comment);
@@ -329,12 +335,14 @@ public class OreSiResources implements ServiceContainerBean {
         });
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApplicationResult getApplication(@PathVariable("nameOrId") final String nameOrId, @RequestParam(required = false, defaultValue = "") final String[] filter) {
         final Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
         return serviceContainer.applicationService().buildOpenAdom(application, filter);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getConfiguration(@PathVariable("nameOrId") final String nameOrId) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
@@ -342,12 +350,13 @@ public class OreSiResources implements ServiceContainerBean {
         return getFile(nameOrId, configFileId);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> changeConfiguration(@PathVariable("nameOrId") final String nameOrId,
                                                     @RequestParam("file") final MultipartFile file,
                                                     @RequestParam(name = "comment", defaultValue = "") final String comment) throws BadApplicationConfigurationException {
 
-        return buildFluxRequestJDJson(fluxSink -> {
+        return buildFluxRequestNDJson(fluxSink -> {
             if (file.isEmpty()) {
                 fluxSink.error(new IllegalArgumentException("EmptyFile"));
             }
@@ -364,6 +373,7 @@ public class OreSiResources implements ServiceContainerBean {
      * @param nameOrId l'id ou le nom de l'application
      * @return un tableau de chaine
      */
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/applications/{nameOrId}/rightsRequest", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(description = "Get a rightsRequest with their description using search params")
     public ResponseEntity<GetRightsRequestResult> listRightsRequest(
@@ -374,6 +384,7 @@ public class OreSiResources implements ServiceContainerBean {
         return ResponseEntity.ok(list);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/applications/{nameOrId}/rightsRequest", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createRightsRequest(@PathVariable("nameOrId") final String nameOrId,
                                                  @RequestBody final CreateRightsRequestRequest createRightsRequestRequest) {
@@ -391,6 +402,8 @@ public class OreSiResources implements ServiceContainerBean {
      * @return les noms triés selon l’ordre dans lequel il faut faire les imports (selon les dépendances entre
      * référentiels).
      */
+
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listNameReferences(@PathVariable("nameOrId") String nameOrId) {
         String[] filter = {ApplicationInformation.ALL.name()};
@@ -406,6 +419,7 @@ public class OreSiResources implements ServiceContainerBean {
      * @param refType  le type du referenciel
      * @return un tableau de chaine
      */
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetReferenceResult> listDataForColumn(
             @PathVariable("nameOrId") final String nameOrId,
@@ -454,6 +468,7 @@ public class OreSiResources implements ServiceContainerBean {
                 referenceTypeForReferencingColumns));
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/csv", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> listDataCsv(
             final HttpServletResponse response,
@@ -473,6 +488,7 @@ public class OreSiResources implements ServiceContainerBean {
                 .body(streamResponseBody);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<List<String>>> listDataForColumn(@PathVariable("nameOrId") final String nameOrId, @PathVariable("refType") final String refType, @PathVariable("column") final String column) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
@@ -480,6 +496,7 @@ public class OreSiResources implements ServiceContainerBean {
         return ResponseEntity.ok(result);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_WRITE')")
     @PostMapping(value = "/applications/{nameOrId}/data/{dataName}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> createData(
             HttpServletRequest request,
@@ -491,7 +508,7 @@ public class OreSiResources implements ServiceContainerBean {
         DataVersioningResult dataVersioningResult;
         try {
             dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, params, false);
-        }catch (InvalidDatasetContentException invalidDatasetContentException){
+        } catch (InvalidDatasetContentException invalidDatasetContentException) {
             List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                     .stream()
                     .map(row -> {
@@ -517,6 +534,7 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     public ResponseEntity<List<String>> listData(@PathVariable("nameOrId") final String nameOrId) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
         List<String> allDataNames = application.getAllDataNames();
@@ -623,6 +641,7 @@ public class OreSiResources implements ServiceContainerBean {
 
     ), description = "Return an extraction of data of datatType 'dataName' of application 'nameOrId'")
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/json", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetDataResult> getAllDataJson(
             @PathVariable("nameOrId") final String nameOrId,
@@ -987,15 +1006,12 @@ public class OreSiResources implements ServiceContainerBean {
     /**
      * export as JSON
      */
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DELETE_FILE')")
     @DeleteMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<String> deleteData(
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataName,
             @RequestParam(value = "downloadDatasetQuery", required = false) final String params) {
-        Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        ApplicationDataDelete applicationDataDelete = serviceContainer.authorizationService().getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_ACCESS, application)
-                .forDataDelete(dataName);
-
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, false);
         final List<UUID> deletedData = serviceContainer.dataService().deleteData(downloadDatasetQuery);
         return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(",")));
@@ -1024,6 +1040,7 @@ public class OreSiResources implements ServiceContainerBean {
     /**
      * export as CSV
      */
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> getAllDataZip(
             final HttpServletResponse response,
@@ -1136,6 +1153,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/synthesis/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                           @PathVariable("dataType") final String dataType) {
@@ -1156,6 +1174,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/synthesis/{dataType}/{variable}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                           @PathVariable("dataType") final String dataType,
@@ -1170,6 +1189,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @PutMapping(value = "/applications/{nameOrId}/synthesis/{dataType}/{variable}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> buidSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                            @PathVariable("dataType") final String dataType,
@@ -1184,6 +1204,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @PutMapping(value = "/applications/{nameOrId}/synthesis/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> buidSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                            @PathVariable("dataType") final String dataType) {
@@ -1191,6 +1212,7 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @GetMapping(value = "/applications/{nameOrId}/upload-bundle", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> getUploadBundle(
             @PathVariable("nameOrId") String nameOrId,
