@@ -335,12 +335,14 @@ public class OreSiResources implements ServiceContainerBean {
         });
     }
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ApplicationResult getApplication(@PathVariable("nameOrId") final String nameOrId, @RequestParam(required = false, defaultValue = "") final String[] filter) {
         final Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
         return serviceContainer.applicationService().buildOpenAdom(application, filter);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<byte[]> getConfiguration(@PathVariable("nameOrId") final String nameOrId) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
@@ -371,6 +373,7 @@ public class OreSiResources implements ServiceContainerBean {
      * @param nameOrId l'id ou le nom de l'application
      * @return un tableau de chaine
      */
+    @PreAuthorize("isAuthenticated()")
     @GetMapping(value = "/applications/{nameOrId}/rightsRequest", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(description = "Get a rightsRequest with their description using search params")
     public ResponseEntity<GetRightsRequestResult> listRightsRequest(
@@ -381,6 +384,7 @@ public class OreSiResources implements ServiceContainerBean {
         return ResponseEntity.ok(list);
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/applications/{nameOrId}/rightsRequest", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> createRightsRequest(@PathVariable("nameOrId") final String nameOrId,
                                                  @RequestBody final CreateRightsRequestRequest createRightsRequestRequest) {
@@ -398,6 +402,8 @@ public class OreSiResources implements ServiceContainerBean {
      * @return les noms triés selon l’ordre dans lequel il faut faire les imports (selon les dépendances entre
      * référentiels).
      */
+
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/references", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<String>> listNameReferences(@PathVariable("nameOrId") String nameOrId) {
         String[] filter = {ApplicationInformation.ALL.name()};
@@ -413,6 +419,7 @@ public class OreSiResources implements ServiceContainerBean {
      * @param refType  le type du referenciel
      * @return un tableau de chaine
      */
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetReferenceResult> listDataForColumn(
             @PathVariable("nameOrId") final String nameOrId,
@@ -461,6 +468,7 @@ public class OreSiResources implements ServiceContainerBean {
                 referenceTypeForReferencingColumns));
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/csv", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> listDataCsv(
             final HttpServletResponse response,
@@ -480,6 +488,7 @@ public class OreSiResources implements ServiceContainerBean {
                 .body(streamResponseBody);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<List<String>>> listDataForColumn(@PathVariable("nameOrId") final String nameOrId, @PathVariable("refType") final String refType, @PathVariable("column") final String column) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
@@ -525,6 +534,7 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     public ResponseEntity<List<String>> listData(@PathVariable("nameOrId") final String nameOrId) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
         List<String> allDataNames = application.getAllDataNames();
@@ -1030,6 +1040,7 @@ public class OreSiResources implements ServiceContainerBean {
     /**
      * export as CSV
      */
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> getAllDataZip(
             final HttpServletResponse response,
@@ -1142,6 +1153,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/synthesis/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                           @PathVariable("dataType") final String dataType) {
@@ -1162,6 +1174,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/synthesis/{dataType}/{variable}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                           @PathVariable("dataType") final String dataType,
@@ -1176,6 +1189,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @PutMapping(value = "/applications/{nameOrId}/synthesis/{dataType}/{variable}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> buidSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                            @PathVariable("dataType") final String dataType,
@@ -1190,6 +1204,7 @@ public class OreSiResources implements ServiceContainerBean {
         }
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @PutMapping(value = "/applications/{nameOrId}/synthesis/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> buidSynthesis(@PathVariable("nameOrId") final String nameOrId,
                                            @PathVariable("dataType") final String dataType) {
@@ -1197,6 +1212,7 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @GetMapping(value = "/applications/{nameOrId}/upload-bundle", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<StreamingResponseBody> getUploadBundle(
             @PathVariable("nameOrId") String nameOrId,

@@ -7,6 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
@@ -14,6 +16,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
+import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
@@ -21,11 +25,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
-public class SecurityConfig  {
+public class SecurityConfig {
 
-    /**/@Bean
+    /**/
+    @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
-        AuthorizationService authorizationService) {
+            AuthorizationService authorizationService) {
         DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
         handler.setPermissionEvaluator(new ApplicationPermissionEvaluator(authorizationService));
         return handler;
@@ -33,7 +38,7 @@ public class SecurityConfig  {
 
     @Bean
     public PermissionEvaluator applicationPermissionEvaluator(
-        AuthorizationService authorizationService
+            AuthorizationService authorizationService
     ) {
         return new ApplicationPermissionEvaluator(authorizationService);
     }
@@ -55,17 +60,20 @@ public class SecurityConfig  {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        CookieClearingLogoutHandler cookies = new CookieClearingLogoutHandler(JWTExtractor.JWT_COOKIE_NAME);
+
         http
-                .csrf(AbstractHttpConfigurer::disable)// Optionnel : désactive la protection CSRF pour simplifier les tests d'API
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
                 .httpBasic(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
                         auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(
+                                        "/api/v1/logout",
                                         "/actuator/**",
                                         "/swagger-ui/**",
-                                        "/v3/api-docs/**",
+                                        "/api-docs/**",
                                         "/api/public/**",
                                         "/api-docs.yaml").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/login").hasAuthority(AuthorizationFilter.ROLE_AUTHENTIFIED_USER.getAuthority())

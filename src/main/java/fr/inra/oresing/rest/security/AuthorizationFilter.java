@@ -27,6 +27,7 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -82,23 +83,25 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String path = request.getRequestURI();
         OreSiAuthenticationToken authenticationToken = requestContext.getAuthenticationToken();
-        if (authenticationToken != null) {
+        if (authenticationToken != null ) {
             chain.doFilter(request, response);
             return;
         }
         if (response.isCommitted()) {
             return;
         }
+        if (path.endsWith("/logout")) {
+            JWTExtractor.clearSession(request, response);
+            chain.doFilter(request, response);
+            return;
+        }
         if (
                 path.startsWith("/actuator") ||
                         path.startsWith("/swagger-ui") ||
-                        path.startsWith("/v2/api-docs") ||
+                        path.startsWith("/api-docs") ||
                         path.startsWith("/api/public") ||
                         path.startsWith("/api-docs.yaml")) {
             chain.doFilter(request, response); // Skip le filtre
-            return;
-        }
-        if (path.endsWith("/logout")) {
             return;
         }
         if (request.getAttribute(AUTHORIZATION_ALREADY_DONE) != null) {

@@ -1117,7 +1117,7 @@ public class OreSiResourcesTest {
         referencesRight = JsonPath.parse(referencesRight).read("authorizationId");
 
         mockMvc.perform(get("/api/v1/applications/monsore/authorization/user/{userId}", withRigthsUserId)
-                        .cookie(withRigthsCookie))
+                        .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.userAuthorization.type_de_sites[0].operationTypes", hasItems("publication", "depot", "extraction")))
                 .andExpect(jsonPath("$.userAuthorization.sites[0].operationTypes", hasItems("publication", "depot", "extraction")))

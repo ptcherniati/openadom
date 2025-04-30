@@ -64,11 +64,13 @@ public class AuthorizationResources implements ServiceContainerBean {
     private OreSiRepository repo;
 
 
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @GetMapping(value = "/authorizationForAdmin", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<LoginAdminResult> getAdminAuthorizationsForOpenAdom() {
         return serviceContainer.authenticationService().getAdminAuthorizations();
     }
 
+    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @GetMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResult> getAuthorizationById(
             @PathVariable("nameOrId") final String applicationNameOrId,
@@ -297,7 +299,6 @@ public class AuthorizationResources implements ServiceContainerBean {
     @Parameters({
             @Parameter(name = "nameOrId", description = "Nom ou ID de l'application", required = true)
     })
-
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @PostMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addAuthorization(
@@ -342,6 +343,7 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResults> getAdminAuthorizationsForOpenAdom(@PathVariable("nameOrId") final String applicationNameOrId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
@@ -350,6 +352,7 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{applicationNameOrId}/authorization/user/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthorizationsResult getAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") final String applicationNameOrId, @PathVariable(name = "userLoginOrId") final String userLoginOrId) {
         return serviceContainer.authorizationService().getAuthorizationsForUserAndPublic(applicationNameOrId, userLoginOrId);
@@ -584,6 +587,7 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok(user);
     }
 
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") final String applicationNameOrId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());

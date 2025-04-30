@@ -122,4 +122,18 @@ public class JWTExtractor {
     public void setSetGetUserRole(Function<UUID, OreSiUserRole> getUserRole) {
         this.getUserRole = getUserRole;
     }
+
+
+
+    protected void clearSession(HttpServletRequest request, HttpServletResponse response) throws IOException {
+
+        // Invalider la session côté serveur
+        request.getSession().invalidate();
+
+        Cookie cookie = new Cookie(JWT_COOKIE_NAME, null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(0);
+        response.addCookie(cookie);
+    }
 }
