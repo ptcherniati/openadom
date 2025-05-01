@@ -225,7 +225,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                     return new AuthorizationNoRestriction(Set.of());
                 }
                 final ArrayNode operationTypesNode = (ArrayNode) node.get("operationtypes");
-                final JsonNode timeScope = node.get("timescope");
+                final JsonNode timeScope = node.get("timeScope");
                 final JsonNode authorizationScope = node.get("authorizationscope");
                 Set<OperationType> operationTypes = extractOperationTypes(operationTypesNode);
                 if (null == authorizationScope) {

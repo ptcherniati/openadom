@@ -7,6 +7,10 @@
             </Pattern>
         </layout>
     </appender>
+    <logger name="com.fasterxml.jackson" level="TRACE"/>
+    <logger name="org.springframework.http.converter.json" level="TRACE"/>
+    <logger name="org.springframework.web.servlet.mvc.method.annotation" level="TRACE"/>
+
 
     <root level="error">
         <appender-ref ref="CONSOLE"/>
