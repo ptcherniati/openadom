@@ -309,9 +309,9 @@ public class AuthorizationResources implements ServiceContainerBean {
                 .map(ApplicationPersona::application)
                 .orElse(null);
         List<AuthorizationRequestError> errors = new ArrayList<>();
-        CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization = serviceContainer.authorizationService()
+        CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization =
+                serviceContainer.authorizationService()
                 .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
-        serviceContainer.authorizationService().createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
