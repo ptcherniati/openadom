@@ -17,7 +17,7 @@ import java.util.Optional;
 public class OreSiAuthenticationToken  extends AbstractAuthenticationToken implements Authentication {
 
     private final Object principal;
-    private Object credentials;
+    private final Object credentials;
     private ApplicationPersona applicationPersona;
     private SystemPersona systemPersona;
     private String applicationName;

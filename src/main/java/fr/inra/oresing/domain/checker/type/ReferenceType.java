@@ -38,7 +38,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
     private final String refType;
     public final CheckerTarget target(){
         return target;
-    };
+    }
 
     public void setReferenceValues(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
         this.referenceValues = referenceValues;

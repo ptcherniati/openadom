@@ -37,6 +37,7 @@ import java.util.*;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -163,6 +164,7 @@ public class RightsTest {
         final Cookie cookie = new Cookie(JWTExtractor.JWT_COOKIE_NAME, token);
         cookie.setPath("/");
         cookie.setHttpOnly(true);
+        cookie.setSecure(false);
         return cookie;
     }
 
@@ -174,12 +176,12 @@ public class RightsTest {
                 .andExpect(status().isOk()); // Devrait renvoyer 200 OK car l'utilisateur est connecté
 
         // Étape 2: Déconnexion de l'utilisateur
-        mockMvc.perform(delete("/api/v1/logout")
+        mockMvc.perform(delete("/api/v1/logout").with(csrf().asHeader())
                         .cookie(authCookie))
                 .andExpect(status().isOk()); // La déconnexion devrait réussir
 
         // Récupérer le cookie de déconnexion (qui devrait être expiré)
-        authCookie = mockMvc.perform(delete("/api/v1/logout")
+        authCookie = mockMvc.perform(delete("/api/v1/logout").with(csrf().asHeader())
                         .cookie(authCookie))
                 .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 

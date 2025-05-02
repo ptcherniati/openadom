@@ -91,7 +91,7 @@ public record HierarchicalDependancesBuilder(
                 new Validation(buildErrorWithValidationParams, null, Map.of("domainTags", domainTags)));
     }
 
-    protected static void addRecursivlyDepends(Collection<BuilderNode> nodes) {
+    private static void addRecursivlyDepends(Collection<BuilderNode> nodes) {
         Map<String, BuilderNode> nodeMap = nodes.stream()
                 .collect(Collectors.toMap(BuilderNode::nodeName, node -> node));
         Map<String, Set<String>> dependsByNodeNames = new HashMap<>();

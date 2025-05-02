@@ -89,7 +89,6 @@ public class SecurityConfig {
                 .securityContext(security -> security
                         .securityContextRepository(new RequestAttributeSecurityContextRepository())
                 );
-        ;
         return http.build();
     }
 

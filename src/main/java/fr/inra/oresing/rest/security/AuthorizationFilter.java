@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
@@ -27,7 +26,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -69,7 +67,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             OreExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
         this.requestContext = requestContext;
-        this.mapper = jsonRowMapper;
+        mapper = jsonRowMapper;
         this.JWTExtractor = new JWTExtractor(
                 mapper,
                 jwtExpiration,
@@ -91,7 +89,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             return;
         }
         if (path.endsWith("/logout")) {
-            JWTExtractor.clearSession(request, response);
+            JWTExtractor.clearSession(request, response, false);
             chain.doFilter(request, response);
             return;
         }
@@ -109,7 +107,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         }
         request.setAttribute(AUTHORIZATION_ALREADY_DONE, true);
         try {
-            OreSiAuthenticationToken token = buildAuthentication(request, response);
+            OreSiAuthenticationToken token = buildAuthentication(request, response, request.isSecure());
             requestContext.setAuthenticationToken(token);
         } catch (AuthenticationFailure e) {
             ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
@@ -124,20 +122,20 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     }
 
 
-    private OreSiAuthenticationToken buildAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationFailure, IOException {
+    private OreSiAuthenticationToken buildAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws AuthenticationFailure, IOException {
         String path = request.getRequestURI();
         String method = request.getMethod();
         if (HttpMethod.OPTIONS.name().equals(method)) {
             return null;
         }
         if (HttpMethod.POST.name().equals(method) && path.endsWith("/login")) {
-            return buildLoginAuthentication(request, response);
+            return buildLoginAuthentication(request, response, isSecureEnvironnement);
         } else if (HttpMethod.POST.name().equals(method) && path.endsWith("/users")) {
             return buildCreateUserAuthentication();
         } else if (HttpMethod.PUT.name().equals(method) && path.endsWith("/users")) {
             return buildUpdateUserAuthentication(request);
         } else {
-            OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response);
+            OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response, isSecureEnvironnement);
             requestContext.setAuthenticationToken(oreSiAuthenticationToken); //premier stockage pour certaines méthodes
             if (oreSiAuthenticationToken == null) {
                 return null;
@@ -220,7 +218,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         return authenticationToken;
     }
 
-    private OreSiAuthenticationToken buildLoginAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationFailure {
+    private OreSiAuthenticationToken buildLoginAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws AuthenticationFailure {
         String loginValue = request.getParameter("login");
         String passwordValue = request.getParameter("password");
 
@@ -229,7 +227,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                 LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
                         .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
                         .forLoginPassword(loginValue, passwordValue);
-                JWTExtractor.refreshJwtInResponse(response, loginAdminResult.id());
+                JWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
                 return new OreSiAuthenticationToken(
                         loginAdminResult,
                         request.getRequestURI(),
@@ -265,13 +263,13 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         );
     }
 
-    private OreSiAuthenticationToken handleJwtAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private OreSiAuthenticationToken handleJwtAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws IOException {
         String jwtCookie = JWTExtractor.extractJwtCookie(request);
         if (jwtCookie == null) {
             return null;
         }
         OreSiRequestClient requestClient = JWTExtractor.getRequestClientFromJwt(jwtCookie);
-        JWTExtractor.refreshJwtInResponse(response, requestClient.id());
+        JWTExtractor.refreshJwtInResponse(response, requestClient.id(), isSecureEnvironnement);
         return new OreSiAuthenticationToken(
                 requestClient,
                 request.getRequestURI(),

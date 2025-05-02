@@ -202,7 +202,7 @@ public class DataImporter {
                     Optional.ofNullable(missingLines.get(lineKey.naturalKey()))
                             .map(LinkedList::new)
                             .map(missingLines1 -> {
-                                ImmutableList.Builder<ReferenceDatumAfterChecking> builder = ImmutableList.<ReferenceDatumAfterChecking>builder();
+                                ImmutableList.Builder<ReferenceDatumAfterChecking> builder = ImmutableList.builder();
                                 for (RowWithReferenceDatum missingLine : missingLines1) {
                                     List<ReferenceDatumAfterChecking> check = check(
                                             buildKey,
@@ -307,10 +307,7 @@ public class DataImporter {
                     return Stream.of(entry.getKey());
                 }).noneMatch(column -> column.equals(lineChecker.target()) ||
                         column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
-        if (matchingTarget) {
-            return true;
-        }
-        return false;
+        return matchingTarget;
     }
 
     /**

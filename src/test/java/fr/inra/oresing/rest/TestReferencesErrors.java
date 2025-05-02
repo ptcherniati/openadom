@@ -43,6 +43,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -82,7 +83,6 @@ public class TestReferencesErrors {
     public static void registerErrors() throws IOException {
         String errorsAsString = new ObjectMapper().writeValueAsString(responses);
         final File errorsFile = new File("ui/cypress/fixtures/applications/errors/ref_ola_errors.json");
-        log.debug(errorsFile.getAbsolutePath());
         final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
         writer.write(errorsAsString);
         writer.close();
@@ -189,7 +189,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getKey() + ".csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", "proprietes_taxon")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -203,7 +203,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -234,7 +234,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/condition_prelevements")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -258,7 +258,7 @@ public class TestReferencesErrors {
     private void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
         mockMvc.perform(put("/api/v1/authorization/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
-                        .param("applicationPattern", pattern)
+                        .param("applicationPattern", pattern).with(csrf().asHeader())
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(userId.toString())))
@@ -300,7 +300,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnCookie))
                         .andDo(result -> {
                             if (result.getResponse().getStatus() > 300) {
@@ -333,7 +333,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -376,7 +376,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnsCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -404,7 +404,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnsCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();

@@ -77,6 +77,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -316,7 +317,7 @@ public class OreSiResourcesTest {
 
 
                 response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/{refType}", e.getKey())
-                                .file(refFile)
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(monsoreCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -344,7 +345,7 @@ public class OreSiResourcesTest {
                     final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                     response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/{refType}", e.getKey())
                                     .file(refFile)
-                                    .cookie(monsoreCookie))
+                                    .cookie(monsoreCookie).with(csrf().asHeader()))
                             .andDo(result -> {
                                 final int status = result.getResponse().getStatus();
                                 if (status > 300) {
@@ -406,7 +407,7 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/{refType}", "pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(monsoreCookie))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -421,7 +422,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             // sans droit on ne peut pas
             Assertions.assertInstanceOf(NotApplicationDataWriterException.class, mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(withRigthsCookie))
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
@@ -446,7 +447,7 @@ public class OreSiResourcesTest {
             String jsonRightsForMonsoereId = JsonPath.parse(jsonRightsForMonsoere).read("$.authorizationId");
             //avec les droits on peut publier
             response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(monsoreCookie/*withRigthsCookie*/))
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
@@ -457,11 +458,11 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(StringUtils.abbreviate(response, 50));
+            
 
             //sans droit on ne peut pas
             response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(lambdaCookie))
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResponse().getContentAsString();
@@ -472,35 +473,34 @@ public class OreSiResourcesTest {
 
             //avec les droits public on peut publier même sans droit
             response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(lambdaCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
             // on supprime les droits public
-            mockMvc.perform(delete("/api/v1/applications/monsoresimple/authorization/" + publicRightsId)
+            mockMvc.perform(delete("/api/v1/applications/monsoresimple/authorization/" + publicRightsId).with(csrf().asHeader())
                             .cookie(monsoreCookie))
                     .andExpect(status().is2xxSuccessful());
 
             response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(lambdaCookie))
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(StringUtils.abbreviate(response, 50));
+            
         }
         // ajout de data avec trim à faire
         resource = getClass().getResource(Fixtures.getPemDataToTrimResourceName());
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
             final String actualJson = getPemData(monsoreCookie);
-            log.debug(StringUtils.abbreviate(actualJson, 50));
         }
         final String contentAsString = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
                         .cookie(monsoreCookie))
@@ -547,11 +547,11 @@ public class OreSiResourcesTest {
             final byte[] bytes = wrongData.getBytes(StandardCharsets.UTF_8);
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", bytes);
             response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(monsoreCookie))
                     .andExpect(status().isBadRequest())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
+            
         } catch (final IOException e) {
             throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
         }
@@ -562,7 +562,7 @@ public class OreSiResourcesTest {
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
 
-        log.debug(StringUtils.abbreviate(response, 50));
+        
 
         {
             final String expectedJson = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.json")), StandardCharsets.UTF_8);
@@ -570,7 +570,6 @@ public class OreSiResourcesTest {
             final List<String> list = new ArrayList<>();
 
             final String actualJson = getPemData(monsoreCookie);
-            log.debug(StringUtils.abbreviate(actualJson, 50));
         }
         String filter = """
                 {
@@ -625,7 +624,6 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", hasSize(32)))
                     .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", hasSize(96)))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(actualJson, 50));
 
         }
 
@@ -655,11 +653,11 @@ public class OreSiResourcesTest {
                     .replace("projet_atlantique", "projet_atlantiqu");
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", invalidCsv.getBytes(StandardCharsets.UTF_8));
             response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(monsoreCookie))
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
+            
             Assertions.assertTrue(response.contains("projet_manch"));
             Assertions.assertTrue(response.contains("projet_atlantiqu"));
             final String finalResponse = response;
@@ -695,7 +693,7 @@ public class OreSiResourcesTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        mockMvc.perform(delete("/api/v1/applications/monsoresimple/data/pem")
+        mockMvc.perform(delete("/api/v1/applications/monsoresimple/data/pem").with(csrf().asHeader())
                         .param("downloadDatasetQuery", filter)
                         .cookie(monsoreCookie))
                 .andExpect(status().is2xxSuccessful())
@@ -832,7 +830,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 final String response = mockMvc.perform(multipart("/api/v1/applications/multiplicity/data/{refType}", e.getKey())
-                                .file(refFile)
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
@@ -899,7 +897,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 mockMvc.perform(multipart("/api/v1/applications/minautor/data/{refType}", e.getKey())
-                                .file(refFile)
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
@@ -910,7 +908,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 mockMvc.perform(multipart("/api/v1/applications/minautor/data/{refType}", e.getKey())
-                                .file(refFile)
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
@@ -1046,14 +1044,14 @@ public class OreSiResourcesTest {
                     }
                     """;
 
-            String response = mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest")
+            String response = mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest").with(csrf().asHeader())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(rightsRequest)
                             .cookie(authCookie)))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest")
+            mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest").with(csrf().asHeader())
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(rightsRequest)
                             .cookie(lambdaCookie)))
@@ -1094,7 +1092,7 @@ public class OreSiResourcesTest {
             Assertions.assertInstanceOf(
                     NotApplicationDataWriterException.class,
                     mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
-                                    .file(refFile)
+                                    .file(refFile).with(csrf().asHeader())
                                     .cookie(withRigthsCookie))
                             .andExpect(status().is4xxClientError())
                             .andReturn()
@@ -1106,7 +1104,7 @@ public class OreSiResourcesTest {
             Assertions.assertInstanceOf(
                     NotApplicationDataWriterException.class,
                     mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites")
-                                    .file(refFile)
+                                    .file(refFile).with(csrf().asHeader())
                                     .cookie(withRigthsCookie))
                             .andExpect(status().is4xxClientError())
                             .andReturn()
@@ -1137,7 +1135,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
 
             response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(withRigthsCookie))
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
@@ -1156,7 +1154,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
 
             response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(withRigthsCookie))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -1172,12 +1170,10 @@ public class OreSiResourcesTest {
                     String contentAsString = result.getResponse().getContentAsString();
                     String[] read1 = JsonPath.parse(contentAsString).read("$.rows[*].naturalKey", String[].class);
                     naturalKeys.addAll(Arrays.asList(read1));
-                    System.out.println(naturalKeys);
                     CollectionUtils.isEqualCollection(naturalKeys, List.of("bassin_versant", "plateforme"));
 
                     read1 = JsonPath.parse(contentAsString).read("$.rows[*].hierarchicalKey", String[].class);
                     hierarchicalKeys.addAll(Arrays.asList(read1));
-                    System.out.println(hierarchicalKeys);
                     CollectionUtils.isEqualCollection(hierarchicalKeys, List.of("type_de_sitesKbassin_versant", "type_de_sitesKplateforme"));
 
                     read1 = JsonPath.parse(contentAsString).read("$.rows[*].rowId[*]", String[].class);
@@ -1213,14 +1209,14 @@ public class OreSiResourcesTest {
                         .param("downloadDatasetQuery", SELECT_ROW_BY_NATURAL_KEY.formatted(hierarchicalKeys.get(1)))
                         .cookie(withRigthsCookie))
                 .andExpect(jsonPath("$.rows[0].hierarchicalKey", equalTo(hierarchicalKeys.get(1))));
-        String deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{data}", "type_de_sites")
+        String deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{data}", "type_de_sites").with(csrf().asHeader())
                         .param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1)))
                         .cookie(withRigthsCookie))
                 .andReturn().getResponse().getContentAsString();
         Assertions.assertTrue(deletedIds.contains(ids.get(1)));
 
         //suppression par id
-        mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites")
+        mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites").with(csrf().asHeader())
                         .param("_row_id_", ids.get(1))
                         .cookie(withRigthsCookie))
                 .andReturn().getResponse().getContentAsString();
@@ -1235,7 +1231,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
@@ -1295,7 +1291,7 @@ public class OreSiResourcesTest {
                       }
                     }""";
             mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers")
-                            .file(addFile)
+                            .file(addFile).with(csrf().asHeader())
                             .param("params", json)
                             .cookie(authCookie)))
                     .andDo(result -> {
@@ -1391,11 +1387,11 @@ public class OreSiResourcesTest {
                                 entries.add(zipEntry);
                             }
                         }
-                        System.out.println();
+                        //System.out.println();
                         List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
                                 .collect(Collectors.toList());
-                        System.out.println(entryNames);
+                        //System.out.println(entryNames);
                         Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere_infos.txt"), String.format("Le zip doit contenir %s", "monsoere_infos.txt"));
                         Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere.yaml"), String.format("Le zip doit contenir %s", "monsoere.yaml"));
                     });
@@ -1465,7 +1461,7 @@ public class OreSiResourcesTest {
                 // sans droit dépôt impossible de déposer
                 // en fait on n'a pas les droits de lecture sur projet
                 response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .param("params", Fixtures.getPemRepositoryParams(projet, plateforme, site, false))
                                 .cookie(withRigthsCookie))
                         .andExpect(status().is4xxClientError())
@@ -1477,7 +1473,6 @@ public class OreSiResourcesTest {
                         })
                         .andExpect(jsonPath("$.message", Is.is(NotApplicationDataWriterException.NO_RIGHT_FOR_USER_DATA_WRITER)))
                         .andReturn().getResponse().getContentAsString();
-                log.debug(response);
             } catch (ServletException servletException) {
                 SiOreAuthorizationRequestException cause = (SiOreAuthorizationRequestException) servletException.getCause();
                 AuthorizationRequestException requestException = cause.getException();
@@ -1497,12 +1492,11 @@ public class OreSiResourcesTest {
             //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
             for (int i = 0; i < 3; i++) {
                 response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .param("params", Fixtures.getPemRepositoryParams(projet, plateforme, site, false))
                                 .cookie(withRigthsCookie))
                         .andExpect(status().is2xxSuccessful())
                         .andReturn().getResponse().getContentAsString();
-                log.debug(response);
             }
             //on regarde les versions déposées
             response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
@@ -1530,11 +1524,10 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.rows", hasSize(0)))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
 
             // on publie le dernier fichier déposé sans les droits
 
-            Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+            Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").with(csrf().asHeader())
                             .param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
                             .cookie(withRigthsCookie))
                     .andExpect(status().is4xxClientError())
@@ -1555,12 +1548,12 @@ public class OreSiResourcesTest {
 
             // on publie le dernier fichier déposé
 
-            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").with(csrf().asHeader())
                             .param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
                             .cookie(withRigthsCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
+            
 
             // on récupère la liste des versions déposées
 
@@ -1574,7 +1567,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(1)))
                     .andExpect(jsonPath("$[*][?(@.params.published == true )].id").value(oirFilesUUID))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
+            
 
             // on récupère le data en base
 
@@ -1585,7 +1578,7 @@ public class OreSiResourcesTest {
                     //.andExpect(jsonPath("$.rows[*]", hasSize(34)))
                     .andExpect(jsonPath("$.rows[*].values[? (@.chemin == 'NULL_KEY__oir__p1' && @.projet == 'projet_manche')]", hasSize(34)))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
+            
 
             final byte[] responseToByteArray = mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/data/pem/zip")
                                     .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -1620,12 +1613,12 @@ public class OreSiResourcesTest {
         //on publie une autre version
         final String fileUUID = publishOrDepublish(authCookie, "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true);
         // on supprime l'application publiée
-        response = mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID)
+        response = mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID).with(csrf().asHeader())
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         Assertions.assertEquals(response, fileUUID);
-        log.debug(StringUtils.abbreviate(response, 50));
+        
         try {
             publishOrDepublish(withRigthsCookie, "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
 
@@ -1644,12 +1637,12 @@ public class OreSiResourcesTest {
 
         // on depublie le fichier oir déposé (les droits publication valent dépublication
 
-        response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+        response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").with(csrf().asHeader())
                         .param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, false))
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
+        
 
         // on récupère la liste des versions déposées
 
@@ -1662,7 +1655,7 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(3)))
                 .andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
+        
 
         // on récupère le data en base si j'ai les droits de publication je peux aussi lire les données avec ces droits (seuelement ^pour nivelle
 
@@ -1699,9 +1692,9 @@ public class OreSiResourcesTest {
                 .andExpect(jsonPath("$.rows[*]", hasSize(136)))
                 .andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'NULL_KEY__oir__p1')][? (@.projet.value == 'projet_manche')]", hasSize(0)))
                 .andReturn().getResponse().getContentAsString();
-        log.debug(StringUtils.abbreviate(response, 50));
+        
         // on supprime le fichier on peut dépublier mais pas supprimer le fichier
-        NotApplicationCanDeleteRightsException resolvedException = (NotApplicationCanDeleteRightsException) mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)
+        NotApplicationCanDeleteRightsException resolvedException = (NotApplicationCanDeleteRightsException) mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader())
                         .cookie(withRigthsCookie))
                 .andExpect(status().is4xxClientError())
                 .andReturn()
@@ -1723,7 +1716,7 @@ public class OreSiResourcesTest {
                 "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", authCookie);
 
         // on supprime le fichier a les droits car à les droits de publication
-        mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)
+        mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader())
                         .cookie(withRigthsCookie))
                 .andExpect(status().is2xxSuccessful());
     }
@@ -1748,7 +1741,7 @@ public class OreSiResourcesTest {
                         final MockMultipartFile refFile = new MockMultipartFile("file", refName1, "text/plain", refStream);
 
                         mockMvc.perform(multipart("/api/v1/applications/teledec/data/{refType}", refName1)
-                                        .file(refFile)
+                                        .file(refFile).with(csrf().asHeader())
                                         .cookie(authCookie))
                                 .andExpect(status().isCreated())
                                 .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -1801,7 +1794,7 @@ public class OreSiResourcesTest {
                         final MockMultipartFile dataFile = new MockMultipartFile("file", dataName, "text/plain", dataStream);
 
                         mockMvc.perform(multipart("/api/v1/applications/teledec/data/{data}", dataName)
-                                        .file(dataFile)
+                                        .file(dataFile).with(csrf().asHeader())
                                         .cookie(authCookie))
                                 .andDo(result -> {
                                     if (result.getResponse().getStatus() != 201) {
@@ -1859,7 +1852,7 @@ public class OreSiResourcesTest {
                            }
                       }
                 }""", datatype, localization, from, to, String.join("\",\"", roles), withRigthsUserId, System.currentTimeMillis());
-        MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/authorization")
+        MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/authorization").with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(authenticateCookie1)
                 .content(json);
@@ -1902,7 +1895,7 @@ public class OreSiResourcesTest {
                 withRigthsUserId,
                 authorizationForAll
         );
-        MockHttpServletRequestBuilder createRight = multipart("/api/v1/applications/monsore/authorization")
+        MockHttpServletRequestBuilder createRight = multipart("/api/v1/applications/monsore/authorization").with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(authCookie)
                 .content(json);
@@ -1948,7 +1941,7 @@ public class OreSiResourcesTest {
                       }
                    }
                 }""", role, datatype, withRigthsUserId);
-        MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/authorization")
+        MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/authorization").with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(cookie)
                 .content(json);
@@ -1968,7 +1961,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
             refFile.transferTo(Path.of("/tmp/pem.csv"));
             MvcResult mockResponse = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .param("params", Fixtures.getPemRepositoryParams(
                                     projet,
                                     plateforme,
@@ -1979,7 +1972,6 @@ public class OreSiResourcesTest {
             if (mockResponse.getResponse().getStatus() >= 200 && mockResponse.getResponse().getStatus() < 300) {
                 final String fileUUID = JsonPath.parse(mockResponse.getResponse().getContentAsString()).read("$.id");
                 testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
-                log.debug(StringUtils.abbreviate(mockResponse.getResponse().getContentAsString(), 50));
                 return fileUUID;
             }
             throw Objects.requireNonNull(mockResponse.getResolvedException());
@@ -2055,7 +2047,7 @@ public class OreSiResourcesTest {
                     }""", lambdaUserId, "date_de_visite");
 
 
-            final MockHttpServletRequestBuilder create = post("/api/v1/applications/progressive/authorization")
+            final MockHttpServletRequestBuilder create = post("/api/v1/applications/progressive/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -2063,7 +2055,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             authorizationId = JsonPath.parse(response).read("$.authorizationId", String.class);
-            log.debug(StringUtils.abbreviate(response, 50));
+            
         }
 
         {
@@ -2083,7 +2075,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*].values.relevant.numero").value(hasItemInArray(equalTo("125")), String[].class))
                     .andReturn().getResponse().getContentAsString();
         }
-        final MockHttpServletRequestBuilder delete = delete(String.format("/api/v1/applications/progressive/authorization/%s", authorizationId))
+        final MockHttpServletRequestBuilder delete = delete(String.format("/api/v1/applications/progressive/authorization/%s", authorizationId)).with(csrf().asHeader())
                 .contentType(MediaType.APPLICATION_JSON)
                 .cookie(authCookie);
         mockMvc.perform(delete)
@@ -2217,7 +2209,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(multipart("/api/v1/applications/progressive/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -2235,7 +2227,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 mockMvc.perform(multipart("/api/v1/applications/progressive/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.fileId", IsNull.notNullValue()))
@@ -2276,7 +2268,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -2304,7 +2296,7 @@ public class OreSiResourcesTest {
                     final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                     response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                    .file(refFile)
+                                    .file(refFile).with(csrf().asHeader())
                                     .cookie(authCookie))
                             .andExpect(status().isCreated())
                             .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -2319,7 +2311,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -2368,7 +2360,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
@@ -2419,7 +2411,7 @@ public class OreSiResourcesTest {
                     final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                     response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey())
-                                    .file(refFile)
+                                    .file(refFile).with(csrf().asHeader())
                                     .cookie(authCookie))
                             .andExpect(status().isCreated())
                             .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -2434,7 +2426,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -2473,7 +2465,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                     response = mockMvc.perform(multipart("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
@@ -2567,6 +2559,7 @@ public class OreSiResourcesTest {
         final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", pattern)
+                        .with(csrf().asHeader())
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 //.andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(userId.toString())))
@@ -2581,12 +2574,12 @@ public class OreSiResourcesTest {
             final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
 
             final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/SWC")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(StringUtils.abbreviate(response, 50));
+            
         }
 
         {
@@ -2595,8 +2588,6 @@ public class OreSiResourcesTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(actualJson, 50));
             Assertions.assertEquals(2912, StringUtils.countMatches(actualJson, "\"SWC\":"));
         }
 
@@ -2620,12 +2611,12 @@ public class OreSiResourcesTest {
             final MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
 
             final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/biomasse_production_teneur")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(StringUtils.abbreviate(response, 50));
+            
         }
 
         {
@@ -2634,8 +2625,6 @@ public class OreSiResourcesTest {
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(actualJson, 50));
             Assertions.assertEquals(252, StringUtils.countMatches(actualJson, "prairie permanente"));
         }
 
@@ -2656,7 +2645,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
 
             final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .param("params", """
                                     {
                                         "fileid":null,
@@ -2682,7 +2671,7 @@ public class OreSiResourcesTest {
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
-            log.debug(StringUtils.abbreviate(response, 50));
+            
         }
 
         // restitution de data json
@@ -2702,8 +2691,6 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*]", hasSize(17568)))
 //                    .andExpect(content().json(expectedJson))
                     .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(actualJson, 50));
         }
 
         // restitution de data csv
@@ -2730,7 +2717,7 @@ public class OreSiResourcesTest {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andDo(result -> {
                             final int status = result.getResponse().getStatus();
@@ -2792,7 +2779,7 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().is2xxSuccessful());
             }
@@ -2802,7 +2789,7 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getHauteFrequenceDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -2824,7 +2811,7 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -2842,7 +2829,7 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude2.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -2862,7 +2849,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude_duplicate.csv", "text/plain", refStream);
             ResultActions error = mockMvc
                     .perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie));
             //fail();
         } catch (final ServletException e) {
@@ -2897,7 +2884,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -2915,7 +2902,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude2.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -2935,7 +2922,7 @@ on test le dépôt d'un fichier récursif
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude_duplicated.csv", "text/plain", refStream);
             ResultActions error = mockMvc
                     .perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie));
             //fail();
         } catch (final ServletException e) {
@@ -2967,7 +2954,7 @@ on test le dépôt d'un fichier récursif
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude_missing_parent.csv", "text/plain", refStream);
             ResultActions error = mockMvc
                     .perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie));
             //fail();
         } catch (final ServletException e) {
@@ -2998,7 +2985,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data_without_duplicateds.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3010,7 +2997,7 @@ on test le dépôt d'un fichier récursif
                     .andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            ;
         }
 
         // on  redepose le fichier
@@ -3018,7 +3005,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data_without_duplicateds.csv", "text/plain", refStream);
             String response = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     //.andExpect(jsonPath("$[0].validationCheckResult.messageParams.file", IsEqual.equalTo("dty"))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.failingRowContent", StringContains.containsString("1980-02-23")))
@@ -3032,14 +3019,14 @@ on test le dépôt d'un fichier récursif
                     .andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            ;
         }
         //on teste un dépot de fichier de données avec lignes dupliquées
         String dataWithDuplicateds = Fixtures.getDuplicatedDataFiles().get("data_with_duplicateds");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithDuplicateds)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data_with_duplicateds.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is4xxClientError())
                     .andExpect(jsonPath("$[0].validationCheckResult.message", IsEqual.equalTo("duplicatedLineInDatatype")))
@@ -3057,7 +3044,7 @@ on test le dépôt d'un fichier récursif
                     .andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(response);
+            ;
         }
     }
 
@@ -3069,7 +3056,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream configurationFile = fixtures.getClass().getResourceAsStream(Fixtures.getOlaApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
             mockMvc.perform(multipart("/api/v1/applications/olac")
-                            .file(configuration)
+                            .file(configuration).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3085,7 +3072,7 @@ on test le dépôt d'un fichier récursif
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().is2xxSuccessful());
             }
@@ -3095,7 +3082,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getConditionPrelevementDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/condition_prelevements")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3104,7 +3091,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getPhysicoChimieDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/physico-chimie")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3113,7 +3100,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getSondeDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/sonde_truncated")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
 
@@ -3123,7 +3110,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getPhytoAggregatedDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3132,7 +3119,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getPhytoplanctonDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton__truncated.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3141,7 +3128,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getZooplanctonDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zooplancton__truncated.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton__truncated")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3150,7 +3137,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getZooplactonBiovolumDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3164,7 +3151,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream configurationFile = fixtures.getClass().getResourceAsStream(Fixtures.getForetEssaiApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "foret_essai.yaml", "text/plain", configurationFile);
             mockMvc.perform(multipart("/api/v1/applications/foret")
-                            .file(configuration)
+                            .file(configuration).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3175,7 +3162,7 @@ on test le dépôt d'un fichier récursif
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().is2xxSuccessful());
             }
@@ -3186,7 +3173,7 @@ on test le dépôt d'un fichier récursif
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(entry.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/foret/data/" + entry.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().is2xxSuccessful());
 
@@ -3214,7 +3201,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream configurationFile = fixtures.getClass().getResourceAsStream(Fixtures.getForetApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
             mockMvc.perform(multipart("/api/v1/applications/foret")
-                            .file(configuration)
+                            .file(configuration).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3224,7 +3211,7 @@ on test le dépôt d'un fichier récursif
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().is2xxSuccessful());
             }
@@ -3234,7 +3221,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getFluxMeteoForetDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -3248,11 +3235,11 @@ on test le dépôt d'un fichier récursif
         try (final InputStream in = fixtures.openSwcDataResourceName(false)) {
             final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
             final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/SWC")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
+            
         }
     }
 

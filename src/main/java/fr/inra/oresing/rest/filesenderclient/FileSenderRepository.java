@@ -191,11 +191,8 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         //String signature = generateSignature("PUT", "/file/" + file.getInt("id") + "/chunk/" + offset, params, chunk);
 
         // You might want to add the signature to your headers or params as per your server's logic
-        System.out.println("call for putchunck");
         int fileId = file.getInt("id");
-        System.out.println("**************************************************************");
         JSONObject puchunck = call("put", "/file/" + fileId + "/chunk/" + offset, params, null, chunk, headers);
-        System.out.println("**************************************************************");
         call("get", "/file/%d".formatted(fileId), new HashMap<>(), null, null, new HashMap<>());
 
         return puchunck;
@@ -249,9 +246,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
             }
 
             if (content != null) {
-                System.out.println("JSON Content: " + content.toString(4)); // Pretty print the JSON
-
-
                 ((HttpEntityEnclosingRequestBase) request).setEntity(new StringEntity(content.toString(), StandardCharsets.UTF_8));
             } else if (rawContent != null) {
                 ((HttpEntityEnclosingRequestBase) request).setEntity(new ByteArrayEntity(rawContent));

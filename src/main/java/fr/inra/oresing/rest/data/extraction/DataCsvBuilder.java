@@ -51,14 +51,6 @@ public class DataCsvBuilder {
         return new DataCsvBuilder(referenceImporterContextBuilder);
     }
 
-    private void addLineToZip(CSVWriter writer, List<String> rowAsRecord) {
-        try {
-            writer.writeNext(rowAsRecord.toArray(new String[]{}));
-        } catch (Exception e) {
-            System.out.println(e.getMessage());
-        }
-    }
-
     private static DataRow addRefsLinkedTo(DataRow dataRow, UUIDsfromData uuidsfromData) {
         dataRow.refsLinkedTo().entrySet().forEach(uuidsfromData::addRefsLinkedTo);
         return dataRow;

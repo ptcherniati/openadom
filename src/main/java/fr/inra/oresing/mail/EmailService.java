@@ -41,25 +41,25 @@ public class EmailService implements Email, ServiceContainerBean {
                                                    "To validate your e-maioresil, enter the validation key when connecting.%n\n";
     private static final String VALIDATION_KEY_SUBJECT = "Clef de validation / Validation key";
     private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_SUBJECTS = Map.of(
-            UNPUBLISHED, Map.<Locale, String>of(
+            UNPUBLISHED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été dépublié",
                     Locale.ENGLISH, "Your file has been unpublished"
             ),
-            UPLOAD_STATE.PUBLISHED, Map.<Locale, String>of(
+            UPLOAD_STATE.PUBLISHED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été publié",
                     Locale.ENGLISH, "Your file has been published"
             ),
-            UPLOAD_STATE.UPLOADED, Map.<Locale, String>of(
+            UPLOAD_STATE.UPLOADED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été enregistré",
                     Locale.ENGLISH, "Your file has been register"
             ),
-            UPLOAD_STATE.DELETED, Map.<Locale, String>of(
+            UPLOAD_STATE.DELETED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été supprimé",
                     Locale.ENGLISH, "Your file has been deleted"
             )
     );
     private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_TEXTS = Map.of(
-            UNPUBLISHED, Map.<Locale, String>of(
+            UNPUBLISHED, Map.of(
                     Locale.FRENCH, """
                             Le fichier de données %1$s a bien été dépublié pour l'application %2$s.
                             %1$s continent %3$s enregistrement(s)""",
@@ -67,7 +67,7 @@ public class EmailService implements Email, ServiceContainerBean {
                             The data file %1$s has been successfully unpublished for the application %2$s.
                             %1$s continent %3$s record(s)"""
             ),
-            UPLOAD_STATE.PUBLISHED, Map.<Locale, String>of(
+            UPLOAD_STATE.PUBLISHED, Map.of(
                     Locale.FRENCH, """
                             Le fichier de données %1$s a bien été publié pour l'application %2$s.
                             %1$s continent %3$s enregistrement(s)""",
@@ -75,7 +75,7 @@ public class EmailService implements Email, ServiceContainerBean {
                             The data file %1$s has been successfully published for the application %2$s.
                             %1$s continent %3$s record(s)"""
             ),
-            UPLOAD_STATE.UPLOADED, Map.<Locale, String>of(
+            UPLOAD_STATE.UPLOADED, Map.of(
                     Locale.FRENCH, """
                             Le fichier de données %1$s a bien été enregistré pour l'application %2$s.
                             %1$s continent %3$s enregistrement(s)""",
@@ -83,7 +83,7 @@ public class EmailService implements Email, ServiceContainerBean {
                             The data file %1$s has been successfully register for the application %2$s.
                             %1$s continent %3$s record(s)"""
             ),
-            UPLOAD_STATE.DELETED, Map.<Locale, String>of(
+            UPLOAD_STATE.DELETED, Map.of(
                     Locale.FRENCH, """
                             Le fichier de données %1$s a bien été supprimé pour l'application %2$s.
                             %1$s continent %3$s enregistrement(s)""",
@@ -131,7 +131,7 @@ public class EmailService implements Email, ServiceContainerBean {
         UPLOADED,
         PUBLISHED,
         UNPUBLISHED,
-        DELETED;
+        DELETED
     }
 
     public enum MESSAGES {
@@ -197,10 +197,6 @@ public class EmailService implements Email, ServiceContainerBean {
         mailMessage.setFrom("openadom@inrae.fr");
         mailMessage.setSubject(subject);
         mailMessage.setText(text);
-        /*System.out.println("""
-                    sujet: %s
-                    text: %s
-                """.formatted(subject, text));*/
 
         mailSender.send(mailMessage);
     }
@@ -212,10 +208,6 @@ public class EmailService implements Email, ServiceContainerBean {
         mailMessage.setFrom("openadom@inrae.fr");
         mailMessage.setSubject(Locale.ENGLISH.equals(locale)?MSG_ERROR_SUBJECT_EN:MSG_ERROR_SUBJECT_FR);
         mailMessage.setText(body);
-        System.out.println("""
-                    sujet: %s
-                    text: %s
-                """.formatted("Oula la cela marche pas!", body));
 
         mailSender.send(mailMessage);
     }
