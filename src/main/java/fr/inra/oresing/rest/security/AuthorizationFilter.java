@@ -98,7 +98,8 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                         path.startsWith("/swagger-ui") ||
                         path.startsWith("/api-docs") ||
                         path.startsWith("/api/public") ||
-                        path.startsWith("/api-docs.yaml")) {
+                        path.startsWith("/api-docs.yaml")||
+                        path.equals("/error")) {
             chain.doFilter(request, response); // Skip le filtre
             return;
         }

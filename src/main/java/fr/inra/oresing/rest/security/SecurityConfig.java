@@ -2,6 +2,10 @@ package fr.inra.oresing.rest.security;
 
 import fr.inra.oresing.rest.authentication.evaluator.ApplicationPermissionEvaluator;
 import fr.inra.oresing.rest.services.AuthorizationService;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -21,8 +25,13 @@ import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.io.IOException;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -68,6 +77,7 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
                         .ignoringRequestMatchers("/swagger-ui/**", "/api-docs/**", "/api/public/**")
                         .ignoringRequestMatchers("/api/v1/login", "/api/v1/users", "/api/v1/logout")
                 )
@@ -80,16 +90,30 @@ public class SecurityConfig {
                                         "/swagger-ui/**",
                                         "/api-docs/**",
                                         "/api/public/**",
-                                        "/api-docs.yaml").permitAll()
+                                        "/api-docs.yaml",
+                                        "/error").permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/v1/login").hasAuthority(AuthorizationFilter.ROLE_AUTHENTIFIED_USER.getAuthority())
                                 .requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
                                 .requestMatchers(HttpMethod.PUT, "/api/v1/users").hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
                                 .anyRequest().authenticated())
                 .addFilterAfter(authorizationFilter, BasicAuthenticationFilter.class)
+                .addFilterAfter(new CsrfCookieFilter(), AuthorizationFilter.class)
                 .securityContext(security -> security
                         .securityContextRepository(new RequestAttributeSecurityContextRepository())
                 );
         return http.build();
+    }
+
+    private static final class CsrfCookieFilter extends OncePerRequestFilter {
+        @Override
+        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
+                                        FilterChain filterChain) throws IOException, ServletException {
+            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+            if (csrfToken != null) {
+                response.setHeader(csrfToken.getHeaderName(), csrfToken.getToken());
+            }
+            filterChain.doFilter(request, response);
+        }
     }
 
 

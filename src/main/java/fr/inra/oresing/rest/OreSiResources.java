@@ -292,7 +292,7 @@ public class OreSiResources implements ServiceContainerBean {
         });
     }
 
-    @PreAuthorize("isFullyAuthenticated()")
+    @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) {
         return buildFluxRequestNDJson(fluxSink -> {
