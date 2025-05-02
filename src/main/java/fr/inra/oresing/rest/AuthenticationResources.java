@@ -1,10 +1,13 @@
 package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
+import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
@@ -52,7 +55,6 @@ public class AuthenticationResources implements ServiceContainerBean {
     @Autowired
     private OreSiApiRequestContext request;
 
-
     @Tag(name = "Sécurité", description = "Endpoints liés à la sécurité et à l’authentification")
 
     @Operation(
@@ -69,6 +71,12 @@ public class AuthenticationResources implements ServiceContainerBean {
     @GetMapping("/csrf-token")
     public CsrfToken csrf(CsrfToken token) {
         return token;
+    }
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/me")
+    public OreSiRequestClient me() {
+        return request.getRequestClient();
     }
 
     @Operation(

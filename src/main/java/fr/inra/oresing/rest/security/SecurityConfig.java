@@ -117,7 +117,7 @@ public class SecurityConfig {
             registry.addMapping("/api/**")
                     .allowedOrigins(swaggerUrl, frontendOrigin)
                     .allowedMethods("POST", "PUT", "GET", "DELETE")
-                    .allowedHeaders("X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language")
+                    .allowedHeaders("X-CSRF-TOKEN", "X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language")
                     .allowCredentials(true)
                     .maxAge(MAX_AGE);
         }
