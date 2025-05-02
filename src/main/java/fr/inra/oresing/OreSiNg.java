@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
@@ -38,6 +39,10 @@ import java.util.Properties;
 
 @Slf4j
 @EnableWebMvc
+@OpenAPIDefinition(
+        servers = @io.swagger.v3.oas.annotations.servers.Server(url = "${springdoc.swagger-ui.server-url}", description = "Server URL")
+)
+
 @SpringBootApplication(scanBasePackages = "fr.inra.oresing")
 public class OreSiNg implements WebMvcConfigurer {
 

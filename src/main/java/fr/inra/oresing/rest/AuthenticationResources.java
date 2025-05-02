@@ -17,6 +17,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -25,6 +27,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
@@ -49,6 +52,24 @@ public class AuthenticationResources implements ServiceContainerBean {
     @Autowired
     private OreSiApiRequestContext request;
 
+
+    @Tag(name = "Sécurité", description = "Endpoints liés à la sécurité et à l’authentification")
+
+    @Operation(
+            summary = "Obtenir un token CSRF",
+            description = "Renvoie le token CSRF à utiliser dans les requêtes POST/PUT/DELETE. Nécessite d’être authentifié.",
+            security = @SecurityRequirement(name = "bearerAuth"),
+            responses = {
+                    @ApiResponse(responseCode = "200", description = "Token CSRF renvoyé"),
+                    @ApiResponse(responseCode = "401", description = "Non authentifié")
+            }
+    )
+
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("/csrf-token")
+    public CsrfToken csrf(CsrfToken token) {
+        return token;
+    }
 
     @Operation(
             summary = "Connexion utilisateur",

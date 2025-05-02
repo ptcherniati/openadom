@@ -11,8 +11,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
@@ -21,12 +19,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
-import org.springframework.security.web.authentication.logout.LogoutFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -57,16 +53,9 @@ public class SecurityConfig {
     @Autowired
     private AuthorizationFilter authorizationFilter;
     @Value("${allowed.origin}")
-    String allowedOrigin;
-
-
-    /*@Bean
-    @Primary
-    public AuthenticationManager authManager(HttpSecurity http) throws Exception {
-        return http.getSharedObject(AuthenticationManagerBuilder.class)
-                .authenticationProvider(authenticationProvider)
-                .build();
-    }*/
+    String frontendOrigin;
+    @Value("${springdoc.swagger-ui.server-url}")
+    String swaggerUrl;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -78,7 +67,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                        .ignoringRequestMatchers("/swagger-ui/**", "/api-docs/**", "/api/public/**")
+                        .ignoringRequestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**", "/api/public/**")
                         .ignoringRequestMatchers("/api/v1/login", "/api/v1/users", "/api/v1/logout")
                 )
                 .authorizeHttpRequests(auth ->
@@ -89,6 +78,7 @@ public class SecurityConfig {
                                         "/actuator/**",
                                         "/swagger-ui/**",
                                         "/api-docs/**",
+                                        "/v3/api-docs/**",
                                         "/api/public/**",
                                         "/api-docs.yaml",
                                         "/error").permitAll()
@@ -125,8 +115,9 @@ public class SecurityConfig {
         @Override
         public void addCorsMappings(CorsRegistry registry) {
             registry.addMapping("/api/**")
-                    .allowedOrigins(allowedOrigin)
+                    .allowedOrigins(swaggerUrl, frontendOrigin)
                     .allowedMethods("POST", "PUT", "GET", "DELETE")
+                    .allowedHeaders("X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language")
                     .allowCredentials(true)
                     .maxAge(MAX_AGE);
         }
