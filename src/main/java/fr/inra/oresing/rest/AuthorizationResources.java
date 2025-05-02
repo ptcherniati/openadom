@@ -175,7 +175,8 @@ public class AuthorizationResources implements ServiceContainerBean {
                                                     ]
                                                   },
                                                   "timeScope": {
-                                                    "fromDay": "1984-01-02"
+                                                    "format": "yyyy-MM-dd HH:mm:ss",
+                                                    "fromDay": "1984-01-02 23:59:59"
                                                   }
                                                 }
                                               }
@@ -224,8 +225,9 @@ public class AuthorizationResources implements ServiceContainerBean {
                                                 "pem": {
                                                   "operationTypes": ["extraction"],
                                                   "timeScope": {
-                                                    "fromDay": "1984-01-01",
-                                                    "toDay": "1984-01-02"
+                                                  "format": "dd/MM/yyyy",
+                                                    "fromDay": "01/01/1984",
+                                                    "toDay": "02/01/1984"
                                                   }
                                                 }
                                               }
