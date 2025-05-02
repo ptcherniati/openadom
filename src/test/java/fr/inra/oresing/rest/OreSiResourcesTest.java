@@ -1490,8 +1490,8 @@ public class OreSiResourcesTest {
                     List.of(OperationType.depot.name()),
                     "pem",
                     "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1",
-                    "1984,1,1",
-                    "1984,1,5",
+                    "01/01/1984",
+                    "05/01/1984",
                     authCookie);
 
             //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
@@ -1550,7 +1550,7 @@ public class OreSiResourcesTest {
 
 
             getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.publication.name()),
-                    "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "1984,1,1", "1984,1,6", authCookie);
+                    "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", authCookie);
 
 
             // on publie le dernier fichier déposé
@@ -1634,7 +1634,7 @@ public class OreSiResourcesTest {
             Assertions.assertEquals("pem", e.dataName);
         }
         getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.publication.name()),
-                "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "1984,1,1", "1984,1,6", authCookie);
+                "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", authCookie);
 
         //les droit s de publication permettent aussi le dépôt
         String fileUUID2 = publishOrDepublish(withRigthsCookie, "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true);
@@ -1720,7 +1720,7 @@ public class OreSiResourcesTest {
         //on donne les droits de suppression
 
         getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.delete.name()),
-                "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "1984,1,1", "1984,1,6", authCookie);
+                "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", authCookie);
 
         // on supprime le fichier a les droits car à les droits de publication
         mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)
@@ -1852,8 +1852,9 @@ public class OreSiResourcesTest {
                                      "sites":["%2$s"]
                                  },
                                 "timeScope":{
-                                   "fromDay":[%3$s],
-                                   "toDay":[%4$s]
+                                   "format": "dd/MM/yyyy",
+                                   "fromDay": "%3$s",
+                                   "toDay": "%4$s"
                                 }
                            }
                       }
