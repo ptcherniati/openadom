@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.application.configuration.date;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.collect.*;
 import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
