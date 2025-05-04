@@ -13,10 +13,6 @@ public record ApplicationManagerUser(
         this(application, ApplicationManager.ALL_DATANAMES);
     }
 
-    @Override
-    public boolean canUpdateApplication() {
-        return false;
-    }
 
     @Override
     public boolean canDelete(FileOrUUID fileOrUUID) {
@@ -25,7 +21,7 @@ public record ApplicationManagerUser(
 
     @Override
     public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
-        return true;
+        return false;
     }
 
     @Override
@@ -37,4 +33,11 @@ public record ApplicationManagerUser(
     public OreSiTechnicalException getException() {
         return null;
     }
+
+
+    @Override
+    public ApplicationManagerUser canUpdateApplication() {
+        return this;
+    }
+
 }

@@ -294,7 +294,6 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
                     .map(ListType::getValue)
                     .map(list -> {
                                 final List<CheckerValidationCheckResult> validationCheckResults = (List<CheckerValidationCheckResult>) list.stream()
-                                        .map(object -> object)
                                         .map(o -> checkRequiredThenCheck((StringType) o))
                                         .collect(Collectors.toList());
                                 return (CheckerValidationCheckResult) new DefaultManyValidationCheckResult(validationCheckResults, column);

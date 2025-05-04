@@ -67,13 +67,14 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                        .ignoringRequestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**", "/api/public/**")
+                        .ignoringRequestMatchers("/", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**", "/api/public/**")
                         .ignoringRequestMatchers("/api/v1/login", "/api/v1/users", "/api/v1/logout")
                 )
                 .authorizeHttpRequests(auth ->
                         auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(
+                                        "/",
                                         "/api/v1/logout",
                                         "/actuator/**",
                                         "/swagger-ui/**",
@@ -114,10 +115,19 @@ public class SecurityConfig {
 
         @Override
         public void addCorsMappings(CorsRegistry registry) {
+            // Configuration CORS pour les endpoints API
             registry.addMapping("/api/**")
                     .allowedOrigins(swaggerUrl, frontendOrigin)
-                    .allowedMethods("POST", "PUT", "GET", "DELETE")
+                    .allowedMethods("POST", "PUT", "GET", "DELETE", "OPTIONS")
                     .allowedHeaders("X-CSRF-TOKEN", "X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language")
+                    .allowCredentials(true)
+                    .maxAge(MAX_AGE);
+
+            // Configuration CORS spécifique pour la racine
+            registry.addMapping("/")
+                    .allowedOrigins(swaggerUrl, frontendOrigin)
+                    .allowedMethods("GET", "OPTIONS")
+                    .allowedHeaders("*")
                     .allowCredentials(true)
                     .maxAge(MAX_AGE);
         }

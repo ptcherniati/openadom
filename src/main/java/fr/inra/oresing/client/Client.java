@@ -169,9 +169,8 @@ public class Client {
         /*List<Command> dataCommands = dataTypes.stream()
                 .flatMap(dataType -> getUploadDataCommands(dataType).stream())
                 .toList();*/
-        List<Command> commands = new LinkedList<>(dataCommands);
         //commands.addAll(dataCommands);
-        return commands;
+        return new LinkedList<>(dataCommands);
     }
 
     private List<Command> getUploadDataCommands(String dataType) {
@@ -280,8 +279,7 @@ public class Client {
                                 .forEach(map -> {
                                     logError("->>>>>>>>>>");
                                     logError(map.get("message").toString());
-                                    ((Map<String, Object>) map.get(MESSAGE_PARAMS)).entrySet()
-                                            .forEach(entry -> logError("%s : %s".formatted(entry.getKey(), entry.getValue())));
+                                    ((Map<String, Object>) map.get(MESSAGE_PARAMS)).forEach((key, value) -> logError("%s : %s".formatted(key, value)));
                                 });
                     }
                     default -> fail(

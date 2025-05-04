@@ -98,7 +98,7 @@ public record HierarchicalDependancesBuilder(
         for (String nodeName : nodeMap.keySet()) {
             collectDependencies(nodeName, nodeMap, dependsByNodeNames);
         }
-        nodes.stream()
+        nodes
                 .forEach(node -> {
                     node.depends().clear();
                     String nodeName = node.nodeName();

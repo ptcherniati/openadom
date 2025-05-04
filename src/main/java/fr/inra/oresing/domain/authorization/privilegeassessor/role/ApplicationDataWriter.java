@@ -35,7 +35,7 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
     String dataName();
 
     default boolean isData() {
-        return application().isData(dataName());
+        return !application().isData(dataName());
     }
 
     OreSiTechnicalException getException();
@@ -115,7 +115,7 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
         }
 
         // Vérification de la couverture totale
-        return verifyCoverageCompleteness(submissionIntervalScope, authorizationMatchingIntervals);
+        return !verifyCoverageCompleteness(submissionIntervalScope, authorizationMatchingIntervals);
     }
 
     private boolean verifyCoverageCompleteness(
@@ -125,7 +125,7 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
         // Trier les intervalles par date de début
         List<LocalDateTimeRange> sortedIntervals = authorizationMatchingIntervals.stream()
                 .sorted(Comparator.comparing(interval -> interval.getRange().lowerEndpoint()))
-                .collect(Collectors.toList());
+                .toList();
 
         LocalDateTime currentCoverageEnd = submissionIntervalScope.getRange().lowerEndpoint();
 

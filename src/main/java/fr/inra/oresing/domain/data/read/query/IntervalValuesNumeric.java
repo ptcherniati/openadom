@@ -12,7 +12,7 @@ public record IntervalValuesNumeric(
         String to) implements WithIntervalValues {
     public IntervalValuesNumeric {
         Float fromNumeric;
-        Float toNumeric;
+        float toNumeric;
         if (from != null) {
             try {
                 fromNumeric = Float.parseFloat(from);

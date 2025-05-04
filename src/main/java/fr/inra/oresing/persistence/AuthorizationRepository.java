@@ -83,7 +83,7 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
         final String query = String.format("""
                         SELECT '%1$s' AS "@class", to_jsonb(t) AS json
                         FROM %2$s t, public.oresiuser u
-                        WHERE ARRAY[u.id]::entityref[] <@ oresiusers 
+                        WHERE ARRAY[u.id]::entityref[] <@ oresiusers
                           AND u.login = '_public_'
                         """,
                 OreSiAuthorization.class.getName(),

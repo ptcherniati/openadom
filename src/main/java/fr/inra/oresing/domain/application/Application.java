@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.application;
 
-import com.google.common.collect.Maps;
 import fr.inra.oresing.domain.OreSiEntity;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
@@ -12,7 +11,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -208,13 +206,14 @@ public class Application extends OreSiEntity {
     }
 
     public String getLocalizedLocalName(Locale locale) {
+        assert getConfiguration() != null;
         String localizedApplicationName = Optional.ofNullable(getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
                 .map(InternationalizationTitle::getTitle)
                 .map(title->title.get(locale) )
                 .orElse(getConfiguration().applicationDescription().name());
-        return localizedApplicationName == null ? getName() : localizedApplicationName;
+        return localizedApplicationName;
     }
 
     public String getLocalizedDataName(Locale locale, String dataName) {

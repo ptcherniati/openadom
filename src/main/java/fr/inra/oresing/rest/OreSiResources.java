@@ -15,7 +15,6 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotAppli
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
@@ -69,6 +68,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
@@ -132,6 +132,7 @@ public class OreSiResources implements ServiceContainerBean {
 
     public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
 
+    @Setter
     private ServiceContainer serviceContainer;
 
     @Autowired
@@ -215,13 +216,12 @@ public class OreSiResources implements ServiceContainerBean {
                         .orElse(null)
         );
 
-        StoreFile finalStoreFile = storeFile;
-        Boolean canDelete = applicationDataDelete.get().canDelete(finalStoreFile.fileOrUuid());
+        boolean canDelete = applicationDataDelete.get().canDelete(storeFile.fileOrUuid());
         if (!canDelete) {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
         if (!storeFile.builder().getFileOrUUID().topublish()) {
-            if (!applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
+            if (applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
             DataVersioningResult dataVersioningResult = serviceContainer.versioningService()
@@ -667,7 +667,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "general case",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                            "General case. You can provide an optional json with componentSelects, rowIds, authorizationDescriptions, componentFilters, componentOrderBy" """,
+                                            "General case. You can provide an optional json with componentSelects, rowIds, authorizationDescriptions, componentFilters, componentOrderBy\"""",
                                     description =
                                             """
                                                             {
@@ -680,7 +680,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "reduce by select",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                            "Select by. You can provide an optional json with componentSelects" """,
+                                            "Select by. You can provide an optional json with componentSelects\"""",
                                     description =
                                             """
                                                             {
@@ -691,7 +691,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "order by",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                            "Order by. You can provide an optional json with componentOrderBy" """,
+                                            "Order by. You can provide an optional json with componentOrderBy\"""",
                                     description =
                                             """
                                                             {
@@ -707,7 +707,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select by rowIds",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                            "Find by RowIds. You can provide an optional json with rowIds" """,
+                                            "Find by RowIds. You can provide an optional json with rowIds\"""",
                                     description =
                                             """
                                                             {
@@ -718,7 +718,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select by naturalKeys",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                            "Find by naturalKeys. You can provide an optional json with naturalKeys" """,
+                                            "Find by naturalKeys. You can provide an optional json with naturalKeys\"""",
                                     description =
                                             """
                                                             {
@@ -729,7 +729,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select by hierarchicalKey",
                                     ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
                                     value = """
-                                            "Find by naturalKeys. You can provide an optional json with naturalKeys" """,
+                                            "Find by naturalKeys. You can provide an optional json with naturalKeys\"""",
                                     description =
                                             """
                                                             {
@@ -740,7 +740,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select by submissionScope",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                            "Find by authorizations. You can provide an optional json with submissionScope" """,
+                                            "Find by authorizations. You can provide an optional json with submissionScope\"""",
                                     description =
                                             """
                                                             {
@@ -772,7 +772,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter (like '%filter%')",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                            "Select by filter. You can provide an optional json with componentFilters" """,
+                                            "Select by filter. You can provide an optional json with componentFilters\"""",
                                     description =
                                             """
                                                             {
@@ -792,7 +792,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter with regexp (~ '^[ao]m+)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                            "Select by RegExp. You can provide an optional json with componentFilters. Can be apply only on text not for reference." """,
+                                            "Select by RegExp. You can provide an optional json with componentFilters. Can be apply only on text not for reference.\"""",
                                     description =
                                             """
                                                             {
@@ -810,7 +810,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter date (With declared pattern)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                            "Select by date. You can provide an optional json with componentFilters" """,
+                                            "Select by date. You can provide an optional json with componentFilters\"""",
                                     description =
                                             """
                                                             {
@@ -826,7 +826,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter date by interval (With declared pattern)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                            "Select by interval of date. You can provide an optional json with componentFilters" """,
+                                            "Select by interval of date. You can provide an optional json with componentFilters\"""",
                                     description =
                                             """
                                                             {
@@ -845,7 +845,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter numeric)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                            "Select by numeric. You can provide an optional json with componentFiltersé" """,
+                                            "Select by numeric. You can provide an optional json with componentFiltersé\"""",
                                     description =
                                             """
                                                             {
@@ -862,7 +862,7 @@ public class OreSiResources implements ServiceContainerBean {
                                     name = "select filter by filter numeric by interval)",
                                     ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
                                     value = """
-                                            "Select by interval of numeric. You can provide an optional json with componentFilters" """,
+                                            "Select by interval of numeric. You can provide an optional json with componentFilters\"""",
                                     description =
                                             """
                                                             {
@@ -1256,15 +1256,14 @@ public class OreSiResources implements ServiceContainerBean {
                 if (reportRef.get() != null && reportRef.get().referentielsEnErreur().isEmpty()) {
                     // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
                     ExecutorService executorService = Executors.newSingleThreadExecutor();
-                    Path finalTempFile = tempFile;
                     executorService.submit(() -> {
                         try {
-                            serviceContainer.dataService().sendZipLinkByMail(finalTempFile, reportRef.get(), user.get());
+                            serviceContainer.dataService().sendZipLinkByMail(tempFile, reportRef.get(), user.get());
                         } catch (Exception e) {
                             log.error("Erreur lors de l'envoi du lien ZIP par e-mail", e);
                         } finally {
                             try {
-                                Files.deleteIfExists(finalTempFile);
+                                Files.deleteIfExists(tempFile);
                             } catch (IOException e) {
                                 log.error("Erreur lors de la suppression du fichier temporaire", e);
                             }
@@ -1297,7 +1296,4 @@ public class OreSiResources implements ServiceContainerBean {
                 .body(responseBody);
     }
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }

@@ -7,18 +7,18 @@ import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
+import lombok.Getter;
 
 import java.util.*;
 
 public abstract class OneValueStaticPatternColumn extends Column {
 
+    @Getter
     private final Multiplicity multiplicity;
+    @Getter
     private final TransformationConfiguration defaultValue;
 
-    public String getHeaderInFile() {
-        return headerInFile;
-    }
-
+    @Getter
     private final String headerInFile;
 
     public int getAdjacentColumnsSize() {
@@ -57,7 +57,6 @@ public abstract class OneValueStaticPatternColumn extends Column {
         }
         Optional<Column> matchingAdjacentColumn = adjacentColumns.stream()
                 .filter(adjacentColumn -> adjacentColumn.getReferenceColumn().column().equals(patternOfColumn.get(1)))
-                .filter(obj -> true)
                 .findFirst();
         return matchingAdjacentColumn.orElse(null);
     }
@@ -85,7 +84,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
         Map<DataColumn, DataColumnValue> columnValues = new HashMap<>();
         columnValues.put(new DataColumn(Column.__VALUE__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent)));
         columnValues.putAll(referenceDatum.values());
-        final DataColumnValue referenceColumnValue = new DataColumnPatternValue(columnValues);
+        final DataColumnValue<Map<String, Object>, Map<String, Object>> referenceColumnValue = new DataColumnPatternValue(columnValues);
         referenceDatum.values().clear();
         referenceDatum.put(getReferenceColumn(), referenceColumnValue);
     }
@@ -102,7 +101,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
         columnValues.put(new DataColumn(Column.__ORIGINAL_COLUMN_NAME__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(headerInFile)));
         columnValues.putAll(qualifierComponents.values());
         columnValues.putAll(adjacentComponents.values());
-        final DataColumnValue referenceColumnValue = new DataColumnPatternValue(columnValues);
+        final DataColumnValue<Map<String, Object>, Map<String, Object>> referenceColumnValue = new DataColumnPatternValue(columnValues);
         DataDatum datum = new DataDatum();
         datum.put(getReferenceColumn(), referenceColumnValue);
         return datum;
@@ -118,14 +117,6 @@ public abstract class OneValueStaticPatternColumn extends Column {
         }
     }
 
-    public Multiplicity getMultiplicity() {
-        return this.multiplicity;
-    }
-
-    public TransformationConfiguration getDefaultValue() {
-        return this.defaultValue;
-    }
-
     public DataDatum buildAdjacentComponents(List<String> adjacentComponentsValues) {
         Map<DataColumn, DataColumnValue> columnValues = new HashMap<>();
         for (int i = 0; i < adjacentColumns.size(); i++) {
@@ -133,7 +124,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
             DataColumn dataColumn = adjacentColumn.getReferenceColumn();
             String value = adjacentComponentsValues.get(i);
             FieldType fieldValue = Strings.isNullOrEmpty(value) ? StringType.getStringTypeFromStringValue("") : StringType.getStringTypeFromStringValue(value);
-            DataColumnValue dataColumnValue = new DataColumnSingleValue(fieldValue);
+            DataColumnValue<FieldType, FieldType> dataColumnValue = new DataColumnSingleValue(fieldValue);
             columnValues.put(dataColumn, dataColumnValue);
         }
         return new DataDatum(columnValues);

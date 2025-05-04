@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -50,13 +49,10 @@ public sealed interface ComponentOrderByForExport
                     .map(ComponentDescription::checker)
                     .filter(ReferenceChecker.class::isInstance)
                     .map(ReferenceChecker.class::cast)
-                    .map(ReferenceChecker::refType)
-                    .map(referencetype -> Optional.of(dataRepository)
+                    .map(ReferenceChecker::refType).flatMap(referencetype -> Optional.of(dataRepository)
                             .map(repository -> repository.findDisplayByReferenceType(referencetype))
                             .map(map -> map.get(fieldType.toString()))
-                            .map(map -> map.get(language))
-                            .orElse(null)
-                    )
+                            .map(map -> map.get(language)))
                     .orElse(fieldType == null ? "" : fieldType.toString());
             default -> fieldType == null ? "" : fieldType.toString();
         };

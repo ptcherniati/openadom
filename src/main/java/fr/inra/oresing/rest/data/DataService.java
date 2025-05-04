@@ -11,9 +11,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataReader;
 import fr.inra.oresing.domain.checker.CheckerFactory;
-import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.*;
@@ -26,32 +24,31 @@ import fr.inra.oresing.domain.data.deposit.context.column.*;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.domain.file.DataFile;
+import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
-import fr.inra.oresing.persistence.data.read.bundle.FileContent;
-import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.domain.file.DataFile;
-import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.groovy.Expression;
 import fr.inra.oresing.domain.groovy.GroovyContextHelper;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.groovy.StringSetGroovyExpression;
+import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import fr.inra.oresing.persistence.*;
-import fr.inra.oresing.rest.OreSiApiRequestContext;
-import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
-import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
+import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
+import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
 import fr.inra.oresing.rest.filesenderclient.*;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
 import fr.inra.oresing.rest.model.data.LineCheckerResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,7 +58,9 @@ import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -74,8 +73,6 @@ import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain.DATA_READ;
-
 @Slf4j
 @Component
 public class DataService implements ServiceContainerBean {
@@ -84,6 +81,7 @@ public class DataService implements ServiceContainerBean {
     public static final String README_FILE_NAME = "LISEZ-MOI.txt";
     public static final String SCRIPTS = "Scripts";
     public static final String SETUP_SCRIPT_NAME = "setup.sh";
+    @Setter
     ServiceContainer serviceContainer;
     @Autowired
     private OreSiRepository repo;
@@ -280,9 +278,7 @@ public class DataService implements ServiceContainerBean {
                 ).stream()
                 .map(entry -> {
                     final ComponentDescription basicComponent = entry.getValue();
-                    final TransformationConfiguration defaultValue = Optional
-                            .ofNullable(basicComponent.defaultValue())
-                            .orElse(null);
+                    final TransformationConfiguration defaultValue = basicComponent.defaultValue();
                     final DataColumn referenceColumn = new DataColumn(entry.getKey());
                     final String headerForReferenceColumn = Optional.of(basicComponent)
                             .map(ComponentDescription::importHeader)
@@ -459,8 +455,8 @@ public class DataService implements ServiceContainerBean {
     }
 
     private Map<String, Object> computeGroovyContext(final DataRepository referenceValueRepository, final GroovyDataInjectionConfiguration groovyDataInjectionConfiguration) {
-        if (!Optional.ofNullable(groovyDataInjectionConfiguration)
-                .map(GroovyDataInjectionConfiguration::getReferences).isPresent()) {
+        if (Optional.ofNullable(groovyDataInjectionConfiguration)
+                .map(GroovyDataInjectionConfiguration::getReferences).isEmpty()) {
             return Map.of();
         }
         final Set<String> configurationReferences = groovyDataInjectionConfiguration.getReferences();
@@ -505,7 +501,11 @@ public class DataService implements ServiceContainerBean {
         dataRepository = getDataRepository(downloadDatasetQuery);
         serviceContainer.authenticationService().setRoleForClient();
         return dataRepository.findAllByDataTypeFlux(downloadDatasetQuery)
-                .map(dataRows -> DataRow.of(downloadDatasetQuery.application().findData(downloadDatasetQuery.dataName()), dataRows));
+                .map(dataRows -> DataRow
+                        .of(downloadDatasetQuery.application()
+                                        .findData(downloadDatasetQuery.dataName()
+                                        ).orElse(null)
+                                , dataRows));
     }
 
     private DataRepository getDataRepository(DownloadDatasetQuery downloadDatasetQuery) {
@@ -578,10 +578,6 @@ public class DataService implements ServiceContainerBean {
                     return Mono.just(false);
                 })
                 .block();
-    }
-
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
     }
 
     public DataRepositoryForBuffer getDataRepositoryWithBuffer(Application application) {
@@ -723,8 +719,8 @@ public class DataService implements ServiceContainerBean {
         return serviceContainer.dataService().findDataFlux(downloadDatasetQuery).collectList().block();
     }
 
-    public String sendZipLinkByMail(Path filePath, MessageInformations messageInformations, OreSiUser currentUser) {
-        return switch (messageInformations) {
+    public void sendZipLinkByMail(Path filePath, MessageInformations messageInformations, OreSiUser currentUser) {
+        switch (messageInformations) {
             case DownloadDatasetQuery downloadDatasetQuery -> {
                 try {
                     FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForDownloadDatasetQuery(downloadDatasetQuery);
@@ -764,7 +760,7 @@ public class DataService implements ServiceContainerBean {
                             fileSenderInternationalisation,
                             internationnalizedDataName
                     );*/
-                    yield downloadUrl;
+                    break;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -805,14 +801,14 @@ public class DataService implements ServiceContainerBean {
                     String downloadUrl = fileRepository.postTransfer(fileInfos);
                     log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
 
-                    yield downloadUrl;
+                    break;
                 } catch (Exception e) {
                     log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
                     throw new RuntimeException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
                 }
             }
             default -> throw new IllegalStateException("Unexpected value: " + messageInformations);
-        };
+        }
 
     }
 
@@ -825,7 +821,7 @@ public class DataService implements ServiceContainerBean {
         List<String> referentielsAvecDonneesExemple = new ArrayList<>();
         List<String> referentielsEnErreur = new ArrayList<>();
 
-        locale = Optional.of(locale)
+        Optional.of(locale)
                 .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
 
         try (zipOutputStream) {
@@ -934,8 +930,7 @@ public class DataService implements ServiceContainerBean {
     }
 
     private void writeScriptSH(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
-        String setupScriptName = SETUP_SCRIPT_NAME;
-        writeStringToZip(zipOutputStream, setupScriptName, buildScriptSh());
+        writeStringToZip(zipOutputStream, SETUP_SCRIPT_NAME, buildScriptSh());
         fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
                 .add(SETUP_SCRIPT_NAME);
     }

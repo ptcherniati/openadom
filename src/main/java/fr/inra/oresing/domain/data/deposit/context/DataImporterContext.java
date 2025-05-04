@@ -22,9 +22,8 @@ import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import lombok.Getter;
+import lombok.Setter;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.codehaus.groovy.util.SingleKeyHashMap;
 
 import java.util.*;
 import java.util.function.Function;
@@ -48,8 +47,10 @@ public class DataImporterContext {
      */
     private final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences;
     private final ImmutableSet<Column> columns;
+    @Getter
     private ImmutableSet<LineChecker> transformedLineCheckers;
 
+    @Getter
     private ImmutableSet<Column> columnsWithPatternColumns;
     @Getter
     private final PatternColumnFactory patternColumnFactory;
@@ -58,24 +59,20 @@ public class DataImporterContext {
     final Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey;
     final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey;
     final boolean allowUnexpectedColumns;
+    @Getter
     private final List<ReferenceScope.NodeDescription> nodesForMenu;
+    @Getter
     private final PublishContext.PublishContextBuilder publishContextBuilder;
     private final Map<Ltree, List<DataImporter.RowWithReferenceDatum>> missingParentLines = new HashMap<>();
+    @Setter
+    @Getter
     private Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = new HashMap<>();
-
-    public Map<DataValue.LineIdentityColumnName, UUID> getAfterPreloadReferenceUuids() {
-        return afterPreloadReferenceUuids;
-    }
 
     public Optional<UUID> getKnownId(final Ltree naturalKey) {
         return getAfterPreloadReferenceUuids().entrySet().stream()
                 .filter(entry -> entry.getKey().naturalKey().equals(naturalKey))
                 .map(Map.Entry::getValue)
                 .findFirst();
-    }
-
-    public void setAfterPreloadReferenceUuids(Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids) {
-        this.afterPreloadReferenceUuids = afterPreloadReferenceUuids;
     }
 
     public void setReferenceValuesForSelfType(Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType) {
@@ -95,14 +92,6 @@ public class DataImporterContext {
                 ));
     }
 
-
-    public List<ReferenceScope.NodeDescription> getNodesForMenu() {
-        return nodesForMenu;
-    }
-
-    public ImmutableSet<Column> getColumnsWithPatternColumns() {
-        return columnsWithPatternColumns;
-    }
 
     public DataImporterContext(final ContextConstants constants,
                                final ImmutableSet<LineChecker> lineCheckers,
@@ -322,10 +311,6 @@ public class DataImporterContext {
         return constants.dataConfiguration().naturalKey();
     }
 
-    public PublishContext.PublishContextBuilder getPublishContextBuilder() {
-        return this.publishContextBuilder;
-    }
-
     public Authorization getAuthorization() {
         return constants.dataConfiguration().authorization();
     }
@@ -349,10 +334,6 @@ public class DataImporterContext {
                 .orElseGet(ImmutableMap::of);
         setReferenceValuesForSelfType(referenceValues);
         this.transformedLineCheckers = lineCheckers;
-    }
-
-    public ImmutableSet<LineChecker> getTransformedLineCheckers() {
-        return transformedLineCheckers;
     }
 
     public void addKnownIdToReferenceValues(DataValue.LineIdentityColumnName key, UUID uuid) {

@@ -17,8 +17,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -195,11 +193,11 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         return getRolesForRole(userIdOrRoleName);
     }
 
-    public int updateAuthorizations(final UUID userId, final Set<String> authorizations) {
+    public void updateAuthorizations(final UUID userId, final Set<String> authorizations) {
         final String query = "update " + getTable().getSqlIdentifier() + " o\n" +
                 "set authorizations = :authorizations\n" +
                 "where id = :uuid::uuid\n";
-        return getNamedParameterJdbcTemplate().update(
+        getNamedParameterJdbcTemplate().update(
                 query,
                 new MapSqlParameterSource("authorizations", authorizations.toArray(String[]::new))
                         .addValue("uuid", userId)
@@ -225,7 +223,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         return findById(userId);
     }
 
-    public OreSiUser updateNewDate(final OreSiUser oreSiUser, final Date newDate) {
+    public void updateNewDate(final OreSiUser oreSiUser, final Date newDate) {
         final String query = "update " + getTable().getSqlIdentifier() + " o\n" +
                 "set  accountstate = :accountstate::account_state,\n" +
                 "updatedate = :updateDate,\n" +
@@ -248,7 +246,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
                         .addValue("chartes", charte)
                         .addValue("updateDate", newDate)
                         .addValue("password", oreSiUser.getPassword()));
-        return findById(oreSiUser.getId());
+        findById(oreSiUser.getId());
     }
 
     public OreSiUser update(final OreSiUser oreSiUser) throws JsonProcessingException {

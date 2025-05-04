@@ -17,6 +17,7 @@ import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.model.authorization.UserAuthorizationForApplication;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -36,6 +37,7 @@ import java.util.stream.Collectors;
 @Component
 @Transactional(readOnly = true)
 public class AuthenticationService implements ServiceContainerBean, fr.inra.oresing.domain.authorization.AuthenticationService {
+    @Setter
     private ServiceContainer serviceContainer;
 
     @Autowired
@@ -71,10 +73,9 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
     /**
      * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
      */
-    public OreSiRoleToAccessDatabase setRoleForClient() {
+    public void setRoleForClient() {
         final OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClientRole();
         setRole(roleToAccessDatabase);
-        return roleToAccessDatabase;
     }
 
     public OreSiUser getCurrentUser() {
@@ -137,12 +138,11 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
     }
 
-    public OreSiUser sendEmailValidation(final String loginOrEmail, final String password) throws AuthenticationFailure {
+    public void sendEmailValidation(final String loginOrEmail, final String password) throws AuthenticationFailure {
         OreSiUser oreSiUser = userRepository.findByLoginOrEmail(loginOrEmail)
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, (LoginAdminResult) null));
         String verificationKey = generateVerificationKey(oreSiUser);
         serviceContainer.emailService().sendEmailValidation(oreSiUser.getLogin(), oreSiUser.getEmail(), verificationKey, EmailService.MESSAGES.NEW_EMAIL);
-        return oreSiUser;
     }
 
     public OreSiUser sendEmailValidation(final OreSiUser loginResult, final EmailService.MESSAGES messages) throws AuthenticationFailure {
@@ -159,7 +159,7 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
         return oreSiUser;
     }
 
-    public OreSiUser validateValidationKey(OreSiUser oreSiUser, final String validationKey) throws NoSuchAlgorithmException, InvalidKeySpecException, AuthenticationFailure, JsonProcessingException {
+    public void validateValidationKey(OreSiUser oreSiUser, final String validationKey) throws AuthenticationFailure {
         OreSiUser oreSiUser1 = oreSiUser;
         String verificationKey = generateVerificationKey(oreSiUser1);
         final LocalDateTime now = LocalDateTime.now();
@@ -178,7 +178,7 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
             sendValidationKey(oreSiUser1);
             throw new AuthenticationFailure(AuthenticationFailure.BAD_VALIDATION_KEY, oreSiUser1);
         }
-        return userRepository.findById(oreSiUser1.getId());
+        userRepository.findById(oreSiUser1.getId());
     }
 
     private LoginAdminResult toLoginResult(final OreSiUser oreSiUser, final CurrentUserRoles currentUserRoles) {
@@ -626,7 +626,4 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
         return oreSiUser;
     }
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }

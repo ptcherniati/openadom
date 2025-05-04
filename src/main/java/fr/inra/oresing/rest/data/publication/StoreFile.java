@@ -3,7 +3,6 @@ package fr.inra.oresing.rest.data.publication;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
-import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.domain.services.file.BinaryFileService;
@@ -46,6 +45,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
                         if (fileOrUuid() != null) {
                             binaryFile.withBinaryFileDataset(fileOrUuid().binaryfiledataset());
                         }
+                        assert file != null;
                         binaryFileRepository.storeFileContent(fileId, inputStream, (int) file.getSize());
                         return binaryFileRepository.tryFindByIdWithData(fileId).orElse(null);
                     });
@@ -66,7 +66,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
         if (newFileOrUUID && !builder().applicationDataWriter().hasRightForDeposit(fileOrUuid())) {
             throw new NotApplicationDataWriterForDepositException(application().getName(), dataName());
         } else {
-            if (publishing && !builder().applicationDataWriter().hasRightForPublishOrUnPublish(fileOrUuid())) {
+            if (publishing && builder().applicationDataWriter().hasRightForPublishOrUnPublish(fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(application().getName(), dataName());
             }
         }

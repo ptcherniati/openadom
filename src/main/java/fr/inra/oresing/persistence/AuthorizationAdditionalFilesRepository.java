@@ -59,12 +59,12 @@ public class AuthorizationAdditionalFilesRepository extends JsonTableInApplicati
 
     public List<OreSiAdditionalFileAuthorization> findPublicAuthorizations() {
         final String query = String.format("""
-                        SELECT 
-                            '%1$s' AS "@class", 
+                        SELECT
+                            '%1$s' AS "@class",
                             to_jsonb(t) AS json
                         FROM %2$s t, public.oresiuser u
-                        WHERE 
-                            ARRAY[u.id]::entityref[] <@ oresiusers 
+                        WHERE
+                            ARRAY[u.id]::entityref[] <@ oresiusers
                             AND u.login = '_public_'
                         """,
                 OreSiAdditionalFileAuthorization.class.getName(),

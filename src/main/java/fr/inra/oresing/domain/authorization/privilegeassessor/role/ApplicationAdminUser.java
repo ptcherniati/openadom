@@ -22,11 +22,11 @@ public record ApplicationAdminUser(
     }
 
     @Override
-    public boolean canUpdateApplication() {
-        return true;
+    public ApplicationAdminUser canUpdateApplication() {
+        return this;
     }
 
-    public boolean canManagerRightOfUserForRole(OreSiUser user, OreSiRoleForUser roleForUser) {
+    public void canManagerRightOfUserForRole(OreSiUser user, OreSiRoleForUser roleForUser) {
         if (Optional.ofNullable(user)
                 .map(OreSiUser::getChartes)
                 .map(chartes -> chartes.get(application().getId().toString()))
@@ -38,7 +38,6 @@ public record ApplicationAdminUser(
         if (!List.of(applicationManager.getAsSqlRole(), userManager.getAsSqlRole()).toString().contains(roleForUser.role())) {
             throw new IllegalRoleToBeGranted(roleForUser.role());
         }
-        return true;
     }
 
     @Override
@@ -48,7 +47,7 @@ public record ApplicationAdminUser(
 
     @Override
     public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
-        return true;
+        return false;
     }
 
     @Override

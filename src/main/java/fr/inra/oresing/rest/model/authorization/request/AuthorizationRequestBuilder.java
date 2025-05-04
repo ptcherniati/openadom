@@ -10,6 +10,7 @@ import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestExcep
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.rest.model.authorization.CreateAuthorizationRequest;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
+import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 
@@ -30,11 +31,16 @@ Roles {
 public class AuthorizationRequestBuilder {
     public static final String NAME = "name";
     static final YAMLMapper mapper = YAMLMapper.builder().build();
+    @Getter
     private final Application application;
+    @Getter
     final AuthorizationForAllBuilder authorizationForAllBuilder = new AuthorizationForAllBuilder(this);
+    @Getter
     final AuthorizationWithRestrictionBuilder authorizationWithRestrictionBuilder = new AuthorizationWithRestrictionBuilder(this);
     final List<AuthorizationRequestError> errors;
+    @Getter
     final List<UUID> allUsers;
+    @Getter
     final List<OreSiAuthorization> authorizationsForCurrentUser;
 
     public AuthorizationRequestBuilder(Application application,
@@ -45,26 +51,6 @@ public class AuthorizationRequestBuilder {
         this.allUsers = allUsers;
         this.authorizationsForCurrentUser = authorizationsForCurrentUser;
         this.errors = errors;
-    }
-
-    public AuthorizationWithRestrictionBuilder getAuthorizationWithRestrictionBuilder() {
-        return this.authorizationWithRestrictionBuilder;
-    }
-
-    public AuthorizationForAllBuilder getAuthorizationForAllBuilder() {
-        return this.authorizationForAllBuilder;
-    }
-
-    public Application getApplication() {
-        return this.application;
-    }
-
-    public List<UUID> getAllUsers() {
-        return this.allUsers;
-    }
-
-    public List<OreSiAuthorization> getAuthorizationsForCurrentUser() {
-        return this.authorizationsForCurrentUser;
     }
 
     private boolean isValidRequest() {

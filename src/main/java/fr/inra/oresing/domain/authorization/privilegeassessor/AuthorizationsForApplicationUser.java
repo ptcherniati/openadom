@@ -21,15 +21,15 @@ public record AuthorizationsForApplicationUser(
 
     /* find if exists authorization foroperationtype of action */
     private boolean canDoAction(String dataName, Set<OperationType> actions) {
-        if(isApplicationManager || isUserManager){
+        if(isApplicationManager || isUserManager) {
             return true;
         }
         return Optional.of(userAuthorizations())
                        .map(authorizations -> authorizations.get(dataName))
                        .stream().flatMap(List::stream)
-                       .map(AuthorizationParsed::operationTypes)
-                       .flatMap(Set::stream)
-                       .anyMatch(actions::contains) ||
+                .map(AuthorizationParsed::operationTypes)
+                .flatMap(Set::stream)
+                .anyMatch(actions::contains) ||
                Optional.of(publicAuthorizations())
                        .map(authorizations -> authorizations.get(dataName))
                        .map(AuthorizationParsed::operationTypes)

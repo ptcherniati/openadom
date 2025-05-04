@@ -1,12 +1,11 @@
 package fr.inra.oresing.domain.data.menu;
 
+import lombok.Getter;
+
+@Getter
 public enum MenuType {
     authorization("authorization"),
     submission("submission");
-
-    public String getType() {
-        return type;
-    }
 
     private final String type;
 

@@ -49,8 +49,7 @@ public class ComponentFilters {
         final CheckerDescription formatForFieldType = Optional.ofNullable(dataDescription)
                 .map(StandardDataDescription::componentDescriptions)
                 .map(dd -> {
-                    ComponentDescription componentDescription = dd.get(componentFilter.componentKey);
-                    return componentDescription;
+                    return dd.get(componentFilter.componentKey);
                 })
                 .map(ComponentDescription::checker)
                 .orElse(CheckerDescription.NO_CHECKER);

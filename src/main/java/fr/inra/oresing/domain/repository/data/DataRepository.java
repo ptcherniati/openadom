@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.repository.data;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
@@ -29,7 +28,7 @@ public interface DataRepository {
     @Transactional(readOnly = true)
     Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final MultiValueMap<String, String> params);
 
-    int removeByFileId(UUID id);
+    void removeByFileId(UUID id);
 
     Map<String, List<Ltree>> resolveRequiredAuthorizations(Map<String, List<Ltree>> stringLtreeMap);
 

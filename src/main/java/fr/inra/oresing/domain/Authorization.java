@@ -2,10 +2,12 @@ package fr.inra.oresing.domain;
 
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
+import lombok.Getter;
 
 import java.util.List;
 import java.util.Map;
 
+@Getter
 public class Authorization {
     LocalDateTimeRange timeScope= LocalDateTimeRange.always();
     private Map<String, List<Ltree>> requiredAuthorizations;
@@ -62,11 +64,4 @@ public class Authorization {
                 .collect(Collectors.joining(",", "(", ")::%1$s.\"authorization\""));
     }*/
 
-    public Map<String, List<Ltree>> getRequiredAuthorizations() {
-        return requiredAuthorizations;
-    }
-
-    public LocalDateTimeRange getTimeScope() {
-        return timeScope;
-    }
 }

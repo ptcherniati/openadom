@@ -16,9 +16,9 @@ import fr.inra.oresing.rest.model.rightsrequest.CreateRightsRequestRequest;
 import fr.inra.oresing.rest.model.rightsrequest.GetRightsRequestResult;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestResult;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class RightsRequestService  implements ServiceContainerBean{
 
+    @Setter
     private ServiceContainer serviceContainer;
 
     @Autowired
@@ -125,7 +126,4 @@ public class RightsRequestService  implements ServiceContainerBean{
     }
 
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }

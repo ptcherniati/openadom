@@ -32,6 +32,7 @@ import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import fr.inra.oresing.rest.reactive.ReactiveTypeInfo;
 import fr.inra.oresing.rest.reactive.ReactiveTypeProgress;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,15 +44,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain.APPLICATION_MANAGER;
-import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain.SYSTEM_ADMINISTRATION;
 
 @Slf4j
 @Component
@@ -60,6 +57,7 @@ public class ApplicationService implements ServiceContainerBean {
     @Autowired
     private OreSiRepository repository;
 
+    @Setter
     private ServiceContainer serviceContainer;
     @Autowired
     private BeanFactory beanFactory;
@@ -90,16 +88,16 @@ public class ApplicationService implements ServiceContainerBean {
     }
 
     @Transactional()
-    public ReactiveProgression.CreateApplicationProgression createApplication(
+    public void createApplication(
             ReactiveProgression.CreateApplicationProgression progression,
             final String name,
             final MultipartFile configurationFile,
             final String comment) {
-        OreSiApiRequestContext.getAuthentication()
-                .map(OreSiAuthenticationToken::getSystemPersona)
-                .filter(ApplicationCreator.class::isInstance)
-                .map(ApplicationCreator.class::cast)
-                .orElse(null)
+        Objects.requireNonNull(OreSiApiRequestContext.getAuthentication()
+                        .map(OreSiAuthenticationToken::getSystemPersona)
+                        .filter(ApplicationCreator.class::isInstance)
+                        .map(ApplicationCreator.class::cast)
+                        .orElse(null))
                 .canCreateApplication(name);
         final ReactiveProgression.CreateApplicationProgressionMessagesLabel baseMessage = new ReactiveProgression.CreateApplicationProgressionMessagesLabel();
         progression.pushProgression();
@@ -119,11 +117,12 @@ public class ApplicationService implements ServiceContainerBean {
             if ("fr.inra.oresing.domain.authorization.privilegeassessor.exception"
                     .equals(e.getClass().getPackage().getName())) {
                 progression.fluxSink().error(e);
+                assert e instanceof OreSiTechnicalException;
                 throw (OreSiTechnicalException) e;
             }
             progression.fluxSink().error(e);
             progression.fluxSink().complete();
-            return null;
+            return;
         }
         ReactiveProgression.CreateApplicationProgression progression1 = progression.withSubLabel("viewCreation");
         progression1.pushMessage("start", Map.of("applicationName", application.getName()));
@@ -134,7 +133,6 @@ public class ApplicationService implements ServiceContainerBean {
         progression1.pushResult(application.getId());
         progression1.incrementAndPush(i -> 1D);
         progression1.complete();
-        return result;
     }
 
     public ApplicationResult buildOpenAdom(final Application application, final String[] filter) {
@@ -235,11 +233,11 @@ public class ApplicationService implements ServiceContainerBean {
             final MultipartFile configurationFile,
             final String comment) {
         final Application application = getApplication(nameOrId);
-        OreSiApiRequestContext.getAuthentication()
-                .map(OreSiAuthenticationToken::getApplicationPersona)
-                .filter(ApplicationManager.class::isInstance)
-                .map(ApplicationManager.class::cast)
-                .orElse(null)
+        Objects.requireNonNull(OreSiApiRequestContext.getAuthentication()
+                        .map(OreSiAuthenticationToken::getApplicationPersona)
+                        .filter(ApplicationManager.class::isInstance)
+                        .map(ApplicationManager.class::cast)
+                        .orElse(null))
                 .canUpdateApplication();
         ReactiveProgression.ChangeApplicationProgression progression1 = progression;
         final ReactiveProgression.ChangeApplicationProgressionMessagesLabel baseMessage = new ReactiveProgression.ChangeApplicationProgressionMessagesLabel();
@@ -444,7 +442,4 @@ public class ApplicationService implements ServiceContainerBean {
         }
     }
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }

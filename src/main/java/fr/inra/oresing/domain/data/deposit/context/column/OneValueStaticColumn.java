@@ -1,6 +1,7 @@
 package fr.inra.oresing.domain.data.deposit.context.column;
 
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
+import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
 
@@ -14,7 +15,7 @@ public abstract class OneValueStaticColumn extends Column {
 
     @Override
     public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-        final DataColumnValue referenceColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent));
+        final DataColumnValue<FieldType, FieldType> referenceColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent));
         referenceDatum.put(getReferenceColumn(), referenceColumnValue);
     }
 

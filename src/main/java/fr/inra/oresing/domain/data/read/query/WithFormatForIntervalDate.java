@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.data.read.query;
 import fr.inra.oresing.domain.checker.type.DateType;
 
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;

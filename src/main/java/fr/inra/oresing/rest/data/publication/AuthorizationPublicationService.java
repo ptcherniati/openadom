@@ -3,7 +3,6 @@ package fr.inra.oresing.rest.data.publication;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
@@ -14,9 +13,8 @@ import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.domain.services.synthesis.SynthesisService;
 import fr.inra.oresing.persistence.BinaryFileInfos;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
+import lombok.Getter;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -29,13 +27,11 @@ public class AuthorizationPublicationService {
     protected final StandardDataDescription dataDescription;
     protected final Application application;
 
+    @Getter
     protected final String dataName;
+    @Getter
     protected FileOrUUID fileOrUUID;
-    protected ApplicationDataWriter applicationDataWriter;
-
-    public String getDataName() {
-        return this.dataName;
-    }
+    protected final ApplicationDataWriter applicationDataWriter;
 
     public ApplicationDataWriter applicationDataWriter() {
         return this.applicationDataWriter;
@@ -53,10 +49,6 @@ public class AuthorizationPublicationService {
         this.fileOrUUID = setFileOrUUID(fileOrUUID);
         this.dataDescription = buildDataDescription(application);
         this.applicationDataWriter = applicationDataWriter;
-    }
-
-    public FileOrUUID getFileOrUUID() {
-        return this.fileOrUUID;
     }
 
     protected StandardDataDescription buildDataDescription(Application application) {

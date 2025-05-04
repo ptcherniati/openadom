@@ -133,7 +133,7 @@ record SelectRequest(
     record SelectRequestOffset(OutPut outPut) {
         public String build() {
 
-            return (outPut().offset() != null && outPut().offset() >= 0) ?
+            return outPut().offset() >= 0 ?
                     """
                             OFFSET  %d ROWS""".formatted(outPut().offset()) :
                     "";

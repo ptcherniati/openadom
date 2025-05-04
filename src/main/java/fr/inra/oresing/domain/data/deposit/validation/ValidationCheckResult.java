@@ -64,15 +64,13 @@ public interface ValidationCheckResult {
             List<?> limitedList = collection.stream()
                     .limit(MAX_COLLECTION_SIZE)
                     .collect(Collectors.toList());
-            if (value instanceof List) {
-                return limitedList;
-            } else if (value instanceof Set) {
-                return new HashSet<>(limitedList);
-            } else if (value instanceof SortedSet) {
-                return new TreeSet<>(limitedList);
-            } else {
-                return limitedList; // Retourne une List par défaut
-            }
+            return switch (value) {
+                case List list -> limitedList;
+                case SortedSet sortedSet -> new TreeSet<>(limitedList);
+                case Set set -> new HashSet<>(limitedList);
+                default -> limitedList; // Retourne une List par défaut
+
+            };
         } else if (value instanceof Map<?, ?> map) {
             Map<?, ?> limitedMap = map.entrySet().stream()
                     .limit(MAX_COLLECTION_SIZE)
@@ -87,4 +85,3 @@ public interface ValidationCheckResult {
         }
     }
 }
-

@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.model.data;
 
 import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 
 import java.util.UUID;
 
