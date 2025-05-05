@@ -5,9 +5,9 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
-import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -15,14 +15,18 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.any;
 
+@Tag("core.auth")
 @DisplayName("Tests pour ApplicationDepositWriterUser")
 class ApplicationDepositWriterUserTest {
 
@@ -31,13 +35,13 @@ class ApplicationDepositWriterUserTest {
 
     @Mock
     private static AuthorizationParsed authorizationParsed;
-    
+
     @Mock
     private FileOrUUID mockFileOrUUID;
-    
+
     @Mock
     private BinaryFileDataset mockBinaryFileDataset;
-    
+
     @Mock
     private AuthorizationParsed mockAuthorization;
 
@@ -109,13 +113,13 @@ class ApplicationDepositWriterUserTest {
         // Arrangement
         String dataName = "testData";
         ApplicationDepositWriterUser depositWriter = spy(new ApplicationDepositWriterUser(
-                mockApplication, 
-                dataName, 
+                mockApplication,
+                dataName,
                 authorizations
         ));
-        
+
         doReturn(isData).when(depositWriter).isData();
-        
+
         // Si ce n'est pas une donnée, configurer le comportement pour tester les authorizations
         if (!isData) {
             doReturn(authorizationsMatch).when(depositWriter).testRequiredAuthorizations(
@@ -132,16 +136,16 @@ class ApplicationDepositWriterUserTest {
                     () -> depositWriter.hasRightForDeposit(mockFileOrUUID),
                     "Devrait lever une exception de droit de dépôt"
             );
-            
+
             // Vérifier que l'exception contient les informations pertinentes
-            assertThat(exception.getMessage(), 
+            assertThat(exception.getMessage(),
                     containsString(NotApplicationDataWriterForDepositException.NO_RIGHT_FOR_USER_DATA_WRITER_FOR_DEPOSIT));
             assertThat(exception.getApplicationName(), is("Test Application"));
             assertThat(exception.getDataName(), is(dataName));
         } else {
             // Action et assertion - ne devrait pas lever d'exception
             boolean result = depositWriter.hasRightForDeposit(mockFileOrUUID);
-            assertThat("Le résultat de hasRightForDeposit devrait être correct", 
+            assertThat("Le résultat de hasRightForDeposit devrait être correct",
                     result, is(expectedResult));
         }
     }
@@ -151,14 +155,14 @@ class ApplicationDepositWriterUserTest {
     void deleteShouldAlwaysBeDenied() {
         // Arrangement
         ApplicationDepositWriterUser depositWriter = new ApplicationDepositWriterUser(
-                mockApplication, 
-                "testData", 
+                mockApplication,
+                "testData",
                 new ArrayList<>(List.of(mockAuthorization))
         );
-        
+
         // Action
         boolean canDelete = depositWriter.canDelete(mockFileOrUUID);
-        
+
         // Assertion
         assertFalse(canDelete, "Le droit de suppression devrait toujours être refusé");
     }
@@ -168,14 +172,14 @@ class ApplicationDepositWriterUserTest {
     void publishRightsShouldAlwaysBeGranted() {
         // Arrangement
         ApplicationDepositWriterUser depositWriter = new ApplicationDepositWriterUser(
-                mockApplication, 
-                "testData", 
+                mockApplication,
+                "testData",
                 new ArrayList<>(List.of(mockAuthorization))
         );
-        
+
         // Action
         boolean canPublish = depositWriter.hasRightForPublishOrUnPublish(mockFileOrUUID);
-        
+
         // Assertion
         assertTrue(canPublish, "Le droit de publication devrait toujours être accordé");
     }
@@ -185,17 +189,17 @@ class ApplicationDepositWriterUserTest {
     void shouldReturnCorrectExceptionType() {
         // Arrangement
         ApplicationDepositWriterUser depositWriter = new ApplicationDepositWriterUser(
-                mockApplication, 
-                "testData", 
+                mockApplication,
+                "testData",
                 new ArrayList<>()
         );
-        
+
         // Action
         NotApplicationDataWriterForDepositException exception = depositWriter.getException();
-        
+
         // Assertion
         assertNotNull(exception, "L'exception ne devrait pas être null");
-        assertThat(exception.getMessage(), 
+        assertThat(exception.getMessage(),
                 containsString(NotApplicationDataWriterForDepositException.NO_RIGHT_FOR_USER_DATA_WRITER_FOR_DEPOSIT));
         assertThat(exception.getApplicationName(), is("Test Application"));
         assertThat(exception.getDataName(), is("testData"));
@@ -206,21 +210,21 @@ class ApplicationDepositWriterUserTest {
     void shouldImplementApplicationDataWriterInterface() {
         // Arrangement
         ApplicationDepositWriterUser depositWriter = new ApplicationDepositWriterUser(
-                mockApplication, 
-                "testData", 
+                mockApplication,
+                "testData",
                 new ArrayList<>()
         );
-        
+
         // Vérifier l'implémentation de l'interface
         assertTrue(depositWriter instanceof ApplicationDataWriter,
                 "Devrait implémenter ApplicationDataWriter");
-        
+
         // Vérifier l'accès à travers l'interface
         ApplicationDataWriter asWriter = depositWriter;
-        
-        assertSame(mockApplication, asWriter.application(), 
+
+        assertSame(mockApplication, asWriter.application(),
                 "L'accès à l'application devrait fonctionner via l'interface");
-        assertEquals("testData", asWriter.dataName(), 
+        assertEquals("testData", asWriter.dataName(),
                 "L'accès au nom de données devrait fonctionner via l'interface");
     }
 

@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -24,6 +25,7 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.mockito.Mockito.when;
 
+@Tag("core.auth")
 @DisplayName("Tests pour ApplicationDataDelete")
 class ApplicationDataDeleteTest {
 
@@ -70,7 +72,7 @@ class ApplicationDataDeleteTest {
                                 ApplicationManager.class,
                                 ApplicationDataWriter.class,
                                 ApplicationDataDelete.class
-                }),
+                        }),
                 Arguments.of("ApplicationDataDelete via PublishWriterUser",
                         new ApplicationDeleteUser(
                                 mockApplication,

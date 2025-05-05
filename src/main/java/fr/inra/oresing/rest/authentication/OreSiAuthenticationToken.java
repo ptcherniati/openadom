@@ -73,7 +73,7 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
     public Object getPrincipal() {
         return principal;
     }
-    public static OreSiUserRequestClient getrequestClient(OreSiAuthenticationToken token) {
+    public static OreSiUserRequestClient getRequestClient(OreSiAuthenticationToken token) {
         return switch (token.getPrincipal()){
             case NotConnectedUnauthentifiedUserForCreate notConnected ->null;
             case NotConnectedAuthentifiedIdleUser notConnectedUser-> new OreSiUserRequestClient(

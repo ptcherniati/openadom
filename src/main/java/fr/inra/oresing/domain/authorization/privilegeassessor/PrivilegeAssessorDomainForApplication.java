@@ -34,7 +34,7 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
     Test if is applicationManagerUserForUpdateRights
      */
     public ApplicationManager forManageAuthorizations() {
-        if (!authorizations.isUserManager()) {
+        if (!(authorizations.isUserManager() || authorizations().isApplicationManager())) {
             throw new NotApplicationUserManagerRightsException(application.getName());
         }
         return new ApplicationManagerUser(application());

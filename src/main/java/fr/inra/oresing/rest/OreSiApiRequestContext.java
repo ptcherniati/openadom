@@ -40,7 +40,7 @@ public class OreSiApiRequestContext {
 
     private Optional<OreSiUserRequestClient> getRequestClientOptional() {
         return getAuthenticationTokenOptional()
-                .map(OreSiAuthenticationToken::getrequestClient);
+                .map(OreSiAuthenticationToken::getRequestClient);
     }
 
     private static Optional<OreSiAuthenticationToken> getAuthenticationTokenOptional() {

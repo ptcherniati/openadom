@@ -1,10 +1,18 @@
 package fr.inra.oresing.rest;
 
+import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.TestDatabaseConfig;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -15,9 +23,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 /**
  * Test simple pour vérifier que la racine (/) redirige vers Swagger UI
  */
-@SpringBootTest
-@AutoConfigureMockMvc
-@Slf4j
+
+@SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
+@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
+@TestPropertySource(locations = "classpath:/application-tests.properties")
+@Tag("integration.rest")
 public class HomeResourcesTest {
 
     @Autowired
