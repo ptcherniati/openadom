@@ -72,13 +72,13 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
      * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
      */
     public OreSiRoleToAccessDatabase setRoleForClient() {
-        final OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClient().role();
+        final OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClientRole();
         setRole(roleToAccessDatabase);
         return roleToAccessDatabase;
     }
 
     public OreSiUser getCurrentUser() {
-        return userRepository.findById(request.getRequestClient().id());
+        return userRepository.findById(request.getRequestUserId());
     }
 
     /**
@@ -555,6 +555,7 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
             case NotConnectedAuthentifiedMissingPasswordUser notConnectedAuthentifiedMissingPasswordUser -> updatePasswordLost(notConnectedAuthentifiedMissingPasswordUser.oreSiUser(), notConnectedAuthentifiedMissingPasswordUser.createUserRequest());
             case NotConnectedAuthentifiedPendingUser notConnectedAuthentifiedPendingUser -> sendValidationKey(notConnectedAuthentifiedPendingUser.user());
             case NotConnectedUnauthentifiedUser notConnectedUnauthentifiedUser -> throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, notConnectedUnauthentifiedUser.createUserRequest());
+            case NotConnectedUnauthentifiedUserForCreate notConnectedUnauthentifiedUserForCreate -> null;//TODO;
         };
     }
 

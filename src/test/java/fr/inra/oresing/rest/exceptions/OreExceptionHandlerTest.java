@@ -69,7 +69,7 @@ class OreExceptionHandlerTest {
         assertDoesNotThrow(() -> objectMapper.writeValueAsString(response.getBody()));
     }
 
-    @Test
+    //@Test
     public void testDisconnectedExceptionSerializability() {
         /*DisconnectedException exception = new DisconnectedException("User disconnected");
         ResponseEntity<DisconnectedException> response = exceptionHandler.handle(exception);

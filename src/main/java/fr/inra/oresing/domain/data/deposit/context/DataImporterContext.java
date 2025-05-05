@@ -7,10 +7,12 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.context.column.PatternColumnFactory;
@@ -21,6 +23,8 @@ import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.codehaus.groovy.util.SingleKeyHashMap;
 
 import java.util.*;
 import java.util.function.Function;
@@ -44,16 +48,7 @@ public class DataImporterContext {
      */
     private final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences;
     private final ImmutableSet<Column> columns;
-
-    public List<ReferenceScope.NodeDescription> getNodesForMenu() {
-        return nodesForMenu;
-    }
-
-    private final List<ReferenceScope.NodeDescription> nodesForMenu;
-
-    public ImmutableSet<Column> getColumnsWithPatternColumns() {
-        return columnsWithPatternColumns;
-    }
+    private ImmutableSet<LineChecker> transformedLineCheckers;
 
     private ImmutableSet<Column> columnsWithPatternColumns;
     @Getter
@@ -63,7 +58,51 @@ public class DataImporterContext {
     final Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey;
     final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey;
     final boolean allowUnexpectedColumns;
+    private final List<ReferenceScope.NodeDescription> nodesForMenu;
     private final PublishContext.PublishContextBuilder publishContextBuilder;
+    private final Map<Ltree, List<DataImporter.RowWithReferenceDatum>> missingParentLines = new HashMap<>();
+    private Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = new HashMap<>();
+
+    public Map<DataValue.LineIdentityColumnName, UUID> getAfterPreloadReferenceUuids() {
+        return afterPreloadReferenceUuids;
+    }
+
+    public Optional<UUID> getKnownId(final Ltree naturalKey) {
+        return getAfterPreloadReferenceUuids().entrySet().stream()
+                .filter(entry -> entry.getKey().naturalKey().equals(naturalKey))
+                .map(Map.Entry::getValue)
+                .findFirst();
+    }
+
+    public void setAfterPreloadReferenceUuids(Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids) {
+        this.afterPreloadReferenceUuids = afterPreloadReferenceUuids;
+    }
+
+    public void setReferenceValuesForSelfType(Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType) {
+        Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = referenceValuesForSelfType.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream().findFirst().orElse(UUID.randomUUID())
+                ));
+        setAfterPreloadReferenceUuids(afterPreloadReferenceUuids);
+    }
+
+    public Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType() {
+        return getAfterPreloadReferenceUuids().entrySet()
+                .stream().collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> ImmutableSet.of(entry.getValue())
+                ));
+    }
+
+
+    public List<ReferenceScope.NodeDescription> getNodesForMenu() {
+        return nodesForMenu;
+    }
+
+    public ImmutableSet<Column> getColumnsWithPatternColumns() {
+        return columnsWithPatternColumns;
+    }
 
     public DataImporterContext(final ContextConstants constants,
                                final ImmutableSet<LineChecker> lineCheckers,
@@ -105,7 +144,6 @@ public class DataImporterContext {
 
     /**
      * Séparateur pour les clés naturelles composites.
-     *
      */
     public static String getCompositeNaturalKeyComponentsSeparator() {
         return COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR;
@@ -117,7 +155,6 @@ public class DataImporterContext {
 
     /**
      * Crée une clé hiérarchique
-     *
      */
     public Ltree newHierarchicalKey(final Ltree recursiveNaturalKey, final DataDatum referenceDatum) {
         return getHierarchicalKeyFactory().newHierarchicalKey(recursiveNaturalKey, referenceDatum);
@@ -129,7 +166,6 @@ public class DataImporterContext {
 
     /**
      * Les colonnes dont les valeurs composent la clé naturelle composite de chaque ligne pour ce référentiel
-     *
      */
     public ImmutableList<DataColumn> getKeyColumns() {
         Preconditions.checkState(CollectionUtils.isNotEmpty(getDataDescription().naturalKey()), ExceptionMessage.MISSING_PRIMARY_KEY_COMPONENT.toMessage(), getRefType());
@@ -150,7 +186,6 @@ public class DataImporterContext {
 
     /**
      * Si le référentiel contient des colonnes qui font références à d'autres lignes de ce même référentiel
-     *
      */
     public boolean isRecursive() {
         return getRecursiveComponentDescription().isPresent();
@@ -158,7 +193,6 @@ public class DataImporterContext {
 
     /**
      * Pour un référentiel récursif, indique la colonne dans laquelle la valeur est la clé vers le parent de la ligne courante
-     *
      */
     public DataColumn getColumnToLookForParentKey() {
         Preconditions.checkState(isRecursive());
@@ -171,7 +205,6 @@ public class DataImporterContext {
 
     /**
      * Le séparateur à utiliser pour distinguer les cellules du fichier CSV
-     *
      */
     public char getCsvSeparator() {
         return getDataDescription().separator();
@@ -183,7 +216,6 @@ public class DataImporterContext {
 
     /**
      * Dans le cas d'un référentiel récursif, le {@link ReferenceType} qui porte sur la colonne contenant des valeurs faisant référence à d'autres lignes du référentiel.
-     *
      */
     public LineChecker getReferenceLineChecker() {
         Preconditions.checkState(isRecursive());
@@ -200,7 +232,7 @@ public class DataImporterContext {
     }
 
     public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(final Ltree hierarchicalKey) {
-        if(storedReferences==null){
+        if (storedReferences == null) {
             return Optional.empty();
         }
         return storedReferences.entrySet().stream()
@@ -266,14 +298,14 @@ public class DataImporterContext {
         return Optional.ofNullable(constants.displayPattern());
     }
 
-       public String getParent() {
+    public String getParent() {
         return constants.hierarchicalKeyFactory().parent();
     }
 
     public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue> constantColumnsValues) {
         return columnsWithPatternColumns.stream()
-                .map(registeredColumn->registeredColumn.as(column.column()))
-                .anyMatch(Objects::nonNull)||
+                .map(registeredColumn -> registeredColumn.as(column.column()))
+                .anyMatch(Objects::nonNull) ||
                 constantColumnsValues.keySet().stream()
                         .map(DataColumn::column)
                         .anyMatch(c -> c.equals(column.column()));
@@ -304,5 +336,47 @@ public class DataImporterContext {
                 .stream()
                 .map(getimportHeader)
                 .toList();
+    }
+
+    public void setTransformedLineCheckers(ImmutableSet<LineChecker> transformedLineCheckers) {
+        ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = transformedLineCheckers.stream()
+                .map(LineChecker::fieldTypeForOne)
+                .filter(ReferenceType.class::isInstance)
+                .map(ReferenceType.class::cast)
+                .filter(referenceType -> referenceType.getRefType().equals(getRefType()))
+                .findAny()
+                .map(ReferenceType::getReferenceValues)
+                .orElseGet(ImmutableMap::of);
+        setReferenceValuesForSelfType(referenceValues);
+        this.transformedLineCheckers = lineCheckers;
+    }
+
+    public ImmutableSet<LineChecker> getTransformedLineCheckers() {
+        return transformedLineCheckers;
+    }
+
+    public void addKnownIdToReferenceValues(DataValue.LineIdentityColumnName key, UUID uuid) {
+        Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType = getReferenceValuesForSelfType();
+        Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = new HashMap<>(referenceValuesForSelfType);
+        if (!referenceValues.containsKey(key)) {
+            referenceValues.put(key, ImmutableSet.of(uuid));
+        }
+        setReferenceValuesForSelfType(ImmutableMap.copyOf(referenceValues));
+        for (LineChecker lineChecker : getTransformedLineCheckers()) {
+            if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(getRefType())) {
+                ReferenceType fieldType = (ReferenceType) lineChecker.fieldTypeForOne();
+                fieldType.setReferenceValues(ImmutableMap.copyOf(referenceValues));
+            }
+        }
+    }
+
+    public void registerMissingLine(Ltree hierarchicalParentKey, DataImporter.RowWithReferenceDatum rowWithReferenceDatum) {
+        this.missingParentLines
+                .computeIfAbsent(hierarchicalParentKey, k -> new LinkedList<>())
+                .add(rowWithReferenceDatum);
+    }
+
+    public Map<Ltree, List<DataImporter.RowWithReferenceDatum>> getMissingLines() {
+        return this.missingParentLines;
     }
 }

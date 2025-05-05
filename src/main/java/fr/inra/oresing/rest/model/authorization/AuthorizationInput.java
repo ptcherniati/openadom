@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.model.authorization;
 
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import lombok.Getter;
@@ -8,6 +9,10 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,10 +26,10 @@ public class AuthorizationInput {
 
     public void setOperationTypes(Set<OperationType> operationTypes) {
 
-        if(operationTypes.contains(OperationType.publication)){
+        if (operationTypes.contains(OperationType.publication)) {
             operationTypes.add(OperationType.depot);
         }
-        if(operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)){
+        if (operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)) {
             operationTypes.add(OperationType.extraction);
         }
         this.operationTypes = operationTypes;
@@ -38,18 +43,53 @@ public class AuthorizationInput {
         this.requiredAuthorizations = requiredAuthorizations;
         this.timeScope = timeScope;
         operationTypes = new HashSet<>(operationTypes);
-        if(operationTypes.contains(OperationType.publication)){
+        if (operationTypes.contains(OperationType.publication)) {
             operationTypes.add(OperationType.depot);
             operationTypes.add(OperationType.delete);
         }
-        if(operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)){
+        if (operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)) {
             operationTypes.add(OperationType.extraction);
         }
         this.operationTypes = operationTypes;
     }
 
-    public void setTimeScope(final Map<String, LocalDate> dates) {
+    /*public void setTimeScope(final Map<String, LocalDate> dates) {
         this.timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
+    }*/
+    public void setTimeScope(Map<String, String> dates) {
+        this.timeScope = Optional.ofNullable(dates.get("format"))
+                .map(DatePattern::of)
+                .map(datePattern -> {
+                    Class<TemporalAccessor> type = datePattern.type();
+                    DateTimeFormatter formatter = datePattern.formatter();
+                    if (type.equals(LocalDate.class)) {
+                        LocalDate fromDay = Optional.ofNullable(dates.get("fromDay"))
+                                .map(from->LocalDate.parse(from, formatter))
+                                .orElse(LocalDate.MIN);
+                        LocalDate toDay = Optional.ofNullable(dates.get("toDay"))
+                                .map(from->LocalDate.parse(from, formatter))
+                                .orElse(LocalDate.MAX);
+                        return LocalDateTimeRange.between(fromDay, toDay);
+                    } else if (type.equals(LocalTime.class)) {
+                        LocalTime fromDay = Optional.ofNullable(dates.get("fromDay"))
+                                .map(from->LocalTime.parse(from, formatter))
+                                .orElse(LocalTime.MIN);
+                        LocalTime toDay = Optional.ofNullable(dates.get("toDay"))
+                                .map(from->LocalTime.parse(from, formatter))
+                                .orElse(LocalTime.MAX);
+                        return LocalDateTimeRange.between(LocalDate.now().atTime(fromDay), LocalDate.now().atTime( toDay));
+                    } else if (type.equals(LocalDateTime.class)) {
+                        LocalDateTime fromDay = Optional.ofNullable(dates.get("fromDay"))
+                                .map(from->LocalDateTime.parse(from, formatter))
+                                .orElse(LocalDateTime.MIN);
+                        LocalDateTime toDay = Optional.ofNullable(dates.get("toDay"))
+                                .map(from->LocalDateTime.parse(from, formatter))
+                                .orElse(LocalDateTime.MAX);
+                        return LocalDateTimeRange.between( fromDay,  toDay);
+                    }
+                    return null;
+                })
+                .orElse(null);
     }
 
     public AuthorizationInput() {

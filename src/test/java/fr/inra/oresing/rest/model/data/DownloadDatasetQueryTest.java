@@ -218,7 +218,6 @@ class DownloadDatasetQueryTest {
         try {
             final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery build = before(simpleSearchJson);
             final SqlRequest sql = DataRequestBuilder.buildSelectRequest(build);
-            System.out.println(sql);
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -230,7 +229,6 @@ class DownloadDatasetQueryTest {
         try {
             final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery build = before(searchByIds);
             final SqlRequest request = DataRequestBuilder.buildSelectRequest(build);
-            System.out.println(request.sql());
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -242,7 +240,6 @@ class DownloadDatasetQueryTest {
         try {
             final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery build = before(searchNoFilter);
             final SqlRequest request = DataRequestBuilder.buildSelectRequest(build);
-            System.out.println(request.sql());
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
@@ -254,7 +251,6 @@ class DownloadDatasetQueryTest {
         try {
             final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery build = before(advancedSearchJson);
             final SqlRequest request = DataRequestBuilder.buildSelectRequest(build);
-            System.out.println(request.sql());
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }

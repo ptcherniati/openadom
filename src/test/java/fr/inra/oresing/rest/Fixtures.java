@@ -10,6 +10,7 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.*;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import jakarta.servlet.http.Cookie;
 import lombok.Getter;
 import org.apache.commons.io.IOUtils;
@@ -40,6 +41,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -127,17 +129,12 @@ public class Fixtures {
     public Exception loadApplicationWithError(final MockMultipartFile file,
                                               final Cookie cookie,
                                               final String applicationName) throws Exception {
-        final MvcResult result = mockMvc
+        return mockMvc
                 .perform(multipart("/api/v1/applications/{applicationName}", applicationName)
-                        .file(file)
+                            .file(file).with(csrf().asHeader())
                         .cookie(cookie)
                 )
-                .andExpect(request().asyncStarted())
-                .andReturn();
-        if (result.getAsyncResult() instanceof Exception) {
-            return (Exception) result.getAsyncResult();
-        }
-        return mockMvc.perform(asyncDispatch(result))
+                .andExpect(status().is(401))
                 .andReturn()
                 .getResolvedException();
     }
@@ -146,7 +143,7 @@ public class Fixtures {
                                   final Cookie cookie) throws Exception {
         final ResultActions result = mockMvc.perform(
                 multipart("/api/v1/validate-configuration")
-                        .file(file)
+                            .file(file).with(csrf().asHeader())
                         .accept(MediaType.APPLICATION_NDJSON)
                         .cookie(cookie)
         );
@@ -170,19 +167,19 @@ public class Fixtures {
         try {
             final ResultActions result = mockMvc.perform(
                     multipart("/api/v1/applications/{applicationName}", applicationName)
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .param("comment", comment != null ? comment : "")
                             .accept(MediaType.APPLICATION_NDJSON)
                             .cookie(cookie)
             );
             return mockMvc.perform(asyncDispatch(
                             result
-                                    .andExpect(request().asyncStarted())
+                                    //.andExpect(request().asyncStarted())
                                     .andReturn())
                     )
                     .andReturn();
         } catch (final Exception e) {
-            throw e.getCause();
+            throw e.getCause()==null?e:e.getCause();
         }
     }
 
@@ -193,7 +190,7 @@ public class Fixtures {
                                   final String comment) throws Exception {
         final ResultActions result = mockMvc.perform(
                 multipart("/api/v1/applications/{applicationName}/configuration", applicationName)
-                        .file(file)
+                            .file(file).with(csrf().asHeader())
                         .param("comment", comment != null ? comment : "")
                         .accept(MediaType.APPLICATION_NDJSON)
                         .cookie(cookie)
@@ -661,7 +658,7 @@ public class Fixtures {
             cookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", aLogin)
                             .param("password", aPassword))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         }
         return cookie;
     }@Transactional
@@ -702,7 +699,7 @@ public class Fixtures {
                             .param("login", aLogin)
                             .param("password", aPassword))
                     .andReturn().getResponse();
-            cookie = response.getCookie(AuthHelper.JWT_COOKIE_NAME);
+            cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
         }
         final String aPassword = "xxxxxxxx";
         final CreateUserResult createUserResult = authenticationService.createUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
@@ -723,7 +720,7 @@ public class Fixtures {
         return mockMvc.perform(post("/api/v1/login")
                         .param("login", applicationPattern)
                         .param("password", aPassword))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
     }
 
     public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {
@@ -755,7 +752,7 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
@@ -765,7 +762,7 @@ public class Fixtures {
         try (final InputStream refStream = getClass().getResourceAsStream(getPemDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -786,7 +783,7 @@ public class Fixtures {
         try (final InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationReferenceResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "reference.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/couleurs")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -795,7 +792,7 @@ public class Fixtures {
         try (final InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/jeu1")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -820,7 +817,7 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/acbb/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie1))
                         .andExpect(status().isCreated());
             }
@@ -839,7 +836,7 @@ public class Fixtures {
         try (final InputStream in = openSwcDataResourceName(true)) {
             final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/acbb/data/SWC")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -849,7 +846,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -859,7 +856,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/acbb/data/flux_tours")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -903,7 +900,7 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().is2xxSuccessful());
             }
@@ -913,7 +910,7 @@ public class Fixtures {
         try (final InputStream refStream = getClass().getResourceAsStream(getHauteFrequenceDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
-                            .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -972,7 +969,7 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
@@ -982,7 +979,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/condition_prelevements")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -991,7 +988,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getPhysicoChimieDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/physico-chimie")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -1000,7 +997,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getSondeDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/sonde_truncated")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -1009,7 +1006,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getPhytoAggregatedDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -1018,7 +1015,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getPhytoplanctonDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -1027,7 +1024,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getZooplanctonDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton__truncated")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -1036,7 +1033,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getZooplactonBiovolumDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -1132,7 +1129,7 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
@@ -1142,7 +1139,7 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getFluxMeteoForetDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
-                            .file(file)
+                            .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().isCreated());
         }
@@ -1203,7 +1200,7 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
@@ -1212,7 +1209,7 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }

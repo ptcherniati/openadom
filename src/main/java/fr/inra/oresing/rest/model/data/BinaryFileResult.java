@@ -12,7 +12,7 @@ public record BinaryFileResult(
         long size,
         BinaryFileInfosResult params) {
 
-    public static final BinaryFileResult of(BinaryFile binaryFile, UserDescriptionResult createuser, UserDescriptionResult publisheduser){
+    public static BinaryFileResult of(BinaryFile binaryFile, UserDescriptionResult createuser, UserDescriptionResult publisheduser){
         return new BinaryFileResult(
                 binaryFile.getId(),
                 binaryFile.getName(),

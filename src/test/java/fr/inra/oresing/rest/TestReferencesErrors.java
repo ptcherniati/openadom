@@ -8,6 +8,7 @@ import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;
@@ -42,6 +43,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -81,7 +83,6 @@ public class TestReferencesErrors {
     public static void registerErrors() throws IOException {
         String errorsAsString = new ObjectMapper().writeValueAsString(responses);
         final File errorsFile = new File("ui/cypress/fixtures/applications/errors/ref_ola_errors.json");
-        log.debug(errorsFile.getAbsolutePath());
         final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
         writer.write(errorsAsString);
         writer.close();
@@ -108,7 +109,7 @@ public class TestReferencesErrors {
         authCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", LOGIN)
                         .param("password", PASSWORD))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         addRoleAdmin(authUser);
     }
 
@@ -151,7 +152,7 @@ public class TestReferencesErrors {
             recursivityCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "recursivity")
                             .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, recursivityCookie, "recursivite", ""));
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
                             .param("filter", "ALL")
@@ -188,7 +189,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getKey() + ".csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", "proprietes_taxon")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -202,7 +203,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -233,7 +234,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/condition_prelevements")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -257,7 +258,7 @@ public class TestReferencesErrors {
     private void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
         mockMvc.perform(put("/api/v1/authorization/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
-                        .param("applicationPattern", pattern)
+                        .param("applicationPattern", pattern).with(csrf().asHeader())
                         .cookie(authCookie))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(userId.toString())))
@@ -280,7 +281,7 @@ public class TestReferencesErrors {
             repeatedColumnCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "repeatedcolumns")
                             .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnCookie, "repeatedcolumns", ""));
 
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
@@ -299,7 +300,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnCookie))
                         .andDo(result -> {
                             if (result.getResponse().getStatus() > 300) {
@@ -332,7 +333,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -357,7 +358,7 @@ public class TestReferencesErrors {
             repeatedColumnsCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", "repeatedcolumns")
                             .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnsCookie, "repeatedcolumns", ""));
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
                             .param("filter", "ALL")
@@ -375,7 +376,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnsCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -403,7 +404,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
-                                .file(refFile)
+                            .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnsCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();

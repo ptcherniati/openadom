@@ -6,12 +6,11 @@ import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
-import fr.inra.oresing.rest.AuthHelper;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import org.hamcrest.Matchers;
 import static org.junit.jupiter.api.Assertions.*;
 
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -40,6 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -87,13 +87,13 @@ public class AuthenticationServiceTest {
         final String email = "toto@codelutin.com";
         final String password = "xxxx";
         MockHttpServletResponse response = mockMvc.perform(
-                        post("/api/v1/users")
+                        post("/api/v1/users").with(csrf().asHeader())
                                 .param("login", login)
                                 .param("password", password)
                                 .param("email", email)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
-        Cookie cookie = response.getCookie(AuthHelper.JWT_COOKIE_NAME);
+        Cookie cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
 /*
         final String authUserId = JsonPath.parse(response.getContentAsString()).read("$.id", String.class);
 */
@@ -103,7 +103,7 @@ public class AuthenticationServiceTest {
         assertEquals(mailFrom, message.getFrom());
         String[] lines = Objects.requireNonNull(message.getText()).split("\n");
         String validationKey = lines[6];
-        String user = mockMvc.perform(put("/api/v1/users")
+        String user = mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -113,7 +113,7 @@ public class AuthenticationServiceTest {
         assertEquals(login, loginAdminResult.login());
         final OreSiUserRole userRole = authenticationService.getUserRole(UUID.fromString(id));
 
-        mockMvc.perform(put("/api/v1/users")
+        mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"email\": \"" + email + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -128,7 +128,7 @@ public class AuthenticationServiceTest {
         validationKey = getValidationKey(messageArgumentCaptor, login, password, "pending", newEmail);
 
         //on valide l'email
-        mockMvc.perform(put("/api/v1/users")
+        mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -137,7 +137,7 @@ public class AuthenticationServiceTest {
         validationKey = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
         final String validationKey2 = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
         assertEquals(validationKey2, validationKey);
-        mockMvc.perform(put("/api/v1/users")
+        mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\"" +
                                 ", \"email\": \"" + newEmail + "\", " +
@@ -166,7 +166,7 @@ public class AuthenticationServiceTest {
         final String user;
         final String validationKey;
         final SimpleMailMessage message;
-        mockMvc.perform(put("/api/v1/users")
+        mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"email\": \"" + email + "\", \"password\": \"" + password + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is(expectedState)))

@@ -10,6 +10,8 @@ import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManager;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
@@ -21,6 +23,7 @@ import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.MultiYaml;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.model.application.ApplicationLightResult;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
@@ -53,7 +56,7 @@ import static fr.inra.oresing.domain.authorization.privilegeassessor.role.Privil
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class ApplicationService implements ServiceContainerBean{
+public class ApplicationService implements ServiceContainerBean {
     @Autowired
     private OreSiRepository repository;
 
@@ -92,8 +95,11 @@ public class ApplicationService implements ServiceContainerBean{
             final String name,
             final MultipartFile configurationFile,
             final String comment) {
-        serviceContainer.authorizationService().getPrivilegeAssessorForSystem(SYSTEM_ADMINISTRATION)
-                .forCreateApplication()
+        OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getSystemPersona)
+                .filter(ApplicationCreator.class::isInstance)
+                .map(ApplicationCreator.class::cast)
+                .orElse(null)
                 .canCreateApplication(name);
         final ReactiveProgression.CreateApplicationProgressionMessagesLabel baseMessage = new ReactiveProgression.CreateApplicationProgressionMessagesLabel();
         progression.pushProgression();
@@ -229,9 +235,11 @@ public class ApplicationService implements ServiceContainerBean{
             final MultipartFile configurationFile,
             final String comment) {
         final Application application = getApplication(nameOrId);
-
-        serviceContainer.authorizationService().getPrivilegeAssessorForApplication(APPLICATION_MANAGER, application)
-                .forUpdateApplication()
+        OreSiApiRequestContext.getAuthentication()
+                .map(OreSiAuthenticationToken::getApplicationPersona)
+                .filter(ApplicationManager.class::isInstance)
+                .map(ApplicationManager.class::cast)
+                .orElse(null)
                 .canUpdateApplication();
         ReactiveProgression.ChangeApplicationProgression progression1 = progression;
         final ReactiveProgression.ChangeApplicationProgressionMessagesLabel baseMessage = new ReactiveProgression.ChangeApplicationProgressionMessagesLabel();

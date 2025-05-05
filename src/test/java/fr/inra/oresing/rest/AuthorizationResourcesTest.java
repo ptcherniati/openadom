@@ -9,6 +9,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.ReactiveTypeError;
+import fr.inra.oresing.rest.security.JWTExtractor;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ import java.io.InputStream;
 import java.util.*;
 
 import static org.hamcrest.Matchers.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -86,37 +88,37 @@ public class AuthorizationResourcesTest {
         final CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx", "withrights@inrae.fr");
         fixtures.setToActive(withRightsUserResult.userId());
         final String withRigthsUserId = withRightsUserResult.userId().toString();
-        final Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login")
+        final Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login").with(csrf().asHeader())
                         .param("login", "withrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         final CreateUserResult withAdminRightsUserResult = authenticationService.createUser("withadminrigths", "xxxxxxxx", "withadminrights@inrae.fr");
         fixtures.setToActive(withAdminRightsUserResult.userId());
         final String withAdminRigthsUserId = withAdminRightsUserResult.userId().toString();
         final Cookie withAdminRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withadminrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         final CreateUserResult withBadAdminRightsUserResult = authenticationService.createUser("withbadadminrigths", "xxxxxxxx", "withbadadminrigths@inrae.fr");
         fixtures.setToActive(withBadAdminRightsUserResult.userId());
         final String withBadAdminRigthsUserId = withBadAdminRightsUserResult.userId().toString();
         final Cookie withBadAdminRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withbadadminrigths")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         final CreateUserResult lamdaUserResult = authenticationService.createUser("lambda", "xxxxxxxx", "lambda@inrae.fr");
         fixtures.setToActive(lamdaUserResult.userId());
         final String lambdaUserId = lamdaUserResult.userId().toString();
         final Cookie lambdaCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         final CreateUserResult readerUserResult = authenticationService.createUser("UnReader", "xxxxxxxx", "UnReader@inrae.fr");
         fixtures.setToActive(readerUserResult.userId());
         final Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "UnReader")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
         final String readerUserId = readerUserResult.userId().toString();
 
@@ -180,7 +182,7 @@ public class AuthorizationResourcesTest {
                           " }\n" +
                           "}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -208,7 +210,7 @@ public class AuthorizationResourcesTest {
                    " }\n" +
                    "}";
 
-            create = post("/api/v1/applications/acbb/authorization")
+            create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -254,7 +256,7 @@ public class AuthorizationResourcesTest {
                           " }\n" +
                           "}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization")
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
@@ -262,8 +264,6 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
 
-
-            log.debug(StringUtils.abbreviate(response, 50));
             //on ajoute une autre submissionScope
             json = "{\n" +
                    "   \"usersId\":[\"" + readerUserId + "\",\"" + authId + "\"],\n" +
@@ -298,25 +298,23 @@ public class AuthorizationResourcesTest {
                    "  }\n" +
                    " }\n" +
                    "}";
-            create = post("/api/v1/applications/acbb/authorization")
+            create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
             response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
             // on peut aussi rajouter une submissionScope avec withAdminRigthsUserId
-            create = post("/api/v1/applications/acbb/authorization")
+            create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(withAdminRigthsCookie)
                     .content(json);
             response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
             // on ne peut aussi rajouter une submissionScope avec withBadAdminRigthsUserId theix vs laqueuille
-            create = post("/api/v1/applications/acbb/authorization")
+            create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(withBadAdminRigthsCookie)
                     .content(json);
@@ -324,7 +322,6 @@ public class AuthorizationResourcesTest {
                     .andExpect(status().is4xxClientError())
                     .andExpect(jsonPath("$.localizedMessage", IsEqual.equalTo("NO_RIGHT_FOR_SET_RIGHTS_APPLICATION")))
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
         }
         {
             MockHttpServletRequestBuilder authorizations = get("/api/v1/applications/acbb/authorization/user/" + authId)
@@ -372,7 +369,7 @@ public class AuthorizationResourcesTest {
         final Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "UnReader")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
         final String authorizationId;
 
@@ -412,14 +409,13 @@ public class AuthorizationResourcesTest {
                                 " }\n" +
                                 "}";
 
-            final MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization")
+            final MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
             final String response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
-            log.debug(StringUtils.abbreviate(response, 50));
 
             authorizationId = JsonPath.parse(response).read("$.authorizationId");
         }
@@ -429,8 +425,6 @@ public class AuthorizationResourcesTest {
                             .cookie(authCookie))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(json, 50));
 
             assertTrue(json.contains("[2016,1,1]"));
         }
@@ -453,13 +447,11 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            final String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
+            final String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId).with(csrf().asHeader())
                             .cookie(authCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-
-            log.debug(StringUtils.abbreviate(json, 50));
 
         }
 
@@ -490,7 +482,7 @@ public class AuthorizationResourcesTest {
             Cookie dbUserCookies = mockMvc.perform(post("/api/v1/login")
                             .param("login", TEST)
                             .param("password", TEST))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
             addRoleAdmin(dbUserResult);
             final String applicationCreatorLogin = "applicationCreator";
             final String applicationCreatorPassword = "xxxxxxxx";
@@ -499,7 +491,7 @@ public class AuthorizationResourcesTest {
             Cookie applicationCreatorCookies = mockMvc.perform(post("/api/v1/login")
                             .param("login", applicationCreatorLogin)
                             .param("password", applicationCreatorPassword))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
             final String lambdaLogin = "lambda";
             final String lambdaPassword = "xxxxxxxx";
             final CreateUserResult lambdaResult = authenticationService.createUser(lambdaLogin, lambdaPassword, "lambdaLogin@inrae.fr");
@@ -507,7 +499,7 @@ public class AuthorizationResourcesTest {
             Cookie lambdaCookie = mockMvc.perform(post("/api/v1/login")
                             .param("login", lambdaLogin)
                             .param("password", lambdaPassword))
-                    .andReturn().getResponse().getCookie(AuthHelper.JWT_COOKIE_NAME);
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
 
             {
                 //l'administrateur peut créer des applications.
@@ -517,7 +509,7 @@ public class AuthorizationResourcesTest {
             {
                 // on donne les droits pour un pattern acbb
 
-                final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorResult.userId().toString())
                                 .param("applicationPattern", "acbb")
                                 .cookie(dbUserCookies))
@@ -545,7 +537,7 @@ public class AuthorizationResourcesTest {
             }
             {
                 //on donne des droits pour le pattern monsore
-                final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorResult.userId().toString())
                                 .param("applicationPattern", "monsore")
                                 .cookie(dbUserCookies))
@@ -562,7 +554,7 @@ public class AuthorizationResourcesTest {
             }
             {
                 //on supprime des droits pour le pattern monsore
-                final ResultActions resultActions = mockMvc.perform(delete("/api/v1/authorization/applicationCreator")
+                final ResultActions resultActions = mockMvc.perform(delete("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorResult.userId().toString())
                                 .param("applicationPattern", "monsore")
                                 .cookie(dbUserCookies))
