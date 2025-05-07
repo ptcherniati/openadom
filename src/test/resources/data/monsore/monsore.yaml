@@ -10,7 +10,7 @@ OA_application:
       en: SOERE my SOERE
   OA_comment: Fichier de test de l'application brokenADOM version initiale
   OA_name: monsore
-  OA_version: 3.0.1
+  OA_version: 3.0.2
 OA_tags:
   context:
     fr: contexte
@@ -871,6 +871,8 @@ OA_data:
             en: Number of individuals
         OA_defaultValue:
           OA_expression: return 0
+        OA_checker:
+          OA_name: OA_float
     OA_computedComponents:
       chemin: #optional
         OA_withNaturalKeyComponents:   #optional

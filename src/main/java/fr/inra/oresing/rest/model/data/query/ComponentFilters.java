@@ -48,12 +48,12 @@ public class ComponentFilters {
         }
         final CheckerDescription formatForFieldType = Optional.ofNullable(dataDescription)
                 .map(StandardDataDescription::componentDescriptions)
-                .map(dd -> {
-                    ComponentDescription componentDescription = dd.get(componentFilter.componentKey);
-                    return componentDescription;
-                })
-                .map(ComponentDescription::checker)
-                .orElse(CheckerDescription.NO_CHECKER);
+                .stream()
+                .flatMap(map -> map.values().stream()) // Transforme le Stream<Map> en Stream des valeurs
+                .filter(component -> Objects.equals(component.componentKey(), componentFilter.componentKey))
+                .findFirst() // Trouvez le premier élément correspondant
+                .map(ComponentDescription::checker) // Mappez chaque composant vers son CheckerDescription
+                .orElse(CheckerDescription.NO_CHECKER); // Retourne NO_CHECKER si aucun élément n'est trouvé
         final Multiplicity multiplicity = formatForFieldType.multiplicity();
         if (CollectionUtils.isNotEmpty(componentFilter.intervalsValues) && componentFilter.intervalsValues.stream().allMatch(Objects::nonNull)) {
             return switch (formatForFieldType) {
@@ -117,7 +117,6 @@ public class ComponentFilters {
                         componentFilter.componentKey,
                         componentFilter.getIntervalsValues().stream()
                                 .map(intervalValues ->
-
                                                 new IntervalValuesNumeric(
                                                         intervalValues.from,
                                                         intervalValues.to)
