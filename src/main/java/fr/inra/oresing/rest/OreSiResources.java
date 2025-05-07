@@ -1138,8 +1138,6 @@ public class OreSiResources implements ServiceContainerBean {
         try {
             final DownloadDatasetQuery downloadDatasetQuery = params != null ? new JsonRowMapper<DownloadDatasetQuery>().toObject(params, DownloadDatasetQuery.class) : new DownloadDatasetQuery();
             if (loadExample) {
-                downloadDatasetQuery.setLimit(100L);
-            } else {
                 downloadDatasetQuery.setLimit(5000L);
             }
             final Application application = serviceContainer.applicationService().getApplication(applicationNameOrID);
