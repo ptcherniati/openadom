@@ -29,7 +29,8 @@ public record AuthorizationParsed(
                 ));
 
         LocalDate fromDate = Optional.ofNullable(Objects.requireNonNull(authorizationForScope).timeScope())
-                .map(LocalDateTimeRange::getRange).filter(Range::hasLowerBound).map(range -> range.lowerEndpoint().toLocalDate()).orElse(LocalDate.MIN);
+                .map(LocalDateTimeRange::getRange).filter(Range::hasLowerBound)
+                .map(range -> range.lowerEndpoint().toLocalDate()).orElse(LocalDate.MIN);
 
         LocalDate toDate = Optional.ofNullable(authorizationForScope.timeScope())
                 .map(LocalDateTimeRange::getRange).filter(Range::hasUpperBound).map(range -> range.upperEndpoint().toLocalDate()).orElse(LocalDate.MAX);

@@ -150,7 +150,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                 final Optional<String> duration = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_DURATION))
                         .map(JsonNode::asText);
                 final String durationRegex = "^(?!.*(second|minute|hour|day|week|month|year).*\1)\\d+ +(?:second|minute|hour|day|week|month|year)s?(?: +\\d+ +(?:second|minute|hour|day|week|month|year)s?)*$";
-                if (!duration.isEmpty() && !duration.get().toLowerCase().matches(durationRegex)) {
+                if (duration.isPresent() && !duration.get().toLowerCase().matches(durationRegex)) {
                     rootBuilder.buildError(ConfigurationException.INVALID_DURATION_CHECKER_DATE, Map.of(
                                     "declaredDuration", duration.get()),
                             NodeSchemaValidator.joinPath(

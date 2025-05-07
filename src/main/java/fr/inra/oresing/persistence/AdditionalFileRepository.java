@@ -34,9 +34,9 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
     public Optional<AdditionalBinaryFile> tryFindByIdWithData(final UUID id) {
         Preconditions.checkArgument(id != null);
         final String query = String.format("""
-                        SELECT '%s' as "@class", to_jsonb(t) as json 
+                        SELECT '%s' as "@class", to_jsonb(t) as json
                         FROM (
-                            SELECT 
+                            SELECT
                                 id,
                                 creationdate,
                                 updatedate,
@@ -66,7 +66,7 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         String query = String.format("""
                         SELECT '%1$s' as "@class", to_jsonb(t) as json
                         FROM (
-                            SELECT 
+                            SELECT
                                 id,
                                 creationdate,
                                 updatedate,
@@ -150,14 +150,14 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
                             FROM %1$s bf
                             WHERE forApplication
                         )
-                        SELECT DISTINCT '%3$s' AS "@class", to_jsonb(t) AS json 
+                        SELECT DISTINCT '%3$s' AS "@class", to_jsonb(t) AS json
                         FROM (
-                            SELECT 
+                            SELECT
                                 id, creationdate, updatedate, creationuser, updateuser,
                                 application, fileType, fileName, comment, size,
                                 convert_from(data, 'UTF8') AS "data", fileinfos,
                                 associates, forapplication
-                            FROM additionalFileId 
+                            FROM additionalFileId
                             JOIN %1$s USING (id)
                         ) t
                         """,
@@ -236,7 +236,7 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         String sql = String.format("""
                         SELECT '%1$s' AS "@class", to_jsonb(t) AS json
                         FROM (
-                            SELECT 
+                            SELECT
                                 id, creationdate, updatedate, creationuser, updateuser,
                                 application, fileType, fileName, comment, size,
                                 convert_from(data, 'UTF8') AS "data", fileinfos, associates, forapplication
@@ -269,7 +269,7 @@ public class AdditionalFileRepository extends JsonTableInApplicationSchemaReposi
         String sql = String.format("""
                         DELETE FROM %1$s
                         WHERE %2$s
-                        RETURNING '%3$s' AS "@class", 
+                        RETURNING '%3$s' AS "@class",
                         to_jsonb((
                             id, creationdate, updatedate, creationuser, updateuser,
                             application, fileType, fileName, comment, size,

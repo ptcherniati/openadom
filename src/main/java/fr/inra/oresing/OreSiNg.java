@@ -1,9 +1,8 @@
 package fr.inra.oresing;
 
-import com.fasterxml.jackson.databind.PropertyNamingStrategies;
-import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
+import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
@@ -19,7 +18,6 @@ import org.springframework.boot.info.GitProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.context.support.ResourceBundleMessageSource;
@@ -38,6 +36,10 @@ import java.util.Properties;
 
 @Slf4j
 @EnableWebMvc
+@OpenAPIDefinition(
+        servers = @io.swagger.v3.oas.annotations.servers.Server(url = "${springdoc.swagger-ui.server-url}", description = "Server URL")
+)
+
 @SpringBootApplication(scanBasePackages = "fr.inra.oresing")
 public class OreSiNg implements WebMvcConfigurer {
 
@@ -66,7 +68,7 @@ public class OreSiNg implements WebMvcConfigurer {
     }
 
     @Configuration
-    public class GitInfoConfig {
+    public static class GitInfoConfig {
 
         @Bean
         @ConditionalOnMissingBean
@@ -83,7 +85,7 @@ public class OreSiNg implements WebMvcConfigurer {
     }
 
     @Component
-    public class GitInfoContributor implements InfoContributor {
+    public static class GitInfoContributor implements InfoContributor {
 
         private final GitProperties gitProperties;
 
@@ -112,7 +114,7 @@ public class OreSiNg implements WebMvcConfigurer {
     }
 
     @Configuration
-    public class OpenApiConfig {
+    public static class OpenApiConfig {
 
         @Value("${allowed.origin}")
         private String allowedOrigin;

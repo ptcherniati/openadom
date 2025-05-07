@@ -28,7 +28,7 @@ public record CheckAndStoreFile(
             try {
                 Preconditions.checkArgument(!(binaryFile().getFileData().available() == 0), "le CSV téléversé pour le référentiel " + dataName() + " est vide");
             } catch (IOException e) {
-                throw new  IllegalArgumentException(String.valueOf("le CSV téléversé pour le référentiel " + dataName() + " est vide"));
+                throw new  IllegalArgumentException("le CSV téléversé pour le référentiel " + dataName() + " est vide");
             }
             UUID fileId = binaryFileRepository.store(binaryFile());
             builder().binaryFile = binaryFileRepository.tryFindByIdWithData(fileId).orElse(null);// TODO throwException

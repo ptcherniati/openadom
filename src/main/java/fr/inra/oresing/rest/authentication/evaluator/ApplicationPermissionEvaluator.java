@@ -38,14 +38,14 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     public static final String APPLICATION_WRITE_FILE = "APPLICATION_WRITE_FILE";
     public static final String APPLICATION_DELETE_FILE = "APPLICATION_DELETE_FILE";
 
-    public Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_USER_CONNECTED;
-    public Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_ADMINISTRATION;
+    public final Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_USER_CONNECTED;
+    public final Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_ADMINISTRATION;
 
-    public Function<String, PrivilegeAssessorDomainForApplication> APPLICATION_MANAGER;
-    public Function<String, PrivilegeAssessorDomainForApplication> DATA_MANAGEMENT;
-    public Function<String, PrivilegeAssessorDomainForApplication> DATA_READ;
-    public Function<String, PrivilegeAssessorDomainForApplication> DATA_WRITE;
-    public Function<String, PrivilegeAssessorDomainForApplication> DATA_ACCESS;
+    public final Function<String, PrivilegeAssessorDomainForApplication> APPLICATION_MANAGER;
+    public final Function<String, PrivilegeAssessorDomainForApplication> DATA_MANAGEMENT;
+    public final Function<String, PrivilegeAssessorDomainForApplication> DATA_READ;
+    public final Function<String, PrivilegeAssessorDomainForApplication> DATA_WRITE;
+    public final Function<String, PrivilegeAssessorDomainForApplication> DATA_ACCESS;
 
 
     private final AuthorizationService authorizationService;
@@ -73,20 +73,23 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     placement des permissions dans le fichier de configuration :
      */
     public boolean hasPermission(Authentication authentication, Object targetDomain, Object permission) {
-        Optional<OreSiAuthenticationToken> oreSiAuthenticationTokenOpt = Optional.ofNullable(authentication)
+        return Optional.ofNullable(authentication)
                 .filter(OreSiAuthenticationToken.class::isInstance)
-                .map(OreSiAuthenticationToken.class::cast);
-        if (SYSTEM.equals(targetDomain)) {
-            return hasPermissionForSystem(oreSiAuthenticationTokenOpt, permission);
-        } else if (APPLICATION.equals(targetDomain)) {
-            return hasPermissionForApplication(oreSiAuthenticationTokenOpt, permission);
-        }
-        return false;
+                .map(OreSiAuthenticationToken.class::cast)
+                .map(authenticationToken -> {
+                    if (SYSTEM.equals(targetDomain)) {
+                        return hasPermissionForSystem(authenticationToken, permission);
+                    } else if (APPLICATION.equals(targetDomain)) {
+                        return hasPermissionForApplication(authenticationToken, permission);
+                    }
+                    return false;
+                })
+                .orElse(false);
     }
 
-    private boolean hasPermissionForSystem(Optional<OreSiAuthenticationToken> oreSiAuthenticationTokenOpt, Object permission) {
-        return oreSiAuthenticationTokenOpt
-                .map(oreSiAuthenticationToken -> {
+    private boolean hasPermissionForSystem(OreSiAuthenticationToken oreSiAuthenticationToken, Object permission) {
+        return Optional.of( oreSiAuthenticationToken)
+                .map(oreSiAuthenticationToken1 -> {
                     SystemPersona persona = switch (permission) {
                         case String roleApplicationCreate when SYSTEM_APPLICATION_CREATE.equals(roleApplicationCreate) ->
                                 SYSTEM_USER_CONNECTED.get()
@@ -119,7 +122,8 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                 .orElse(false);
     }
 
-    private boolean hasPermissionForApplication(Optional<OreSiAuthenticationToken> oreSiAuthenticationTokenOpt, Object permission) {
+    private boolean hasPermissionForApplication(OreSiAuthenticationToken oreSiAuthenticationToken, Object permission) {
+        final Optional<OreSiAuthenticationToken> oreSiAuthenticationTokenOpt = Optional.of(oreSiAuthenticationToken);
         Optional<String> applicationNameOpt = oreSiAuthenticationTokenOpt
                 .map(OreSiAuthenticationToken::getApplicationName);
         if (applicationNameOpt.isEmpty()) {
@@ -128,56 +132,55 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
         Optional<String> dataNameOpt = oreSiAuthenticationTokenOpt
                 .map(OreSiAuthenticationToken::getDataName);
         return applicationNameOpt
-                .flatMap(applicationName -> {
-                    return switch (permission) {
-                        case String applicationModify when APPLICATION_APPLICATION_MODIFY.equals(applicationModify) ->
-                                Optional.of(APPLICATION_MANAGER.apply(applicationName)
-                                        .forUpdateApplication());
-                        case String applicationDeleteRole when APPLICATION_ROLE_MANAGEMENT_FOR_DELETE.equals(applicationDeleteRole) ->
-                                Optional.of(APPLICATION_MANAGER.apply(applicationName)
-                                        .forManageAdministrator());
-                        case String applicationUpdateRole when APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE.equals(applicationUpdateRole) ->
-                                Optional.of(APPLICATION_MANAGER.apply(applicationName)
-                                        .forManageAdministrator());
-                        case String applicationAdminForRead when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ.equals(applicationAdminForRead) ->
-                                Optional.of(DATA_MANAGEMENT.apply(applicationName)
-                                        .forManageAuthorizations());
-                        case String applicationAdminForDelete when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE.equals(applicationAdminForDelete) ->
-                                Optional.of(DATA_MANAGEMENT.apply(applicationName)
-                                        .forDeleteAuthorization());
-                        case String applicationAdminForUpdate when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE.equals(applicationAdminForUpdate) ->
-                                Optional.of(DATA_MANAGEMENT.apply(applicationName)
-                                        .forManageAuthorizations());
-                        case String applicationAdminForAdd when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD.equals(applicationAdminForAdd) ->
-                                Optional.of(DATA_MANAGEMENT.apply(applicationName)
-                                        .forManageAuthorizations());
-                        case String read when APPLICATION_DATA_READ.equals(read) -> dataNameOpt
-                                .map(authorizationService
-                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
-                                        ::forDataRead);
-                        case String read when APPLICATION_DATA_WRITE.equals(read) -> dataNameOpt
-                                .map(dataName ->
-                                        OreSiApiRequestContext.getAuthentication()
-                                                .map(OreSiAuthenticationToken::getFileOrUUID)
-                                                .map(FileOrUUID::topublish)
-                                                .or(() -> Optional.of(false))
-                                                .map(toPublish -> authorizationService
-                                                        .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
-                                                        .forDataWrite(dataName, toPublish))
-                                                .orElse(null)
-                                );
-                        case String writeFile when APPLICATION_WRITE_FILE.equals(writeFile) -> dataNameOpt
-                                .map(dataName -> DATA_WRITE.apply(applicationName)
-                                        .forDataWrite(dataName, false));
-                        case String deleteFile when APPLICATION_DELETE_FILE.equals(deleteFile) -> dataNameOpt
-                                .map(dataName -> DATA_READ.apply(applicationName)
-                                        .forDataDelete(dataName));
-                        default -> Optional.empty();
-                    };
+                .flatMap(applicationName -> switch (permission) {
+                    case String applicationModify when APPLICATION_APPLICATION_MODIFY.equals(applicationModify) ->
+                            Optional.of(APPLICATION_MANAGER.apply(applicationName)
+                                    .forUpdateApplication());
+                    case String applicationDeleteRole when APPLICATION_ROLE_MANAGEMENT_FOR_DELETE.equals(applicationDeleteRole) ->
+                            Optional.of(APPLICATION_MANAGER.apply(applicationName)
+                                    .forManageAdministrator());
+                    case String applicationUpdateRole when APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE.equals(applicationUpdateRole) ->
+                            Optional.of(APPLICATION_MANAGER.apply(applicationName)
+                                    .forManageAdministrator());
+                    case String applicationAdminForRead when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ.equals(applicationAdminForRead) ->
+                            Optional.of(DATA_MANAGEMENT.apply(applicationName)
+                                    .forManageAuthorizations());
+                    case String applicationAdminForDelete when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE.equals(applicationAdminForDelete) ->
+                            Optional.of(DATA_MANAGEMENT.apply(applicationName)
+                                    .forDeleteAuthorization());
+                    case String applicationAdminForUpdate when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE.equals(applicationAdminForUpdate) ->
+                            Optional.of(DATA_MANAGEMENT.apply(applicationName)
+                                    .forManageAuthorizations());
+                    case String applicationAdminForAdd when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD.equals(applicationAdminForAdd) ->
+                            Optional.of(DATA_MANAGEMENT.apply(applicationName)
+                                    .forManageAuthorizations());
+                    case String read when APPLICATION_DATA_READ.equals(read) ->
+                            dataNameOpt
+                            .map(authorizationService
+                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
+                                    ::forDataRead);
+                    case String read when APPLICATION_DATA_WRITE.equals(read) -> dataNameOpt
+                            .map(dataName ->
+                                    OreSiApiRequestContext.getAuthentication()
+                                            .map(OreSiAuthenticationToken::getFileOrUUID)
+                                            .map(FileOrUUID::topublish)
+                                            .or(() -> Optional.of(false))
+                                            .map(toPublish -> authorizationService
+                                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
+                                                    .forDataWrite(dataName, toPublish))
+                                            .orElse(null)
+                            );
+                    case String writeFile when APPLICATION_WRITE_FILE.equals(writeFile) -> dataNameOpt
+                            .map(dataName -> DATA_WRITE.apply(applicationName)
+                                    .forDataWrite(dataName, false));
+                    case String deleteFile when APPLICATION_DELETE_FILE.equals(deleteFile) -> dataNameOpt
+                            .map(dataName -> DATA_READ.apply(applicationName)
+                                    .forDataDelete(dataName));
+                    default -> Optional.empty();
                 })
                 .map(applicationPersona -> {
                     oreSiAuthenticationTokenOpt
-                            .ifPresent(oreSiAuthenticationToken -> oreSiAuthenticationToken.setApplicationPersonna(applicationPersona));
+                            .ifPresent(oreSiAuthenticationToken1 -> oreSiAuthenticationToken.setApplicationPersonna(applicationPersona));
                     return true;
                 })
                 .orElse(false);

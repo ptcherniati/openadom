@@ -18,10 +18,10 @@ import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFilePa
 import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import fr.inra.oresing.rest.model.rightsrequest.GetAdditionalFilesResult;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.rest.webmvc.support.RepositoryEntityLinks;
@@ -49,6 +49,7 @@ public class AdditionalFileService implements ServiceContainerBean {
     @Value("classpath:charte/default_charte.pdf")
     Resource defaultCharte;
 
+    @Setter
     private ServiceContainer serviceContainer;
 
     @Autowired
@@ -165,7 +166,7 @@ public class AdditionalFileService implements ServiceContainerBean {
         final Mono<byte[]> mono = Mono.just(additionnalFilesStream)
 
                 .map(Stream::findFirst)
-                .map(o -> o.orElse(null))//orElseGet(() -> getDefaultCharte(additionalFilesInfos, nameOrId)))
+                .mapNotNull(o -> o.orElse(null))//orElseGet(() -> getDefaultCharte(additionalFilesInfos, nameOrId)))
                 .map(additionalBinaryFile -> {
                     response.setHeader("Content-Disposition", "inline; filename=" + additionalBinaryFile.getFileName());
                     response.setHeader("Content-Length", Long.toString(additionalBinaryFile.getSize()));
@@ -253,7 +254,4 @@ public class AdditionalFileService implements ServiceContainerBean {
         return new GetAdditionalFilesResult(grantableUsers, additionalFilesInfos.getFiletype(), additionalBinaryFileResults, description, fileNamesForFiletype);
     }
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }

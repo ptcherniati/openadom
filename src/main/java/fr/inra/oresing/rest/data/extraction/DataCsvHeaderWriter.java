@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;

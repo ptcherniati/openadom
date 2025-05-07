@@ -9,12 +9,11 @@ import fr.inra.oresing.domain.application.configuration.Tag;
 import fr.inra.oresing.domain.chart.Chart;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
 import fr.inra.oresing.domain.repository.synthesis.SynthesisRepository;
-import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.DataSynthesisRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,6 +31,7 @@ public class SynthesisService implements fr.inra.oresing.domain.services.synthes
     @Autowired
     OreSiRepository repository;
 
+    @Setter
     private ServiceContainer serviceContainer;
 
 
@@ -113,7 +113,4 @@ public class SynthesisService implements fr.inra.oresing.domain.services.synthes
     }
 
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }

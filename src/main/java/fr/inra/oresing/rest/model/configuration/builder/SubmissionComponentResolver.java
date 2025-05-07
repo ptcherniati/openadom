@@ -80,7 +80,7 @@ public record SubmissionComponentResolver(RootBuilder rootBuilder) {
     private Submission.SubmissionScope.ReferenceScope findReferenceScopeFromComponent(ComponentDescription componentDescription, String reference) {
         Optional<String> reftype = Optional.ofNullable(componentDescription)
                 .flatMap(ComponentDescription::findReferenceCheckerType);
-        if(!reftype.isPresent()){
+        if(reftype.isEmpty()){
             return null;
         }
         if(reftype.get().equals(reference)){

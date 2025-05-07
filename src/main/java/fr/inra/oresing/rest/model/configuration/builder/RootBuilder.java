@@ -61,6 +61,7 @@ public class RootBuilder {
     private final RightsRequestBuilder rightsRequestBuilder = new RightsRequestBuilder(this);
     private final AdditionalFilesBuilder additionalFilesBuilder = new AdditionalFilesBuilder(this);
 
+    @Getter
     private final SubmissionComponentResolver submissionComponentResolver = new SubmissionComponentResolver(this);
     private final DataAndComponentTestDoublon dataAndComponentTestDoublon = new DataAndComponentTestDoublon(this);
     @Getter
@@ -85,10 +86,6 @@ public class RootBuilder {
                 .orElse(false) ?
                 ComponentPresenceConstraint.MANDATORY :
                 ComponentPresenceConstraint.OPTIONAL;
-    }
-
-    public SubmissionComponentResolver getSubmissionComponentResolver() {
-        return this.submissionComponentResolver;
     }
 
     public void buildError(final ConfigurationException exception, Map<String, Object> params, final String path) {

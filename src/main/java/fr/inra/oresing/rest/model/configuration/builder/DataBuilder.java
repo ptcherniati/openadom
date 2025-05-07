@@ -171,9 +171,9 @@ public record DataBuilder(RootBuilder rootBuilder) {
                 ));
     }
 
-    private boolean testLocalizationDisplay(Map<String, Map> localizationDisplay, List<String> listComponentKeys, String path) {
+    private void testLocalizationDisplay(Map<String, Map> localizationDisplay, List<String> listComponentKeys, String path) {
         if (MapUtils.isEmpty(localizationDisplay)) {
-            return true;
+            return;
         }
         boolean isValid = true;
         for (String group : List.of(ConfigurationSchemaNode.OA_TITLE, ConfigurationSchemaNode.OA_DESCRIPTION)) {
@@ -188,17 +188,15 @@ public record DataBuilder(RootBuilder rootBuilder) {
                 }
             }
         }
-        return isValid;
     }
 
     private boolean testLocalizationDisplay(String matchingGroup, List<String> listComponentKeys, String path, String group, String language) {
-        Pattern pattern = DISPLAY_MATCHING_GROUP;
-        List<String> list = pattern.matcher(matchingGroup)
+        List<String> list = DISPLAY_MATCHING_GROUP.matcher(matchingGroup)
                 .results()
                 .map(m -> m.group(1))
                 .filter(Predicate.not(listComponentKeys::contains))
                 .toList();
-        list.stream()
+        list
                 .forEach(
                 badGroup -> rootBuilder.buildError(ConfigurationException.MISSING_COMPONENT_FOR_DISPLAY_PATTERN,
                         Map.of(

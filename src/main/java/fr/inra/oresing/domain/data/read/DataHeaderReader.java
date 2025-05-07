@@ -54,7 +54,7 @@ public record DataHeaderReader(DataDatum constantValues,
             constantDescriptions.forEach(constant -> {
                 final int columnNumber = ((FileColumnConstantHeader) constant.constantImportHeader()).columnNumber();
                 final String valueInFile = row.size() >= columnNumber ? row.get(columnNumber - 1) : "" .trim();
-                final FieldType value = StringType.getStringTypeFromStringValue(valueInFile);
+                final FieldType<String> value = StringType.getStringTypeFromStringValue(valueInFile);
                 addConstants(constantValues, constant, value);
             });
         }
@@ -83,7 +83,7 @@ public record DataHeaderReader(DataDatum constantValues,
         ImmutableList<String> headersForRow = Streams.stream(headerRow)
                 .map(String::trim)
                 .collect(ImmutableList.toImmutableList());
-        headersForRow = InvalidDatasetContentException.checkHeader(
+        InvalidDatasetContentException.checkHeader(
                 headersForRow,
                 dataImporterContext().getExpectedHeaders(),
                 dataImporterContext().getMandatoryHeaders(),
@@ -112,20 +112,25 @@ public record DataHeaderReader(DataDatum constantValues,
             final ImmutableSet<ConstantComponent> constantDescriptions = perRowNumberConstants.get(lineNumber);
             postHeaderRows.add(row.stream().map(String::trim).toList());
             constantDescriptions.forEach(constant -> {
-                final ColumnConstantHeader columnConstantHeader = (ColumnConstantHeader) constant.constantImportHeader();
-                final int columnNumber = switch (columnConstantHeader) {
-                    case final ColumnConstantHeaderByColumnNumber columnConstantHeaderByColumnNumber ->
-                            columnConstantHeaderByColumnNumber.columnNumber();
-                    case final ColumnConstantHeaderByHeaderName columnConstantHeaderByHeaderName ->
-                            headerRow.indexOf(columnConstantHeaderByHeaderName.headerName()) + 1;
-                };
+                final int columnNumber = getColumnNumber(headerRow, constant);
                 final String columnValue = columnNumber > 0 ? row.get(columnNumber - 1) : "";
-                final FieldType value = StringType.getStringTypeFromStringValue((row.size() >= columnNumber ? columnValue : "").trim());
+                final FieldType<String> value = StringType.getStringTypeFromStringValue((row.size() >= columnNumber ? columnValue : "").trim());
                 final String componentKey = constant.componentKey();
                 addConstants(constantValues, constant, value);
             });
         }
         publishContextBuilder().withPostHeaderRow(postHeaderRows);
+    }
+
+    private static int getColumnNumber(ImmutableList<String> headerRow, ConstantComponent constant) {
+        final ColumnConstantHeader columnConstantHeader = (ColumnConstantHeader) constant.constantImportHeader();
+        final int columnNumber = switch (columnConstantHeader) {
+            case final ColumnConstantHeaderByColumnNumber columnConstantHeaderByColumnNumber ->
+                    columnConstantHeaderByColumnNumber.columnNumber();
+            case final ColumnConstantHeaderByHeaderName columnConstantHeaderByHeaderName ->
+                    headerRow.indexOf(columnConstantHeaderByHeaderName.headerName()) + 1;
+        };
+        return columnNumber;
     }
 
     public ImmutableList<String> readHeader(final Iterator<CSVRecord> linesIterator) {

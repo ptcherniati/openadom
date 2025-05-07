@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.index.AuthorizationIndex;
-import fr.inra.oresing.rest.OreSiApiRequestContext;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -69,12 +68,11 @@ public class MigrateService {
                 """);
     }
 
-    public MigrateResult runFlywayUpdate(OreSiUserRole creator) {
+    public void runFlywayUpdate(OreSiUserRole creator) {
         authenticationService.resetRole();
         final Flyway flyway = getFlyway(creator);
         MigrateResult migrate = flyway.migrate();
         updateAuthorizationIndexes(flyway);
-        return migrate;
     }
 
     private void updateAuthorizationIndexes(Flyway flyway) {

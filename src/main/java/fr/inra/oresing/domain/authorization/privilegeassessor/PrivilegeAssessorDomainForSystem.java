@@ -4,7 +4,6 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.BadLogin
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
-import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.Optional;

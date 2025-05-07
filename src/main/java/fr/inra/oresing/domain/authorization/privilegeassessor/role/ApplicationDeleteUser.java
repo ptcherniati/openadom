@@ -34,7 +34,7 @@ public record ApplicationDeleteUser(
         if(authorizationParseds.isEmpty()){
             throw getException();
         }
-        if(!isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
+        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
             throw getException();
         }
         return true;
@@ -53,15 +53,15 @@ public record ApplicationDeleteUser(
             if(CollectionUtils.isEmpty(authorizationParseds)){
                 throw getException();
             }
-            return true;
+            return false;
         }
         if(authorizationParseds.isEmpty()){
             throw getException();
         }
-        if(!isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
+        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
             throw getException();
         }
-        return true;
+        return false;
     }
 
     @Override

@@ -3,7 +3,6 @@ package fr.inra.oresing.rest.data.publication;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
@@ -14,9 +13,8 @@ import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.domain.services.synthesis.SynthesisService;
 import fr.inra.oresing.persistence.BinaryFileInfos;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
+import lombok.Getter;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -24,18 +22,17 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class AuthorizationPublicationService {
+    public static final String DATA_NAME_CAN_T_BE_NULL = "dataName Can't be null";
     protected final ReportErrors errors;
     protected BinaryFile binaryFile;
     protected final StandardDataDescription dataDescription;
     protected final Application application;
 
+    @Getter
     protected final String dataName;
+    @Getter
     protected FileOrUUID fileOrUUID;
-    protected ApplicationDataWriter applicationDataWriter;
-
-    public String getDataName() {
-        return this.dataName;
-    }
+    protected final ApplicationDataWriter applicationDataWriter;
 
     public ApplicationDataWriter applicationDataWriter() {
         return this.applicationDataWriter;
@@ -55,13 +52,12 @@ public class AuthorizationPublicationService {
         this.applicationDataWriter = applicationDataWriter;
     }
 
-    public FileOrUUID getFileOrUUID() {
-        return this.fileOrUUID;
-    }
-
     protected StandardDataDescription buildDataDescription(Application application) {
-        return application.findData(dataName)
-                .orElseThrow(() -> new IllegalArgumentException("dataName Can't be null"));
+        return Optional.ofNullable(application)
+                .map(name -> application.findData(dataName)
+                        .orElseThrow(() -> new IllegalArgumentException(DATA_NAME_CAN_T_BE_NULL))
+                )
+                .orElse(null);
     }
 
     protected FileOrUUID setFileOrUUID(FileOrUUID fileOrUUIDLocal) {
@@ -114,10 +110,10 @@ public class AuthorizationPublicationService {
         Boolean unPublishIsAsked = !publishIsAsked && Optional.ofNullable(binaryFile).map(BinaryFile::getParams).map(BinaryFileInfos::published).orElse(false);
         return
                 isRepository() &&
-                !(
-                        existsFileToPublish &&
-                        (publishIsAsked || unPublishIsAsked)
-                );
+                        !(
+                                existsFileToPublish &&
+                                        (publishIsAsked || unPublishIsAsked)
+                        );
     }
 
     protected boolean isRepository() {

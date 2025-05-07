@@ -324,7 +324,7 @@ window.document.addEventListener("DOMContentLoaded", function (event) {
         for (let i = 1; i < note.children.length; i++) {
           const child = note.children[i];
           if (child.tagName === "P" && child.innerText === "") {
-            continue;
+
           } else {
             container.appendChild(child.cloneNode(true));
             break;

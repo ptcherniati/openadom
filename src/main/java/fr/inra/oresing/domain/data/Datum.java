@@ -50,8 +50,8 @@ public class Datum implements SomethingThatCanProvideEvaluationContext {
         return new Datum(filteredValues);
     }
 
-    public FieldType put(final String componentKey, final FieldType value) {
-        return values.put(componentKey, value);
+    public void put(final String componentKey, final FieldType value) {
+        values.put(componentKey, value);
     }
 
     public void putAll(final Datum rowWithValues) {

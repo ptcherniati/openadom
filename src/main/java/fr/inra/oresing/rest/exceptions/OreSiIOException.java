@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest.exceptions;
 
-import fr.inra.oresing.OreSiException;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 
 public class OreSiIOException extends OreSiTechnicalException {

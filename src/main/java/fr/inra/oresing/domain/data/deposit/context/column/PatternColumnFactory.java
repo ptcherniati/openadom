@@ -13,6 +13,7 @@ import fr.inra.oresing.domain.application.configuration.PatternComponent;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
+import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
@@ -177,9 +178,7 @@ public class PatternColumnFactory {
                 final ComponentPresenceConstraint mandatory = Optional.of(patternComponentDescriptions())
                         .map(ComponentDescription::mandatory)
                         .orElse(ComponentPresenceConstraint.MANDATORY);
-                final TransformationConfiguration defaultValue = Optional
-                        .ofNullable(patternComponentDescriptions().defaultValue())
-                        .orElse(null);
+                final TransformationConfiguration defaultValue = patternComponentDescriptions().defaultValue();
                 final DataDatum qualifierComponents = new DataDatum();
                 final DataDatum adjacentComponents = new DataDatum();
                 final List<Column> qualifierColumns = new LinkedList<>();
@@ -238,8 +237,8 @@ public class PatternColumnFactory {
                                             .put(dataColumn, dataColumnValue);
 
                                 }
-                                case null, default -> {
-                                    final DataColumnValue dataColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(constantValue));
+                                default -> {
+                                    final DataColumnValue<FieldType, FieldType> dataColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(constantValue));
                                     qualifierComponents
                                             .put(dataColumn, dataColumnValue);
                                 }

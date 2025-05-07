@@ -6,21 +6,17 @@ import fr.inra.oresing.mail.Email;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.VersioningService;
+import lombok.Getter;
 import org.springframework.beans.BeansException;
-import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.core.Ordered;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,15 +26,12 @@ public class ServiceContainerInjector implements ApplicationContextAware, Priori
 
     private ConfigurableListableBeanFactory services;
 
-    public ServiceContainer getServiceContainer() {
-        return serviceContainer;
-    }
-
+    @Getter
     private ServiceContainer serviceContainer;
 
 
     private void injectServiceContainer() {
-        Map<String, Object> serviceContainerBeans = Arrays.asList(services.getBeanNamesForType(ServiceContainerBean.class)).stream()
+        Map<String, Object> serviceContainerBeans = Arrays.stream(services.getBeanNamesForType(ServiceContainerBean.class))
                 .collect(Collectors.toMap(
                         Function.identity(),
                         services::getBean

@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.file.FileOrUUID;
+import lombok.Getter;
 
 import java.util.*;
 import java.util.function.Function;
@@ -37,7 +38,9 @@ public record PublishContext(
     public static class PublishContextBuilder {
         final FileOrUUID fileOrUUID;
         private final Function<String, List<DataValue>> getDatavaluesByReference;
+        @Getter
         final Application application;
+        @Getter
         final String dataName;
         List<List<String>> preHeaderRow;
         List<List<String>> postHeaderRow;
@@ -155,16 +158,9 @@ public record PublishContext(
             return Optional.ofNullable(fileOrUUID).map(FileOrUUID::binaryfiledataset);
         }
 
-        public Application getApplication() {
-            return application;
-        }
-
         public String getApplicationName() {
             return application.getName();
         }
 
-        public String getDataName() {
-            return dataName;
-        }
     }
 }

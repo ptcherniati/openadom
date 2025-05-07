@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnMultipleValue;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import lombok.EqualsAndHashCode;
 import lombok.Value;
 import org.apache.commons.collections.CollectionUtils;
@@ -58,9 +57,8 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         return switch (lineChecker.underlyingType()) {
             case ReferenceType ignored -> new DataColumnMultipleValue(
                     ((List<FieldType>) value().getValue()).stream()
-                            .map(referenceType -> {
+                            .peek(referenceType -> {
                                 referenceType.transform(lineChecker, referenceColumnRawValue, dataColumn, refsLinkedTo);
-                                return referenceType;
                             })
                             .map(FieldType::getValue)
                             .map(Object::toString)

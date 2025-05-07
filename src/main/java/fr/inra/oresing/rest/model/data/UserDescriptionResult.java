@@ -5,7 +5,7 @@ import fr.inra.oresing.domain.OreSiUser;
 import java.util.UUID;
 
 public record UserDescriptionResult(UUID id, String login, String email) {
-    public static final UserDescriptionResult of(OreSiUser user) {
+    public static UserDescriptionResult of(OreSiUser user) {
         return new UserDescriptionResult(
                 user.getId(),
                 user.getLogin(),

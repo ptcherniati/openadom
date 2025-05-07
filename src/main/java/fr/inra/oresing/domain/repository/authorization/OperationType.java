@@ -2,10 +2,12 @@ package fr.inra.oresing.domain.repository.authorization;
 
 import fr.inra.oresing.domain.data.AuthorizationColumnsDescription;
 import fr.inra.oresing.domain.internationalization.Internationalization;
+import lombok.Getter;
 
 import java.util.Locale;
 import java.util.Map;
 
+@Getter
 public enum OperationType {
     //admin("admin", true,false,false, false,false, Map.of("fr","Délégation", "en","Delegation")),
     depot("depot", true,false,false,false,false,  Map.of("fr","Dépôt", "en","Deposit")),
@@ -15,10 +17,6 @@ public enum OperationType {
     associate("associate", false,true,true,true,true,  Map.of("fr","Associer", "en","Associate"));
 
     private final AuthorizationColumnsDescription authorizationColumnsDescription;
-
-    public AuthorizationColumnsDescription getAuthorizationColumnsDescription() {
-        return authorizationColumnsDescription;
-    }
 
 
     OperationType(final String title, final boolean display, final boolean withPeriods, final boolean withDataGroups, final boolean forPublic, final boolean forRequest, final Map<String, String> internationalizationName) {

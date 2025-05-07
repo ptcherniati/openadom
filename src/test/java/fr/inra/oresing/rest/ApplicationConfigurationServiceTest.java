@@ -170,8 +170,6 @@ public class ApplicationConfigurationServiceTest {
         byte[] configBytes = config.getBytes(StandardCharsets.UTF_8);
         FileBomResolver fileBomResolver = FileBomResolver.of(new ByteArrayInputStream(configBytes));
         Application application = ApplicationConfigurationService.parseConfigurationBytes("", progression, fileBomResolver);
-        System.out.println(application);
-        //assertEquals(expectedValidity, application.isValid(), "La configuration '" + config + "' devrait être " + (expectedValidity ? "valide" : "invalide"));
     }
 
 

@@ -138,14 +138,12 @@ public class AdditionalFileSearchHelper {
                             )
                     );
                 }
-                if (!CollectionUtils.isEmpty(filterList)) {
-                    filters.add(
-                            String.format("fileinfos #> '{\"%s\"}'@@ ('%s')::jsonpath",
-                                    JsonTableInApplicationSchemaRepositoryTemplate.escapeSql(filter.getField()),
-                                    String.join(" && ", filterList)
-                            )
-                    );
-                }
+                filters.add(
+                        String.format("fileinfos #> '{\"%s\"}'@@ ('%s')::jsonpath",
+                                JsonTableInApplicationSchemaRepositoryTemplate.escapeSql(filter.getField()),
+                                String.join(" && ", filterList)
+                        )
+                );
             }
         }
         if (CollectionUtils.isEmpty(filters)) {

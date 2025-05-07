@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchema
 import fr.inra.oresing.domain.application.configuration.type.ReferenceScopeType;
 import fr.inra.oresing.domain.application.configuration.type.StringType;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 

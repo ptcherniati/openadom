@@ -17,7 +17,6 @@ class ConfigurationSchemaNodeTest {
         final String expectedSchema = Resources.toString(url, StandardCharsets.UTF_8)
                 .replace("   \" \"   "," + \" \" + ");
         final String exampleOfFile = RootExampleBuilder.buildRootSchema().buildExample(0);
-        System.out.println(exampleOfFile);
         Assertions.assertEquals(expectedSchema, exampleOfFile);
     }
 

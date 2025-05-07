@@ -177,7 +177,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
     }
 
 
-    private JSONObject putChunk(JSONObject file, byte[] chunk, long offset) throws Exception {
+    private void putChunk(JSONObject file, byte[] chunk, long offset) throws Exception {
         Map<String, String> params = new HashMap<>();
         params.put("key", file.getString("uid"));
         int fileSize = file.getInt("size");
@@ -191,34 +191,30 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         //String signature = generateSignature("PUT", "/file/" + file.getInt("id") + "/chunk/" + offset, params, chunk);
 
         // You might want to add the signature to your headers or params as per your server's logic
-        System.out.println("call for putchunck");
         int fileId = file.getInt("id");
-        System.out.println("**************************************************************");
         JSONObject puchunck = call("put", "/file/" + fileId + "/chunk/" + offset, params, null, chunk, headers);
-        System.out.println("**************************************************************");
         call("get", "/file/%d".formatted(fileId), new HashMap<>(), null, null, new HashMap<>());
 
-        return puchunck;
     }
 
-    private JSONObject fileComplete(JSONObject file) throws Exception {
+    private void fileComplete(JSONObject file) throws Exception {
         Map<String, String> params = new HashMap<>();
         params.put("key", file.getString("uid"));
 
         JSONObject content = new JSONObject();
         content.put("complete", true);
 
-        return call("put", "/file/" + file.getInt("id"), params, content, null, new HashMap<>());
+        call("put", "/file/" + file.getInt("id"), params, content, null, new HashMap<>());
     }
 
-    private JSONObject transferComplete(JSONObject transfer) throws Exception {
+    private void transferComplete(JSONObject transfer) throws Exception {
         Map<String, String> params = new HashMap<>();
         params.put("key", transfer.getJSONArray("files").getJSONObject(0).getString("uid"));
 
         JSONObject content = new JSONObject();
         content.put("complete", true);
 
-        return call("put", "/transfer/" + transfer.getInt("id"), params, content, null, new HashMap<>());
+        call("put", "/transfer/" + transfer.getInt("id"), params, content, null, new HashMap<>());
     }
 
     private JSONObject call(String method, String path, Map<String, String> params, JSONObject content, byte[] rawContent, Map<String, String> headers) throws Exception {
@@ -249,11 +245,10 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
             }
 
             if (content != null) {
-                System.out.println("JSON Content: " + content.toString(4)); // Pretty print the JSON
-
-
+                assert request instanceof HttpEntityEnclosingRequestBase;
                 ((HttpEntityEnclosingRequestBase) request).setEntity(new StringEntity(content.toString(), StandardCharsets.UTF_8));
             } else if (rawContent != null) {
+                assert request instanceof HttpEntityEnclosingRequestBase;
                 ((HttpEntityEnclosingRequestBase) request).setEntity(new ByteArrayEntity(rawContent));
             }
 

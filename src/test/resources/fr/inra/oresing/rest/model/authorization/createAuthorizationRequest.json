@@ -15,6 +15,7 @@
         "projet": ["projet_atlantique", "projet_manche"]
       },
       "timeScope": {
+        "format":  "yyy-MM-dd",
         "fromDay": "2024-03-29",
         "toDay": "2024-03-29"
       }

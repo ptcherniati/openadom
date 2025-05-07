@@ -1,12 +1,15 @@
 package fr.inra.oresing.rest.authentication;
 
 import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.data.publication.StoreFile;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.security.AuthorizationFilter;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -17,12 +20,25 @@ import java.util.Optional;
 public class OreSiAuthenticationToken  extends AbstractAuthenticationToken implements Authentication {
 
     private final Object principal;
-    private Object credentials;
+    private final Object credentials;
+    @Getter
     private ApplicationPersona applicationPersona;
+    @Setter
+    @Getter
     private SystemPersona systemPersona;
+    @Setter
+    @Getter
     private String applicationName;
+    @Setter
+    @Getter
     private String dataName;
+    @Getter
     private StoreFile storeFile;
+    @Setter
+    @Getter
+    private BinaryFile binaryFile;
+    @Setter
+    @Getter
     private FileOrUUID fileOrUUID;
 
     public OreSiAuthenticationToken(Object principal, String credentials, Collection<? extends GrantedAuthority> authorities) {
@@ -61,7 +77,7 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
     public Object getPrincipal() {
         return principal;
     }
-    public static OreSiUserRequestClient getrequestClient(OreSiAuthenticationToken token) {
+    public static OreSiUserRequestClient getRequestClient(OreSiAuthenticationToken token) {
         return switch (token.getPrincipal()){
             case NotConnectedUnauthentifiedUserForCreate notConnected ->null;
             case NotConnectedAuthentifiedIdleUser notConnectedUser-> new OreSiUserRequestClient(
@@ -114,49 +130,8 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
         this.applicationPersona =applicationUser;
     }
 
-    public void setApplicationName(String applicationName){
-        this.applicationName=applicationName;
-    }
-
-    public void setDataName(String dataName) {
-        this.dataName=dataName;
-    }
-
-    public String  getApplicationName() {
-        return applicationName;
-    }
-
-    public String  getDataName() {
-        return dataName;
-    }
-
-    public void setSystemPersona(SystemPersona systemPersona) {
-        this.systemPersona = systemPersona;
-    }
-
     public StoreFile setStoreFile(StoreFile storeFile) {
         this.storeFile=storeFile;
         return storeFile;
     }
-
-    public StoreFile getStoreFile() {
-        return storeFile;
-    }
-
-    public ApplicationPersona getApplicationPersona() {
-        return applicationPersona;
-    }
-
-    public SystemPersona getSystemPersona() {
-        return systemPersona;
-    }
-
-    public FileOrUUID getFileOrUUID() {
-        return fileOrUUID;
-    }
-
-    public void setFileOrUUID(FileOrUUID fileOrUUIDOpt) {
-        this.fileOrUUID = fileOrUUIDOpt;
-    }
 }
-

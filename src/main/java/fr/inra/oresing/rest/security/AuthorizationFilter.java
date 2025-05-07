@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.AuthenticationFailure;
@@ -27,7 +27,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +41,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -69,7 +71,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             OreExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
         this.requestContext = requestContext;
-        this.mapper = jsonRowMapper;
+        mapper = jsonRowMapper;
         this.JWTExtractor = new JWTExtractor(
                 mapper,
                 jwtExpiration,
@@ -83,7 +85,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String path = request.getRequestURI();
         OreSiAuthenticationToken authenticationToken = requestContext.getAuthenticationToken();
-        if (authenticationToken != null ) {
+        if (authenticationToken != null) {
             chain.doFilter(request, response);
             return;
         }
@@ -91,16 +93,18 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             return;
         }
         if (path.endsWith("/logout")) {
-            JWTExtractor.clearSession(request, response);
+            JWTExtractor.clearSession(request, response, false);
             chain.doFilter(request, response);
             return;
         }
         if (
-                path.startsWith("/actuator") ||
+                path.equals("/") ||
+                        path.startsWith("/actuator") ||
                         path.startsWith("/swagger-ui") ||
                         path.startsWith("/api-docs") ||
                         path.startsWith("/api/public") ||
-                        path.startsWith("/api-docs.yaml")) {
+                        path.startsWith("/api-docs.yaml") ||
+                        path.equals("/error")) {
             chain.doFilter(request, response); // Skip le filtre
             return;
         }
@@ -109,7 +113,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         }
         request.setAttribute(AUTHORIZATION_ALREADY_DONE, true);
         try {
-            OreSiAuthenticationToken token = buildAuthentication(request, response);
+            OreSiAuthenticationToken token = buildAuthentication(request, response, request.isSecure());
             requestContext.setAuthenticationToken(token);
         } catch (AuthenticationFailure e) {
             ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
@@ -124,20 +128,20 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     }
 
 
-    private OreSiAuthenticationToken buildAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationFailure, IOException {
+    private OreSiAuthenticationToken buildAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws AuthenticationFailure, IOException {
         String path = request.getRequestURI();
         String method = request.getMethod();
         if (HttpMethod.OPTIONS.name().equals(method)) {
             return null;
         }
         if (HttpMethod.POST.name().equals(method) && path.endsWith("/login")) {
-            return buildLoginAuthentication(request, response);
+            return buildLoginAuthentication(request, response, isSecureEnvironnement);
         } else if (HttpMethod.POST.name().equals(method) && path.endsWith("/users")) {
             return buildCreateUserAuthentication();
         } else if (HttpMethod.PUT.name().equals(method) && path.endsWith("/users")) {
             return buildUpdateUserAuthentication(request);
         } else {
-            OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response);
+            OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response, isSecureEnvironnement);
             requestContext.setAuthenticationToken(oreSiAuthenticationToken); //premier stockage pour certaines méthodes
             if (oreSiAuthenticationToken == null) {
                 return null;
@@ -156,25 +160,44 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                     .map(list -> list.get(6))
                     .or(() -> {
                         Pattern pattern = Pattern
-                                .compile("/api/v1/applications/%s/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
-                        return Optional.ofNullable(path)
+                                .compile("/api/v1/applications/(%s)/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
+                        final Optional<UUID> optionalUUID = Optional.ofNullable(path)
                                 .map(pattern::matcher)
-                                .map(m -> m.matches() ? m.group(1) : null)
-                                .map(UUID::fromString)
-                                .map(fileId -> {
-                                    Application applicationOrApplicationAccordingToRights = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(oreSiAuthenticationToken.getApplicationName());
-                                    return Optional.ofNullable(serviceContainer.versioningService()
-                                                    .getStoreFile(applicationOrApplicationAccordingToRights,
-                                                            null,
-                                                            FileOrUUID.forUUID(fileId),
-                                                            null,
-                                                            null))
-                                            .map(oreSiAuthenticationToken::setStoreFile)
-                                            .map(StoreFile::builder)
-                                            .map(AuthorizationPublicationService::getDataName)
-                                            .orElse(null);
+                                .map(m -> m.matches() ? m.group(2) : null)
+                                .map(UUID::fromString);
+                        final Optional<String> dataNameOpt = Optional.ofNullable(path)
+                                .map(pattern::matcher)
+                                .map(m -> m.matches() ? m.group(1) : null);
+                        try {
+                            return optionalUUID
+                                    .map(fileId -> {
+                                        Application applicationOrApplicationAccordingToRights = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(oreSiAuthenticationToken.getApplicationName());
+                                        return Optional.ofNullable(serviceContainer.versioningService()
+                                                        .getStoreFile(applicationOrApplicationAccordingToRights,
+                                                                null,
+                                                                FileOrUUID.forUUID(fileId),
+                                                                null,
+                                                                null))
+                                                .map(oreSiAuthenticationToken::setStoreFile)
+                                                .map(StoreFile::builder)
+                                                .map(AuthorizationPublicationService::getDataName)
+                                                .orElse(null);
 
-                                });
+                                    });
+                        } catch (IllegalArgumentException e) {
+                            if (AuthorizationPublicationService.DATA_NAME_CAN_T_BE_NULL.equals(e.getMessage())) {
+                                optionalUUID
+                                        .flatMap(fileId -> serviceContainer.binaryFileService().getFile(oreSiAuthenticationToken.getApplicationName(), fileId))
+                                        .ifPresent(binaryFile -> {
+                                            oreSiAuthenticationToken.setBinaryFile(binaryFile);
+                                            dataNameOpt
+                                                    .ifPresent(oreSiAuthenticationToken::setDataName);
+
+                                            ;
+                                        });
+                            }
+                            return Optional.empty();
+                        }
                     })
                     .ifPresent(dataName -> {
                         addFilleOrUUID(request, oreSiAuthenticationToken, dataName, path);
@@ -189,7 +212,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         if (HttpMethod.POST.name().equals(request.getMethod()) && "/api/v1/applications/%1$s/data/%2$s".formatted(oreSiAuthenticationToken.getApplicationName(), dataName).equals(path)) {
             String params = request.getParameter("params");
             Optional.ofNullable(params)
-                    .filter(Objects::nonNull)
+                    .filter(obj -> true)
                     .filter(Predicate.not("undefined"::equals))
                     .map(json -> {
                         try {
@@ -220,7 +243,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         return authenticationToken;
     }
 
-    private OreSiAuthenticationToken buildLoginAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationFailure {
+    private OreSiAuthenticationToken buildLoginAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws AuthenticationFailure {
         String loginValue = request.getParameter("login");
         String passwordValue = request.getParameter("password");
 
@@ -229,7 +252,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                 LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
                         .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
                         .forLoginPassword(loginValue, passwordValue);
-                JWTExtractor.refreshJwtInResponse(response, loginAdminResult.id());
+                JWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
                 return new OreSiAuthenticationToken(
                         loginAdminResult,
                         request.getRequestURI(),
@@ -265,13 +288,13 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         );
     }
 
-    private OreSiAuthenticationToken handleJwtAuthentication(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private OreSiAuthenticationToken handleJwtAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws IOException {
         String jwtCookie = JWTExtractor.extractJwtCookie(request);
         if (jwtCookie == null) {
             return null;
         }
         OreSiRequestClient requestClient = JWTExtractor.getRequestClientFromJwt(jwtCookie);
-        JWTExtractor.refreshJwtInResponse(response, requestClient.id());
+        JWTExtractor.refreshJwtInResponse(response, requestClient.id(), isSecureEnvironnement);
         return new OreSiAuthenticationToken(
                 requestClient,
                 request.getRequestURI(),

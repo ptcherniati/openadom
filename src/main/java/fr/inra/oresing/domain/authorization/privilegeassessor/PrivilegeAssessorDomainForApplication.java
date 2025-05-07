@@ -13,6 +13,8 @@ import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserReaderRightsException.NO_RIGHT_FOR_APPLICATION_USER_READER_RIGHT_EXCEPTION;
+
 public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
         AuthorizationsForApplicationUser authorizations,
         PrivilegeApplicationDomain domain,
@@ -32,7 +34,7 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
     Test if is applicationManagerUserForUpdateRights
      */
     public ApplicationManager forManageAuthorizations() {
-        if (!authorizations.isUserManager()) {
+        if (!(authorizations.isUserManager() || authorizations().isApplicationManager())) {
             throw new NotApplicationUserManagerRightsException(application.getName());
         }
         return new ApplicationManagerUser(application());
@@ -44,7 +46,7 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
      */
     public ApplicationManager forAddAuthorization() {
         if (!authorizations.isUserManager()) {
-            throw new NotApplicationUserReaderRightsException(application.getName());
+            throw new NotApplicationUserReaderRightsException(NO_RIGHT_FOR_APPLICATION_USER_READER_RIGHT_EXCEPTION);
         }
         return new ApplicationManagerUser(application());
     }
@@ -77,7 +79,6 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
 
         Set<OperationType> rolesSetted = Optional.ofNullable(authorizations().userAuthorizations())
                 .map(map -> map.get(dataName))
-                .filter(obj -> true)
                 .map(authList -> authList.stream()
                         .flatMap(auth -> auth.operationTypes().stream())
                         .collect(Collectors.toSet()))

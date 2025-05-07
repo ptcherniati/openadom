@@ -39,7 +39,7 @@ public class JWTExtractor {
         final String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
         final byte[] keyBytes = secureEnoughJwtSecret.getBytes();
         key = Keys.hmacShaKeyFor(keyBytes);
-        this.jwtExpiration = jwtExpiration;
+        JWTExtractor.jwtExpiration = jwtExpiration;
     }
 
     public String extractJwtCookie(HttpServletRequest request) {
@@ -79,13 +79,13 @@ public class JWTExtractor {
         return mapper.readValue(json, OpenAdomJwtValue.class).requestClient();
     }
 
-    public void refreshJwtInResponse(HttpServletResponse response, UUID id) {
+    public void refreshJwtInResponse(HttpServletResponse response, UUID id, boolean isSecureEnvironnement) {
         OreSiUserRole userRole = getUserRole.apply(id);
         OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(id, userRole);
         String json = mapper.toJson(new OpenAdomJwtValue(requestClient));
         String jwt = buildToken(json);
         try {
-            addCookie(jwt, response);
+            addCookie(jwt, response, isSecureEnvironnement);
             addJwtHeader(response, jwt);
         } catch (Exception e) {
             log.trace("pas grave");
@@ -96,8 +96,9 @@ public class JWTExtractor {
         response.setHeader("Authorization", "Bearer " + jwt);
     }
 
-    public static void addCookie(String jwt, HttpServletResponse response) {
+    public static void addCookie(String jwt, HttpServletResponse response, boolean secureEnvironment) {
         Cookie cookie = getCookie(jwt);
+        cookie.setSecure(secureEnvironment);
         response.addCookie(cookie);
     }
 
@@ -125,7 +126,7 @@ public class JWTExtractor {
 
 
 
-    protected void clearSession(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    protected void clearSession(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) {
 
         // Invalider la session côté serveur
         request.getSession().invalidate();

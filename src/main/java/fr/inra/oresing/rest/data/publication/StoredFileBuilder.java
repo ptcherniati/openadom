@@ -14,15 +14,11 @@ public record StoredFileBuilder(
 ) implements State {
 
     public StoreFile testAndBuild(DataRepositoryForBuffer dataRepositoryWithBuffer) {
-        Map<String, List<Ltree>> requiredAuthorization = Optional.ofNullable(builder())
+        Optional.ofNullable(builder())
                 .map(AuthorizationPublicationService::getFileOrUUID)
                 .map(FileOrUUID::binaryfiledataset)
                 .map(binaryFileDataset -> binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepositoryWithBuffer))
-                .map(BinaryFileDataset::getRequiredAuthorizations)
-                .orElse(null);
-        if (requiredAuthorization != null) {
-            builder().fileOrUUID.binaryfiledataset().setRequiredAuthorizations(requiredAuthorization);
-        }
+                .map(BinaryFileDataset::getRequiredAuthorizations).ifPresent(requiredAuthorization -> builder().fileOrUUID.binaryfiledataset().setRequiredAuthorizations(requiredAuthorization));
         return new StoreFile(builder()).testRights();
     }
 }

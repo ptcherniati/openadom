@@ -22,11 +22,11 @@ public record ApplicationPublishWriterUser(
 
     @Override
     public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
-        if(!isData()){
-            if(CollectionUtils.isEmpty(authorizations)){
+        if(isData()){
+            if(CollectionUtils.isEmpty(authorizations())){
                 throw getException();
             }
-            return true;
+            return false;
         }
         List<AuthorizationParsed> authorizationParseds = authorizations().stream()
                 .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
@@ -34,15 +34,15 @@ public record ApplicationPublishWriterUser(
         if(authorizationParseds.isEmpty()){
             throw getException();
         }
-        if(!isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
+        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
             throw getException();
         }
-        return true;
+        return false;
     }
 
     @Override
     public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
-        return hasRightForPublishOrUnPublish(fileOrUUID);
+        return !hasRightForPublishOrUnPublish(fileOrUUID);
     }
 
     public OreSiTechnicalException getException() {

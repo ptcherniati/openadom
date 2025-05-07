@@ -11,12 +11,10 @@ import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import lombok.Getter;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 
 import java.util.function.Supplier;
@@ -38,7 +36,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
     private final String refType;
     public final CheckerTarget target(){
         return target;
-    };
+    }
 
     public void setReferenceValues(ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues) {
         this.referenceValues = referenceValues;

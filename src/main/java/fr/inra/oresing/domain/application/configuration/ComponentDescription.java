@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.application.configuration;
 
-import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;

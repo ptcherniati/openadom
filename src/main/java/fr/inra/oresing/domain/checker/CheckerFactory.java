@@ -5,8 +5,6 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
-import fr.inra.oresing.domain.checker.type.ReferenceType;
-import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.repository.data.DataRepository;
@@ -14,8 +12,6 @@ import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguratio
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 

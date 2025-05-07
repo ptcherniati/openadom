@@ -3,5 +3,5 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 public sealed interface ApplicationManager extends ApplicationPersona
         permits ApplicationAdminUser, ApplicationManagerUser {
     String ALL_DATANAMES = "ALL_DATANAMES";
-    boolean canUpdateApplication();
+   <AM extends ApplicationManager> AM canUpdateApplication();
 }

@@ -3,12 +3,10 @@ package fr.inra.oresing.domain.application.configuration;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
-import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Set;
 
 public record ComputedComponent(ComponentDescriptionType type,

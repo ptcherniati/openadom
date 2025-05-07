@@ -29,13 +29,13 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -53,6 +53,7 @@ public class AuthorizationResources implements ServiceContainerBean {
     @Autowired
     private HealthEndpoint healthEndpoint;
 
+    @Setter
     private ServiceContainer serviceContainer;
     @Autowired
     private UserRepository userRepository;
@@ -175,7 +176,8 @@ public class AuthorizationResources implements ServiceContainerBean {
                                                     ]
                                                   },
                                                   "timeScope": {
-                                                    "fromDay": "1984-01-02"
+                                                    "format": "yyyy-MM-dd HH:mm:ss",
+                                                    "fromDay": "1984-01-02 23:59:59"
                                                   }
                                                 }
                                               }
@@ -224,8 +226,9 @@ public class AuthorizationResources implements ServiceContainerBean {
                                                 "pem": {
                                                   "operationTypes": ["extraction"],
                                                   "timeScope": {
-                                                    "fromDay": "1984-01-01",
-                                                    "toDay": "1984-01-02"
+                                                  "format": "dd/MM/yyyy",
+                                                    "fromDay": "01/01/1984",
+                                                    "toDay": "02/01/1984"
                                                   }
                                                 }
                                               }
@@ -309,9 +312,10 @@ public class AuthorizationResources implements ServiceContainerBean {
                 .map(ApplicationPersona::application)
                 .orElse(null);
         List<AuthorizationRequestError> errors = new ArrayList<>();
-        CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization = serviceContainer.authorizationService()
+        assert application != null;
+        CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization =
+                serviceContainer.authorizationService()
                 .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
-        serviceContainer.authorizationService().createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
@@ -371,6 +375,7 @@ public class AuthorizationResources implements ServiceContainerBean {
                 .map(OreSiAuthenticationToken::getApplicationPersona)
                 .filter(ApplicationAdminUser.class::isInstance)
                 .map(ApplicationAdminUser.class::cast);
+        assert application != null;
         UUID revokeId = serviceContainer.authorizationService().revoke(
                 applicationAdminUser.get(),
                 applicationNameOrId,
@@ -439,8 +444,8 @@ public class AuthorizationResources implements ServiceContainerBean {
     }
 
     @PreAuthorize("""
-                #applicationNameOrId == null ? 
-                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE') : 
+                #applicationNameOrId == null ?
+                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE') :
                 hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE')
             """)
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -521,8 +526,8 @@ public class AuthorizationResources implements ServiceContainerBean {
 
 
     @PreAuthorize("""
-                #applicationNameOrId == null ? 
-                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_DELETE') : 
+                #applicationNameOrId == null ?
+                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_DELETE') :
                 hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_DELETE')
             """)
     public ResponseEntity<OreSiUser> deleteAuthorization(
@@ -610,7 +615,4 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok().body(new Health(connectedUser, health));
     }
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }
