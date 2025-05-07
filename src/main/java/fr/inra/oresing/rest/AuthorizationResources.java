@@ -29,13 +29,13 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -53,6 +53,7 @@ public class AuthorizationResources implements ServiceContainerBean {
     @Autowired
     private HealthEndpoint healthEndpoint;
 
+    @Setter
     private ServiceContainer serviceContainer;
     @Autowired
     private UserRepository userRepository;
@@ -311,6 +312,7 @@ public class AuthorizationResources implements ServiceContainerBean {
                 .map(ApplicationPersona::application)
                 .orElse(null);
         List<AuthorizationRequestError> errors = new ArrayList<>();
+        assert application != null;
         CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization =
                 serviceContainer.authorizationService()
                 .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
@@ -373,6 +375,7 @@ public class AuthorizationResources implements ServiceContainerBean {
                 .map(OreSiAuthenticationToken::getApplicationPersona)
                 .filter(ApplicationAdminUser.class::isInstance)
                 .map(ApplicationAdminUser.class::cast);
+        assert application != null;
         UUID revokeId = serviceContainer.authorizationService().revoke(
                 applicationAdminUser.get(),
                 applicationNameOrId,
@@ -441,8 +444,8 @@ public class AuthorizationResources implements ServiceContainerBean {
     }
 
     @PreAuthorize("""
-                #applicationNameOrId == null ? 
-                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE') : 
+                #applicationNameOrId == null ?
+                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE') :
                 hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE')
             """)
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -523,8 +526,8 @@ public class AuthorizationResources implements ServiceContainerBean {
 
 
     @PreAuthorize("""
-                #applicationNameOrId == null ? 
-                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_DELETE') : 
+                #applicationNameOrId == null ?
+                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_DELETE') :
                 hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_DELETE')
             """)
     public ResponseEntity<OreSiUser> deleteAuthorization(
@@ -612,7 +615,4 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok().body(new Health(connectedUser, health));
     }
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }

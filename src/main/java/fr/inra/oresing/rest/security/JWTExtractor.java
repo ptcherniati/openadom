@@ -126,7 +126,7 @@ public class JWTExtractor {
 
 
 
-    protected void clearSession(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws IOException {
+    protected void clearSession(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) {
 
         // Invalider la session côté serveur
         request.getSession().invalidate();

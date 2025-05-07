@@ -1,19 +1,6 @@
 package fr.inra.oresing.rest.data.publication;
 
-import com.google.common.base.Strings;
-import fr.inra.oresing.domain.Authorization;
-import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
-
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 
 public record AuthorizationForUser(
         boolean isApplicationCreator,

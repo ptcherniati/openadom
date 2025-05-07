@@ -5,8 +5,6 @@ import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
 
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -21,7 +19,7 @@ public record FileContent(String fileName, String fileContent) {
             WHERE rv.referencetype = '%2$s'
             ORDER BY rv.binaryfile, bf.updatedate DESC;
             """;
-    public static String GENERIC_FILE_NAME = "format('%s_%s.csv', 'name', LPAD(ROW_NUMBER() OVER (ORDER BY bf.updatedate)::text, 3, '0'))";
+    public static final String GENERIC_FILE_NAME = "format('%s_%s.csv', 'name', LPAD(ROW_NUMBER() OVER (ORDER BY bf.updatedate)::text, 3, '0'))";
 
     public static String buildFileNameRequest(Application application, String dataName) {
         String patternForFileNameRequest = application.findSubmission(dataName)
@@ -35,7 +33,7 @@ public record FileContent(String fileName, String fileContent) {
                 .filter(submission1 -> SubmissionType.OA_VERSIONING.equals(submission1.strategy()))
                 .map(Submission::fileNameParsing)
                 .map(Submission.SubmissionFileNameParsing::pattern);
-        if (!patternOpt.isPresent()) {
+        if (patternOpt.isEmpty()) {
             return GENERIC_FILE_NAME;
         }
         String pattern = patternOpt.get();

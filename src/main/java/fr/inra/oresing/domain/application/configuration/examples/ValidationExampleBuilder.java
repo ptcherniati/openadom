@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.application.configuration.type.*;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static fr.inra.oresing.domain.application.configuration.examples.I18nExampleBuilder.*;
 

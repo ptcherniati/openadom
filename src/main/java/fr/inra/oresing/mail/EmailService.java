@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.LocaleResolver;
 
@@ -206,7 +205,7 @@ public class EmailService implements Email, ServiceContainerBean {
         final SimpleMailMessage  mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
         mailMessage.setFrom("openadom@inrae.fr");
-        mailMessage.setSubject(Locale.ENGLISH.equals(locale)?MSG_ERROR_SUBJECT_EN:MSG_ERROR_SUBJECT_FR);
+        mailMessage.setSubject(Locale.ENGLISH.getLanguage().equals(locale)?MSG_ERROR_SUBJECT_EN:MSG_ERROR_SUBJECT_FR);
         mailMessage.setText(body);
 
         mailSender.send(mailMessage);

@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.Authorization;
 import fr.inra.oresing.domain.authorization.privilegeassessor.*;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationManagerRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
@@ -30,7 +29,6 @@ import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.UpdateRolesOnAdditionalFilesManagement;
 import fr.inra.oresing.rest.UpdateRolesOnManagement;
-import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
@@ -42,7 +40,6 @@ import org.springframework.util.MultiValueMap;
 
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -486,8 +483,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     }
 
     public List<OreSiUser> getAllUsers() {
-        final List<OreSiUser> allUsers = userRepository.findAll();
-        return allUsers;
+        return userRepository.findAll();
     }
 
     public ImmutableSortedSet<ApplicationUserResult> getGrantableUsers(Application application) {

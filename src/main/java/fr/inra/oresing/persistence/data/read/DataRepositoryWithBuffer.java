@@ -80,10 +80,7 @@ public record DataRepositoryWithBuffer(
                     String hierarchicalKey = getDataFromFileOrRepository(
                             fileWithPrefix(referenceType, PREFIX_FOR_HIERARCHICAL),
                             stream -> stream
-                                    .map(parts -> {
-                                        availableKeys.add(parts[1]);
-                                        return parts;
-                                    }) // Collecter toutes les clés disponibles
+                                    .peek(parts -> availableKeys.add(parts[1])) // Collecter toutes les clés disponibles
                                     .filter(parts -> parts[1].equals(keyForScope.toString()) || parts[2].equals(keyForScope.toString()))
                                     .map(parts -> parts[2])
                                     .findFirst()
@@ -143,11 +140,10 @@ public record DataRepositoryWithBuffer(
     }
 
     private Stream<String[]> validateAndProcessStream(Stream<String[]> stream, int minLength) {
-        return stream.map(parts -> {
+        return stream.peek(parts -> {
             if (parts.length < minLength) {
                 throw new IllegalArgumentException("Format de ligne invalide : " + String.join("\t", parts));
             }
-            return parts;
         });
     }
 

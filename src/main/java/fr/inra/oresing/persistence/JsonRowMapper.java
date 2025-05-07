@@ -25,6 +25,7 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
+import lombok.Getter;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
@@ -50,13 +51,10 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         buildMapper();
     }
 
-    public ObjectMapper getJsonMapper() {
-        return jsonMapper;
-    }
-
     /**
      * Mapper json pour la persistence (dialogue avec la base de données)
      */
+    @Getter
     private ObjectMapper jsonMapper;
 
     public JsonRowMapper() {

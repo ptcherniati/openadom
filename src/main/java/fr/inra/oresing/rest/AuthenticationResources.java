@@ -6,11 +6,7 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
-import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
-import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -46,8 +42,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1")
-public class AuthenticationResources implements ServiceContainerBean {
-    private ServiceContainer serviceContainer;
+public class AuthenticationResources {
 
     @Autowired
     protected AuthenticationService authenticationService;
@@ -130,7 +125,7 @@ public class AuthenticationResources implements ServiceContainerBean {
                                               "currentUserRoles": {
                                                 "applicationRoles": {
                                                   "1fd78157-8233-47b0-80bb-f2ffcb6e7b97": [
-                                                    "applicationManager", 
+                                                    "applicationManager",
                                                     "dataCurator",
                                                     "userManager"
                                                   ],
@@ -175,7 +170,7 @@ public class AuthenticationResources implements ServiceContainerBean {
     })
 
     @PostMapping(value = "/login", produces = MediaType.APPLICATION_JSON_VALUE)
-    public LoginAdminResult login(final HttpServletResponse response, @RequestParam("login") final String login, @RequestParam("password") final String password) throws Throwable {
+    public LoginAdminResult login(final HttpServletResponse response, @RequestParam("login") final String login, @RequestParam("password") final String password) {
         return Optional.ofNullable(SecurityContextHolder.getContext())
                 .map(SecurityContext::getAuthentication)
                 .map(Authentication::getPrincipal)
@@ -206,7 +201,7 @@ public class AuthenticationResources implements ServiceContainerBean {
     })
 
     @DeleteMapping("/logout")
-    public ResponseEntity<String> logout(HttpServletResponse response) throws IOException {
+    public ResponseEntity<String> logout(HttpServletResponse response) {
         return ResponseEntity
                 .ok("{\"message\": \"Disconnected\"}");
     }
@@ -274,8 +269,8 @@ public class AuthenticationResources implements ServiceContainerBean {
             description = """
                     Gère différentes opérations de mise à jour selon les paramètres fournis :
                     
-                    1. **Activation de compte** (login + password + verificationKey)  
-                    2. **Changement d'email** (login + email → envoi d'une verificationKey)  
+                    1. **Activation de compte** (login + password + verificationKey)
+                    2. **Changement d'email** (login + email → envoi d'une verificationKey)
                     3. **Réinitialisation de mot de passe** (login + email + verificationKey + newPassword + newPasswordConfirm)
                     4. **Modification mot de passe** (login + password + active)
                     Transitions d'état du compte : idle → pending → active""",
@@ -289,10 +284,10 @@ public class AuthenticationResources implements ServiceContainerBean {
                             examples = {
                                     @ExampleObject(
                                             name = "Activation de compte",
-                                            value = """ 
-                                                    { 
+                                            value = """
+                                                    {
                                                         "userId": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
-                                                        "login": "user123", 
+                                                        "login": "user123",
                                                         "email": "user@example.com",
                                                         "accountState": "active",
                                                         "chartes": { "key": "2025-03-11T16:27:00.000Z" }
@@ -322,6 +317,7 @@ public class AuthenticationResources implements ServiceContainerBean {
                 .filter(NotConnectedUser.class::isInstance)
                 .map(NotConnectedUser.class::cast)
                 .orElse(null);
+        assert notConnectedUser != null;
         final OreSiUser oreSiUser = authenticationService.updateUser(notConnectedUser);
         final String uri = UriUtils.encodePath("/users/" + Optional.ofNullable(oreSiUser)
                         .map(OreSiUser::getId)
@@ -368,10 +364,5 @@ public class AuthenticationResources implements ServiceContainerBean {
     @GetMapping(value = "/users/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public OreSiUser getByIdOrLogin(@PathVariable(name = "userLoginOrId") final String userLoginOrId) {
         return authenticationService.getByIdOrLogin(userLoginOrId);
-    }
-
-    @Override
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
     }
 }

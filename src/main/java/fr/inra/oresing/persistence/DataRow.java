@@ -24,8 +24,8 @@ public record DataRow(
         Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
         List<String> allPatternColumnNames
 ) {
-    public static DataRow of(Optional<StandardDataDescription> application, DataRows dataRows) {
-        List<String> patternComponentKeys = application
+    public static DataRow of(StandardDataDescription application, DataRows dataRows) {
+        List<String> patternComponentKeys = Optional.of(application)
                 .map(StandardDataDescription::componentDescriptions)
                 .stream().flatMap(descriptions -> descriptions.entrySet().stream()
                         .filter(component -> component.getValue() instanceof PatternComponent)

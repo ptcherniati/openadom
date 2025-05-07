@@ -43,17 +43,13 @@ public sealed interface CheckerDescription permits
                     new DateType(dateChecker.pattern(), DateTimeFormatter.ofPattern(dateChecker.pattern()), dateChecker.duration(), dateChecker.min(), dateChecker.max());
             case final BooleanChecker booleanChecker -> new BooleanType(false);
             case final FloatChecker floatChecker -> {
-                final Float minFloat = Optional.ofNullable(floatChecker.min())
-                        .orElse(null);
-                final Float maxFloat = Optional.ofNullable(floatChecker.max())
-                        .orElse(null);
+                final Float minFloat = floatChecker.min();
+                final Float maxFloat = floatChecker.max();
                 yield new FloatType(minFloat, maxFloat);
             }
             case final IntegerChecker integerChecker -> {
-                final Integer minInteger = Optional.ofNullable(integerChecker.min())
-                        .orElse(null);
-                final Integer maxInteger = Optional.ofNullable(integerChecker.max())
-                        .orElse(null);
+                final Integer minInteger = integerChecker.min();
+                final Integer maxInteger = integerChecker.max();
                 yield new IntegerType(minInteger, maxInteger);
             }
             case final GroovyExpressionChecker groovy -> {

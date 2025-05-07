@@ -3,8 +3,10 @@ package fr.inra.oresing.rest.model.data.query;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.persistence.DataRepository;
+import lombok.Getter;
 
 public class ComponentOrderBy {
+    @Getter
     public String componentKey;
     public DataRepository.Order order;
 
@@ -30,10 +32,6 @@ public class ComponentOrderBy {
                 ComponentType.getComponentType(componentDescription)
 
         );
-    }
-
-    public String getComponentKey() {
-        return componentKey;
     }
 
     public String getOrder() {

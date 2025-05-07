@@ -195,29 +195,28 @@ public class DataImporter {
 
     private static List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         if (recursionStrategy instanceof WithRecursion) {
-            List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = recursionStrategy.testHasParent(buildKey, recursionStrategy, referenceDatumAfterChecking);
+            recursionStrategy.testHasParent(buildKey, recursionStrategy, referenceDatumAfterChecking);
+            List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings;
             KeysAndReferenceDatumAfterChecking lineKey = buildKey.apply(referenceDatumAfterChecking);
             Map<Ltree, List<RowWithReferenceDatum>> missingLines = recursionStrategy.dataImporterContext().getMissingLines();
-            List<ReferenceDatumAfterChecking> referenceDatumAfterCheckingsAfterRegardingRecursivity =
-                    Optional.ofNullable(missingLines.get(lineKey.naturalKey()))
-                            .map(LinkedList::new)
-                            .map(missingLines1 -> {
-                                ImmutableList.Builder<ReferenceDatumAfterChecking> builder = ImmutableList.builder();
-                                for (RowWithReferenceDatum missingLine : missingLines1) {
-                                    List<ReferenceDatumAfterChecking> check = check(
-                                            buildKey,
-                                            recursionStrategy,
-                                            missingLine,
-                                            transformedLineCheckers,
-                                            publishContextBuilder
-                                    );
-                                    builder.addAll(check);
-                                }
-                                return builder.build();
-                            })
-                            .orElseGet(ImmutableList::of);
-            referenceDatumAfterCheckings = referenceDatumAfterCheckingsAfterRegardingRecursivity;
-            referenceDatumAfterCheckings.stream()
+            referenceDatumAfterCheckings = Optional.ofNullable(missingLines.get(lineKey.naturalKey()))
+                    .map(LinkedList::new)
+                    .map(missingLines1 -> {
+                        ImmutableList.Builder<ReferenceDatumAfterChecking> builder = ImmutableList.builder();
+                        for (RowWithReferenceDatum missingLine : missingLines1) {
+                            List<ReferenceDatumAfterChecking> check = check(
+                                    buildKey,
+                                    recursionStrategy,
+                                    missingLine,
+                                    transformedLineCheckers,
+                                    publishContextBuilder
+                            );
+                            builder.addAll(check);
+                        }
+                        return builder.build();
+                    })
+                    .orElseGet(ImmutableList::of);
+            referenceDatumAfterCheckings
                     .forEach(recursionStrategy.dataImporterContext().getMissingLines()::remove);
             return referenceDatumAfterCheckings;
         }
@@ -283,12 +282,11 @@ public class DataImporter {
             }
         }
         //}
-        final CheckerValidationCheckResult validationCheckResults = lineChecker.checkReference(referenceDatumBeforeChecking, context);
-        return validationCheckResults;
+        return lineChecker.checkReference(referenceDatumBeforeChecking, context);
     }
 
     private static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker) {
-        boolean matchingTarget = rowWithReferenceDatum.referenceDatum().values()
+        return rowWithReferenceDatum.referenceDatum().values()
                 .entrySet()
                 .stream()
                 .flatMap(entry -> {
@@ -307,7 +305,6 @@ public class DataImporter {
                     return Stream.of(entry.getKey());
                 }).noneMatch(column -> column.equals(lineChecker.target()) ||
                         column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
-        return matchingTarget;
     }
 
     /**
@@ -341,14 +338,11 @@ public class DataImporter {
                         csvRecord
                 );
         final Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
-        final Stream<RowWithReferenceDatum> recordStreamBeforePreloading =
-                csvRecordsStream
-                        .flatMap(csvRecordToReferenceDatumFn)
-                        .map(dataHeaderReader::addConstantsToRow)
-                        .map(this::computeComputedColumns);
-        Stream<RowWithReferenceDatum> recordStream = recordStreamBeforePreloading;
         dataImporterContext.setTransformedLineCheckers(buildLineCheckers(dataHeaderReader.constantValues().values()));
-        Stream<DataValue> referenceValuesStream = recordStream
+        Stream<DataValue> referenceValuesStream = csvRecordsStream
+                .flatMap(csvRecordToReferenceDatumFn)
+                .map(dataHeaderReader::addConstantsToRow)
+                .map(this::computeComputedColumns)
                 //.parallel()
                 .filter(rowWithReferenceDatum -> allErrors.canRegisterErrors())
                 .map(rowWithReferenceDatum -> check(
@@ -686,6 +680,7 @@ public class DataImporter {
                 null :
                 LocalDate.from(ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo())).plusDays(1).atStartOfDay();
         dateTimeRange = LocalDateTimeRange.between(from, to);
+        assert to != null;
         builder.put("to", DISPLAY_DATE_FORMATTER_DDMMYYYY.format(to));
         if (!dateTimeRange.getRange().encloses(timeScope.getRange())) {
             errors.add(new CsvRowValidationCheckResult(DefaultValidationCheckResult.error("timeRangeOutOfInterval", builder.build(), null), rowNumber));
@@ -859,7 +854,7 @@ public class DataImporter {
             DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keys.naturalKey(), keys.hierarchicalKey());
             if (knownId.isEmpty()) {
                 dataImporterContext().getAfterPreloadReferenceUuids().put(key, UUID.randomUUID());
-                knownId = dataImporterContext().getKnownId(keys.naturalKey());
+                dataImporterContext().getKnownId(keys.naturalKey());
             }
             return List.of(referenceDatumAfterChecking);
         }

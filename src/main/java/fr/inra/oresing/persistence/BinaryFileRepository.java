@@ -12,18 +12,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
-import org.springframework.jdbc.core.support.AbstractLobCreatingPreparedStatementCallback;
 import org.springframework.jdbc.support.lob.DefaultLobHandler;
-import org.springframework.jdbc.support.lob.LobCreator;
 import org.springframework.jdbc.support.lob.LobHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.*;
 
 @Component
@@ -54,10 +49,10 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         Preconditions.checkArgument(binaryFileDataset != null);
 
         final String query = String.format("""
-                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json 
+                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
                         FROM (
-                            SELECT id, application, name, comment, size, params 
-                            FROM %2$s  
+                            SELECT id, application, name, comment, size, params
+                            FROM %2$s
                             WHERE application = :application::uuid
                               AND (params->>'published')::bool
                               AND params->'binaryfiledataset'->'requiredauthorizations' = :requiredAuthorizations::jsonb
@@ -106,6 +101,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                         if (binaryFile != null) {
                             binaryFile.setFileData(retrieveFileContentAsInputStream(binaryFile.getId()));
                         }
+                        assert binaryFile != null;
                         return Optional.of(binaryFile);
                     }
                     return Optional.empty();
@@ -118,16 +114,16 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
         final String sql = String.format("""
                         SELECT '%1$s' AS "@class", to_jsonb(t) AS json
                         FROM (
-                            SELECT 
-                                id, 
+                            SELECT
+                                id,
                                 creationdate,
                                 updatedate,
-                                application, 
-                                name, 
-                                comment, 
-                                size, 
-                                null AS fileData, 
-                                params 
+                                application,
+                                name,
+                                comment,
+                                size,
+                                null AS fileData,
+                                params
                             FROM %2$s
                             %3$s
                         ) t
@@ -231,6 +227,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     public UUID store(BinaryFile entity) {
         Optional<InputStream> inputStreamOpt = Optional.ofNullable(entity)
                 .map(BinaryFile::getFileData);
+        assert entity != null;
         entity.setFileData(null);
         UUID fileId = super.store(entity);
 

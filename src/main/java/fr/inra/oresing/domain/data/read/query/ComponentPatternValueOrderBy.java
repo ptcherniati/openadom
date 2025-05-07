@@ -25,7 +25,7 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
             List<String> values = new LinkedList<>();
             Optional<String> valueopt = patternMapTypeOpt
                     .map(mapType -> getValue(language, dataRepository, dataDescription, mapType));
-            values.add(valueopt.isPresent() ? valueopt.get() : "");
+            values.add(valueopt.orElse(""));
             allColumns().stream()
                     .map(qualifier -> {
                         if(qualifier.componentKey().contains("::")) {
@@ -55,8 +55,7 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
 
     private static Optional getMapType(ListType fieldType) {
         return fieldType.getValue().stream()
-                .filter(MapType.class::isInstance)
-                .map(mapType -> mapType)
+                .filter(obj -> true)
                 .findFirst();
     }
 
@@ -64,7 +63,7 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
         Set<ComponentOrderBy> components = qualifiersColumns();
         components.addAll(adjacentColumns());
         return components.stream()
-                .sorted((a,b)-> a.order().compareTo(b.order()))
+                .sorted(Comparator.comparing(ComponentOrderBy::order))
                 .toList();
     }
 

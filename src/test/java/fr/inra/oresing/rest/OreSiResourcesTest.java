@@ -2997,7 +2997,6 @@ on test le dépôt d'un fichier récursif
                     .andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
-            ;
         }
 
         // on  redepose le fichier
@@ -3019,7 +3018,6 @@ on test le dépôt d'un fichier récursif
                     .andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
-            ;
         }
         //on teste un dépot de fichier de données avec lignes dupliquées
         String dataWithDuplicateds = Fixtures.getDuplicatedDataFiles().get("data_with_duplicateds");
@@ -3044,7 +3042,6 @@ on test le dépôt d'un fichier récursif
                     .andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
-            ;
         }
     }
 

@@ -15,12 +15,12 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.persistence.*;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -41,6 +41,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     @Autowired
     private OreSiRepository repository;
 
+    @Setter
     private ServiceContainer serviceContainer;
     @Autowired
     private AuthenticationService authenticationService;
@@ -169,7 +170,4 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsParsed);
     }
 
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        this.serviceContainer = serviceContainer;
-    }
 }

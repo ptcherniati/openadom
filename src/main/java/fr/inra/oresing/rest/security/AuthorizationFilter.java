@@ -94,6 +94,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             return;
         }
         if (
+                path.equals("/") ||
                 path.startsWith("/actuator") ||
                         path.startsWith("/swagger-ui") ||
                         path.startsWith("/api-docs") ||
@@ -188,7 +189,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         if (HttpMethod.POST.name().equals(request.getMethod()) && "/api/v1/applications/%1$s/data/%2$s".formatted(oreSiAuthenticationToken.getApplicationName(), dataName).equals(path)) {
             String params = request.getParameter("params");
             Optional.ofNullable(params)
-                    .filter(Objects::nonNull)
+                    .filter(obj -> true)
                     .filter(Predicate.not("undefined"::equals))
                     .map(json -> {
                         try {

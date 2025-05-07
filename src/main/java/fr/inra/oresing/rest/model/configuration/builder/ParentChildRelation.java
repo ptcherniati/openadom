@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.model.configuration.builder;
 
 import fr.inra.oresing.domain.application.configuration.BuilderNode;
-import groovyjarjarantlr4.runtime.tree.Tree;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;

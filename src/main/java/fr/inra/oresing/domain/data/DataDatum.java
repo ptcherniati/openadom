@@ -104,7 +104,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                         .orElse(new MapType(new HashMap<>()));
                 map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
             } else if (entry.getValue() instanceof DataColumnPatternValue patternValue) {
-                final FieldType valueThatMayBeNull = Optional.of(patternValue)
+                final FieldType<Map<String, Object>> valueThatMayBeNull = Optional.of(patternValue)
                         .map(DataColumnPatternValue::toJsonForDatabase)
                         .map(MapType::new)
                         .orElse(new MapType<>(Map.of()));
@@ -135,7 +135,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
         return ImmutableMap.copyOf(map);
     }
 
-    public DataColumnValue put(final DataColumn column, final DataColumnValue value) {
+    public void put(final DataColumn column, final DataColumnValue value) {
         final DataColumnValue replaced;
         if (values().entrySet().stream()
                 .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
@@ -143,10 +143,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
             replaced = values().entrySet().stream()
                     .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
                     .filter(entry -> ((DataColumnPatternValue) entry.getValue()).values().containsKey(column))
-                    .map(entry -> {
-                        ((DataColumnPatternValue) entry.getValue()).values().put(column, value);
-                        return entry;
-                    })
+                    .peek(entry -> ((DataColumnPatternValue) entry.getValue()).values().put(column, value))
                     .map(Map.Entry::getValue)
                     .findFirst()
                     .orElse(null);
@@ -158,7 +155,6 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
             Preconditions.checkState(consistent, "dans ce cas, on est en train de remplacer un champs avec une valeur qui a une autre multiplicité, c'est sûrement une erreur");
 
         }
-        return replaced;
     }
 
     public void putAll(final DataDatum anotherReferenceDatum) {

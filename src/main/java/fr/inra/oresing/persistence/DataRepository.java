@@ -6,7 +6,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Iterators;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.menu.MenuType;
@@ -116,7 +115,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
 
-    public int removeByFileId(final UUID fileId) {
+    public void removeByFileId(final UUID fileId) {
         final String query = String.format("""
                         DELETE FROM %s
                         WHERE binaryfile::text = :binaryFile
@@ -127,7 +126,6 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         Map<String, Object> params = Map.of("binaryFile", fileId.toString());
         int unpublishedLines = getNamedParameterJdbcTemplate().update(query, params);
         flush();
-        return unpublishedLines;
     }
 
 
@@ -347,7 +345,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         final String query = String.format("""
                         SELECT %s
                         FROM %s t
-                        WHERE application = :applicationId::uuid 
+                        WHERE application = :applicationId::uuid
                           AND ReferenceType = :refType
                         """,
                 select,
@@ -374,9 +372,9 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     public List<ApplicationResult.DataSynthesis> buildReferenceSynthesis() {
         final String query = String.format("""
-                        SELECT 
-                            ReferenceType AS ReferenceType, 
-                            COUNT(*) AS lineCount 
+                        SELECT
+                            ReferenceType AS ReferenceType,
+                            COUNT(*) AS lineCount
                         FROM %s
                         GROUP BY ReferenceType
                         """,
@@ -391,15 +389,15 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     public void updateConstraintForeignReferences(final List<UUID> uuids) {
         final String deleteSql = String.format("""
-                        DELETE FROM %s.Reference_Reference 
+                        DELETE FROM %s.Reference_Reference
                         WHERE referenceId IN (:ids)
                         """,
                 getTable().schema().getSqlIdentifier()
         );
         final String insertSql = String.format("""
                         INSERT INTO %1$s.Reference_Reference(referenceId, referencesBy)
-                        SELECT 
-                            id AS referenceId, 
+                        SELECT
+                            id AS referenceId,
                             (jsonb_array_elements_text(jsonb_path_query(jsonb_path_query(refslinkedto, '$.*'), '$.*')#> '{uuids}'))::uuid AS referencesBy
                         FROM %2$s
                         WHERE id IN (:ids)
@@ -424,9 +422,9 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
             return new HashMap<>();
         }
         final String sql = String.format("""
-                        SELECT DISTINCT 
-                            '%1$s' AS "@class",  
-                            to_jsonb(r) AS json 
+                        SELECT DISTINCT
+                            '%1$s' AS "@class",
+                            to_jsonb(r) AS json
                         FROM %2$s.reference_reference dr
                         JOIN %2$s."referencevalue" d ON dr.referenceId = d.id
                         JOIN %3$s r ON dr.referencesBy = r.id
@@ -576,7 +574,6 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                 params,
                                 (rs, rowNum) -> new FileContent(rs.getString("fileName"), rs.getString("fileContent"))
                         )
-                        .map(fileContent -> fileContent)
         );
     }
 

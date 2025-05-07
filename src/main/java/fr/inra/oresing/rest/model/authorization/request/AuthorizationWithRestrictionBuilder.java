@@ -54,7 +54,7 @@ public class AuthorizationWithRestrictionBuilder {
         try {
 
         } catch (Exception e) {
-
+            throw new RuntimeException(e);
         }
       });
     }

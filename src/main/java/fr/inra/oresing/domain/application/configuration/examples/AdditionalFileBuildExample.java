@@ -27,8 +27,7 @@ class AdditionalFileBuildExample {
 
     private static LinkedHashMap<String, ConfigurationSchemaNodeType> getChildren(TitleType title) {
 
-        LinkedHashMap<String, ConfigurationSchemaNodeType> children = createChildrenMap(title);
-        return children;
+        return createChildrenMap(title);
     }
 
     private static LinkedHashMap<String, ConfigurationSchemaNodeType> createChildrenMap(TitleType title) {

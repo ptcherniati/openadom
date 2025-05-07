@@ -64,7 +64,7 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
         String sql = String.format("""
                         SELECT '%1$s' AS "@class", to_jsonb(t) AS json
                         FROM (
-                            SELECT * 
+                            SELECT *
                             FROM %2$s
                             %3$s
                         ) t
@@ -86,10 +86,10 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
     protected String getUpsertQuery() {
         return String.format("""
                         INSERT INTO %1$s AS t (
-                            id, creationdate, updatedate, application, "user", comment, 
+                            id, creationdate, updatedate, application, "user", comment,
                             rightsRequestForm, rightsRequest, setted
                         )
-                        SELECT 
+                        SELECT
                             id,
                             COALESCE(creationdate, now()),
                             COALESCE(updatedate, now()),
@@ -99,9 +99,9 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
                             rightsRequestForm,
                             rightsRequest,
                             COALESCE(setted, false)
-                        FROM json_populate_recordset(NULL::%1$s, :json::json) 
+                        FROM json_populate_recordset(NULL::%1$s, :json::json)
                         ON CONFLICT (id)
-                        DO UPDATE SET 
+                        DO UPDATE SET
                             updatedate = current_timestamp,
                             rightsRequestForm = EXCLUDED.rightsRequestForm,
                             rightsRequest = EXCLUDED.rightsRequest,
@@ -121,7 +121,7 @@ public class RightsRequestRepository extends JsonTableInApplicationSchemaReposit
         String sql = String.format("""
                         SELECT '%1$s' AS "@class", to_jsonb(t) AS json
                         FROM (
-                            SELECT * 
+                            SELECT *
                             FROM %2$s
                             %3$s
                         ) t

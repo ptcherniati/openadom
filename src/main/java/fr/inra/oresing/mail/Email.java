@@ -4,7 +4,6 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
-import org.springframework.scheduling.annotation.Async;
 
 import java.util.Locale;
 

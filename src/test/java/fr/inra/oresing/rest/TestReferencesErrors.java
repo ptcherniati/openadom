@@ -249,7 +249,7 @@ public class TestReferencesErrors {
                                     .collect(Collectors.joining(",")),
                             m.group(4));
                 }
-                JSONAssert.assertEquals(e.getValue().get(2), response, JSONCompareMode.NON_EXTENSIBLE);;
+                JSONAssert.assertEquals(e.getValue().get(2), response, JSONCompareMode.NON_EXTENSIBLE);
             }
         }
         //System.out.println(responses);

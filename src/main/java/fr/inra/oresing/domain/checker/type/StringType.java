@@ -10,14 +10,13 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import org.apache.commons.lang3.StringUtils;
+
 import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 public non-sealed class StringType implements FieldType<String> {
     private final Predicate<String> predicate;

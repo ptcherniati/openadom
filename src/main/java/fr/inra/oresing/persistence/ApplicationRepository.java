@@ -77,7 +77,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
         String query = newDataIdentifiers.stream()
                 .map(buildQueryAddIdentifier)
                 .collect(Collectors.joining("\n"));
-        return getNamedParameterJdbcTemplate().execute(query, PreparedStatement::execute);
+        return Boolean.TRUE.equals(getNamedParameterJdbcTemplate().execute(query, PreparedStatement::execute));
     }
 
     private String buildQueryAddIdentifier(String applicationName, String identifier) {
@@ -86,11 +86,10 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
                 .formatted(applicationName, identifier);
     }
 
-    public int updateAuthorizationIndexes(Application application) {
+    public void updateAuthorizationIndexes(Application application) {
         AuthorizationIndex authorizationIndex = new AuthorizationIndex(application);
         String sql = authorizationIndex.dropIndexes();
         int updateAuthorizationIndexes = getNamedParameterJdbcTemplate().update(sql, Map.of());
         authorizationIndex.createIndexes();
-        return updateAuthorizationIndexes;
     }
 }

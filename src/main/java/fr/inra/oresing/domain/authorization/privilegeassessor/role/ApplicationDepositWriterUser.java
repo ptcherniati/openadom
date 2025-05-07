@@ -20,12 +20,12 @@ public record ApplicationDepositWriterUser(
 
     @Override
     public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
-        return false;
+        return true;
     }
 
     @Override
     public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
-        if(!isData()){
+        if(isData()){
             if(CollectionUtils.isEmpty(authorizations)){
                 throw getException();
             }
@@ -37,7 +37,7 @@ public record ApplicationDepositWriterUser(
         if(authorizationParseds.isEmpty()){
             throw getException();
         }
-        if(!isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
+        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
             throw getException();
         }
         return true;
