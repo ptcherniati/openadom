@@ -7,21 +7,20 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import lombok.Getter;
 import org.apache.commons.collections4.MapUtils;
-
-import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public non-sealed class ReferenceType extends AbstractType<Ltree> {
@@ -34,7 +33,8 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
     private Set<String> knownSpecialCharacters = new HashSet<>();
     @Getter
     private final String refType;
-    public final CheckerTarget target(){
+
+    public final CheckerTarget target() {
         return target;
     }
 

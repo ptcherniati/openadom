@@ -4,11 +4,15 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import lombok.Value;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -75,7 +79,8 @@ public class Ltree implements Comparable<Ltree> {
     }
 
     public static String escapeToLabel(String key, Set<String> knownSpecialCharacters) {
-        if (VALID_LABEL_REGEX.asMatchPredicate().test(key) && isEncodedString(key, knownSpecialCharacters)) {
+        final Set<String> validPatterns = CollectionUtils.isNotEmpty(knownSpecialCharacters) ? knownSpecialCharacters : KNOWN_SYMBOL_CODES;
+        if (VALID_LABEL_REGEX.asMatchPredicate().test(key) && isEncodedString(key, validPatterns)) {
             return key;
         }
         return extracttolabelFromStringWithSpecialCharacters(key);
