@@ -22,6 +22,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class AuthorizationPublicationService {
+    public static final String DATA_NAME_CAN_T_BE_NULL = "dataName Can't be null";
     protected final ReportErrors errors;
     protected BinaryFile binaryFile;
     protected final StandardDataDescription dataDescription;
@@ -52,8 +53,11 @@ public class AuthorizationPublicationService {
     }
 
     protected StandardDataDescription buildDataDescription(Application application) {
-        return application.findData(dataName)
-                .orElseThrow(() -> new IllegalArgumentException("dataName Can't be null"));
+        return Optional.ofNullable(application)
+                .map(name -> application.findData(dataName)
+                        .orElseThrow(() -> new IllegalArgumentException(DATA_NAME_CAN_T_BE_NULL))
+                )
+                .orElse(null);
     }
 
     protected FileOrUUID setFileOrUUID(FileOrUUID fileOrUUIDLocal) {
@@ -106,10 +110,10 @@ public class AuthorizationPublicationService {
         Boolean unPublishIsAsked = !publishIsAsked && Optional.ofNullable(binaryFile).map(BinaryFile::getParams).map(BinaryFileInfos::published).orElse(false);
         return
                 isRepository() &&
-                !(
-                        existsFileToPublish &&
-                        (publishIsAsked || unPublishIsAsked)
-                );
+                        !(
+                                existsFileToPublish &&
+                                        (publishIsAsked || unPublishIsAsked)
+                        );
     }
 
     protected boolean isRepository() {

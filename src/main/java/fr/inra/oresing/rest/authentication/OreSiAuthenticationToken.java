@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.authentication;
 
 import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
@@ -33,6 +34,9 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
     private String dataName;
     @Getter
     private StoreFile storeFile;
+    @Setter
+    @Getter
+    private BinaryFile binaryFile;
     @Setter
     @Getter
     private FileOrUUID fileOrUUID;
@@ -130,5 +134,4 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
         this.storeFile=storeFile;
         return storeFile;
     }
-
 }

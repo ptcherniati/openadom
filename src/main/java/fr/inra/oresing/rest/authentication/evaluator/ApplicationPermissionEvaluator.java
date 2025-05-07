@@ -154,7 +154,8 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                     case String applicationAdminForAdd when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD.equals(applicationAdminForAdd) ->
                             Optional.of(DATA_MANAGEMENT.apply(applicationName)
                                     .forManageAuthorizations());
-                    case String read when APPLICATION_DATA_READ.equals(read) -> dataNameOpt
+                    case String read when APPLICATION_DATA_READ.equals(read) ->
+                            dataNameOpt
                             .map(authorizationService
                                     .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
                                     ::forDataRead);

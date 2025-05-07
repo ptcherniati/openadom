@@ -7,7 +7,8 @@ import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.AuthenticationFailure;
@@ -40,7 +41,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.GenericFilterBean;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -81,7 +85,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String path = request.getRequestURI();
         OreSiAuthenticationToken authenticationToken = requestContext.getAuthenticationToken();
-        if (authenticationToken != null ) {
+        if (authenticationToken != null) {
             chain.doFilter(request, response);
             return;
         }
@@ -95,11 +99,11 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         }
         if (
                 path.equals("/") ||
-                path.startsWith("/actuator") ||
+                        path.startsWith("/actuator") ||
                         path.startsWith("/swagger-ui") ||
                         path.startsWith("/api-docs") ||
                         path.startsWith("/api/public") ||
-                        path.startsWith("/api-docs.yaml")||
+                        path.startsWith("/api-docs.yaml") ||
                         path.equals("/error")) {
             chain.doFilter(request, response); // Skip le filtre
             return;
@@ -156,25 +160,44 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                     .map(list -> list.get(6))
                     .or(() -> {
                         Pattern pattern = Pattern
-                                .compile("/api/v1/applications/%s/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
-                        return Optional.ofNullable(path)
+                                .compile("/api/v1/applications/(%s)/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
+                        final Optional<UUID> optionalUUID = Optional.ofNullable(path)
                                 .map(pattern::matcher)
-                                .map(m -> m.matches() ? m.group(1) : null)
-                                .map(UUID::fromString)
-                                .map(fileId -> {
-                                    Application applicationOrApplicationAccordingToRights = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(oreSiAuthenticationToken.getApplicationName());
-                                    return Optional.ofNullable(serviceContainer.versioningService()
-                                                    .getStoreFile(applicationOrApplicationAccordingToRights,
-                                                            null,
-                                                            FileOrUUID.forUUID(fileId),
-                                                            null,
-                                                            null))
-                                            .map(oreSiAuthenticationToken::setStoreFile)
-                                            .map(StoreFile::builder)
-                                            .map(AuthorizationPublicationService::getDataName)
-                                            .orElse(null);
+                                .map(m -> m.matches() ? m.group(2) : null)
+                                .map(UUID::fromString);
+                        final Optional<String> dataNameOpt = Optional.ofNullable(path)
+                                .map(pattern::matcher)
+                                .map(m -> m.matches() ? m.group(1) : null);
+                        try {
+                            return optionalUUID
+                                    .map(fileId -> {
+                                        Application applicationOrApplicationAccordingToRights = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(oreSiAuthenticationToken.getApplicationName());
+                                        return Optional.ofNullable(serviceContainer.versioningService()
+                                                        .getStoreFile(applicationOrApplicationAccordingToRights,
+                                                                null,
+                                                                FileOrUUID.forUUID(fileId),
+                                                                null,
+                                                                null))
+                                                .map(oreSiAuthenticationToken::setStoreFile)
+                                                .map(StoreFile::builder)
+                                                .map(AuthorizationPublicationService::getDataName)
+                                                .orElse(null);
 
-                                });
+                                    });
+                        } catch (IllegalArgumentException e) {
+                            if (AuthorizationPublicationService.DATA_NAME_CAN_T_BE_NULL.equals(e.getMessage())) {
+                                optionalUUID
+                                        .flatMap(fileId -> serviceContainer.binaryFileService().getFile(oreSiAuthenticationToken.getApplicationName(), fileId))
+                                        .ifPresent(binaryFile -> {
+                                            oreSiAuthenticationToken.setBinaryFile(binaryFile);
+                                            dataNameOpt
+                                                    .ifPresent(oreSiAuthenticationToken::setDataName);
+
+                                            ;
+                                        });
+                            }
+                            return Optional.empty();
+                        }
                     })
                     .ifPresent(dataName -> {
                         addFilleOrUUID(request, oreSiAuthenticationToken, dataName, path);

@@ -10,7 +10,9 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.ComponentDescription;
+import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
@@ -29,6 +31,7 @@ import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
+import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
@@ -38,8 +41,9 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.binaryFile.BinaryFileService;
-import fr.inra.oresing.rest.data.publication.*;
-import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
+import fr.inra.oresing.rest.data.publication.DataVersioningResult;
+import fr.inra.oresing.rest.data.publication.State;
+import fr.inra.oresing.rest.data.publication.StoreFile;
 import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFileParamsSearchException;
@@ -74,10 +78,10 @@ import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -267,14 +271,21 @@ public class OreSiResources implements ServiceContainerBean {
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<byte[]> getFile(@PathVariable("name") final String name, @PathVariable("id") final UUID id) {
+    public ResponseEntity<StreamingResponseBody> getFile(
+            @PathVariable("name") final String name,
+            @PathVariable("id") final UUID id) {
         final Optional<BinaryFile> optionalBinaryFile = serviceContainer.binaryFileService().getFileWithData(name, id);
         if (optionalBinaryFile.isPresent()) {
             final BinaryFile binaryFile = optionalBinaryFile.get();
-            final HttpHeaders headers = new HttpHeaders();
-            headers.setContentLength(binaryFile.getSize());
-            headers.set("Content-disposition", "attachment;filename=" + binaryFile.getName());
-            return new ResponseEntity(binaryFile.getFileData(), headers, HttpStatus.OK);
+            InputStream inputStream = binaryFile.getFileData(); // Ton InputStream depuis la BDD
+            String filename = binaryFile.getName();
+
+            StreamingResponseBody body = outputStream -> FileCopyUtils.copy(inputStream, outputStream);
+
+            return ResponseEntity.ok()
+                    .contentLength(binaryFile.getSize())
+                    .header("Content-Disposition", "attachment;filename=" + filename)
+                    .body(body);
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -344,7 +355,7 @@ public class OreSiResources implements ServiceContainerBean {
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<byte[]> getConfiguration(@PathVariable("nameOrId") final String nameOrId) {
+    public ResponseEntity<StreamingResponseBody> getConfiguration(@PathVariable("nameOrId") final String nameOrId) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
         final UUID configFileId = application.getConfigFile();
         return getFile(nameOrId, configFileId);
