@@ -55,7 +55,7 @@ class FileContentTest {
                	TO_CHAR(lower((bf."authorization").timescope),'yyyy-MM-dd'),
                	TO_CHAR(upper((bf."authorization").timescope),'yyyy-MM-dd')
                ) as "fileName",
-                   convert_from(decode(encode(bf.filedata, 'escape'), 'base64'), 'UTF8') AS "fileContent"
+                   convert_from(bf.filedata), 'UTF8') AS "fileContent"
                FROM null.referencevalue rv
                JOIN null.binaryfile bf ON bf.id = rv.binaryfile
                WHERE rv.referencetype = 'data'
