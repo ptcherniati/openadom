@@ -10,7 +10,7 @@ OA_application:
       en: SOERE my SOERE
   OA_comment: Fichier de test de l'application brokenADOM version initiale
   OA_name: monsore
-  OA_version: 3.0.2
+  OA_version: 3.0.1
 OA_tags:
   context:
     fr: contexte
