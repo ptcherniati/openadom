@@ -13,10 +13,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.Authentication;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
@@ -39,77 +36,134 @@ public class ApplicationPermissionEvaluatorTest {
 
     @BeforeEach
     void setUp() {
-        // Au lieu de créer des mocks des persona, nous allons modifier notre approche
+        // Définir une fabrique de privilèges qui retournera le bon type de persona selon le contexte
+        PrivilegeFactory privilegeFactory = new PrivilegeFactory();
 
-        // Créer des mocks des domains avec RETURNS_SELF pour les méthodes à chaîner
-        PrivilegeAssessorDomainForSystem systemUserConnected = mock(PrivilegeAssessorDomainForSystem.class);
-        PrivilegeAssessorDomainForSystem systemAdministration = mock(PrivilegeAssessorDomainForSystem.class);
-        PrivilegeAssessorDomainForApplication applicationManager = mock(PrivilegeAssessorDomainForApplication.class);
-        PrivilegeAssessorDomainForApplication dataManagement = mock(PrivilegeAssessorDomainForApplication.class);
-        PrivilegeAssessorDomainForApplication dataRead = mock(PrivilegeAssessorDomainForApplication.class);
-        PrivilegeAssessorDomainForApplication dataWrite = mock(PrivilegeAssessorDomainForApplication.class);
-        PrivilegeAssessorDomainForApplication dataAccess = mock(PrivilegeAssessorDomainForApplication.class);
-
-        ConnectedUser connectedUserPersonna = mock(ConnectedUser.class);
-        OpenAdomAdmin openAdomAdminPersona = mock(OpenAdomAdmin.class);
-        ApplicationCreatorUser applicationCreatorPersona = mock(ApplicationCreatorUser.class);
-
-        ApplicationManagerUser applicationManagerPersona = mock(ApplicationManagerUser.class);
-        ApplicationAdminUser applicationAdminUserPersona = mock(ApplicationAdminUser.class);
-        ApplicationDataReader applicationDataReadPersona = mock(ApplicationDataReader.class);
-        ApplicationDepositWriterUser applicationDataWriteOnDepositPersona = mock(ApplicationDepositWriterUser.class);
-        ApplicationPublishWriterUser applicationDataWriteOnPublishPersona = mock(ApplicationPublishWriterUser.class);
-        ApplicationDeleteUser applicationDataDeletePersona = mock(ApplicationDeleteUser.class);
-        // Configurer tous les assessors pour qu'ils retournent le même objet persona
-        lenient().when(systemUserConnected.connectedUser()).thenReturn(connectedUserPersonna);
-        lenient().when(systemUserConnected.forAdministrationManagement()).thenReturn(openAdomAdminPersona);
-        lenient().when(systemUserConnected.forCreateApplication()).thenReturn(applicationCreatorPersona);
-
-        lenient().when(systemAdministration.forAdministrationManagement()).thenReturn(openAdomAdminPersona);
-        lenient().when(systemAdministration.forCreateApplication()).thenReturn(applicationCreatorPersona);
-
-        lenient().when(applicationManager.forUpdateApplication()).thenReturn(applicationManagerPersona);
-        lenient().when(applicationManager.forManageAdministrator()).thenReturn(applicationAdminUserPersona);
-
-        lenient().when(dataManagement.forManageAuthorizations()).thenReturn(applicationManagerPersona);
-        lenient().when(dataManagement.forDeleteAuthorization()).thenReturn(applicationAdminUserPersona);
-
-        lenient().when(dataRead.forDataRead(anyString())).thenReturn(applicationDataReadPersona);
-        lenient().when(dataRead.forDataDelete(anyString())).thenReturn(applicationDataDeletePersona);
-        lenient().when(dataRead.forDataWrite(anyString(), anyBoolean())).thenReturn(applicationDataWriteOnDepositPersona);
-
-        lenient().when(dataWrite.forDataWrite(anyString(), anyBoolean())).thenReturn(applicationDataWriteOnDepositPersona);
-
-        // Configuration du service d'autorisation
+        // Configurer le service d'autorisation pour utiliser cette fabrique
         lenient().when(authorizationService.getPrivilegeAssessorForSystem(any(PrivilegeSystemDomain.class)))
                 .thenAnswer(invocation -> {
                     PrivilegeSystemDomain domain = invocation.getArgument(0);
-                    if (domain == PrivilegeSystemDomain.SYSTEM_USER_CONNECTED) {
-                        return systemUserConnected;
-                    } else if (domain == PrivilegeSystemDomain.SYSTEM_ADMINISTRATION) {
-                        return systemAdministration;
-                    }
-                    return mock(PrivilegeAssessorDomainForSystem.class);
+                    return privilegeFactory.createSystemAssessor(domain);
                 });
 
         lenient().when(authorizationService.getPrivilegeAssessorForApplication(any(PrivilegeApplicationDomain.class), anyString()))
                 .thenAnswer(invocation -> {
                     PrivilegeApplicationDomain domain = invocation.getArgument(0);
-                    if (domain == PrivilegeApplicationDomain.APPLICATION_MANAGER) {
-                        return applicationManager;
-                    } else if (domain == PrivilegeApplicationDomain.DATA_MANAGEMENT) {
-                        return dataManagement;
-                    } else if (domain == PrivilegeApplicationDomain.DATA_READ) {
-                        return dataRead;
-                    } else if (domain == PrivilegeApplicationDomain.DATA_WRITE) {
-                        return dataWrite;
-                    } else if (domain == PrivilegeApplicationDomain.DATA_ACCESS) {
-                        return dataAccess;
-                    }
-                    return mock(PrivilegeAssessorDomainForApplication.class);
+                    String applicationName = invocation.getArgument(1);
+                    return privilegeFactory.createApplicationAssessor(domain, applicationName);
                 });
 
         permissionEvaluator = new ApplicationPermissionEvaluator(authorizationService);
+    }
+
+    // Classe interne pour gérer la création des assessors et personas
+    private class PrivilegeFactory {
+        // Cache des assessors pour éviter de recréer des objets
+        private final Map<PrivilegeSystemDomain, PrivilegeAssessorDomainForSystem> systemAssessors = new HashMap<>();
+        private final Map<String, Map<PrivilegeApplicationDomain, PrivilegeAssessorDomainForApplication>> applicationAssessors = new HashMap<>();
+
+        // Cache des personas pour garantir la cohérence
+        private final Map<String, SystemPersona> systemPersonas = new HashMap<>();
+        private final Map<String, ApplicationPersona> applicationPersonas = new HashMap<>();
+
+        public PrivilegeAssessorDomainForSystem createSystemAssessor(PrivilegeSystemDomain domain) {
+            return systemAssessors.computeIfAbsent(domain, d -> {
+                PrivilegeAssessorDomainForSystem assessor = mock(PrivilegeAssessorDomainForSystem.class);
+
+                // Configurer l'assessor selon le domaine
+                switch (d) {
+                    case SYSTEM_USER_CONNECTED:
+                        lenient().when(assessor.connectedUser()).thenReturn((ConnectedUser) getOrCreateSystemPersona("ConnectedUser"));
+                        lenient().when(assessor.forAdministrationManagement()).thenReturn((OpenAdomAdmin) getOrCreateSystemPersona("OpenAdomAdmin"));
+                        lenient().when(assessor.forCreateApplication()).thenReturn((ApplicationCreator) getOrCreateSystemPersona("ApplicationCreator"));
+                        break;
+                    case SYSTEM_ADMINISTRATION:
+                        lenient().when(assessor.forAdministrationManagement()).thenReturn((OpenAdomAdmin) getOrCreateSystemPersona("OpenAdomAdmin"));
+                        lenient().when(assessor.forCreateApplication()).thenReturn((ApplicationCreator) getOrCreateSystemPersona("ApplicationCreator"));
+                        break;
+                }
+
+                return assessor;
+            });
+        }
+
+        public PrivilegeAssessorDomainForApplication createApplicationAssessor(PrivilegeApplicationDomain domain, String applicationName) {
+            return applicationAssessors
+                    .computeIfAbsent(applicationName, name -> new HashMap<>())
+                    .computeIfAbsent(domain, d -> {
+                        PrivilegeAssessorDomainForApplication assessor = mock(PrivilegeAssessorDomainForApplication.class);
+
+                        // Configurer l'assessor selon le domaine
+                        switch (d) {
+                            case APPLICATION_MANAGER:
+                                lenient().when(assessor.forUpdateApplication())
+                                        .thenReturn((ApplicationManager) getOrCreateApplicationPersona("ApplicationManager"));
+                                lenient().when(assessor.forManageAdministrator())
+                                        .thenReturn((ApplicationAdminUser) getOrCreateApplicationPersona("ApplicationAdminUser"));
+                                break;
+                            case DATA_MANAGEMENT:
+                                lenient().when(assessor.forManageAuthorizations())
+                                        .thenReturn((ApplicationManager) getOrCreateApplicationPersona("ApplicationAdminUser"));
+                                lenient().when(assessor.forDeleteAuthorization())
+                                        .thenReturn((ApplicationAdminUser) getOrCreateApplicationPersona("ApplicationAdminUser"));
+                                break;
+                            case DATA_READ:
+                                lenient().when(assessor.forDataRead(anyString()))
+                                        .thenReturn((ApplicationDataReader) getOrCreateApplicationPersona("ApplicationDataReader"));
+                                lenient().when(assessor.forDataDelete(anyString()))
+                                        .thenReturn((ApplicationDataDelete) getOrCreateApplicationPersona("ApplicationDeleteUser"));
+                                lenient().when(assessor.forDataWrite(anyString(), eq(false)))
+                                        .thenReturn((ApplicationDataWriter) getOrCreateApplicationPersona("ApplicationDepositWriter"));
+                                lenient().when(assessor.forDataWrite(anyString(), eq(true)))
+                                        .thenReturn((ApplicationDataWriter) getOrCreateApplicationPersona("ApplicationPublishWriter"));
+                                break;
+                            case DATA_WRITE:
+                                lenient().when(assessor.forDataWrite(anyString(), eq(false)))
+                                        .thenReturn((ApplicationDataWriter) getOrCreateApplicationPersona("ApplicationDepositWriter"));
+                                lenient().when(assessor.forDataWrite(anyString(), eq(true)))
+                                        .thenReturn((ApplicationDataWriter) getOrCreateApplicationPersona("ApplicationPublishWriter"));
+                                break;
+                        }
+
+                        return assessor;
+                    });
+        }
+
+        private SystemPersona getOrCreateSystemPersona(String type) {
+            return systemPersonas.computeIfAbsent(type, t -> {
+                switch (t) {
+                    case "ConnectedUser":
+                        return mock(ConnectedUser.class);
+                    case "OpenAdomAdmin":
+                        return mock(OpenAdomAdmin.class);
+                    case "ApplicationCreator":
+                        return mock(ApplicationCreatorUser.class);
+                    default:
+                        return mock(SystemPersona.class);
+                }
+            });
+        }
+
+        private ApplicationPersona getOrCreateApplicationPersona(String type) {
+            return applicationPersonas.computeIfAbsent(type, t -> {
+                switch (t) {
+                    case "ApplicationManager":
+                        return mock(ApplicationManagerUser.class);
+                    case "ApplicationAdminUser":
+                        return mock(ApplicationAdminUser.class);
+                    case "ApplicationDataReader":
+                        return mock(ApplicationDataReader.class);
+                    case "ApplicationDepositWriter":
+                        return mock(ApplicationDepositWriterUser.class);
+                    case "ApplicationPublishWriter":
+                        return mock(ApplicationPublishWriterUser.class);
+                    case "ApplicationDeleteUser":
+                        return mock(ApplicationDeleteUser.class);
+                    default:
+                        return mock(ApplicationPersona.class);
+                }
+            });
+        }
     }
 
 
@@ -125,6 +179,58 @@ public class ApplicationPermissionEvaluatorTest {
             List<OreSiAuthenticationToken> authorizedTokens,
             List<OreSiAuthenticationToken> unauthorizedTokens
     ) {
+        // Nouvelle méthode pour aider à la configuration des tests
+        public static PermissionTestCase forUser(
+                String targetDomain,
+                String permission,
+                String description,
+                String userRole,  // Le rôle de l'utilisateur
+                OreSiAuthenticationToken token,
+                OreSiAuthenticationToken unauthorizedToken) {
+
+            if (targetDomain.equals(ApplicationPermissionEvaluator.SYSTEM)) {
+                return new PermissionTestCase(
+                        targetDomain,
+                        permission,
+                        description,
+                        determineSystemPersonaClass(userRole),  // Méthode pour déterminer la classe de persona
+                        null,
+                        List.of(token),
+                        List.of(unauthorizedToken)
+                );
+            } else {
+                return new PermissionTestCase(
+                        targetDomain,
+                        permission,
+                        description,
+                        null,
+                        determineApplicationPersonaClass(userRole),  // Méthode pour déterminer la classe de persona
+                        List.of(token),
+                        List.of(unauthorizedToken)
+                );
+            }
+        }
+
+        private static Class<? extends SystemPersona> determineSystemPersonaClass(String userRole) {
+            return switch (userRole) {
+                case "ConnectedUser" -> ConnectedUser.class;
+                case "OpenAdomAdmin" -> OpenAdomAdmin.class;
+                case "ApplicationCreator" -> ApplicationCreatorUser.class;
+                default -> null;
+            };
+        }
+
+        private static Class<? extends ApplicationPersona> determineApplicationPersonaClass(String userRole) {
+            return switch (userRole) {
+                case "ApplicationManager" -> ApplicationManagerUser.class;
+                case "ApplicationAdminUser" -> ApplicationAdminUser.class;
+                case "ApplicationDataReader" -> ApplicationDataReader.class;
+                case "ApplicationDepositWriter" -> ApplicationDepositWriterUser.class;
+                case "ApplicationPublishWriter" -> ApplicationPublishWriterUser.class;
+                case "ApplicationDeleteUser" -> ApplicationDeleteUser.class;
+                default -> null;
+            };
+        }
     }
 
     /**
