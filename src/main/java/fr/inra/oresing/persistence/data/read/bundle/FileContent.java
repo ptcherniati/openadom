@@ -13,7 +13,7 @@ public record FileContent(String fileName, String fileContent) {
     public static final String EXPORT_REGISTER_DATA_CSV_SQL = """
             SELECT DISTINCT ON (rv.binaryfile)
                 %3$s as "fileName",
-                convert_from(decode(encode(bf.filedata, 'escape'), 'base64'), 'UTF8') AS "fileContent"
+                convert_from(bf.filedata, 'UTF8') AS "fileContent"
             FROM %1$s.referencevalue rv
             JOIN %1$s.binaryfile bf ON bf.id = rv.binaryfile
             WHERE rv.referencetype = '%2$s'
