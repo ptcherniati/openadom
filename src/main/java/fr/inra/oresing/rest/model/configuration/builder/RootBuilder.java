@@ -11,11 +11,13 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.type.RootType;
+import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import lombok.Getter;
+import org.apache.commons.collections4.CollectionUtils;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -218,7 +220,8 @@ public class RootBuilder {
                                     InternationalizationComponent.EXPORT_HEADER
                             ), oaI18n);
                 } catch (final IllegalArgumentException illegalArgumentException) {
-                    buildError(ConfigurationException.UNSUPORTED_I18N_KEY_LANGUAGE,
+                    buildError(
+                            ConfigurationException.UNSUPORTED_I18N_KEY_LANGUAGE,
                             Map.of(),
                             NodeSchemaValidator.joinPath(
                                     OA_DATA,
@@ -251,9 +254,32 @@ public class RootBuilder {
                     componentEntry.getValue(),
                     i18n);
             i18n = component.i18n();
+            testNaturalKeyIsOnlyOne(component.result(), key);
             result.put(key, component.result());
         }
         return new Parsing<>(i18n, result);
+    }
+
+    private void testNaturalKeyIsOnlyOne(StandardDataDescription result, String dataName) {
+        final List<String> manyComponentInNaturalKey = result.naturalKey().stream()
+                .map(result.componentDescriptions()::get)
+                .filter(componentDescription -> componentDescription.checker() != null)
+                .filter(componentDescription -> componentDescription.checker().multiplicity() == Multiplicity.MANY)
+                .map(ComponentDescription::componentKey)
+                .toList();
+        if(CollectionUtils.isNotEmpty(manyComponentInNaturalKey)){
+            buildError(
+                    ConfigurationException.MANY_COMPONENT_IN_NATURAL_KEY,
+                    Map.of(
+                            "dataName", dataName,
+                            "manyComponents", manyComponentInNaturalKey
+                    ),
+                    NodeSchemaValidator.joinPath(
+                            OA_DATA,
+                            dataName
+                    )
+            );
+        }
     }
 
     ReactiveProgression.Progression getProgression() {

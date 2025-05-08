@@ -197,6 +197,7 @@ public enum ConfigurationException {
     BAD_LOCALE_SECTION_TYPE,
     BAD_LOCALE,
     BAD_GROOVY_EXPRESSION,
+    MANY_COMPONENT_IN_NATURAL_KEY,
     /*
     submieesion
      */

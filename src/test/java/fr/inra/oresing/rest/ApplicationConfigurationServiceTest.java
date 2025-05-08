@@ -15,6 +15,7 @@ import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.services.ApplicationConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,6 +36,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ActiveProfiles("testmail")
@@ -249,6 +252,29 @@ public class ApplicationConfigurationServiceTest {
                     assertEquals(ConfigurationException.BAD_TAGS_PATTERNS.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > especes", validationError.getParam("path"));
                     assertEquals(Set.of("__HIDDEN__", "__REFERENCE__", "test", "context", "no-tag", "__ORDER_(\\d*)__", "__DATA__"), validationError.getParam(("acceptedTagPatterns")));
+                });
+    }
+
+    @Test
+    public void tetsManyInNaturalKey() {
+        CONFIGURATION_INSTANCE.builder("testBadNameTag")
+                .withReplace(
+                        """
+                       esp_nom:
+                    """, """
+                       esp_nom:
+                            OA_checker:
+                              OA_name: OA_string
+                              OA_params:
+                                OA_multiplicity: "MANY\"
+                    """)
+                .test(errors -> {
+                    assertEquals(1, errors.size());
+                    final ValidationError validationError = errors.getFirst();
+                    assertEquals(ConfigurationException.MANY_COMPONENT_IN_NATURAL_KEY.getMessage(), validationError.getMessage());
+                    assertEquals("OA_data > especes", validationError.getParam("path"));
+                    assertThat((List<String>)validationError.getParam("manyComponents"), containsInAnyOrder("esp_nom"));
+                    assertEquals("especes", validationError.getParam(("dataName")));
                 });
     }
 
