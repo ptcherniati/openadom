@@ -263,7 +263,7 @@ public class RootBuilder {
     private void testNaturalKeyIsOnlyOne(StandardDataDescription result, String dataName) {
         final List<String> manyComponentInNaturalKey = result.naturalKey().stream()
                 .map(result.componentDescriptions()::get)
-                .filter(componentDescription -> componentDescription.checker() != null)
+                .filter(componentDescription -> Optional.ofNullable(componentDescription).map(ComponentDescription::checker).isPresent())
                 .filter(componentDescription -> componentDescription.checker().multiplicity() == Multiplicity.MANY)
                 .map(ComponentDescription::componentKey)
                 .toList();
