@@ -12,16 +12,6 @@ public enum OreSiAnonymousRequestClient implements OreSiRequestClient {
     ANONYMOUS;
 
     @Override
-    public UUID id() {
-        throw new DisconnectedException("la requête est faite en tant qu'utilisateur anonyme, il n'y a pas d'identifiant associé");
-    }
-
-    @Override
-    public OreSiAnonymousRole role() {
-        return OreSiRole.anonymous();
-    }
-
-    @Override
     public String toString() {
         return new ToStringBuilder(this)
                 .append("role", role())

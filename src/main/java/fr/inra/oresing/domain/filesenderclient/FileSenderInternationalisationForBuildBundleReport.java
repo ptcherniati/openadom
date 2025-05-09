@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public record FileSenderInternationalisationForBuildBundleReport(BuildBundleReport buildBundleReport)
-implements FileSenderInternationalisation{
+        implements FileSenderInternationalisation {
     private static final Map<Locale, String> SUBJECT_PATTERN = Map.of(
             Locale.FRENCH, "Fichier ZIP pour le dépôt des données de l'application \"%s\"",
             Locale.ENGLISH, "ZIP file for bulk data submission of application \"%s\""
@@ -44,34 +44,6 @@ implements FileSenderInternationalisation{
                     - Referentials with errors: %s
                     """
     );
-    /*private static final Map<Locale, String> MESSAGE_PATTERN_FOR_MAIL = Map.of(
-            Locale.FRENCH, """
-                    %s
-
-                    Vous pouvez télécharger le fichier ZIP contenant les données en cliquant sur le lien suivant :
-                    %s
-
-                    Le lien expirera dans 10 jours.
-
-                    Résumé du contenu du ZIP :
-                    - Référentiels avec données : %s
-                    - Référentiels avec données d'exemple : %s
-                    - Référentiels en erreur : %s
-                    """,
-            Locale.ENGLISH, """
-                    %s
-
-                    You can download the ZIP file containing the data by clicking on the following link:
-                    %s
-
-                    The link will expire in 10 days.
-
-                    Summary of ZIP content:
-                    - Referentials with data: %s
-                    - Referentials with example data: %s
-                    - Referentials with errors: %s
-                    """
-    );*/
 
     public String subjectPattern() {
         return Optional.ofNullable(SUBJECT_PATTERN.get(buildBundleReport.locale()))

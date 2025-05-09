@@ -81,10 +81,10 @@ public record PublishContext(
         }
 
         public PublishContext build() {
-            final HeaderInfos header = new HeaderInfos(preHeaderRow, postHeaderRow, headerRow);
+            final HeaderInfos headerInfos = new HeaderInfos(preHeaderRow, postHeaderRow, headerRow);
             return new PublishContext(
                     fileOrUUID,
-                    header,
+                    headerInfos,
                     rowInfos
             );
         }

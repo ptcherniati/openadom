@@ -74,9 +74,4 @@ public class AuthenticationFailure extends OreSiException {
         super(message);
         params = getParams(loginAdminResult);
     }
-
-    public AuthenticationFailure(final String message, final LoginAdminResult loginAdminResult, final Throwable cause) {
-        super(message, cause);
-        params = getParams(loginAdminResult);
-    }
 }
