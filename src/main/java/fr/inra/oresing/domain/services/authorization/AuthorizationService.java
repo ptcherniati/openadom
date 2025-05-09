@@ -2,19 +2,19 @@ package fr.inra.oresing.domain.services.authorization;
 
 import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForApplication;
 import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForSystem;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsResult;
 
 public interface AuthorizationService {
     AuthorizationsResult getAuthorizationsForUserAndPublic(String applicationName, String currentUser);
 
     PrivilegeAssessorDomainForSystem getPrivilegeAssessorForSystem(
-            PrivilegeSystemDomain privilegeDomain
+            PrivilegeSystemDomainEnum privilegeDomain
     );
 
     PrivilegeAssessorDomainForApplication getPrivilegeAssessorForApplication(
-            PrivilegeApplicationDomain privilegeDomain,
+            PrivilegeApplicationDomainEnum privilegeDomain,
             String applicationNameOrId
     );
 }

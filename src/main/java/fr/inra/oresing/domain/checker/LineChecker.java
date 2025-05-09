@@ -22,10 +22,10 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public sealed interface LineChecker<FT extends FieldType> permits LineChecker.ManyChecker, LineChecker.OneChecker {
+public sealed interface LineChecker<F extends FieldType> permits LineChecker.ManyChecker, LineChecker.OneChecker {
 
 
-    static Set<LineChecker> toLineChecker(
+    static Set<LineChecker<? extends FieldType>> toLineChecker(
             DataRepository referenceValueRepository,
             PublishContext.PublishContextBuilder publishContextBuilder,
             TransformationConfiguration transformation,
@@ -65,8 +65,8 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
         };
     }
 
-    default FieldType<FT> underlyingType() {
-        return switch (this) {
+    default F underlyingType() {
+        return (F) switch (this) {
             case final ManyChecker manyChecker -> manyChecker.fieldTypeForOne;
             case final OneChecker oneChecker -> oneChecker.fieldTypeForOne;
         };
@@ -80,7 +80,7 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
 
     CheckerDescription checkerDescription();
 
-    FT fieldTypeForOne();
+    F fieldTypeForOne();
 
     default CheckerValidationCheckResult checkRequiredThenCheck(final StringType value) {
         return checkRequiredThenCheck(value.toString());
@@ -258,16 +258,16 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
         }
     }
 
-    record ManyChecker<FT extends FieldType, U extends ListType<FT>>(
+    record ManyChecker<F extends FieldType, U extends ListType<F>>(
             U value,
-            FT fieldTypeForOne,
+            F fieldTypeForOne,
             DataColumn target,
             LineTransformer transformer,
             CheckerDescription checkerDescription
-    ) implements LineChecker<FT> {
+    ) implements LineChecker<F> {
 
         public ManyChecker(final U value, final DataColumn target, final LineTransformer transformer, final CheckerDescription checkerDescription) {
-            this(value, Optional.ofNullable(value).map(ListType::getFieldType).orElse((FT) new StringType("")), target, transformer, checkerDescription);
+            this(value, Optional.ofNullable(value).map(ListType::getFieldType).orElse((F) new StringType("")), target, transformer, checkerDescription);
         }
 
         public CheckerValidationCheckResult check(final String value) {
@@ -311,12 +311,12 @@ public sealed interface LineChecker<FT extends FieldType> permits LineChecker.Ma
 
     }
 
-    record OneChecker<FT extends FieldType>(
-            FT fieldTypeForOne,
+    record OneChecker<F extends FieldType>(
+            F fieldTypeForOne,
             DataColumn target,
             LineTransformer transformer,
             CheckerDescription checkerDescription
-    ) implements LineChecker<FT> {
+    ) implements LineChecker<F> {
 
         public CheckerValidationCheckResult checkReference(final DataDatum referenceDatum, Map<String, Object> context) {
 

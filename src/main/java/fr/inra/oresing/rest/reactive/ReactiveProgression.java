@@ -93,13 +93,13 @@ public class ReactiveProgression {
 
         String label();
 
-        default <PM extends ProgressionMessagesLabel> PM withSubLabel(final String subLabel) {
+        default <P extends ProgressionMessagesLabel> P withSubLabel(final String subLabel) {
             return newProgressionMessageLabel(COMPOSITION_LABEL.formatted(label(), subLabel));
         }
 
-        <PM extends ProgressionMessagesLabel> PM newProgressionMessageLabel(String formatted);
+        <P extends ProgressionMessagesLabel> P newProgressionMessageLabel(String formatted);
 
-        default <PM extends ProgressionMessagesLabel> PM up() {
+        default <P extends ProgressionMessagesLabel> P up() {
             return newProgressionMessageLabel(label().replaceAll("\\.[^\\.]*", ""));
         }
     }
@@ -201,8 +201,8 @@ public class ReactiveProgression {
         }
 
         @Override
-        public <PM extends ProgressionMessagesLabel> PM newProgressionMessageLabel(final String label) {
-            return (PM) new CreateApplicationProgressionMessagesLabel(label);
+        public <P extends ProgressionMessagesLabel> P newProgressionMessageLabel(final String label) {
+            return (P) new CreateApplicationProgressionMessagesLabel(label);
         }
     }
 
@@ -213,8 +213,8 @@ public class ReactiveProgression {
         }
 
         @Override
-        public <PM extends ProgressionMessagesLabel> PM newProgressionMessageLabel(final String label) {
-            return (PM) new ChangeApplicationProgressionMessagesLabel(label);
+        public <P extends ProgressionMessagesLabel> P newProgressionMessageLabel(final String label) {
+            return (P) new ChangeApplicationProgressionMessagesLabel(label);
         }
     }
 
@@ -225,8 +225,8 @@ public class ReactiveProgression {
         }
 
         @Override
-        public <PM extends ProgressionMessagesLabel> PM newProgressionMessageLabel(final String label) {
-            return (PM) new CreateApplicationProgressionMessagesLabel(label);
+        public <P extends ProgressionMessagesLabel> P newProgressionMessageLabel(final String label) {
+            return (P) new CreateApplicationProgressionMessagesLabel(label);
         }
     }
 }

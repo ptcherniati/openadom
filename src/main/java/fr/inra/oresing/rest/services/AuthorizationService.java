@@ -12,8 +12,8 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.*;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
 import fr.inra.oresing.domain.authorization.request.*;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
@@ -44,7 +44,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain.DATA_ACCESS;
+import static fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum.DATA_ACCESS;
 
 @Slf4j
 @Component
@@ -974,21 +974,21 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
 
     @Override
     public PrivilegeAssessorDomainForSystem getPrivilegeAssessorForSystem(
-            PrivilegeSystemDomain privilegeDomain
+            PrivilegeSystemDomainEnum privilegeSystemDomainEnum
     ) {
-        return switch (privilegeDomain) {
+        return switch (privilegeSystemDomainEnum) {
             case SYSTEM_ADMINISTRATION -> {
                 AuthorizationsForSystemUser authorizations = getAuthorizationsForSystemUser();
                 yield PrivilegeAssessorBuilder.forSystem(
                         authorizations,
-                        privilegeDomain
+                        privilegeSystemDomainEnum
                 );
             }
             case SYSTEM_USER_CONNECTED -> {
                 AuthorizationsForSystemUser authorizations = getAuthorizationsForSystemUser();
                 yield PrivilegeAssessorBuilder.forUser(
                         authorizations,
-                        privilegeDomain
+                        privilegeSystemDomainEnum
                 );
             }
             case SYSTEM_USER_NOT_CONNECTED -> throw new RuntimeException();
@@ -996,7 +996,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
         };
     }
 
-    public PrivilegeAssessorDomainForNotConnectedUser getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain privilegeDomain) {
+    public PrivilegeAssessorDomainForNotConnectedUser getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum privilegeDomain) {
         return PrivilegeAssessorBuilder.forNotConnectedUser(
                 serviceContainer.authenticationService(),
                 userRepository,
@@ -1006,7 +1006,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
 
     @Override
     public PrivilegeAssessorDomainForApplication getPrivilegeAssessorForApplication(
-            PrivilegeApplicationDomain privilegeDomain,
+            PrivilegeApplicationDomainEnum privilegeApplicationDomainEnum,
             String applicationNameOrUuid
     ) {
         Application application = repository.application().findApplication(applicationNameOrUuid);
@@ -1020,7 +1020,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
         );
         return PrivilegeAssessorBuilder.forApplication(
                 authorizations,
-                privilegeDomain,
+                privilegeApplicationDomainEnum,
                 application,
                 grantable
         );

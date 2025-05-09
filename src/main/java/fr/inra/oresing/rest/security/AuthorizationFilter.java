@@ -8,7 +8,7 @@ import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.AuthenticationFailure;
@@ -250,7 +250,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         if (Strings.isNotEmpty(loginValue) && Strings.isNotEmpty(passwordValue)) {
             try {
                 LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
-                        .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
+                        .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
                         .forLoginPassword(loginValue, passwordValue);
                 JWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
                 return new OreSiAuthenticationToken(
@@ -269,7 +269,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     private OreSiAuthenticationToken buildCreateUserAuthentication() {
         return new OreSiAuthenticationToken(
                 serviceContainer.authorizationService()
-                        .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
+                        .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
                         .forCreateUser(),
                 "",
                 List.of(ROLE_UNAUTHENTIFIED_CREATE_USER)
@@ -279,7 +279,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     public OreSiAuthenticationToken buildUpdateUserAuthentication(HttpServletRequest request) throws IOException, AuthenticationFailure {
         CreateUserRequest createUserRequest = mapper.readStream(request.getInputStream(), CreateUserRequest.class);
         NotConnectedUser updateUser = serviceContainer.authorizationService()
-                .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomain.SYSTEM_USER_NOT_CONNECTED)
+                .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
                 .forUpdateUser(createUserRequest);
         return new OreSiAuthenticationToken(
                 updateUser,

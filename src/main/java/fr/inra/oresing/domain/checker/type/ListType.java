@@ -17,13 +17,13 @@ import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public non-sealed class ListType<FT extends FieldType> implements FieldType<List> {
+public non-sealed class ListType<F extends FieldType> implements FieldType<List> {
     public static final ListType<? extends FieldType> EMPTY_LIST =  new ListType(StringType.getStringTypeFromStringValue(""));
     @Getter
-    private final FT fieldType;
-    List<FT> value = new LinkedList<>();
+    private final F fieldType;
+    List<F> value = new LinkedList<>();
     final Supplier<ListType> clone;
-    public <U extends ListType<FT>> ListType(final FT fieldType) {
+    public <U extends ListType<F>> ListType(final F fieldType) {
         this.fieldType = fieldType;
         clone = () -> new ListType(fieldType.copy());
     }
@@ -35,7 +35,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     }
 
     @Override
-    public List<FT> getValue() {
+    public List<F> getValue() {
         return value;
     }
 
@@ -68,7 +68,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
         final FieldType underlyingType = lineChecker.fieldTypeForOne();
         final List<ValidationCheckResult> collect = Arrays.stream(value.split(","))
                 .map(v -> underlyingType.check(v, lineChecker))
-                .peek(v -> this.value.add((FT) underlyingType.copy()))
+                .peek(v -> this.value.add((F) underlyingType.copy()))
                 .collect(Collectors.toList());
         return new DefaultManyValidationCheckResult(collect, lineChecker.target());
     }
@@ -102,7 +102,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     @Override
     public void serialize(final ObjectNode node, final ObjectMapper mapper, final String key) {
         final ArrayNode arrayNode = mapper.createArrayNode();
-        for (final FT ft : value) {
+        for (final F ft : value) {
             ft.serializeAddArray(arrayNode);
         }
         node.set(key, arrayNode);
@@ -112,7 +112,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     public void serialize(final JsonGenerator gen) throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
         final ArrayNode arrayNode = mapper.createArrayNode();
-        for (final FT ft : value) {
+        for (final F ft : value) {
             ft.serializeAddArray(arrayNode);
         }
         gen.writeObject(arrayNode);
@@ -122,7 +122,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     public void serialize(final JsonGenerator gen, final String key) throws IOException {
         final ObjectMapper mapper = new ObjectMapper();
         final ArrayNode arrayNode = mapper.createArrayNode();
-        for (final FT ft : value) {
+        for (final F ft : value) {
             ft.serializeAddArray(arrayNode);
         }
         gen.writeFieldName(key);
@@ -133,7 +133,7 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
     public void serializeAddArray(final ArrayNode arrayNode) {
         final ObjectMapper mapper = new ObjectMapper();
         final ArrayNode an = mapper.createArrayNode();
-        for (final FT ft : value) {
+        for (final F ft : value) {
             ft.serializeAddArray(an);
         }
         arrayNode.add(an);
@@ -151,11 +151,11 @@ public non-sealed class ListType<FT extends FieldType> implements FieldType<List
         return new ListType<>(new StringType(""));
     }
 
-    public void add(final FT value) {
+    public void add(final F value) {
         getValue().add(value);
     }
 
     public void merge(final ListType<StringType> listType) {
-        getValue().addAll((Collection<? extends FT>) listType.getValue().stream().toList());
+        getValue().addAll((Collection<? extends F>) listType.getValue().stream().toList());
     }
 }

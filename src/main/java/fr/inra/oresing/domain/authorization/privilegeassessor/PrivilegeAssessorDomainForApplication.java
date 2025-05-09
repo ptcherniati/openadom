@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 
 import static fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserReaderRightsException.NO_RIGHT_FOR_APPLICATION_USER_READER_RIGHT_EXCEPTION;
 
-public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
+public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicationDomainEnum>(
         AuthorizationsForApplicationUser authorizations,
-        PrivilegeApplicationDomain domain,
+        P domain,
         Application application,
         GetGrantableResult grantable) implements PrivilegeAssessorDomain {
     /*

@@ -4,7 +4,10 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.checker.type.*;
+import fr.inra.oresing.domain.checker.type.AbstractType;
+import fr.inra.oresing.domain.checker.type.FieldType;
+import fr.inra.oresing.domain.checker.type.MapType;
+import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 
@@ -60,14 +63,14 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
 
     public boolean contains(final DataColumn column) {
         return values.containsKey(column) ||
-               values().entrySet()
-                       .stream()
-                       .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
-                       .flatMap(entry -> ((DataColumnPatternValue) entry.getValue()).values().keySet().stream()
-                               .map(registerColumn -> Column.__VALUE__.equals(registerColumn.column()) ? entry.getKey().column() : Column.COLUMN_IN_COLUMN_PATTERN.formatted(entry.getKey().column(), registerColumn.column()))
-                       )
-                       .map(DataColumn::new)
-                       .anyMatch(registerColumn -> registerColumn.equals(column));
+                values().entrySet()
+                        .stream()
+                        .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
+                        .flatMap(entry -> ((DataColumnPatternValue) entry.getValue()).values().keySet().stream()
+                                .map(registerColumn -> Column.__VALUE__.equals(registerColumn.column()) ? entry.getKey().column() : Column.COLUMN_IN_COLUMN_PATTERN.formatted(entry.getKey().column(), registerColumn.column()))
+                        )
+                        .map(DataColumn::new)
+                        .anyMatch(registerColumn -> registerColumn.equals(column));
     }
 
     public DataColumnValue get(final DataColumn column) {
@@ -143,7 +146,10 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
             replaced = values().entrySet().stream()
                     .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
                     .filter(entry -> ((DataColumnPatternValue) entry.getValue()).values().containsKey(column))
-                    .peek(entry -> ((DataColumnPatternValue) entry.getValue()).values().put(column, value))
+                    .map(entry -> {
+                        ((DataColumnPatternValue) entry.getValue()).values().put(column, value);
+                        return entry;
+                    })
                     .map(Map.Entry::getValue)
                     .findFirst()
                     .orElse(null);

@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
@@ -209,7 +210,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
     Application application = Mockito.mock(Application.class);
     GetGrantableResult grantable;
     private AuthorizationsForApplicationUser authorizations;
-    private PrivilegeAssessorDomain domain;
+    private PrivilegeApplicationDomainEnum privilegeApplicationDomainEnum;
 
     public PrivilegeAssessorDomainForApplicationFactory() {
     }
@@ -219,7 +220,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
     }
 
     public PrivilegeAssessorDomainForApplication build() {
-        final PrivilegeAssessorDomainForApplication privilegeAssessorDomainForApplication = new PrivilegeAssessorDomainForApplication(authorizations, domain, application, grantable);
+        final PrivilegeAssessorDomainForApplication privilegeAssessorDomainForApplication = new PrivilegeAssessorDomainForApplication(authorizations, privilegeApplicationDomainEnum, application, grantable);
         return privilegeAssessorDomainForApplication;
     }
 
@@ -228,8 +229,8 @@ public class PrivilegeAssessorDomainForApplicationFactory {
         return this;
     }
 
-    public PrivilegeAssessorDomainForApplicationFactory withDomain(PrivilegeAssessorDomain domain) {
-        this.domain = domain;
+    public PrivilegeAssessorDomainForApplicationFactory withDomain(PrivilegeApplicationDomainEnum domain) {
+        this.privilegeApplicationDomainEnum = domain;
         return this;
     }
 

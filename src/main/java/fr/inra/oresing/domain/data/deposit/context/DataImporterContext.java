@@ -10,6 +10,7 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
@@ -41,14 +42,14 @@ public class DataImporterContext {
     /**
      *
      */
-    private final ImmutableSet<LineChecker> lineCheckers;
+    private final ImmutableSet<LineChecker<? extends FieldType>> lineCheckers;
     /**
      * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
      */
     private final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences;
     private final ImmutableSet<Column> columns;
     @Getter
-    private ImmutableSet<LineChecker> transformedLineCheckers;
+    private ImmutableSet<LineChecker<? extends FieldType>> transformedLineCheckers;
 
     @Getter
     private ImmutableSet<Column> columnsWithPatternColumns;
@@ -94,7 +95,7 @@ public class DataImporterContext {
 
 
     public DataImporterContext(final ContextConstants constants,
-                               final ImmutableSet<LineChecker> lineCheckers,
+                               final ImmutableSet<LineChecker<? extends FieldType>> lineCheckers,
                                final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences,
                                final ImmutableSet<Column> columns,
                                final PatternColumnFactory patternColumnFactory,
@@ -323,7 +324,7 @@ public class DataImporterContext {
                 .toList();
     }
 
-    public void setTransformedLineCheckers(ImmutableSet<LineChecker> transformedLineCheckers) {
+    public void setTransformedLineCheckers(ImmutableSet<LineChecker<? extends FieldType>> transformedLineCheckers) {
         ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = transformedLineCheckers.stream()
                 .map(LineChecker::fieldTypeForOne)
                 .filter(ReferenceType.class::isInstance)

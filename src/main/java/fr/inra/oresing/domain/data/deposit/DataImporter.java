@@ -90,7 +90,7 @@ public class DataImporter {
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
             final RowWithReferenceDatum rowWithReferenceDatum,
-            final ImmutableSet<LineChecker> transformedLineCheckers,
+            final ImmutableSet<LineChecker<? extends FieldType>> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder) {
         final DataDatum referenceDatumBeforeChecking = rowWithReferenceDatum.referenceDatum();
         final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<>();
@@ -106,66 +106,11 @@ public class DataImporter {
             Map<String, Object> context = new HashMap<>();
 
             final CheckerValidationCheckResult validationCheckResults = testValues(rowWithReferenceDatum, publishContextBuilder, lineChecker, context, referenceDatumBeforeChecking);
-            Optional.ofNullable(validationCheckResults)
-                    .filter(ValidationCheckResult::isSuccess)
-                    .ifPresent(validationCheckResult -> {
-                                final DataColumn dataColumn = (DataColumn) validationCheckResult.target();
-                                final DataColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(dataColumn);
-                                DataColumnValue valueToStoreInDatabase =
-                                        validationCheckResults.transform(
-                                                lineChecker,
-                                                referenceColumnRawValue,
-                                                dataColumn,
-                                                refsLinkedTo);
-                                List<DataColumn> patternOfColumn = Arrays.stream(dataColumn.column().split(Column.COLUMN_IN_COLUMN_SEPARATOR))
-                                        .map(DataColumn::new)
-                                        .toList();
-                                DataColumn firstPatternOfColumn = patternOfColumn.get(0);
-                                DataColumnValue columnValue = referenceDatum.get(firstPatternOfColumn);
-                                if (columnValue instanceof DataColumnPatternValue(
-                                        Map<DataColumn, DataColumnValue> values
-                                )) {
-                                    if (patternOfColumn.size() > 1) {
-                                        DataColumn secondPatternOfColumn = patternOfColumn.get(1);
-                                        values.put(secondPatternOfColumn, valueToStoreInDatabase);
-                                        valueToStoreInDatabase = columnValue;
-                                    } else {
-                                        firstPatternOfColumn = new DataColumn(Column.__VALUE__);
-                                        valueToStoreInDatabase = new DataColumnSingleValue(((PatternValidationCheckResult) validationCheckResults).value().getColumnValue());
-                                    }
-                                }
-                                referenceDatum.put(firstPatternOfColumn, valueToStoreInDatabase);
-                            }
-                    );
+            registerCheckedValues(lineChecker, validationCheckResults, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum);
 
             if (validationCheckResults != null && !validationCheckResults.isSuccess()) {
-                boolean isLineCheckerRecusrsiveReference = Optional.ofNullable(lineChecker.checkerDescription())
-                        .filter(ReferenceChecker.class::isInstance)
-                        .map(ReferenceChecker.class::cast)
-                        .stream().anyMatch(ReferenceChecker::isRecursive);
-                boolean isErrorInvalidReferenceWithComponent = validationCheckResults.getValidations().stream()
-                        .map(ValidationCheckResult::message)
-                        .anyMatch("invalidReferenceWithComponent"::equals);
-                if (isLineCheckerRecusrsiveReference && isErrorInvalidReferenceWithComponent) {
-                    Optional.ofNullable(lineChecker.checkerDescription())
-                            .filter(ReferenceChecker.class::isInstance)
-                            .map(ReferenceChecker.class::cast)
-                            .map(ReferenceChecker::componentKey)
-                            .map(DataColumn::new)
-                            .map(referenceDatumBeforeChecking::get)
-                            .map(DataColumnValue::getValuesToCheck)
-                            .map(FieldType::getValue)
-                            .map(Object::toString)
-                            .map(Ltree::fromUnescapedString)
-                            .ifPresent(hierarchicalParentKey -> recursionStrategy.dataImporterContext()
-                                    .registerMissingLine(hierarchicalParentKey, rowWithReferenceDatum)
-                            );
-                    return List.of();
-                }
-                List<ValidationCheckResult> vcrs = validationCheckResults.getValidations().stream().filter(ValidationCheckResult::isError).toList();
-                vcrs.stream()
-                        .map(vcr -> new CsvRowValidationCheckResult(vcr, rowWithReferenceDatum.lineNumber()))
-                        .forEach(allCheckerErrorsBuilder::add);
+                final List<ReferenceDatumAfterChecking> recursionStrategy1 = registerErrors(recursionStrategy, rowWithReferenceDatum, lineChecker, validationCheckResults, referenceDatumBeforeChecking, allCheckerErrorsBuilder);
+                if (recursionStrategy1 != null) return recursionStrategy1;
             }
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
@@ -177,28 +122,106 @@ public class DataImporter {
                 ImmutableMap.copyOf(refsLinkedTo),
                 allCheckerErrorsBuilder.build()
         );
+        return buildReferenceDataAfterChecking(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
+    }
+
+    private static List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker<? extends FieldType>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = List.of();
-        if (recursionStrategy instanceof WithRecursion) {
-            addBuildedLineKeysToReferenceValues(buildKey, recursionStrategy, referenceDatumAfterChecking);
-            referenceDatumAfterCheckings = testLinesRegardingRecursivity(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
+        if (recursionStrategy instanceof WithRecursion withRecursion) {
+            addBuildedLineKeysToReferenceValues(buildKey, withRecursion, referenceDatumAfterChecking);
+            referenceDatumAfterCheckings = testLinesRegardingRecursivity(buildKey, withRecursion, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
         }
         referenceDatumAfterCheckings = ImmutableList.<ReferenceDatumAfterChecking>builder()
                 .add(referenceDatumAfterChecking)
                 .addAll(referenceDatumAfterCheckings)
                 .build();
-        if (recursionStrategy instanceof WithRecursion) {
-            recursionStrategy.dataImporterContext().getMissingLines()
+        if (recursionStrategy instanceof WithRecursion withRecursion) {
+            withRecursion.dataImporterContext().getMissingLines()
                     .remove(buildKey.apply(referenceDatumAfterChecking).naturalKey());
         }
         return referenceDatumAfterCheckings;
     }
 
-    private static List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        if (recursionStrategy instanceof WithRecursion) {
-            recursionStrategy.testHasParent(buildKey, recursionStrategy, referenceDatumAfterChecking);
+    private static void registerCheckedValues(LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo, DataDatum referenceDatum) {
+        Optional.ofNullable(validationCheckResults)
+                .filter(ValidationCheckResult::isSuccess)
+                .ifPresent(validationCheckResult -> {
+                            final DataColumn dataColumn = (DataColumn) validationCheckResult.target();
+                            final DataColumnValue referenceColumnRawValue = referenceDatumBeforeChecking.get(dataColumn);
+                            DataColumnValue valueToStoreInDatabase =
+                                    validationCheckResults.transform(
+                                            lineChecker,
+                                            referenceColumnRawValue,
+                                            dataColumn,
+                                            refsLinkedTo);
+                            List<DataColumn> patternOfColumn = Arrays.stream(dataColumn.column().split(Column.COLUMN_IN_COLUMN_SEPARATOR))
+                                    .map(DataColumn::new)
+                                    .toList();
+                            DataColumn firstPatternOfColumn = patternOfColumn.get(0);
+                            DataColumnValue columnValue = referenceDatum.get(firstPatternOfColumn);
+                            if (columnValue instanceof DataColumnPatternValue(
+                                    Map<DataColumn, DataColumnValue> values
+                            )) {
+                                if (patternOfColumn.size() > 1) {
+                                    DataColumn secondPatternOfColumn = patternOfColumn.get(1);
+                                    values.put(secondPatternOfColumn, valueToStoreInDatabase);
+                                    valueToStoreInDatabase = columnValue;
+                                } else {
+                                    firstPatternOfColumn = new DataColumn(Column.__VALUE__);
+                                    valueToStoreInDatabase = new DataColumnSingleValue(((PatternValidationCheckResult) validationCheckResults).value().getColumnValue());
+                                }
+                            }
+                            referenceDatum.put(firstPatternOfColumn, valueToStoreInDatabase);
+                        }
+                );
+    }
+
+    private static List<ReferenceDatumAfterChecking> registerErrors(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
+        boolean isLineCheckerRecusrsiveReference = Optional.ofNullable(lineChecker.checkerDescription())
+                .filter(ReferenceChecker.class::isInstance)
+                .map(ReferenceChecker.class::cast)
+                .stream().anyMatch(ReferenceChecker::isRecursive);
+        boolean isErrorInvalidReferenceWithComponent = validationCheckResults.getValidations().stream()
+                .map(ValidationCheckResult::message)
+                .anyMatch("invalidReferenceWithComponent"::equals);
+        if (isLineCheckerRecusrsiveReference && isErrorInvalidReferenceWithComponent) {
+            return registerMissingLine(recursionStrategy, rowWithReferenceDatum, lineChecker, referenceDatumBeforeChecking);
+        }
+        List<ValidationCheckResult> vcrs = validationCheckResults.getValidations().stream().filter(ValidationCheckResult::isError).toList();
+        vcrs.stream()
+                .map(vcr -> new CsvRowValidationCheckResult(vcr, rowWithReferenceDatum.lineNumber()))
+                .forEach(allCheckerErrorsBuilder::add);
+        return null;
+    }
+
+    private static List<ReferenceDatumAfterChecking> registerMissingLine(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking) {
+        Optional.ofNullable(lineChecker.checkerDescription())
+                .filter(ReferenceChecker.class::isInstance)
+                .map(ReferenceChecker.class::cast)
+                .map(ReferenceChecker::componentKey)
+                .map(DataColumn::new)
+                .map(referenceDatumBeforeChecking::get)
+                .map(DataColumnValue::getValuesToCheck)
+                .map(FieldType::getValue)
+                .map(Object::toString)
+                .map(Ltree::fromUnescapedString)
+                .ifPresent(hierarchicalParentKey -> recursionStrategy.dataImporterContext()
+                        .registerMissingLine(hierarchicalParentKey, rowWithReferenceDatum)
+                );
+        return List.of();
+    }
+
+    private static List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(
+            Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
+            RecursionStrategy recursionStrategy,
+            ImmutableSet<LineChecker<? extends FieldType>> transformedLineCheckers,
+            PublishContext.PublishContextBuilder publishContextBuilder,
+            ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+        if (recursionStrategy instanceof WithRecursion withRecursion) {
+            withRecursion.testHasParent(buildKey, withRecursion, referenceDatumAfterChecking);
             List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings;
             KeysAndReferenceDatumAfterChecking lineKey = buildKey.apply(referenceDatumAfterChecking);
-            Map<Ltree, List<RowWithReferenceDatum>> missingLines = recursionStrategy.dataImporterContext().getMissingLines();
+            Map<Ltree, List<RowWithReferenceDatum>> missingLines = withRecursion.dataImporterContext().getMissingLines();
             referenceDatumAfterCheckings = Optional.ofNullable(missingLines.get(lineKey.naturalKey()))
                     .map(LinkedList::new)
                     .map(missingLines1 -> {
@@ -206,7 +229,7 @@ public class DataImporter {
                         for (RowWithReferenceDatum missingLine : missingLines1) {
                             List<ReferenceDatumAfterChecking> check = check(
                                     buildKey,
-                                    recursionStrategy,
+                                    withRecursion,
                                     missingLine,
                                     transformedLineCheckers,
                                     publishContextBuilder
@@ -217,7 +240,7 @@ public class DataImporter {
                     })
                     .orElseGet(ImmutableList::of);
             referenceDatumAfterCheckings
-                    .forEach(recursionStrategy.dataImporterContext().getMissingLines()::remove);
+                    .forEach(withRecursion.dataImporterContext().getMissingLines()::remove);
             return referenceDatumAfterCheckings;
         }
         return List.of();
@@ -246,7 +269,7 @@ public class DataImporter {
                 ));
     }
 
-    private static CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
+    private static CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
         switch (lineChecker.transformer()) {
             case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {
                 for (LineChecker.LineTransformer transformer : transformers.transformers()) {
@@ -285,7 +308,7 @@ public class DataImporter {
         return lineChecker.checkReference(referenceDatumBeforeChecking, context);
     }
 
-    private static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker lineChecker) {
+    private static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker<? extends FieldType> lineChecker) {
         return rowWithReferenceDatum.referenceDatum().values()
                 .entrySet()
                 .stream()
@@ -317,10 +340,11 @@ public class DataImporter {
                 .build();
 
         SetMultimap<Ltree, Long> encounteredHierarchicalKeysForConflictDetection = HashMultimap.create();
-        Consumer<KeysAndReferenceDatumAfterChecking> storeHierarchicalKeyForConflictDetection = keysAndReferenceDatumAfterChecking -> {
+        Function<KeysAndReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> storeHierarchicalKeyForConflictDetection = keysAndReferenceDatumAfterChecking -> {
             final long lineNumber = keysAndReferenceDatumAfterChecking.getLineNumber();
             final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
             encounteredHierarchicalKeysForConflictDetection.put(hierarchicalKey, lineNumber);
+            return keysAndReferenceDatumAfterChecking;
         };
         ReportErrors allErrors = new ReportErrors(dataImporterContext.getJsonRowMapper());
 
@@ -354,19 +378,19 @@ public class DataImporter {
                         )
                 )
                 .flatMap(List::stream)
-                .peek(referenceDatumAfterChecking -> allErrors.addAll(referenceDatumAfterChecking.errors()))
+                .map(referenceDatumAfterChecking -> {
+                    allErrors.addAll(referenceDatumAfterChecking.errors());
+                    return referenceDatumAfterChecking;
+                })
                 .filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.errors().isEmpty())
                 .map(this::computeKeys)
-                .peek(storeHierarchicalKeyForConflictDetection)
+                .map(storeHierarchicalKeyForConflictDetection)
                 .filter(keysAndReferenceDatumAfterChecking -> {
                     final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
                     return encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                 })
                 .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
-        /*if (dataImporterContext.isRecursive()) {
-            referenceValuesStream = referenceValuesStream.sorted(Comparator.comparing(a -> a.getHierarchicalKey().getSql()));
-        }*/
-        //referenceValuesStream.sequential();
+
         storeAll(referenceValuesStream);
         final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
@@ -399,13 +423,13 @@ public class DataImporter {
     }
 
 
-    private ImmutableSet<LineChecker> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
-        final ImmutableSet.Builder<LineChecker> linecheckersBuilder = ImmutableSet.builder();
-        for (final LineChecker lineChecker : dataImporterContext.getLineCheckers()) {
+    private ImmutableSet<LineChecker<? extends FieldType>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
+        final ImmutableSet.Builder<LineChecker<? extends FieldType>> linecheckersBuilder = ImmutableSet.builder();
+        for (final LineChecker<? extends FieldType> lineChecker : dataImporterContext.getLineCheckers()) {
             if (!dataImporterContext.existsColumn(lineChecker.target(), constantColumnsValues)) {
                 continue;
             }
-            if (recursionStrategy instanceof WithRecursion) {
+            if (recursionStrategy instanceof WithRecursion withRecursion) {
                 if (lineChecker.underlyingType() instanceof final ReferenceType referenceType) {
                     final Map<DataValue.LineIdentityColumnName, UUID> map2 = dataImporterContext.getAfterPreloadReferenceUuids();
                     final Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> map1 = referenceType.getReferenceValues();
@@ -464,33 +488,41 @@ public class DataImporter {
                     final Collection<Long> lineNumbers = entry.getValue();
                     return lineNumbers.size() > 1;
                 })
-                .flatMap(entry -> {
-                    final Ltree conflictingHierarchicalKey = entry.getKey();
-                    final ImmutableSortedSet<Long> lineNumbers = ImmutableSortedSet.copyOf(entry.getValue());
-                    final SortedSet<Long> conflictingLineNumbers = new TreeSet<>(lineNumbers);
-                    final Long firstLineNumberToIgnore = conflictingLineNumbers.first();
-                    conflictingLineNumbers.remove(firstLineNumberToIgnore);
-                    return conflictingLineNumbers.stream()
-                            .map(conflictingLineNumber -> {
-                                final Set<Long> otherLines = new TreeSet<>(lineNumbers);
-                                otherLines.remove(conflictingLineNumber);
-                                final DuplicationLineValidationCheckResult validationCheckResult =
-                                        new DuplicationLineValidationCheckResult(
-                                                DuplicationLineValidationCheckResult.FileType.REFERENCES,
-                                                dataImporterContext.getRefType(),
-                                                ValidationLevel.ERROR,
-                                                conflictingHierarchicalKey,
-                                                conflictingLineNumber,
-                                                lineNumbers,
-                                                null
-                                        );
-                                return validationCheckResult.getValidations().stream()
-                                        .map(validationCheckResult1 -> new CsvRowValidationCheckResult(validationCheckResult, conflictingLineNumber))
-                                        .collect(Collectors.toList());
-                            })
-                            .flatMap(Collection::stream);
-                })
+                .flatMap(buildCsvRowValidationCheckResult())
                 .collect(Collectors.toSet());
+    }
+
+    private Function<Map.Entry<Ltree, Collection<Long>>, Stream<? extends CsvRowValidationCheckResult>> buildCsvRowValidationCheckResult() {
+        return entry -> {
+            final Ltree conflictingHierarchicalKey = entry.getKey();
+            final ImmutableSortedSet<Long> lineNumbers = ImmutableSortedSet.copyOf(entry.getValue());
+            final SortedSet<Long> conflictingLineNumbers = new TreeSet<>(lineNumbers);
+            final Long firstLineNumberToIgnore = conflictingLineNumbers.first();
+            conflictingLineNumbers.remove(firstLineNumberToIgnore);
+            return conflictingLineNumbers.stream()
+                    .map(buildValidationsCheckResults(lineNumbers, conflictingHierarchicalKey))
+                    .flatMap(Collection::stream);
+        };
+    }
+
+    private Function<Long, List<CsvRowValidationCheckResult>> buildValidationsCheckResults(ImmutableSortedSet<Long> lineNumbers, Ltree conflictingHierarchicalKey) {
+        return conflictingLineNumber -> {
+            final Set<Long> otherLines = new TreeSet<>(lineNumbers);
+            otherLines.remove(conflictingLineNumber);
+            final DuplicationLineValidationCheckResult validationCheckResult =
+                    new DuplicationLineValidationCheckResult(
+                            DuplicationLineValidationCheckResult.FileType.REFERENCES,
+                            dataImporterContext.getRefType(),
+                            ValidationLevel.ERROR,
+                            conflictingHierarchicalKey,
+                            conflictingLineNumber,
+                            lineNumbers,
+                            null
+                    );
+            return validationCheckResult.getValidations().stream()
+                    .map(validationCheckResult1 -> new CsvRowValidationCheckResult(validationCheckResult, conflictingLineNumber))
+                    .collect(Collectors.toList());
+        };
     }
 
     /**
@@ -522,6 +554,10 @@ public class DataImporter {
         if (patternValueForHeaders.isEmpty()) {
             return Stream.of(new RowWithReferenceDatum(lineNumber, "", referenceDatum, ImmutableMap.copyOf(refsLinkedTo)));
         }
+        return buildRowsWithPattern(patternValueForHeaders, referenceDatum, lineNumber, refsLinkedTo);
+    }
+
+    private Stream<RowWithReferenceDatum> buildRowsWithPattern(List<PatternValueForHeader> patternValueForHeaders, DataDatum referenceDatum, int lineNumber, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
         List<RowWithReferenceDatum> rowWithReferenceData = new LinkedList<>();
         for (PatternValueForHeader patternValueForHeader : patternValueForHeaders) {
             DataDatum patternComponentDatum = dataImporterContext.getPatternColumnFactory().toQualifierDatum(patternValueForHeader.header(), patternValueForHeader);
@@ -602,19 +638,7 @@ public class DataImporter {
                 .map(FileOrUUID::binaryfiledataset)
                 .orElse(null);
 
-        Map<String, List<Ltree>> requiredAuthorizations = new LinkedHashMap<>();
-        authorization.authorizationScope().stream()
-                .map(AuthorizationScopeComponentData::component)
-                .map(DataColumn::new)
-                .map(referenceDatum::get)
-                .map(DataColumnValue::toJsonForDatabase)
-                .filter(ReferenceType.class::isInstance)
-                .map(ReferenceType.class::cast)
-                .forEach(referenceType -> {
-                            List<Ltree> hierarchyOfHierarchicalkeys = getHierarchyOfHierarchicalkeys(referenceType);
-                            requiredAuthorizations.put(referenceType.getRefType(), hierarchyOfHierarchicalkeys);
-                        }
-                );
+        final Map<String, List<Ltree>> requiredAuthorizations = buildRequiredAuthorizations(authorization, referenceDatum);
         LocalDateTimeRange timeScope;
         DateType timeScopeDateLineChecker = authorization.timeScope() != null ?
                 dataImporterContext.getLineCheckers().stream()
@@ -637,6 +661,23 @@ public class DataImporter {
                 requiredAuthorizations,
                 timeScope
         );
+    }
+
+    private Map<String, List<Ltree>> buildRequiredAuthorizations(Authorization authorization, DataDatum referenceDatum) {
+        Map<String, List<Ltree>> requiredAuthorizations = new LinkedHashMap<>();
+        authorization.authorizationScope().stream()
+                .map(AuthorizationScopeComponentData::component)
+                .map(DataColumn::new)
+                .map(referenceDatum::get)
+                .map(DataColumnValue::toJsonForDatabase)
+                .filter(ReferenceType.class::isInstance)
+                .map(ReferenceType.class::cast)
+                .forEach(referenceType -> {
+                            List<Ltree> hierarchyOfHierarchicalkeys = getHierarchyOfHierarchicalkeys(referenceType);
+                            requiredAuthorizations.put(referenceType.getRefType(), hierarchyOfHierarchicalkeys);
+                        }
+                );
+        return requiredAuthorizations;
     }
 
     private List<Ltree> getHierarchyOfHierarchicalkeys(ReferenceType referenceType) {

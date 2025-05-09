@@ -200,7 +200,7 @@ public class DataService implements ServiceContainerBean {
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
         Function<String, List<DataValue>> getDatavaluesByReference = reference -> referenceValueRepository.findAllByReferenceTypeStream(reference).toList();
         PublishContext.PublishContextBuilder publishContextBuilder = new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference);
-        final ImmutableSet<LineChecker> lineCheckers = checkerFactory.getCheckers(application, dataName,
+        final ImmutableSet<LineChecker<? extends FieldType>> lineCheckers = checkerFactory.getCheckers(application, dataName,
                 publishContextBuilder);
         ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences = referenceValueRepository.getDataIdPerKeys(dataName);
 

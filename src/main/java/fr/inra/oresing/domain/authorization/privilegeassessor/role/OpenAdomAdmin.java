@@ -8,7 +8,8 @@ import java.util.Set;
 public record OpenAdomAdmin() implements ApplicationCreator {
     public static final String OPEN_ADOM_ADMIN_ROLE = "openAdomAdmin";
     @Override
-    public void canCreateApplication(String applicationName) {
+    public boolean canCreateApplication(String applicationName) {
+        return true;
     }
 
     public void canManagerRightForRole(OreSiRoleForUser roleForUser) {

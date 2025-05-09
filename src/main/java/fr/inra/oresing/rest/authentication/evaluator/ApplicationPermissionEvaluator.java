@@ -52,20 +52,20 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
 
     public ApplicationPermissionEvaluator(AuthorizationService authorizationService) {
         this.authorizationService = authorizationService;
-        this.SYSTEM_USER_CONNECTED = () -> authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_USER_CONNECTED);
-        this.SYSTEM_ADMINISTRATION = () -> authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomain.SYSTEM_ADMINISTRATION);
+        this.SYSTEM_USER_CONNECTED = () -> authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomainEnum.SYSTEM_USER_CONNECTED);
+        this.SYSTEM_ADMINISTRATION = () -> authorizationService.getPrivilegeAssessorForSystem(PrivilegeSystemDomainEnum.SYSTEM_ADMINISTRATION);
 
         this.APPLICATION_MANAGER = applicationName -> authorizationService
-                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.APPLICATION_MANAGER, applicationName);
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.APPLICATION_MANAGER, applicationName);
         this.DATA_MANAGEMENT = applicationName -> authorizationService
-                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_MANAGEMENT, applicationName);
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_MANAGEMENT, applicationName);
         this.DATA_READ = applicationName -> authorizationService
 
-                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName);
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName);
         this.DATA_WRITE = applicationName -> authorizationService
-                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_WRITE, applicationName);
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_WRITE, applicationName);
         this.DATA_ACCESS = applicationName -> authorizationService
-                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_ACCESS, applicationName);
+                .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_ACCESS, applicationName);
     }
 
     @Override
@@ -157,7 +157,7 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                     case String read when APPLICATION_DATA_READ.equals(read) ->
                             dataNameOpt
                             .map(authorizationService
-                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
+                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
                                     ::forDataRead);
                     case String read when APPLICATION_DATA_WRITE.equals(read) -> dataNameOpt
                             .map(dataName ->
@@ -166,7 +166,7 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                                             .map(FileOrUUID::topublish)
                                             .or(() -> Optional.of(false))
                                             .map(toPublish -> authorizationService
-                                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomain.DATA_READ, applicationName)
+                                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
                                                     .forDataWrite(dataName, toPublish))
                                             .orElse(null)
                             );

@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public record PrivilegeAssessorDomainForNotConnectedUser<PrivilegeSystemDomain>(
+public record PrivilegeAssessorDomainForNotConnectedUser<P extends PrivilegeSystemDomainEnum>(
         AuthenticationService authenticationService,
         UserRepository userRepository,
-        PrivilegeSystemDomain domain
+        P domain
 ) implements PrivilegeAssessorDomain {
 
     public LoginAdminResult forLoginPassword(String login, String password) throws AuthenticationFailure {
@@ -41,17 +41,20 @@ public record PrivilegeAssessorDomainForNotConnectedUser<PrivilegeSystemDomain>(
                 return new NotConnectedAuthentifiedIdleUser(user, createUserRequest);
             }
         } else if (!Strings.isNullOrEmpty(login) && !Strings.isNullOrEmpty(email)) {
-            final Optional<OreSiUser> loginResult = userRepository.findByLoginAndEmail(login, email);
-            loginResult.orElseThrow(() -> new AuthenticationFailure(
-                    AuthenticationFailure.INVALID_ACCOUNT,
-                    new LoginAdminResult(null,
-                            login,
-                            email,
-                            "",
-                            null,
-                            Set.of(),
-                            Map.of()
-                    )));
+            final Optional<OreSiUser> loginResult =
+                    userRepository.findByLoginAndEmail(login, email);
+            if (loginResult.isEmpty()) {
+                throw new AuthenticationFailure(
+                        AuthenticationFailure.INVALID_ACCOUNT,
+                        new LoginAdminResult(null,
+                                login,
+                                email,
+                                "",
+                                null,
+                                Set.of(),
+                                Map.of()
+                        ));
+            } ;
             if (!Strings.isNullOrEmpty(charte)) {
                 return new NotConnectedAuthentifiedActiveUserNotSignedCharte(loginResult.get(), createUserRequest, charte);
             } else if (!Strings.isNullOrEmpty(verificationKey)) {

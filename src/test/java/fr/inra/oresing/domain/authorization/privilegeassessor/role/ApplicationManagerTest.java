@@ -101,9 +101,9 @@ class ApplicationManagerTest {
     /**
      * Fonction utilitaire pour tester la conversion de type générique
      */
-    private <AM extends ApplicationManager> boolean checkManagerWriteCapability(AM manager) {
+    private <A extends ApplicationManager> boolean checkManagerWriteCapability(A manager) {
         // Utiliser canUpdateApplication pour récupérer le même type
-        AM updatedManager = manager.canUpdateApplication();
+        A updatedManager = manager.canUpdateApplication();
 
         // Vérifier si c'est aussi un ApplicationDataWriter
         return updatedManager instanceof ApplicationDataWriter;

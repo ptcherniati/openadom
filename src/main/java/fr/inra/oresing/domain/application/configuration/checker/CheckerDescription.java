@@ -32,8 +32,8 @@ public sealed interface CheckerDescription permits
 
     boolean required();
 
-    default <FT extends FieldType> FT buildFieldtype(final DataRepository repository, final PublishContext.PublishContextBuilder publishContextBuilder, final CheckerTarget target, final LineChecker.LineTransformer transformer) {
-        return (FT) switch (this) {
+    default <F extends FieldType> F buildFieldtype(final DataRepository repository, final PublishContext.PublishContextBuilder publishContextBuilder, final CheckerTarget target, final LineChecker.LineTransformer transformer) {
+        return (F) switch (this) {
             case final ReferenceChecker referenceChecker -> {
                 final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys = repository.getDataIdPerKeys(referenceChecker.refType());
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = getUUidByNaturalKey(referenceIdPerKeys);

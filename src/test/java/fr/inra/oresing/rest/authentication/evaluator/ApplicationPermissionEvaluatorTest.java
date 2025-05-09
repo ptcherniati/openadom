@@ -40,15 +40,15 @@ public class ApplicationPermissionEvaluatorTest {
         PrivilegeFactory privilegeFactory = new PrivilegeFactory();
 
         // Configurer le service d'autorisation pour utiliser cette fabrique
-        lenient().when(authorizationService.getPrivilegeAssessorForSystem(any(PrivilegeSystemDomain.class)))
+        lenient().when(authorizationService.getPrivilegeAssessorForSystem(any(PrivilegeSystemDomainEnum.class)))
                 .thenAnswer(invocation -> {
-                    PrivilegeSystemDomain domain = invocation.getArgument(0);
+                    PrivilegeSystemDomainEnum domain = invocation.getArgument(0);
                     return privilegeFactory.createSystemAssessor(domain);
                 });
 
-        lenient().when(authorizationService.getPrivilegeAssessorForApplication(any(PrivilegeApplicationDomain.class), anyString()))
+        lenient().when(authorizationService.getPrivilegeAssessorForApplication(any(PrivilegeApplicationDomainEnum.class), anyString()))
                 .thenAnswer(invocation -> {
-                    PrivilegeApplicationDomain domain = invocation.getArgument(0);
+                    PrivilegeApplicationDomainEnum domain = invocation.getArgument(0);
                     String applicationName = invocation.getArgument(1);
                     return privilegeFactory.createApplicationAssessor(domain, applicationName);
                 });
@@ -59,14 +59,14 @@ public class ApplicationPermissionEvaluatorTest {
     // Classe interne pour gérer la création des assessors et personas
     private class PrivilegeFactory {
         // Cache des assessors pour éviter de recréer des objets
-        private final Map<PrivilegeSystemDomain, PrivilegeAssessorDomainForSystem> systemAssessors = new HashMap<>();
-        private final Map<String, Map<PrivilegeApplicationDomain, PrivilegeAssessorDomainForApplication>> applicationAssessors = new HashMap<>();
+        private final Map<PrivilegeSystemDomainEnum, PrivilegeAssessorDomainForSystem> systemAssessors = new HashMap<>();
+        private final Map<String, Map<PrivilegeApplicationDomainEnum, PrivilegeAssessorDomainForApplication>> applicationAssessors = new HashMap<>();
 
         // Cache des personas pour garantir la cohérence
         private final Map<String, SystemPersona> systemPersonas = new HashMap<>();
         private final Map<String, ApplicationPersona> applicationPersonas = new HashMap<>();
 
-        public PrivilegeAssessorDomainForSystem createSystemAssessor(PrivilegeSystemDomain domain) {
+        public PrivilegeAssessorDomainForSystem createSystemAssessor(PrivilegeSystemDomainEnum domain) {
             return systemAssessors.computeIfAbsent(domain, d -> {
                 PrivilegeAssessorDomainForSystem assessor = mock(PrivilegeAssessorDomainForSystem.class);
 
@@ -87,7 +87,7 @@ public class ApplicationPermissionEvaluatorTest {
             });
         }
 
-        public PrivilegeAssessorDomainForApplication createApplicationAssessor(PrivilegeApplicationDomain domain, String applicationName) {
+        public PrivilegeAssessorDomainForApplication createApplicationAssessor(PrivilegeApplicationDomainEnum domain, String applicationName) {
             return applicationAssessors
                     .computeIfAbsent(applicationName, name -> new HashMap<>())
                     .computeIfAbsent(domain, d -> {

@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 
 import java.util.Set;
@@ -39,7 +40,7 @@ public class PrivilegeAssessorDomainForSystemFactory {
 
     // Attributs d'instance pour le builder
     private AuthorizationsForSystemUser authorizations = mock(AuthorizationsForSystemUser.class, "mock authorizations");
-    private PrivilegeAssessorDomain domain;
+    private PrivilegeSystemDomainEnum privilegeSystemDomainEnum;
     private CurrentUserRoles currentUserRoles = mock(CurrentUserRoles.class, "mock currentUserRoles");
 
 
@@ -50,7 +51,7 @@ public class PrivilegeAssessorDomainForSystemFactory {
     }
 
     public PrivilegeAssessorDomainForSystem build() {
-        final PrivilegeAssessorDomainForSystem privilegeAssessorDomainForApplication = new PrivilegeAssessorDomainForSystem(authorizations, domain);
+        final PrivilegeAssessorDomainForSystem privilegeAssessorDomainForApplication = new PrivilegeAssessorDomainForSystem(authorizations, privilegeSystemDomainEnum);
         return privilegeAssessorDomainForApplication;
     }
 
@@ -59,8 +60,8 @@ public class PrivilegeAssessorDomainForSystemFactory {
         return this;
     }
 
-    public PrivilegeAssessorDomainForSystemFactory withDomain(PrivilegeAssessorDomain domain) {
-        this.domain = domain;
+    public PrivilegeAssessorDomainForSystemFactory withDomain(PrivilegeSystemDomainEnum privilegeSystemDomainEnum) {
+        this.privilegeSystemDomainEnum = privilegeSystemDomainEnum;
         return this;
     }
 
