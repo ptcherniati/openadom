@@ -119,7 +119,7 @@ public class PrivilegeAccessorDomainTest {
                         "forDataRead",
                         "Lecture des données",
                         assessor -> ((PrivilegeAssessorDomainForApplication) assessor).forDataRead(DEFAULT_DATA_NAME),
-                        ApplicationDataReader.class,
+                        ApplicationDataReaderUser.class,
                         NotApplicationDataReaderException.class,
                         List.of(
                                 USER_MANAGER_FOR_ADD_AUTHORIZATION,

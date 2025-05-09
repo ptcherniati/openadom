@@ -65,13 +65,13 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
     /*
     Test if is applicationUserForReadingData
      */
-    public ApplicationDataReader forDataRead(String dataName) {
+    public ApplicationDataReaderUser forDataRead(String dataName) {
         if(Optional.of(authorizations())
                 .filter(authorizationsForApplicationUser -> authorizationsForApplicationUser.canRead(dataName))
                 .isEmpty()){
             throw new NotApplicationDataReaderException(application().getName(), dataName);
         }
-        return new ApplicationDataReader(application());
+        return new ApplicationDataReaderUser(application());
     }
 
     public Map<AuthorizationsForUserResult.Roles, Boolean> getAuthorizationsForUser(String dataName) {

@@ -59,7 +59,7 @@ class ApplicationUserTest {
         return Stream.of(
                 Arguments.of(
                         "ApplicationDataReader",
-                        new ApplicationDataReader(staticMockApp)
+                        new ApplicationDataReaderUser(staticMockApp)
                 ),
                 Arguments.of(
                         "ApplicationDataWriter via AdminUser",
@@ -90,7 +90,7 @@ class ApplicationUserTest {
         return Stream.of(
                 Arguments.of(
                         "ApplicationDataReader implémente ApplicationUser",
-                        new ApplicationDataReader(mockApp),
+                        new ApplicationDataReaderUser(mockApp),
                         new Class<?>[]{ApplicationUser.class, ApplicationPersona.class}
                 ),
                 Arguments.of(
@@ -126,7 +126,7 @@ class ApplicationUserTest {
                 ),
                 Arguments.of(
                         "ApplicationDataReader",
-                        new ApplicationDataReader(mockApp),
+                        new ApplicationDataReaderUser(mockApp),
                         List.of(ApplicationUser.class, ApplicationPersona.class)
                 ),
                 Arguments.of(
@@ -150,7 +150,7 @@ class ApplicationUserTest {
                 Arguments.of(
                         "ApplicationUser",
                         ApplicationUser.class,
-                        new Class[]{ApplicationDataReader.class, ApplicationDataWriter.class},
+                        new Class[]{ApplicationDataReaderUser.class, ApplicationDataWriter.class},
                         2
                 ),
                 Arguments.of(
