@@ -26,7 +26,7 @@ import java.util.stream.IntStream;
  * https://www.postgresql.</a>org/docs/cu</a>rrent/ltree.html
  */
 @Value
-public class Ltree implements Comparable<Ltree> {
+public class    Ltree implements Comparable<Ltree> {
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
      */
@@ -35,10 +35,6 @@ public class Ltree implements Comparable<Ltree> {
     private static final Pattern LABEL_INVALID_CHARACTERS_REGEX = Pattern.compile("[^a-zA-Z0-9_]");
     private static final Pattern VALID_LABEL_REGEX = Pattern.compile("[a-zA-Z0-9_]+");
     private static final Ltree EMPTY_LTREE_SINGLETON = new Ltree("");
-    /*public static Set<String> KNOWN_SYMBOL_CODES = IntStream.range(Character.MIN_CODE_POINT, Character.MAX_CODE_POINT)
-            .filter(Character::isValidCodePoint)
-            .filter(Character::isDefined)
-            .mapToObj(i -> Character.getName(i).replaceAll("[ -]", "")).collect(Collectors.toCollection(HashSet::new));*/
     public static Set<String> KNOWN_SYMBOL_CODES = IntStream.range(0, 0x3FF)
             .filter(Character::isValidCodePoint)
             .filter(Character::isDefined)
@@ -98,7 +94,7 @@ public class Ltree implements Comparable<Ltree> {
                 .collect(Collectors.joining());
         checkLabelSyntax(escaped);
         return escaped
-                .replaceAll("________", "__NULL_KEY__")
+                .replace("________", "__NULL_KEY__")
                 .replaceAll("^______", "NULL_KEY__")
                 .replaceAll("______$", "__NULL_KEY");
     }

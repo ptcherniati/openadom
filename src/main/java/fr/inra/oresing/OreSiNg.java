@@ -25,7 +25,9 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
-import org.springframework.web.servlet.config.annotation.*;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
 import java.io.File;
@@ -157,12 +159,5 @@ public class OreSiNg implements WebMvcConfigurer {
         messageSource.setBasenames("emailMessage"); // Nom de base des fichiers de propriétés
         messageSource.setDefaultEncoding("UTF-8");
         return messageSource;
-    }/*
-
-    @Bean("camelCaseJsonRowMapper")
-    public JsonRowMapper<?> camelCaseJsonRowMapper() {
-        JsonRowMapper<?> mapper = new JsonRowMapper<>(PropertyNamingStrategies.LOWER_CAMEL_CASE);
-        return mapper;
-    }*/
-
+    }
 }
