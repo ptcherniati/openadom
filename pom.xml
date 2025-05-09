@@ -87,10 +87,8 @@
 
         <!--sonar-->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec
         </sonar.coverage.jacoco.xmlReportPaths>
-        <sonar.language>java</sonar.language>
         <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
         <sonar.projectName>openADOM-backend</sonar.projectName>
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
@@ -339,6 +337,7 @@
                 <version>0.8.11</version>
                 <executions>
                     <execution>
+                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
@@ -352,30 +351,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>io.github.git-commit-id</groupId>
-                <artifactId>git-commit-id-maven-plugin</artifactId>
-                <version>9.0.1</version>
-                <executions>
-                    <execution>
-                        <id>get-the-git-infos</id>
-                        <goals>
-                            <goal>revision</goal>
-                        </goals>
-                        <phase>initialize</phase>
-                    </execution>
-                </executions>
-                <configuration>
-                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
-                    </generateGitPropertiesFilename>
-                    <!--<includeOnlyProperties>
-                        <includeOnlyProperty>^git.branch$</includeOnlyProperty>
-                        <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
-                        <includeOnlyProperty>^git.commit.time$</includeOnlyProperty>
-                    </includeOnlyProperties>-->
-                </configuration>
-            </plugin>
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
