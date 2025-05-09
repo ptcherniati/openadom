@@ -8,8 +8,9 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
+import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.column.OneValueStaticPatternColumn;
+import fr.inra.oresing.domain.data.deposit.recursion.RecursionStrategy;
 import fr.inra.oresing.domain.data.deposit.recursion.WithRecursion;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DuplicationLineValidationCheckResult;
@@ -22,21 +23,23 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class CsvReader {
-    private final DataImporter dataImporter;
+    private final DataImporterContext dataImporterContext;
+    private final RecursionStrategy recursionStrategy;
 
-    public CsvReader(DataImporter dataImporter) {
-        this.dataImporter = dataImporter;
+    public CsvReader(DataImporterContext dataImporterContext, RecursionStrategy recursionStrategy) {
+        this.dataImporterContext = dataImporterContext;
+        this.recursionStrategy = recursionStrategy;
     }
 
     public ImmutableSet<LineChecker<? extends FieldType>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
         final ImmutableSet.Builder<LineChecker<? extends FieldType>> linecheckersBuilder = ImmutableSet.builder();
-        for (final LineChecker<? extends FieldType> lineChecker : dataImporter.getDataImporterContext().getLineCheckers()) {
-            if (!dataImporter.getDataImporterContext().existsColumn(lineChecker.target(), constantColumnsValues)) {
+        for (final LineChecker<? extends FieldType> lineChecker : dataImporterContext.getLineCheckers()) {
+            if (!dataImporterContext.existsColumn(lineChecker.target(), constantColumnsValues)) {
                 continue;
             }
-            if (dataImporter.getRecursionStrategy() instanceof WithRecursion withRecursion) {
+            if (recursionStrategy instanceof WithRecursion withRecursion) {
                 if (lineChecker.underlyingType() instanceof final ReferenceType referenceType) {
-                    final Map<DataValue.LineIdentityColumnName, UUID> map2 = dataImporter.getDataImporterContext().getAfterPreloadReferenceUuids();
+                    final Map<DataValue.LineIdentityColumnName, UUID> map2 = dataImporterContext.getAfterPreloadReferenceUuids();
                     final Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> map1 = referenceType.getReferenceValues();
                     final ImmutableMap.Builder<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> builder = ImmutableMap.builder();
                     builder.putAll(map1);
@@ -95,7 +98,7 @@ public class CsvReader {
             final DuplicationLineValidationCheckResult validationCheckResult =
                     new DuplicationLineValidationCheckResult(
                             DuplicationLineValidationCheckResult.FileType.REFERENCES,
-                            dataImporter.getDataImporterContext().getRefType(),
+                            dataImporterContext.getRefType(),
                             ValidationLevel.ERROR,
                             conflictingHierarchicalKey,
                             conflictingLineNumber,
@@ -123,8 +126,8 @@ public class CsvReader {
             String[] values = csvRecord.values();
             final String cellContent = values.length > i ? values[i] : "";
             final String patternComponentName = currentHeader.next();
-            if (dataImporter.getDataImporterContext().pushValue(referenceDatum, patternComponentName, cellContent.trim(), refsLinkedTo)) {
-                OneValueStaticPatternColumn expectedPatternColumn1 = dataImporter.getDataImporterContext().getPatternColumnFactory().getExpectedPatternColumn(patternComponentName);
+            if (dataImporterContext.pushValue(referenceDatum, patternComponentName, cellContent.trim(), refsLinkedTo)) {
+                OneValueStaticPatternColumn expectedPatternColumn1 = dataImporterContext.getPatternColumnFactory().getExpectedPatternColumn(patternComponentName);
                 List<String> adjacentValues = new LinkedList<String>();
                 for (int j = 0; j < (expectedPatternColumn1 == null ? 0 : expectedPatternColumn1.getAdjacentColumnsSize()); j++) {
                     i++;
@@ -143,7 +146,7 @@ public class CsvReader {
     public Stream<RowWithReferenceDatum> buildRowsWithPattern(List<PatternValueForHeader> patternValueForHeaders, DataDatum referenceDatum, int lineNumber, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
         List<RowWithReferenceDatum> rowWithReferenceData = new LinkedList<RowWithReferenceDatum>();
         for (PatternValueForHeader patternValueForHeader : patternValueForHeaders) {
-            DataDatum patternComponentDatum = dataImporter.getDataImporterContext().getPatternColumnFactory().toQualifierDatum(patternValueForHeader.header(), patternValueForHeader);
+            DataDatum patternComponentDatum = dataImporterContext.getPatternColumnFactory().toQualifierDatum(patternValueForHeader.header(), patternValueForHeader);
             DataDatum dataDatum = referenceDatum.with(patternComponentDatum);
             rowWithReferenceData.add(
                     new RowWithReferenceDatum(

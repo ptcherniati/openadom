@@ -7,6 +7,9 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
+import fr.inra.oresing.domain.data.deposit.configuration.ConfigurationSi;
+import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.recursion.RecursionStrategy;
 import fr.inra.oresing.domain.data.deposit.storage.KeysAndReferenceDatumAfterChecking;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.ReferenceDatumAfterChecking;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
@@ -19,14 +22,15 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class DataTransformer {
-    public DataImporter getDataImporter() {
-        return dataImporter;
-    }
 
-    private final DataImporter dataImporter;
+    private final DataImporterContext dataImporterContext;
+    private final RecursionStrategy recursionStrategy;
+    private final ConfigurationSi configurationSi;
 
-    public DataTransformer(DataImporter dataImporter) {
-        this.dataImporter = dataImporter;
+    public DataTransformer(DataImporterContext dataImporterContext, RecursionStrategy recursionStrategy) {
+        this.dataImporterContext = dataImporterContext;
+        this.recursionStrategy = recursionStrategy;
+        this.configurationSi= new ConfigurationSi(dataImporterContext);
     }
 
     public static Ltree getHierarchicalNodeFromNatural(final String naturalKey, final String refType) {
@@ -36,14 +40,10 @@ public class DataTransformer {
         return Ltree.fromSql(naturalKeyToString);
     }
 
-    public ImmutableSet<LineChecker<? extends FieldType>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
-        return dataImporter.getCsvReader().buildLineCheckers(constantColumnsValues);
-    }
-
     public RowWithReferenceDatum computeComputedColumns(final RowWithReferenceDatum rowWithReferenceDatum) {
         final DataDatum rowWithDefaults = new DataDatum();
         final DataDatum rowWithValues = DataDatum.copyOf(rowWithReferenceDatum.referenceDatum());
-        dataImporter.getDataImporterContext().getColumns().stream()
+        dataImporterContext.getColumns().stream()
                 .filter(column -> column.getComputedValueUsage() != ComputedValueUsage.NOT_COMPUTED)
                 .forEach(column -> {
                     final DataColumn referenceColumn = column.getReferenceColumn();
@@ -67,14 +67,14 @@ public class DataTransformer {
      */
     public KeysAndReferenceDatumAfterChecking computeKeys(final ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         DataDatum referenceDatum = referenceDatumAfterChecking.referenceDatumAfterChecking();
-        Ltree naturalKey = dataImporter.getRecursionStrategy().computeNaturalKey(referenceDatumAfterChecking);
+        Ltree naturalKey = recursionStrategy .computeNaturalKey(referenceDatumAfterChecking);
         DataDatum datumForColumnsInKey = new DataDatum(
                 referenceDatum.values().entrySet()
                         .stream().filter(entry ->
-                                dataImporter.getDataImporterContext().getNaturalKeyColumns().contains(entry.getKey().column())
+                                dataImporterContext.getNaturalKeyColumns().contains(entry.getKey().column())
                         )
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-        Ltree hierarchicalKey = dataImporter.getRecursionStrategy().getHierarchicalKey(naturalKey, datumForColumnsInKey, referenceDatumAfterChecking);
+        Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, datumForColumnsInKey, referenceDatumAfterChecking);
         return new KeysAndReferenceDatumAfterChecking(
                 referenceDatumAfterChecking,
                 naturalKey,
@@ -91,25 +91,25 @@ public class DataTransformer {
 
         DataValue e = new DataValue();
         Ltree naturalKey = keysAndReferenceDatumAfterChecking.naturalKey();
-        dataImporter.getDataImporterContext().getKnownId(naturalKey)
+        dataImporterContext.getKnownId(naturalKey)
                 .ifPresent(e::setId);
-        referenceDatum.putAll(InternationalizationDisplay.getDisplaysName(dataImporter.getDataImporterContext(), referenceDatum));
-        referenceDatum.putAll(InternationalizationDisplay.getDisplaysDescription(dataImporter.getDataImporterContext(), referenceDatum));
+        referenceDatum.putAll(InternationalizationDisplay.getDisplaysName(dataImporterContext, referenceDatum));
+        referenceDatum.putAll(InternationalizationDisplay.getDisplaysDescription(dataImporterContext, referenceDatum));
 
         final String patternColumnName = referenceDatumAfterChecking.patternColumnName();
-        dataImporter.getDataImporterContext().getIdForSameHierarchicalKeyInDatabase(hierarchicalKey)
+        dataImporterContext.getIdForSameHierarchicalKeyInDatabase(hierarchicalKey)
                 .ifPresent(e::setId);
 
-        Authorization lineAuthorization = dataImporter.getConfigurationSi().getLineAuthorization(referenceDatum, referenceDatumAfterChecking.lineNumber(), errors);
+        Authorization lineAuthorization = configurationSi.getLineAuthorization(referenceDatum, referenceDatumAfterChecking.lineNumber(), errors);
 
         e.setPatternColumnName(patternColumnName);
         e.setBinaryFile(fileId);
-        e.setReferenceType(dataImporter.getDataImporterContext().getRefType());
+        e.setReferenceType(dataImporterContext.getRefType());
         e.setHierarchicalKey(hierarchicalKey);
         e.setRefsLinkedTo(referenceDatumAfterChecking.refsLinkedTo());
         e.setAuthorization(lineAuthorization);
         e.setNaturalKey(naturalKey);
-        e.setApplication(dataImporter.getDataImporterContext().getApplication().getId());
+        e.setApplication(dataImporterContext.getApplication().getId());
         e.setRefValues(referenceDatum);
         return e;
     }
