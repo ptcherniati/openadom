@@ -9,8 +9,8 @@ import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
+import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import org.apache.commons.csv.CSVRecord;
@@ -141,15 +141,15 @@ public record DataHeaderReader(DataDatum constantValues,
         return columns;
     }
 
-    public DataImporter.RowWithReferenceDatum addConstantsToRow(
-            final DataImporter.RowWithReferenceDatum rowWithReferenceDatum
+    public RowWithReferenceDatum addConstantsToRow(
+            final RowWithReferenceDatum rowWithReferenceDatum
     ) {
         final ImmutableMap<DataColumn, DataColumnValue> values = ImmutableMap.<DataColumn, DataColumnValue>builder()
                 .putAll(constantValues().values())
                 .putAll(rowWithReferenceDatum.referenceDatum().values())
                 .build();
         final DataDatum datum = new DataDatum(values);
-        return new DataImporter.RowWithReferenceDatum(
+        return new RowWithReferenceDatum(
                 rowWithReferenceDatum.lineNumber(),
                 rowWithReferenceDatum.patternColumnName(),
                 datum,

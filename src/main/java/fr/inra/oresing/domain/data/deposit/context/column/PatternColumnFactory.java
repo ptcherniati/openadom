@@ -16,7 +16,7 @@ import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
+import fr.inra.oresing.domain.data.deposit.csvreader.PatternValueForHeader;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
@@ -63,7 +63,7 @@ public class PatternColumnFactory {
                 PatternDescription.of(patternComponentDescriptions));
     }
 
-    public DataDatum toQualifierDatum(final String patternComponentName, final DataImporter.PatternValueForHeader patternValueForHeader) {
+    public DataDatum toQualifierDatum(final String patternComponentName, final PatternValueForHeader patternValueForHeader) {
         PatternColumn patternColumn = patternColumns.get(patternComponentName).copy();
         DataDatum adjacentComponents = this.getExpectedPatternColumn(patternComponentName)
                 .buildAdjacentComponents(patternValueForHeader.adjacentCellContent());
@@ -77,7 +77,7 @@ public class PatternColumnFactory {
                         patternValueForHeader.refsLinkedTo());
     }
 
-    public DataDatum toAdjacentDatum(final DataImporter.PatternValueForHeader patternValueForHeader) {
+    public DataDatum toAdjacentDatum(final PatternValueForHeader patternValueForHeader) {
         final PatternColumn patternColumn = patternColumns.get(patternValueForHeader.header());
         final DataDatum adjacentComponents = patternColumn.adjacentComponents();
         patternColumn.column().pushValue(patternValueForHeader.cellContent(), adjacentComponents, patternValueForHeader.refsLinkedTo());

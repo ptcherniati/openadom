@@ -13,8 +13,8 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
+import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.context.column.PatternColumnFactory;
 import fr.inra.oresing.domain.data.deposit.context.hierarchicalkey.HierarchicalKeyFactory;
@@ -64,7 +64,7 @@ public class DataImporterContext {
     private final List<ReferenceScope.NodeDescription> nodesForMenu;
     @Getter
     private final PublishContext.PublishContextBuilder publishContextBuilder;
-    private final Map<Ltree, List<DataImporter.RowWithReferenceDatum>> missingParentLines = new HashMap<>();
+    private final Map<Ltree, List<RowWithReferenceDatum>> missingParentLines = new HashMap<>();
     @Setter
     @Getter
     private Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = new HashMap<>();
@@ -352,13 +352,13 @@ public class DataImporterContext {
         }
     }
 
-    public void registerMissingLine(Ltree hierarchicalParentKey, DataImporter.RowWithReferenceDatum rowWithReferenceDatum) {
+    public void registerMissingLine(Ltree hierarchicalParentKey, RowWithReferenceDatum rowWithReferenceDatum) {
         this.missingParentLines
                 .computeIfAbsent(hierarchicalParentKey, k -> new LinkedList<>())
                 .add(rowWithReferenceDatum);
     }
 
-    public Map<Ltree, List<DataImporter.RowWithReferenceDatum>> getMissingLines() {
+    public Map<Ltree, List<RowWithReferenceDatum>> getMissingLines() {
         return this.missingParentLines;
     }
 }

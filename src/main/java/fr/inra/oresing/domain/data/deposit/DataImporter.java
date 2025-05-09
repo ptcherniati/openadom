@@ -1,36 +1,39 @@
 package fr.inra.oresing.domain.data.deposit;
 
-import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.collect.*;
-import com.google.common.primitives.Ints;
-import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.Authorization;
+import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.GroovyExpressionChecker;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
-import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.data.deposit.configuration.ConfigurationSi;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
-import fr.inra.oresing.domain.data.deposit.context.column.OneValueStaticPatternColumn;
-import fr.inra.oresing.domain.data.deposit.validation.*;
+import fr.inra.oresing.domain.data.deposit.csvreader.CsvReader;
+import fr.inra.oresing.domain.data.deposit.csvreader.PatternValueForHeader;
+import fr.inra.oresing.domain.data.deposit.recursion.RecursionStrategy;
+import fr.inra.oresing.domain.data.deposit.recursion.WithRecursion;
+import fr.inra.oresing.domain.data.deposit.recursion.WithoutRecursion;
+import fr.inra.oresing.domain.data.deposit.storage.KeysAndReferenceDatumAfterChecking;
+import fr.inra.oresing.domain.data.deposit.transformation.DataTransformer;
+import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.transformer.data.ReferenceDatumAfterChecking;
+import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.PatternValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
-import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.DataHeaderReader;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.internationalization.InternationalizationDisplay;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -54,9 +57,31 @@ public class DataImporter {
 
 
     public static final String HIERARCHICALKEY_SEPARATOR = "K";
+
+    public CsvReader getCsvReader() {
+        return csvReader;
+    }
+
+    public ConfigurationSi getConfigurationSi() {
+        return configurationSi;
+    }
+
+    private final CsvReader csvReader = new CsvReader(this);
+    private final DataTransformer dataTransformer = new DataTransformer(this);
+
+    public DataImporterContext getDataImporterContext() {
+        return dataImporterContext;
+    }
+
     private final DataImporterContext dataImporterContext;
+
+    public RecursionStrategy getRecursionStrategy() {
+        return recursionStrategy;
+    }
+
     private final RecursionStrategy recursionStrategy;
     private final Consumer<Stream<DataValue>> storeAll;
+    private final ConfigurationSi configurationSi = new ConfigurationSi(this);
 
     public DataImporter(final DataImporterContext dataImporterContext, final Consumer<Stream<DataValue>> storeAll) {
         super();
@@ -67,13 +92,6 @@ public class DataImporter {
         } else {
             recursionStrategy = new WithoutRecursion(dataImporterContext);
         }
-    }
-
-    public static Ltree getHierarchicalNodeFromNatural(final String naturalKey, final String refType) {
-        final Ltree escapedNaturalKey = Ltree.fromUnescapedString(naturalKey);
-        final Ltree type = Ltree.fromUnescapedString(refType);
-        final String naturalKeyToString = "%1$s%3$s%2$s".formatted(type, escapedNaturalKey, HIERARCHICALKEY_SEPARATOR);
-        return Ltree.fromSql(naturalKeyToString);
     }
 
     /**
@@ -279,10 +297,10 @@ public class DataImporter {
                             context = publishContextBuilder.getGroovyContextForReferences(
                                     groovyReferences,
                                     new PublishContext.RowInfos(
-                                            rowWithReferenceDatum.referenceDatum.values().values().stream()
+                                            rowWithReferenceDatum.referenceDatum().values().values().stream()
                                                     .map(DataColumnValue::getValuesToCheck)
                                                     .map(FieldType::toString).toList(),
-                                            rowWithReferenceDatum.lineNumber
+                                            rowWithReferenceDatum.lineNumber()
                                     )
                             );
                         }
@@ -297,8 +315,8 @@ public class DataImporter {
                     context = publishContextBuilder.getGroovyContextForReferences(
                             groovyReferences,
                             new PublishContext.RowInfos(
-                                    rowWithReferenceDatum.referenceDatum.values().values().stream().map(DataColumnValue::getValuesToCheck).map(FieldType::toString).toList(),
-                                    rowWithReferenceDatum.lineNumber
+                                    rowWithReferenceDatum.referenceDatum().values().values().stream().map(DataColumnValue::getValuesToCheck).map(FieldType::toString).toList(),
+                                    rowWithReferenceDatum.lineNumber()
                             )
                     );
                 }
@@ -357,20 +375,20 @@ public class DataImporter {
         final ImmutableList<String> columns = dataHeaderReader.readHeader(linesIterator);
         dataImporterContext.withPatternColumn();
         final Function<CSVRecord, Stream<RowWithReferenceDatum>> csvRecordToReferenceDatumFn = csvRecord ->
-                csvRecordToRowWithReferenceDatum(
+                csvReader.csvRecordToRowWithReferenceDatum(
                         columns,
                         csvRecord
                 );
         final Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
-        dataImporterContext.setTransformedLineCheckers(buildLineCheckers(dataHeaderReader.constantValues().values()));
+        dataImporterContext.setTransformedLineCheckers(csvReader.buildLineCheckers(dataHeaderReader.constantValues().values()));
         Stream<DataValue> referenceValuesStream = csvRecordsStream
                 .flatMap(csvRecordToReferenceDatumFn)
                 .map(dataHeaderReader::addConstantsToRow)
-                .map(this::computeComputedColumns)
+                .map(dataTransformer::computeComputedColumns)
                 //.parallel()
                 .filter(rowWithReferenceDatum -> allErrors.canRegisterErrors())
                 .map(rowWithReferenceDatum -> check(
-                                this::computeKeys,
+                                dataTransformer::computeKeys,
                                 recursionStrategy,
                                 rowWithReferenceDatum,
                                 dataImporterContext.getTransformedLineCheckers(),
@@ -383,16 +401,16 @@ public class DataImporter {
                     return referenceDatumAfterChecking;
                 })
                 .filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.errors().isEmpty())
-                .map(this::computeKeys)
+                .map(dataTransformer::computeKeys)
                 .map(storeHierarchicalKeyForConflictDetection)
                 .filter(keysAndReferenceDatumAfterChecking -> {
                     final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
                     return encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                 })
-                .map(keysAndReferenceDatumAfterChecking -> toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
+                .map(keysAndReferenceDatumAfterChecking -> dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
 
         storeAll(referenceValuesStream);
-        final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
+        final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = csvReader.getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         if (!recursionStrategy.dataImporterContext().getMissingLines().isEmpty()) {
             Optional<ReferenceType> referenceType = dataImporterContext.getTransformedLineCheckers().stream()
@@ -422,107 +440,19 @@ public class DataImporter {
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
     }
 
-
-    private ImmutableSet<LineChecker<? extends FieldType>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
-        final ImmutableSet.Builder<LineChecker<? extends FieldType>> linecheckersBuilder = ImmutableSet.builder();
-        for (final LineChecker<? extends FieldType> lineChecker : dataImporterContext.getLineCheckers()) {
-            if (!dataImporterContext.existsColumn(lineChecker.target(), constantColumnsValues)) {
-                continue;
-            }
-            if (recursionStrategy instanceof WithRecursion withRecursion) {
-                if (lineChecker.underlyingType() instanceof final ReferenceType referenceType) {
-                    final Map<DataValue.LineIdentityColumnName, UUID> map2 = dataImporterContext.getAfterPreloadReferenceUuids();
-                    final Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> map1 = referenceType.getReferenceValues();
-                    final ImmutableMap.Builder<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> builder = ImmutableMap.builder();
-                    builder.putAll(map1);
-                    map2.entrySet().stream()
-                            .filter(ltree -> !map1.containsKey(ltree.getKey()))
-                            .forEach(ltreeUUIDEntry -> builder.put(ltreeUUIDEntry.getKey(), ImmutableSet.of(ltreeUUIDEntry.getValue())));
-                    final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referencesValues = builder.build();
-                    switch (lineChecker) {
-                        case final LineChecker.ManyChecker manyChecker -> {
-                            manyChecker.value().getValue()
-                                    .forEach(o -> ((ReferenceType) o).setReferenceValues(referencesValues));
-                            referenceType.setReferenceValues(referencesValues);
-                        }
-                        case final LineChecker.OneChecker oneChecker -> {
-                            ((ReferenceType) oneChecker.fieldTypeForOne()).setReferenceValues(referencesValues);
-                            referenceType.setReferenceValues(referencesValues);
-                        }
-                    }
-                }
-            }
-            linecheckersBuilder.add(lineChecker);
-        }
-        return linecheckersBuilder.build();
-    }
-
-    private RowWithReferenceDatum computeComputedColumns(final RowWithReferenceDatum rowWithReferenceDatum) {
-        final DataDatum rowWithDefaults = new DataDatum();
-        final DataDatum rowWithValues = DataDatum.copyOf(rowWithReferenceDatum.referenceDatum());
-        dataImporterContext.getColumns().stream()
-                .filter(column -> column.getComputedValueUsage() != ComputedValueUsage.NOT_COMPUTED)
-                .forEach(column -> {
-                    final DataColumn referenceColumn = column.getReferenceColumn();
-                    final Optional<DataColumnValue> evaluate = column.computeValue(rowWithReferenceDatum.referenceDatum());
-                    evaluate.ifPresent(presentEvaluate -> {
-                        if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_VALUE) {
-                            rowWithValues.put(referenceColumn, presentEvaluate);
-                        } else if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE) {
-                            rowWithDefaults.put(referenceColumn, presentEvaluate);
-                        } else {
-                            throw ComputedValueUsage.getError(column.getComputedValueUsage());
-                        }
-                    });
-                });
-        rowWithDefaults.putAll(rowWithValues);
-        return new RowWithReferenceDatum(rowWithReferenceDatum.lineNumber(), rowWithReferenceDatum.patternColumnName(), rowWithDefaults, rowWithReferenceDatum.refsLinkedTo());
-    }
-
     /**
      * Étant donné les clé hiérarchiques qu'on a rencontré (normalement une seule par ligne), vérifie s'il y a des doublons et calcul des erreurs le cas échéant
      */
     private Set<CsvRowValidationCheckResult> getHierarchicalKeysConflictErrors(final SetMultimap<Ltree, Long> hierarchicalKeys) {
-        return hierarchicalKeys.asMap().entrySet().stream()
-                .filter(entry -> {
-                    final Collection<Long> lineNumbers = entry.getValue();
-                    return lineNumbers.size() > 1;
-                })
-                .flatMap(buildCsvRowValidationCheckResult())
-                .collect(Collectors.toSet());
+        return csvReader.getHierarchicalKeysConflictErrors(hierarchicalKeys);
     }
 
     private Function<Map.Entry<Ltree, Collection<Long>>, Stream<? extends CsvRowValidationCheckResult>> buildCsvRowValidationCheckResult() {
-        return entry -> {
-            final Ltree conflictingHierarchicalKey = entry.getKey();
-            final ImmutableSortedSet<Long> lineNumbers = ImmutableSortedSet.copyOf(entry.getValue());
-            final SortedSet<Long> conflictingLineNumbers = new TreeSet<>(lineNumbers);
-            final Long firstLineNumberToIgnore = conflictingLineNumbers.first();
-            conflictingLineNumbers.remove(firstLineNumberToIgnore);
-            return conflictingLineNumbers.stream()
-                    .map(buildValidationsCheckResults(lineNumbers, conflictingHierarchicalKey))
-                    .flatMap(Collection::stream);
-        };
+        return csvReader.buildCsvRowValidationCheckResult();
     }
 
     private Function<Long, List<CsvRowValidationCheckResult>> buildValidationsCheckResults(ImmutableSortedSet<Long> lineNumbers, Ltree conflictingHierarchicalKey) {
-        return conflictingLineNumber -> {
-            final Set<Long> otherLines = new TreeSet<>(lineNumbers);
-            otherLines.remove(conflictingLineNumber);
-            final DuplicationLineValidationCheckResult validationCheckResult =
-                    new DuplicationLineValidationCheckResult(
-                            DuplicationLineValidationCheckResult.FileType.REFERENCES,
-                            dataImporterContext.getRefType(),
-                            ValidationLevel.ERROR,
-                            conflictingHierarchicalKey,
-                            conflictingLineNumber,
-                            lineNumbers,
-                            null
-                    );
-            return validationCheckResult.getValidations().stream()
-                    .map(validationCheckResult1 -> new CsvRowValidationCheckResult(validationCheckResult, conflictingLineNumber))
-                    .collect(Collectors.toList());
-        };
+        return csvReader.buildValidationsCheckResults(lineNumbers, conflictingHierarchicalKey);
     }
 
     /**
@@ -531,177 +461,36 @@ public class DataImporter {
     private Stream<RowWithReferenceDatum> csvRecordToRowWithReferenceDatum(
             final ImmutableList<String> columns,
             final CSVRecord csvRecord) {
-        final Iterator<String> currentHeader = columns.iterator();
-        final DataDatum referenceDatum = new DataDatum();
-        final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<>();
-        final List<PatternValueForHeader> patternValueForHeaders = new LinkedList<>();
-        final int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
-        for (int i = 0; i < columns.size(); i++) {
-            String[] values = csvRecord.values();
-            final String cellContent = values.length > i ? values[i] : "";
-            final String patternComponentName = currentHeader.next();
-            if (dataImporterContext.pushValue(referenceDatum, patternComponentName, cellContent.trim(), refsLinkedTo)) {
-                OneValueStaticPatternColumn expectedPatternColumn1 = dataImporterContext.getPatternColumnFactory().getExpectedPatternColumn(patternComponentName);
-                List<String> adjacentValues = new LinkedList<>();
-                for (int j = 0; j < (expectedPatternColumn1 == null ? 0 : expectedPatternColumn1.getAdjacentColumnsSize()); j++) {
-                    i++;
-                    adjacentValues.add(values[i]);
-                    currentHeader.next();
-                }
-                patternValueForHeaders.add(new PatternValueForHeader(patternComponentName, cellContent.trim(), adjacentValues, refsLinkedTo));
-            }
-        }
-        if (patternValueForHeaders.isEmpty()) {
-            return Stream.of(new RowWithReferenceDatum(lineNumber, "", referenceDatum, ImmutableMap.copyOf(refsLinkedTo)));
-        }
-        return buildRowsWithPattern(patternValueForHeaders, referenceDatum, lineNumber, refsLinkedTo);
+        return csvReader.csvRecordToRowWithReferenceDatum(columns, csvRecord);
     }
 
     private Stream<RowWithReferenceDatum> buildRowsWithPattern(List<PatternValueForHeader> patternValueForHeaders, DataDatum referenceDatum, int lineNumber, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-        List<RowWithReferenceDatum> rowWithReferenceData = new LinkedList<>();
-        for (PatternValueForHeader patternValueForHeader : patternValueForHeaders) {
-            DataDatum patternComponentDatum = dataImporterContext.getPatternColumnFactory().toQualifierDatum(patternValueForHeader.header(), patternValueForHeader);
-            DataDatum dataDatum = referenceDatum.with(patternComponentDatum);
-            rowWithReferenceData.add(
-                    new RowWithReferenceDatum(
-                            lineNumber,
-                            patternValueForHeader.header(),
-                            dataDatum,
-                            ImmutableMap.copyOf(refsLinkedTo)
-                    )
-            );
-        }
-        return rowWithReferenceData.stream();
-    }
-
-    /**
-     * Associe à chaque ligne une clé naturelle (peut-être composite ?) et une clé hiérarchique.
-     */
-    private KeysAndReferenceDatumAfterChecking computeKeys(final ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        DataDatum referenceDatum = referenceDatumAfterChecking.referenceDatumAfterChecking();
-        Ltree naturalKey = recursionStrategy.computeNaturalKey(referenceDatumAfterChecking);
-        DataDatum datumForColumnsInKey = new DataDatum(
-                referenceDatum.values().entrySet()
-                        .stream().filter(entry ->
-                                dataImporterContext.getNaturalKeyColumns().contains(entry.getKey().column())
-                        )
-                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-        Ltree hierarchicalKey = recursionStrategy.getHierarchicalKey(naturalKey, datumForColumnsInKey, referenceDatumAfterChecking);
-        return new KeysAndReferenceDatumAfterChecking(
-                referenceDatumAfterChecking,
-                naturalKey,
-                hierarchicalKey);
+        return csvReader.buildRowsWithPattern(patternValueForHeaders, referenceDatum, lineNumber, refsLinkedTo);
     }
 
     /**
      * Transforme une ligne de données en une entité prête à être sauvée en base de données.
      */
     private DataValue toEntity(final KeysAndReferenceDatumAfterChecking keysAndReferenceDatumAfterChecking, final UUID fileId, ReportErrors errors) {
-        ReferenceDatumAfterChecking referenceDatumAfterChecking = keysAndReferenceDatumAfterChecking.referenceDatumAfterChecking();
-        DataDatum referenceDatum = referenceDatumAfterChecking.referenceDatumAfterChecking();
-        Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
 
-        DataValue e = new DataValue();
-        Ltree naturalKey = keysAndReferenceDatumAfterChecking.naturalKey();
-        dataImporterContext.getKnownId(naturalKey)
-                .ifPresent(e::setId);
-        referenceDatum.putAll(InternationalizationDisplay.getDisplaysName(dataImporterContext, referenceDatum));
-        referenceDatum.putAll(InternationalizationDisplay.getDisplaysDescription(dataImporterContext, referenceDatum));
-
-        final String patternColumnName = referenceDatumAfterChecking.patternColumnName();
-        dataImporterContext.getIdForSameHierarchicalKeyInDatabase(hierarchicalKey)
-                .ifPresent(e::setId);
-
-        fr.inra.oresing.domain.Authorization lineAuthorization = getLineAuthorization(referenceDatum, referenceDatumAfterChecking.lineNumber(), errors);
-
-        e.setPatternColumnName(patternColumnName);
-        e.setBinaryFile(fileId);
-        e.setReferenceType(dataImporterContext.getRefType());
-        e.setHierarchicalKey(hierarchicalKey);
-        e.setRefsLinkedTo(referenceDatumAfterChecking.refsLinkedTo());
-        e.setAuthorization(lineAuthorization);
-        e.setNaturalKey(naturalKey);
-        e.setApplication(dataImporterContext.getApplication().getId());
-        e.setRefValues(referenceDatum);
-        return e;
+        return dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, fileId, errors);
     }
 
     private fr.inra.oresing.domain.Authorization getLineAuthorization(DataDatum referenceDatum, long lineNumber, ReportErrors errors) {
-        final Authorization authorization = dataImporterContext.getAuthorization();
-        if (authorization == null) {
-            return new fr.inra.oresing.domain.Authorization();
-        }
-
-        BinaryFileDataset binaryFileDataset = Optional.ofNullable(dataImporterContext.getPublishContextBuilder())
-                .map(PublishContext.PublishContextBuilder::build)
-                .map(PublishContext::fileOrUUID)
-                .map(FileOrUUID::binaryfiledataset)
-                .orElse(null);
-
-        final Map<String, List<Ltree>> requiredAuthorizations = buildRequiredAuthorizations(authorization, referenceDatum);
-        LocalDateTimeRange timeScope;
-        DateType timeScopeDateLineChecker = authorization.timeScope() != null ?
-                dataImporterContext.getLineCheckers().stream()
-                        .filter(dateType -> dateType.target().column().equals(authorization.timeScope()))
-                        .map(LineChecker::underlyingType)
-                        .filter(DateType.class::isInstance)
-                        .map(DateType.class::cast)
-                        .collect(MoreCollectors.onlyElement()) :
-                null;
 
 
-        if (timeScopeDateLineChecker != null) {
-            LocalDateTime value = ((DateType) referenceDatum.get(new DataColumn(authorization.timeScope())).getValuesToCheck()).getValue();
-            timeScope = LocalDateTimeRange.parse(value, timeScopeDateLineChecker);
-        } else {
-            timeScope = LocalDateTimeRange.always();
-        }
-        checkTimescopRangeInDatasetRange(timeScope, errors, binaryFileDataset, lineNumber);
-        return new fr.inra.oresing.domain.Authorization(
-                requiredAuthorizations,
-                timeScope
-        );
+        return configurationSi.getLineAuthorization(referenceDatum, lineNumber, errors);
     }
 
     private Map<String, List<Ltree>> buildRequiredAuthorizations(Authorization authorization, DataDatum referenceDatum) {
-        Map<String, List<Ltree>> requiredAuthorizations = new LinkedHashMap<>();
-        authorization.authorizationScope().stream()
-                .map(AuthorizationScopeComponentData::component)
-                .map(DataColumn::new)
-                .map(referenceDatum::get)
-                .map(DataColumnValue::toJsonForDatabase)
-                .filter(ReferenceType.class::isInstance)
-                .map(ReferenceType.class::cast)
-                .forEach(referenceType -> {
-                            List<Ltree> hierarchyOfHierarchicalkeys = getHierarchyOfHierarchicalkeys(referenceType);
-                            requiredAuthorizations.put(referenceType.getRefType(), hierarchyOfHierarchicalkeys);
-                        }
-                );
-        return requiredAuthorizations;
+        return configurationSi.buildRequiredAuthorizations(authorization, referenceDatum);
     }
 
     private List<Ltree> getHierarchyOfHierarchicalkeys(ReferenceType referenceType) {
-        List<ReferenceScope.NodeDescription> nodesForMenu = dataImporterContext.getNodesForMenu();
-        List<Ltree> hierarchicalKeys = new LinkedList<>();
-        ReferenceScope.NodeDescription referenceNode = nodesForMenu.stream()
-                .filter(node -> node.node_type().equals(referenceType.getRefType()))
-                .filter(node -> node.node_key().equals(referenceType.getHierarchicalKey()))
-                .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("reference of type %s and hirarchicalkey %s doesn't exist".formatted(referenceType.getRefType(), referenceType.getHierarchicalKey())));
-        hierarchicalKeys.add(referenceNode.node().node_key());
-        while (referenceNode.parent_nk() != null) {
-            ReferenceScope.NodeDescription finalReferenceNode = referenceNode;
-            referenceNode = nodesForMenu.stream()
-                    .filter(node -> node.node_type().equals(finalReferenceNode.parent_type()))
-                    .filter(node -> node.node_nk().equals(finalReferenceNode.parent_nk()))
-                    .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("reference of type %s and hirarchicalkey %s doesn't exist".formatted(referenceType.getRefType(), referenceType.getHierarchicalKey())));
-            hierarchicalKeys.add(referenceNode.node().node_key());
-        }
-        return hierarchicalKeys;
+        return configurationSi.getHierarchyOfHierarchicalkeys(referenceType);
     }
 
-    private void checkTimescopRangeInDatasetRange(LocalDateTimeRange timeScope, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset, long rowNumber) {
+    public void checkTimescopRangeInDatasetRange(LocalDateTimeRange timeScope, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset, long rowNumber) {
         if (binaryFileDataset == null) {
             return;
         }
@@ -740,244 +529,4 @@ public class DataImporter {
         }
     }
 
-    /**
-     * Représente les variations de l'algorithme d'import selon que le référentiel soit récursif ou non.
-     */
-    private interface RecursionStrategy {
-
-        Ltree getHierarchicalKey(Ltree naturalKey, DataDatum referenceDatum, ReferenceDatumAfterChecking referenceDatumAfterChecking);
-
-        DataImporterContext dataImporterContext();
-
-        Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking);
-
-        List<ReferenceDatumAfterChecking> testHasParent(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ReferenceDatumAfterChecking referenceDatumAfterChecking);
-    }
-
-    public record PatternValueForHeader(String header, String cellContent, List<String> adjacentCellContent,
-                                        Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-    }
-
-    public record RowWithReferenceDatum(long lineNumber, String patternColumnName, DataDatum referenceDatum,
-                                        Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-    }
-
-    private record ReferenceDatumAfterChecking(long lineNumber, String patternColumnName,
-                                               DataDatum referenceDatumBeforeChecking,
-                                               DataDatum referenceDatumAfterChecking,
-                                               Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
-                                               ImmutableList<CsvRowValidationCheckResult> errors) {
-    }
-
-    private record KeysAndReferenceDatumAfterChecking(ReferenceDatumAfterChecking referenceDatumAfterChecking,
-                                                      Ltree naturalKey, Ltree hierarchicalKey) {
-        public long getLineNumber() {
-            return referenceDatumAfterChecking.lineNumber();
-        }
-    }
-
-    public record WithRecursion(
-            DataImporterContext dataImporterContext,
-            Map<DataValue.LineIdentityColumnName, Ltree> parentReferenceMap) implements RecursionStrategy {
-        /**
-         * When we have the hierarchical key, we can recover the natural key as the leaf of the ltree.
-         * In this case you must remove the reference to the data type "[^\\.][a-z][a-z]*K"
-         */
-        //public static final Function<Ltree, Ltree> fromNaturalKey = nk -> Ltree.fromSql(nk.getSql().replaceAll("[^\\.][a-z][a-z]*K", ""));
-        public WithRecursion(final DataImporterContext dataImporterContext) {
-            this(dataImporterContext, new HashMap<>());
-        }
-
-        public static Function<Ltree, Ltree> toNaturalKey(String dataname) {
-            return nk -> Ltree.fromSql("%sK%s".formatted(dataname, nk.getSql()));
-        }
-
-        /*
-             to construct the natural key we concatenate the values of the key columns.
-             - if the column is a repository type column, its value is an ltree. We take the last element of this ltree as part of the key
-             - otherwise we escape the value
-             - date values receive special treatment
-          */
-        @Override
-        public Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-            Function<String, String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
-            Function<DataColumn, String> toEscapedValueFromColumnRegardingColumnIsReferenceType = dataColumn -> getEscapedValueFromColumnRegardingColumnIsReferenceType(dataColumn, referenceDatumAfterChecking.referenceDatumAfterChecking());
-            String naturalKey = dataImporterContext().getNaturalKeyColumns().stream()
-                    .map(DataColumn::new)
-                    .map(toEscapedValueFromColumnRegardingColumnIsReferenceType)
-                    .map(nullOrEmptyToNull)
-                    .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
-            Preconditions.checkState(!naturalKey.isEmpty(), ExceptionMessage.NULL_NATURAL_KEY.toMessage(), referenceDatumAfterChecking.lineNumber(), String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
-            return Ltree.fromSql(naturalKey/*.replaceAll("^%s__".formatted(Ltree.NULL_KEY) "")*/);
-        }
-
-        String getEscapedValueFromColumnRegardingColumnIsReferenceType(DataColumn dataColumn, DataDatum referenceDatum) {
-            boolean isReferenceColumn = dataImporterContext().getLineCheckers().stream()
-                    .filter(lineChecker -> lineChecker.target().equals(dataColumn))
-                    .map(LineChecker::underlyingType)
-                    .anyMatch(ReferenceType.class::isInstance);
-            String dataValue = referenceDatum.get(dataColumn).toJsonForDatabase().toString();
-            if (Strings.isNullOrEmpty(dataValue)) {
-                return "";
-            }
-            if (isReferenceColumn) {
-                return Ltree.fromSql(dataValue).last().getSql();
-            } else {
-                return Ltree.fromUnescapedString(dataValue).getSql();
-            }
-        }
-
-        @Override
-        public Ltree getHierarchicalKey(final Ltree naturalKey, final DataDatum referenceDatum, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-            Optional<DataValue.LineIdentityColumnName> registerId = dataImporterContext().getAfterPreloadReferenceUuids().keySet()
-                    .stream()
-                    .filter(lineIdentityColumnName -> lineIdentityColumnName.naturalKey().equals(naturalKey))
-                    .findFirst();
-            if (registerId.isPresent()) {
-                return registerId.get().hierarchicalKey();
-            }
-            String parentType = dataImporterContext()
-                    .getDataDescription()
-                    .findParentDescription(dataImporterContext().getRefType())
-                    .map(ComponentDescription::checker)
-                    .map(ReferenceChecker.class::cast)
-                    .map(ReferenceChecker::refType)
-                    .orElse(null);
-            Optional<Ltree> parentValue = dataImporterContext()
-                    .getDataDescription()
-                    .findParentDescription(dataImporterContext().getRefType())
-                    .map(ComponentDescription::componentKey)
-                    .map(DataColumn::new)
-                    .map(referenceDatumAfterChecking.referenceDatumAfterChecking::get)
-                    .map(DataColumnValue::toJsonForDatabase)
-                    .map(Object::toString)
-                    .map(Ltree::fromSql)
-                    .map(toNaturalKey(parentType));
-            Ltree parentRecursiveValue =
-                    dataImporterContext()
-                            .getDataDescription().componentDescriptions().values()
-                            .stream()
-                            .map(ComponentDescription::checker)
-                            .filter(ReferenceChecker.class::isInstance)
-                            .map(ReferenceChecker.class::cast)
-                            .filter(ReferenceChecker::isRecursive)
-                            .findAny()
-                            .map(ReferenceChecker::componentKey)
-                            .map(DataColumn::new)
-                            .map(referenceDatum.values()::get)
-                            .map(DataColumnValue::getValuesToCheck)
-                            .filter(ReferenceType.class::isInstance)
-                            .map(ReferenceType.class::cast)
-                            .map(ReferenceType::getValue)
-                            .map(this::recursiveNodeHierarchicalKey)
-                            .orElse(null);
-            Ltree hierarchicalKey = recursiveNodeHierarchicalKey(naturalKey);
-            if (parentRecursiveValue != null) {
-                hierarchicalKey = Ltree.join(parentRecursiveValue, hierarchicalKey);
-            }
-            if (parentValue.isPresent()) {
-                hierarchicalKey = Ltree.join(parentValue.get(), hierarchicalKey);
-            }
-            return hierarchicalKey;
-        }
-
-        private Ltree recursiveNodeHierarchicalKey(final Ltree naturalKey) {
-            return Ltree.fromSql("%sK%s".formatted(dataImporterContext().getRefType(), naturalKey));
-        }
-
-        @Override
-        public List<ReferenceDatumAfterChecking> testHasParent(
-                Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
-                RecursionStrategy recursionStrategy,
-                ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-            KeysAndReferenceDatumAfterChecking keys = buildKey.apply(referenceDatumAfterChecking);
-            Optional<UUID> knownId = dataImporterContext().getKnownId(keys.naturalKey());
-            DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keys.naturalKey(), keys.hierarchicalKey());
-            if (knownId.isEmpty()) {
-                dataImporterContext().getAfterPreloadReferenceUuids().put(key, UUID.randomUUID());
-                dataImporterContext().getKnownId(keys.naturalKey());
-            }
-            return List.of(referenceDatumAfterChecking);
-        }
-
-        /**
-         * Pour une ligne passée, calcule la clé naturelle composite de cette ligne.
-         * <p>
-         * Il s'agit d'aller lire les différentes colonnes qui composent la clé, de joindre le tout et de gérer
-         * l'échappement.
-         */
-        private DataValue.LineIdentityColumnName computeIdentityKey(final DataDatum referenceDatum) {
-            final String naturalKeyAsString = dataImporterContext.getKeyColumns().stream()
-                    .map(referenceColumn -> {
-                        final DataColumnValue referenceColumnValue = referenceDatum.get(referenceColumn);
-                        Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue, "dans le référentiel " + dataImporterContext.getRefType() + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut pas y avoir une valeur multiple.");
-                        return referenceColumnValue;
-                    })
-                    .map(DataColumnSingleValue.class::cast)
-                    .map(DataColumnSingleValue::getValue)
-                    .map(Object::toString)
-                    .map(s -> Strings.isNullOrEmpty(s) ? Ltree.NULL_KEY : s)
-                    .map(Ltree::escapeToLabel)
-                    .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
-            Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-            return new DataValue.LineIdentityColumnName(naturalKey, naturalKey); //TODO
-        }
-
-        /**
-         * Si on a détecté des lignes qui font référence à un parent mais que celui-ci n'existe pas, on lève une exception
-         *
-         * @param missingParentReferences pour chaque parent manquant, les lignes du CSV où il est mentionné
-         */
-        private void checkMissingParentReferencesIsEmpty(final ListMultimap<Ltree, Long> missingParentReferences) {
-            final ReportErrors reportErrors = new ReportErrors(dataImporterContext.getJsonRowMapper());
-            missingParentReferences.entries().stream()
-                    .map(entry -> {
-                        final Ltree missingParentReference = entry.getKey();
-                        final Long lineNumber = entry.getValue();
-                        final ValidationCheckResult validationCheckResult =
-                                new MissingParentLineValidationCheckResult(lineNumber, dataImporterContext.getRefType(), missingParentReference, dataImporterContext().getAfterPreloadReferenceUuids().keySet());
-                        return validationCheckResult.getValidations().stream()
-                                .map(validationCheckResult1 -> new CsvRowValidationCheckResult(validationCheckResult1, lineNumber))
-                                .collect(Collectors.toList());
-                    })
-                    .flatMap(List::stream)
-                    .forEach(reportErrors::add);
-            InvalidDatasetContentException.checkErrorsIsEmpty(reportErrors);
-        }
-    }
-
-    public record WithoutRecursion(DataImporterContext dataImporterContext) implements RecursionStrategy {
-
-        @Override
-        public Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-            Function<String, String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
-
-            final String naturalKeyAsString = dataImporterContext.getKeyColumns().stream()
-                    .map(referenceColumn -> {
-                        final DataColumnValue referenceColumnValue = referenceDatumAfterChecking.referenceDatumAfterChecking.get(referenceColumn);
-                        Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue, "dans le référentiel " + dataImporterContext.getRefType() + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut pas y avoir une valeur multiple.");
-                        return referenceColumnValue;
-                    })
-                    .map(DataColumnSingleValue.class::cast)
-                    .map(DataColumnSingleValue::getValue)
-                    .map(Object::toString)
-                    .map(nullOrEmptyToNull)
-                    .map(label -> label.matches(DateType.PATTERN_DATE_REGEXP_FIND_DATE) ? DateType.sorteableDateToFormattedDate(label).replaceAll("/", "_") : label)
-                    .map(Ltree::escapeToLabel)
-                    .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
-            Preconditions.checkState(!naturalKeyAsString.isEmpty(), ExceptionMessage.NULL_NATURAL_KEY.toMessage(), referenceDatumAfterChecking.lineNumber(), String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
-            return Ltree.fromSql(naturalKeyAsString);
-        }
-
-        @Override
-        public Ltree getHierarchicalKey(Ltree naturalKey, final DataDatum referenceDatum, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-            Ltree naturalKey1 = getHierarchicalNodeFromNatural(naturalKey.getSql(), dataImporterContext.getRefType());
-            return dataImporterContext.newHierarchicalKey(naturalKey1, referenceDatumAfterChecking.referenceDatumAfterChecking());
-        }
-
-        @Override
-        public List<ReferenceDatumAfterChecking> testHasParent(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-            return List.of(referenceDatumAfterChecking);
-        }
-    }
 }
