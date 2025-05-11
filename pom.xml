@@ -11,9 +11,8 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.6</version>
+        <version>3.4.4</version>
     </parent>
-
 
     <name>si-ore-ng</name>
     <description>SI ORE NG</description>
@@ -65,33 +64,37 @@
         <license.licenseName>lgpl_v3</license.licenseName>
 
         <!-- Java Version -->
-        <java.version>21</java.version>
-        <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <java.version>23</java.version>
 
         <jwt.version>0.12.6</jwt.version>
-        <flyway.version>10.10.0</flyway.version>
+        <flyway.version>11.7.2</flyway.version>
         <flyway.database.version>10.16.0</flyway.database.version>
         <flyway-spring-test.version>10.0.0</flyway-spring-test.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.6.0</springdoc-openapi-starter-webmvc-ui.version>
-        <common-csv.version>1.12.0</common-csv.version>
-        <commons-io.version>2.18.0</commons-io.version>
-        <guava.version>33.3.0-jre</guava.version>
-        <opencsv.version>5.9</opencsv.version>
+        <springdoc-openapi-starter-webmvc-ui.version>2.8.6</springdoc-openapi-starter-webmvc-ui.version>
+        <common-csv.version>1.14.0</common-csv.version>
+        <!--<commons-io.version>2.19.0</commons-io.version>-->
+        <guava.version>33.4.8-jre</guava.version>
+        <opencsv.version>5.10</opencsv.version>
         <bcrypt.version>0.10.2</bcrypt.version>
-        <vue.version>2.6.14</vue.version>
+        <vue.version>3.5.13</vue.version>
         <testcontainer.postgresql.version>1.20.1</testcontainer.postgresql.version>
-        <groovy.version-jsr223>3.0.22</groovy.version-jsr223>
-        <!--Database infos -->
-        <java.version>21</java.version>
-
+        <groovy.version-jsr223>3.0.24</groovy.version-jsr223>
+        
         <!--sonar-->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
         <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec
         </sonar.coverage.jacoco.xmlReportPaths>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.language>java</sonar.language>
         <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
         <sonar.projectName>openADOM-backend</sonar.projectName>
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
+        
+        <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
+         
+        <!-- for lombock with java23+ -->
+        <maven.compiler.proc>full</maven.compiler.proc>
+
     </properties>
 
     <dependencies>
@@ -120,29 +123,13 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
-            <groupId>pl.project13.maven</groupId>
-            <artifactId>git-commit-id-plugin</artifactId>
-            <version>3.0.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc-openapi-starter-webmvc-ui.version}</version>
         </dependency>
-
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-core</artifactId>
-            <version>${flyway.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.flywaydb</groupId>
-            <artifactId>flyway-database-postgresql</artifactId>
-            <version>${flyway.database.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -167,48 +154,17 @@
         </dependency>
         <!-- ******************************************************* -->
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-csv</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.dataformat</groupId>
-            <artifactId>jackson-dataformat-yaml</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jdk8</artifactId>
-        </dependency>
-        <!-- Apache HttpClient -->
-        <dependency>
-            <groupId>org.apache.httpcomponents</groupId>
-            <artifactId>httpclient</artifactId>
-            <version>4.5.14</version>
-        </dependency>
-
         <!-- JSON in Java -->
         <dependency>
             <groupId>org.json</groupId>
             <artifactId>json</artifactId>
-            <version>20240303</version>
+            <version>20250107</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
             <version>${common-csv.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <version>${commons-io.version}</version>
         </dependency>
 
         <dependency>
@@ -247,6 +203,14 @@
             <version>${flyway-spring-test.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
         <dependency>
@@ -258,14 +222,7 @@
         <dependency>
             <groupId>org.apache.ivy</groupId>
             <artifactId>ivy</artifactId>
-            <version>2.5.2</version>
-        </dependency>
-
-        <!-- UI -->
-        <dependency>
-            <groupId>org.webjars.bowergithub.vuejs</groupId>
-            <artifactId>vue</artifactId>
-            <version>${vue.version}</version>
+            <version>2.5.3</version>
         </dependency>
 
         <dependency>
@@ -276,23 +233,80 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
-            <version>5.13.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>postgresql</artifactId>
-            <version>${testcontainer.postgresql.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-suite-engine</artifactId>
         </dependency>
+        
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
-            <version>5.3.1</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-security</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-config</artifactId>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-validation</artifactId>
+        </dependency>
+
+        <!-- UI    -->
+        <!-- Vue 3 -->
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vue</artifactId>
+            <version>${vue.version}</version>
+        </dependency>
+        
+        <!-- Old Vue 2 
+        <dependency> 
+            <groupId>org.webjars.bowergithub.vuejs</groupId>
+            <artifactId>vue</artifactId>
+            <version>${vue.version}</version> 
+        </dependency> -->
+        <!-- Latest Vue 2 Version
+        <dependency>
+            <groupId>org.webjars.npm</groupId>
+            <artifactId>vue</artifactId>
+            <version>2.7.14</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.webjars.npm</groupId>
+                    <artifactId>vue__compiler-sfc</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency> -->
+        
+        <!-- 
+        <dependency>
+            <groupId>pl.project13.maven</groupId>
+            <artifactId>git-commit-id-plugin</artifactId>
+            <version>4.9.10</version>
+        </dependency> -->
+        
+        <!-- 
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-csv</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -309,9 +323,47 @@
             <version>6.3.5</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-yaml</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency> -->
+        
+        <!-- Apache HttpClient 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.14</version>
+        </dependency> -->
+        
+        <!-- <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency> -->
+
+        <!-- <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>${commons-io.version}</version>
+        </dependency> -->
+ 
+        <!--
+        <dependency>
+            <groupId>org.apache.httpcomponents.core5</groupId>
+            <artifactId>httpcore5</artifactId>
+        </dependency> -->
+        
+        <!--
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.14</version> 
+        </dependency> -->
 
     </dependencies>
-
 
     <build>
         <resources>
@@ -334,7 +386,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.11</version>
+                <version>0.8.13</version>
                 <executions>
                     <execution>
                         <id>prepare-agent</id>
@@ -353,6 +405,29 @@
             </plugin>
 
             <plugin>
+                <groupId>io.github.git-commit-id</groupId>
+                <artifactId>git-commit-id-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>get-the-git-infos</id>
+                        <goals>
+                            <goal>revision</goal>
+                        </goals>
+                        <phase>initialize</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <generateGitPropertiesFile>true</generateGitPropertiesFile>
+                    <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
+                    </generateGitPropertiesFilename>
+                    <!--<includeOnlyProperties>
+                        <includeOnlyProperty>^git.branch$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
+                        <includeOnlyProperty>^git.commit.time$</includeOnlyProperty>
+                    </includeOnlyProperties>-->
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
@@ -363,8 +438,8 @@
                     <compilerArgs>
                         <arg>-parameters</arg>
                     </compilerArgs>
-                    <source>11</source>
-                    <target>11</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -395,7 +470,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <!-- Utilisez une version récente pour être certain du support adéquat de JUnit 5 -->
-                <version>3.0.0-M5</version>
+                <version>${maven-surefire-plugin.version}</version>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <configuration>
+                    <ignoredVersions>.*-M.*,.*-alpha.*,.*-beta.*</ignoredVersions>
+                </configuration>
             </plugin>
         </plugins>
     </build>
@@ -449,7 +531,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -469,7 +551,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -489,7 +571,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -509,7 +591,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -529,7 +611,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -549,7 +631,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -569,7 +651,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -589,7 +671,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -609,7 +691,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -628,7 +710,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -647,7 +729,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -666,7 +748,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -685,7 +767,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -704,7 +786,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -723,7 +805,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -742,7 +824,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
                         </configuration>
@@ -757,7 +839,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-surefire-plugin</artifactId>
-                        <version>3.0.0-M5</version>
+                        <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <argLine>-XX:+EnableDynamicAgentLoading</argLine>
                             <excludedGroups>
