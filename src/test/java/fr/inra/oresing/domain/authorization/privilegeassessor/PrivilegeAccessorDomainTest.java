@@ -23,50 +23,6 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
 @DisplayName("Tests organisés des méthodes de PrivilegeAssessorDomainForApplication")
 public class PrivilegeAccessorDomainTest {
-    sealed interface MethodeInfo<P extends PrivilegeAssessorDomain> permits MethodeApplicationInfo, MethodeSystemInfo {
-        String name();
-
-        String description();
-
-        Function<P, Object> methodCall();
-
-        Class<?> returnType();
-
-        Class<? extends OreSiTechnicalException> exceptionType();
-
-        List<P> authorizedAssessors();
-
-        List<P> unauthorizedAssessors();
-    }
-
-    /**
-     * Configuration d'une méthode d'accès à tester pour les droits application.
-     */
-    record MethodeApplicationInfo<PrivilegeAssessorDomainForApplication>(
-            String name,
-            String description,
-            Function<PrivilegeAssessorDomainForApplication, Object> methodCall,
-            Class<?> returnType,
-            Class<? extends OreSiTechnicalException> exceptionType,
-            List<PrivilegeAssessorDomainForApplication> authorizedAssessors,
-            List<PrivilegeAssessorDomainForApplication> unauthorizedAssessors
-    ) implements MethodeInfo {
-    }
-
-    /**
-     * Configuration d'une méthode d'accès à tester pour les droits system
-     */
-    record MethodeSystemInfo<PrivilegeAssessorDomainForSystem>(
-            String name,
-            String description,
-            Function<PrivilegeAssessorDomainForSystem, Object> methodCall,
-            Class<?> returnType,
-            Class<? extends OreSiTechnicalException> exceptionType,
-            List<PrivilegeAssessorDomainForSystem> authorizedAssessors,
-            List<PrivilegeAssessorDomainForSystem> unauthorizedAssessors
-    ) implements MethodeInfo {
-    }
-
     /**
      * Définition des méthodes à tester avec leurs assessors autorisés et non autorisés
      */
@@ -315,26 +271,26 @@ public class PrivilegeAccessorDomainTest {
         return getMethodsApplicationToTest().stream()
                 .map(method -> dynamicContainer(
                         ((MethodeInfo) method).name() + " - " + ((MethodeInfo) method).description(),
-                        (Iterable<? extends DynamicNode>) Stream.of(
-                                // Container pour les assessors autorisés
-                                dynamicContainer(
-                                        "utilisateurs avec droits",
-                                        ((MethodeInfo) method).authorizedAssessors().stream()
-                                                .map(assessor -> dynamicTest(
-                                                        getReadableAssessorName((P) assessor),
-                                                        () -> testAuthorizedAccess((M) method, (P) assessor)
-                                                ))
-                                ),
-                                // Container pour les assessors non autorisés
-                                dynamicContainer(
-                                        "utilisateurs sans droit",
-                                        ((M) method).unauthorizedAssessors().stream()
-                                                .map(assessor -> dynamicTest(
-                                                        getReadableAssessorName((P) assessor),
-                                                        () -> testUnauthorizedAccess((M) method, (P) assessor)
-                                                ))
+                        Stream.of(
+                                        // Container pour les assessors autorisés
+                                        dynamicContainer(
+                                                "utilisateurs avec droits",
+                                                ((MethodeInfo) method).authorizedAssessors().stream()
+                                                        .map(assessor -> dynamicTest(
+                                                                getReadableAssessorName((P) assessor),
+                                                                () -> testAuthorizedAccess((M) method, (P) assessor)
+                                                        ))
+                                        ),
+                                        // Container pour les assessors non autorisés
+                                        dynamicContainer(
+                                                "utilisateurs sans droit",
+                                                ((M) method).unauthorizedAssessors().stream()
+                                                        .map(assessor -> dynamicTest(
+                                                                getReadableAssessorName((P) assessor),
+                                                                () -> testUnauthorizedAccess((M) method, (P) assessor)
+                                                        ))
+                                        )
                                 )
-                        )
                                 .collect(Collectors.toSet())
                 ));
     }
@@ -491,7 +447,7 @@ public class PrivilegeAccessorDomainTest {
     @DisplayName("Matrice complète des droits")
     <M extends MethodeInfo, P extends PrivilegeAssessorDomain> Stream<DynamicNode> fullMatrix() {
         // Liste de tous les assessors
-        List<PrivilegeAssessorDomain> allAssessors = Arrays.<PrivilegeAssessorDomain>asList(
+        List<PrivilegeAssessorDomain> allAssessors = Arrays.asList(
                 USER_MANAGER_FOR_ADD_AUTHORIZATION,
                 USER_MANAGER,
                 APPLICATION_MANAGER,
@@ -556,5 +512,49 @@ public class PrivilegeAccessorDomainTest {
                                     }
                                 })
                 ));
+    }
+
+    sealed interface MethodeInfo<P extends PrivilegeAssessorDomain> permits MethodeApplicationInfo, MethodeSystemInfo {
+        String name();
+
+        String description();
+
+        Function<P, Object> methodCall();
+
+        Class<?> returnType();
+
+        Class<? extends OreSiTechnicalException> exceptionType();
+
+        List<P> authorizedAssessors();
+
+        List<P> unauthorizedAssessors();
+    }
+
+    /**
+     * Configuration d'une méthode d'accès à tester pour les droits application.
+     */
+    record MethodeApplicationInfo<PrivilegeAssessorDomainForApplication>(
+            String name,
+            String description,
+            Function<PrivilegeAssessorDomainForApplication, Object> methodCall,
+            Class<?> returnType,
+            Class<? extends OreSiTechnicalException> exceptionType,
+            List<PrivilegeAssessorDomainForApplication> authorizedAssessors,
+            List<PrivilegeAssessorDomainForApplication> unauthorizedAssessors
+    ) implements MethodeInfo {
+    }
+
+    /**
+     * Configuration d'une méthode d'accès à tester pour les droits system
+     */
+    record MethodeSystemInfo<PrivilegeAssessorDomainForSystem>(
+            String name,
+            String description,
+            Function<PrivilegeAssessorDomainForSystem, Object> methodCall,
+            Class<?> returnType,
+            Class<? extends OreSiTechnicalException> exceptionType,
+            List<PrivilegeAssessorDomainForSystem> authorizedAssessors,
+            List<PrivilegeAssessorDomainForSystem> unauthorizedAssessors
+    ) implements MethodeInfo {
     }
 }

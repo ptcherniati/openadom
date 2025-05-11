@@ -55,7 +55,6 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
 
     private static Optional getMapType(ListType fieldType) {
         return fieldType.getValue().stream()
-                .filter(obj -> true)
                 .findFirst();
     }
 

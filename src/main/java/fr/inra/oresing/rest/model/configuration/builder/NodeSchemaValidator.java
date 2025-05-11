@@ -46,7 +46,7 @@ public class NodeSchemaValidator {
 
     public static String joinI18nPath(String... pathes) {
         return String.join(I18N_PATH_SEPARATOR, pathes)
-                .replaceAll(PATH_SEPARATOR, I18N_PATH_SEPARATOR);
+                .replace(PATH_SEPARATOR, I18N_PATH_SEPARATOR);
     }
 
     public static String joinPath(String... pathes) {

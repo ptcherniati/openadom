@@ -24,6 +24,7 @@ import static fr.inra.oresing.mail.EmailService.UPLOAD_STATE.UNPUBLISHED;
 @Service
 @RequiredArgsConstructor
 public class EmailService implements Email, ServiceContainerBean {
+    public static final String OPENADOM_INRAE_FR = "openadom@inrae.fr";
     @Value("${spring.mail.from}")
     String mailFrom;
     @Autowired
@@ -160,7 +161,7 @@ public class EmailService implements Email, ServiceContainerBean {
             String internationnalizedDataName) {
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(to);
-        mailMessage.setFrom("openadom@inrae.fr");
+        mailMessage.setFrom(OPENADOM_INRAE_FR);
         mailMessage.setSubject(subject);
         mailMessage.setText(
                 String.format(
@@ -193,7 +194,7 @@ public class EmailService implements Email, ServiceContainerBean {
                 );
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
-        mailMessage.setFrom("openadom@inrae.fr");
+        mailMessage.setFrom(OPENADOM_INRAE_FR);
         mailMessage.setSubject(subject);
         mailMessage.setText(text);
 
@@ -204,7 +205,7 @@ public class EmailService implements Email, ServiceContainerBean {
     public void sendUpoadErrorsMail(Locale application, String dataName, String locale, OreSiUser currentUser, String body) {
         final SimpleMailMessage  mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
-        mailMessage.setFrom("openadom@inrae.fr");
+        mailMessage.setFrom(OPENADOM_INRAE_FR);
         mailMessage.setSubject(Locale.ENGLISH.getLanguage().equals(locale)?MSG_ERROR_SUBJECT_EN:MSG_ERROR_SUBJECT_FR);
         mailMessage.setText(body);
 

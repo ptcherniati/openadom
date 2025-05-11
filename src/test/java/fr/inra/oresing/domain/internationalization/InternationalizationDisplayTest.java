@@ -1,9 +1,10 @@
 package fr.inra.oresing.domain.internationalization;
 
-import static org.junit.jupiter.api.Assertions.*;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @org.junit.jupiter.api.Tag("domain.i18n")
 public class InternationalizationDisplayTest {
@@ -19,8 +20,8 @@ public class InternationalizationDisplayTest {
     public void getParsePatternTest() {
         final List<InternationalizationDisplay.PatternSection> patternSections = InternationalizationDisplay.parsePattern(pattern);
         for (int i = 1; i < 3; i++) {
-            assertEquals((i>1?" ":"")+"column "+i+" ", patternSections.get(i-1).text);
-            assertEquals("column"+i, patternSections.get(i-1).variable);
+            assertEquals((i > 1 ? " " : "") + "column " + i + " ", patternSections.get(i - 1).text);
+            assertEquals("column" + i, patternSections.get(i - 1).variable);
         }
         assertEquals(" end", patternSections.get(3).text);
         assertEquals("", patternSections.get(3).variable);

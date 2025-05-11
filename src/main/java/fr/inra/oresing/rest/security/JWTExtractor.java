@@ -93,7 +93,7 @@ public class JWTExtractor {
     }
 
     public static void addJwtHeader(HttpServletResponse response, String jwt) {
-        response.setHeader("Authorization", "Bearer " + jwt);
+        response.setHeader(AUTHORIZATION, BEARER_ + jwt);
     }
 
     public static void addCookie(String jwt, HttpServletResponse response, boolean secureEnvironment) {

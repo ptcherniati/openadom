@@ -55,7 +55,7 @@ public record WithRecursion(
                 .map(nullOrEmptyToNull)
                 .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
         Preconditions.checkState(!naturalKey.isEmpty(), ExceptionMessage.NULL_NATURAL_KEY.toMessage(), referenceDatumAfterChecking.lineNumber(), String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
-        return Ltree.fromSql(naturalKey/*.replaceAll("^%s__".formatted(Ltree.NULL_KEY) "")*/);
+        return Ltree.fromSql(naturalKey);
     }
 
     String getEscapedValueFromColumnRegardingColumnIsReferenceType(DataColumn dataColumn, DataDatum referenceDatum) {

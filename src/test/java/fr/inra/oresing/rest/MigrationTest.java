@@ -2,9 +2,10 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import jakarta.servlet.http.Cookie;
 import java.io.InputStream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -59,8 +59,8 @@ public class MigrationTest {
 
         {
             final String actualCsv = mockMvc.perform(get("/api/v1/applications/fakeapp/data/jeu1/zip")
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
         }

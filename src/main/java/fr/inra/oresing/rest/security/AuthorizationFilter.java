@@ -34,6 +34,7 @@ import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -56,6 +57,15 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_UPDATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_UPDATE_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_CREATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_CREATE_USER");
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
+    public static final String APPLICATIONS = "applications";
+    public static final String DATA = "data";
+    public static final String SYNTHESIS = "synthesis";
+    public static final String FILES_ON_REPOSITORY = "filesOnRepository";
+    public static final String PARAMS = "params";
+    public static final String JS_UNDEFINED = "undefined";
+    public static final String LOGIN_PARAMETER = "login";
+    public static final String PASSWORD_PARAMETER = "password";
+    public static final String ECHEC_TECHNIQUE = "Échec technique";
     private final OreSiApiRequestContext requestContext;
     private static JsonRowMapper<OreSiUserRequestClient> mapper;
     private final OreExceptionHandler exceptionHandler;
@@ -99,12 +109,12 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         }
         if (
                 path.equals("/") ||
-                        path.startsWith("/actuator") ||
-                        path.startsWith("/swagger-ui") ||
-                        path.startsWith("/api-docs") ||
-                        path.startsWith("/api/public") ||
-                        path.startsWith("/api-docs.yaml") ||
-                        path.equals("/error")) {
+                        path.startsWith(SecurityConfig.ACTUATOR) ||
+                        path.startsWith(SecurityConfig.SWAGGER_UI) ||
+                        path.startsWith(SecurityConfig.API_DOCS) ||
+                        path.startsWith(SecurityConfig.API_PUBLIC) ||
+                        path.startsWith(SecurityConfig.API_DOCS_YAML) ||
+                        path.equals(SecurityConfig.ERROR)) {
             chain.doFilter(request, response); // Skip le filtre
             return;
         }
@@ -118,7 +128,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         } catch (AuthenticationFailure e) {
             ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCode().value());
-            response.setContentType("application/json");
+            response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             String body = mapper.toJson(handle.getBody());
             response.getWriter().write(body);
             response.getWriter().flush();
@@ -134,11 +144,11 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         if (HttpMethod.OPTIONS.name().equals(method)) {
             return null;
         }
-        if (HttpMethod.POST.name().equals(method) && path.endsWith("/login")) {
+        if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.LOGIN)) {
             return buildLoginAuthentication(request, response, isSecureEnvironnement);
-        } else if (HttpMethod.POST.name().equals(method) && path.endsWith("/users")) {
+        } else if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.USERS)) {
             return buildCreateUserAuthentication();
-        } else if (HttpMethod.PUT.name().equals(method) && path.endsWith("/users")) {
+        } else if (HttpMethod.PUT.name().equals(method) && path.endsWith(SecurityConfig.USERS)) {
             return buildUpdateUserAuthentication(request);
         } else {
             OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response, isSecureEnvironnement);
@@ -149,14 +159,14 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             Optional.ofNullable(path)
                     .map(p -> p.split("/"))
                     .map(Arrays::asList)
-                    .filter(list -> list.size() > 4 && "applications".equals(list.get(3)))
+                    .filter(list -> list.size() > 4 && APPLICATIONS.equals(list.get(3)))
                     .map(list -> list.get(4))
                     .ifPresent(oreSiAuthenticationToken::setApplicationName);
             Optional.ofNullable(path)
                     .map(p -> p.split("/"))
                     .map(Arrays::asList)
-                    .filter(list -> list.size() > 3 && "applications".equals(list.get(3)))
-                    .filter(list -> list.size() > 6 && List.of("data", "synthesis", "filesOnRepository").contains(list.get(5)))
+                    .filter(list -> list.size() > 3 && APPLICATIONS.equals(list.get(3)))
+                    .filter(list -> list.size() > 6 && List.of(DATA, SYNTHESIS, FILES_ON_REPOSITORY).contains(list.get(5)))
                     .map(list -> list.get(6))
                     .or(() -> {
                         Pattern pattern = Pattern
@@ -193,7 +203,6 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                                             dataNameOpt
                                                     .ifPresent(oreSiAuthenticationToken::setDataName);
 
-                                            ;
                                         });
                             }
                             return Optional.empty();
@@ -210,10 +219,9 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
 
     private void addFilleOrUUID(HttpServletRequest request, OreSiAuthenticationToken oreSiAuthenticationToken, String dataName, String path) {
         if (HttpMethod.POST.name().equals(request.getMethod()) && "/api/v1/applications/%1$s/data/%2$s".formatted(oreSiAuthenticationToken.getApplicationName(), dataName).equals(path)) {
-            String params = request.getParameter("params");
+            String params = request.getParameter(PARAMS);
             Optional.ofNullable(params)
-                    .filter(obj -> true)
-                    .filter(Predicate.not("undefined"::equals))
+                    .filter(Predicate.not(JS_UNDEFINED::equals))
                     .map(json -> {
                         try {
                             return new ObjectMapper().readValue(params, FileOrUUID.class);
@@ -244,8 +252,8 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     }
 
     private OreSiAuthenticationToken buildLoginAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws AuthenticationFailure {
-        String loginValue = request.getParameter("login");
-        String passwordValue = request.getParameter("password");
+        String loginValue = request.getParameter(LOGIN_PARAMETER);
+        String passwordValue = request.getParameter(PASSWORD_PARAMETER);
 
         if (Strings.isNotEmpty(loginValue) && Strings.isNotEmpty(passwordValue)) {
             try {
@@ -259,10 +267,10 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                         List.of(ROLE_AUTHENTIFIED_USER)
                 );
             } catch (AuthenticationFailure e) {
-                throw new AuthenticationFailure("Échec technique", (OreSiUser) null);
+                throw new AuthenticationFailure(ECHEC_TECHNIQUE, (OreSiUser) null);
             }
         }
-        throw new AuthenticationFailure("Échec technique", (OreSiUser) null);
+        throw new AuthenticationFailure(ECHEC_TECHNIQUE, (OreSiUser) null);
     }
 
 

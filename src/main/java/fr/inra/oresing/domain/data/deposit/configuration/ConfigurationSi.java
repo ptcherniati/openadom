@@ -83,7 +83,7 @@ public class ConfigurationSi {
         LocalDateTime from = binaryFileDataset.getFrom() == null ?
                 null :
                 LocalDate.from(DataImporter.ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getFrom())).atStartOfDay();
-        ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<String, Object>();
+        ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
         builder.put("from", DataImporter.DISPLAY_DATE_FORMATTER_DDMMYYYY.format(Objects.requireNonNull(from)));
         LocalDateTime lowerBound = timeScope.getRange().hasLowerBound() ? timeScope.getRange().lowerEndpoint() : LocalDateTime.MIN;
         builder.put("value", DataImporter.DISPLAY_DATE_FORMATTER_DDMMYYYY.format(lowerBound));
@@ -100,7 +100,7 @@ public class ConfigurationSi {
 
 
     public Map<String, List<Ltree>> buildRequiredAuthorizations(fr.inra.oresing.domain.application.configuration.Authorization authorization, DataDatum referenceDatum) {
-        Map<String, List<Ltree>> requiredAuthorizations = new LinkedHashMap<String, List<Ltree>>();
+        Map<String, List<Ltree>> requiredAuthorizations = new LinkedHashMap<>();
         authorization.authorizationScope().stream()
                 .map(AuthorizationScopeComponentData::component)
                 .map(DataColumn::new)
@@ -118,7 +118,7 @@ public class ConfigurationSi {
 
     public List<Ltree> getHierarchyOfHierarchicalkeys(ReferenceType referenceType) {
         List<ReferenceScope.NodeDescription> nodesForMenu = dataImporterContext.getNodesForMenu();
-        List<Ltree> hierarchicalKeys = new LinkedList<Ltree>();
+        List<Ltree> hierarchicalKeys = new LinkedList<>();
         ReferenceScope.NodeDescription referenceNode = nodesForMenu.stream()
                 .filter(node -> node.node_type().equals(referenceType.getRefType()))
                 .filter(node -> node.node_key().equals(referenceType.getHierarchicalKey()))

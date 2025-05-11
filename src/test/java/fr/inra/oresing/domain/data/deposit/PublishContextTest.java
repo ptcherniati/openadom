@@ -22,11 +22,11 @@ class PublishContextTest {
     private List<List<String>> preHeaderRow;
     private List<List<String>> postHeaderRow;
     private List<String> headerRow;
-    private List<String> currentRow = List.of("val3", "val4");
+    private final List<String> currentRow = List.of("val3", "val4");
     private HeaderInfos headerInfos;
     private RowInfos rowInfos;
-    private Application application = Mockito.mock(Application.class);
-    private Function getDataByReference = Mockito.mock(Function.class);
+    private final Application application = Mockito.mock(Application.class);
+    private final Function getDataByReference = Mockito.mock(Function.class);
 
     @BeforeEach
     public void setUp() {
@@ -128,6 +128,6 @@ class PublishContextTest {
                 .withPreHeaderRow(preHeaderRow)
                 .withHeaderRow(headerRow)
                 .withPostHeaderRow(postHeaderRow)
-                .build(currentRow,4L );
+                .build(currentRow, 4L);
     }
 }

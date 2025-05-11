@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @Tag("core.config")
 class LtreeTest {
     @Test
-    void assertThatAStringWithInvalidCharactersCanBeEncodedTwice(){
+    void assertThatAStringWithInvalidCharactersCanBeEncodedTwice() {
         String label = "TOTOé_°_%_>_²_؇_?";
         Ltree nk = Ltree.fromUnescapedString(label);
         String encodedString = "totoe_DEGREESIGN_PERCENTSIGN_GREATERTHANSIGN_SUPERSCRIPTTWO_ARABICINDICFOURTHROOT_QUESTIONMARK";
@@ -24,6 +24,7 @@ class LtreeTest {
         final String sql = Ltree.fromUnescapedString("composition <5%/µg").getSql();
         assertEquals("composition_LESSTHANSIGN5PERCENTSIGNSOLIDUSMICROSIGNg", sql);
     }
+
     /*@Test
     void assertThatAStringWithCompositeLTreeCanBeEncodedTwice(){
         String label = "toto.titi.tutu";
@@ -31,14 +32,15 @@ class LtreeTest {
         Assert.assertEquals(label, nk.getSql());
     }*/
     @ParameterizedTest(name = "{0} match an encodingString")
-    @ValueSource(strings = {"°","%",">","²","$","?","&","@","°","µ"})
-    void testIsEcodedString(String aSign){
+    @ValueSource(strings = {"°", "%", ">", "²", "$", "?", "&", "@", "°", "µ"})
+    void testIsEcodedString(String aSign) {
         String aChar = Ltree.fromUnescapedString(aSign).getSql();
         assertTrue(Ltree.isEncodedString(aChar));
     }
+
     @ParameterizedTest(name = "{0} doesn't match an encodingString")
-    @ValueSource(strings = {"_","A","2","a"})
-    void testIsNotEncodedString(String aSign){
+    @ValueSource(strings = {"_", "A", "2", "a"})
+    void testIsNotEncodedString(String aSign) {
         String aChar = Ltree.fromUnescapedString(aSign).getSql();
         assertFalse(Ltree.isEncodedString(aChar));
     }

@@ -2,7 +2,10 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import fr.inra.oresing.*;
+import fr.inra.oresing.OpenAdomJwtValue;
+import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.OreSiUserRequestClient;
+import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
@@ -16,7 +19,10 @@ import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -33,13 +39,16 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.crypto.SecretKey;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ActiveProfiles("testmail")
 @SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
@@ -51,6 +60,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("integration.rest")
 @Slf4j
 public class RightsTest {
+    @Value("${jwt.secret:1234567890AZERTYUIOP}")
+    String jwtSecret = "1234567890AZERTYUIOP";
+    SecretKey key;
+    String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
     @Autowired
     private Fixtures fixtures;
     @Autowired
@@ -63,10 +76,6 @@ public class RightsTest {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private UUID authUserId;
     private Cookie authCookie;
-    @Value("${jwt.secret:1234567890AZERTYUIOP}")
-    String jwtSecret ="1234567890AZERTYUIOP";
-    SecretKey key;
-    String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
 
     @BeforeEach
     public void createUser() throws Exception {
@@ -154,7 +163,7 @@ public class RightsTest {
         }
         final Date issuedAt = new Date();
 
-        final String token =  Jwts.builder()
+        final String token = Jwts.builder()
                 .subject(json)
                 .issuedAt(issuedAt)
                 .expiration(DateUtils.addSeconds(issuedAt, 0))

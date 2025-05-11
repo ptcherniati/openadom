@@ -107,7 +107,7 @@ public class ApplicationService implements ServiceContainerBean {
         application.setName(name);
         ReactiveProgression.CreateApplicationProgression result;
         try {
-            result = (ReactiveProgression.CreateApplicationProgression) changeApplicationConfiguration(
+            changeApplicationConfiguration(
                     comment,
                     progression,
                     application,
@@ -361,7 +361,7 @@ public class ApplicationService implements ServiceContainerBean {
             return progression;
         }
         //BadApplicationConfigurationException.check(configurationParsingResult);
-        progression.fluxSink().next(new ReactiveTypeInfo("application.configuration.create.register.start", Map.of("applicationName", applicationName)));
+        progression.fluxSink().next(new ReactiveTypeInfo<>("application.configuration.create.register.start", Map.of("applicationName", applicationName)));
 
         final Configuration configuration = application.getConfiguration();
         application.setId(oldApplicationId);

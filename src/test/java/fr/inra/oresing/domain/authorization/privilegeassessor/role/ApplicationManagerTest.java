@@ -52,8 +52,8 @@ class ApplicationManagerTest {
         ApplicationManagerUser castedManager = managerUser.canUpdateApplication();
 
         // Vérifier le type exact
-        assertTrue(castedAdmin instanceof ApplicationAdminUser, "castedAdmin devrait être de type ApplicationAdminUser");
-        assertTrue(castedManager instanceof ApplicationManagerUser, "castedManager devrait être de type ApplicationManagerUser");
+        assertInstanceOf(ApplicationAdminUser.class, castedAdmin, "castedAdmin devrait être de type ApplicationAdminUser");
+        assertInstanceOf(ApplicationManagerUser.class, castedManager, "castedManager devrait être de type ApplicationManagerUser");
 
         // Vérifier l'identité des objets
         assertSame(adminUser, castedAdmin, "canUpdateApplication devrait retourner l'objet original");
@@ -68,8 +68,8 @@ class ApplicationManagerTest {
         ApplicationManager regularManager = new ApplicationManagerUser(mockApplication);
 
         // Action - Utiliser la méthode générique pour obtenir le type spécifique
-        ApplicationAdminUser recoveredAdmin = adminManager.<ApplicationAdminUser>canUpdateApplication();
-        ApplicationManagerUser recoveredManager = regularManager.<ApplicationManagerUser>canUpdateApplication();
+        ApplicationAdminUser recoveredAdmin = adminManager.canUpdateApplication();
+        ApplicationManagerUser recoveredManager = regularManager.canUpdateApplication();
 
         // Assertion
         assertNotNull(recoveredAdmin, "Le admin récupéré ne devrait pas être null");

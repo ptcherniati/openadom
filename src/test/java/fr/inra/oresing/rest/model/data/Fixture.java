@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest.model.data;
 
-import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
@@ -21,6 +20,7 @@ import java.util.Optional;
 public class Fixture {
     public static final String DATATYPE = "pem";
     public static final Resource yaml = new ClassPathResource("data/configuration/data.configuration.monsore.json");
+
     public static DownloadDatasetQuery addApplication(final DownloadDatasetQuery downloadDatasetQuery) throws IOException {
         final byte[] yamlContent = FileCopyUtils.copyToByteArray(yaml.getInputStream());
         final YAMLMapper mapper = new YAMLMapper();

@@ -265,8 +265,7 @@ class ApplicationUserTest {
         // Vérifier que toutes les implémentations de ApplicationUser sont aussi des ApplicationPersona
         for (Arguments args : provideUserImplementations().toList()) {
             Object impl = args.get()[1];
-            assertTrue(impl instanceof ApplicationPersona,
-                    impl.getClass().getSimpleName() + " devrait implémenter ApplicationPersona");
+            assertInstanceOf(ApplicationPersona.class, impl, impl.getClass().getSimpleName() + " devrait implémenter ApplicationPersona");
         }
     }
 
@@ -318,8 +317,7 @@ class ApplicationUserTest {
                 "La conversion ascendante devrait préserver l'accès à l'application");
 
         // Vérifier les conversions descendantes (downcasting) sécurisées
-        if (user instanceof ApplicationDataWriter) {
-            ApplicationDataWriter writer = (ApplicationDataWriter) user;
+        if (user instanceof ApplicationDataWriter writer) {
             assertSame(user.application(), writer.application(),
                     "La conversion descendante vers ApplicationDataWriter devrait préserver l'identité");
 

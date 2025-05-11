@@ -74,7 +74,7 @@ public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
             final V value1 = kvEntry.getValue();
             final K key = kvEntry.getKey();
             if(value1 instanceof SomethingToBeSentToFrontend){
-                final Object jsonForFrontend = ((SomethingToBeSentToFrontend) value1).toJsonForFrontend();
+                final Object jsonForFrontend = ((SomethingToBeSentToFrontend<?>) value1).toJsonForFrontend();
                 returnMap.put(key, jsonForFrontend);
             }else{
                 returnMap.put(key,value1);

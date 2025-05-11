@@ -19,12 +19,6 @@ public class PrivilegeAssessorDomainForSystemFactory {
     public static final PrivilegeAssessorDomainForSystem APPLICATION_CREATOR = builder()
             .withIsApplicationCreator(Set.of(DEFAULT_DATA_NAME))
             .build();
-
-    private PrivilegeAssessorDomainForSystemFactory withIsApplicationCreator(Set<String> defaultDataNamePatterns) {
-        when(authorizations.applicationCreator()).thenReturn(defaultDataNamePatterns);
-        return this;
-    }
-
     public static final PrivilegeAssessorDomainForSystem NO_SYSTEM_RIGHTS = builder()
             .build();
 
@@ -33,21 +27,25 @@ public class PrivilegeAssessorDomainForSystemFactory {
 
     }
 
-    private PrivilegeAssessorDomainForSystemFactory withIsOpenAdomAdmin(boolean isOpenAdomAdmin) {
-        when(currentUserRoles.isOpenAdomAdmin()).thenReturn(isOpenAdomAdmin);
-        return this;
-    }
-
     // Attributs d'instance pour le builder
     private AuthorizationsForSystemUser authorizations = mock(AuthorizationsForSystemUser.class, "mock authorizations");
     private PrivilegeSystemDomainEnum privilegeSystemDomainEnum;
     private CurrentUserRoles currentUserRoles = mock(CurrentUserRoles.class, "mock currentUserRoles");
 
-
     public static PrivilegeAssessorDomainForSystemFactory builder() {
         final PrivilegeAssessorDomainForSystemFactory privilegeAssessorDomainForSystemFactory = new PrivilegeAssessorDomainForSystemFactory();
         when(privilegeAssessorDomainForSystemFactory.authorizations.currentUserRoles()).thenReturn(privilegeAssessorDomainForSystemFactory.currentUserRoles);
         return privilegeAssessorDomainForSystemFactory;
+    }
+
+    private PrivilegeAssessorDomainForSystemFactory withIsApplicationCreator(Set<String> defaultDataNamePatterns) {
+        when(authorizations.applicationCreator()).thenReturn(defaultDataNamePatterns);
+        return this;
+    }
+
+    private PrivilegeAssessorDomainForSystemFactory withIsOpenAdomAdmin(boolean isOpenAdomAdmin) {
+        when(currentUserRoles.isOpenAdomAdmin()).thenReturn(isOpenAdomAdmin);
+        return this;
     }
 
     public PrivilegeAssessorDomainForSystem build() {

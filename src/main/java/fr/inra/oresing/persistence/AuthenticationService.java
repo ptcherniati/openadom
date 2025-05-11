@@ -4,6 +4,7 @@ import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.authorization.role.*;
@@ -36,7 +37,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
-public class AuthenticationService implements ServiceContainerBean, fr.inra.oresing.domain.authorization.AuthenticationService {
+public class AuthenticationService implements ServiceContainerBean, AuthenticationServiceImpl {
     @Setter
     private ServiceContainer serviceContainer;
 
@@ -578,7 +579,7 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
         return sendEmailValidation(loginResult, EmailService.MESSAGES.VALIDATION_KEY);
     }
 
-    private OreSiUser updatePasswordLost(final OreSiUser loginResult, final CreateUserRequest createUserRequest) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    private OreSiUser updatePasswordLost(final OreSiUser loginResult, final CreateUserRequest createUserRequest) throws AuthenticationFailure, JsonProcessingException {
         final OreSiUser oreSiUser = Optional.ofNullable(loginResult)
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
         validateValidationKey(oreSiUser, createUserRequest.getVerificationKey());
@@ -621,7 +622,7 @@ public class AuthenticationService implements ServiceContainerBean, fr.inra.ores
         return updateUser;
     }
 
-    private OreSiUser activeAccount(final OreSiUser oreSiUser, final String verificationKey) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    private OreSiUser activeAccount(final OreSiUser oreSiUser, final String verificationKey) throws AuthenticationFailure {
         validateValidationKey(oreSiUser, verificationKey);
         return oreSiUser;
     }

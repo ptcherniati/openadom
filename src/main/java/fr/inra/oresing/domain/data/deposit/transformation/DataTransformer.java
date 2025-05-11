@@ -1,10 +1,7 @@
 package fr.inra.oresing.domain.data.deposit.transformation;
 
-import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.Authorization;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.checker.LineChecker;
-import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.configuration.ConfigurationSi;

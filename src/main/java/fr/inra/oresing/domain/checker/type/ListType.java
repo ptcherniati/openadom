@@ -18,7 +18,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public non-sealed class ListType<F extends FieldType> implements FieldType<List> {
-    public static final ListType<? extends FieldType> EMPTY_LIST =  new ListType(StringType.getStringTypeFromStringValue(""));
+    public static final ListType<? extends FieldType> EMPTY_LIST =  new ListType<>(StringType.getStringTypeFromStringValue(""));
     @Getter
     private final F fieldType;
     List<F> value = new LinkedList<>();
@@ -28,7 +28,7 @@ public non-sealed class ListType<F extends FieldType> implements FieldType<List>
         clone = () -> new ListType(fieldType.copy());
     }
 
-    public static FieldType getListTypeFromListValue(final List<StringType> value) {
+    public static ListType getListTypeFromListValue(final List<StringType> value) {
         final ListType listType = new ListType(StringType.getStringTypeFromStringValue(""));
         listType.value = value;
         return listType;

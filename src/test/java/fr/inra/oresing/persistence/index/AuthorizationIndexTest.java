@@ -6,15 +6,19 @@ import fr.inra.oresing.domain.application.configuration.AuthorizationScopeCompon
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
-import fr.inra.oresing.domain.authorization.request.*;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Assertions;
+import fr.inra.oresing.domain.authorization.request.AuthorizationForReferenceScope;
+import fr.inra.oresing.domain.authorization.request.AuthorizationForReferenceScopeAndTimeScope;
+import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
+import fr.inra.oresing.domain.authorization.request.AuthorizationNoRestriction;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

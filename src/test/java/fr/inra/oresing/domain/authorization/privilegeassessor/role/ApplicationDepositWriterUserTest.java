@@ -31,11 +31,9 @@ import static org.mockito.Mockito.any;
 class ApplicationDepositWriterUserTest {
 
     @Mock
-    private Application mockApplication;
-
-    @Mock
     private static AuthorizationParsed authorizationParsed;
-
+    @Mock
+    private Application mockApplication;
     @Mock
     private FileOrUUID mockFileOrUUID;
 
@@ -44,14 +42,6 @@ class ApplicationDepositWriterUserTest {
 
     @Mock
     private AuthorizationParsed mockAuthorization;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        when(mockApplication.getName()).thenReturn("Test Application");
-        when(mockFileOrUUID.binaryfiledataset()).thenReturn(mockBinaryFileDataset);
-        when(mockBinaryFileDataset.getRequiredAuthorizations()).thenReturn(new HashMap<>());
-    }
 
     /**
      * Fournit des scénarios de test pour les droits de dépôt
@@ -97,6 +87,14 @@ class ApplicationDepositWriterUserTest {
                         true
                 )
         );
+    }
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        when(mockApplication.getName()).thenReturn("Test Application");
+        when(mockFileOrUUID.binaryfiledataset()).thenReturn(mockBinaryFileDataset);
+        when(mockBinaryFileDataset.getRequiredAuthorizations()).thenReturn(new HashMap<>());
     }
 
     @ParameterizedTest(name = "{0}")
@@ -216,8 +214,7 @@ class ApplicationDepositWriterUserTest {
         );
 
         // Vérifier l'implémentation de l'interface
-        assertTrue(depositWriter instanceof ApplicationDataWriter,
-                "Devrait implémenter ApplicationDataWriter");
+        assertInstanceOf(ApplicationDataWriter.class, depositWriter, "Devrait implémenter ApplicationDataWriter");
 
         // Vérifier l'accès à travers l'interface
         ApplicationDataWriter asWriter = depositWriter;

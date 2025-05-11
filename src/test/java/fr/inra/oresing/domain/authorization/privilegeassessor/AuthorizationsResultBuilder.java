@@ -10,18 +10,18 @@ import java.util.List;
 import java.util.Map;
 
 public class AuthorizationsResultBuilder {
-    public static final AuthorizationsResultBuilder builder() {
-        return new AuthorizationsResultBuilder();
-    }
-
-    private Map<String, List<AuthorizationParsed>> userAuthorization = new HashMap<>();
-    private Map<String, AuthorizationParsed> publicAuthorization = new HashMap<>();
+    private final Map<String, List<AuthorizationParsed>> userAuthorization = new HashMap<>();
+    private final Map<String, AuthorizationParsed> publicAuthorization = new HashMap<>();
     private String applicationName = "applicationName";
     private boolean isApplicationCreator = false;
     private boolean isApplicationManager = false;
     private boolean isUserManager = false;
     private boolean isApplicationUser = false;
     private boolean isActiveAppicationUser = false;
+
+    public static final AuthorizationsResultBuilder builder() {
+        return new AuthorizationsResultBuilder();
+    }
 
     public AuthorizationsResultBuilder putAuthorizationParsed(String dataName, AuthorizationParsed authorizationParsed) {
         this.userAuthorization.compute(dataName,

@@ -63,7 +63,7 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
         return Optional.ofNullable(fieldType)
                 .map(ListType::getValue)
                 .map(DataColumnMultipleValue::new)
-                .orElse(new DataColumnMultipleValue(ListType.EMPTY_LIST));
+                .orElse(new DataColumnMultipleValue<>(ListType.EMPTY_LIST));
     }
 
     private U stringToValue(final String s) {

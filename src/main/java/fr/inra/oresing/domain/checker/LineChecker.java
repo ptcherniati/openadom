@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public sealed interface LineChecker<F extends FieldType> permits LineChecker.ManyChecker, LineChecker.OneChecker {
 
 
-    static Set<LineChecker<? extends FieldType>> toLineChecker(
+    static <L extends FieldType> Set<LineChecker<L>> toLineChecker(
             DataRepository referenceValueRepository,
             PublishContext.PublishContextBuilder publishContextBuilder,
             TransformationConfiguration transformation,
@@ -50,13 +50,13 @@ public sealed interface LineChecker<F extends FieldType> permits LineChecker.Man
                 lineTransformer
         );
         return switch (checker.multiplicity()) {
-            case ONE -> Set.of(new OneChecker<>(
+            case ONE -> Set.of((LineChecker<L>) new OneChecker<>(
                     fieldType,
                     target,
                     lineTransformer,
                     checker
             ));
-            case MANY -> Set.of(new ManyChecker<>(
+            case MANY -> Set.of((LineChecker<L>) new ManyChecker<>(
                     new ListType<>(fieldType),
                     target,
                     lineTransformer,

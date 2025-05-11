@@ -1,11 +1,7 @@
 package fr.inra.oresing.rest.model.authorization.request;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
-import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.rest.model.authorization.AuthorizationInput;
 import org.apache.commons.collections.MapUtils;
@@ -42,21 +38,4 @@ public class AuthorizationWithRestrictionBuilder {
     return new AuthorizationWithRestriction(authorizationWithrestriction);
   }
 
-  private void addAuthorizationForAll(OperationType roleKey,
-                                      JsonNode authorizationForAllNode,
-                                      ImmutableMap.Builder<OperationType, AuthorizationForAll> authorizationsForAllBuilder,
-                                      List<String> badReferences) {
-    if (authorizationForAllNode.isEmpty()) {
-      return;
-    }
-    if (authorizationForAllNode.isArray()) {
-      authorizationForAllNode.elements().forEachRemaining(referenceNode -> {
-        try {
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-      });
-    }
-  }
 }

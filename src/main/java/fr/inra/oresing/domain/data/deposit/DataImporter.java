@@ -31,9 +31,13 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,7 +47,6 @@ public class DataImporter {
 
 
     public static final String HIERARCHICALKEY_SEPARATOR = "K";
-
 
 
     private final DataImporterContext dataImporterContext;
@@ -70,7 +73,7 @@ public class DataImporter {
         } else {
             recursionStrategy = new WithoutRecursion(dataImporterContext);
         }
-        this.dataTransformer= new DataTransformer(getDataImporterContext(), getRecursionStrategy());
+        this.dataTransformer = new DataTransformer(getDataImporterContext(), getRecursionStrategy());
         this.csvReader = new CsvReader(getDataImporterContext(), getRecursionStrategy());
         this.dataValidator = new DataValidator();
     }
@@ -82,7 +85,7 @@ public class DataImporter {
         final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT).setDelimiter(dataImporterContext.getCsvSeparator()).setSkipHeaderRecord(true).build();
 
         SetMultimap<Ltree, Long> encounteredHierarchicalKeysForConflictDetection = HashMultimap.create();
-        Function<KeysAndReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> storeHierarchicalKeyForConflictDetection = keysAndReferenceDatumAfterChecking -> {
+        UnaryOperator<KeysAndReferenceDatumAfterChecking> storeHierarchicalKeyForConflictDetection = keysAndReferenceDatumAfterChecking -> {
             final long lineNumber = keysAndReferenceDatumAfterChecking.getLineNumber();
             final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
             encounteredHierarchicalKeysForConflictDetection.put(hierarchicalKey, lineNumber);
@@ -100,10 +103,8 @@ public class DataImporter {
         dataImporterContext.setTransformedLineCheckers(csvReader.buildLineCheckers(dataHeaderReader.constantValues().values()));
         Stream<DataValue> referenceValuesStream = csvRecordsStream.flatMap(csvRecordToReferenceDatumFn).map(dataHeaderReader::addConstantsToRow).map(dataTransformer::computeComputedColumns)
                 //.parallel()
-                .filter(rowWithReferenceDatum -> allErrors.canRegisterErrors()).map(rowWithReferenceDatum -> dataValidator.check(dataTransformer::computeKeys, recursionStrategy, rowWithReferenceDatum, dataImporterContext.getTransformedLineCheckers(), dataImporterContext.getPublishContextBuilder())).flatMap(List::stream).map(referenceDatumAfterChecking -> {
-                    allErrors.addAll(referenceDatumAfterChecking.errors());
-                    return referenceDatumAfterChecking;
-                }).filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.errors().isEmpty()).map(dataTransformer::computeKeys).map(storeHierarchicalKeyForConflictDetection).filter(keysAndReferenceDatumAfterChecking -> {
+                .filter(rowWithReferenceDatum -> allErrors.canRegisterErrors())
+                .map(rowWithReferenceDatum -> dataValidator.check(dataTransformer::computeKeys, recursionStrategy, rowWithReferenceDatum, dataImporterContext.getTransformedLineCheckers(), dataImporterContext.getPublishContextBuilder())).flatMap(List::stream).peek(referenceDatumAfterChecking -> allErrors.addAll(referenceDatumAfterChecking.errors())).filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.errors().isEmpty()).map(dataTransformer::computeKeys).map(storeHierarchicalKeyForConflictDetection).filter(keysAndReferenceDatumAfterChecking -> {
                     final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
                     return encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                 }).map(keysAndReferenceDatumAfterChecking -> dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
@@ -112,8 +113,15 @@ public class DataImporter {
         final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = csvReader.getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         if (!recursionStrategy.dataImporterContext().getMissingLines().isEmpty()) {
-            Optional<ReferenceType> referenceType = dataImporterContext.getTransformedLineCheckers().stream().filter(lineChecker -> lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.isRecursive()).map(LineChecker::fieldTypeForOne).filter(ReferenceType.class::isInstance).map(ReferenceType.class::cast).filter(rt -> rt.getRefType().equals(dataImporterContext.getRefType())).findAny();
-            CheckerTarget target = referenceType.get().target();
+            CheckerTarget target = dataImporterContext.getTransformedLineCheckers().stream()
+                    .filter(lineChecker -> lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.isRecursive())
+                    .map(LineChecker::fieldTypeForOne)
+                    .filter(ReferenceType.class::isInstance)
+                    .map(ReferenceType.class::cast)
+                    .filter(rt -> rt.getRefType().equals(dataImporterContext.getRefType()))
+                    .findFirst()
+                    .map(ReferenceType::target)
+                    .orElse(null);
             ReferenceValidationCheckResult error = ReferenceValidationCheckResult.error(target,//target,
                     recursionStrategy.dataImporterContext().getMissingLines().keySet().toString(),//localRawValue,
                     target.getInternationalizedKey("missingrecursiveParentReference"), ImmutableMap.of("target", target,//target.toHumanReadableString(),

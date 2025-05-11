@@ -5,8 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.io.Resources;
-import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.*;
@@ -81,11 +81,6 @@ public class Fixtures {
                 .collect(Collectors.toList());
     }
 
-    public String getIdFromApplicationResult(final MvcResult result) throws UnsupportedEncodingException {
-        return (String) getResults(result).getFirst().result();
-
-    }
-
     static List<ReactiveTypeResult> getResults(final MvcResult result) throws UnsupportedEncodingException {
         return Optional.ofNullable(getReactiveResultFromResult(result)
                         .get(ReactiveType.REACTIVE_RESULT))
@@ -124,83 +119,6 @@ public class Fixtures {
                                             case REACTIVE_PROGRESS -> new ReactiveTypeProgress(el.get("result"));
                                         }).collect(Collectors.toList())))
                 );
-    }
-
-    public Exception loadApplicationWithError(final MockMultipartFile file,
-                                              final Cookie cookie,
-                                              final String applicationName) throws Exception {
-        return mockMvc
-                .perform(multipart("/api/v1/applications/{applicationName}", applicationName)
-                            .file(file).with(csrf().asHeader())
-                        .cookie(cookie)
-                )
-                .andExpect(status().is(401))
-                .andReturn()
-                .getResolvedException();
-    }
-
-    MvcResult validateApplication(final MockMultipartFile file,
-                                  final Cookie cookie) throws Exception {
-        final ResultActions result = mockMvc.perform(
-                multipart("/api/v1/validate-configuration")
-                            .file(file).with(csrf().asHeader())
-                        .accept(MediaType.APPLICATION_NDJSON)
-                        .cookie(cookie)
-        );
-        return mockMvc.perform(asyncDispatch(
-                        result
-                                .andDo(result1 -> {
-                                    if(result1.getResponse().getStatus() > 250){
-                                        System.out.println(result1);
-                                    }
-                                })
-                                .andExpect(request().asyncStarted())
-                                .andReturn())
-                )
-                .andReturn();
-    }
-
-    public MvcResult loadApplication(final MockMultipartFile file,
-                                     final Cookie cookie,
-                                     final String applicationName,
-                                     final String comment) throws Throwable {
-        try {
-            final ResultActions result = mockMvc.perform(
-                    multipart("/api/v1/applications/{applicationName}", applicationName)
-                            .file(file).with(csrf().asHeader())
-                            .param("comment", comment != null ? comment : "")
-                            .accept(MediaType.APPLICATION_NDJSON)
-                            .cookie(cookie)
-            );
-            return mockMvc.perform(asyncDispatch(
-                            result
-                                    //.andExpect(request().asyncStarted())
-                                    .andReturn())
-                    )
-                    .andReturn();
-        } catch (final Exception e) {
-            throw e.getCause()==null?e:e.getCause();
-        }
-    }
-
-
-    MvcResult changeConfiguration(final MockMultipartFile file,
-                                  final Cookie cookie,
-                                  final String applicationName,
-                                  final String comment) throws Exception {
-        final ResultActions result = mockMvc.perform(
-                multipart("/api/v1/applications/{applicationName}/configuration", applicationName)
-                            .file(file).with(csrf().asHeader())
-                        .param("comment", comment != null ? comment : "")
-                        .accept(MediaType.APPLICATION_NDJSON)
-                        .cookie(cookie)
-        );
-        return mockMvc.perform(asyncDispatch(
-                        result
-                                .andExpect(request().asyncStarted())
-                                .andReturn())
-                )
-                .andReturn();
     }
 
     public static String getApplicationWithComputedComponentsWithReferences() {
@@ -260,10 +178,10 @@ public class Fixtures {
         return data;
     }
 
-
     public static String getMonsoreApplicationConfigurationWithRepositoryResourceName() {
         return "/data/monsore/monsore-with-repository.yaml";
     }
+
     public static String getMonsoreApplicationConfigurationResourceName() {
         return "/data/monsore/monsore.yaml";
     }
@@ -382,7 +300,6 @@ public class Fixtures {
                       "to":"1984-01-05 00:00:00"
                    }""", plateforme, projet, site);
     }
-
 
     public static String getConditionsPrelevementRepositoryId(final String site) {
         return String.format("""
@@ -621,22 +538,6 @@ public class Fixtures {
         return "/data/acbb/biomasse_production_teneur.csv";
     }
 
-    public InputStream openSwcDataResourceName(final boolean truncated) {
-        final String resourceName = "/data/acbb/SWC.csv";
-        if (truncated) {
-            try {
-                final String collect = Resources.asCharSource(Objects.requireNonNull(getClass().getResource(resourceName)), StandardCharsets.UTF_8).lines()
-                        .limit(100)
-                        .collect(Collectors.joining("\n"));
-                return IOUtils.toInputStream(collect, StandardCharsets.UTF_8);
-            } catch (final IOException e) {
-                throw new OreSiTechnicalException("ne devrait pas arriver", e);
-            }
-        } else {
-            return getClass().getResourceAsStream(resourceName);
-        }
-    }
-
     public static String getMigrationApplicationConfigurationResourceName(final int version) {
         return "/data/migration/fake-app_v" + version + ".yaml";
     }
@@ -647,219 +548,6 @@ public class Fixtures {
 
     public static String getMigrationApplicationReferenceResourceName() {
         return "/data/migration/couleurs.csv";
-    }
-
-    public Cookie addopenAdomAdmin(final String applicationPattern) throws Exception {
-        if (cookie == null) {
-            final String aPassword = "xxxxxxxx";
-            final String aLogin = "openAdomAdmin";
-            final CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword, aLogin + "@inrae.fr");
-            authenticationService.addUserRightCreateApplication(createUserResult.userId(), applicationPattern);
-            cookie = mockMvc.perform(post("/api/v1/login")
-                            .param("login", aLogin)
-                            .param("password", aPassword))
-                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-        }
-        return cookie;
-    }@Transactional
-    void addRoleAdmin(final CreateUserResult dbUserResult) {
-        String sql = """
-        GRANT "openAdomAdmin" TO :userId WITH INHERIT TRUE
-        """;
-
-        namedParameterJdbcTemplate.update(
-                sql,
-                Map.of("userId", dbUserResult.userId().toString())
-        );
-    }
-
-    @Transactional
-    void setToActive(final UUID userId) {
-        String sql = """
-        UPDATE public.OreSiUser 
-        SET accountstate = 'active' 
-        WHERE id = :id
-        """;
-
-        namedParameterJdbcTemplate.update(
-                sql,
-                Map.of("id", userId)
-        );
-    }
-
-
-    public Cookie addApplicationCreatorUser(final String applicationPattern) throws Exception {
-        if (cookie == null) {
-            final String aPassword = "xxxxxxxx";
-            final String aLogin = "poussin";
-            final CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword, aLogin + "@inrae.fr");
-            setToActive(createUserResult.userId());
-            addRoleAdmin(createUserResult);
-            MockHttpServletResponse response = mockMvc.perform(post("/api/v1/login")
-                            .param("login", aLogin)
-                            .param("password", aPassword))
-                    .andReturn().getResponse();
-            cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
-        }
-        final String aPassword = "xxxxxxxx";
-        final CreateUserResult createUserResult = authenticationService.createUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
-        setToActive(createUserResult.userId());
-        UUID userId = createUserResult.userId();
-        final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
-                        .param("userIdOrLogin", userId.toString())
-                        .param("applicationPattern", applicationPattern)
-                        .cookie(cookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(userId.toString())))
-                .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
-                .andExpect(jsonPath("$.authorizations", Matchers.hasItem(applicationPattern)))
-                .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
-        OreSiUser user = userRepository.findById(userId);
-        assertTrue(user.getAuthorizations().contains(applicationPattern));
-        setToActive(createUserResult.userId());
-        return mockMvc.perform(post("/api/v1/login")
-                        .param("login", applicationPattern)
-                        .param("password", aPassword))
-                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-    }
-
-    public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {
-        MvcResult result;
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-            result = loadApplication(configuration, authCookie, (applicationName == null ? "monsore" : applicationName), (applicationName == null ? "monsore" : applicationName));
-
-            return getIdFromApplicationResult(result);
-        } catch (final Throwable e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Exception createApplicationMonSoreWithError(final Cookie authCookie, final String applicationName) throws Exception {
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-            return loadApplicationWithError(configuration, authCookie, (applicationName == null ? "monsore" : applicationName));
-
-        }
-    }
-
-    public Cookie addMonsoreApplication() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("monsore");
-        final String result = createApplicationMonSore(authCookie, "monsore");
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : getMonsoreReferentielFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data
-        try (final InputStream refStream = getClass().getResourceAsStream(getPemDataResourceName())) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
-        return authCookie;
-    }
-
-    public Cookie addMigrationApplication() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("fakeapp");
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getMigrationApplicationConfigurationResourceName(1))) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
-
-            getIdFromApplicationResult(loadApplication(configuration, authCookie, "fakeapp", "fakeapp"));
-        } catch (final Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-        // Ajout de referentiel
-        try (final InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationReferenceResourceName())) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "reference.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/couleurs")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data
-        try (final InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationDataResourceName())) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "data.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/jeu1")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
-
-        return authCookie;
-    }
-
-    public Cookie addApplicationAcbb(Cookie authCookie) throws Exception {
-        Cookie authCookie1 = authCookie;
-        if (authCookie1 == null) {
-            authCookie1 = addApplicationCreatorUser("acbb");
-        }
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getAcbbApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
-            getIdFromApplicationResult(loadApplication(configuration, authCookie1, "acbb", "acbb"));
-        } catch (final Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : getAcbbReferentielFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/acbb/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie1))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data
-        addFluxTours(authCookie1);
-
-        addBiomasse(authCookie1);
-
-        addSWC(authCookie1);
-        return authCookie1;
-    }
-
-    private void addSWC(final Cookie authCookie) throws Exception {
-        try (final InputStream in = openSwcDataResourceName(true)) {
-            final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/SWC")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
-    }
-
-    private void addBiomasse(final Cookie authCookie) throws Exception {
-        try (final InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
-    }
-
-    private void addFluxTours(final Cookie authCookie) throws Exception {
-        try (final InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/flux_tours")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
     }
 
     public static String getValidationApplicationConfigurationResourceName() {
@@ -884,37 +572,6 @@ public class Fixtures {
 
     public static String getHauteFrequenceDataResourceName() {
         return "/data/hautefrequence/rnt_bimont_haute_frequence_14-06-2016_14-03-2017.csv";
-    }
-
-    public Cookie addApplicationHauteFrequence() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("hautefrequence");
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getHauteFrequenceApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
-            loadApplication(configuration, authCookie, "hautefrequence", "hautefrequence");
-        } catch (final Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : getHauteFrequenceReferentielFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
-                        .andExpect(status().is2xxSuccessful());
-            }
-        }
-
-        // ajout de data
-        try (final InputStream refStream = getClass().getResourceAsStream(getHauteFrequenceDataResourceName())) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
-        return authCookie;
     }
 
     public static String getDuplicatedApplicationConfigurationResourceName() {
@@ -952,93 +609,6 @@ public class Fixtures {
 
     public static String getOlaApplicationConfigurationResourceName() {
         return "/data/olac/olac.yaml";
-    }
-
-    public Cookie addApplicationOLAC() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("olac");
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getOlaApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
-
-            loadApplication(configuration, authCookie, "olac", "olac");
-        } catch (final Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : getOlaReferentielFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data condition_prelevements
-        try (final InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/condition_prelevements")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data physico-chimie
-        try (final InputStream in = getClass().getResourceAsStream(getPhysicoChimieDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/physico-chimie")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data sonde_truncated
-        try (final InputStream in = getClass().getResourceAsStream(getSondeDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/sonde_truncated")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data phytoplancton_aggregated
-        try (final InputStream in = getClass().getResourceAsStream(getPhytoAggregatedDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data phytoplancton_truncated
-        try (final InputStream in = getClass().getResourceAsStream(getPhytoplanctonDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_truncated.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data  zooplancton_truncated
-        try (final InputStream in = getClass().getResourceAsStream(getZooplanctonDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_truncated.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton__truncated")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        // ajout de data zooplancton_biovolumes
-        try (final InputStream in = getClass().getResourceAsStream(getZooplactonBiovolumDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        return authCookie;
     }
 
     public static String getConditionPrelevementDataResourceName() {
@@ -1115,38 +685,6 @@ public class Fixtures {
         return "/data/foret/foret_essai.yaml";
     }
 
-    public Cookie addApplicationFORET() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("foret");
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getForetApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
-            loadApplication(configuration, authCookie, "foret", "foret");
-        } catch (final Throwable e) {
-            throw new RuntimeException(e);
-        }
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : getForetReferentielFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data
-        try (final InputStream in = getClass().getResourceAsStream(getFluxMeteoForetDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().isCreated());
-        }
-
-        return authCookie;
-    }
-
     public static String getFluxMeteoForetDataResourceName() {
         return "/data/foret/flux_meteo_dataResult.csv";
     }
@@ -1185,6 +723,483 @@ public class Fixtures {
                 .build();
     }
 
+    public static String getMultiplicityMany() {
+        return "/data/multiplicity/multiplicity.yaml";
+    }
+
+    public static Map<String, String> getMultiplicityReferencesFiles() {
+        final Map<String, String> references = new LinkedHashMap<>();
+        references.put("reference1", "/data/multiplicity/references/reference1.csv");
+        references.put("reference2", "/data/multiplicity/references/reference2.csv");
+        references.put("bugs", "/data/multiplicity/data/bugs.csv");
+        return references;
+    }
+
+    public static String getMultiplicityManyData() {
+        return "/data/multiplicity/data/bugs.csv";
+    }
+
+    public String getIdFromApplicationResult(final MvcResult result) throws UnsupportedEncodingException {
+        return (String) getResults(result).getFirst().result();
+
+    }
+
+    public Exception loadApplicationWithError(final MockMultipartFile file,
+                                              final Cookie cookie,
+                                              final String applicationName) throws Exception {
+        return mockMvc
+                .perform(multipart("/api/v1/applications/{applicationName}", applicationName)
+                        .file(file).with(csrf().asHeader())
+                        .cookie(cookie)
+                )
+                .andExpect(status().is(401))
+                .andReturn()
+                .getResolvedException();
+    }
+
+    MvcResult validateApplication(final MockMultipartFile file,
+                                  final Cookie cookie) throws Exception {
+        final ResultActions result = mockMvc.perform(
+                multipart("/api/v1/validate-configuration")
+                        .file(file).with(csrf().asHeader())
+                        .accept(MediaType.APPLICATION_NDJSON)
+                        .cookie(cookie)
+        );
+        return mockMvc.perform(asyncDispatch(
+                        result
+                                .andDo(result1 -> {
+                                    if (result1.getResponse().getStatus() > 250) {
+                                        System.out.println(result1);
+                                    }
+                                })
+                                .andExpect(request().asyncStarted())
+                                .andReturn())
+                )
+                .andReturn();
+    }
+
+    public MvcResult loadApplication(final MockMultipartFile file,
+                                     final Cookie cookie,
+                                     final String applicationName,
+                                     final String comment) throws Throwable {
+        try {
+            final ResultActions result = mockMvc.perform(
+                    multipart("/api/v1/applications/{applicationName}", applicationName)
+                            .file(file).with(csrf().asHeader())
+                            .param("comment", comment != null ? comment : "")
+                            .accept(MediaType.APPLICATION_NDJSON)
+                            .cookie(cookie)
+            );
+            return mockMvc.perform(asyncDispatch(
+                            result
+                                    //.andExpect(request().asyncStarted())
+                                    .andReturn())
+                    )
+                    .andReturn();
+        } catch (final Exception e) {
+            throw e.getCause() == null ? e : e.getCause();
+        }
+    }
+
+    MvcResult changeConfiguration(final MockMultipartFile file,
+                                  final Cookie cookie,
+                                  final String applicationName,
+                                  final String comment) throws Exception {
+        final ResultActions result = mockMvc.perform(
+                multipart("/api/v1/applications/{applicationName}/configuration", applicationName)
+                        .file(file).with(csrf().asHeader())
+                        .param("comment", comment != null ? comment : "")
+                        .accept(MediaType.APPLICATION_NDJSON)
+                        .cookie(cookie)
+        );
+        return mockMvc.perform(asyncDispatch(
+                        result
+                                .andExpect(request().asyncStarted())
+                                .andReturn())
+                )
+                .andReturn();
+    }
+
+    public InputStream openSwcDataResourceName(final boolean truncated) {
+        final String resourceName = "/data/acbb/SWC.csv";
+        if (truncated) {
+            try {
+                final String collect = Resources.asCharSource(Objects.requireNonNull(getClass().getResource(resourceName)), StandardCharsets.UTF_8).lines()
+                        .limit(100)
+                        .collect(Collectors.joining("\n"));
+                return IOUtils.toInputStream(collect, StandardCharsets.UTF_8);
+            } catch (final IOException e) {
+                throw new OreSiTechnicalException("ne devrait pas arriver", e);
+            }
+        } else {
+            return getClass().getResourceAsStream(resourceName);
+        }
+    }
+
+    public Cookie addopenAdomAdmin(final String applicationPattern) throws Exception {
+        if (cookie == null) {
+            final String aPassword = "xxxxxxxx";
+            final String aLogin = "openAdomAdmin";
+            final CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword, aLogin + "@inrae.fr");
+            authenticationService.addUserRightCreateApplication(createUserResult.userId(), applicationPattern);
+            cookie = mockMvc.perform(post("/api/v1/login")
+                            .param("login", aLogin)
+                            .param("password", aPassword))
+                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+        }
+        return cookie;
+    }
+
+    @Transactional
+    void addRoleAdmin(final CreateUserResult dbUserResult) {
+        String sql = """
+                GRANT "openAdomAdmin" TO :userId WITH INHERIT TRUE
+                """;
+
+        namedParameterJdbcTemplate.update(
+                sql,
+                Map.of("userId", dbUserResult.userId().toString())
+        );
+    }
+
+    @Transactional
+    void setToActive(final UUID userId) {
+        String sql = """
+                UPDATE public.OreSiUser 
+                SET accountstate = 'active' 
+                WHERE id = :id
+                """;
+
+        namedParameterJdbcTemplate.update(
+                sql,
+                Map.of("id", userId)
+        );
+    }
+
+    public Cookie addApplicationCreatorUser(final String applicationPattern) throws Exception {
+        if (cookie == null) {
+            final String aPassword = "xxxxxxxx";
+            final String aLogin = "poussin";
+            final CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword, aLogin + "@inrae.fr");
+            setToActive(createUserResult.userId());
+            addRoleAdmin(createUserResult);
+            MockHttpServletResponse response = mockMvc.perform(post("/api/v1/login")
+                            .param("login", aLogin)
+                            .param("password", aPassword))
+                    .andReturn().getResponse();
+            cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
+        }
+        final String aPassword = "xxxxxxxx";
+        final CreateUserResult createUserResult = authenticationService.createUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
+        setToActive(createUserResult.userId());
+        UUID userId = createUserResult.userId();
+        final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                        .param("userIdOrLogin", userId.toString())
+                        .param("applicationPattern", applicationPattern)
+                        .cookie(cookie))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(userId.toString())))
+                .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
+                .andExpect(jsonPath("$.authorizations", Matchers.hasItem(applicationPattern)))
+                .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
+        OreSiUser user = userRepository.findById(userId);
+        assertTrue(user.getAuthorizations().contains(applicationPattern));
+        setToActive(createUserResult.userId());
+        return mockMvc.perform(post("/api/v1/login")
+                        .param("login", applicationPattern)
+                        .param("password", aPassword))
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+    }
+
+    public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {
+        MvcResult result;
+        try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
+            result = loadApplication(configuration, authCookie, (applicationName == null ? "monsore" : applicationName), (applicationName == null ? "monsore" : applicationName));
+
+            return getIdFromApplicationResult(result);
+        } catch (final Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public Exception createApplicationMonSoreWithError(final Cookie authCookie, final String applicationName) throws Exception {
+        try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
+            return loadApplicationWithError(configuration, authCookie, (applicationName == null ? "monsore" : applicationName));
+
+        }
+    }
+
+    public Cookie addMonsoreApplication() throws Exception {
+        final Cookie authCookie = addApplicationCreatorUser("monsore");
+        final String result = createApplicationMonSore(authCookie, "monsore");
+
+        // Ajout de referentiel
+        for (final Map.Entry<String, String> e : getMonsoreReferentielFiles().entrySet()) {
+            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", e.getKey())
+                                .file(refFile).with(csrf().asHeader())
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data
+        try (final InputStream refStream = getClass().getResourceAsStream(getPemDataResourceName())) {
+            final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
+            mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+                            .file(refFile).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+        }
+        return authCookie;
+    }
+
+    public Cookie addMigrationApplication() throws Exception {
+        final Cookie authCookie = addApplicationCreatorUser("fakeapp");
+        try (final InputStream configurationFile = getClass().getResourceAsStream(getMigrationApplicationConfigurationResourceName(1))) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
+
+            getIdFromApplicationResult(loadApplication(configuration, authCookie, "fakeapp", "fakeapp"));
+        } catch (final Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        // Ajout de referentiel
+        try (final InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationReferenceResourceName())) {
+            final MockMultipartFile refFile = new MockMultipartFile("file", "reference.csv", "text/plain", refStream);
+            mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/couleurs")
+                            .file(refFile).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data
+        try (final InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationDataResourceName())) {
+            final MockMultipartFile refFile = new MockMultipartFile("file", "data.csv", "text/plain", refStream);
+            mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/jeu1")
+                            .file(refFile).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+        }
+
+        return authCookie;
+    }
+
+    public Cookie addApplicationAcbb(Cookie authCookie) throws Exception {
+        Cookie authCookie1 = authCookie;
+        if (authCookie1 == null) {
+            authCookie1 = addApplicationCreatorUser("acbb");
+        }
+        try (final InputStream configurationFile = getClass().getResourceAsStream(getAcbbApplicationConfigurationResourceName())) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
+            getIdFromApplicationResult(loadApplication(configuration, authCookie1, "acbb", "acbb"));
+        } catch (final Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        // Ajout de referentiel
+        for (final Map.Entry<String, String> e : getAcbbReferentielFiles().entrySet()) {
+            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(multipart("/api/v1/applications/acbb/data/{refType}", e.getKey())
+                                .file(refFile).with(csrf().asHeader())
+                                .cookie(authCookie1))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data
+        addFluxTours(authCookie1);
+
+        addBiomasse(authCookie1);
+
+        addSWC(authCookie1);
+        return authCookie1;
+    }
+
+    private void addSWC(final Cookie authCookie) throws Exception {
+        try (final InputStream in = openSwcDataResourceName(true)) {
+            final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/acbb/data/SWC")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+        }
+    }
+
+    private void addBiomasse(final Cookie authCookie) throws Exception {
+        try (final InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+        }
+    }
+
+    private void addFluxTours(final Cookie authCookie) throws Exception {
+        try (final InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/acbb/data/flux_tours")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+        }
+    }
+
+    public Cookie addApplicationHauteFrequence() throws Exception {
+        final Cookie authCookie = addApplicationCreatorUser("hautefrequence");
+        try (final InputStream configurationFile = getClass().getResourceAsStream(getHauteFrequenceApplicationConfigurationResourceName())) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
+            loadApplication(configuration, authCookie, "hautefrequence", "hautefrequence");
+        } catch (final Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        // Ajout de referentiel
+        for (final Map.Entry<String, String> e : getHauteFrequenceReferentielFiles().entrySet()) {
+            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey())
+                                .file(refFile).with(csrf().asHeader())
+                                .cookie(authCookie))
+                        .andExpect(status().is2xxSuccessful());
+            }
+        }
+
+        // ajout de data
+        try (final InputStream refStream = getClass().getResourceAsStream(getHauteFrequenceDataResourceName())) {
+            final MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
+            mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
+                            .file(refFile).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().is2xxSuccessful());
+        }
+        return authCookie;
+    }
+
+    public Cookie addApplicationOLAC() throws Exception {
+        final Cookie authCookie = addApplicationCreatorUser("olac");
+        try (final InputStream configurationFile = getClass().getResourceAsStream(getOlaApplicationConfigurationResourceName())) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
+
+            loadApplication(configuration, authCookie, "olac", "olac");
+        } catch (final Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        // Ajout de referentiel
+        for (final Map.Entry<String, String> e : getOlaReferentielFiles().entrySet()) {
+            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey())
+                                .file(refFile).with(csrf().asHeader())
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data condition_prelevements
+        try (final InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/condition_prelevements")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data physico-chimie
+        try (final InputStream in = getClass().getResourceAsStream(getPhysicoChimieDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/physico-chimie")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data sonde_truncated
+        try (final InputStream in = getClass().getResourceAsStream(getSondeDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/sonde_truncated")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data phytoplancton_aggregated
+        try (final InputStream in = getClass().getResourceAsStream(getPhytoAggregatedDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data phytoplancton_truncated
+        try (final InputStream in = getClass().getResourceAsStream(getPhytoplanctonDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_truncated.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data  zooplancton_truncated
+        try (final InputStream in = getClass().getResourceAsStream(getZooplanctonDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_truncated.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton__truncated")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        // ajout de data zooplancton_biovolumes
+        try (final InputStream in = getClass().getResourceAsStream(getZooplactonBiovolumDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        return authCookie;
+    }
+
+    public Cookie addApplicationFORET() throws Exception {
+        final Cookie authCookie = addApplicationCreatorUser("foret");
+        try (final InputStream configurationFile = getClass().getResourceAsStream(getForetApplicationConfigurationResourceName())) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
+            loadApplication(configuration, authCookie, "foret", "foret");
+        } catch (final Throwable e) {
+            throw new RuntimeException(e);
+        }
+
+        // Ajout de referentiel
+        for (final Map.Entry<String, String> e : getForetReferentielFiles().entrySet()) {
+            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+                mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey())
+                                .file(refFile).with(csrf().asHeader())
+                                .cookie(authCookie))
+                        .andExpect(status().isCreated());
+            }
+        }
+
+        // ajout de data
+        try (final InputStream in = getClass().getResourceAsStream(getFluxMeteoForetDataResourceName())) {
+            final MockMultipartFile file = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", in);
+            mockMvc.perform(multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
+                            .file(file).with(csrf().asHeader())
+                            .cookie(authCookie))
+                    .andExpect(status().isCreated());
+        }
+
+        return authCookie;
+    }
+
     public void addApplicationRecursivity() throws Exception {
         final Cookie authCookie = addApplicationCreatorUser("recursivite");
         try (final InputStream in = getClass().getResourceAsStream(getRecursivityApplicationConfigurationResourceName())) {
@@ -1200,7 +1215,7 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
@@ -1209,27 +1224,11 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
         }
-    }
-
-    public static String getMultiplicityMany() {
-        return "/data/multiplicity/multiplicity.yaml";
-    }
-
-    public static Map<String, String> getMultiplicityReferencesFiles() {
-        final Map<String, String> references = new LinkedHashMap<>();
-        references.put("reference1", "/data/multiplicity/references/reference1.csv");
-        references.put("reference2", "/data/multiplicity/references/reference2.csv");
-        references.put("bugs", "/data/multiplicity/data/bugs.csv");
-        return references;
-    }
-
-    public static String getMultiplicityManyData() {
-        return "/data/multiplicity/data/bugs.csv";
     }
 
     @Getter

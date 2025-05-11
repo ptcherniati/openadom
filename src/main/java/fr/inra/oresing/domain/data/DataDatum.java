@@ -146,10 +146,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
             replaced = values().entrySet().stream()
                     .filter(entry -> entry.getValue() instanceof DataColumnPatternValue)
                     .filter(entry -> ((DataColumnPatternValue) entry.getValue()).values().containsKey(column))
-                    .map(entry -> {
-                        ((DataColumnPatternValue) entry.getValue()).values().put(column, value);
-                        return entry;
-                    })
+                    .peek(entry -> ((DataColumnPatternValue) entry.getValue()).values().put(column, value))
                     .map(Map.Entry::getValue)
                     .findFirst()
                     .orElse(null);

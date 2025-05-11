@@ -159,17 +159,13 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                             .map(authorizationService
                                     .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
                                     ::forDataRead);
-                    case String read when APPLICATION_DATA_WRITE.equals(read) -> dataNameOpt
-                            .map(dataName ->
-                                    OreSiApiRequestContext.getAuthentication()
-                                            .map(OreSiAuthenticationToken::getFileOrUUID)
-                                            .map(FileOrUUID::topublish)
-                                            .or(() -> Optional.of(false))
-                                            .map(toPublish -> authorizationService
-                                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
-                                                    .forDataWrite(dataName, toPublish))
-                                            .orElse(null)
-                            );
+                    case String read when APPLICATION_DATA_WRITE.equals(read) -> dataNameOpt.flatMap(dataName -> OreSiApiRequestContext.getAuthentication()
+                            .map(OreSiAuthenticationToken::getFileOrUUID)
+                            .map(FileOrUUID::topublish)
+                            .or(() -> Optional.of(false))
+                            .map(toPublish -> authorizationService
+                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
+                                    .forDataWrite(dataName, toPublish)));
                     case String writeFile when APPLICATION_WRITE_FILE.equals(writeFile) -> dataNameOpt
                             .map(dataName -> DATA_WRITE.apply(applicationName)
                                     .forDataWrite(dataName, false));

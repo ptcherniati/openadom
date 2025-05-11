@@ -68,7 +68,7 @@ public non-sealed class FloatType implements FieldType<Float> {
         FloatValidationCheckResult validationCheckResult;
         final DataColumn target = lineChecker.target();
         try {
-            this.value = Float.parseFloat(value.replaceAll(",", "."));
+            this.value = Float.parseFloat(value.replace(",", "."));
             if (min != null && this.value.compareTo(min) < 0) {
                 throw new IllegalArgumentException(LOWER_THAN_MIN.name());
             }

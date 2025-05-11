@@ -9,14 +9,15 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.security.JWTExtractor;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
-
-import static org.junit.jupiter.api.Assertions.*;
-
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +34,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.Cookie;
-
 import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -43,6 +42,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -64,6 +64,8 @@ public class TestReferencesErrors {
     public static final String LOGIN = "poussinreferenceserrors";
     public static final String PASSWORD = "xxxxxxxx";
     public static final String EMAIL = "poussinreferenceserrors@inrae.fr";
+    private static CreateUserResult authUser = null;
+    private static UUID userId;
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
@@ -77,8 +79,7 @@ public class TestReferencesErrors {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private Cookie authCookie;
-    private static CreateUserResult authUser = null;
-    private static UUID userId;
+
     @AfterAll
     public static void registerErrors() throws IOException {
         String errorsAsString = new ObjectMapper().writeValueAsString(responses);
@@ -189,7 +190,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getKey() + ".csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", "proprietes_taxon")
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -203,7 +204,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -234,7 +235,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/condition_prelevements")
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(recursivityCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -300,7 +301,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnCookie))
                         .andDo(result -> {
                             if (result.getResponse().getStatus() > 300) {
@@ -333,7 +334,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
@@ -376,7 +377,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnsCookie))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
@@ -404,7 +405,7 @@ public class TestReferencesErrors {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
-                            .file(refFile).with(csrf().asHeader())
+                                .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnsCookie))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();

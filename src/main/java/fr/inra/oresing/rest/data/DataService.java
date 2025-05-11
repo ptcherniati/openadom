@@ -200,7 +200,7 @@ public class DataService implements ServiceContainerBean {
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
         Function<String, List<DataValue>> getDatavaluesByReference = reference -> referenceValueRepository.findAllByReferenceTypeStream(reference).toList();
         PublishContext.PublishContextBuilder publishContextBuilder = new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference);
-        final ImmutableSet<LineChecker<? extends FieldType>> lineCheckers = checkerFactory.getCheckers(application, dataName,
+        final ImmutableSet<LineChecker<FieldType>> lineCheckers = checkerFactory.getCheckers(application, dataName,
                 publishContextBuilder);
         ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences = referenceValueRepository.getDataIdPerKeys(dataName);
 
@@ -760,7 +760,6 @@ public class DataService implements ServiceContainerBean {
                             fileSenderInternationalisation,
                             internationnalizedDataName
                     );*/
-                    break;
                 } catch (Exception e) {
                     throw new RuntimeException(e);
                 }
@@ -801,7 +800,6 @@ public class DataService implements ServiceContainerBean {
                     String downloadUrl = fileRepository.postTransfer(fileInfos);
                     log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
 
-                    break;
                 } catch (Exception e) {
                     log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
                     throw new RuntimeException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);

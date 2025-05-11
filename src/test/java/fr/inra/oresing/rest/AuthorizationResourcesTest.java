@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest;
 
+import com.google.common.base.Strings;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
@@ -12,13 +13,9 @@ import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.security.JWTExtractor;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import com.google.common.base.Strings;
 import org.hamcrest.core.IsEqual;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -38,15 +35,15 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.Cookie;
-
 import java.io.InputStream;
 import java.util.*;
 
 import static org.hamcrest.Matchers.*;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 @ActiveProfiles("testmail")
 @SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
@@ -165,22 +162,22 @@ public class AuthorizationResourcesTest {
         {
             // on met les droits administrateurs sur withAdminRigthsUser
             String json = "{\n" +
-                          "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
-                          "   \"applicationNameOrId\":\"acbb\",\n" +
-                          "   \"id\": null,\n" +
-                          "   \"name\": \"une submissionScope sur acbb\",\n" +
-                          "   \"authorizations\":{\n" +
-                          "   \"biomasse_production_teneur\":{\n" +
-                          "   \"admin\":[\n" +
-                          "      {\n" +
-                          "         \"requiredAuthorizations\":{\n" +
-                          "            \"localization\":\"theix\"\n" +
-                          "         }\n" +
-                          "      }\n" +
-                          "   ]\n" +
-                          "  }\n" +
-                          " }\n" +
-                          "}";
+                    "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une submissionScope sur acbb\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"biomasse_production_teneur\":{\n" +
+                    "   \"admin\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"localization\":\"theix\"\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "  }\n" +
+                    " }\n" +
+                    "}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
@@ -193,22 +190,22 @@ public class AuthorizationResourcesTest {
 
             // on met les droits administrateurs sur withBadAdminRigthsUser
             json = "{\n" +
-                   "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
-                   "   \"applicationNameOrId\":\"acbb\",\n" +
-                   "   \"id\": null,\n" +
-                   "   \"name\": \"une submissionScope sur acbb\",\n" +
-                   "   \"authorizations\":{\n" +
-                   "   \"biomasse_production_teneur\":{\n" +
-                   "   \"admin\":[\n" +
-                   "      {\n" +
-                   "         \"requiredAuthorizations\":{\n" +
-                   "            \"localization\":\"laqueuille\"\n" +
-                   "         }\n" +
-                   "      }\n" +
-                   "   ]\n" +
-                   "  }\n" +
-                   " }\n" +
-                   "}";
+                    "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une submissionScope sur acbb\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"biomasse_production_teneur\":{\n" +
+                    "   \"admin\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"localization\":\"laqueuille\"\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "  }\n" +
+                    " }\n" +
+                    "}";
 
             create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
@@ -223,38 +220,38 @@ public class AuthorizationResourcesTest {
 
         {
             String json = "{\n" +
-                          "   \"usersId\":[\"" + readerUserId + "\"],\n" +
-                          "   \"applicationNameOrId\":\"acbb\",\n" +
-                          "   \"id\": null,\n" +
-                          "   \"name\": \"une submissionScope sur acbb\",\n" +
-                          "   \"dataName\":\"biomasse_production_teneur\",\n" +
-                          "   \"authorizations\":{\n" +
-                          "   \"biomasse_production_teneur\":{\n" +
-                          "   \"extraction\":[\n" +
-                          "      {\n" +
-                          "         \"requiredAuthorizations\":{\n" +
-                          "            \"localization\":\"theix.theix__22\"\n" +
-                          "         },\n" +
-                          "         \"datagroups\":[\n" +
-                          "            \"all\"\n" +
-                          "         ],\n" +
-                          "         \"intervalDates\":{\n" +
-                          "            \"fromDay\":[\n" +
-                          "               2010,\n" +
-                          "               1,\n" +
-                          "               1\n" +
-                          "            ],\n" +
-                          "            \"toDay\":[\n" +
-                          "               2010,\n" +
-                          "               6,\n" +
-                          "               1\n" +
-                          "            ]\n" +
-                          "         }\n" +
-                          "      }\n" +
-                          "   ]\n" +
-                          "  }\n" +
-                          " }\n" +
-                          "}";
+                    "   \"usersId\":[\"" + readerUserId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une submissionScope sur acbb\",\n" +
+                    "   \"dataName\":\"biomasse_production_teneur\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"biomasse_production_teneur\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"localization\":\"theix.theix__22\"\n" +
+                    "         },\n" +
+                    "         \"datagroups\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2010,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2010,\n" +
+                    "               6,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "  }\n" +
+                    " }\n" +
+                    "}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
@@ -266,38 +263,38 @@ public class AuthorizationResourcesTest {
 
             //on ajoute une autre submissionScope
             json = "{\n" +
-                   "   \"usersId\":[\"" + readerUserId + "\",\"" + authId + "\"],\n" +
-                   "   \"applicationNameOrId\":\"acbb\",\n" +
-                   "   \"id\": null,\n" +
-                   "   \"name\": \"une autre submissionScope sur acbb\",\n" +
-                   "   \"dataName\":\"biomasse_production_teneur\",\n" +
-                   "   \"authorizations\":{\n" +
-                   "   \"biomasse_production_teneur\":{\n" +
-                   "   \"extraction\":[\n" +
-                   "      {\n" +
-                   "         \"requiredAuthorizations\":{\n" +
-                   "            \"localization\":\"theix.theix__2\"\n" +
-                   "         },\n" +
-                   "         \"dataGroups\":[\n" +
-                   "            \"all\"\n" +
-                   "         ],\n" +
-                   "         \"intervalDates\":{\n" +
-                   "            \"fromDay\":[\n" +
-                   "               2009,\n" +
-                   "               1,\n" +
-                   "               1\n" +
-                   "            ],\n" +
-                   "            \"toDay\":[\n" +
-                   "               2009,\n" +
-                   "               6,\n" +
-                   "               1\n" +
-                   "            ]\n" +
-                   "         }\n" +
-                   "      }\n" +
-                   "   ]\n" +
-                   "  }\n" +
-                   " }\n" +
-                   "}";
+                    "   \"usersId\":[\"" + readerUserId + "\",\"" + authId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"acbb\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une autre submissionScope sur acbb\",\n" +
+                    "   \"dataName\":\"biomasse_production_teneur\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"biomasse_production_teneur\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"localization\":\"theix.theix__2\"\n" +
+                    "         },\n" +
+                    "         \"dataGroups\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2009,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2009,\n" +
+                    "               6,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "  }\n" +
+                    " }\n" +
+                    "}";
             create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
@@ -376,38 +373,38 @@ public class AuthorizationResourcesTest {
         {
 
             final String json = "{\n" +
-                                "   \"usersId\":[\"" + readerUserId + "\"],\n" +
-                                "   \"applicationNameOrId\":\"hautefrequence\",\n" +
-                                "   \"id\": null,\n" +
-                                "   \"name\": \"une submissionScope sur haute fréquence\",\n" +
-                                "   \"authorizations\":{\n" +
-                                "   \"hautefrequence\":{\n" +
-                                "   \"extraction\":[\n" +
-                                "      {\n" +
-                                "         \"requiredAuthorizations\":{\n" +
-                                "            \"localization\":\"bimont.bim13\",\n" +
-                                "            \"projet\":\"sou\"\n" +
-                                "         },\n" +
-                                "         \"datagroups\":[\n" +
-                                "            \"all\"\n" +
-                                "         ],\n" +
-                                "         \"intervalDates\":{\n" +
-                                "            \"fromDay\":[\n" +
-                                "               2016,\n" +
-                                "               1,\n" +
-                                "               1\n" +
-                                "            ],\n" +
-                                "            \"toDay\":[\n" +
-                                "               2017,\n" +
-                                "               1,\n" +
-                                "               1\n" +
-                                "            ]\n" +
-                                "         }\n" +
-                                "      }\n" +
-                                "   ]\n" +
-                                "  }\n" +
-                                " }\n" +
-                                "}";
+                    "   \"usersId\":[\"" + readerUserId + "\"],\n" +
+                    "   \"applicationNameOrId\":\"hautefrequence\",\n" +
+                    "   \"id\": null,\n" +
+                    "   \"name\": \"une submissionScope sur haute fréquence\",\n" +
+                    "   \"authorizations\":{\n" +
+                    "   \"hautefrequence\":{\n" +
+                    "   \"extraction\":[\n" +
+                    "      {\n" +
+                    "         \"requiredAuthorizations\":{\n" +
+                    "            \"localization\":\"bimont.bim13\",\n" +
+                    "            \"projet\":\"sou\"\n" +
+                    "         },\n" +
+                    "         \"datagroups\":[\n" +
+                    "            \"all\"\n" +
+                    "         ],\n" +
+                    "         \"intervalDates\":{\n" +
+                    "            \"fromDay\":[\n" +
+                    "               2016,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ],\n" +
+                    "            \"toDay\":[\n" +
+                    "               2017,\n" +
+                    "               1,\n" +
+                    "               1\n" +
+                    "            ]\n" +
+                    "         }\n" +
+                    "      }\n" +
+                    "   ]\n" +
+                    "  }\n" +
+                    " }\n" +
+                    "}";
 
             final MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)

@@ -7,14 +7,18 @@ import java.util.Optional;
 import java.util.UUID;
 
 public class ApplicationUserResultBuilder {
-    private boolean isApplicationManager = false;
-    private boolean isUserManager = false;
-    private UUID applicationId = UUID.randomUUID();
-    private UUID id = UUID.randomUUID();
     String label = "label";
     String email = "email@openadom.fr";
     boolean isApplicationUser = false;
     boolean isActiveApplicationUser = false;
+    private boolean isApplicationManager = false;
+    private boolean isUserManager = false;
+    private UUID applicationId = UUID.randomUUID();
+    private UUID id = UUID.randomUUID();
+
+    public static final ApplicationUserResultBuilder builder(Application application) {
+        return new ApplicationUserResultBuilder();
+    }
 
     public ApplicationUserResult ApplicationUserResultBuilder() {
         return new ApplicationUserResult(
@@ -27,10 +31,6 @@ public class ApplicationUserResultBuilder {
                 isApplicationUser,
                 isActiveApplicationUser
         );
-    }
-
-    public static final ApplicationUserResultBuilder builder(Application application) {
-        return new ApplicationUserResultBuilder();
     }
 
     public ApplicationUserResultBuilder withApplicationId(UUID applicationId) {
@@ -62,11 +62,13 @@ public class ApplicationUserResultBuilder {
         this.isActiveApplicationUser = isActiveApplicationUser;
         return this;
     }
+
     public ApplicationUserResultBuilder withLabel(String label) {
         this.label = label;
         return this;
     }
-    public ApplicationUserResultBuilder withEmail(String email){
+
+    public ApplicationUserResultBuilder withEmail(String email) {
         this.email = email;
         return this;
     }

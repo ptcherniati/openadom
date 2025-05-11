@@ -44,10 +44,8 @@ import java.util.stream.Collectors;
 @Component
 @Primary
 public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
-    private PropertyNamingStrategy strategies = PropertyNamingStrategies.LOWER_CASE;
 
     public JsonRowMapper(PropertyNamingStrategy strategies) {
-        this.strategies = strategies;
         buildMapper();
     }
 

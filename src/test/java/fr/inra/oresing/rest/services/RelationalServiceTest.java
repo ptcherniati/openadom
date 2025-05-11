@@ -6,8 +6,8 @@ import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.rest.Fixtures;
 import fr.inra.oresing.rest.OreSiResourcesTest;
 import fr.inra.oresing.rest.ViewStrategy;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +51,6 @@ public class RelationalServiceTest {
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     @Autowired
     private MockMvc mockMvc;
-
 
 
     @BeforeEach
@@ -99,10 +98,10 @@ public class RelationalServiceTest {
         }
         applications
                 .forEach(application -> {
-                final String applicationName = application.getName();
-                relationalService.createViews(applicationName, ViewStrategy.VIEW);
-                relationalService.createViews(applicationName, ViewStrategy.TABLE);
-        });
+                    final String applicationName = application.getName();
+                    relationalService.createViews(applicationName, ViewStrategy.VIEW);
+                    relationalService.createViews(applicationName, ViewStrategy.TABLE);
+                });
 
         {
 //            request.setRequestClient(applicationCreatorRequestClient);
@@ -159,18 +158,18 @@ public class RelationalServiceTest {
             // on vérifie juste que la vue association pour les colonnes dynamiques est bien alimentée
             // que les deux clés étrangères sont bien placées et qu'on a bien la valeur
             final String sql = "select count(*) from recursivite_view.\"taxon_propriétés de taxons\" tpt " +
-                         "join recursivite_view.taxon as t on tpt.taxon_hierachicakkey = t.taxon_hierachicakkey " +
-                         "join recursivite_view.proprietes_taxon pt on tpt.\"_1propriétés de taxons_hierachicakKey\" = pt.proprietes_taxon_hierachicakkey " +
-                         "where value != '';";
+                    "join recursivite_view.taxon as t on tpt.taxon_hierachicakkey = t.taxon_hierachicakkey " +
+                    "join recursivite_view.proprietes_taxon pt on tpt.\"_1propriétés de taxons_hierachicakKey\" = pt.proprietes_taxon_hierachicakkey " +
+                    "where value != '';";
             final int numberOfRowInAssociationView = namedParameterJdbcTemplate.queryForObject(sql, Collections.emptyMap(), Integer.class);
             assertEquals(424, numberOfRowInAssociationView);
         }
 
         applications
-                .forEach(application ->  {
-            final String applicationName = application.getName();
-            relationalService.dropViews(applicationName, ViewStrategy.VIEW);
-            relationalService.dropViews(applicationName, ViewStrategy.TABLE);
-        });
+                .forEach(application -> {
+                    final String applicationName = application.getName();
+                    relationalService.dropViews(applicationName, ViewStrategy.VIEW);
+                    relationalService.dropViews(applicationName, ViewStrategy.TABLE);
+                });
     }
 }

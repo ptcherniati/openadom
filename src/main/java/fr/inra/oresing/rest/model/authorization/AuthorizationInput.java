@@ -21,6 +21,9 @@ import java.util.stream.Collectors;
 @Setter
 @ToString(callSuper = true)
 public class AuthorizationInput {
+    public static final String FROM_DAY = "fromDay";
+    public static final String TO_DAY = "toDay";
+    public static final String FORMAT = "format";
     LocalDateTimeRange timeScope = LocalDateTimeRange.always();
     private Map<String, List<Ltree>> requiredAuthorizations = new HashMap<>();
 
@@ -57,32 +60,32 @@ public class AuthorizationInput {
         this.timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
     }*/
     public void setTimeScope(Map<String, String> dates) {
-        this.timeScope = Optional.ofNullable(dates.get("format"))
+        this.timeScope = Optional.ofNullable(dates.get(FORMAT))
                 .map(DatePattern::of)
                 .map(datePattern -> {
                     Class<TemporalAccessor> type = datePattern.type();
                     DateTimeFormatter formatter = datePattern.formatter();
                     if (type.equals(LocalDate.class)) {
-                        LocalDate fromDay = Optional.ofNullable(dates.get("fromDay"))
+                        LocalDate fromDay = Optional.ofNullable(dates.get(FROM_DAY))
                                 .map(from->LocalDate.parse(from, formatter))
                                 .orElse(LocalDate.MIN);
-                        LocalDate toDay = Optional.ofNullable(dates.get("toDay"))
+                        LocalDate toDay = Optional.ofNullable(dates.get(TO_DAY))
                                 .map(from->LocalDate.parse(from, formatter))
                                 .orElse(LocalDate.MAX);
                         return LocalDateTimeRange.between(fromDay, toDay);
                     } else if (type.equals(LocalTime.class)) {
-                        LocalTime fromDay = Optional.ofNullable(dates.get("fromDay"))
+                        LocalTime fromDay = Optional.ofNullable(dates.get(FROM_DAY))
                                 .map(from->LocalTime.parse(from, formatter))
                                 .orElse(LocalTime.MIN);
-                        LocalTime toDay = Optional.ofNullable(dates.get("toDay"))
+                        LocalTime toDay = Optional.ofNullable(dates.get(TO_DAY))
                                 .map(from->LocalTime.parse(from, formatter))
                                 .orElse(LocalTime.MAX);
                         return LocalDateTimeRange.between(LocalDate.now().atTime(fromDay), LocalDate.now().atTime( toDay));
                     } else if (type.equals(LocalDateTime.class)) {
-                        LocalDateTime fromDay = Optional.ofNullable(dates.get("fromDay"))
+                        LocalDateTime fromDay = Optional.ofNullable(dates.get(FROM_DAY))
                                 .map(from->LocalDateTime.parse(from, formatter))
                                 .orElse(LocalDateTime.MIN);
-                        LocalDateTime toDay = Optional.ofNullable(dates.get("toDay"))
+                        LocalDateTime toDay = Optional.ofNullable(dates.get(TO_DAY))
                                 .map(from->LocalDateTime.parse(from, formatter))
                                 .orElse(LocalDateTime.MAX);
                         return LocalDateTimeRange.between( fromDay,  toDay);
@@ -139,7 +142,7 @@ public class AuthorizationInput {
     }*/
 
     public void setIntervalDates(Map<String, LocalDate> dates) {
-        this.timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
+        this.timeScope = getTimeScope(dates.get(FROM_DAY), dates.get(TO_DAY));
     }
 
     /*public String toSQL(List<String> requiredAuthorizationsAttributes) {

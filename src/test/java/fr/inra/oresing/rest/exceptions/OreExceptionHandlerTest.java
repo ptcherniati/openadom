@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.type.BooleanType;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
@@ -34,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.when;
 
 class OreExceptionHandlerTest {
@@ -98,7 +97,7 @@ class OreExceptionHandlerTest {
 
     private void testAuthFailureCase(String message) {
         OreSiUser oreSiUser = new OreSiUser();
-        oreSiUser.setId( UUID.randomUUID());
+        oreSiUser.setId(UUID.randomUUID());
         oreSiUser.setLogin("testuser");
         oreSiUser.setEmail("test@example.com");
         oreSiUser.setAccountstate(OreSiUser.OreSiUserStates.active);

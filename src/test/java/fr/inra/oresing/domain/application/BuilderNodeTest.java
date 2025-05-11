@@ -173,6 +173,7 @@ class BuilderNodeTest {
         Assertions.assertEquals(8, nodeLeaves.size());
         Assertions.assertArrayEquals(List.of("variables", "valeurs_qualitative", "sites", "themes", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers").toArray(), nodeLeaves.stream().map(BuilderNode::nodeName).toArray());
     }
+
     @Test
     public void TestBuildOrderedNodes() {
         final SortedSet<Node> orderedNodes = Node.buildNode(builderNodes.values(), new Validation(null, null, null));

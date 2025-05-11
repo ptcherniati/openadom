@@ -73,6 +73,136 @@ class ConfigurationBuilderTest {
         HIERARCHICAL_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
     }
 
+    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
+        testTags(configuration.tags());
+        assertEquals("2.0.1", configuration.version().version());
+        testInternationalisation(configuration.i18n());
+        testApplicationDescription(configuration.applicationDescription());
+        testComponents(configuration.dataDescription());
+    }
+
+    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
+        testExampleTags(configuration.tags());
+        assertEquals("2.0.1", configuration.version().version());
+        testExampleInternationalisation(configuration.i18n());
+        testExampleApplicationDescription(configuration.applicationDescription());
+        testExampleComponents(configuration.dataDescription());
+    }
+
+    private static void testMonsoreConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
+        testMonsoreTags(configuration.tags());
+        assertEquals("2.0.1", configuration.version().version());
+        testMonsoreInternationalisation(configuration.i18n());
+        testMonsoreApplicationDescription(configuration.applicationDescription());
+        testMonsoreComponents(configuration.dataDescription());
+    }
+
+    private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
+
+        // Compare les deux JSON sans tenir compte de l'ordre des champs (mode LENIENT)
+        JSONAssert.assertEquals(DATA_RESULT, actualJson, JSONCompareMode.LENIENT);
+    }
+
+    private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
+
+        // Compare les JSON sans tenir compte de l'ordre des champs
+        JSONAssert.assertEquals(DATA_MONSORE_RESULT, actualJson, JSONCompareMode.LENIENT);
+    }
+
+    private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
+        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
+
+        // Compare les JSON sans tenir compte de l'ordre des champs
+        JSONAssert.assertEquals(DATA_EXAMPLE_RESULT, actualJson, JSONCompareMode.LENIENT);
+    }
+
+    private static void testApplicationDescription(final ApplicationDescription applicationDescription) {
+        Assertions.assertThat(applicationDescription.name())
+                .isEqualTo("monapplication");
+        Assertions.assertThat(applicationDescription.version().version())
+                .isEqualTo("4.0.1");
+        Assertions.assertThat(applicationDescription.defaultLanguage())
+                .isEqualTo(Locale.ENGLISH);
+        Assertions.assertThat(applicationDescription.comment())
+                .isEqualTo("une application de test");
+
+    }
+
+    private static void testMonsoreApplicationDescription(final ApplicationDescription applicationDescription) {
+        Assertions.assertThat(applicationDescription.name())
+                .isEqualTo("monsore");
+        Assertions.assertThat(applicationDescription.version().version())
+                .isEqualTo("3.0.1");
+        Assertions.assertThat(applicationDescription.defaultLanguage())
+                .isEqualTo(Locale.FRENCH);
+        Assertions.assertThat(applicationDescription.comment())
+                .isEqualTo("un commentaire");
+
+    }
+
+    private static void testExampleApplicationDescription(final ApplicationDescription applicationDescription) {
+        Assertions.assertThat(applicationDescription.name())
+                .isEqualTo("monsore");
+        Assertions.assertThat(applicationDescription.version().version())
+                .isEqualTo("3.0.1");
+        Assertions.assertThat(applicationDescription.defaultLanguage())
+                .isEqualTo(Locale.FRENCH);
+        Assertions.assertThat(applicationDescription.comment())
+                .isEqualTo("une application de test");
+
+    }
+
+    private static void testInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
+        Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
+                .isEqualTo(LOCALIZATION_RESULT);
+    }
+
+    private static void testMonsoreInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
+        Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
+                .isEqualTo(LOCALIZATION_MONSORE_RESULT);
+    }
+
+    private static JSONObject toJsonObject(Object json) {
+        return new JsonRowMapper<>().convertValue(json, JSONObject.class);
+    }
+
+    private static void testExampleInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
+        Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
+                .isEqualTo(LOCALIZATION_EXAMPLE_RESULT);
+    }
+
+    private static void testTags(final Set<Tag> tags) {
+        Assertions.assertThat(tags)
+                .contains(new Tag.DomainTag("temporal"),
+                        new Tag.DomainTag("context"),
+                        new Tag.DomainTag("data"),
+                        new Tag.DomainTag("test"),
+                        new Tag.DomainTag("unit"))
+                .hasSize(5);
+    }
+
+    private static void testMonsoreTags(final Set<Tag> tags) {
+        Assertions.assertThat(tags)
+                .contains(new Tag.DomainTag("context"),
+                        new Tag.DomainTag("data"),
+                        new Tag.DomainTag("test"),
+                        new Tag.DomainTag("unit"),
+                        new Tag.DomainTag("temporal"))
+                .hasSize(5);
+    }
+
+    private static void testExampleTags(final Set<Tag> tags) {
+        Assertions.assertThat(tags)
+                .contains(new Tag.DomainTag("context"),
+                        new Tag.DomainTag("data"))
+                .hasSize(2);
+    }
+
     @Test
     void buildApplicationTest() {
         final YAMLMapper yamlMapper = YAMLMapper.builder().build();
@@ -144,8 +274,8 @@ class ConfigurationBuilderTest {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION.getBytes(), progression, "un commentaire");
                     assertNotNull(configuration);
-                    try{
-                    testHierarchicalNodes( configuration.hierarchicalNodes());
+                    try {
+                        testHierarchicalNodes(configuration.hierarchicalNodes());
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
                         throw new RuntimeException(e);
@@ -195,134 +325,5 @@ class ConfigurationBuilderTest {
                 .map(ValidationError::getValidationErrorString)
                 .toList()
                 .toString());
-    }
-
-
-    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
-        testTags(configuration.tags());
-        assertEquals("2.0.1", configuration.version().version());
-        testInternationalisation(configuration.i18n());
-        testApplicationDescription(configuration.applicationDescription());
-        testComponents(configuration.dataDescription());
-    }
-
-    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
-        testExampleTags(configuration.tags());
-        assertEquals("2.0.1", configuration.version().version());
-        testExampleInternationalisation(configuration.i18n());
-        testExampleApplicationDescription(configuration.applicationDescription());
-        testExampleComponents(configuration.dataDescription());
-    }
-
-    private static void testMonsoreConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
-        testMonsoreTags(configuration.tags());
-        assertEquals("2.0.1", configuration.version().version());
-        testMonsoreInternationalisation(configuration.i18n());
-        testMonsoreApplicationDescription(configuration.applicationDescription());
-        testMonsoreComponents(configuration.dataDescription());
-    }
-
-
-    private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
-
-        // Compare les deux JSON sans tenir compte de l'ordre des champs (mode LENIENT)
-        JSONAssert.assertEquals(DATA_RESULT, actualJson, JSONCompareMode.LENIENT);
-    }
-
-    private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
-
-        // Compare les JSON sans tenir compte de l'ordre des champs
-        JSONAssert.assertEquals(DATA_MONSORE_RESULT, actualJson, JSONCompareMode.LENIENT);
-    }
-    private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
-
-        // Compare les JSON sans tenir compte de l'ordre des champs
-        JSONAssert.assertEquals(DATA_EXAMPLE_RESULT, actualJson, JSONCompareMode.LENIENT);
-    }
-
-    private static void testApplicationDescription(final ApplicationDescription applicationDescription) {
-        Assertions.assertThat(applicationDescription.name())
-                .isEqualTo("monapplication");
-        Assertions.assertThat(applicationDescription.version().version())
-                .isEqualTo("4.0.1");
-        Assertions.assertThat(applicationDescription.defaultLanguage())
-                .isEqualTo(Locale.ENGLISH);
-        Assertions.assertThat(applicationDescription.comment())
-                .isEqualTo("une application de test");
-
-    }
-
-    private static void testMonsoreApplicationDescription(final ApplicationDescription applicationDescription) {
-        Assertions.assertThat(applicationDescription.name())
-                .isEqualTo("monsore");
-        Assertions.assertThat(applicationDescription.version().version())
-                .isEqualTo("3.0.1");
-        Assertions.assertThat(applicationDescription.defaultLanguage())
-                .isEqualTo(Locale.FRENCH);
-        Assertions.assertThat(applicationDescription.comment())
-                .isEqualTo("un commentaire");
-
-    }
-    private static void testExampleApplicationDescription(final ApplicationDescription applicationDescription) {
-        Assertions.assertThat(applicationDescription.name())
-                .isEqualTo("monsore");
-        Assertions.assertThat(applicationDescription.version().version())
-                .isEqualTo("3.0.1");
-        Assertions.assertThat(applicationDescription.defaultLanguage())
-                .isEqualTo(Locale.FRENCH);
-        Assertions.assertThat(applicationDescription.comment())
-                .isEqualTo("une application de test");
-
-    }
-
-    private static void testInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
-        Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
-                .isEqualTo(LOCALIZATION_RESULT);
-    }
-
-    private static void testMonsoreInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
-        Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
-                .isEqualTo(LOCALIZATION_MONSORE_RESULT);
-    }
-
-    private static JSONObject toJsonObject(Object json) {
-        return new JsonRowMapper<>().convertValue(json, JSONObject.class);
-    }
-
-    private static void testExampleInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
-        Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
-                .isEqualTo(LOCALIZATION_EXAMPLE_RESULT);
-    }
-
-    private static void testTags(final Set<Tag> tags) {
-        Assertions.assertThat(tags)
-                .contains(new Tag.DomainTag("temporal"),
-                        new Tag.DomainTag("context"),
-                        new Tag.DomainTag("data"),
-                        new Tag.DomainTag("test"),
-                        new Tag.DomainTag("unit"))
-                .hasSize(5);
-    }
-
-    private static void testMonsoreTags(final Set<Tag> tags) {
-        Assertions.assertThat(tags)
-                .contains(new Tag.DomainTag("context"),
-                        new Tag.DomainTag("data"),
-                        new Tag.DomainTag("test"),
-                        new Tag.DomainTag("unit"),
-                        new Tag.DomainTag("temporal"))
-                .hasSize(5);
-    }
-    private static void testExampleTags(final Set<Tag> tags) {
-        Assertions.assertThat(tags)
-                .contains(new Tag.DomainTag("context"),
-                        new Tag.DomainTag("data"))
-                .hasSize(2);
     }
 }

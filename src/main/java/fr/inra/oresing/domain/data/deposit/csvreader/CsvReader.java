@@ -31,9 +31,9 @@ public class CsvReader {
         this.recursionStrategy = recursionStrategy;
     }
 
-    public ImmutableSet<LineChecker<? extends FieldType>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
-        final ImmutableSet.Builder<LineChecker<? extends FieldType>> linecheckersBuilder = ImmutableSet.builder();
-        for (final LineChecker<? extends FieldType> lineChecker : dataImporterContext.getLineCheckers()) {
+    public <F extends FieldType> ImmutableSet<LineChecker<F>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
+        final ImmutableSet.Builder<LineChecker<F>> linecheckersBuilder = ImmutableSet.builder();
+        for (final LineChecker<F> lineChecker : dataImporterContext.getLineCheckers()) {
             if (!dataImporterContext.existsColumn(lineChecker.target(), constantColumnsValues)) {
                 continue;
             }
@@ -78,11 +78,11 @@ public class CsvReader {
                 .collect(Collectors.toSet());
     }
 
-    public Function<Map.Entry<Ltree, Collection<Long>>, Stream<? extends CsvRowValidationCheckResult>> buildCsvRowValidationCheckResult() {
+    public Function<Map.Entry<Ltree, Collection<Long>>, Stream<CsvRowValidationCheckResult>> buildCsvRowValidationCheckResult() {
         return entry -> {
             final Ltree conflictingHierarchicalKey = entry.getKey();
             final ImmutableSortedSet<Long> lineNumbers = ImmutableSortedSet.copyOf(entry.getValue());
-            final SortedSet<Long> conflictingLineNumbers = new TreeSet<Long>(lineNumbers);
+            final SortedSet<Long> conflictingLineNumbers = new TreeSet<>(lineNumbers);
             final Long firstLineNumberToIgnore = conflictingLineNumbers.first();
             conflictingLineNumbers.remove(firstLineNumberToIgnore);
             return conflictingLineNumbers.stream()
@@ -93,7 +93,7 @@ public class CsvReader {
 
     public Function<Long, List<CsvRowValidationCheckResult>> buildValidationsCheckResults(ImmutableSortedSet<Long> lineNumbers, Ltree conflictingHierarchicalKey) {
         return conflictingLineNumber -> {
-            final Set<Long> otherLines = new TreeSet<Long>(lineNumbers);
+            final Set<Long> otherLines = new TreeSet<>(lineNumbers);
             otherLines.remove(conflictingLineNumber);
             final DuplicationLineValidationCheckResult validationCheckResult =
                     new DuplicationLineValidationCheckResult(
@@ -119,8 +119,8 @@ public class CsvReader {
             final CSVRecord csvRecord) {
         final Iterator<String> currentHeader = columns.iterator();
         final DataDatum referenceDatum = new DataDatum();
-        final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<String, Map<String, RefsLinkedToValue>>();
-        final List<PatternValueForHeader> patternValueForHeaders = new LinkedList<PatternValueForHeader>();
+        final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<>();
+        final List<PatternValueForHeader> patternValueForHeaders = new LinkedList<>();
         final int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
         for (int i = 0; i < columns.size(); i++) {
             String[] values = csvRecord.values();
@@ -128,7 +128,7 @@ public class CsvReader {
             final String patternComponentName = currentHeader.next();
             if (dataImporterContext.pushValue(referenceDatum, patternComponentName, cellContent.trim(), refsLinkedTo)) {
                 OneValueStaticPatternColumn expectedPatternColumn1 = dataImporterContext.getPatternColumnFactory().getExpectedPatternColumn(patternComponentName);
-                List<String> adjacentValues = new LinkedList<String>();
+                List<String> adjacentValues = new LinkedList<>();
                 for (int j = 0; j < (expectedPatternColumn1 == null ? 0 : expectedPatternColumn1.getAdjacentColumnsSize()); j++) {
                     i++;
                     adjacentValues.add(values[i]);
@@ -144,7 +144,7 @@ public class CsvReader {
     }
 
     public Stream<RowWithReferenceDatum> buildRowsWithPattern(List<PatternValueForHeader> patternValueForHeaders, DataDatum referenceDatum, int lineNumber, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-        List<RowWithReferenceDatum> rowWithReferenceData = new LinkedList<RowWithReferenceDatum>();
+        List<RowWithReferenceDatum> rowWithReferenceData = new LinkedList<>();
         for (PatternValueForHeader patternValueForHeader : patternValueForHeaders) {
             DataDatum patternComponentDatum = dataImporterContext.getPatternColumnFactory().toQualifierDatum(patternValueForHeader.header(), patternValueForHeader);
             DataDatum dataDatum = referenceDatum.with(patternComponentDatum);

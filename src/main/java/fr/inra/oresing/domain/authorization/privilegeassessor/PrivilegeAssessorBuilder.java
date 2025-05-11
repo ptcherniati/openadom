@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.AuthenticationService;
+import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdministratorForSystemException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
@@ -51,7 +51,7 @@ public sealed interface PrivilegeAssessorBuilder<PrivilegeAssessorState>
         );
     }
 
-    static PrivilegeAssessorDomainForNotConnectedUser<PrivilegeSystemDomainEnum> forNotConnectedUser(AuthenticationService authenticationService, UserRepository userRepository, PrivilegeSystemDomainEnum privilegeSystemDomainEnum) {
+    static PrivilegeAssessorDomainForNotConnectedUser<PrivilegeSystemDomainEnum> forNotConnectedUser(AuthenticationServiceImpl authenticationService, UserRepository userRepository, PrivilegeSystemDomainEnum privilegeSystemDomainEnum) {
         return new PrivilegeAssessorDomainForNotConnectedUser<>(
                 authenticationService,
                 userRepository,

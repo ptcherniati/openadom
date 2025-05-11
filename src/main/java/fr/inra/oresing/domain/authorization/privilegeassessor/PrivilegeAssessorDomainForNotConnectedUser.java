@@ -3,7 +3,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.authorization.AuthenticationService;
+import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
 import fr.inra.oresing.domain.repository.user.file.UserRepository;
 import fr.inra.oresing.persistence.AuthenticationFailure;
@@ -15,7 +15,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public record PrivilegeAssessorDomainForNotConnectedUser<P extends PrivilegeSystemDomainEnum>(
-        AuthenticationService authenticationService,
+        AuthenticationServiceImpl authenticationService,
         UserRepository userRepository,
         P domain
 ) implements PrivilegeAssessorDomain {
@@ -54,7 +54,7 @@ public record PrivilegeAssessorDomainForNotConnectedUser<P extends PrivilegeSyst
                                 Set.of(),
                                 Map.of()
                         ));
-            } ;
+            }
             if (!Strings.isNullOrEmpty(charte)) {
                 return new NotConnectedAuthentifiedActiveUserNotSignedCharte(loginResult.get(), createUserRequest, charte);
             } else if (!Strings.isNullOrEmpty(verificationKey)) {

@@ -124,13 +124,12 @@ public record DataHeaderReader(DataDatum constantValues,
 
     private static int getColumnNumber(ImmutableList<String> headerRow, ConstantComponent constant) {
         final ColumnConstantHeader columnConstantHeader = (ColumnConstantHeader) constant.constantImportHeader();
-        final int columnNumber = switch (columnConstantHeader) {
+        return switch (columnConstantHeader) {
             case final ColumnConstantHeaderByColumnNumber columnConstantHeaderByColumnNumber ->
                     columnConstantHeaderByColumnNumber.columnNumber();
             case final ColumnConstantHeaderByHeaderName columnConstantHeaderByHeaderName ->
                     headerRow.indexOf(columnConstantHeaderByHeaderName.headerName()) + 1;
         };
-        return columnNumber;
     }
 
     public ImmutableList<String> readHeader(final Iterator<CSVRecord> linesIterator) {

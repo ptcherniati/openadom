@@ -55,7 +55,7 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(DisconnectedException.class)
-    public ResponseEntity<?> handle(final DisconnectedException disconnectedException) {
+    public ResponseEntity handle(final DisconnectedException disconnectedException) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(disconnectedException);
     }
 

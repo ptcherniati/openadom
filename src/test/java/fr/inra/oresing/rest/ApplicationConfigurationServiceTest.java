@@ -6,16 +6,15 @@ import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.services.ApplicationConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,7 +29,10 @@ import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.function.Consumer;
@@ -138,11 +140,11 @@ public class ApplicationConfigurationServiceTest {
                 .block()
                 .stream().collect(Collectors.joining("\n")));
         assertEquals("""
-                1.0.5
-                3.0.1
-                3.0.1
-                3.0.1
-                3.0.1""",
+                        1.0.5
+                        3.0.1
+                        3.0.1
+                        3.0.1
+                        3.0.1""",
                 block.get(0));
     }
 
@@ -260,20 +262,20 @@ public class ApplicationConfigurationServiceTest {
         CONFIGURATION_INSTANCE.builder("testBadNameTag")
                 .withReplace(
                         """
-                       esp_nom:
-                    """, """
-                       esp_nom:
-                            OA_checker:
-                              OA_name: OA_string
-                              OA_params:
-                                OA_multiplicity: "MANY\"
-                    """)
+                                   esp_nom:
+                                """, """
+                                   esp_nom:
+                                        OA_checker:
+                                          OA_name: OA_string
+                                          OA_params:
+                                            OA_multiplicity: "MANY"
+                                """)
                 .test(errors -> {
                     assertEquals(1, errors.size());
                     final ValidationError validationError = errors.getFirst();
                     assertEquals(ConfigurationException.MANY_COMPONENT_IN_NATURAL_KEY.getMessage(), validationError.getMessage());
                     assertEquals("OA_data > especes", validationError.getParam("path"));
-                    assertThat((List<String>)validationError.getParam("manyComponents"), containsInAnyOrder("esp_nom"));
+                    assertThat((List<String>) validationError.getParam("manyComponents"), containsInAnyOrder("esp_nom"));
                     assertEquals("especes", validationError.getParam(("dataName")));
                 });
     }
@@ -1420,13 +1422,13 @@ public class ApplicationConfigurationServiceTest {
     public void testMissingComponentForDisplayPattern() {
         CONFIGURATION_INSTANCE.builder("testMissingComponentForDisplayPattern")
                 .withReplace("    OA_i18nDisplayPattern:\n" +
-                             "      OA_title:\n" +
-                             "        fr: \"{esp_nom}\"\n" +
-                             "        en: \"{esp_nom}\"",
+                                "      OA_title:\n" +
+                                "        fr: \"{esp_nom}\"\n" +
+                                "        en: \"{esp_nom}\"",
                         "    OA_i18nDisplayPattern:\n" +
-                        "      OA_title:\n" +
-                        "        fr: \"{esp_invalid_nom}\"\n" +
-                        "        en: \"{esp_nom}\"")
+                                "      OA_title:\n" +
+                                "        fr: \"{esp_invalid_nom}\"\n" +
+                                "        en: \"{esp_nom}\"")
                 .test(errors -> {
                     assertEquals(1, errors.size());
                     final ValidationError validationError = errors.getFirst();

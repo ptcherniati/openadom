@@ -9,10 +9,6 @@ import static fr.inra.oresing.OreSiRequestClient.DISCONECTED_EXCEPTION;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 
 class OreSiRequestClientTest {
-    static class OreSiRequestClientForTest implements OreSiRequestClient {
-
-    }
-
     static OreSiRequestClientForTest client = new OreSiRequestClientForTest();
 
     @Test
@@ -25,5 +21,9 @@ class OreSiRequestClientTest {
     @Test
     void role() {
         Assertions.assertThat(client.role()).isEqualTo(OreSiRole.anonymous());
+    }
+
+    static class OreSiRequestClientForTest implements OreSiRequestClient {
+
     }
 }

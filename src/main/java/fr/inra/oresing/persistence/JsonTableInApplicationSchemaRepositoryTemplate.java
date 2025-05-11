@@ -24,7 +24,7 @@ public abstract class JsonTableInApplicationSchemaRepositoryTemplate<T extends O
 
     public static String escapeSql(final String string) {
         return Optional.ofNullable(string)
-                .map(s -> s.replaceAll("'", "''"))
+                .map(s -> s.replace("'", "''"))
                 .orElse(null);
     }
 
