@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.model.configuration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -222,28 +223,49 @@ class ConfigurationBuilderTest {
         testMonsoreComponents(configuration.dataDescription());
     }
 
+    private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-    private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
+        String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
+                                        .writeValueAsString(dataDescriptionMap);
 
-        // Compare les deux JSON sans tenir compte de l'ordre des champs (mode LENIENT)
-        JSONAssert.assertEquals(DATA_RESULT, actualJson, JSONCompareMode.LENIENT);
+        JsonNode expectedNode = objectMapper.readTree(DATA_RESULT);
+        JsonNode actualNode   = objectMapper.readTree(actualJson);
+
+        Assertions.assertThat(actualNode).isEqualTo(expectedNode);
+
+        // Ancienne version dépendante de l'ordre des champs (désactivée)
+        // assertEquals(actualJson, DATA_RESULT);
     }
 
-    private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
+    private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
-        // Compare les JSON sans tenir compte de l'ordre des champs
-        JSONAssert.assertEquals(DATA_MONSORE_RESULT, actualJson, JSONCompareMode.LENIENT);
+        String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
+                                        .writeValueAsString(dataDescriptionMap);
+
+        JsonNode expectedNode = objectMapper.readTree(DATA_MONSORE_RESULT);
+        JsonNode actualNode   = objectMapper.readTree(actualJson);
+
+        Assertions.assertThat(actualNode).isEqualTo(expectedNode);
+
+        // Désactivé, car sensible à l’ordre des attributs selon la version de Java
+        // Assertions.assertThat(actualJson).isEqualTo(DATA_MONSORE_RESULT);
     }
-    private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException, JSONException {
-        ObjectMapper mapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        String actualJson = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(dataDescriptionMap);
-
-        // Compare les JSON sans tenir compte de l'ordre des champs
-        JSONAssert.assertEquals(DATA_EXAMPLE_RESULT, actualJson, JSONCompareMode.LENIENT);
+    
+    private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
+        
+        String DATA_EXAMPLE_RESULT_EXPECTED = new ObjectMapper().registerModule(new JavaTimeModule())
+                                                                .writer()
+                                                                .withDefaultPrettyPrinter()
+                                                                .writeValueAsString(dataDescriptionMap);
+        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
+        JsonNode expectedNode = objectMapper.readTree(DATA_EXAMPLE_RESULT);
+        JsonNode actualNode   = objectMapper.readTree(DATA_EXAMPLE_RESULT_EXPECTED);
+        Assertions.assertThat(actualNode).isEqualTo(expectedNode);
+        // Désactivé : l'ordre des attributs diffère selon la version du JDK
+        // Assertions.assertThat(DATA_EXAMPLE_RESULT_EXPECTED)
+        //          .isEqualTo(DATA_EXAMPLE_RESULT);
     }
 
     private static void testApplicationDescription(final ApplicationDescription applicationDescription) {
