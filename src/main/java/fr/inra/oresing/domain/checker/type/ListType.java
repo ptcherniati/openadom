@@ -6,14 +6,17 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultManyValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultManyValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import lombok.Getter;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -44,31 +47,15 @@ public non-sealed class ListType<F extends FieldType> implements FieldType<List>
         return SqlPrimitiveType.TEXT;
     }
 
-/*
-    @Override
-    public ValidationCheckResult check(String value, LineCheckerWarper lineCheckerWarper) {
-        FieldType underlyingType = lineCheckerWarper.getUnderlyingType();
-        List<UUID> uuids = new LinkedList<>();
-        List<ValidationCheckResult> collect = Arrays.stream(value.split(","))
-                .map(v -> underlyingType.check(v, lineCheckerWarper))
-                .peek(v -> this.value.add((FT) underlyingType.copy()))
-                .peek(v -> {
-                    if (v instanceof ReferenceValidationCheckResult rvcr && rvcr!=null){
-                        uuids.addAll(rvcr.matchedReferenceId());
-                    }
-
-                })
-                .collect(Collectors.toList());
-        return new DefaultManyValidationCheckResult(collect, lineCheckerWarper.getTarget());
-    }
-*/
-
     @Override
     public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         final FieldType underlyingType = lineChecker.fieldTypeForOne();
         final List<ValidationCheckResult> collect = Arrays.stream(value.split(","))
                 .map(v -> underlyingType.check(v, lineChecker))
-                .peek(v -> this.value.add((F) underlyingType.copy()))
+                .map(v -> {
+                    this.value.add((F) underlyingType.copy());
+                    return v;
+                })
                 .collect(Collectors.toList());
         return new DefaultManyValidationCheckResult(collect, lineChecker.target());
     }

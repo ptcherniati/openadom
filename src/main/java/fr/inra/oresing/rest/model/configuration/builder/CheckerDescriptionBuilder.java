@@ -2,9 +2,9 @@ package fr.inra.oresing.rest.model.configuration.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
 import fr.inra.oresing.domain.application.configuration.checker.*;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
+import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
 import fr.inra.oresing.domain.application.configuration.type.CheckerEnum;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;

@@ -26,7 +26,7 @@ public record ApplicationPublishWriterUser(
             if(CollectionUtils.isEmpty(authorizations())){
                 throw getException();
             }
-            return false;
+            return true;
         }
         List<AuthorizationParsed> authorizationParseds = authorizations().stream()
                 .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
@@ -35,14 +35,14 @@ public record ApplicationPublishWriterUser(
             throw getException();
         }
         if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
-            throw getException();
+            return true;
         }
-        return false;
+        throw getException();
     }
 
     @Override
     public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
-        return !hasRightForPublishOrUnPublish(fileOrUUID);
+        return hasRightForPublishOrUnPublish(fileOrUUID);
     }
 
     public OreSiTechnicalException getException() {

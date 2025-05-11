@@ -37,26 +37,24 @@ public class CsvReader {
             if (!dataImporterContext.existsColumn(lineChecker.target(), constantColumnsValues)) {
                 continue;
             }
-            if (recursionStrategy instanceof WithRecursion withRecursion) {
-                if (lineChecker.underlyingType() instanceof final ReferenceType referenceType) {
-                    final Map<DataValue.LineIdentityColumnName, UUID> map2 = dataImporterContext.getAfterPreloadReferenceUuids();
-                    final Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> map1 = referenceType.getReferenceValues();
-                    final ImmutableMap.Builder<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> builder = ImmutableMap.builder();
-                    builder.putAll(map1);
-                    map2.entrySet().stream()
-                            .filter(ltree -> !map1.containsKey(ltree.getKey()))
-                            .forEach(ltreeUUIDEntry -> builder.put(ltreeUUIDEntry.getKey(), ImmutableSet.of(ltreeUUIDEntry.getValue())));
-                    final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referencesValues = builder.build();
-                    switch (lineChecker) {
-                        case final LineChecker.ManyChecker manyChecker -> {
-                            manyChecker.value().getValue()
-                                    .forEach(o -> ((ReferenceType) o).setReferenceValues(referencesValues));
-                            referenceType.setReferenceValues(referencesValues);
-                        }
-                        case final LineChecker.OneChecker oneChecker -> {
-                            ((ReferenceType) oneChecker.fieldTypeForOne()).setReferenceValues(referencesValues);
-                            referenceType.setReferenceValues(referencesValues);
-                        }
+            if (recursionStrategy instanceof WithRecursion _ && lineChecker.underlyingType() instanceof final ReferenceType referenceType) {
+                final Map<DataValue.LineIdentityColumnName, UUID> map2 = dataImporterContext.getAfterPreloadReferenceUuids();
+                final Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> map1 = referenceType.getReferenceValues();
+                final ImmutableMap.Builder<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> builder = ImmutableMap.builder();
+                builder.putAll(map1);
+                map2.entrySet().stream()
+                        .filter(ltree -> !map1.containsKey(ltree.getKey()))
+                        .forEach(ltreeUUIDEntry -> builder.put(ltreeUUIDEntry.getKey(), ImmutableSet.of(ltreeUUIDEntry.getValue())));
+                final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referencesValues = builder.build();
+                switch (lineChecker) {
+                    case final LineChecker.ManyChecker manyChecker -> {
+                        manyChecker.value().getValue()
+                                .forEach(o -> ((ReferenceType) o).setReferenceValues(referencesValues));
+                        referenceType.setReferenceValues(referencesValues);
+                    }
+                    case final LineChecker.OneChecker oneChecker -> {
+                        ((ReferenceType) oneChecker.fieldTypeForOne()).setReferenceValues(referencesValues);
+                        referenceType.setReferenceValues(referencesValues);
                     }
                 }
             }
@@ -107,7 +105,7 @@ public class CsvReader {
                     );
             return validationCheckResult.getValidations().stream()
                     .map(validationCheckResult1 -> new CsvRowValidationCheckResult(validationCheckResult, conflictingLineNumber))
-                    .collect(Collectors.toList());
+                    .toList();
         };
     }
 
@@ -122,20 +120,23 @@ public class CsvReader {
         final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<>();
         final List<PatternValueForHeader> patternValueForHeaders = new LinkedList<>();
         final int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
-        for (int i = 0; i < columns.size(); i++) {
+        int i = 0;
+        while (i < columns.size()) {
             String[] values = csvRecord.values();
             final String cellContent = values.length > i ? values[i] : "";
             final String patternComponentName = currentHeader.next();
             if (dataImporterContext.pushValue(referenceDatum, patternComponentName, cellContent.trim(), refsLinkedTo)) {
                 OneValueStaticPatternColumn expectedPatternColumn1 = dataImporterContext.getPatternColumnFactory().getExpectedPatternColumn(patternComponentName);
                 List<String> adjacentValues = new LinkedList<>();
-                for (int j = 0; j < (expectedPatternColumn1 == null ? 0 : expectedPatternColumn1.getAdjacentColumnsSize()); j++) {
+                final int adjacentColumnsIndex = expectedPatternColumn1 == null ? 0 : expectedPatternColumn1.getAdjacentColumnsSize();
+                for (int j = 0; j < adjacentColumnsIndex && (i + 1) < values.length; j++) {
                     i++;
                     adjacentValues.add(values[i]);
                     currentHeader.next();
                 }
                 patternValueForHeaders.add(new PatternValueForHeader(patternComponentName, cellContent.trim(), adjacentValues, refsLinkedTo));
             }
+            i++;
         }
         if (patternValueForHeaders.isEmpty()) {
             return Stream.of(new RowWithReferenceDatum(lineNumber, "", referenceDatum, ImmutableMap.copyOf(refsLinkedTo)));

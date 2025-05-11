@@ -9,9 +9,11 @@ import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
 import org.json.JSONException;
@@ -196,7 +198,7 @@ class CreateAuthorizationRequestTest {
         try {
             JSONAssert.assertEquals(expectedJson, actualJson, JSONCompareMode.LENIENT);
         } catch (JSONException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.JSON_EXCEPTION.toMessage(), e);
         }
     }
 }

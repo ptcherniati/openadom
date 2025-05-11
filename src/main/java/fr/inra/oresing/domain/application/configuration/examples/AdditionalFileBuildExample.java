@@ -6,6 +6,9 @@ import fr.inra.oresing.domain.application.configuration.type.*;
 import java.util.LinkedHashMap;
 
 class AdditionalFileBuildExample {
+    private AdditionalFileBuildExample() {
+    }
+
     protected static final AdditionalFileType FIRST = buildAdditionalFileSchema(
             TitleExampleBuilder.buildTitle(
                     I18nExampleBuilder.buildI18n("Fichier", "File"),

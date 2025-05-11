@@ -65,9 +65,9 @@ public interface ValidationCheckResult {
                     .limit(MAX_COLLECTION_SIZE)
                     .collect(Collectors.toList());
             return switch (value) {
-                case List list -> limitedList;
-                case SortedSet sortedSet -> new TreeSet<>(limitedList);
-                case Set set -> new HashSet<>(limitedList);
+                case List list -> list;
+                case SortedSet sortedSet -> new TreeSet<>(sortedSet);
+                case Set set -> new HashSet<>(set);
                 default -> limitedList; // Retourne une List par défaut
 
             };

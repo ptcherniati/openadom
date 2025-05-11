@@ -2,7 +2,10 @@ package fr.inra.oresing.persistence.index;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.Authorization;
+import fr.inra.oresing.domain.application.configuration.AuthorizationScopeComponentData;
+import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
 

@@ -22,11 +22,6 @@ public class PrivilegeAssessorDomainForSystemFactory {
     public static final PrivilegeAssessorDomainForSystem NO_SYSTEM_RIGHTS = builder()
             .build();
 
-    // Initialisation des constantes nécessitant des mocks
-    static {
-
-    }
-
     // Attributs d'instance pour le builder
     private AuthorizationsForSystemUser authorizations = mock(AuthorizationsForSystemUser.class, "mock authorizations");
     private PrivilegeSystemDomainEnum privilegeSystemDomainEnum;
@@ -49,8 +44,7 @@ public class PrivilegeAssessorDomainForSystemFactory {
     }
 
     public PrivilegeAssessorDomainForSystem build() {
-        final PrivilegeAssessorDomainForSystem privilegeAssessorDomainForApplication = new PrivilegeAssessorDomainForSystem(authorizations, privilegeSystemDomainEnum);
-        return privilegeAssessorDomainForApplication;
+        return new PrivilegeAssessorDomainForSystem(authorizations, privilegeSystemDomainEnum);
     }
 
     public PrivilegeAssessorDomainForSystemFactory withAuthorizations(AuthorizationsForSystemUser authorizations) {

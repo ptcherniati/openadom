@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.data.publication;
 
+import com.google.common.base.Preconditions;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
@@ -45,7 +46,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
                         if (fileOrUuid() != null) {
                             binaryFile.withBinaryFileDataset(fileOrUuid().binaryfiledataset());
                         }
-                        assert file != null;
+                        Preconditions.checkState(file != null);
                         binaryFileRepository.storeFileContent(fileId, inputStream, (int) file.getSize());
                         return binaryFileRepository.tryFindByIdWithData(fileId).orElse(null);
                     });
@@ -59,14 +60,14 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
     }
 
     public StoreFile testRights() {
-        boolean newFileOrUUID = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::fileid).isEmpty();
+        boolean isNewFileOrUUID = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::fileid).isEmpty();
         boolean publishing = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::topublish).orElse(false) ||
-                             newFileOrUUID && !builder().isRepository();
+                             isNewFileOrUUID && !builder().isRepository();
         publishing = !application().isData(dataName()) || publishing;
-        if (newFileOrUUID && !builder().applicationDataWriter().hasRightForDeposit(fileOrUuid())) {
+        if (isNewFileOrUUID && !builder().applicationDataWriter().hasRightForDeposit(fileOrUuid())) {
             throw new NotApplicationDataWriterForDepositException(application().getName(), dataName());
         } else {
-            if (publishing && builder().applicationDataWriter().hasRightForPublishOrUnPublish(fileOrUuid())) {
+            if (publishing && !builder().applicationDataWriter().hasRightForPublishOrUnPublish(fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(application().getName(), dataName());
             }
         }

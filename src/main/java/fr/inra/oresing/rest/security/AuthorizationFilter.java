@@ -69,7 +69,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     private final OreSiApiRequestContext requestContext;
     private static JsonRowMapper<OreSiUserRequestClient> mapper;
     private final OreExceptionHandler exceptionHandler;
-    private final JWTExtractor JWTExtractor;
+    private final JWTExtractor jWTExtractor;
     private ServiceContainer serviceContainer;
 
     @Autowired
@@ -81,9 +81,9 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             OreExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
         this.requestContext = requestContext;
-        mapper = jsonRowMapper;
-        this.JWTExtractor = new JWTExtractor(
-                mapper,
+        this.mapper = jsonRowMapper;
+        this.jWTExtractor = new JWTExtractor(
+                jsonRowMapper,
                 jwtExpiration,
                 jwtSecret
         );
@@ -103,7 +103,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             return;
         }
         if (path.endsWith("/logout")) {
-            JWTExtractor.clearSession(request, response, false);
+            jWTExtractor.clearSession(request, response, false);
             chain.doFilter(request, response);
             return;
         }
@@ -146,75 +146,84 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         }
         if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.LOGIN)) {
             return buildLoginAuthentication(request, response, isSecureEnvironnement);
-        } else if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.USERS)) {
-            return buildCreateUserAuthentication();
-        } else if (HttpMethod.PUT.name().equals(method) && path.endsWith(SecurityConfig.USERS)) {
-            return buildUpdateUserAuthentication(request);
-        } else {
-            OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response, isSecureEnvironnement);
-            requestContext.setAuthenticationToken(oreSiAuthenticationToken); //premier stockage pour certaines méthodes
-            if (oreSiAuthenticationToken == null) {
-                return null;
-            }
-            Optional.ofNullable(path)
-                    .map(p -> p.split("/"))
-                    .map(Arrays::asList)
-                    .filter(list -> list.size() > 4 && APPLICATIONS.equals(list.get(3)))
-                    .map(list -> list.get(4))
-                    .ifPresent(oreSiAuthenticationToken::setApplicationName);
-            Optional.ofNullable(path)
-                    .map(p -> p.split("/"))
-                    .map(Arrays::asList)
-                    .filter(list -> list.size() > 3 && APPLICATIONS.equals(list.get(3)))
-                    .filter(list -> list.size() > 6 && List.of(DATA, SYNTHESIS, FILES_ON_REPOSITORY).contains(list.get(5)))
-                    .map(list -> list.get(6))
-                    .or(() -> {
-                        Pattern pattern = Pattern
-                                .compile("/api/v1/applications/(%s)/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
-                        final Optional<UUID> optionalUUID = Optional.ofNullable(path)
-                                .map(pattern::matcher)
-                                .map(m -> m.matches() ? m.group(2) : null)
-                                .map(UUID::fromString);
-                        final Optional<String> dataNameOpt = Optional.ofNullable(path)
-                                .map(pattern::matcher)
-                                .map(m -> m.matches() ? m.group(1) : null);
-                        try {
-                            return optionalUUID
-                                    .map(fileId -> {
-                                        Application applicationOrApplicationAccordingToRights = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(oreSiAuthenticationToken.getApplicationName());
-                                        return Optional.ofNullable(serviceContainer.versioningService()
-                                                        .getStoreFile(applicationOrApplicationAccordingToRights,
-                                                                null,
-                                                                FileOrUUID.forUUID(fileId),
-                                                                null,
-                                                                null))
-                                                .map(oreSiAuthenticationToken::setStoreFile)
-                                                .map(StoreFile::builder)
-                                                .map(AuthorizationPublicationService::getDataName)
-                                                .orElse(null);
-
-                                    });
-                        } catch (IllegalArgumentException e) {
-                            if (AuthorizationPublicationService.DATA_NAME_CAN_T_BE_NULL.equals(e.getMessage())) {
-                                optionalUUID
-                                        .flatMap(fileId -> serviceContainer.binaryFileService().getFile(oreSiAuthenticationToken.getApplicationName(), fileId))
-                                        .ifPresent(binaryFile -> {
-                                            oreSiAuthenticationToken.setBinaryFile(binaryFile);
-                                            dataNameOpt
-                                                    .ifPresent(oreSiAuthenticationToken::setDataName);
-
-                                        });
-                            }
-                            return Optional.empty();
-                        }
-                    })
-                    .ifPresent(dataName -> {
-                        addFilleOrUUID(request, oreSiAuthenticationToken, dataName, path);
-                        oreSiAuthenticationToken.setDataName(dataName);
-                    });
-
-            return oreSiAuthenticationToken;
         }
+        if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.USERS)) {
+            return buildCreateUserAuthentication();
+        }
+        if (HttpMethod.PUT.name().equals(method) && path.endsWith(SecurityConfig.USERS)) {
+            return buildUpdateUserAuthentication(request);
+        }
+
+        OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response, isSecureEnvironnement);
+        requestContext.setAuthenticationToken(oreSiAuthenticationToken); //premier stockage pour certaines méthodes
+        if (oreSiAuthenticationToken == null) {
+            return null;
+        }
+        Optional.ofNullable(path)
+                .map(p -> p.split("/"))
+                .map(Arrays::asList)
+                .filter(list -> list.size() > 4 && APPLICATIONS.equals(list.get(3)))
+                .map(list -> list.get(4))
+                .ifPresent(oreSiAuthenticationToken::setApplicationName);
+        Optional.ofNullable(path)
+                .map(p -> p.split("/"))
+                .map(Arrays::asList)
+                .filter(list -> list.size() > 3 && APPLICATIONS.equals(list.get(3)))
+                .filter(list -> list.size() > 6 && List.of(DATA, SYNTHESIS, FILES_ON_REPOSITORY).contains(list.get(5)))
+                .map(list -> list.get(6))
+                .or(() -> getWithFileId(oreSiAuthenticationToken, path))
+                .ifPresent(dataName -> {
+                    addFilleOrUUID(request, oreSiAuthenticationToken, dataName, path);
+                    oreSiAuthenticationToken.setDataName(dataName);
+                });
+
+        return oreSiAuthenticationToken;
+    }
+
+    private Optional<? extends String> getWithFileId(OreSiAuthenticationToken oreSiAuthenticationToken, String path) {
+        Pattern pattern = Pattern
+                .compile("/api/v1/applications/(%s)/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
+        final Optional<UUID> optionalUUID = Optional.ofNullable(path)
+                .map(pattern::matcher)
+                .map(m -> m.matches() ? m.group(2) : null)
+                .map(UUID::fromString);
+        final Optional<String> dataNameOpt = Optional.ofNullable(path)
+                .map(pattern::matcher)
+                .map(m -> m.matches() ? m.group(1) : null);
+        try {
+            return optionalUUID
+                    .map(fileId -> extractFileOrUUIDAndFindDataName(fileId, oreSiAuthenticationToken));
+        } catch (IllegalArgumentException e) {
+            extractBinaryFileAndFindDataName(oreSiAuthenticationToken, e, optionalUUID, dataNameOpt);
+            return Optional.empty();
+        }
+    }
+
+    private void extractBinaryFileAndFindDataName(OreSiAuthenticationToken oreSiAuthenticationToken, IllegalArgumentException e, Optional<UUID> optionalUUID, Optional<String> dataNameOpt) {
+        if (AuthorizationPublicationService.DATA_NAME_CAN_T_BE_NULL.equals(e.getMessage())) {
+            optionalUUID
+                    .flatMap(fileId -> serviceContainer.binaryFileService().getFile(oreSiAuthenticationToken.getApplicationName(), fileId))
+                    .ifPresent(binaryFile -> {
+                        oreSiAuthenticationToken.setBinaryFile(binaryFile);
+                        dataNameOpt
+                                .ifPresent(oreSiAuthenticationToken::setDataName);
+
+                    });
+        }
+    }
+
+    private String extractFileOrUUIDAndFindDataName(UUID fileId, OreSiAuthenticationToken oreSiAuthenticationToken) {
+        Application applicationOrApplicationAccordingToRights = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(oreSiAuthenticationToken.getApplicationName());
+        return Optional.ofNullable(serviceContainer.versioningService()
+                        .getStoreFile(applicationOrApplicationAccordingToRights,
+                                null,
+                                FileOrUUID.forUUID(fileId),
+                                null,
+                                null))
+                .map(oreSiAuthenticationToken::setStoreFile)
+                .map(StoreFile::builder)
+                .map(AuthorizationPublicationService::getDataName)
+                .orElse(null);
     }
 
     private void addFilleOrUUID(HttpServletRequest request, OreSiAuthenticationToken oreSiAuthenticationToken, String dataName, String path) {
@@ -247,10 +256,6 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         }
     }
 
-    private OreSiAuthenticationToken addFileOrUUIDIfCreateData(OreSiAuthenticationToken authenticationToken, String dataName) {
-        return authenticationToken;
-    }
-
     private OreSiAuthenticationToken buildLoginAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws AuthenticationFailure {
         String loginValue = request.getParameter(LOGIN_PARAMETER);
         String passwordValue = request.getParameter(PASSWORD_PARAMETER);
@@ -260,13 +265,13 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                 LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
                         .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
                         .forLoginPassword(loginValue, passwordValue);
-                JWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
+                jWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
                 return new OreSiAuthenticationToken(
                         loginAdminResult,
                         request.getRequestURI(),
                         List.of(ROLE_AUTHENTIFIED_USER)
                 );
-            } catch (AuthenticationFailure e) {
+            } catch (AuthenticationFailure _) {
                 throw new AuthenticationFailure(ECHEC_TECHNIQUE, (OreSiUser) null);
             }
         }
@@ -297,12 +302,12 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     }
 
     private OreSiAuthenticationToken handleJwtAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws IOException {
-        String jwtCookie = JWTExtractor.extractJwtCookie(request);
+        String jwtCookie = jWTExtractor.extractJwtCookie(request);
         if (jwtCookie == null) {
             return null;
         }
-        OreSiRequestClient requestClient = JWTExtractor.getRequestClientFromJwt(jwtCookie);
-        JWTExtractor.refreshJwtInResponse(response, requestClient.id(), isSecureEnvironnement);
+        OreSiRequestClient requestClient = jWTExtractor.getRequestClientFromJwt(jwtCookie);
+        jWTExtractor.refreshJwtInResponse(response, requestClient.id(), isSecureEnvironnement);
         return new OreSiAuthenticationToken(
                 requestClient,
                 request.getRequestURI(),
@@ -312,7 +317,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
 
     @Override
     public void setServiceContainer(ServiceContainer serviceContainer) {
-        JWTExtractor.setSetGetUserRole(serviceContainer.authenticationService()::getUserRole);
+        jWTExtractor.setSetGetUserRole(serviceContainer.authenticationService()::getUserRole);
         this.serviceContainer = serviceContainer;
     }
 }

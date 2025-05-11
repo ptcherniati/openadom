@@ -7,6 +7,6 @@ public enum ApplicationInformation {
     SYNTHESIS,
     ADDITIONALFILE,
     RIGHTSREQUEST,
-    DATATYPE, //TODO
-    REFERENCETYPE //TODO
+    DATATYPE,
+    REFERENCETYPE
 }

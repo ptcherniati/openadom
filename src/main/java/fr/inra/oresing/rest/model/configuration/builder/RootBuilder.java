@@ -16,10 +16,10 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 
-import jakarta.annotation.Nullable;
 import java.util.*;
 import java.util.function.Consumer;
 

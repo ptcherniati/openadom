@@ -86,12 +86,15 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
     public String getCsvCellContent() {
         return (String) values.getValue().stream()
                 .map(Object::toString)
-                .peek(value -> Preconditions.checkState(
-                                !value.toString().contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
-                                ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
-                                value,
-                                ManyValuesStaticColumn.CSV_CELL_SEPARATOR
-                        )
+                .map(value -> {
+                            Preconditions.checkState(
+                                    !value.toString().contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
+                                    ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
+                                    value,
+                                    ManyValuesStaticColumn.CSV_CELL_SEPARATOR
+                            );
+                            return values;
+                        }
                 )
                 .collect(Collectors.joining(ManyValuesStaticColumn.CSV_CELL_SEPARATOR));
 

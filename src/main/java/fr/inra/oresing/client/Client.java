@@ -2,9 +2,11 @@ package fr.inra.oresing.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import org.apache.commons.io.file.AccumulatorPathVisitor;
 import org.apache.commons.io.file.Counters;
-import org.apache.hc.client5.http.classic.methods   .HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.cookie.CookieStore;
 import org.apache.hc.client5.http.entity.mime.FileBody;
@@ -18,7 +20,9 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -261,7 +265,7 @@ public class Client {
                             })
                             .collect(Collectors.toList());
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
             }
 
@@ -301,7 +305,7 @@ public class Client {
                     .collect(Collectors.toCollection(TreeSet::new));
             return Collections.unmodifiableSortedSet(csvFilePathsInDirectory);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
         }
     }
 
@@ -322,7 +326,7 @@ public class Client {
         try (InputStream inputStream = response.getEntity().getContent()) {
             return new ObjectMapper().readValue(inputStream, valueTypeRef);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
         }
     }
 
@@ -362,7 +366,7 @@ public class Client {
             try {
                 return new URI("%s/api/v1/%s".formatted(instanceUrl, endpoint));
             } catch (URISyntaxException e) {
-                throw new RuntimeException("ne devrait pas arriver", e);
+                throw new OreSiTechnicalException("ne devrait pas arriver", e);
             }
         }
 

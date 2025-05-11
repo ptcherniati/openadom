@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class ConfigurationTest {
 
     @Test
-    public void testVersion() {
+     void testVersion() {
         assertEquals("1.0.1-BADVERSION", Version.BAD_VERSION.version());
         assertEquals(Configuration.OPEN_ADOM_VERSION_PATTERN, Configuration.OPEN_ADOM_VERSION.version());
         final String versionString = "2.3.4.42-SNAPSHOT+12-2024-01-11";

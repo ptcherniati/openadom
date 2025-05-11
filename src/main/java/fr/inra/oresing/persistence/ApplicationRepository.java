@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 @Component
@@ -73,7 +73,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
     }
 
     public boolean addReferenceToAuthorizationScope(String applicationName, Collection<String> newDataIdentifiers) {
-        Function<String, String> buildQueryAddIdentifier = identifier->buildQueryAddIdentifier(applicationName, identifier);
+        UnaryOperator<String> buildQueryAddIdentifier = identifier->buildQueryAddIdentifier(applicationName, identifier);
         String query = newDataIdentifiers.stream()
                 .map(buildQueryAddIdentifier)
                 .collect(Collectors.joining("\n"));
@@ -89,7 +89,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
     public void updateAuthorizationIndexes(Application application) {
         AuthorizationIndex authorizationIndex = new AuthorizationIndex(application);
         String sql = authorizationIndex.dropIndexes();
-        int updateAuthorizationIndexes = getNamedParameterJdbcTemplate().update(sql, Map.of());
+        getNamedParameterJdbcTemplate().update(sql, Map.of());
         authorizationIndex.createIndexes();
     }
 }

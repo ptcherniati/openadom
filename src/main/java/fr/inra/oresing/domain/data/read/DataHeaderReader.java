@@ -10,8 +10,8 @@ import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import org.apache.commons.csv.CSVRecord;
 

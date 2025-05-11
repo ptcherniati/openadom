@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileOrUUID;
@@ -11,10 +12,14 @@ import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.mail.EmailService;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.persistence.OreSiRepository;
+import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.data.publication.*;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
@@ -149,7 +154,7 @@ public class VersioningService implements ServiceContainerBean {
                             true
                     );
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
             }
 

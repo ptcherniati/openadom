@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -236,7 +238,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         try {
             charte = ow.writeValueAsString(oreSiUser.getChartes());
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.JSON_PROCESSING.toMessage(), e);
         }
         getNamedParameterJdbcTemplate().update(
                 query,

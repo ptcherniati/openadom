@@ -1,8 +1,11 @@
 package fr.inra.oresing.rest.model.application;
 
+import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.application.configuration.Node;
+import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 import lombok.Getter;

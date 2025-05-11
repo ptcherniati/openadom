@@ -1,13 +1,19 @@
 package fr.inra.oresing.rest.services;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.*;
-import fr.inra.oresing.domain.*;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSortedMap;
+import com.google.common.collect.ImmutableSortedSet;
+import fr.inra.oresing.domain.OreSiAuthorization;
+import fr.inra.oresing.domain.OreSiRoleForUser;
+import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResult;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.Authorization;
+import fr.inra.oresing.domain.application.configuration.AuthorizationScopeComponentData;
+import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.authorization.privilegeassessor.*;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
@@ -17,6 +23,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSyst
 import fr.inra.oresing.domain.authorization.request.*;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.role.role.BadApplicationRoleException;
 import fr.inra.oresing.domain.exceptions.role.role.BadRoleException;
@@ -29,6 +36,7 @@ import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.UpdateRolesOnAdditionalFilesManagement;
 import fr.inra.oresing.rest.UpdateRolesOnManagement;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
@@ -842,10 +850,11 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 .collect(Collectors.toSet());
 
         Map<OperationAdditionalFileType, List<String>> modifiedAuthorizations = authorizationsByType.entrySet().stream()
-                .peek(authByTypeEntry -> {
+                .map(authByTypeEntry -> {
                     if (!isApplicationCreator) {
                         removeAuthorizationAdditionalFilesThatCantBeModified(authByTypeEntry, authorizationListForCurrentUser);
                     }
+                    return authByTypeEntry;
                 })
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         if (!isApplicationCreator) {
@@ -991,7 +1000,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                         privilegeSystemDomainEnum
                 );
             }
-            case SYSTEM_USER_NOT_CONNECTED -> throw new RuntimeException();
+            case SYSTEM_USER_NOT_CONNECTED -> throw new OreSiTechnicalException(ExceptionMessage.SYSTEM_USER_NOT_CONNECTED.toMessage());
             case AUTHENTICATION_MANAGEMENT -> null;
         };
     }

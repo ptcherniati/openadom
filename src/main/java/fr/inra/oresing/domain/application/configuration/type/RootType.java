@@ -13,7 +13,7 @@ public record RootType(SectionBuilder sectionBuilder,
         return SectionBuilder.getInstance()
                 .withMandatorySections(
                         new LabelDescription(ConfigurationSchemaNode.OA_VERSION, StringType.EMPTY_INSTANCE()),
-                        new LabelDescription(ConfigurationSchemaNode.OA_APPLICATION, ApplicationDescriptionType.EMPTY_INSTANCE())
+                        new LabelDescription(ConfigurationSchemaNode.OA_APPLICATION, ApplicationDescriptionType.emptyInstance())
                 )
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_DATA, DataType.EMPTY_INSTANCE()),

@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.chart;
 
-import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.OreSiEntity;
+import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

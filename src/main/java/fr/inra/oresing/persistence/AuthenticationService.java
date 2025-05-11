@@ -3,17 +3,19 @@ package fr.inra.oresing.persistence;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
+import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.*;
 import fr.inra.oresing.mail.EmailService;
-import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.rest.CreateUserRequest;
-import fr.inra.oresing.rest.model.authorization.CurrentUserRolesResult;
 import fr.inra.oresing.rest.CreateUserResult;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.rest.model.authorization.CurrentUserRolesResult;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.model.authorization.UserAuthorizationForApplication;
 import fr.inra.oresing.rest.services.ServiceContainer;
@@ -139,7 +141,7 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
     }
 
-    public void sendEmailValidation(final String loginOrEmail, final String password) throws AuthenticationFailure {
+    public void sendEmailValidation(final String loginOrEmail) throws AuthenticationFailure {
         OreSiUser oreSiUser = userRepository.findByLoginOrEmail(loginOrEmail)
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, (LoginAdminResult) null));
         String verificationKey = generateVerificationKey(oreSiUser);
@@ -556,7 +558,7 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
             case NotConnectedAuthentifiedMissingPasswordUser notConnectedAuthentifiedMissingPasswordUser -> updatePasswordLost(notConnectedAuthentifiedMissingPasswordUser.oreSiUser(), notConnectedAuthentifiedMissingPasswordUser.createUserRequest());
             case NotConnectedAuthentifiedPendingUser notConnectedAuthentifiedPendingUser -> sendValidationKey(notConnectedAuthentifiedPendingUser.user());
             case NotConnectedUnauthentifiedUser notConnectedUnauthentifiedUser -> throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, notConnectedUnauthentifiedUser.createUserRequest());
-            case NotConnectedUnauthentifiedUserForCreate notConnectedUnauthentifiedUserForCreate -> null;//TODO;
+            case NotConnectedUnauthentifiedUserForCreate _ -> null;
         };
     }
 
@@ -569,7 +571,7 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
                     try {
                         return userRepository.update(oreSiUser);
                     } catch (final JsonProcessingException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(ExceptionMessage.JSON_PROCESSING.toMessage(), e);
                     }
                 })
                 .orElse(new OreSiUser());

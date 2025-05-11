@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.data.deposit.validation.transformer;
 
 import com.google.common.collect.ImmutableList;
-import fr.inra.oresing.domain.data.Datum;
 import fr.inra.oresing.domain.data.DataDatum;
+import fr.inra.oresing.domain.data.Datum;
 
 import java.util.Deque;
 import java.util.LinkedList;

@@ -1,10 +1,10 @@
 package fr.inra.oresing.rest.services;
 
 import com.google.common.collect.Lists;
-import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
+import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.ViewStrategy;
 import fr.inra.oresing.rest.exceptions.views.FieldNameTooLongForSqlFieldException;
 import lombok.extern.slf4j.Slf4j;

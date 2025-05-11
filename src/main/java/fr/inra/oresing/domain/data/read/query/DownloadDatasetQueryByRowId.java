@@ -4,7 +4,8 @@ package fr.inra.oresing.domain.data.read.query;
 import fr.inra.oresing.domain.application.Application;
 import org.apache.logging.log4j.util.Strings;
 
-import java.util.*;
+import java.util.Objects;
+import java.util.Set;
 
 public record DownloadDatasetQueryByRowId(
         Application application,

@@ -110,7 +110,7 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
                 authorizationMatchingIntervals.add(intersectionInterval);
             }
         }
-        return !verifyCoverageCompleteness(submissionIntervalScope, authorizationMatchingIntervals);
+        return verifyCoverageCompleteness(submissionIntervalScope, authorizationMatchingIntervals);
     }
 
     private boolean verifyCoverageCompleteness(

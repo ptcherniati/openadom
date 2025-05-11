@@ -3,11 +3,12 @@ package fr.inra.oresing.domain.application.configuration.examples;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.*;
 import org.apache.commons.collections4.CollectionUtils;
-import static fr.inra.oresing.domain.application.configuration.examples.StringExampleBuilder.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import static fr.inra.oresing.domain.application.configuration.examples.StringExampleBuilder.*;
 
 class  BasicComponentExampleBuilder {
         public static final BasicComponentType SITES_KEY = buildBasicComponents(null, BooleanExampleBuilder.FALSE, NOM_CODIQUE_DU_SITE, null, null, null, I18nExampleBuilder.LANG_RESTRICTION_FR_EN);

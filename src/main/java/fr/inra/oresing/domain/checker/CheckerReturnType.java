@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.checker;
 
-import fr.inra.oresing.domain.groovy.GroovyExpression;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.domain.groovy.GroovyExpression;
 
 import java.util.Arrays;
 import java.util.Map;

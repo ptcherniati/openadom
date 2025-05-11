@@ -11,10 +11,11 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import java.util.function.Supplier;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
 
 public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
      Map<K,V> value;

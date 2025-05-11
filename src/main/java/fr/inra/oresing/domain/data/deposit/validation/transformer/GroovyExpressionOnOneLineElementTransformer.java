@@ -4,8 +4,8 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
-import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.data.SomethingThatCanProvideEvaluationContext;
+import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Set;

@@ -17,7 +17,7 @@ class DatePatternTest {
     public static final String DATETIME = "12/01/1925 12:23:56";
 
     @Test
-    public void testCreateWithDatePattern() {
+     void testCreateWithDatePattern() {
         final DatePattern<LocalDate> localDateDatePattern = DatePattern.of("dd/MM/yyyy");
         Assertions.assertNotNull(localDateDatePattern);
         final LocalDate localDate = localDateDatePattern.format(DATE);
@@ -26,7 +26,7 @@ class DatePatternTest {
     }
 
     @Test
-    public void testCreateWithBadPattern() {
+     void testCreateWithBadPattern() {
         try {
             final DatePattern<LocalDate> localDateDatePattern = DatePattern.of("yyyy-Mm-dd");
         } catch (final SiOreConfigurationFormatException e) {
@@ -36,7 +36,7 @@ class DatePatternTest {
     }
 
     @Test
-    public void testCreateWithTimePattern() {
+     void testCreateWithTimePattern() {
         final DatePattern<LocalTime> localTimeDatePattern = DatePattern.of("HH:mm:ss");
         Assertions.assertNotNull(localTimeDatePattern);
         final LocalTime localDate = localTimeDatePattern.format(TIME);
@@ -45,7 +45,7 @@ class DatePatternTest {
     }
 
     @Test
-    public void testCreateWithDateTimePattern() {
+     void testCreateWithDateTimePattern() {
         final DatePattern<LocalDateTime> localTimeDatePattern = DatePattern.of("dd/MM/yyyy HH:mm:ss");
         Assertions.assertNotNull(localTimeDatePattern);
         final LocalDateTime localDate = localTimeDatePattern.format(DATETIME);

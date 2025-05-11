@@ -105,7 +105,7 @@ public class Fixtures {
                     try {
                         return new ObjectMapper().readValue(o, Map.class);
                     } catch (final JsonProcessingException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
                 .collect(
@@ -438,17 +438,17 @@ public class Fixtures {
         referentielErrors.put("invalidDateWithComponent", List.of(
                 "02/01/2016",
                 "01/01/16",
-                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\",\"target\":{\"column\":\"date\"}},\"lineNumber\":2}]"
+                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"pattern\":\"dd/MM/yyyy\",\"value\":\"01/01/16\",\"component\":\"date\"},\"lineNumber\":2}]"
         ));
         referentielErrors.put("invalidFloatWithColumn", List.of(
                 "55,22",
                 "x",
-                "[{\"type\":\"FloatValidationCheckResult\",\"message\":\"invalidFloatWithComponent\",\"params\":{\"target\":{\"column\":\"isFloatValue\"},\"value\":\"x\"},\"lineNumber\":5}]"
+                "[{\"type\":\"FloatValidationCheckResult\",\"message\":\"invalidFloatWithComponent\",\"params\":{\"component\":\"isFloatValue\",\"value\":\"x\" },\"lineNumber\":5}]"
         ));
         referentielErrors.put("invalidIntegerWithComponent", List.of(
                 "4",
                 "x",
-                "[{\"type\":\"IntegerValidationCheckResult\",\"message\":\"invalidIntegerWithComponent\",\"params\":{\"target\":{\"column\":\"ordre_affichage\"},\"value\":\"x\"},\"lineNumber\":5}]"
+                "[{\"type\":\"IntegerValidationCheckResult\",\"message\":\"invalidIntegerWithComponent\",\"params\":{\"component\":\"ordre_affichage\",\"value\":\"x\"},\"lineNumber\":5}]"
         ));
         referentielErrors.put("duplicatedLineInReference", List.of(
                 "01/01/2016;Notes sur les biovolumes;Notes sur les biovolumes;Notes on biovolumes;;;39,22;false;Phytoplancton;38",
@@ -464,12 +464,12 @@ public class Fixtures {
         referentielErrors.put("invalidReferenceWithComponent", List.of(
                 "38;",
                 "38;martin",
-                "[{\"type\":\"ReferenceValidationCheckResult\",\"message\":\"invalidReferenceWithComponent\",\"params\":{\"target\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"},\"lineNumber\":39}]"
+                "[{\"type\":\"ReferenceValidationCheckResult\",\"message\":\"invalidReferenceWithComponent\",\"params\":{\"component\":\"site\",\"referenceValues\":[],\"refType\":\"site\",\"value\":\"martin\"},\"lineNumber\":39}]"
         ));
         referentielErrors.put("patternNotMatchedWithComponent", List.of(
                 "02/01/2016",
                 "12:00:00",
-                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"target\":{\"column\":\"date\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"lineNumber\":2}]"
+                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"component\":\"date\",\"pattern\":\"dd/MM/yyyy\",\"value\":\"12:00:00\"},\"lineNumber\":2}]"
         ));
         return referentielErrors;
     }
@@ -480,22 +480,22 @@ public class Fixtures {
         DataTypeErrors.put("invalidDate", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;x24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"target\":{\"column\":\"date_day\"},\"pattern\":\"dd/MM/yyyy\",\"value\":\"x24/02/2020\"},\"lineNumber\":3}]"
+                "[{\"type\":\"DateValidationCheckResult\",\"message\":\"invalidDateWithComponent\",\"params\":{\"component\":\"date_day\",\"pattern\":\"dd/MM/yyyy\",\"value\":\"x24/02/2020\"},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("invalidInt", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;x8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "[{\"type\":\"IntegerValidationCheckResult\",\"message\":\"invalidIntegerWithComponent\",\"params\":{\"target\":{\"column\":\"temperatureDeLAir\"},\"value\":\"x8\"},\"lineNumber\":3}]"
+                "[{\"type\":\"IntegerValidationCheckResult\",\"message\":\"invalidIntegerWithComponent\",\"params\":{\"component\":\"temperatureDeLAir\",\"value\":\"x8\"},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("invalidFloat", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;x10;vert-vert",
-                "[{\"type\":\"FloatValidationCheckResult\",\"message\":\"invalidFloatWithComponent\",\"params\":{\"target\":{\"column\":\"transparenceParSecchi\"},\"value\":\"x10\"},\"lineNumber\":3}]"
+                "[{\"type\":\"FloatValidationCheckResult\",\"message\":\"invalidFloatWithComponent\",\"params\":{\"component\":\"transparenceParSecchi\",\"value\":\"x10\"},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("requiredValue", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
                 "suivi des lacs;leman;SHL2;;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
-                "[{\"type\":\"DefaultCheckerValidationCheckResult\",\"message\":\"requiredValueWithComponent\",\"params\":{\"target\":{\"column\":\"date_day\"}},\"lineNumber\":3}]"
+                "[{\"type\":\"DefaultCheckerValidationCheckResult\",\"message\":\"requiredValueWithComponent\",\"params\":{\"component\":\"date_day\"},\"lineNumber\":3}]"
         ));
         DataTypeErrors.put("duplicatedLineInDatatype", List.of(
                 "suivi des lacs;leman;SHL2;24/02/2020;00:00:00;Tracté par la Daphnie;8;1;ensoleille;clair;;1;979;plat;propre;;10;vert-vert",
@@ -919,7 +919,7 @@ public class Fixtures {
 
             return getIdFromApplicationResult(result);
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 
@@ -964,7 +964,7 @@ public class Fixtures {
 
             getIdFromApplicationResult(loadApplication(configuration, authCookie, "fakeapp", "fakeapp"));
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         // Ajout de referentiel
@@ -997,7 +997,7 @@ public class Fixtures {
             final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
             getIdFromApplicationResult(loadApplication(configuration, authCookie1, "acbb", "acbb"));
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         // Ajout de referentiel
@@ -1056,7 +1056,7 @@ public class Fixtures {
             final MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
             loadApplication(configuration, authCookie, "hautefrequence", "hautefrequence");
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         // Ajout de referentiel
@@ -1088,7 +1088,7 @@ public class Fixtures {
 
             loadApplication(configuration, authCookie, "olac", "olac");
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         // Ajout de referentiel
@@ -1174,7 +1174,7 @@ public class Fixtures {
             final MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
             loadApplication(configuration, authCookie, "foret", "foret");
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         // Ajout de referentiel
@@ -1206,7 +1206,7 @@ public class Fixtures {
             final MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             loadApplication(configuration, authCookie, "recursivite", "recursivite");
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         String response;

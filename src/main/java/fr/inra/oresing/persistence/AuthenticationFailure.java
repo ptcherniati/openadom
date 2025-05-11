@@ -7,6 +7,7 @@ import fr.inra.oresing.rest.CreateUserRequest;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import lombok.Getter;
 
+import java.io.Serializable;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -33,7 +34,7 @@ public class AuthenticationFailure extends OreSiException {
     public static final String CONSTANT_STATE = "state";
     public static final String CONSTANT_SUBMISSION_SCOPE = "submissionScope";
 
-    private final Map params;
+    private final Map<String, ? extends Serializable> params;
 
     public AuthenticationFailure(String message, CreateUserRequest userRequest) {
         super(message);

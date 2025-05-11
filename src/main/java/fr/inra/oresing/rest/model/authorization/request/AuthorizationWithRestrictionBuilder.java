@@ -6,7 +6,10 @@ import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.rest.model.authorization.AuthorizationInput;
 import org.apache.commons.collections.MapUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class AuthorizationWithRestrictionBuilder {
   final AuthorizationRequestBuilder authorizationRequestBuilder;

@@ -44,8 +44,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -124,13 +122,13 @@ public class RightsTest {
     }
 
     @Test
-    public void noCookieTest() throws Exception {
+     void noCookieTest() throws Exception {
         mockMvc.perform(get("/api/v1/applications"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-    public void timeOutCookie() throws Exception {
+     void timeOutCookie() throws Exception {
         OreSiUser oreSiUser = new OreSiUser();
         oreSiUser.setId(authUserId);
         OreSiUserRequestClient oreSiUserRequestClient = new OreSiUserRequestClient(authUserId, OreSiUserRole.forUser(oreSiUser));
@@ -138,9 +136,9 @@ public class RightsTest {
         try {
             mockMvc.perform(get("/api/v1/applications")
                     .cookie(cookie));
-            fail();
+            Assertions.fail();
         } catch (AuthenticationCredentialsNotFoundException e) {
-            assertTrue(e.getCause() instanceof ExpiredJwtException);
+            Assertions.assertTrue(e.getCause() instanceof ExpiredJwtException);
         }
     }
 
@@ -178,7 +176,7 @@ public class RightsTest {
     }
 
     //@Test
-    public void logoutShouldInvalidateSession() throws Exception {
+     void logoutShouldInvalidateSession() throws Exception {
         // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
         mockMvc.perform(get("/api/v1/applications")
                         .cookie(authCookie))
@@ -198,7 +196,7 @@ public class RightsTest {
     }
 
     @Test
-    public void cookieMaxAgeIsResetOnEachCall() throws Exception {
+     void cookieMaxAgeIsResetOnEachCall() throws Exception {
         // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
         MvcResult result = mockMvc.perform(get("/api/v1/applications")
                         .cookie(authCookie))

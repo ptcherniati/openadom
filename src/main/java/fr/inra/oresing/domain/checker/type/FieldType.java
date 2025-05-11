@@ -23,13 +23,12 @@ public sealed interface FieldType<T> extends SomethingToBeStoredAsJsonInDatabase
         PatternType,
         NullType,
         StringType {
+
     T getValue();
 
     SqlPrimitiveType getSqlType();
 
     CheckerValidationCheckResult check(String value, LineChecker lineChecker);
-
-    //ValidationCheckResult check(String value, LineCheckerWarper lineCheckerWarper);
 
     FieldType copy();
 

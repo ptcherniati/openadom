@@ -65,11 +65,6 @@ public class ColumnDescriptionBuilder {
         return this;
     }
 
-    public ColumnDescriptionBuilder isDisplay(boolean isDisplay) {
-        this.isDisplay = isDisplay;
-        return this;
-    }
-
     public ColumnDescriptionBuilder addLocale(Locale locale, String value) {
         this.internationalisationName.put(locale, value);
         return this;

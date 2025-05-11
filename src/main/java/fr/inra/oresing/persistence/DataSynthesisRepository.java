@@ -1,10 +1,10 @@
 package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
-import com.google.common.base.Strings;
 import fr.inra.oresing.domain.repository.synthesis.SynthesisRepository;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;

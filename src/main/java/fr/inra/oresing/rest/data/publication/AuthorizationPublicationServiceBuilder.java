@@ -9,7 +9,9 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDa
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
 

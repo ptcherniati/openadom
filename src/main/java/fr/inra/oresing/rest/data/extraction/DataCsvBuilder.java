@@ -1,19 +1,23 @@
 package fr.inra.oresing.rest.data.extraction;
 
-import com.google.common.collect.ImmutableSet;
 import com.opencsv.CSVWriter;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.UUIDsfromData;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
-import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
+import fr.inra.oresing.domain.data.read.query.ComponentOrderByForExport;
+import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.AdditionalFileRepository;
+import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.rest.data.DataService;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +29,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -40,37 +43,18 @@ public class DataCsvBuilder {
 
     private Flux<DataRow> datas;
     private OutputStream outputStream;
-    private Locale locale;
-    Function<String, InternationalizationData> internationalizationData;
 
-    public DataCsvBuilder(final BiFunction<String, String, DataImporterContext> buildReferenceImporterContext) {
+    public DataCsvBuilder() {
         super();
     }
 
     public static DataCsvBuilder getDataCsvBuilder(final BiFunction<String, String, DataImporterContext> referenceImporterContextBuilder) {
-        return new DataCsvBuilder(referenceImporterContextBuilder);
+        return new DataCsvBuilder();
     }
 
     private static DataRow addRefsLinkedTo(DataRow dataRow, UUIDsfromData uuidsfromData) {
         dataRow.refsLinkedTo().entrySet().forEach(uuidsfromData::addRefsLinkedTo);
         return dataRow;
-    }
-
-    private static Comparator<ComponentOrderBy> getComparator(StandardDataDescription dataDescription) {
-        return (o1, o2) -> {
-            /*Optional.ofNullable(o1)
-                    .map(ComponentOrderBy::componentKey)
-                    .map(componentKey->dataDescription.componentDescriptions().get(componentKey))
-                    .map(ComponentDescription::tags)*/
-            return 0;
-        };
-    }
-
-    public static String getValue(FieldType fieldType) {
-        return switch (fieldType) {
-            case DateType dateType -> DateType.sortableDateToFormattedDate(dateType.toString());
-            default -> fieldType.toString();
-        };
     }
 
     public DataCsvBuilder withDownloadDatasetQuery(final DownloadDatasetQuery downloadDatasetQuery) {
@@ -84,6 +68,7 @@ public class DataCsvBuilder {
     }
 
     public DataCsvBuilder withReferenceService(final DataService referenceService) {
+
         return this;
     }
 
@@ -130,27 +115,22 @@ public class DataCsvBuilder {
 
     public UUIDsfromData buildDataCsv(String language, StandardDataDescription dataDescription, boolean horizontalDisplay) {
         final UUIDsfromData uuiDsfromData = new UUIDsfromData();
-        AtomicLong counter = new AtomicLong();
         Character separator = downloadDatasetQuery.application().findData(downloadDatasetQuery.dataName())
                 .map(StandardDataDescription::separator)
                 .orElse(';');
         BufferedWriter bufferedWriter = new BufferedWriter(new OutputStreamWriter(outputStream, StandardCharsets.UTF_8), 1024);
         CSVWriter writer = new CSVWriter(bufferedWriter, separator, CSVWriter.DEFAULT_QUOTE_CHARACTER, CSVWriter.DEFAULT_ESCAPE_CHARACTER, CSVWriter.DEFAULT_LINE_END);
 
-        Set<String> componentSelects = Optional.ofNullable(downloadDatasetQuery)
+        final Set<String> componentSelects = Optional.ofNullable(downloadDatasetQuery)
                 .map(DownloadDatasetQuery::componentSelects)
-                .orElseGet(ImmutableSet::of);
-        if (componentSelects.isEmpty()) {
-            Optional.ofNullable(dataDescription)
-                    .map(StandardDataDescription::componentDescriptions)
-                    .map(Map::keySet)
-                    .orElseGet(Set::of);
-        }
-        Set<ComponentOrderBy> componentsOrderBy = Optional.of(Objects.requireNonNull(downloadDatasetQuery))
-                .map(DownloadDatasetQuery::componentOrderBy)
+                .filter(CollectionUtils::isNotEmpty)
+                .or(() -> Optional.ofNullable(dataDescription)
+                        .map(StandardDataDescription::componentDescriptions)
+                        .map(Map::keySet))
                 .orElseGet(Set::of);
-        LinkedList<String> elementsToBeSortedInFirst = componentsOrderBy
-                .stream()
+        LinkedList<String> elementsToBeSortedInFirst = Optional.of(Objects.requireNonNull(downloadDatasetQuery))
+                .map(DownloadDatasetQuery::componentOrderBy)
+                .stream().flatMap(Set::stream)
                 .map(ComponentOrderBy::componentKey)
                 .collect(Collectors.toCollection(LinkedList::new));
         Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns = downloadDatasetQuery.application().getConfiguration()
@@ -202,7 +182,7 @@ public class DataCsvBuilder {
                     })
                     .blockLast(); // Attendre que toutes les données soient traitées
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         return uuiDsfromData;
     }

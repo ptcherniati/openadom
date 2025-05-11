@@ -2,7 +2,6 @@ package fr.inra.oresing.rest.model.rightsrequest;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import fr.inra.oresing.domain.Authorization;
-//import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

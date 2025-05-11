@@ -111,7 +111,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
                     this);
         }
         return ReferenceValidationCheckResult.error(target, localRawValue, target.getInternationalizedKey("invalidReference"), ImmutableMap.of(
-                        "target", target.toHumanReadableString(),
+                        "component",((DataColumn)target).column(),
                         "referenceValues", Optional.ofNullable(referenceValues)
                                 .filter(MapUtils::isNotEmpty)
                                 .map(Map::keySet)

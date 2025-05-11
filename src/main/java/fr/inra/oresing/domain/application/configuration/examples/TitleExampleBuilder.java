@@ -1,7 +1,9 @@
 package fr.inra.oresing.domain.application.configuration.examples;
 
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.type.*;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
+import fr.inra.oresing.domain.application.configuration.type.I18nType;
+import fr.inra.oresing.domain.application.configuration.type.TitleType;
 
 import java.util.LinkedHashMap;
 

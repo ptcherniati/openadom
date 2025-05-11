@@ -42,6 +42,7 @@ import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.filesenderclient.*;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
@@ -477,7 +478,10 @@ public class DataService implements ServiceContainerBean {
         serviceContainer.authenticationService().setRoleForClient();
         return getReferenceValueRepository(application)
                 .findAllByReferenceTypeWithReferencingReferencesStream(refType, params)
-                .peek(referenceValue -> referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents)))
+                .map(referenceValue -> {
+                    referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents));
+                    return referenceValue;
+                })
                 .toList();
     }
 
@@ -643,7 +647,7 @@ public class DataService implements ServiceContainerBean {
                     try {
                         zipOutputStream.close();
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                     }
                 });
         //TODO add additionalFiles
@@ -661,7 +665,7 @@ public class DataService implements ServiceContainerBean {
                                 dataRepositoryWithBuffer,
                                 zipOutputStream);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
                 .doOnError(e -> {
@@ -686,7 +690,7 @@ public class DataService implements ServiceContainerBean {
                             try {
                                 new AdditionalFileSearchHelper().addAdditionalFilesToZip(additionalFile, zipOutputStream, "additionalFiles/");
                             } catch (final IOException e) {
-                                throw new RuntimeException("Erreur lors de l'ajout des fichiers additionnels", e);
+                                throw new OreSiTechnicalException("Erreur lors de l'ajout des fichiers additionnels", e);
                             }
                         });
             }
@@ -710,7 +714,7 @@ public class DataService implements ServiceContainerBean {
                     .addDatas(datas)
                     .build(fileNamePattern);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
         }
 
     }
@@ -761,7 +765,7 @@ public class DataService implements ServiceContainerBean {
                             internationnalizedDataName
                     );*/
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
             }
             case BuildBundleReport buildBundleReport -> {
@@ -802,7 +806,7 @@ public class DataService implements ServiceContainerBean {
 
                 } catch (Exception e) {
                     log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
-                    throw new RuntimeException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                    throw new OreSiTechnicalException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
                 }
             }
             default -> throw new IllegalStateException("Unexpected value: " + messageInformations);

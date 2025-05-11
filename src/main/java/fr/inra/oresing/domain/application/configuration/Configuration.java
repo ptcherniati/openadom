@@ -53,17 +53,6 @@ public record Configuration(Version version, Set<Tag> tags,
 
     public LinkedHashMap<String, StandardDataDescription> componentDescriptionAccordingToRights() {
         return dataDescription().entrySet().stream()
-                /*.peek(entry -> {
-                    final String key = entry.getKey();
-                    final StandardDataDescription componentDescription = entry.getValue();
-                    ComponentDescription componentDescriptionccordingToRights = new FilteredDescriptionComponent(
-                            ComponentDescription.ComponentDescriptionType.TagsDescription,
-                            key,
-                            componentDescription.tags(),
-                            null
-
-                    );
-                })*/
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 
@@ -129,7 +118,7 @@ public record Configuration(Version version, Set<Tag> tags,
     public Map<String, InternationalizedSortedColumn> getInternationalizedSortedColumns(
             String dataname,
             String locale,
-            LinkedList<String> elementsToBeSortedInFirst) {
+            List<String> elementsToBeSortedInFirst) {
         StandardDataDescription dataDescription = findData(dataname).orElseThrow(() -> new IllegalArgumentException("no dataDescription for %s".formatted(dataname)));
         Comparator<Map.Entry<String, InternationalizedSortedColumn>> comparator = (aEntry, bEntry) -> {
             InternationalizedSortedColumn a = aEntry.getValue();

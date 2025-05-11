@@ -7,8 +7,6 @@ import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
-import fr.inra.oresing.rest.security.JWTExtractor;
-import jakarta.servlet.http.Cookie;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -75,13 +73,13 @@ public class AuthenticationServiceTest {
     }
 
     @Test
-    public void testSetRole() {
+     void testSetRole() {
         OreSiRoleToAccessDatabase anonymousRole = authenticationService.setRole(OreSiRole.anonymous());
         assertEquals(OreSiRole.anonymous(), anonymousRole);
     }
 
     @Test
-    public void testCreateAndLogin() throws Throwable {
+     void testCreateAndLogin() throws Throwable {
         final ArgumentCaptor<SimpleMailMessage> messageArgumentCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         final String login = "toto";
         final String email = "toto@codelutin.com";
@@ -93,7 +91,6 @@ public class AuthenticationServiceTest {
                                 .param("email", email)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
-        Cookie cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
 /*
         final String authUserId = JsonPath.parse(response.getContentAsString()).read("$.id", String.class);
 */

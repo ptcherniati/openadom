@@ -7,19 +7,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
-public sealed abstract class AbstractType<T> implements FieldType<T> permits ReferenceType {
+public abstract sealed class AbstractType<T> implements FieldType<T> permits ReferenceType {
     protected CheckerTarget target;
     protected LineChecker.Transformer transformer;
 
     public static FieldType readObject(final Object fieldType) {
         return switch (fieldType) {
-            case null -> new NullType();
+            case null -> NullType.INSTANCE;
             case List list -> {
                 List<FieldType> collect = (List<FieldType>) list.stream()
                         .map(AbstractType::readObject)
-                        .collect(Collectors.toList());
+                        .toList();
                 FieldType innerFieldType = !collect.isEmpty() ? collect.getFirst() : StringType.getStringTypeFromStringValue("");
                 ListType<FieldType> listType = new ListType<>(innerFieldType);
                 listType.value = collect;

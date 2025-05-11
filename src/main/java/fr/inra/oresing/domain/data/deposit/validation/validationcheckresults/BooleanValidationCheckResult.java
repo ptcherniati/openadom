@@ -5,7 +5,7 @@ import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.type.BooleanType;
 
-import java.util.*;
+import java.util.Map;
 
 
 public record BooleanValidationCheckResult(ValidationLevel level, String message, Map<String, Object> messageParams,

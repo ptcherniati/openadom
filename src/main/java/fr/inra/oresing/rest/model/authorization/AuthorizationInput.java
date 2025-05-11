@@ -56,9 +56,6 @@ public class AuthorizationInput {
         this.operationTypes = operationTypes;
     }
 
-    /*public void setTimeScope(final Map<String, LocalDate> dates) {
-        this.timeScope = getTimeScope(dates.get("fromDay"), dates.get("toDay"));
-    }*/
     public void setTimeScope(Map<String, String> dates) {
         this.timeScope = Optional.ofNullable(dates.get(FORMAT))
                 .map(DatePattern::of)

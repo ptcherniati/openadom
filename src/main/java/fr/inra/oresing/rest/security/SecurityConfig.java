@@ -17,7 +17,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -70,9 +69,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthorizationFilter authorizationFilter) throws Exception {
-        CookieClearingLogoutHandler cookies = new CookieClearingLogoutHandler(JWTExtractor.JWT_COOKIE_NAME);
-
-        http
+       http
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(csrf -> csrf

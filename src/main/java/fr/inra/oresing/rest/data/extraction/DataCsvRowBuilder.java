@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.data.extraction;
 
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.data.read.query.ComponentOrderByForExport;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 
 import java.util.List;

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
@@ -65,7 +66,6 @@ public class TestReferencesErrors {
     public static final String PASSWORD = "xxxxxxxx";
     public static final String EMAIL = "poussinreferenceserrors@inrae.fr";
     private static CreateUserResult authUser = null;
-    private static UUID userId;
     @Autowired
     private ObjectMapper objectMapper;
     @Autowired
@@ -81,7 +81,7 @@ public class TestReferencesErrors {
     private Cookie authCookie;
 
     @AfterAll
-    public static void registerErrors() throws IOException {
+     static void registerErrors() throws IOException {
         String errorsAsString = new ObjectMapper().writeValueAsString(responses);
         final File errorsFile = new File("ui/cypress/fixtures/applications/errors/ref_ola_errors.json");
         final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
@@ -93,12 +93,10 @@ public class TestReferencesErrors {
     public void createUser() throws Exception {
         try {
             authUser = authenticationService.createUser(LOGIN, PASSWORD, EMAIL);
-            userId = authUser.userId();
             setToActive(authUser.userId());
         } catch (AuthenticationFailure e) {
             LoginAdminResult login = authenticationService.login("poussin", "xxxxxxxx");
             authUser = CreateUserResult.of(authenticationService.getByIdOrLogin(login.id().toString()));
-            userId = authUser.userId();
             setToActive(authUser.userId());
             log.info("L'utilisateur existe déjà .... login");
         }
@@ -139,7 +137,7 @@ public class TestReferencesErrors {
 
 
     @Test
-    public void testRecursivity() throws Exception {
+     void testRecursivity() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getRecursivityApplicationConfigurationResourceName());
         final Cookie recursivityCookie;
@@ -154,7 +152,9 @@ public class TestReferencesErrors {
                             .param("login", "recursivity")
                             .param("password", PASSWORD))
                     .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, recursivityCookie, "recursivite", ""));
+            final String id = fixtures.getIdFromApplicationResult(
+                    fixtures.loadApplication(configuration, recursivityCookie, "recursivite", "")
+            );
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
                             .param("filter", "ALL")
                             .cookie(recursivityCookie))
@@ -165,7 +165,7 @@ public class TestReferencesErrors {
                     .andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         String response;
@@ -269,7 +269,7 @@ public class TestReferencesErrors {
     }
 
     @Test
-    public void testRepeatedColumnsWithAllowUnexpectedColumns() throws Exception {
+     void testRepeatedColumnsWithAllowUnexpectedColumns() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsWithAllowUnexpectedColumnsApplicationConfigurationResourceName());
         final Cookie repeatedColumnCookie;
@@ -292,7 +292,7 @@ public class TestReferencesErrors {
                     .andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         String response;
@@ -346,7 +346,7 @@ public class TestReferencesErrors {
     }
 
     @Test
-    public void testRepeatedColumns() throws Exception {
+     void testRepeatedColumns() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsApplicationConfigurationResourceName());
         final Cookie repeatedColumnsCookie;
@@ -368,7 +368,7 @@ public class TestReferencesErrors {
                     .andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         String response;
@@ -379,6 +379,11 @@ public class TestReferencesErrors {
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
                                 .file(refFile).with(csrf().asHeader())
                                 .cookie(repeatedColumnsCookie))
+                        .andDo(result -> {
+                            if (result.getResponse().getStatus() > 300) {
+                                log.error(e.getKey());
+                            }
+                        })
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();

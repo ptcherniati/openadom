@@ -1,10 +1,12 @@
 package fr.inra.oresing.domain.application.configuration.examples;
 
-import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.*;
+import fr.inra.oresing.domain.checker.Multiplicity;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 class GroovyCheckerExampleBuilder {
     protected static final GroovyCheckerType T_11;

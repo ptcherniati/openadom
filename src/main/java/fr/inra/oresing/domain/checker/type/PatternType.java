@@ -13,12 +13,12 @@ import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.PatternValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
     Map<K, V> value;

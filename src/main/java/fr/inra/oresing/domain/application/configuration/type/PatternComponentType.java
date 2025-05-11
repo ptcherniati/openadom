@@ -3,7 +3,8 @@ package fr.inra.oresing.domain.application.configuration.type;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 public record PatternComponentType(SectionBuilder sectionBuilder,
                                    Map<String, ConfigurationSchemaNodeType> children,

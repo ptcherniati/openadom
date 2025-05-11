@@ -28,7 +28,7 @@ class LtreeTest {
     }
 
     @Test
-    public void parseLabel() {
+     void parseLabel() {
         final String sql = Ltree.fromUnescapedString("composition <5%/µg").getSql();
         
         // Remarque :

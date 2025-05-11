@@ -175,7 +175,7 @@ public record StandardDataDescription(
     public void buildEmptyFile(OutputStream output) throws IOException {
         CSVFormat customFormat = CSVFormat.Builder.create()
                 .setDelimiter(Optional.of(separator()).orElse(';'))
-                .build();
+                .get();
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(output);
         CSVPrinter csvPrinter = new CSVPrinter(outputStreamWriter, customFormat);
         buildPreOrPostHeader(csvPrinter, true);

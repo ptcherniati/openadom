@@ -2,6 +2,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
@@ -10,19 +11,18 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @Tag("core.auth")
@@ -42,22 +42,28 @@ class ApplicationDataDeleteTest {
     /**
      * Fournit dApplicationDataDeletees implémentations de ApplicationDataDelete pour les tests paramétrés
      */
-    static Stream<Arguments> provideDeleteImplementations() {
+    static Stream<TestParameters> provideDeleteImplementations() {
 
         return Stream.of(
-                Arguments.of("ApplicationAdminUser", new ApplicationAdminUser(mockApplication), true, false, true),
-                Arguments.of("ApplicationManagerUser", new ApplicationManagerUser(mockApplication), true, false, true),
-                Arguments.of("ApplicatioDeleteUser", new ApplicationDeleteUser(mockApplication, "testData", new ArrayList<>(List.of(authorizationParsed))), true, false, false)
+                new TestParameters("ApplicationAdminUser", () -> new ApplicationAdminUser(mockApplication), true, true, true),
+                new TestParameters("ApplicationManagerUser", () -> new ApplicationManagerUser(mockApplication), true, true, true),
+                new TestParameters("ApplicatioDeleteUser", () -> new ApplicationDeleteUser(mockApplication, "testData", new ArrayList<>(List.of(authorizationParsed))), true, false, false),
+                new TestParameters("ApplicatioDeleteUserWithRepository",
+                        () -> {
+                            final Submission submission = mock(Submission.class);
+                            when(mockApplication.findSubmission(anyString())).thenReturn(Optional.of(submission));
+                            return new ApplicationDeleteUser(mockApplication, "testData", new ArrayList<>(List.of(authorizationParsed)));
+                        }, true, true, false)
         );
     }
 
     /**
      * Fournit des cas de test pour vérifier le comportement polymorphique
      */
-    static Stream<Arguments> provideInterfaceImplementations() {
+    static Stream<ParameterTest2> provideInterfaceImplementations() {
 
         return Stream.of(
-                Arguments.of("ApplicationManager via AdminUser",
+                new ParameterTest2("ApplicationManager via AdminUser",
                         new ApplicationAdminUser(mockApplication),
 
                         new Class[]{
@@ -66,14 +72,14 @@ class ApplicationDataDeleteTest {
                                 ApplicationDataDelete.class
                         }),
 
-                Arguments.of("ApplicationManager via ManagerUser",
+                new ParameterTest2("ApplicationManager via ManagerUser",
                         new ApplicationManagerUser(mockApplication),
                         new Class[]{
                                 ApplicationManager.class,
                                 ApplicationDataWriter.class,
                                 ApplicationDataDelete.class
                         }),
-                Arguments.of("ApplicationDataDelete via PublishWriterUser",
+                new ParameterTest2("ApplicationDataDelete via PublishWriterUser",
                         new ApplicationDeleteUser(
                                 mockApplication,
                                 "testData",
@@ -94,64 +100,64 @@ class ApplicationDataDeleteTest {
         when(authorizationParsed.operationTypes()).thenReturn(Set.of(OperationType.delete, OperationType.extraction));
     }
 
-    @ParameterizedTest(name = "{0} - Vérification des droits")
-    @MethodSource("provideDeleteImplementations")
-    @DisplayName("Les droits d'accès devraient être correctement définis pour chaque implémentation")
-    void shouldHaveCorrectAccessRights(
+    record TestRight(
             String implName,
             ApplicationDataDelete writer,
             boolean expectedCanDelete,
             boolean expectedCanPublish,
             boolean expectedCanDeposit) {
+    }
+
+    @ParameterizedTest(name = "{0} - Vérification des droits")
+    @MethodSource("provideDeleteImplementations")
+    @DisplayName("Les droits d'accès devraient être correctement définis pour chaque implémentation")
+    void shouldHaveCorrectAccessRights(TestParameters testParameters) {
 
         // Vérifier les droits de suppression
-        assertThat(implName + " - Droit de suppression",
-                writer.canDelete(mockFileOrUUID),
-                is(expectedCanDelete));
+        assertThat(testParameters.implName() + " - Droit de suppression",
+                testParameters.writer().get().canDelete(mockFileOrUUID),
+                is(testParameters.expectedCanDelete()));
 
         // Vérifier les droits de publication
-        assertThat(implName + " - Droit de publication",
-                writer.hasRightForPublishOrUnPublish(mockFileOrUUID),
-                is(expectedCanPublish));
+        assertThat(testParameters.implName() + " - Droit de publication",
+                testParameters.writer().get().hasRightForPublishOrUnPublish(mockFileOrUUID),
+                is(testParameters.expectedCanPublish()));
 
         // Vérifier les droits de dépôt
-        assertThat(implName + " - Droit de dépôt",
-                writer.hasRightForDeposit(mockFileOrUUID),
-                is(expectedCanDeposit));
+        assertThat(testParameters.implName() + " - Droit de dépôt",
+                testParameters.writer().get().hasRightForDeposit(mockFileOrUUID),
+                is(testParameters.expectedCanDeposit()));
 
         // Vérifier l'accès à l'application
-        assertThat(implName + " - Référence à l'application",
-                writer.application(),
+        assertThat(testParameters.implName() + " - Référence à l'application",
+                testParameters.writer().get().application(),
                 is(notNullValue()));
     }
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("provideInterfaceImplementations")
     @DisplayName("Le polymorphisme devrait fonctionner pour toutes les interfaces")
-    void shouldSupportPolymorphism(
-            String description,
-            Object instance,
-            Class<?>[] expectedInterfaces) {
+    void shouldSupportPolymorphism(ParameterTest2 parameterTest2) {
 
         // Vérifier que l'objet implémente toutes les interfaces attendues
-        for (Class<?> expectedInterface : expectedInterfaces) {
-            assertThat(description + " devrait implémenter " + expectedInterface.getSimpleName(),
-                    instance, is(instanceOf(expectedInterface)));
+        for (Class<?> expectedInterface : parameterTest2.expectedInterfaces()) {
+            assertThat(parameterTest2.description() + " devrait implémenter " + expectedInterface.getSimpleName(),
+                    parameterTest2.instance(), is(instanceOf(expectedInterface)));
         }
 
         // Vérifier l'accès à l'application selon l'interface
-        if (instance instanceof ApplicationManager manager) {
-            assertThat(description + " - Accès via ApplicationManager",
+        if (parameterTest2.instance() instanceof ApplicationManager manager) {
+            assertThat(parameterTest2.description() + " - Accès via ApplicationManager",
                     manager.application(), is(notNullValue()));
         }
 
-        if (instance instanceof ApplicationDataDelete writer) {
-            assertThat(description + " - Accès via ApplicationDataDelete",
+        if (parameterTest2.instance() instanceof ApplicationDataDelete writer) {
+            assertThat(parameterTest2.description() + " - Accès via ApplicationDataDelete",
                     writer.application(), is(notNullValue()));
         }
 
-        if (instance instanceof ApplicationDataDelete deleter) {
-            assertThat(description + " - Accès via ApplicationDataDelete",
+        if (parameterTest2.instance() instanceof ApplicationDataDelete deleter) {
+            assertThat(parameterTest2.description() + " - Accès via ApplicationDataDelete",
                     deleter.application(), is(notNullValue()));
         }
     }
@@ -208,5 +214,13 @@ class ApplicationDataDeleteTest {
 
         assertThat("L'interface sealed devrait permettre ApplicationPublishWriterUser",
                 permittedClasses, hasItemInArray(ApplicationDeleteUser.class));
+    }
+
+    private static record TestParameters(String implName, Supplier<ApplicationDataDelete> writer,
+                                         boolean expectedCanDelete,
+                                         boolean expectedCanPublish, boolean expectedCanDeposit) {
+    }
+
+    private static record ParameterTest2(String description, Object instance, Class<?>[] expectedInterfaces) {
     }
 }

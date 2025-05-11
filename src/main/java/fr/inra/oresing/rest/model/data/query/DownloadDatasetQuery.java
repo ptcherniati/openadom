@@ -3,11 +3,11 @@ package fr.inra.oresing.rest.model.data.query;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.read.query.*;
+import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 
-import jakarta.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 

@@ -8,8 +8,12 @@ import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 
-import java.io.*;
-import java.nio.file.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -43,11 +47,11 @@ public record DataRepositoryWithBuffer(
     public Map<String, Map<String, String>> findDisplayByReferenceType(String referenceType) {
         return getDataFromFileOrRepository(fileWithPrefix(referenceType, PREFIX_FOR_DISPLAY),
                 stream -> stream
-                        .filter(parts->parts.length>3)
+                        .filter(parts -> parts.length > 3)
                         .collect(Collectors.groupingBy(
-                        parts -> parts[1],
-                        Collectors.toMap(parts -> parts[2], parts -> parts[3])
-                ))
+                                parts -> parts[1],
+                                Collectors.toMap(parts -> parts[2], parts -> parts[3])
+                        ))
         );
     }
 
@@ -80,7 +84,10 @@ public record DataRepositoryWithBuffer(
                     String hierarchicalKey = getDataFromFileOrRepository(
                             fileWithPrefix(referenceType, PREFIX_FOR_HIERARCHICAL),
                             stream -> stream
-                                    .peek(parts -> availableKeys.add(parts[1])) // Collecter toutes les clés disponibles
+                                    .map(parts -> {
+                                        availableKeys.add(parts[1]);
+                                        return parts;
+                                    }) // Collecter toutes les clés disponibles
                                     .filter(parts -> parts[1].equals(keyForScope.toString()) || parts[2].equals(keyForScope.toString()))
                                     .map(parts -> parts[2])
                                     .findFirst()
@@ -125,7 +132,7 @@ public record DataRepositoryWithBuffer(
             List<String> parents = new LinkedList<>();
             parents.add(dataName);
             String parentName = application().findParentNode(dataName).map(Node::nodeName).orElse(null);
-            while(parentName!=null){
+            while (parentName != null) {
                 parents.add(parentName);
                 parentName = application().findParentNode(parentName).map(Node::nodeName).orElse(null);
             }
@@ -140,11 +147,13 @@ public record DataRepositoryWithBuffer(
     }
 
     private Stream<String[]> validateAndProcessStream(Stream<String[]> stream, int minLength) {
-        return stream.peek(parts -> {
-            if (parts.length < minLength) {
-                throw new IllegalArgumentException("Format de ligne invalide : " + String.join("\t", parts));
-            }
-        });
+        return stream
+                .map(parts -> {
+                    if (parts.length < minLength) {
+                        throw new IllegalArgumentException("Format de ligne invalide : " + String.join("\t", parts));
+                    }
+                    return parts;
+                });
     }
 
 
@@ -198,7 +207,7 @@ public record DataRepositoryWithBuffer(
     }
 
     public void cleanup() {
-        try(Stream<Path> pathStream = Files.walk(tempDir)) {
+        try (Stream<Path> pathStream = Files.walk(tempDir)) {
             pathStream
                     .sorted(Comparator.reverseOrder())
                     .map(Path::toFile)

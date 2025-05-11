@@ -164,7 +164,7 @@ public class OreSiResourcesTest {
                         .forEach(e ->
                                 Assertions.assertTrue(() -> findedEntries.contains(e), String.format("Le zip doit contenir %s", e)));
             } catch (final IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException(e.getMessage(), e);
             }
         };
     }
@@ -292,7 +292,7 @@ public class OreSiResourcesTest {
             appId = fixtures.getIdFromApplicationResult(resultApplication);
         } catch (final Throwable e) {
             log.error(e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         String response = mockMvc.perform(get("/api/v1/applications/{appId}", appId)
@@ -822,7 +822,7 @@ public class OreSiResourcesTest {
                             .param("filter", "ALL"))
                     .andExpect(status().is2xxSuccessful());
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : Fixtures.getMultiplicityReferencesFiles().entrySet()) {
@@ -889,7 +889,7 @@ public class OreSiResourcesTest {
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, authCookie, "minautor", ""));
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : Fixtures.getApplicationWithComputedComponentsWithReferencesReferences().entrySet()) {
@@ -985,7 +985,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.data.pem.componentDescriptions.projet.tags[*].tagOrder", hasItem(2)))
                     .andExpect(jsonPath("$.data.pem.componentDescriptions.espece.tags[*].tagDefinition", hasItem("NO_TAG")));
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         final CreateUserResult withRightsUserResult = createUserIfNotExists("withrigths", "xxxxxxxx", "withrigths@inrae.fr");
         setToActive(withRightsUserResult.userId());
@@ -1615,6 +1615,11 @@ public class OreSiResourcesTest {
         // on supprime l'application publiée
         response = mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID).with(csrf().asHeader())
                         .cookie(authCookie))
+                .andDo(result -> {
+                    if (result.getResponse().getStatus() != 200) {
+                        log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                    }
+                })
                 .andExpect(status().is2xxSuccessful())
                 .andReturn().getResponse().getContentAsString();
         Assertions.assertEquals(response, fileUUID);
@@ -1712,12 +1717,17 @@ public class OreSiResourcesTest {
 
         //on donne les droits de suppression
 
-        getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.delete.name()),
+        getJsonRightsforRestrictions(withRigthsUserId, List.of(OperationType.delete.name(), OperationType.publication.name()),
                 "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", authCookie);
 
         // on supprime le fichier a les droits car à les droits de publication
         mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader())
                         .cookie(withRigthsCookie))
+                .andDo(result -> {
+                    if (result.getResponse().getStatus() != 200) {
+                        log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                    }
+                })
                 .andExpect(status().is2xxSuccessful());
     }
 
@@ -1732,7 +1742,7 @@ public class OreSiResourcesTest {
             addUserRightCreateApplication(authUserId, "teledec");
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, authCookie, "teledec", ""));
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         Fixtures.getTeledetectionReferencesFiles()
                 .forEach((refName, refPath) -> {
@@ -1747,7 +1757,7 @@ public class OreSiResourcesTest {
                                 .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                                 .andReturn().getResponse().getContentAsString();
                     } catch (final Exception e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 });
         final Matcher<List> m = new Matcher<>() {
@@ -1805,7 +1815,7 @@ public class OreSiResourcesTest {
                                 .andExpect(jsonPath("$.fileId", IsNull.notNullValue()))
                                 .andReturn().getResponse().getContentAsString();
                     } catch (final Exception e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 });
         log.info("fini!");
@@ -1994,7 +2004,7 @@ public class OreSiResourcesTest {
             addUserRightCreateApplication(authUserId, "progressive");
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, authCookie, "progressive", ""));
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         //pas de referentiels
         progressiveYamlAddData();
@@ -2101,7 +2111,7 @@ public class OreSiResourcesTest {
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, authCookie, "progressive", ""));
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         progressiveYamlAddReferences();
@@ -2153,7 +2163,7 @@ public class OreSiResourcesTest {
             //pas de référentiel
             progressiveYamlAddData();
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 
@@ -2174,7 +2184,7 @@ public class OreSiResourcesTest {
             progressiveYamlAddReferences();
             progressiveYamlAddData();
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 
@@ -2195,7 +2205,7 @@ public class OreSiResourcesTest {
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, authCookie, "progressive", ""));
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         progressiveYamlAddReferences();
         progressiveYamlAddData();
@@ -2258,7 +2268,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         String response;
@@ -2350,7 +2360,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         String response;
@@ -2455,7 +2465,7 @@ public class OreSiResourcesTest {
                     .andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         String response;
@@ -2546,7 +2556,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, authCookie, "acbb_openadom_v2", ""));
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         addReferences();
@@ -3249,7 +3259,7 @@ on test le dépôt d'un fichier récursif
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             loadApplicationMonsoere(in);
         } catch (final Throwable e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         byte[] zipResponse = getAndTestUploadBundleZip();
         extractGroovyScriptToBundleSourceFolder(zipResponse, "target/groovy");
@@ -3268,7 +3278,7 @@ on test le dépôt d'un fichier récursif
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 

@@ -2,7 +2,10 @@ package fr.inra.oresing.rest.model.configuration.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.AdditionalFileField;
+import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
+import fr.inra.oresing.domain.application.configuration.FieldDescription;
+import fr.inra.oresing.domain.application.configuration.RightsRequestField;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;

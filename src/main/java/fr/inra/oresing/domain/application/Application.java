@@ -33,8 +33,8 @@ public class Application extends OreSiEntity {
 
 
     public Application applicationAccordingToRights() {
-        Configuration configuration = this.configuration;
-        final Configuration configurationforNotAuthorized = configuration.configurationAccordingToRights();
+        Configuration configurationToSet = this.configuration;
+        final Configuration configurationforNotAuthorized = configurationToSet.configurationAccordingToRights();
         setConfiguration((configurationforNotAuthorized));
         return this;
     }
@@ -64,7 +64,7 @@ public class Application extends OreSiEntity {
     }
 
     public Optional<StandardDataDescription> findData(String dataName) {
-        Function<Map<String, StandardDataDescription>, StandardDataDescription> getDataDescription = data -> data.get(dataName);
+        Function<Map<String, StandardDataDescription>, StandardDataDescription> getDataDescription = localData -> localData.get(dataName);
         return Optional.of(findData())
                 .map(getDataDescription);
     }
@@ -109,7 +109,7 @@ public class Application extends OreSiEntity {
     public String internationalizeHeader(String dataName, String componentName, String language) {
         return Optional.ofNullable(getConfiguration().i18n())
                 .map(Internationalizations::getData)
-                .map(data -> data.get(dataName))
+                .map(localData -> localData.get(dataName))
                 .map(InternationalizationData::getComponents)
                 .map(component -> component.get(componentName))
                 .map(InternationalizationComponent::getExportHeader)

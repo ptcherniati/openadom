@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.services;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.Fixtures;
 import fr.inra.oresing.rest.OreSiResourcesTest;
 import fr.inra.oresing.rest.ViewStrategy;
@@ -94,7 +95,7 @@ public class RelationalServiceTest {
 
             OreSiResourcesTest.registerFile("ui/cypress/fixtures/applications/ore/ore_application_description.txt", applicationsResult);
         } catch (final Exception e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         applications
                 .forEach(application -> {

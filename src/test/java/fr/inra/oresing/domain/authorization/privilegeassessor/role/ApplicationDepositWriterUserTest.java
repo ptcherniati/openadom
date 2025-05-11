@@ -123,7 +123,7 @@ class ApplicationDepositWriterUserTest {
             doReturn(authorizationsMatch).when(depositWriter).testRequiredAuthorizations(
                     any(), any()
             );
-            doReturn(false).when(depositWriter).isDateInRangeAuthorized(any(), any());
+            doReturn(true).when(depositWriter).isDateInRangeAuthorized(any(), any());
         }
 
         if (shouldThrowException) {

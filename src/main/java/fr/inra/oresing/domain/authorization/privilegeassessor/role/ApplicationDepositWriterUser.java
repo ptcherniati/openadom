@@ -6,7 +6,8 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public record ApplicationDepositWriterUser(
         Application application,
@@ -25,8 +26,8 @@ public record ApplicationDepositWriterUser(
 
     @Override
     public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
-        if(isData()){
-            if(CollectionUtils.isEmpty(authorizations)){
+        if (isData()) {
+            if (CollectionUtils.isEmpty(authorizations)) {
                 throw getException();
             }
             return true;
@@ -34,13 +35,13 @@ public record ApplicationDepositWriterUser(
         List<AuthorizationParsed> authorizationParseds = authorizations().stream()
                 .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
                 .toList();
-        if(authorizationParseds.isEmpty()){
+        if (authorizationParseds.isEmpty()) {
             throw getException();
         }
-        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
-            throw getException();
+        if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
+            return true;
         }
-        return true;
+        throw getException();
     }
 
     @Override

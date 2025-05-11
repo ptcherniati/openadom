@@ -9,7 +9,10 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResult;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationPersona;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
@@ -377,7 +380,7 @@ public class AuthorizationResources implements ServiceContainerBean {
                 .map(ApplicationAdminUser.class::cast);
         assert application != null;
         UUID revokeId = serviceContainer.authorizationService().revoke(
-                applicationAdminUser.get(),
+                applicationAdminUser.orElse(null),
                 applicationNameOrId,
                 new AuthorizationRequest(
                         authorizationId,

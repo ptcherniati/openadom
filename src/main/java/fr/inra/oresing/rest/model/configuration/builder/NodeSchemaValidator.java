@@ -8,10 +8,10 @@ import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.*;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
+import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.util.Strings;
 
-import jakarta.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;

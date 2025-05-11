@@ -62,7 +62,7 @@ public class ApplicationConfigurationServiceTest {
     private ApplicationConfigurationService service;
 
     @AfterAll
-    public static void registerErrors() throws IOException {
+     static void registerErrors() throws IOException {
         final JsonRowMapper jsonMapper = new JsonRowMapper<>();
         final String errorsToJson = jsonMapper
                 .toJson(errors);
@@ -78,20 +78,19 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void multiplesErrors() {
+     void multiplesErrors() {
         CONFIGURATION_INSTANCE.builder("testReturnMultiplesErrors")
                 .withReplace("  sites:", "  site:")
                 .test(errors -> assertTrue(errors.size() > 1));
     }
 
     @BeforeEach
-
     public void before() {
         CONFIGURATION_INSTANCE = new TestConfigurationBuilder();
     }
 
     @Test
-    public void parseConfigurationFile() {
+     void parseConfigurationFile() {
         List<String> block = Collections.singletonList(buildFluxRequestJDJson(fluxSink -> {
             ImmutableSet<String> configFiles = ImmutableSet.of(
                     Fixtures.getAcbbApplicationConfigurationResourceName(),
@@ -120,7 +119,7 @@ public class ApplicationConfigurationServiceTest {
                 testConfiguration(progression, "version: 2", false);
                 testConfiguration(progression, "::", false);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException(e.getMessage(), e);
             }
 
             fluxSink.complete();
@@ -174,28 +173,11 @@ public class ApplicationConfigurationServiceTest {
     private void testConfiguration(ReactiveProgression.CreateApplicationProgression progression, String config, boolean expectedValidity) throws IOException {
         byte[] configBytes = config.getBytes(StandardCharsets.UTF_8);
         FileBomResolver fileBomResolver = FileBomResolver.of(new ByteArrayInputStream(configBytes));
-        Application application = ApplicationConfigurationService.parseConfigurationBytes("", progression, fileBomResolver);
-    }
-
-
-    private void parseConfigurationFromResource(final String resource) {
-        buildFluxRequestJDJson(fluxSink -> {
-            final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(new ReactiveProgression.DefaultCounter(0L), fluxSink, new ReactiveProgression.CreateApplicationProgressionMessagesLabel());
-
-            final Application errors;
-            try (final InputStream in = getClass().getResourceAsStream(resource)) {
-                ApplicationConfigurationService.parseConfigurationBytes("test", progression, FileBomResolver.of(in));
-                //TODO
-                //assertTrue(() -> errors.isEmpty(), resource + " doit être reconnu comme un fichier valide");
-            } catch (final IOException e) {
-                throw new OreSiTechnicalException("ne peut pas lire le fichier de test " + resource, e);
-            }
-            fluxSink.complete();
-        });
+        ApplicationConfigurationService.parseConfigurationBytes("", progression, fileBomResolver);
     }
 
     @Test
-    public void testBadBuilderVersion() {
+     void testBadBuilderVersion() {
         CONFIGURATION_INSTANCE.builder("testBadBuilderVersion")
                 .withReplace("""
                         OA_version: 2.0.1
@@ -213,7 +195,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testBadDomaineTagPattern() {
+     void testBadDomaineTagPattern() {
         CONFIGURATION_INSTANCE.builder("testBadDomaineTagPattern")
                 .withReplace("""
                         context:""", """
@@ -228,7 +210,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testBadNameApplication() {
+     void testBadNameApplication() {
         CONFIGURATION_INSTANCE.builder("testBadNameApplication")
                 .withReplace("""
                         OA_name: fake_application""", """
@@ -243,7 +225,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testBadNameTag() {
+     void testBadNameTag() {
         CONFIGURATION_INSTANCE.builder("testBadNameTag")
                 .withReplace("""
                         OA_tags: [ context ]""", """
@@ -258,7 +240,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void tetsManyInNaturalKey() {
+    void tetsManyInNaturalKey() {
         CONFIGURATION_INSTANCE.builder("testBadNameTag")
                 .withReplace(
                         """
@@ -281,7 +263,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testBadNameTagInDynamicComponents() {
+     void testBadNameTagInDynamicComponents() {
         CONFIGURATION_INSTANCE.builder("testBadNameTagInDynamicComponents")
                 .withReplace("""
                         OA_tags: [ test, context ]""", """
@@ -296,7 +278,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testBadReferenceNameForChecker() {
+     void testBadReferenceNameForChecker() {
         CONFIGURATION_INSTANCE.builder("testMissingReferenceNameForChecker")
                 .withReplace("""
                                           OA_params:
@@ -323,7 +305,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testBadVersionApplication() {
+     void testBadVersionApplication() {
         CONFIGURATION_INSTANCE.builder("testBadVersionApplication")
                 .withReplace("""
                         OA_version: 3.0.1""", """
@@ -338,7 +320,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testEmptyFile() {
+     void testEmptyFile() {
         CONFIGURATION_INSTANCE
                 .builder("testEmptyFile", "emptyConfigurationFile.yaml")
                 .test(errors -> {
@@ -351,7 +333,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testInvalidDurationForCheckerDate() {
+     void testInvalidDurationForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testInvalidDurationForCheckerDate")
                 .withReplace("          OA_name: OA_date\n" +
                                 "          OA_params:",
@@ -370,7 +352,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testInvalidMinForCheckerDate() {
+     void testInvalidMinForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testInvalidMinMaxForCheckerDate")
                 .withReplace("""
                                           OA_name: OA_date
@@ -396,7 +378,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testInvalidMaxForCheckerDate() {
+     void testInvalidMaxForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testInvalidMinMaxForCheckerDate")
                 .withReplace("""
                                           OA_name: OA_date
@@ -422,7 +404,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testInvalidNaturalKey() {
+     void testInvalidNaturalKey() {
         CONFIGURATION_INSTANCE.builder("testInvalidNaturalKey")
                 .withReplace("""
                         - esp_nom""", """
@@ -441,7 +423,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testInvalidPatternForCheckerDate() {
+     void testInvalidPatternForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testInvalidPatternForCheckerDate")
                 .withReplace("""
                                           OA_name: OA_date
@@ -463,7 +445,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingBuilderVersion() {
+     void testMissingBuilderVersion() {
         CONFIGURATION_INSTANCE.builder("testMissingBuilderVersion")
                 .withReplace("""
                         OA_version: 2.0.1
@@ -480,7 +462,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingCheckerName() {
+     void testMissingCheckerName() {
         CONFIGURATION_INSTANCE.builder("testMissingNameChecker")
                 .withReplace("""
                                       tze_type_nom:
@@ -507,7 +489,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingAnyMandatorySectionsInConstantComponents() {
+     void testMissingAnyMandatorySectionsInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testMissingAnyMandatorySectionsInConstantComponents")
                 .withReplace("OA_columnName: \"site\"",
                         "")
@@ -524,7 +506,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testmissingRequiredValueInTimeScopeInSubmission() {
+     void testmissingRequiredValueInTimeScopeInSubmission() {
         CONFIGURATION_INSTANCE.builder("testmissingRequiredValueInTimeScopeInSubmission")
                 .withReplace("        OA_timeScope:\n" +
                                 "          OA_component: date",
@@ -539,7 +521,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingAnyMandatoriesSectionsForAuthorization() {
+     void testMissingAnyMandatoriesSectionsForAuthorization() {
         CONFIGURATION_INSTANCE.builder("testMissingAnyMandatoriesSectionsForAuthorization")
                 .withReplace("            OA_reference: projet\n" +
                                 "            OA_component: projet",
@@ -557,7 +539,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingComponentNameForAuthorization() {
+     void testMissingComponentNameForAuthorization() {
         CONFIGURATION_INSTANCE.builder("testmissingComponentNameForAuthorization")
                 .withReplace("            OA_reference: projet\n" +
                                 "            OA_component: projet",
@@ -572,7 +554,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingComponentNameInColumnsForAuthorization() {
+     void testMissingComponentNameInColumnsForAuthorization() {
         CONFIGURATION_INSTANCE.builder("testMissingComponentNameInColumnsForAuthorization")
                 .withReplace("        OA_components: [ site ]",
                         "        OA_components: [  ]")
@@ -589,7 +571,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingArray() {
+     void testMissingArray() {
         CONFIGURATION_INSTANCE.builder("testMissingComponentNameValidation")
                 .withReplace("        OA_components: [ site ]",
                         "        OA_components:")
@@ -602,7 +584,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingNameApplication() {
+     void testMissingNameApplication() {
         CONFIGURATION_INSTANCE.builder("testMissingNameApplication")
                 .withReplace("""
                         OA_name: fake_application""", """
@@ -616,7 +598,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingOrBadTypeVersionApplication() {
+     void testMissingOrBadTypeVersionApplication() {
         CONFIGURATION_INSTANCE.builder("testMissingOrBadTypeVersionApplication")
                 .withReplace("""
                         OA_version: 3.0.1""", """
@@ -631,7 +613,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingPatternForCheckerDate() {
+     void testMissingPatternForCheckerDate() {
         CONFIGURATION_INSTANCE.builder("testMissingPatternForCheckerDate")
                 .withReplace("""
                                           OA_name: OA_date
@@ -652,7 +634,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingRequiredSections() {
+     void testMissingRequiredSections() {
         CONFIGURATION_INSTANCE.builder("testMissingRequiredSections")
                 .withReplace("""
                         OA_version: 2.0.1""", "")
@@ -665,7 +647,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingRequiredValueForChecker() {
+     void testMissingRequiredValueForChecker() {
         CONFIGURATION_INSTANCE.builder("testMissingRequiredValueForChecker")
                 .withReplace("""
                                           OA_params:
@@ -688,7 +670,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingRequiredValueForDynamicColumns() {
+     void testMissingRequiredValueForDynamicColumns() {
         CONFIGURATION_INSTANCE.builder("testMissingRequiredValueForDynamicColumns")
                 .withReplace(" OA_reference: type_de_sites",
                         " OA_reference:")
@@ -701,7 +683,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingMandatorySectionsInConstantComponents() {
+     void testMissingMandatorySectionsInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testMissingMandatorySectionsInConstantComponents")
                 .withReplace("OA_rowNumber: 1",
                         "")
@@ -714,7 +696,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingReferencesForAuthorization() {
+     void testMissingReferencesForAuthorization() {
         CONFIGURATION_INSTANCE.builder("testMissingReferencesForAuthorization")
                 .withReplace("            OA_reference: projet\n" +
                                 "            OA_component: projet",
@@ -729,7 +711,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingRequiredValueForAuthorization() {
+     void testMissingRequiredValueForAuthorization() {
         CONFIGURATION_INSTANCE.builder("testMissingRequiredValueForAuthorization")
                 .withReplace("            OA_reference: projet\n" +
                                 "            OA_component: projet",
@@ -744,7 +726,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testNegativeColumnNumberToPreHeaderLineInConstantComponents() {
+     void testNegativeColumnNumberToPreHeaderLineInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testUnknownColumnNumberToFirstRowLineInConstantComponents")
                 .withReplace("OA_rowNumber: 1\n" +
                                 "          OA_columnNumber: 2",
@@ -759,7 +741,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testNegativeColumnNumberToPostHeaderLineInConstantComponents() {
+     void testNegativeColumnNumberToPostHeaderLineInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testUnknownColumnNumberToFirstRowLineInConstantComponents")
                 .withReplace("          OA_rowNumber: 5\n" +
                                 "          OA_columnName: \"site\"",
@@ -774,7 +756,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testNegativeImportHeaderRowNumberInConstantComponents() {
+     void testNegativeImportHeaderRowNumberInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testNegativeImportHeaderRowNumberInConstantComponents")
                 .withReplace("OA_rowNumber: 1",
                         "OA_rowNumber: -1")
@@ -787,7 +769,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testNullColumnNumberToFirstRowLineInConstantComponents() {
+     void testNullColumnNumberToFirstRowLineInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testNegativeColumnNumberToFirstRowLineInConstantComponents")
                 .withReplace("OA_columnNumber: 2",
                         "OA_columnNumber: 0")
@@ -800,7 +782,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testNotExpectedTagsInConstantComponents() {
+     void testNotExpectedTagsInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testNotExpectedTagsInConstantComponents")
                 .withReplace("      tel_experimental_network:\n" +
                                 "        OA_tags: [ test ]",
@@ -817,7 +799,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testSuperieurImportHeaderRowNumberToFirstRowLineInConstantComponents() {
+     void testSuperieurImportHeaderRowNumberToFirstRowLineInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testSuperieurImportHeaderRowNumberToFirstRowLineInConstantComponents")
                 .withReplace("OA_rowNumber: 1",
                         "OA_rowNumber: 8")
@@ -832,7 +814,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedNameTagInBasicComponent() {
+     void testUnExpectedNameTagInBasicComponent() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedNameTagInBasicComponent")
                 .withReplace("""
                         OA_tags: [ test, __ORDER_2__ ]""", """
@@ -848,7 +830,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedNameTagInComputedComponents() {
+     void testUnExpectedNameTagInComputedComponents() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedNameTagInComputedComponents")
                 .withReplace("      site_bassin:\n" +
                                 "        OA_tags: [ __HIDDEN__ ]",
@@ -865,7 +847,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedNameTagInData() {
+     void testUnExpectedNameTagInData() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedNameTagInData")
                 .withReplace("""
                         OA_tags: [ context ]""", """
@@ -881,7 +863,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedReferencesForComputation() {
+     void testUnExpectedReferencesForComputation() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedReferencesForComputation")
                 .withReplace("""
                                           OA_expression: >
@@ -924,7 +906,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedReferencesForDefaultValueInBasicComponents() {
+     void testUnExpectedReferencesForDefaultValueInBasicComponents() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedReferencesForDefaultValue")
                 .withReplace("""
                                           OA_expression: >
@@ -965,7 +947,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedReferencesForDefaultValueInConstantComponents() {
+     void testUnExpectedReferencesForDefaultValueInConstantComponents() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedReferencesForDefaultValueInConstantComponents")
                 .withReplace("""
                                 OA_references:
@@ -989,7 +971,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedReferencesWithoutComponentSectionForAuthorization() {
+     void testUnExpectedReferencesWithoutComponentSectionForAuthorization() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedReferencesForDefaultValue")
                 .withReplace("            OA_reference: projet\n" +
                                 "            OA_component: projet",
@@ -1005,7 +987,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedReservedTagPatternForDomainTag() {
+     void testUnExpectedReservedTagPatternForDomainTag() {
         CONFIGURATION_INSTANCE.builder("testUnExpectedReservedTagPatternForDomainTag")
                 .withReplace("""
                         context:""", """
@@ -1021,7 +1003,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnExpectedSections() {
+     void testUnExpectedSections() {
         CONFIGURATION_INSTANCE.builder("testUnexpectedSections")
                 .withReplace("""
                         OA_version: 2.0.1""", """
@@ -1036,7 +1018,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownCheckerName() {
+     void testUnknownCheckerName() {
         CONFIGURATION_INSTANCE.builder("testUnknownCheckerName")
                 .withReplace("""
                                       tze_type_nom:
@@ -1064,7 +1046,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownComponentNameForAuthorization() {
+     void testUnknownComponentNameForAuthorization() {
         CONFIGURATION_INSTANCE.builder("testunknownComponentNameForAuthorization")
                 .withReplace("OA_component: projet",
                         "OA_component: proj")
@@ -1091,7 +1073,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownComponentNameValidation() {
+     void testUnknownComponentNameValidation() {
         CONFIGURATION_INSTANCE.builder("testunknownComponentNameValidation")
                 .withReplace("        OA_components: [ site ]",
                         "        OA_components: [ sites ]")
@@ -1109,7 +1091,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownComponentInTimeScopeInSubmission() {
+     void testUnknownComponentInTimeScopeInSubmission() {
         CONFIGURATION_INSTANCE.builder("testunknownComponentInTimeScopeInSubmission")
                 .withReplace("        OA_timeScope:\n" +
                                 "          OA_component: date",
@@ -1129,7 +1111,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownNameAuthorizationScopeInFileNameInSubmission() {
+     void testUnknownNameAuthorizationScopeInFileNameInSubmission() {
         CONFIGURATION_INSTANCE.builder("testUnknownNameAuthorizationScopeInFileNameSubmission")
                 .withReplace("""
                                         OA_matchPatternScopes:
@@ -1155,7 +1137,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownReferenceColumnToLookForHeaderInDataDynamicComponents() {
+     void testUnknownReferenceColumnToLookForHeaderInDataDynamicComponents() {
         CONFIGURATION_INSTANCE.builder("testUnknownReferenceColumnToLookForHeaderInDataDynamicComponents")
                 .withReplace("OA_referenceComponentToLookForHeader: tze_nom_key",
                         "OA_referenceComponentToLookForHeader: nom_key")
@@ -1174,7 +1156,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownReferenceNameForDynamicColumns() {
+     void testUnknownReferenceNameForDynamicColumns() {
         CONFIGURATION_INSTANCE.builder("testUnknownReferenceNameForDynamicColumns")
                 .withReplace(" OA_reference: type_de_sites",
                         " OA_reference: type_de_site")
@@ -1192,7 +1174,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnknownReferenceNameForChecker() {
+     void testUnknownReferenceNameForChecker() {
         CONFIGURATION_INSTANCE.builder("testUnknownReferenceNameForChecker")
                 .withReplace("""
                                           OA_params:
@@ -1220,7 +1202,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testBadEnumSectionTypeInSubmission() {
+     void testBadEnumSectionTypeInSubmission() {
         CONFIGURATION_INSTANCE.builder("testBadEnumSectionTypeInSubmission")
                 .withReplace("OA_strategy: OA_VERSIONING",
                         "OA_strategy: OA_VERSIONINGY")
@@ -1238,7 +1220,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInTags() {
+     void testUnsuportedI18nKeyLanguageInTags() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInTags")
                 .withReplace("  test:\n" +
                                 "    fr: test",
@@ -1253,7 +1235,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInApplication() {
+     void testUnsuportedI18nKeyLanguageInApplication() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInApplication")
                 .withReplace("fr: Application pour de faux",
                         "frrr: Application pour de faux")
@@ -1266,7 +1248,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInAuthorizationScopes() {
+     void testUnsuportedI18nKeyLanguageInAuthorizationScopes() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInAuthorizationScopes")
                 .withReplace("fr: Projets",
                         "frrr: Projets")
@@ -1279,7 +1261,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInAuthorizationScopesExportheader() {
+     void testUnsuportedI18nKeyLanguageInAuthorizationScopesExportheader() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInAuthorizationScopesExportheader")
                 .withReplace("fr: site",
                         "frrr: projet")
@@ -1292,7 +1274,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInDataDynamicComponents() {
+     void testUnsuportedI18nKeyLanguageInDataDynamicComponents() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInDataDynamicComponents")
                 .withReplace("fr: Type de Sites",
                         "frrr: Type de Sites")
@@ -1305,7 +1287,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInDataExportheaderI18n() {
+     void testUnsuportedI18nKeyLanguageInDataExportheaderI18n() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInDataExportheaderI18n")
                 .withReplace("fr: \"colonne calculée\"",
                         "frrr: \"colonne calculée\"")
@@ -1318,7 +1300,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInDataI18n() {
+     void testUnsuportedI18nKeyLanguageInDataI18n() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInDataI18n")
                 .withReplace("fr: Espèces",
                         "frrr: Espèces")
@@ -1331,7 +1313,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInDataI18ndisplay() {
+     void testUnsuportedI18nKeyLanguageInDataI18ndisplay() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInDataI18ndisplay")
                 .withReplace("fr: \"{esp_nom}\"",
                         "frrr: \"{esp_nom}\"")
@@ -1344,7 +1326,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInDataInConstantComponentsExportheaderI18n() {
+     void testUnsuportedI18nKeyLanguageInDataInConstantComponentsExportheaderI18n() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInDataInConstantComponentsExportheaderI18n")
                 .withReplace("fr: \"nom du réseau expérimental\"",
                         "frrr: \"nom du réseau expérimental\"")
@@ -1357,7 +1339,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInRightsRequestDescription() {
+     void testUnsuportedI18nKeyLanguageInRightsRequestDescription() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInRightsRequestDescription")
                 .withReplace("fr: Vous pouvez demander",
                         "frrr: Vous pouvez demander")
@@ -1370,7 +1352,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testUnsuportedI18nKeyLanguageInValidation() {
+     void testUnsuportedI18nKeyLanguageInValidation() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInValidation")
                 .withReplace("fr: les reference",
                         "frrr: les reference")
@@ -1383,7 +1365,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testDuplicatedHeader() {
+    void testDuplicatedHeader() {
         CONFIGURATION_INSTANCE.builder("testDuplicatedHeader")
                 .withReplace("OA_headerName: \"Nom de la clé du site\"",
                         "OA_headerName: \"zet_chemin_parent\"")
@@ -1402,7 +1384,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testDuplicatedComponent() {
+    void testDuplicatedComponent() {
         CONFIGURATION_INSTANCE.builder("testDuplicatedComponent")
                 .withReplace("tel_value",
                         "tel_experimental_site")
@@ -1419,12 +1401,9 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testMissingComponentForDisplayPattern() {
+     void testMissingComponentForDisplayPattern() {
         CONFIGURATION_INSTANCE.builder("testMissingComponentForDisplayPattern")
-                .withReplace("    OA_i18nDisplayPattern:\n" +
-                                "      OA_title:\n" +
-                                "        fr: \"{esp_nom}\"\n" +
-                                "        en: \"{esp_nom}\"",
+                .withReplace("    OA_i18nDisplayPattern:\n      OA_title:\n        fr: \"{esp_nom}\"\n        en: \"{esp_nom}\"".formatted(),
                         "    OA_i18nDisplayPattern:\n" +
                                 "      OA_title:\n" +
                                 "        fr: \"{esp_invalid_nom}\"\n" +
@@ -1444,7 +1423,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testduplicatedComponentInPatternComponent() {
+     void testduplicatedComponentInPatternComponent() {
         CONFIGURATION_INSTANCE.builder("testduplicatedComponentInPatternComponent")
                 .withReplace("swc_qc",
                         "tel_date")
@@ -1467,7 +1446,7 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testduplicatedData() {
+     void testduplicatedData() {
         CONFIGURATION_INSTANCE.builder("testUnsuportedI18nKeyLanguageInValidation")
                 .withReplace("pem",
                         "sites")
@@ -1479,14 +1458,14 @@ public class ApplicationConfigurationServiceTest {
     }
 
     @Test
-    public void testValidConfiguration() {
+     void testValidConfiguration() {
         CONFIGURATION_INSTANCE.builder("testValidConfiguration")
                 .test(errors -> assertTrue(errors.isEmpty()));
     }
 
 
     private class TestConfigurationBuilder {
-        static private TestConfigurationBuilder INSTANCE;
+        private static TestConfigurationBuilder INSTANCE;
         String methodName;
         String path = Fixtures.getValidationApplicationConfigurationResourceName();
         YamlTransformer yamlTransformer = new YamlTransformer("", "");
@@ -1525,9 +1504,9 @@ public class ApplicationConfigurationServiceTest {
                 final Object test = buildFluxRequestJDJson(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(new ReactiveProgression.DefaultCounter(0L), fluxSink, new ReactiveProgression.CreateApplicationProgressionMessagesLabel());
                     try {
-                        final Application application = ApplicationConfigurationService.parseConfigurationBytes("test", progression, FileBomResolver.of(wrongYaml));
+                        ApplicationConfigurationService.parseConfigurationBytes("test", progression, FileBomResolver.of(wrongYaml));
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                     fluxSink.complete();
                 })

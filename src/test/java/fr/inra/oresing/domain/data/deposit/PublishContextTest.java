@@ -29,7 +29,7 @@ class PublishContextTest {
     private final Function getDataByReference = Mockito.mock(Function.class);
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         // Création des mocks ou objets nécessaires
         this.fileOrUUID = Mockito.mock(FileOrUUID.class); // À adapter selon votre constructeur
         this.preHeaderRow = List.of(List.of("A", "B"), List.of("C", "D"), List.of("E", "F"));

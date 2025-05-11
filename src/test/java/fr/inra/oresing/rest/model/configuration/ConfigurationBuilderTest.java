@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
@@ -19,8 +20,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONCompareMode;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -236,9 +235,9 @@ class ConfigurationBuilderTest {
                         testConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     } catch (JSONException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {
@@ -266,9 +265,9 @@ class ConfigurationBuilderTest {
                         testExampleConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     } catch (JSONException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {
@@ -301,7 +300,7 @@ class ConfigurationBuilderTest {
                         testHierarchicalNodes(configuration.hierarchicalNodes());
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {
@@ -333,7 +332,7 @@ class ConfigurationBuilderTest {
                         testMonsoreConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException | JSONException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {

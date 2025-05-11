@@ -1,5 +1,5 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
-sealed public interface PrivilegeAssessorStateSystemDomain extends PrivilegeAssessorStateDomain
+public sealed interface PrivilegeAssessorStateSystemDomain extends PrivilegeAssessorStateDomain
         permits PrivilegeSystemDomain {
 }

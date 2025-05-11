@@ -12,9 +12,9 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.*;
 import fr.inra.oresing.domain.groovy.BooleanGroovyExpression;
 import fr.inra.oresing.domain.groovy.Expression;
 import fr.inra.oresing.domain.groovy.GroovyDecorator;
+import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.groovy.exception.GroovyException;
 import fr.inra.oresing.domain.repository.data.DataRepository;
-import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import org.apache.commons.lang3.NotImplementedException;
 
@@ -101,7 +101,7 @@ public sealed interface LineChecker<F extends FieldType> permits LineChecker.Man
         if (Strings.isNullOrEmpty(value)) {
             if (checkerDescription().required()) {
                 final CheckerTarget target = target();
-                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("target", target), target);
+                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("component", ((DataColumn)target).column()), target);
             } else {
                 validationCheckResult = DefaultCheckerValidationCheckResult.success(target(), new StringType(value));
             }

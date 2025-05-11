@@ -4,7 +4,10 @@ import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.*;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 class PatternComponentExampleBuilder {
     protected static final String SWC_PATTERN = "\"SWC_(.*)_(.*)\"";

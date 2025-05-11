@@ -5,6 +5,7 @@ import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.SqlService;
@@ -84,8 +85,7 @@ public class AuthorizationResourcesTest {
     public void testAddAuthorization() throws Exception {
         final CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx", "withrights@inrae.fr");
         fixtures.setToActive(withRightsUserResult.userId());
-        final String withRigthsUserId = withRightsUserResult.userId().toString();
-        final Cookie withRigthsCookie = mockMvc.perform(post("/api/v1/login").with(csrf().asHeader())
+        mockMvc.perform(post("/api/v1/login").with(csrf().asHeader())
                         .param("login", "withrigths")
                         .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
@@ -105,8 +105,7 @@ public class AuthorizationResourcesTest {
                 .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         final CreateUserResult lamdaUserResult = authenticationService.createUser("lambda", "xxxxxxxx", "lambda@inrae.fr");
         fixtures.setToActive(lamdaUserResult.userId());
-        final String lambdaUserId = lamdaUserResult.userId().toString();
-        final Cookie lambdaCookie = mockMvc.perform(post("/api/v1/login")
+        mockMvc.perform(post("/api/v1/login")
                         .param("login", "lambda")
                         .param("password", "xxxxxxxx"))
                 .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
@@ -444,7 +443,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            final String json = mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId).with(csrf().asHeader())
+            mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId).with(csrf().asHeader())
                             .cookie(authCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
@@ -506,7 +505,7 @@ public class AuthorizationResourcesTest {
             {
                 // on donne les droits pour un pattern acbb
 
-                final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
+                 mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorResult.userId().toString())
                                 .param("applicationPattern", "acbb")
                                 .cookie(dbUserCookies))
@@ -529,12 +528,12 @@ public class AuthorizationResourcesTest {
                     assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
                     assertEquals("monsore", notApplicationCreatorRightsException.applicationName);
                 } catch (Throwable e) {
-                    throw new RuntimeException(e);
+                    throw new OreSiTechnicalException(e.getMessage(), e);
                 }
             }
             {
                 //on donne des droits pour le pattern monsore
-                final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorResult.userId().toString())
                                 .param("applicationPattern", "monsore")
                                 .cookie(dbUserCookies))
@@ -570,7 +569,7 @@ public class AuthorizationResourcesTest {
                     assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
                     assertEquals("monsore", notApplicationCreatorRightsException.applicationName);
                 } catch (Throwable e) {
-                    throw new RuntimeException(e);
+                    throw new OreSiTechnicalException(e.getMessage(), e);
                 }
             }
         }

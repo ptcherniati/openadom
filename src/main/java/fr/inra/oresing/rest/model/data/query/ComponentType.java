@@ -3,7 +3,7 @@ package fr.inra.oresing.rest.model.data.query;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.checker.*;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
-import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.data.read.query.DownloadDatasetQueryAdvancedSearch;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 
 import java.util.Optional;

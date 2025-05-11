@@ -3,12 +3,11 @@ package fr.inra.oresing.domain.massimport;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.ConfigurationBuiderTestBuilder;
 import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,7 +18,6 @@ import java.util.function.Function;
 @Tag("domain.model")
 public class BuildFileHeaderTest {
     static final String RESOURCE_PATH = "fr/inra/oresing/domain/massimport/massimport.yaml";
-    private static final Logger log = LoggerFactory.getLogger(BuildFileHeaderTest.class);
 
     @ParameterizedTest
     @ValueSource(strings = {RESOURCE_PATH})
@@ -37,7 +35,7 @@ public class BuildFileHeaderTest {
                         try {
                             dataDescription.buildEmptyFile(baos);
                         } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            throw new OreSiTechnicalException(e.getMessage(), e);
                         }
                     });
             System.out.println("debut");

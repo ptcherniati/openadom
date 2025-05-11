@@ -1,11 +1,13 @@
 package fr.inra.oresing.persistence.flyway;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiApplicationCreatorRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import org.flywaydb.core.api.callback.Callback;
 import org.flywaydb.core.api.callback.Context;
 import org.flywaydb.core.api.callback.Event;
@@ -102,7 +104,7 @@ public class SchemaFlywayCallback implements Callback {
                     .formatted(sqlSchemaForApplication.getName(), applicationCreator.getAsSqlRole()));
 
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.SQL_EXCEPTION.toMessage(), e);
         }
     }
 
@@ -115,7 +117,7 @@ public class SchemaFlywayCallback implements Callback {
                     try {
                         actionToDoAfterMigration.execute(connection);
                     } catch (final SQLException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(ExceptionMessage.SQL_EXCEPTION.toMessage(), e);
                     }
                 });
     }
@@ -128,7 +130,7 @@ public class SchemaFlywayCallback implements Callback {
             setPrivilegesForUserManagerToAccesSchema(statement, sqlSchemaForApplication, userManagerOnApplicationRole);
             setRoleUserManager(statement, applicationManagerOnApplicationRole);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.SQL_EXCEPTION.toMessage(), e);
         }
     }
 

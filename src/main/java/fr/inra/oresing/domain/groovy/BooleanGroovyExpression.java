@@ -5,7 +5,9 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.checker.CheckerReturnType;
 import fr.inra.oresing.domain.groovy.exception.GroovyException;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public final class BooleanGroovyExpression implements Expression<Boolean> {
 

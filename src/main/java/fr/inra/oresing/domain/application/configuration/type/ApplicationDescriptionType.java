@@ -9,7 +9,7 @@ public record ApplicationDescriptionType(SectionBuilder sectionBuilder,
                                          Map<String, ConfigurationSchemaNodeType> children,
                                          boolean required,
                                          boolean nullable) implements ApplicationType {
-    public static SectionBuilder SECTION_BUILDER(){
+    public static SectionBuilder builder(){
         return SectionBuilder.getInstance()
                 .withMandatorySections(
                         new LabelDescription(ConfigurationSchemaNode.OA_NAME, StringType.EMPTY_INSTANCE()),
@@ -23,19 +23,19 @@ public record ApplicationDescriptionType(SectionBuilder sectionBuilder,
                 );
     }
 
-    public static ApplicationDescriptionType  EMPTY_INSTANCE() {
+    public static ApplicationDescriptionType emptyInstance() {
         return new ApplicationDescriptionType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
 
     public ApplicationDescriptionType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER()
+        this(builder()
                         .test(children.keySet()),
                 children,
                 true,
                 false);
     }
     private ApplicationDescriptionType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
+        this(builder(),
                 children,
                 true,
                 false);

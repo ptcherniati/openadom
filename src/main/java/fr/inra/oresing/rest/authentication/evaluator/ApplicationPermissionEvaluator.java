@@ -2,7 +2,9 @@ package fr.inra.oresing.rest.authentication.evaluator;
 
 import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForApplication;
 import fr.inra.oresing.domain.authorization.privilegeassessor.PrivilegeAssessorDomainForSystem;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.*;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.SystemPersona;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.services.authorization.AuthorizationService;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
@@ -38,14 +40,14 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     public static final String APPLICATION_WRITE_FILE = "APPLICATION_WRITE_FILE";
     public static final String APPLICATION_DELETE_FILE = "APPLICATION_DELETE_FILE";
 
-    public final Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_USER_CONNECTED;
-    public final Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_ADMINISTRATION;
+    public  Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_USER_CONNECTED;
+    public  Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_ADMINISTRATION;
 
-    public final Function<String, PrivilegeAssessorDomainForApplication> APPLICATION_MANAGER;
-    public final Function<String, PrivilegeAssessorDomainForApplication> DATA_MANAGEMENT;
-    public final Function<String, PrivilegeAssessorDomainForApplication> DATA_READ;
-    public final Function<String, PrivilegeAssessorDomainForApplication> DATA_WRITE;
-    public final Function<String, PrivilegeAssessorDomainForApplication> DATA_ACCESS;
+    public  Function<String, PrivilegeAssessorDomainForApplication> APPLICATION_MANAGER;
+    public  Function<String, PrivilegeAssessorDomainForApplication> DATA_MANAGEMENT;
+    public  Function<String, PrivilegeAssessorDomainForApplication> DATA_READ;
+    public  Function<String, PrivilegeAssessorDomainForApplication> DATA_WRITE;
+    public  Function<String, PrivilegeAssessorDomainForApplication> DATA_ACCESS;
 
 
     private final AuthorizationService authorizationService;

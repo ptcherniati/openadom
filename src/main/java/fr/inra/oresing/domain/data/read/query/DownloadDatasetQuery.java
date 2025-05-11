@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public sealed interface DownloadDatasetQuery extends MessageInformations
-        permits DownloadDatasetQueryAdvancedSearch, DownloadDatasetQueryByNaturalKey, DownloadDatasetQueryByRowId, DownloadDatasetQueryNoFilter/*, DownloadDatasetQuerySimpleSearch*/ {
+        permits DownloadDatasetQueryAdvancedSearch, DownloadDatasetQueryByNaturalKey, DownloadDatasetQueryByRowId, DownloadDatasetQueryNoFilter {
 
     Set<ComponentOrderBy> componentOrderBy();
 

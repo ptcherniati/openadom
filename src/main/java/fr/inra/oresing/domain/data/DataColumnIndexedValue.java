@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.data;
 
+import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.MapType;
-import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 
 import java.util.Map;

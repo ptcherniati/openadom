@@ -1,11 +1,11 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.collect.Sets;
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
+import fr.inra.oresing.persistence.*;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;

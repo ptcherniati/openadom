@@ -1,11 +1,11 @@
 package fr.inra.oresing.persistence;
 
 import com.google.common.base.Strings;
+import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
+import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.AdditionalFileDescription;
 import fr.inra.oresing.domain.application.configuration.FieldDescription;
-import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
-import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import lombok.Getter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.util.CollectionUtils;
@@ -36,8 +36,8 @@ public class AdditionalFileSearchHelper {
     }
 
     private String addArgumentAndReturnSubstitution(final Object value) {
-        final int i = this.i.incrementAndGet();
-        final String paramName = String.format("arg%d", i);
+        final int counter = this.i.incrementAndGet();
+        final String paramName = String.format("arg%d", counter);
         paramSource.addValue(paramName, value);
         return String.format(":%s", paramName);
     }
@@ -98,7 +98,6 @@ public class AdditionalFileSearchHelper {
     }
 
     private String whereForField(final AdditionalFilesInfos.FieldFilters filter, final FieldDescription additionalFileFieldFormat) {
-        final boolean isRegExp = filter.isRegExp != null && filter.isRegExp;
         final List<String> filters = new LinkedList<>();
         if (!Strings.isNullOrEmpty(filter.filter)) {
             filters.add(String.format(
@@ -120,8 +119,7 @@ public class AdditionalFileSearchHelper {
                         )
                 );
             }
-        } else if (filter.intervalValues != null && "numeric".equals(filter.type)) {
-            if (!Strings.isNullOrEmpty(filter.intervalValues.from) || !Strings.isNullOrEmpty(filter.intervalValues.to)) {
+        } else if (filter.intervalValues != null && "numeric".equals(filter.type) && (!Strings.isNullOrEmpty(filter.intervalValues.from) || !Strings.isNullOrEmpty(filter.intervalValues.to))) {
                 //fileinfos #> '{"t","value"}'@@ '$. double() >= 1 && $. double() <= 2'
                 final List<String> filterList = new LinkedList<>();
                 if (!Strings.isNullOrEmpty(filter.intervalValues.from)) {
@@ -145,7 +143,7 @@ public class AdditionalFileSearchHelper {
                         )
                 );
             }
-        }
+
         if (CollectionUtils.isEmpty(filters)) {
             return "";
         }

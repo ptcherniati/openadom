@@ -6,7 +6,9 @@ import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 
 public record ApplicationLightResult(

@@ -11,7 +11,7 @@ public record AdditionalFileType(SectionBuilder sectionBuilder, Map<String, Conf
     public static SectionBuilder SECTION_BUILDER(){
         return SectionBuilder.getInstance()
                 .withMandatorySections(
-                        new LabelDescription(ConfigurationSchemaNode.OA_FORM_FIELDS, ApplicationDescriptionType.EMPTY_INSTANCE())
+                        new LabelDescription(ConfigurationSchemaNode.OA_FORM_FIELDS, ApplicationDescriptionType.emptyInstance())
                 )
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_I_18_N, TitleType.EMPTY_INSTANCE())

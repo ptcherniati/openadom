@@ -142,12 +142,12 @@ class BuilderNodeTest {
     }
 
     @Test
-    public void TestInstance() {
+     void TestInstance() {
         Assertions.assertEquals(13, builderNodes.size());
     }
 
     @Test
-    public void TestBuildAllDepends() {
+     void TestBuildAllDepends() {
         final List<BuilderNode> withAllDepends = builderNodes.values().stream().map(node -> node.withAllDepends(builderNodes.values())).toList();
         Assertions.assertArrayEquals(
                 List.of("especes", "sites", "type_de_sites", "unites", "valeurs_qualitative", "variables").toArray(),
@@ -168,14 +168,14 @@ class BuilderNodeTest {
     }
 
     @Test
-    public void TestGetGetNodeLeaves() {
+     void TestGetGetNodeLeaves() {
         final List<BuilderNode> nodeLeaves = BuilderNode.getNodeLeaves(builderNodes.values());
         Assertions.assertEquals(8, nodeLeaves.size());
         Assertions.assertArrayEquals(List.of("variables", "valeurs_qualitative", "sites", "themes", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers").toArray(), nodeLeaves.stream().map(BuilderNode::nodeName).toArray());
     }
 
     @Test
-    public void TestBuildOrderedNodes() {
+     void TestBuildOrderedNodes() {
         final SortedSet<Node> orderedNodes = Node.buildNode(builderNodes.values(), new Validation(null, null, null));
 
         Assertions.assertEquals(

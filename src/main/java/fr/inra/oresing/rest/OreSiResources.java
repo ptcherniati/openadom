@@ -28,6 +28,7 @@ import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
 import fr.inra.oresing.domain.data.read.query.OutPut;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
@@ -261,7 +262,7 @@ public class OreSiResources implements ServiceContainerBean {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
         if (!storeFile.builder().getFileOrUUID().topublish()) {
-            if (applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
+            if (!applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
             DataVersioningResult dataVersioningResult = serviceContainer.versioningService()
@@ -1144,7 +1145,7 @@ public class OreSiResources implements ServiceContainerBean {
                         log.error(IO_ADDING_ERROR, ioe);
                     }
                 }
-                throw new RuntimeException(IO_WRITING_CSV_ERROR, e);
+                throw new OreSiTechnicalException(IO_WRITING_CSV_ERROR, e);
             }
         };
 
@@ -1194,6 +1195,9 @@ public class OreSiResources implements ServiceContainerBean {
                     .map(DownloadDatasetQuery::getOutPut)
                     .map(OutPut::locale)
                     .orElseGet(OreSiResources::getDefaultLocale);
+            /*Optional.of(downloadDatasetQuery.getOutPut())
+                    .map(outPut -> new OutPut(locale, outPut.offset(), outPut.limit()))
+                    .ifPresent(downloadDatasetQuery::setOutPut);*/
             return DownloadDatasetQuery.build(downloadDatasetQuery);
         } catch (final Exception e) {
             throw new BadDownloadDatasetQuery(e.getMessage());
@@ -1334,7 +1338,7 @@ public class OreSiResources implements ServiceContainerBean {
                         log.error(IO_ADDING_ERROR, ioe);
                     }
                 }
-                throw new RuntimeException(BAD_BUNDLE, e);
+                throw new OreSiTechnicalException(BAD_BUNDLE, e);
             }
         };
 

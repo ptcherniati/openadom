@@ -10,8 +10,9 @@ import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 
-import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public sealed interface CheckerDescription permits
@@ -34,13 +35,14 @@ public sealed interface CheckerDescription permits
 
     default <F extends FieldType> F buildFieldtype(final DataRepository repository, final PublishContext.PublishContextBuilder publishContextBuilder, final CheckerTarget target, final LineChecker.LineTransformer transformer) {
         return (F) switch (this) {
+            case null -> NullType.INSTANCE;
             case final ReferenceChecker referenceChecker -> {
                 final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys = repository.getDataIdPerKeys(referenceChecker.refType());
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = getUUidByNaturalKey(referenceIdPerKeys);
                 yield new ReferenceType(target, referenceChecker.refType(), referenceValues, transformer, null);
             }
             case final DateChecker dateChecker ->
-                    new DateType(dateChecker.pattern(), DateTimeFormatter.ofPattern(dateChecker.pattern()), dateChecker.duration(), dateChecker.min(), dateChecker.max());
+                    new DateType(dateChecker.pattern(), dateChecker.duration(), dateChecker.min(), dateChecker.max());
             case final BooleanChecker booleanChecker -> new BooleanType(false);
             case final FloatChecker floatChecker -> {
                 final Float minFloat = floatChecker.min();
@@ -58,12 +60,12 @@ public sealed interface CheckerDescription permits
                 yield new BooleanType(expression);
             }
             case final StringChecker stringChecker -> new StringType(stringChecker.pattern());
-            default -> new StringType("");
+            case ComputationChecker _ -> new StringType("");
         };
     }
 
     
-    private static ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getUUidByNaturalKey(final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys) {
+    static ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getUUidByNaturalKey(final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys) {
         return ImmutableMap.copyOf(
                 referenceIdPerKeys.entrySet().stream()
                         .collect(

@@ -8,13 +8,16 @@ import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.checker.CheckerReturnType;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.BooleanValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.groovy.GroovyExpression;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.BooleanValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public non-sealed class BooleanType implements FieldType<Boolean> {
     private final GroovyExpression expression;

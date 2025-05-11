@@ -1,11 +1,13 @@
 package fr.inra.oresing.rest.reactive;
+
+import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
-import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import reactor.core.publisher.FluxSink;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.function.DoubleUnaryOperator;
 
 public class ReactiveProgression {

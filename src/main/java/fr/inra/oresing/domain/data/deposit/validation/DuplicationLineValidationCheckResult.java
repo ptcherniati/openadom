@@ -3,8 +3,8 @@ package fr.inra.oresing.domain.data.deposit.validation;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSortedSet;
 import fr.inra.oresing.ValidationLevel;
-import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.checker.CheckerTarget;
 
 import java.util.Map;
 

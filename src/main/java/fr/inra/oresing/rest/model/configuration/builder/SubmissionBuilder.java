@@ -4,14 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.ComponentDescription;
+import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
+import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationSubmissionComponent;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-
 import jakarta.annotation.Nullable;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;

@@ -7,21 +7,22 @@ import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.data.DataColumnSingleValue;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.DataDatum;
+import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.storage.KeysAndReferenceDatumAfterChecking;
 import fr.inra.oresing.domain.data.deposit.transformation.DataTransformer;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.ReferenceDatumAfterChecking;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public record WithoutRecursion(DataImporterContext dataImporterContext) implements RecursionStrategy {
 
     @Override
     public Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        Function<String, String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
+        UnaryOperator<String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
 
         final String naturalKeyAsString = dataImporterContext.getKeyColumns().stream()
                 .map(referenceColumn -> {
@@ -33,10 +34,13 @@ public record WithoutRecursion(DataImporterContext dataImporterContext) implemen
                 .map(DataColumnSingleValue::getValue)
                 .map(Object::toString)
                 .map(nullOrEmptyToNull)
-                .map(label -> label.matches(DateType.PATTERN_DATE_REGEXP_FIND_DATE) ? DateType.sorteableDateToFormattedDate(label).replaceAll("/", "_") : label)
+                .map(label -> label.matches(DateType.PATTERN_DATE_REGEXP_FIND_DATE) ? DateType.sorteableDateToFormattedDate(label).replace("/", "_") : label)
                 .map(Ltree::escapeToLabel)
                 .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
-        Preconditions.checkState(!naturalKeyAsString.isEmpty(), ExceptionMessage.NULL_NATURAL_KEY.toMessage(), referenceDatumAfterChecking.lineNumber(), String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
+        Preconditions.checkState(!naturalKeyAsString.isEmpty(),
+                ExceptionMessage.NULL_NATURAL_KEY.toMessage(),
+                referenceDatumAfterChecking.lineNumber(),
+                String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
         return Ltree.fromSql(naturalKeyAsString);
     }
 

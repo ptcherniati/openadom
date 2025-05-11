@@ -7,7 +7,9 @@ import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public abstract class Column implements Comparable<Column> {
     public static final String COLUMN_IN_COLUMN_SEPARATOR = "::";

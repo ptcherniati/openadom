@@ -3,14 +3,16 @@ package fr.inra.oresing.rest.services;
 import com.google.common.collect.ImmutableSortedSet;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.AdditionalFileDescription;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AdditionalFileRepository;
 import fr.inra.oresing.persistence.AdditionalFileSearchHelper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exception.AdditionalFileParamsParsingResult;
@@ -127,7 +129,7 @@ public class AdditionalFileService implements ServiceContainerBean {
             try {
                 additionalBinaryFile.setData(file.getBytes());
             } catch (final IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
             }
         }
         OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
@@ -200,7 +202,7 @@ public class AdditionalFileService implements ServiceContainerBean {
                         }
                         additionalFileSearchHelper.addAdditionalFilesToZip(additionalBinaryFile, zipOutputStream, "");
                     } catch (final IOException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                     }
                 });
 
@@ -246,7 +248,7 @@ public class AdditionalFileService implements ServiceContainerBean {
 
     public GetAdditionalFilesResult findAdditionalFile(final String nameOrId, final AdditionalFilesInfos additionalFilesInfos) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        final AdditionalFileDescription description = Optional.ofNullable(application.getConfiguration().additionalFiles()).map(map -> map.get(additionalFilesInfos.getFiletype())).orElseGet(AdditionalFileDescription::EMPTY_INSTANCE);
+        final AdditionalFileDescription description = Optional.ofNullable(application.getConfiguration().additionalFiles()).map(map -> map.get(additionalFilesInfos.getFiletype())).orElseGet(AdditionalFileDescription::emptyInstance);
         List<AdditionalBinaryFile> additionalFiles = serviceContainer.additionalFileService().findAdditionalFile(application, additionalFilesInfos);
         List<AdditionalBinaryFileResult> additionalBinaryFileResults = additionalFiles.stream().map(af -> serviceContainer.binaryFileService().getAdditionalBinaryFileResult(af, application)).collect(Collectors.toList());
         ImmutableSortedSet<GetGrantableResult.User> grantableUsers = serviceContainer.authorizationService().getGrantableUsers();

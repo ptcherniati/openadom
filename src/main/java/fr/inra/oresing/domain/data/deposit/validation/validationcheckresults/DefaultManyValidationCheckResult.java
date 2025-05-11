@@ -57,8 +57,9 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         return switch (lineChecker.underlyingType()) {
             case ReferenceType ignored -> new DataColumnMultipleValue(
                     ((List<FieldType>) value().getValue()).stream()
-                            .peek(referenceType -> {
+                            .map(referenceType -> {
                                 referenceType.transform(lineChecker, referenceColumnRawValue, dataColumn, refsLinkedTo);
+                                return referenceType;
                             })
                             .map(FieldType::getValue)
                             .map(Object::toString)

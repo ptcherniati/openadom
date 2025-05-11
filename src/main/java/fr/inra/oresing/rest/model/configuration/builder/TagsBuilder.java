@@ -3,9 +3,9 @@ package fr.inra.oresing.rest.model.configuration.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.Tag;
 import fr.inra.oresing.domain.application.configuration.Validation;
+import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.HashSet;

@@ -3,7 +3,7 @@ package fr.inra.oresing.domain.data.read.query;
 
 import fr.inra.oresing.domain.application.Application;
 
-import java.util.*;
+import java.util.Set;
 
 public record DownloadDatasetQueryAdvancedSearch(
         Application application,

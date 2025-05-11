@@ -2,25 +2,24 @@ package fr.inra.oresing.domain.data.deposit.recursion;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.ListMultimap;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
-import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
-import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.data.DataColumn;
+import fr.inra.oresing.domain.data.DataColumnValue;
+import fr.inra.oresing.domain.data.DataDatum;
+import fr.inra.oresing.domain.data.DataValue;
+import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.storage.KeysAndReferenceDatumAfterChecking;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.ReferenceDatumAfterChecking;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
-import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.MissingParentLineValidationCheckResult;
-import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
-import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public record WithRecursion(
@@ -30,7 +29,6 @@ public record WithRecursion(
      * When we have the hierarchical key, we can recover the natural key as the leaf of the ltree.
      * In this case you must remove the reference to the data type "[^\\.][a-z][a-z]*K"
      */
-    //public static final Function<Ltree, Ltree> fromNaturalKey = nk -> Ltree.fromSql(nk.getSql().replaceAll("[^\\.][a-z][a-z]*K", ""));
     public WithRecursion(final DataImporterContext dataImporterContext) {
         this(dataImporterContext, new HashMap<>());
     }
@@ -47,14 +45,17 @@ public record WithRecursion(
       */
     @Override
     public Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        Function<String, String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
+        UnaryOperator<String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
         Function<DataColumn, String> toEscapedValueFromColumnRegardingColumnIsReferenceType = dataColumn -> getEscapedValueFromColumnRegardingColumnIsReferenceType(dataColumn, referenceDatumAfterChecking.referenceDatumAfterChecking());
         String naturalKey = dataImporterContext().getNaturalKeyColumns().stream()
                 .map(DataColumn::new)
                 .map(toEscapedValueFromColumnRegardingColumnIsReferenceType)
                 .map(nullOrEmptyToNull)
                 .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
-        Preconditions.checkState(!naturalKey.isEmpty(), ExceptionMessage.NULL_NATURAL_KEY.toMessage(), referenceDatumAfterChecking.lineNumber(), String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
+        Preconditions.checkState(!naturalKey.isEmpty(),
+                ExceptionMessage.NULL_NATURAL_KEY.toMessage(),
+                referenceDatumAfterChecking.lineNumber(),
+                String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
         return Ltree.fromSql(naturalKey);
     }
 
@@ -115,7 +116,7 @@ public record WithRecursion(
                         .map(DataColumnValue::getValuesToCheck)
                         .filter(ReferenceType.class::isInstance)
                         .map(ReferenceType.class::cast)
-                        .map(ReferenceType::getValue)
+                        .map(FieldType::getValue)
                         .map(this::recursiveNodeHierarchicalKey)
                         .orElse(null);
         Ltree hierarchicalKey = recursiveNodeHierarchicalKey(naturalKey);
@@ -145,50 +146,5 @@ public record WithRecursion(
             dataImporterContext().getKnownId(keys.naturalKey());
         }
         return List.of(referenceDatumAfterChecking);
-    }
-
-    /**
-     * Pour une ligne passée, calcule la clé naturelle composite de cette ligne.
-     * <p>
-     * Il s'agit d'aller lire les différentes colonnes qui composent la clé, de joindre le tout et de gérer
-     * l'échappement.
-     */
-    private DataValue.LineIdentityColumnName computeIdentityKey(final DataDatum referenceDatum) {
-        final String naturalKeyAsString = dataImporterContext.getKeyColumns().stream()
-                .map(referenceColumn -> {
-                    final DataColumnValue referenceColumnValue = referenceDatum.get(referenceColumn);
-                    Preconditions.checkState(referenceColumnValue instanceof DataColumnSingleValue, "dans le référentiel " + dataImporterContext.getRefType() + " la colonne " + referenceColumn + " est utilisée comme clé. Par conséquent, il ne peut pas y avoir une valeur multiple.");
-                    return referenceColumnValue;
-                })
-                .map(DataColumnSingleValue.class::cast)
-                .map(DataColumnSingleValue::getValue)
-                .map(Object::toString)
-                .map(s -> Strings.isNullOrEmpty(s) ? Ltree.NULL_KEY : s)
-                .map(Ltree::escapeToLabel)
-                .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
-        Ltree naturalKey = Ltree.fromSql(naturalKeyAsString);
-        return new DataValue.LineIdentityColumnName(naturalKey, naturalKey); //TODO
-    }
-
-    /**
-     * Si on a détecté des lignes qui font référence à un parent mais que celui-ci n'existe pas, on lève une exception
-     *
-     * @param missingParentReferences pour chaque parent manquant, les lignes du CSV où il est mentionné
-     */
-    private void checkMissingParentReferencesIsEmpty(final ListMultimap<Ltree, Long> missingParentReferences) {
-        final ReportErrors reportErrors = new ReportErrors(dataImporterContext.getJsonRowMapper());
-        missingParentReferences.entries().stream()
-                .map(entry -> {
-                    final Ltree missingParentReference = entry.getKey();
-                    final Long lineNumber = entry.getValue();
-                    final ValidationCheckResult validationCheckResult =
-                            new MissingParentLineValidationCheckResult(lineNumber, dataImporterContext.getRefType(), missingParentReference, dataImporterContext().getAfterPreloadReferenceUuids().keySet());
-                    return validationCheckResult.getValidations().stream()
-                            .map(validationCheckResult1 -> new CsvRowValidationCheckResult(validationCheckResult1, lineNumber))
-                            .collect(Collectors.toList());
-                })
-                .flatMap(List::stream)
-                .forEach(reportErrors::add);
-        InvalidDatasetContentException.checkErrorsIsEmpty(reportErrors);
     }
 }

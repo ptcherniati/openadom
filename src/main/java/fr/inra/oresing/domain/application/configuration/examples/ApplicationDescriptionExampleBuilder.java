@@ -8,6 +8,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 class ApplicationDescriptionExampleBuilder {
+    private ApplicationDescriptionExampleBuilder() {
+    }
+
     protected static ApplicationDescriptionType buildApplicationDesriptionSchema() {
         return new ApplicationDescriptionType(createApplicationDescriptionMap());
     }

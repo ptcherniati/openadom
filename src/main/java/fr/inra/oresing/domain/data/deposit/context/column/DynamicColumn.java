@@ -4,7 +4,9 @@ import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public abstract class DynamicColumn extends Column {
 

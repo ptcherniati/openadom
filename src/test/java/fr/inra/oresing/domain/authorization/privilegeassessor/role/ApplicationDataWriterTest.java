@@ -40,12 +40,12 @@ class ApplicationDataWriterTest {
     /**
      * Fournit des implémentations de ApplicationDataWriter pour les tests paramétrés
      */
-    static Stream<Arguments> provideWriterImplementations() {
+    static Stream<CorrectAccessRightsParameters> provideWriterImplementations() {
 
         return Stream.of(
-                Arguments.of("ApplicationAdminUser", new ApplicationAdminUser(mockApplication), true, false, true),
-                Arguments.of("ApplicationManagerUser", new ApplicationManagerUser(mockApplication), true, false, true),
-                Arguments.of("ApplicationPublishWriterUser", new ApplicationPublishWriterUser(mockApplication, "testData", new ArrayList<>(List.of(authorizationParsed))), true, false, true)
+                new CorrectAccessRightsParameters("ApplicationAdminUser", new ApplicationAdminUser(mockApplication), true, true, true),
+                new CorrectAccessRightsParameters("ApplicationManagerUser", new ApplicationManagerUser(mockApplication), true, true, true),
+                new CorrectAccessRightsParameters("ApplicationPublishWriterUser", new ApplicationPublishWriterUser(mockApplication, "testData", new ArrayList<>(List.of(authorizationParsed))), true, true, true)
         );
     }
 
@@ -94,31 +94,26 @@ class ApplicationDataWriterTest {
     @ParameterizedTest(name = "{0} - Vérification des droits")
     @MethodSource("provideWriterImplementations")
     @DisplayName("Les droits d'accès devraient être correctement définis pour chaque implémentation")
-    void shouldHaveCorrectAccessRights(
-            String implName,
-            ApplicationDataWriter writer,
-            boolean expectedCanDelete,
-            boolean expectedCanPublish,
-            boolean expectedCanDeposit) {
+    void shouldHaveCorrectAccessRights(CorrectAccessRightsParameters correctAccessRightsParameters) {
 
         // Vérifier les droits de suppression
-        assertThat(implName + " - Droit de suppression",
-                writer.canDelete(mockFileOrUUID),
-                is(expectedCanDelete));
+        assertThat(correctAccessRightsParameters.implName() + " - Droit de suppression",
+                correctAccessRightsParameters.writer().canDelete(mockFileOrUUID),
+                is(correctAccessRightsParameters.expectedCanDelete()));
 
         // Vérifier les droits de publication
-        assertThat(implName + " - Droit de publication",
-                writer.hasRightForPublishOrUnPublish(mockFileOrUUID),
-                is(expectedCanPublish));
+        assertThat(correctAccessRightsParameters.implName() + " - Droit de publication",
+                correctAccessRightsParameters.writer().hasRightForPublishOrUnPublish(mockFileOrUUID),
+                is(correctAccessRightsParameters.expectedCanPublish()));
 
         // Vérifier les droits de dépôt
-        assertThat(implName + " - Droit de dépôt",
-                writer.hasRightForDeposit(mockFileOrUUID),
-                is(expectedCanDeposit));
+        assertThat(correctAccessRightsParameters.implName() + " - Droit de dépôt",
+                correctAccessRightsParameters.writer().hasRightForDeposit(mockFileOrUUID),
+                is(correctAccessRightsParameters.expectedCanDeposit()));
 
         // Vérifier l'accès à l'application
-        assertThat(implName + " - Référence à l'application",
-                writer.application(),
+        assertThat(correctAccessRightsParameters.implName() + " - Référence à l'application",
+                correctAccessRightsParameters.writer().application(),
                 is(notNullValue()));
     }
 
@@ -205,5 +200,10 @@ class ApplicationDataWriterTest {
 
         assertThat("L'interface sealed devrait permettre ApplicationPublishWriterUser",
                 permittedClasses, hasItemInArray(ApplicationPublishWriterUser.class));
+    }
+
+    private static record CorrectAccessRightsParameters(String implName, ApplicationDataWriter writer,
+                                                        boolean expectedCanDelete, boolean expectedCanPublish,
+                                                        boolean expectedCanDeposit) {
     }
 }

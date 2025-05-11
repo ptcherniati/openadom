@@ -9,9 +9,9 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import java.util.function.Supplier;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
 public non-sealed class NullType implements FieldType<NullType.Null> {
     public static final NullType INSTANCE = new NullType();
@@ -39,12 +39,6 @@ public non-sealed class NullType implements FieldType<NullType.Null> {
         final CheckerTarget target = lineChecker.target();
         return DefaultCheckerValidationCheckResult.success(target, this);
     }
-
-/*    @Override
-    public ValidationCheckResult check(String value, LineCheckerWarper lineCheckerWarper) {
-        CheckerTarget target = lineCheckerWarper.getTarget();
-        return DefaultValidationCheckResult.success(target);
-    }*/
 
     @Override
     public FieldType toJsonForDatabase() {

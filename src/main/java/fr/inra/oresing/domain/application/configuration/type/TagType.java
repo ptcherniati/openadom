@@ -3,7 +3,9 @@ package fr.inra.oresing.domain.application.configuration.type;
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public record TagType(SectionBuilder sectionBuilder, I18nType children, boolean required,
                       boolean nullable) implements ApplicationType {

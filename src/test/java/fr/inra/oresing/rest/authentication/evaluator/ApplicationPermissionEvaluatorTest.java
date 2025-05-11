@@ -15,6 +15,7 @@ import org.springframework.security.core.Authentication;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -26,12 +27,14 @@ import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests de l'évaluateur de permissions annotation @PreAuthorize")
-public class ApplicationPermissionEvaluatorTest {
+class ApplicationPermissionEvaluatorTest {
 
     @Mock
     private AuthorizationService authorizationService;
 
     private ApplicationPermissionEvaluator permissionEvaluator;
+
+
 
     @BeforeEach
     void setUp() {
@@ -83,43 +86,43 @@ public class ApplicationPermissionEvaluatorTest {
         return List.of(
                 // Tests pour le domaine SYSTEM
                 new UserTest(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_USER,
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_USER,
                         "Utilisateur système connecté",
                         List.of(connectedUser),
                         List.of()
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_OPENADOM_ADMIN,
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_OPENADOM_ADMIN,
                         "Administrateur OpenADOM",
                         List.of(openAdomAdmin),
                         List.of()
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_APPLICATION_CREATOR,
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_APPLICATION_CREATOR,
                         "Création d'application",
                         List.of(openAdomAdmin, applicationCreatorUser),
                         List.of()
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_UPDATE,
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_UPDATE,
                         "Gestion des rôles système - mise à jour",
                         List.of(openAdomAdmin),
                         List.of()
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_DELETE,
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_DELETE,
                         "Gestion des rôles système - suppression",
                         List.of(openAdomAdmin),
                         List.of()
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_USER_READER,
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_USER_READER,
                         "Lecteur d'utilisateurs système",
                         List.of(openAdomAdmin),
                         List.of()
@@ -127,80 +130,80 @@ public class ApplicationPermissionEvaluatorTest {
 
                 // Tests pour le domaine APPLICATION
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_APPLICATION_MODIFY,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_APPLICATION_MODIFY,
                         "Modification d'application",
                         List.of(applicationToken),
                         List.of(applicationAdminUser, applicationManagerUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_DELETE,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_DELETE,
                         "Gestion des rôles - suppression",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE,
                         "Gestion des rôles - mise à jour",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ,
                         "Gestion des autorisations - lecture",
                         List.of(applicationToken),
                         List.of(applicationAdminUser, applicationManagerUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE,
                         "Gestion des autorisations - suppression",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE,
                         "Gestion des autorisations - mise à jour",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD,
                         "Gestion des autorisations - ajout",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_DATA_READ,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_DATA_READ,
                         "Lecture de données",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_DATA_WRITE,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_DATA_WRITE,
                         "Écriture de données",
                         List.of(applicationToken),
                         List.of(applicationDataReaderUser, applicationDeleteUser, applicationPublishWriterUser,
                                 applicationDepositWriterUser, applicationCreatorUser, applicationManagerUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_WRITE_FILE,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_WRITE_FILE,
                         "Écriture de fichier",
                         List.of(applicationToken),
                         List.of(applicationDeleteUser, applicationPublishWriterUser,
                                 applicationCreatorUser, applicationManagerUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_DELETE_FILE,
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_DELETE_FILE,
                         "Suppression de fichier",
                         List.of(applicationToken),
                         List.of(applicationDeleteUser, applicationPublishWriterUser,
@@ -276,7 +279,7 @@ public class ApplicationPermissionEvaluatorTest {
     @DisplayName("Tests organisés par domaine cible")
     Stream<DynamicNode> targetDomainTests() {
         Map<String, List<UserTest>> testsByTarget = getPermissionTestCases().stream()
-                .collect(java.util.stream.Collectors.groupingBy(UserTest::targetDomain));
+                .collect(Collectors.groupingBy(UserTest::targetDomain));
 
         return testsByTarget.entrySet().stream()
                 .map(entry -> dynamicContainer(
@@ -340,7 +343,7 @@ public class ApplicationPermissionEvaluatorTest {
     // Classe interne pour gérer la création des assessors et personas
     private class PrivilegeFactory {
         // Cache des assessors pour éviter de recréer des objets
-        private final Map<PrivilegeSystemDomainEnum, PrivilegeAssessorDomainForSystem> systemAssessors = new HashMap<>();
+        private final Map<PrivilegeSystemDomainEnum, PrivilegeAssessorDomainForSystem> systemAssessors = new EnumMap<>(PrivilegeSystemDomainEnum.class);
         private final Map<String, Map<PrivilegeApplicationDomainEnum, PrivilegeAssessorDomainForApplication>> applicationAssessors = new HashMap<>();
 
         // Cache des personas pour garantir la cohérence
@@ -370,7 +373,7 @@ public class ApplicationPermissionEvaluatorTest {
 
         public PrivilegeAssessorDomainForApplication createApplicationAssessor(PrivilegeApplicationDomainEnum domain, String applicationName) {
             return applicationAssessors
-                    .computeIfAbsent(applicationName, name -> new HashMap<>())
+                    .computeIfAbsent(applicationName, name -> new EnumMap<>(PrivilegeApplicationDomainEnum.class))
                     .computeIfAbsent(domain, d -> {
                         PrivilegeAssessorDomainForApplication assessor = mock(PrivilegeAssessorDomainForApplication.class);
 
@@ -404,6 +407,8 @@ public class ApplicationPermissionEvaluatorTest {
                                 lenient().when(assessor.forDataWrite(anyString(), eq(true)))
                                         .thenReturn((ApplicationDataWriter) getOrCreateApplicationPersona("ApplicationPublishWriter"));
                                 break;
+                            default:
+                                throw new IllegalStateException("Unexpected value: " + d);
                         }
 
                         return assessor;

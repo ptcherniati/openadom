@@ -5,15 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.IntegerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 
-
 import java.io.IOException;
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 public non-sealed class IntegerType implements FieldType<Integer> {
@@ -51,7 +51,7 @@ public non-sealed class IntegerType implements FieldType<Integer> {
     @Override
     public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         IntegerValidationCheckResult validationCheckResult;
-        final CheckerTarget target = lineChecker.target();
+        final DataColumn target = lineChecker.target();
         try {
             this.value = Integer.parseInt(value);
             if (min != null && this.value.compareTo(min) < 0) {
@@ -65,14 +65,14 @@ public non-sealed class IntegerType implements FieldType<Integer> {
             validationCheckResult = IntegerValidationCheckResult.error(
                     target,
                     target.getInternationalizedKey("invalidInteger"), ImmutableMap.of(
-                            "target", target,
+                            "component", target.column(),
                             "value", value)
             );
         } catch (final IllegalArgumentException e) {
             validationCheckResult = IntegerValidationCheckResult.error(
                     target,
                     target.getInternationalizedKey("badIntervalInteger"), ImmutableMap.of(
-                            "target", target,
+                            "component", target.column(),
                             "value", value,
                             "type", e.getMessage(),
                             "bound", Objects.requireNonNull(LOWER_THAN_MIN.equals(e.getMessage()) ? min : max)

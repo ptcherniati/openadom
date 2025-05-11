@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.Assertions;
@@ -146,7 +147,7 @@ class ConfigurationTest {
                     MAPPER.toJson(component)
             );
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 
