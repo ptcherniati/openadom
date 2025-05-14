@@ -13,7 +13,6 @@ import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.index.AuthorizationIndex;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class UpdateRolesOnManagement {
     final SqlService db;
@@ -163,7 +162,7 @@ public class UpdateRolesOnManagement {
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.INSERT ||
                                 statement == SqlPolicy.Statement.UPDATE ? expression : null
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 
@@ -182,7 +181,7 @@ public class UpdateRolesOnManagement {
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.INSERT ||
                                 statement == SqlPolicy.Statement.UPDATE ? "true" : null
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public UUID revoke(final AuthorizationRequest revokeAuthorizationRequest) {

@@ -54,7 +54,7 @@ public class Application extends OreSiEntity {
             List<String> references = getData()
                     .stream()
                     .filter(dataName -> !configuration.dataDescription().get(dataName).tags().contains(new Tag.HiddenTag()))
-                    .collect(Collectors.toList());
+                    .toList();
             returnApp.setData(references);
         }
         if (filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.ADDITIONALFILE)) {

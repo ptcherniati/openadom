@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -69,7 +68,7 @@ public class RightsRequestService  implements ServiceContainerBean{
                 .map(rightsRequest ->
                         getRightsRequestResult(rightsRequest, application)
                 )
-                .collect(Collectors.toList());
+                .toList();
         ImmutableSortedSet<GetGrantableResult.User> grantableUsers = serviceContainer.authorizationService().getGrantableUsers();
         return new GetRightsRequestResult(grantableUsers, rightsRequestResult, description);
     }

@@ -31,7 +31,7 @@ public class CsvReader {
         this.recursionStrategy = recursionStrategy;
     }
 
-    public <F extends FieldType> ImmutableSet<LineChecker<F>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
+    public <F extends FieldType<?>> ImmutableSet<LineChecker<F>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
         final ImmutableSet.Builder<LineChecker<F>> linecheckersBuilder = ImmutableSet.builder();
         for (final LineChecker<F> lineChecker : dataImporterContext.getLineCheckers()) {
             if (!dataImporterContext.existsColumn(lineChecker.target(), constantColumnsValues)) {

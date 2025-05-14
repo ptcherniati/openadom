@@ -7,20 +7,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public abstract sealed class AbstractType<T> implements FieldType<T> permits ReferenceType {
     protected CheckerTarget target;
     protected LineChecker.Transformer transformer;
 
-    public static FieldType readObject(final Object fieldType) {
-        return switch (fieldType) {
+    public static <T> FieldType<T> readObject(final T fieldType) {
+        return (FieldType<T>) switch (fieldType) {
             case null -> NullType.INSTANCE;
             case List list -> {
                 List<FieldType> collect = (List<FieldType>) list.stream()
                         .map(AbstractType::readObject)
                         .toList();
                 FieldType innerFieldType = !collect.isEmpty() ? collect.getFirst() : StringType.getStringTypeFromStringValue("");
-                ListType<FieldType> listType = new ListType<>(innerFieldType);
+                ListType listType = new ListType<>(innerFieldType);
                 listType.value = collect;
                 yield listType;
             }

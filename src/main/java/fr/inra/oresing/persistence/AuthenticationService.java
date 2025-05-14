@@ -485,7 +485,7 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
                                 timestampOpt.isPresent()
                         );
                     })
-                    .collect(Collectors.toList());
+                    .toList();
         } else if (currentUserRolesForCurrentUser.userManagerOf(application)) {
             return userRepository.findAll().stream()
                     .filter(oreSiUser -> OreSiUser.OreSiUserStates.active == oreSiUser.getAccountstate())
@@ -505,7 +505,7 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
                                 timestampOpt.isPresent()
                         );
                     })
-                    .collect(Collectors.toList());
+                    .toList();
         } else {
             throw new NotOpenAdomAdminException();
         }
@@ -520,14 +520,14 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
                         OreSiUserRole userRole = getUserRole(user.getId());
                         return toLoginResult(user, getCurrentUserRoles(userRole.getAsSqlRole()));
                     })
-                    .collect(Collectors.toList());
+                    .toList();
         } else if (currentUserRoles.isApplicationCreator()) {
             return userRepository.findAll().stream()
                     .map(user -> {
                         OreSiUserRole userRole = getUserRole(user.getId());
                         return toLoginResult(user, getCurrentUserRoles(userRole.getAsSqlRole()));
                     })
-                    .collect(Collectors.toList());
+                    .toList();
         } else {
             throw new NotOpenAdomAdminException();//TODO
         }

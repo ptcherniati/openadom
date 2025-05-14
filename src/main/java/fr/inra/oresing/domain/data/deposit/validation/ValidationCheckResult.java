@@ -63,7 +63,7 @@ public interface ValidationCheckResult {
             }
             List<?> limitedList = collection.stream()
                     .limit(MAX_COLLECTION_SIZE)
-                    .collect(Collectors.toList());
+                    .toList();
             return switch (value) {
                 case List list -> list;
                 case SortedSet sortedSet -> new TreeSet<>(sortedSet);

@@ -95,7 +95,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
     private static void removeAuthorizationAdditionalFilesThatCantBeModified(final Map.Entry<OperationAdditionalFileType, List<String>> authByTypeEntry, final Set<String> authorizationListForCurrentUser) {
         List<String> collect = authByTypeEntry.getValue().stream()
                 .filter(authorizationListForCurrentUser::contains)
-                .collect(Collectors.toList());
+                .toList();
         authByTypeEntry.setValue(collect);
     }
 
@@ -768,7 +768,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 .filter(operationTypeListMap -> operationTypeListMap.containsKey(OperationType.admin))
                 .map(operationTypeListMap -> operationTypeListMap.get(OperationType.admin))
                 .flatMap(List::stream)
-                .collect(Collectors.toList());
+                .toList();
 
         Map<OperationAdditionalFileType, List<String>> filteredAuthorizations = oreSiAuthorization.getAdditionalFiles().entrySet().stream()
                 .peek(authByTypeEntry -> {

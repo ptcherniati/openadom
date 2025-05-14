@@ -142,7 +142,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         RowMapper<CurrentUserRoles> rowMapper = (rs, rowNum) -> {
             final String currentUser = rs.getString("currentUser");
             final List<String> memberOf = Arrays.stream((String[]) rs.getArray("memberOf").getArray())
-                    .collect(Collectors.toList());
+                    .toList();
             final boolean isSuper = rs.getBoolean("isSuper");
             return new CurrentUserRoles(memberOf, isSuper, findByLogin(currentUser).orElse(null));
         };

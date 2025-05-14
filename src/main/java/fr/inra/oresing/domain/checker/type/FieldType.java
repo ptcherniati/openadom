@@ -30,7 +30,7 @@ public sealed interface FieldType<T> extends SomethingToBeStoredAsJsonInDatabase
 
     CheckerValidationCheckResult check(String value, LineChecker lineChecker);
 
-    FieldType copy();
+    FieldType<T> copy();
 
     void serialize(JsonGenerator gen) throws IOException;
 

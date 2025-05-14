@@ -208,7 +208,7 @@ public record  AuthorizationIndex(Application application) {
                 .filter(ltree -> ltrees.stream()
                         .filter(other -> !other.equals(ltree))
                         .noneMatch(other -> other.isAncestorOf(ltree)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public String indexName(String dataname) {

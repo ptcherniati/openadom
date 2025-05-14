@@ -6,7 +6,6 @@ import lombok.Value;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 @Value
 @EqualsAndHashCode(callSuper=false)
 public class BadLabelNameException extends OreSiTechnicalException {
@@ -20,7 +19,7 @@ public class BadLabelNameException extends OreSiTechnicalException {
     public BadLabelNameException(final LabelType labelType, final String name, final String... args) {
         super(name);
         this.labelType = labelType;
-        this.args =Arrays.stream(args).collect(Collectors.toList());
+        this.args =Arrays.stream(args).toList();
     }
 
 

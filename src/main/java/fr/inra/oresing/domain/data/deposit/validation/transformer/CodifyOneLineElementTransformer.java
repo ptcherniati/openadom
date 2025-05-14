@@ -11,7 +11,6 @@ import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public record CodifyOneLineElementTransformer(CheckerTarget target) implements TransformOneLineElementTransformer {
 
@@ -24,7 +23,7 @@ public record CodifyOneLineElementTransformer(CheckerTarget target) implements T
             final List<StringType> collect = Arrays.stream(value.toString().split(","))
                     .map(Ltree::escapeToLabel)
                     .map(StringType::getStringTypeFromStringValue)
-                    .collect(Collectors.toList());
+                    .toList();
             return ListType.getListTypeFromListValue(collect);
         } else {
             valueAfterCodification = StringType.getStringTypeFromStringValue(Ltree.escapeToLabel(value.toString()));

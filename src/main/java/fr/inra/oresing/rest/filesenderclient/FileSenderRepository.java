@@ -338,7 +338,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
         String flatParams = String.join("&", copyOfParams.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.toList()));
+                .toList());
 
         String baseUrlWithoutProtocol = BASE_URL.replaceFirst("https?://", "");
         String signedString = String.format("%s&%s%s%s%s",

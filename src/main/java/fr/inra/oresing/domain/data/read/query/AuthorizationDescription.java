@@ -27,6 +27,6 @@ public record AuthorizationDescription(IntervalValues timeScope,
                                 .collect(Collectors.toMap(RequiredAuthorization::compositereferenceLabel, entry->List.of(entry.path()))),
                         localDateTimeRange
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 }

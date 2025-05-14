@@ -52,7 +52,7 @@ public non-sealed class DefaultCheckerValidationCheckResult implements CheckerVa
     }
 
     public static DefaultCheckerValidationCheckResult error(final String message, final Map<String, Object> messageParams, final CheckerTarget target) {
-        return new DefaultCheckerValidationCheckResult(ValidationLevel.ERROR, message, messageParams, target, new NullType());
+        return new DefaultCheckerValidationCheckResult(ValidationLevel.ERROR, message, messageParams, target, NullType.INSTANCE);
     }
 
     @Override

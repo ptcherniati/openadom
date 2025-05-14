@@ -263,7 +263,7 @@ public class Client {
                                 resultMap.put(MESSAGE_PARAMS, ((Map<String, Object>) record.get("validationCheckResult")).get(MESSAGE_PARAMS));
                                 return resultMap;
                             })
-                            .collect(Collectors.toList());
+                            .toList();
                 } catch (IOException e) {
                     throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }

@@ -37,7 +37,7 @@ public class DataValidator {
      *     <li>détecter les référentiels utilisés (et conserver les clés vers ceux utilisés pour fixer le refsLinkedTo)</li>
      * </ul>
      */
-    public <F extends FieldType> List<ReferenceDatumAfterChecking> check(
+    public <F extends FieldType<?>> List<ReferenceDatumAfterChecking> check(
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
             final RowWithReferenceDatum rowWithReferenceDatum,
@@ -81,7 +81,7 @@ public class DataValidator {
         return null;
     }
 
-    private <F extends FieldType> List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker<F>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+    private <F extends FieldType<?>> List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker<F>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = List.of();
         if (recursionStrategy instanceof WithRecursion withRecursion) {
             addBuildedLineKeysToReferenceValues(buildKey, withRecursion, referenceDatumAfterChecking);
@@ -250,7 +250,7 @@ public class DataValidator {
                         column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
     }
 
-    private <F extends FieldType> List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(
+    private <F extends FieldType<?>> List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
             ImmutableSet<LineChecker<F>> transformedLineCheckers,

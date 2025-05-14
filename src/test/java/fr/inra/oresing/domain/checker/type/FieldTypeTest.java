@@ -140,7 +140,7 @@ class FieldTypeTest {
         }
     }
 
-    private List<FieldTypeCases<? extends Object>> getfieldTypesTestCases() {
+    private List<FieldTypeCases<?>> getfieldTypesTestCases() {
         final StringType titi = new StringType("t..i");
         titi.value = "titi";
         String refType = "reftype";
@@ -267,14 +267,14 @@ class FieldTypeTest {
                         NullType.INSTANCE,
                         SqlPrimitiveType.TEXT,
                         List.of(
-                                ResponseOrException.of("rien", NullType.Null.NULL)
+                                ResponseOrException.of("rien", null)
                         )
                 ),
                 new FieldTypeCases("null type",
                         new PatternType(null),
                         SqlPrimitiveType.JSONB,
                         List.of(
-                                ResponseOrException.of("rien", null)
+                                ResponseOrException.of("rien", NullType.INSTANCE)
                         )
                 )
         );

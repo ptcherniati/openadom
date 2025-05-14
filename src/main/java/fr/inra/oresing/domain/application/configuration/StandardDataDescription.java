@@ -78,7 +78,8 @@ public record StandardDataDescription(
                                     }
                                     default:
                                         yield null;
-                                }).orElse(null)).filter(Objects::nonNull).collect(Collectors.toList()),
+                                }).orElse(null)).filter(Objects::nonNull)
+                        .collect(Collectors.toList()),
                 null
         );
     }

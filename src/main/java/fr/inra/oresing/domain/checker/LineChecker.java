@@ -22,10 +22,10 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public sealed interface LineChecker<F extends FieldType> permits LineChecker.ManyChecker, LineChecker.OneChecker {
+public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.ManyChecker, LineChecker.OneChecker {
 
 
-    static <L extends FieldType> Set<LineChecker<L>> toLineChecker(
+    static <L extends FieldType<?>> Set<LineChecker<L>> toLineChecker(
             DataRepository referenceValueRepository,
             PublishContext.PublishContextBuilder publishContextBuilder,
             TransformationConfiguration transformation,
@@ -43,20 +43,20 @@ public sealed interface LineChecker<F extends FieldType> permits LineChecker.Man
                                 .map(CheckerDescription::multiplicity)
                                 .orElse(transformation.multiplicity())
                 );
-        final FieldType fieldType = Objects.requireNonNull(checker).buildFieldtype(
+        final L fieldType = Objects.requireNonNull(checker).buildFieldtype(
                 referenceValueRepository,
                 publishContextBuilder,
                 target,
                 lineTransformer
         );
         return switch (checker.multiplicity()) {
-            case ONE -> Set.of((LineChecker<L>) new OneChecker<>(
+            case ONE -> Set.of(new OneChecker<L>(
                     fieldType,
                     target,
                     lineTransformer,
                     checker
             ));
-            case MANY -> Set.of((LineChecker<L>) new ManyChecker<>(
+            case MANY -> Set.of(new ManyChecker(
                     new ListType<>(fieldType),
                     target,
                     lineTransformer,
@@ -258,7 +258,7 @@ public sealed interface LineChecker<F extends FieldType> permits LineChecker.Man
         }
     }
 
-    record ManyChecker<F extends FieldType, U extends ListType<F>>(
+    record ManyChecker<F extends FieldType<?>, U extends ListType<F>>(
             U value,
             F fieldTypeForOne,
             DataColumn target,
@@ -311,7 +311,7 @@ public sealed interface LineChecker<F extends FieldType> permits LineChecker.Man
 
     }
 
-    record OneChecker<F extends FieldType>(
+    record OneChecker<F extends FieldType<?>>(
             F fieldTypeForOne,
             DataColumn target,
             LineTransformer transformer,

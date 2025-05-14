@@ -20,13 +20,14 @@ import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public non-sealed class ListType<F extends FieldType> implements FieldType<List> {
-    public static final ListType<? extends FieldType> EMPTY_LIST =  new ListType<>(StringType.getStringTypeFromStringValue(""));
+public non-sealed class ListType<F extends FieldType<?>> implements FieldType<List<F>> {
+    public static final ListType<StringType> EMPTY_LIST =  new ListType<>(StringType.getStringTypeFromStringValue(""));
     @Getter
     private final F fieldType;
     List<F> value = new LinkedList<>();
-    final Supplier<ListType> clone;
-    public <U extends ListType<F>> ListType(final F fieldType) {
+    final Supplier<ListType<F>> clone;
+
+    public ListType(F fieldType) {
         this.fieldType = fieldType;
         clone = () -> new ListType(fieldType.copy());
     }
@@ -67,17 +68,10 @@ public non-sealed class ListType<F extends FieldType> implements FieldType<List>
 
     @Override
     public FieldType copy() {
-        final ListType listType = clone.get();
+        final ListType<F> listType = clone.get();
         listType.value = value;
         return listType;
     }
-
-/*
-    public DataColumnValue transform(LineCheckerWarper lineChecker, DataColumnValue referenceColumnRawValue, DataColumn referenceColumn, SetMultimap<DataColumn, String> rawValueReplacedByKeys, ImmutableSetMultimap.Builder<String, Set<UUID>> refsLinkedToBuilder) {
-        ListType<FT> copy = (ListType<FT>) copy();
-        return referenceColumnRawValue.transform(fieldType1 -> copy);
-    }
-*/
 
     @Override
     public String toString() {

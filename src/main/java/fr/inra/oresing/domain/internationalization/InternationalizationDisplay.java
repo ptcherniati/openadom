@@ -135,13 +135,13 @@ public class InternationalizationDisplay {
         return getPatternSplitStream(pattern)
                 .map(k -> k.length > 1 ? k[1] : "")
                 .filter(k -> !Strings.isNullOrEmpty(k))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public static List<PatternSection> parsePattern(final String pattern) {
         return getPatternSplitStream(pattern)
                 .map(PatternSection::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private static Stream<String[]> getPatternSplitStream(final String pattern) {

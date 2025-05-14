@@ -485,7 +485,7 @@ public class RelationalService implements ServiceContainerBean, InitializingBean
             return referenceDescription.getDynamicColumns().keySet().stream()
                     .map(IdentifierTest::new)
                     .map(labelTest -> labelTest.forDynamicReferenceHierachicakKey(count.getAndIncrement()))
-                    .collect(Collectors.toList());
+                    .toList();
         }*/
 
         @Deprecated

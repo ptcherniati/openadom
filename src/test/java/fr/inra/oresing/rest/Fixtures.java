@@ -69,7 +69,7 @@ public class Fixtures {
                 .orElseGet(List::of)
                 .stream()
                 .map(ReactiveTypeInfo.class::cast)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     static List<ReactiveTypeError> getErrors(final MvcResult result) throws UnsupportedEncodingException {
@@ -78,7 +78,7 @@ public class Fixtures {
                 .orElseGet(List::of)
                 .stream()
                 .map(ReactiveTypeError.class::cast)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     static List<ReactiveTypeResult> getResults(final MvcResult result) throws UnsupportedEncodingException {
@@ -87,7 +87,7 @@ public class Fixtures {
                 .orElseGet(List::of)
                 .stream()
                 .map(ReactiveTypeResult.class::cast)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     static List<ReactiveTypeProgress> getProgress(final MvcResult result) throws UnsupportedEncodingException {
@@ -96,7 +96,7 @@ public class Fixtures {
                 .orElseGet(List::of)
                 .stream()
                 .map(ReactiveTypeProgress.class::cast)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     static Map<ReactiveType, List<ReactiveResult>> getReactiveResultFromResult(final MvcResult result) throws UnsupportedEncodingException {
@@ -113,11 +113,12 @@ public class Fixtures {
                                 m -> ReactiveType.valueOf((String) m.get("type")),
                                 Collectors.collectingAndThen(Collectors.toList(),
                                         list -> list.stream().map(el -> switch (ReactiveType.valueOf((String) el.get("type"))) {
-                                            case REACTIVE_RESULT -> new ReactiveTypeResult(el.get("result"));
-                                            case REACTIVE_INFO -> new ReactiveTypeInfo(el.get("result"));
-                                            case REACTIVE_ERROR -> new ReactiveTypeError(el.get("result"));
-                                            case REACTIVE_PROGRESS -> new ReactiveTypeProgress(el.get("result"));
-                                        }).collect(Collectors.toList())))
+                                                    case REACTIVE_RESULT -> new ReactiveTypeResult(el.get("result"));
+                                                    case REACTIVE_INFO -> new ReactiveTypeInfo(el.get("result"));
+                                                    case REACTIVE_ERROR -> new ReactiveTypeError(el.get("result"));
+                                                    case REACTIVE_PROGRESS -> new ReactiveTypeProgress(el.get("result"));
+                                                })
+                                                .collect(Collectors.toList())))
                 );
     }
 

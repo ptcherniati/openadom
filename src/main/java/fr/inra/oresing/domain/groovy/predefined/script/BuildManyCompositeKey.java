@@ -9,7 +9,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public record BuildManyCompositeKey() implements ScriptConstantProvider {
     @Override
@@ -43,7 +42,7 @@ public record BuildManyCompositeKey() implements ScriptConstantProvider {
                     List<String> valuesAtIndex = valuesList.stream()
                             .map(values -> index < values.size() ? values.get(index) : "")
                             .map(String::trim)
-                            .collect(Collectors.toList());
+                            .toList();
                     String compositeKey = BuildCompositeKey.buildNaturelKeyFromLabels(valuesAtIndex);
                     compositeKeys.add(compositeKey);
                 }

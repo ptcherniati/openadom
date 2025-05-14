@@ -783,7 +783,7 @@ public class OreSiResourcesTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.variables").isArray())
                 .andExpect(jsonPath("$.variables", hasSize(6)))
-                .andExpect(jsonPath("$.variables").value(Stream.of("date", "projet", "site", "Couleur des individus", "Nombre d'individus", "espece").collect(Collectors.toList())))
+                .andExpect(jsonPath("$.variables").value(Stream.of("date", "projet", "site", "Couleur des individus", "Nombre d'individus", "espece").toList()))
                 .andExpect(jsonPath("$.checkedFormatComponents.DateType", IsNull.notNullValue()))
                 .andExpect(jsonPath("$.checkedFormatComponents.ReferenceType", IsNull.notNullValue()))
                 .andExpect(jsonPath("$.checkedFormatComponents.IntegerType", IsNull.notNullValue()))
@@ -1390,7 +1390,7 @@ public class OreSiResourcesTest {
                         //System.out.println();
                         List<String> entryNames = entries.stream()
                                 .map(ZipEntry::getName)
-                                .collect(Collectors.toList());
+                                .toList();
                         //System.out.println(entryNames);
                         Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere_infos.txt"), String.format("Le zip doit contenir %s", "monsoere_infos.txt"));
                         Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere.yaml"), String.format("Le zip doit contenir %s", "monsoere.yaml"));
@@ -1887,7 +1887,7 @@ public class OreSiResourcesTest {
                     String rolesString = roles.stream().collect(Collectors.joining("\" ,\"", "\"", "\""));
                     return String.format("\"%s\": [%s]", dataname, rolesString);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         String authorizationForAll = String.join(",\n", formattedStrings);
         String json = String.format("""

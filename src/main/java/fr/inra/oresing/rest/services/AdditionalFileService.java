@@ -38,7 +38,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipOutputStream;
 
@@ -250,7 +249,7 @@ public class AdditionalFileService implements ServiceContainerBean {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         final AdditionalFileDescription description = Optional.ofNullable(application.getConfiguration().additionalFiles()).map(map -> map.get(additionalFilesInfos.getFiletype())).orElseGet(AdditionalFileDescription::emptyInstance);
         List<AdditionalBinaryFile> additionalFiles = serviceContainer.additionalFileService().findAdditionalFile(application, additionalFilesInfos);
-        List<AdditionalBinaryFileResult> additionalBinaryFileResults = additionalFiles.stream().map(af -> serviceContainer.binaryFileService().getAdditionalBinaryFileResult(af, application)).collect(Collectors.toList());
+        List<AdditionalBinaryFileResult> additionalBinaryFileResults = additionalFiles.stream().map(af -> serviceContainer.binaryFileService().getAdditionalBinaryFileResult(af, application)).toList();
         ImmutableSortedSet<GetGrantableResult.User> grantableUsers = serviceContainer.authorizationService().getGrantableUsers();
         List<String> fileNamesForFiletype = repository.getRepository(application).additionalBinaryFile().getFileNamesForFiletype(additionalFilesInfos.getFiletype());
         return new GetAdditionalFilesResult(grantableUsers, additionalFilesInfos.getFiletype(), additionalBinaryFileResults, description, fileNamesForFiletype);

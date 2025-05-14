@@ -145,6 +145,6 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
         return Optional.ofNullable(value)
                 .map(map->map.get(Column.__VALUE__))
                 .map(FieldType.class::cast)
-                .orElseGet(NullType::new);
+                .orElse(NullType.INSTANCE);
     }
 }

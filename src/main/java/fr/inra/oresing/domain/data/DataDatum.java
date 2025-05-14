@@ -46,7 +46,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                                     Map.Entry::getValue));
                     referenceColumnValue = new DataColumnIndexedValue(storedValueAs);
                 }
-                case final Collection collection -> {
+                case final Collection _ -> {
                     final List<FieldType> fieldTypes = ((Collection<Object>) storedValue).stream()
                             .map(AbstractType::readObject)
                             .collect(Collectors.toList());

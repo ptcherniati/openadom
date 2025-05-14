@@ -6,7 +6,7 @@ import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataValue;
 
-public record LineCheckerResultDisplay<F extends FieldType, U extends ListType<F>>(
+public record LineCheckerResultDisplay<F extends FieldType<?>, U extends ListType<F>>(
         U value,
         F fieldTypeForOne,
         DataColumn target,

@@ -42,14 +42,14 @@ public class DataImporterContext {
     /**
      *
      */
-    private final ImmutableSet<LineChecker< FieldType>> lineCheckers;
+    private final ImmutableSet<LineChecker< FieldType<?>>> lineCheckers;
     /**
      * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
      */
     private final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences;
     private final ImmutableSet<Column> columns;
     @Getter
-    private ImmutableSet<LineChecker<FieldType>> transformedLineCheckers;
+    private ImmutableSet<LineChecker<FieldType<?>>> transformedLineCheckers;
 
     @Getter
     private ImmutableSet<Column> columnsWithPatternColumns;
@@ -95,7 +95,7 @@ public class DataImporterContext {
 
 
     public <F extends FieldType> DataImporterContext(final ContextConstants constants,
-                               final ImmutableSet<LineChecker<FieldType>> lineCheckers,
+                               final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers,
                                final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences,
                                final ImmutableSet<Column> columns,
                                final PatternColumnFactory patternColumnFactory,
@@ -324,7 +324,7 @@ public class DataImporterContext {
                 .toList();
     }
 
-    public <F extends FieldType> void  setTransformedLineCheckers(ImmutableSet<LineChecker<F>> transformedLineCheckers) {
+    public <F extends FieldType<?>> void  setTransformedLineCheckers(ImmutableSet<LineChecker<F>> transformedLineCheckers) {
         ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = transformedLineCheckers.stream()
                 .map(LineChecker::fieldTypeForOne)
                 .filter(ReferenceType.class::isInstance)

@@ -5,7 +5,6 @@ import fr.inra.oresing.domain.groovy.GroovyDecorator;
 import fr.inra.oresing.domain.groovy.exception.GroovyException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Constructeur de clés naturelles pour gérer les références hiérarchiques.
@@ -61,7 +60,7 @@ public record NaturalKeyBuilder(
                         .map(GroovyDecorator::getRefValues)
                         .map(ref -> ref.get(keyField).toString())
                         .distinct()
-                        .collect(Collectors.toList());
+                        .toList();
                 errorDetails.put("knownValues", knownValues);
 
                 throw new GroovyException(exceptionCode, errorDetails);
@@ -88,7 +87,7 @@ public record NaturalKeyBuilder(
                         .map(GroovyDecorator::getRefValues)
                         .map(ref -> Optional.of(ref).map(r -> r.get(keyField)).orElse("").toString())
                         .distinct()
-                        .collect(Collectors.toList());
+                        .toList();
 
                 Map<String, Object> errorDetails = new HashMap<>();
                 errorDetails.put("value", datumField);

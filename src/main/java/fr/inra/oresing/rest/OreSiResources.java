@@ -333,7 +333,7 @@ public class OreSiResources implements ServiceContainerBean {
     public Flux<ReactiveResult> getApplications(@RequestParam(required = false, defaultValue = "") final String[] filter) {
         final List<ApplicationInformation> filters = Arrays.stream(filter)
                 .map(ApplicationInformation::valueOf)
-                .collect(Collectors.toList());
+                .toList();
         return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.GetApplicationProgression progression = new ReactiveProgression.GetApplicationProgression(0L, fluxSink);
             serviceContainer.applicationService().getApplications(progression, filters);
@@ -1022,7 +1022,7 @@ public class OreSiResources implements ServiceContainerBean {
                         variables,
                         locale.getLanguage(),
                         dataRepositoryWithBuffer))
-                .collect(Collectors.toList());
+                .toList();
         final Map<String, String> referenceTypeForReferencingColumns =
                 Optional.ofNullable(checkedFormatcomponents.get(ReferenceType.class.getSimpleName()))
                         .map(checkedFormatColumn -> checkedFormatColumn.entrySet()
@@ -1215,7 +1215,7 @@ public class OreSiResources implements ServiceContainerBean {
                     .stream()
                     .collect(Collectors.toMap(
                                     Map.Entry::getKey,
-                                    e -> e.getValue().stream().map(SynthesisResult::new).collect(Collectors.toList())
+                                    e -> e.getValue().stream().map(SynthesisResult::new).toList()
                             )
                     );
             return ResponseEntity.created(URI.create(uri)).body(synthesisResults);

@@ -106,7 +106,7 @@ public class UpdateRolesOnAdditionalFilesManagement {
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.UPDATE || statement == SqlPolicy.Statement.SELECT || statement == SqlPolicy.Statement.DELETE ? expression : null,
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.INSERT || statement == SqlPolicy.Statement.UPDATE ? expression : null
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 
@@ -125,7 +125,7 @@ public class UpdateRolesOnAdditionalFilesManagement {
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.UPDATE || statement == SqlPolicy.Statement.SELECT || statement == SqlPolicy.Statement.DELETE ? "true" : null,
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.INSERT || statement == SqlPolicy.Statement.UPDATE ? "true" : null
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private static String createExpression(final OreSiAdditionalFileAuthorization authorization, final Set<String> usingExpressionElements, final Application application, final SqlSchemaForApplication sqlSchemaForApplication, final OperationAdditionalFileType operation) {
