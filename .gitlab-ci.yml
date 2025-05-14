@@ -39,7 +39,7 @@ stages:
   - trigger   # trigger openadom/deployment
 
 maven_build:
-  image: maven:3.9.4-amazoncorretto-21
+  image: maven:3.9.9-amazoncorretto-23
   stage: build
   script:
     - mvn --batch-mode clean compile test-compile -DskipTests
@@ -68,5 +68,3 @@ include:
   #- local: .gitlab-ci_sonar.yml
    # path: .
 # - local: .gitlab_build_doc2.yml
-
-
