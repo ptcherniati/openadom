@@ -71,7 +71,7 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                                 .map(CheckerDescription::multiplicity)
                                 .orElse(transformation().multiplicity())
                 );
-        final FieldType fieldType = checker().buildFieldtype(
+        final FieldType<?> fieldType = checker().buildFieldtype(
                 referenceValueRepository,
                 publishContextBuilder,
                 target,

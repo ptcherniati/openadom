@@ -27,12 +27,12 @@ public record DataColumnDisplayValue(
     }
 
     @Override
-    public FieldType getValuesToCheck() {
+    public FieldType<?> getValuesToCheck() {
         return null;
     }
 
     @Override
-    public DataColumnValue<String, ReferenceColumnDisplayValueForLocale> transform(final Function<FieldType, FieldType> transformation) {
+    public DataColumnValue<String, ReferenceColumnDisplayValueForLocale> transform(final Function<FieldType<?>, FieldType<?>> transformation) {
         return null;
     }
 

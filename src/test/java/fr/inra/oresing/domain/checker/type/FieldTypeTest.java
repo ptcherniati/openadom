@@ -118,7 +118,7 @@ class FieldTypeTest {
         }
     }
 
-    record FieldTypeCases<T>(String name, FieldType fieldType, SqlPrimitiveType sqlType,
+    record FieldTypeCases<T>(String name, FieldType<?> fieldType, SqlPrimitiveType sqlType,
                              List<ResponseOrException<T>> values) {
     }
 

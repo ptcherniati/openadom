@@ -31,7 +31,7 @@ public record DataHeaderReader(DataDatum constantValues,
         Objects.requireNonNull(dataImporterContext);
     }
 
-    private static void addConstants(final DataDatum constantValues, final ConstantComponent constant, final FieldType value) {
+    private static void addConstants(final DataDatum constantValues, final ConstantComponent constant, final FieldType<?> value) {
         switch (value) {
             case final ListType listType -> constantValues.put(new DataColumn(constant.componentKey()), new DataColumnMultipleValue(listType.getValue()));
             case final MapType mapType -> throw new IllegalArgumentException("NO MAP HERE");

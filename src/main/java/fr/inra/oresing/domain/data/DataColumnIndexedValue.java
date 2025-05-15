@@ -18,7 +18,7 @@ public record DataColumnIndexedValue(
     }
 
     @Override
-    public DataColumnIndexedValue transform(final Function<FieldType, FieldType> transformation) {
+    public DataColumnIndexedValue transform(final Function<FieldType<?>, FieldType<?>> transformation) {
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
         return new DataColumnIndexedValue(null);
     }

@@ -18,12 +18,12 @@ public interface DataColumnValue<T, F> extends SomethingToBeStoredAsJsonInDataba
     /**
      * L'ensemble des valeurs pour lesquelles il faut appliquer les checkers
      */
-    FieldType getValuesToCheck();
+    FieldType<?> getValuesToCheck();
 
     /**
      * Une copie de l'objet mais après avoir appliqué une transformation sur toutes les valeurs contenues.
      */
-    DataColumnValue<T, F> transform(Function<FieldType, FieldType> transformation);
+    DataColumnValue<T, F> transform(Function<FieldType<?>, FieldType<?>> transformation);
 
     String toValueString(DataImporterContext referenceImporterContext, String referencedColumn, String key);
 }

@@ -144,7 +144,7 @@ class CheckerDescriptionTest {
     @Test
     void testComputationCheckerBuildFieldtype() {
         ComputationChecker checker = new ComputationChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, true, "expression", Set.of(), Set.of());
-        FieldType fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
+        FieldType<?> fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
         assertNotNull(fieldType);
         assertEquals("",fieldType.getValue());
         assertEquals("fr.inra.oresing.domain.checker.type.StringType", fieldType.getClass().getName());

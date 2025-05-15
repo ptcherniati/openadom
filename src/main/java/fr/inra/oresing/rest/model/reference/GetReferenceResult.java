@@ -19,7 +19,7 @@ public record GetReferenceResult(Set<ReferenceValue> referenceValues,
         String patternColumnName;
         String hierarchicalKey;
         String naturalKey;
-        Map<String, FieldType> values;
+        Map<String, FieldType<?>> values;
         Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo;
         Map referencingReference;
         public String commparingValue(){return "%s_%s".formatted(hierarchicalKey, patternColumnName);}
@@ -29,7 +29,7 @@ public record GetReferenceResult(Set<ReferenceValue> referenceValues,
         public ObjectNode getValues() {
             final ObjectMapper mapper = new ObjectMapper();
             final ObjectNode rootNode = mapper.createObjectNode();
-            for (final Map.Entry<String, FieldType> entry : values.entrySet()) {
+            for (final Map.Entry<String, FieldType<?>> entry : values.entrySet()) {
                 entry.getValue().serialize(rootNode, mapper, entry.getKey());
             }
             return rootNode;

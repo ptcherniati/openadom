@@ -55,7 +55,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
     }*/
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 
@@ -102,7 +102,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
                 case Boolean bool -> mapNode.put((String) kvEntry.getKey(), bool);
                 case BooleanType booleanType -> mapNode.put((String) kvEntry.getKey(), booleanType.getValue());
                 case NullType ignored -> mapNode.set((String) kvEntry.getKey(), NullNode.getInstance());
-                case FieldType fieldType -> mapNode.put((String) kvEntry.getKey(), fieldType.toString());
+                case FieldType<?> fieldType -> mapNode.put((String) kvEntry.getKey(), fieldType.toString());
                 default -> mapNode.put((String) kvEntry.getKey(), kvEntry.getValue().toString());
             }
         }
@@ -141,7 +141,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
         return PatternValidationCheckResult.of(checkerValidationCheckResult, this);
     }
 
-    public FieldType getColumnValue() {
+    public FieldType<?> getColumnValue() {
         return Optional.ofNullable(value)
                 .map(map->map.get(Column.__VALUE__))
                 .map(FieldType.class::cast)

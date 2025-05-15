@@ -123,8 +123,8 @@ public abstract class OneValueStaticPatternColumn extends Column {
             Column adjacentColumn = adjacentColumns.get(i);
             DataColumn dataColumn = adjacentColumn.getReferenceColumn();
             String value = adjacentComponentsValues.get(i);
-            FieldType fieldValue = Strings.isNullOrEmpty(value) ? StringType.getStringTypeFromStringValue("") : StringType.getStringTypeFromStringValue(value);
-            DataColumnValue<FieldType, FieldType> dataColumnValue = new DataColumnSingleValue(fieldValue);
+            FieldType<?> fieldValue = Strings.isNullOrEmpty(value) ? StringType.getStringTypeFromStringValue("") : StringType.getStringTypeFromStringValue(value);
+            DataColumnValue<FieldType<?>, FieldType<?>> dataColumnValue = new DataColumnSingleValue(fieldValue);
             columnValues.put(dataColumn, dataColumnValue);
         }
         return new DataDatum(columnValues);

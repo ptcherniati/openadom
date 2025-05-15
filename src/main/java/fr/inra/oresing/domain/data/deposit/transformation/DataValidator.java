@@ -190,7 +190,7 @@ public class DataValidator {
                 ));
     }
 
-    static CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
+    static CheckerValidationCheckResult testValues(RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker<? extends FieldType<?>> lineChecker, Map<String, Object> context, DataDatum referenceDatumBeforeChecking) {
         switch (lineChecker.transformer()) {
             case LineChecker.LineTransformer.ChainTransformersLineTransformer transformers -> {
                 for (LineChecker.LineTransformer transformer : transformers.transformers()) {
@@ -228,7 +228,7 @@ public class DataValidator {
         return lineChecker.checkReference(referenceDatumBeforeChecking, context);
     }
 
-    static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker<? extends FieldType> lineChecker) {
+    static boolean matchingTarget(RowWithReferenceDatum rowWithReferenceDatum, LineChecker<? extends FieldType<?>> lineChecker) {
         return rowWithReferenceDatum.referenceDatum().values()
                 .entrySet()
                 .stream()

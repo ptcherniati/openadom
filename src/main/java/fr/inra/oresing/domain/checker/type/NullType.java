@@ -42,7 +42,7 @@ public non-sealed class NullType implements FieldType<Void> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

@@ -104,7 +104,7 @@ public non-sealed class FloatType implements FieldType<Float> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

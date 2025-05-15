@@ -15,8 +15,8 @@ import java.util.List;
 public record CodifyOneLineElementTransformer(CheckerTarget target) implements TransformOneLineElementTransformer {
 
     @Override
-    public FieldType transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, final FieldType value) {
-        final FieldType valueAfterCodification;
+    public FieldType<?> transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, final FieldType<?> value) {
+        final FieldType<?> valueAfterCodification;
         if (value == null || Strings.isNullOrEmpty(value.toString())) {
             valueAfterCodification = value;
         } else if (value instanceof ListType) {

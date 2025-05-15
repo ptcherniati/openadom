@@ -56,9 +56,11 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
     }
 
     @Override
-    public DataColumnMultipleValue transform(final Function<FieldType, FieldType> transformation) {
-        final ListType fieldType = (ListType) Optional.ofNullable(values)
+    public DataColumnValue<ListType, FieldType> transform(Function<FieldType<?>, FieldType<?>> transformation) {
+        final ListType fieldType = Optional.ofNullable((FieldType<?>)values)
                 .map(transformation)
+                .filter(ListType.class::isInstance)
+                .map(ListType.class::cast)
                 .orElse(values);
         return Optional.ofNullable(fieldType)
                 .map(ListType::getValue)

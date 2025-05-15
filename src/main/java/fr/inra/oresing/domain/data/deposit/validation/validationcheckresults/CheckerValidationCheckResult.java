@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-public sealed interface CheckerValidationCheckResult<T extends FieldType> extends ValidationCheckResult
+public sealed interface CheckerValidationCheckResult<T extends FieldType<?>> extends ValidationCheckResult
         permits BooleanValidationCheckResult, DateValidationCheckResult, DefaultCheckerValidationCheckResult, DefaultManyValidationCheckResult, FloatValidationCheckResult, GroovyValidationCheckResult, IntegerValidationCheckResult, PatternValidationCheckResult, ReferenceValidationCheckResult, StringValidationCheckResult {
     T value();
 

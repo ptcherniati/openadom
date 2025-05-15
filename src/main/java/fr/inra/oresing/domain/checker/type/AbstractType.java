@@ -17,10 +17,10 @@ public abstract sealed class AbstractType<T> implements FieldType<T> permits Ref
         return (FieldType<T>) switch (fieldType) {
             case null -> NullType.INSTANCE;
             case List list -> {
-                List<FieldType> collect = (List<FieldType>) list.stream()
+                List<FieldType<?>> collect = (List<FieldType<?>>) list.stream()
                         .map(AbstractType::readObject)
                         .toList();
-                FieldType innerFieldType = !collect.isEmpty() ? collect.getFirst() : StringType.getStringTypeFromStringValue("");
+                FieldType<?> innerFieldType = !collect.isEmpty() ? collect.getFirst() : StringType.getStringTypeFromStringValue("");
                 ListType listType = new ListType<>(innerFieldType);
                 listType.value = collect;
                 yield listType;
@@ -29,10 +29,10 @@ public abstract sealed class AbstractType<T> implements FieldType<T> permits Ref
             case Double d -> FloatType.of(d.floatValue());
             case Boolean b -> BooleanType.of(b);
             case Map map -> {
-                Map<String, FieldType> mapOfFieldTypes = new HashMap<>();
+                Map<String, FieldType<?>> mapOfFieldTypes = new HashMap<>();
                 for (Map.Entry<String, Object> entry : ((Map<String, Object>) map).entrySet()) {
                     String key = entry.getKey();
-                    FieldType fieldType1 = readObject(entry.getValue());
+                    FieldType<?> fieldType1 = readObject(entry.getValue());
                     mapOfFieldTypes.put(key, fieldType1);
                 }
                 yield new MapType(mapOfFieldTypes);

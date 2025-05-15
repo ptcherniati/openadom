@@ -20,7 +20,7 @@ public non-sealed class DefaultCheckerValidationCheckResult implements CheckerVa
     @Getter
     final Map<String, Object> messageParams;
 
-    final FieldType value;
+    final FieldType<?> value;
 
     public DefaultCheckerValidationCheckResult(final CheckerValidationCheckResult validationCheckResult) {
         this(
@@ -32,7 +32,7 @@ public non-sealed class DefaultCheckerValidationCheckResult implements CheckerVa
         );
     }
 
-    public DefaultCheckerValidationCheckResult(final ValidationLevel level, final String message, final Map<String, Object> messageParams, final CheckerTarget target, final FieldType value) {
+    public DefaultCheckerValidationCheckResult(final ValidationLevel level, final String message, final Map<String, Object> messageParams, final CheckerTarget target, final FieldType<?> value) {
         super();
         this.level = level;
         this.message = message;
@@ -43,11 +43,11 @@ public non-sealed class DefaultCheckerValidationCheckResult implements CheckerVa
 
     final CheckerTarget target;
 
-    public static DefaultCheckerValidationCheckResult success(final CheckerTarget target, final FieldType  value) {
+    public static DefaultCheckerValidationCheckResult success(final CheckerTarget target, final FieldType<?>  value) {
         return new DefaultCheckerValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, value);
     }
 
-    public static DefaultCheckerValidationCheckResult warn(final String message, final ImmutableMap<String, Object> messageParams, final CheckerTarget target, final FieldType  value) {
+    public static DefaultCheckerValidationCheckResult warn(final String message, final ImmutableMap<String, Object> messageParams, final CheckerTarget target, final FieldType<?>  value) {
         return new DefaultCheckerValidationCheckResult(ValidationLevel.WARN, message, messageParams, target, value);
     }
 
@@ -76,7 +76,7 @@ public non-sealed class DefaultCheckerValidationCheckResult implements CheckerVa
     }
 
     @Override
-    public FieldType value() {
+    public FieldType<?> value() {
         return value;
     }
 }

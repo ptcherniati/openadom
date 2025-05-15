@@ -83,7 +83,7 @@ public non-sealed class StringType implements FieldType<String> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

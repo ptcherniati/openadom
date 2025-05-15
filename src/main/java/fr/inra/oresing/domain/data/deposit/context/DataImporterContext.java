@@ -94,7 +94,7 @@ public class DataImporterContext {
     }
 
 
-    public <F extends FieldType> DataImporterContext(final ContextConstants constants,
+    public <F extends FieldType<?>> DataImporterContext(final ContextConstants constants,
                                final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers,
                                final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences,
                                final ImmutableSet<Column> columns,

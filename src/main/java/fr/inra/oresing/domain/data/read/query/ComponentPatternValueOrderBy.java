@@ -16,7 +16,7 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
                                            Set<ComponentOrderBy> qualifiersColumns,
                                            Set<ComponentOrderBy> adjacentColumns) implements ComponentOrderByForExport {
     @Override
-    public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription) {
+    public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription) {
         String componentKey = componentKey();
         ListType fieldType = (ListType) dataRowValues.get(componentKey);
 
@@ -40,17 +40,17 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
 
     private String getAdacentValue(String language, DataRepositoryForBuffer dataRepository, StandardDataDescription dataDescription, ComponentOrderBy qualifier, MapType patternMapTypeOpt) {
         String adjacentKey = qualifier.componentKey().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[1];
-        FieldType adjacentField = (FieldType) patternMapTypeOpt.getValue().get(adjacentKey);
+        FieldType<?> adjacentField = (FieldType<?>) patternMapTypeOpt.getValue().get(adjacentKey);
         return valueToString(language, dataRepository, dataDescription, adjacentField);
     }
 
     private String getQualifierValue(String language, DataRepositoryForBuffer dataRepository, StandardDataDescription dataDescription, ComponentOrderBy qualifier, MapType patternMapTypeOpt) {
-        FieldType adjacentField = (FieldType) patternMapTypeOpt.getValue().get(qualifier.componentKey());
+        FieldType<?> adjacentField = (FieldType<?>) patternMapTypeOpt.getValue().get(qualifier.componentKey());
         return valueToString(language, dataRepository, dataDescription, adjacentField);
     }
 
     private String getValue(String language, DataRepositoryForBuffer dataRepository, StandardDataDescription dataDescription, MapType mapType) {
-        return valueToString(language, dataRepository, dataDescription, (FieldType) mapType.getValue().get(Column.__VALUE__));
+        return valueToString(language, dataRepository, dataDescription, (FieldType<?>) mapType.getValue().get(Column.__VALUE__));
     }
 
     private static Optional getMapType(ListType fieldType) {

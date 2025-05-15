@@ -83,7 +83,7 @@ public non-sealed class IntegerType implements FieldType<Integer> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

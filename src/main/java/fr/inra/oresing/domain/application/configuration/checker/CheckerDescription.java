@@ -33,7 +33,7 @@ public sealed interface CheckerDescription permits
 
     boolean required();
 
-    default <F extends FieldType> F buildFieldtype(final DataRepository repository, final PublishContext.PublishContextBuilder publishContextBuilder, final CheckerTarget target, final LineChecker.LineTransformer transformer) {
+    default <F extends FieldType<?>> F buildFieldtype(final DataRepository repository, final PublishContext.PublishContextBuilder publishContextBuilder, final CheckerTarget target, final LineChecker.LineTransformer transformer) {
         return (F) switch (this) {
             case null -> NullType.INSTANCE;
             case final ReferenceChecker referenceChecker -> {

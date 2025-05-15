@@ -424,7 +424,7 @@ public class DataService implements ServiceContainerBean {
                 final Set<String> evaluate = computationExpression.evaluate(evaluationContext);
                 return Optional.ofNullable(evaluate)
                         .map(l -> l.stream().map(StringType::getStringTypeFromStringValue)
-                                .collect(Collectors.toCollection(LinkedList<FieldType>::new)))
+                                .collect(Collectors.toCollection(LinkedList<FieldType<?>>::new)))
                         .map(DataColumnMultipleValue::new);
             }
         };

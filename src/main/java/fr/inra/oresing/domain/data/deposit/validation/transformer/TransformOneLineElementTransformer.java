@@ -14,8 +14,8 @@ public interface TransformOneLineElementTransformer extends LineTransformer {
     @Override
     default Datum transform(final Datum datum) {
         final String componentKey = ((DataColumn) target()).column();
-        final FieldType value = datum.get(componentKey);
-        final FieldType transformedValue = transform(datum, value);
+        final FieldType<?> value = datum.get(componentKey);
+        final FieldType<?> transformedValue = transform(datum, value);
         final Datum transformedDatum = Datum.copyOf(datum);
         transformedDatum.put(componentKey, transformedValue);
         return transformedDatum;
@@ -34,12 +34,12 @@ public interface TransformOneLineElementTransformer extends LineTransformer {
             // Comme il faut quand même appliquer la transformation, on part de rien
             referenceColumnValue = DataColumnSingleValue.empty();
         }
-        final Function<FieldType, FieldType> fn = value -> transform(referenceDatum, value);
+        final Function<FieldType<?>, FieldType<?>> fn = value -> transform(referenceDatum, value);
         final DataColumnValue transformedReferenceColumnValue = referenceColumnValue.transform(fn);
         final DataDatum transformedDatum = DataDatum.copyOf(referenceDatum);
         transformedDatum.put(referenceColumn, transformedReferenceColumnValue);
         return transformedDatum;
     }
 
-    FieldType transform(SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, FieldType value);
+    FieldType<?> transform(SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, FieldType<?> value);
 }

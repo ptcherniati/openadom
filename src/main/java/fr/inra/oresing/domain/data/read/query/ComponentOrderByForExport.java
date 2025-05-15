@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 public sealed interface ComponentOrderByForExport
         permits ComponentOrderBy, ComponentPatternOrderBy, ComponentPatternValueOrderBy, DynamicComponentOrderBy {
-    Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription);
+    Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription);
 
     String componentKey();
 
@@ -30,7 +30,7 @@ public sealed interface ComponentOrderByForExport
             String language,
             DataRepositoryForBuffer dataRepository,
             StandardDataDescription dataDescription,
-            FieldType fieldType) {
+            FieldType<?> fieldType) {
         if (fieldType instanceof MapType mapType) {
             return "pas trouvé";
         }

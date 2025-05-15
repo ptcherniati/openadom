@@ -14,7 +14,7 @@ import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class DataDatum implements SomethingThatCanProvideEvaluationContext, SomethingToBeStoredAsJsonInDatabase<Map<String, FieldType>>, SomethingToBeSentToFrontend<Map<String, FieldType>> {
+public class DataDatum implements SomethingThatCanProvideEvaluationContext, SomethingToBeStoredAsJsonInDatabase<Map<String, FieldType<?>>>, SomethingToBeSentToFrontend<Map<String, FieldType<?>>> {
 
     private final Map<DataColumn, DataColumnValue> values;
 
@@ -47,7 +47,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                     referenceColumnValue = new DataColumnIndexedValue(storedValueAs);
                 }
                 case final Collection _ -> {
-                    final List<FieldType> fieldTypes = ((Collection<Object>) storedValue).stream()
+                    final List<FieldType<?>> fieldTypes = ((Collection<Object>) storedValue).stream()
                             .map(AbstractType::readObject)
                             .collect(Collectors.toList());
                     referenceColumnValue = new DataColumnMultipleValue(fieldTypes);
@@ -98,12 +98,12 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     }
 
     @Override
-    public ImmutableMap<String, FieldType> toJsonForDatabase() {
-        final Map<String, FieldType> map = new LinkedHashMap<>();
+    public ImmutableMap<String, FieldType<?>> toJsonForDatabase() {
+        final Map<String, FieldType<?>> map = new LinkedHashMap<>();
         for (final Map.Entry<DataColumn, DataColumnValue> entry : values.entrySet()) {
             if (entry.getValue() instanceof DataColumnIndexedValue) {
-                final FieldType valueThatMayBeNull = Optional.of(entry.getValue())
-                        .map(SomethingToBeStoredAsJsonInDatabase<FieldType>::toJsonForDatabase)
+                final FieldType<?> valueThatMayBeNull = Optional.of(entry.getValue())
+                        .map(SomethingToBeStoredAsJsonInDatabase<FieldType<?>>::toJsonForDatabase)
                         .orElse(new MapType(new HashMap<>()));
                 map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
             } else if (entry.getValue() instanceof DataColumnPatternValue patternValue) {
@@ -113,8 +113,8 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                         .orElse(new MapType<>(Map.of()));
                 map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
             } else {
-                final FieldType valueThatMayBeNull = Optional.ofNullable(entry.getValue())
-                        .map(SomethingToBeStoredAsJsonInDatabase<FieldType>::toJsonForDatabase)
+                final FieldType<?> valueThatMayBeNull = Optional.ofNullable(entry.getValue())
+                        .map(SomethingToBeStoredAsJsonInDatabase<FieldType<?>>::toJsonForDatabase)
                         .orElse(StringType.getStringTypeFromStringValue(""));
                 map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
             }
@@ -175,27 +175,27 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
     /**
      * Étant donné une colonne, l'ensemble des valeurs qui doivent être subir transformation et computationChecker
      */
-    public FieldType getValuesToCheck(final DataColumn column) {
+    public FieldType<?> getValuesToCheck(final DataColumn column) {
         return get(column).getValuesToCheck();
     }
 
     @Override
-    public Map<String, FieldType> toJsonForFrontend() {
-        final Map<String, FieldType> map = new LinkedHashMap<>();
+    public Map<String, FieldType<?>> toJsonForFrontend() {
+        final Map<String, FieldType<?>> map = new LinkedHashMap<>();
         for (final Map.Entry<DataColumn, DataColumnValue> entry : values.entrySet()) {
             if (entry.getValue() instanceof DataColumnIndexedValue(
                     Map<Ltree, String> values1
             ) && values1 instanceof final Map<Ltree, String> m) {
-                final Map<String, FieldType> mapOfTypes = new HashMap<>();
+                final Map<String, FieldType<?>> mapOfTypes = new HashMap<>();
                 for (final Map.Entry<Ltree, String> entryForMap : m.entrySet()) {
                     mapOfTypes.put(entryForMap.getKey().getSql(), StringType.getStringTypeFromStringValue(entryForMap.getValue()));
                 }
-                final MapType<String, FieldType> field = new MapType<>(mapOfTypes);
+                final MapType<String, FieldType<?>> field = new MapType<>(mapOfTypes);
                 map.put(entry.getKey().toJsonForDatabase(), field);
                 continue;
             }
-            final FieldType valueThatMayBeNull = Optional.ofNullable(entry.getValue())
-                    .map(DataColumnValue<FieldType, FieldType>::toJsonForFrontend)
+            final FieldType<?> valueThatMayBeNull = Optional.ofNullable(entry.getValue())
+                    .map(DataColumnValue<FieldType<?>, FieldType<?>>::toJsonForFrontend)
                     .orElse(null);
             map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
         }

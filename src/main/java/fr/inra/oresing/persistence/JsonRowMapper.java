@@ -128,9 +128,9 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         return new JsonSerializer<>() {
             @Override
             public void serialize(DataDatum value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                ImmutableMap<String, FieldType> jsonForDatabase = value.toJsonForDatabase();
+                ImmutableMap<String, FieldType<?>> jsonForDatabase = value.toJsonForDatabase();
                 gen.writeStartObject();
-                for (Map.Entry<String, FieldType> fieldType : jsonForDatabase.entrySet()) {
+                for (Map.Entry<String, FieldType<?>> fieldType : jsonForDatabase.entrySet()) {
                     fieldType.getValue().serialize(gen, fieldType.getKey());
                 }
                 gen.writeEndObject();
@@ -174,10 +174,10 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         };
     }
 
-    private static JsonDeserializer<FieldType> getFieldTypeJsonDeserializer() {
+    private static JsonDeserializer<FieldType<?>> getFieldTypeJsonDeserializer() {
         return new JsonDeserializer<>() {
             @Override
-            public FieldType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            public FieldType<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 return AbstractType.readObject(p.readValueAs(Object.class));
             }
         };

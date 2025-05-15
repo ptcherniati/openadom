@@ -15,7 +15,7 @@ public abstract class OneValueStaticColumn extends Column {
 
     @Override
     public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-        final DataColumnValue<FieldType, FieldType> referenceColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent));
+        final DataColumnValue<FieldType<?>, FieldType<?>> referenceColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent));
         referenceDatum.put(getReferenceColumn(), referenceColumnValue);
     }
 

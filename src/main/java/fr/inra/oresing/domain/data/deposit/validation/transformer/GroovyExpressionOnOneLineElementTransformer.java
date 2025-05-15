@@ -36,7 +36,7 @@ public class GroovyExpressionOnOneLineElementTransformer implements TransformOne
     }
 
     @Override
-    public FieldType transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, final FieldType value) {
+    public FieldType<?> transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, final FieldType<?> value) {
         final ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()
                 .putAll(this.context)
                 .putAll(somethingThatCanProvideEvaluationContext.getEvaluationContext())

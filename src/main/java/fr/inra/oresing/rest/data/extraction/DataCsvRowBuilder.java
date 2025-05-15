@@ -15,7 +15,7 @@ public record DataCsvRowBuilder(
         DataRepositoryForBuffer dataRepositoryWithBuffer,
         StandardDataDescription dataDescription,
         boolean horizontalDisplay) {
-    public List<String> getCsvRow(Map<String, FieldType> dataRowValues,
+    public List<String> getCsvRow(Map<String, FieldType<?>> dataRowValues,
                                          List<ComponentOrderByForExport> columns) {
         Function<ComponentOrderByForExport, Stream<String>> toValue = componentOrderBy -> componentOrderBy.toValue(language(), dataRepositoryWithBuffer(), dataRowValues, dataDescription());
         return columns

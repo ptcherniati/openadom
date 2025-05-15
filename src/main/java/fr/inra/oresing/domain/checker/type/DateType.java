@@ -183,7 +183,7 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

@@ -126,7 +126,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

@@ -123,7 +123,7 @@ public non-sealed class BooleanType implements FieldType<Boolean> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

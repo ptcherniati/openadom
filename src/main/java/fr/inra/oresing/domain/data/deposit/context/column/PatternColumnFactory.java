@@ -238,7 +238,7 @@ public class PatternColumnFactory {
 
                                 }
                                 default -> {
-                                    final DataColumnValue<FieldType, FieldType> dataColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(constantValue));
+                                    final DataColumnValue<FieldType<?>, FieldType<?>> dataColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(constantValue));
                                     qualifierComponents
                                             .put(dataColumn, dataColumnValue);
                                 }

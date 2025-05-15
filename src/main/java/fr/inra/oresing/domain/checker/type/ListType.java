@@ -50,7 +50,7 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
 
     @Override
     public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
-        final FieldType underlyingType = lineChecker.fieldTypeForOne();
+        final FieldType<?> underlyingType = lineChecker.fieldTypeForOne();
         final List<ValidationCheckResult> collect = Arrays.stream(value.split(","))
                 .map(v -> underlyingType.check(v, lineChecker))
                 .map(v -> {
@@ -62,7 +62,7 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

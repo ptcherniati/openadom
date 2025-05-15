@@ -70,7 +70,7 @@ public record ApplicationResult(
         }
 
 
-        public record ReferenceUUIDAndDisplay(String display, UUID uuid, Map<String, FieldType> values) {
+        public record ReferenceUUIDAndDisplay(String display, UUID uuid, Map<String, FieldType<?>> values) {
         }
     }
 

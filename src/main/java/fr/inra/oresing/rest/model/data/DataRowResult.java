@@ -35,7 +35,7 @@ public record DataRowResult(
                                    String locale,
                                    DataRepositoryForBuffer dataRepositoryWithBuffer) {
         final Map<String, Object> rows = new HashMap<>();
-        for (final Map.Entry<String, FieldType> componentEntry : dataRow.values().entrySet()) {
+        for (final Map.Entry<String, FieldType<?>> componentEntry : dataRow.values().entrySet()) {
             final String component = componentEntry.getKey();
             if (variables.contains(component) || componentEntry.getKey().startsWith(DataColumn.DISPLAY)) {
                 rows
