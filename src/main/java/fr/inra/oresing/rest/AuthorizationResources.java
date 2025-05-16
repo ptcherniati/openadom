@@ -131,7 +131,7 @@ public class AuthorizationResources implements ServiceContainerBean {
     })
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ')")
-    @GetMapping(value = "/{nameOrId}/authorizationAdminForApplication", produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = "/applications/{nameOrId}/authorizationAdminForApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<UserAuthorizationForApplication> getAdminAuthorizationsForApplication(@PathVariable("nameOrId") final String applicationNameOrId) {
         return OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getApplicationPersona)
@@ -444,9 +444,52 @@ public class AuthorizationResources implements ServiceContainerBean {
     }
 
     @PreAuthorize("""
-                #applicationNameOrId == null ?
-                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE') :
                 hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE')
+            """)
+    @PutMapping(value = "applications/{nameOrId}/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Add an authorization for a user",
+            description = "This service allows adding a specific authorization for a given user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authorization successfully added"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "User or role not found")
+    })
+    public ResponseEntity<OreSiUser> addAuthorizationManagerForApplications(
+            @Parameter(description = "The role to add", required = true,
+                    examples = {
+                            @ExampleObject(name = "applicationManager", value = "\"applicationManager\"", description = "Application manager role"),
+                            @ExampleObject(name = "userManager", value = "\"userManager\"", description = "User manager role")
+                    }
+            )
+            @PathVariable(name = "role") final String role,
+
+            @Parameter(description = "The user's ID or login", required = true,
+                    examples = {
+                            @ExampleObject(name = "userId", value = "\"user123\"", description = "User ID"),
+                            @ExampleObject(name = "userLogin", value = "\"john.doe\"", description = "User login")
+                    }
+            ) @RequestParam(name = "userIdOrLogin") final String userIdOrLogin,
+
+            @Parameter(description = "The application name or ID (if applicable) for grant of applicationManager et userManager of the application",
+                    examples = {
+                            @ExampleObject(name = "applicationName", value = "\"SI_123\"", description = "Application name"),
+                            @ExampleObject(name = "applicationId", value = "\"app-456\"", description = "Application ID")
+                    }
+            ) @RequestParam(name = "applicationNameOrId", required = false) final String applicationNameOrId,
+
+            @Parameter(description = "The application pattern (if applicable) for grant of rôle applicationCreator",
+                    examples = {
+                            @ExampleObject(name = "applicationPattern", value = "\"SI_*\"", description = "Pattern for SI applications")
+                    }
+            ) @RequestParam(name = "applicationPattern", required = false) final List<String> applicationPattern
+    ) throws JsonProcessingException{
+        return addAuthorization(role, userIdOrLogin, applicationNameOrId, applicationPattern);
+    }
+
+
+    @PreAuthorize("""
+                hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE')
             """)
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an authorization for a user",
@@ -461,9 +504,7 @@ public class AuthorizationResources implements ServiceContainerBean {
             @Parameter(description = "The role to add", required = true,
                     examples = {
                             @ExampleObject(name = "openAdomAdmin", value = "\"openAdomAdmin\"", description = "OpenAdom administrator role"),
-                            @ExampleObject(name = "applicationCreator", value = "\"applicationCreator\"", description = "Application creator role"),
-                            @ExampleObject(name = "applicationManager", value = "\"applicationManager\"", description = "Application manager role"),
-                            @ExampleObject(name = "userManager", value = "\"userManager\"", description = "User manager role")
+                            @ExampleObject(name = "applicationCreator", value = "\"applicationCreator\"", description = "Application creator role")
                     }
             )
             @PathVariable(name = "role") final String role,
