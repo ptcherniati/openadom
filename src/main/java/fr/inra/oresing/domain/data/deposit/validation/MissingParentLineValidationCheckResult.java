@@ -11,16 +11,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 public class MissingParentLineValidationCheckResult implements ValidationCheckResult {
-    public static final String MISSING_PARENT_LINE_IN_RECURSIVE_REFERENCE ="missingParentLineInRecursiveReference";
+    public static final String MISSING_PARENT_LINE_IN_RECURSIVE_REFERENCE = "missingParentLineInRecursiveReference";
     final Map<String, Object> messageParams;
-
-    @Override
-    public CheckerTarget target() {
-        return target;
-    }
-
-
     CheckerTarget target;
+
 
     public MissingParentLineValidationCheckResult(final long lineNumber, final String refType, final Ltree missingReferencesKey, final Set<DataValue.LineIdentityColumnName> knownReferences) {
         messageParams = ImmutableMap.of(
@@ -29,6 +23,11 @@ public class MissingParentLineValidationCheckResult implements ValidationCheckRe
                 "missingReferencesKey", missingReferencesKey.getSql(),
                 "knownReferences", knownReferences.stream().map(DataValue.LineIdentityColumnName::naturalKey).map(Ltree::getSql).collect(Collectors.toUnmodifiableSet())
         );
+    }
+
+    @Override
+    public CheckerTarget target() {
+        return target;
     }
 
     @Override

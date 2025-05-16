@@ -22,6 +22,7 @@ OreSiRole extends WithSqlIdentifier {
     static OreSiRole applicationManagerOf(Application application) {
         return OreSiRightOnApplicationRole.adminOn(application);
     }
+
     static OreSiRole userManagerOf(Application application) {
         return OreSiRightOnApplicationRole.userAdminOn(application);
     }
@@ -45,17 +46,17 @@ OreSiRole extends WithSqlIdentifier {
 
     default String addUserInRoleSql(final OreSiRoleWeCanGrantOtherRolesTo roleToModify, final boolean withAdminOption) {
         final String withAdminOptionClause = withAdminOption ? " WITH ADMIN OPTION" : "";
-        return(OreSiRole.openAdomAdmin().getAsSqlRole().equals(getAsSqlRole()) ?
+        return (OreSiRole.openAdomAdmin().getAsSqlRole().equals(getAsSqlRole()) ?
                 """
-                GRANT %1$s TO %2$s%3$s;
-                GRANT %1$s TO %2$s WITH INHERIT TRUE;
-                """ :
+                        GRANT %1$s TO %2$s%3$s;
+                        GRANT %1$s TO %2$s WITH INHERIT TRUE;
+                        """ :
                 """
-                GRANT %1$s TO %2$s%3$s;
-                GRANT %1$s TO %2$s WITH INHERIT TRUE;
-                GRANT %1$s TO "openAdomAdmin" WITH ADMIN OPTION;
-                GRANT %1$s TO "openAdomAdmin" WITH INHERIT TRUE;
-                """)
+                        GRANT %1$s TO %2$s%3$s;
+                        GRANT %1$s TO %2$s WITH INHERIT TRUE;
+                        GRANT %1$s TO "openAdomAdmin" WITH ADMIN OPTION;
+                        GRANT %1$s TO "openAdomAdmin" WITH INHERIT TRUE;
+                        """)
                 .formatted(
                         getSqlIdentifier(),
                         roleToModify.getSqlIdentifier(),

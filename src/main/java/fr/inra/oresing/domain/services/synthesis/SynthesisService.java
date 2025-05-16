@@ -12,7 +12,7 @@ public interface SynthesisService extends ServiceContainerBean {
 
     int deleteSynthesis(String nameOrId, String dataType);
 
-    Map<String, List<OreSiSynthesis>> buildSynthesis(String nameOrId, String dataType, String component) ;
+    Map<String, List<OreSiSynthesis>> buildSynthesis(String nameOrId, String dataType, String component);
 
     Map<String, List<OreSiSynthesis>> getSynthesis(String nameOrId, String dataType);
 

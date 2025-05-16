@@ -19,6 +19,19 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
         this(memberOf, false, null);
     }
 
+    public CurrentUserRoles(
+            final List<String> memberOf,
+            final boolean isDataBaseSuper,
+            final OreSiUser user) {
+        this.memberOf = memberOf == null ? List.of() : List.copyOf(memberOf);
+        this.isDataBaseSuper = isDataBaseSuper;
+        this.user = user;
+    }
+
+    public static CurrentUserRoles empty() {
+        return EMPTY;
+    }
+
     public String userLogin() {
         return Optional.ofNullable(user).map(OreSiUser::getLogin).orElse(null);
     }
@@ -31,10 +44,6 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
         return memberOf().contains(OreSiRole.openAdomAdmin().getAsSqlRole());
     }
 
-    public static CurrentUserRoles empty() {
-        return EMPTY;
-    }
-
     public boolean isApplicationCreator() {
         return Optional.ofNullable(memberOf())
                 .map(roles -> roles.stream()
@@ -44,16 +53,6 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
                         )::contains)
                 )
                 .orElse(false);
-    }
-
-
-    public CurrentUserRoles(
-            final List<String> memberOf,
-            final boolean isDataBaseSuper,
-            final OreSiUser user) {
-        this.memberOf = memberOf == null ? List.of() : List.copyOf(memberOf);
-        this.isDataBaseSuper = isDataBaseSuper;
-        this.user = user;
     }
 
     public CurrentUserRoles withUSer(OreSiUser user) {
@@ -68,7 +67,7 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
         return memberOf().contains(OreSiRole.userManagerOf(application).getAsSqlRole());
     }
 
-    public  Map<String, List<String>> applicationRoles() {
+    public Map<String, List<String>> applicationRoles() {
         return memberOf().stream()
                 .map(Pattern.compile("(.*)_(applicationManager|userManager|reader|writer)")::matcher)
                 .filter(Matcher::matches)

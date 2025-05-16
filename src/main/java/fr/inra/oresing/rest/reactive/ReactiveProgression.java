@@ -53,12 +53,14 @@ public class ReactiveProgression {
         P up();
 
 
-        default void pushError(final ValidationError error){
+        default void pushError(final ValidationError error) {
             fluxSink().next(new ReactiveTypeError(error));
         }
+
         default void pushError(final IOException e) {
             fluxSink().next(new ReactiveTypeError(e));
         }
+
         default void pushError(final ValidationCheckResult validationCheckResult) {
             record ValidationCheckResultError(List<ValidationCheckResult> validationCheckResults) {
                 ValidationCheckResultError(final List<ValidationCheckResult> validationCheckResults) {
@@ -68,8 +70,8 @@ public class ReactiveProgression {
             fluxSink().next(
                     new ReactiveTypeError(
                             new ValidationCheckResultError(List.of(validationCheckResult))
-                            )
-                    );
+                    )
+            );
         }
 
         default void pushError(final Exception e) {
@@ -78,11 +80,11 @@ public class ReactiveProgression {
             );
         }
 
-        default void pushError(final ConfigurationException configurationException){
+        default void pushError(final ConfigurationException configurationException) {
             pushError(new ValidationError(configurationException, null));
         }
 
-        default void pushError(final ConfigurationException configurationException, final Map<String, Object> params){
+        default void pushError(final ConfigurationException configurationException, final Map<String, Object> params) {
             pushError(new ValidationError(configurationException, params));
         }
     }

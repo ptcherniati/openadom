@@ -22,8 +22,8 @@ public record ApplicationPublishWriterUser(
 
     @Override
     public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
-        if(isData()){
-            if(CollectionUtils.isEmpty(authorizations())){
+        if (isData()) {
+            if (CollectionUtils.isEmpty(authorizations())) {
                 throw getException();
             }
             return true;
@@ -31,10 +31,10 @@ public record ApplicationPublishWriterUser(
         List<AuthorizationParsed> authorizationParseds = authorizations().stream()
                 .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
                 .toList();
-        if(authorizationParseds.isEmpty()){
+        if (authorizationParseds.isEmpty()) {
             throw getException();
         }
-        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
+        if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
             return true;
         }
         throw getException();

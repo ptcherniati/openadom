@@ -13,7 +13,7 @@ public record ValidationCheckResultRest(
         this(type, message, params, -1);
     }
 
-    public ValidationCheckResultRest withLineNumber(long lineNumber){
+    public ValidationCheckResultRest withLineNumber(long lineNumber) {
         return new ValidationCheckResultRest(type(), message(), params(), lineNumber());
     }
 }

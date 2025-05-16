@@ -13,19 +13,21 @@ public record DateChecker(
         TemporalAccessor max,
         String duration
 ) implements CheckerDescription {
-        public static final CheckerDescription BAD_CHECKER = new DateChecker(
-                CheckerDescriptionType.DateChecker,
-                null,
-                false,
-                null,
-                null,
-                null,
-                null
-        );
+    public static final CheckerDescription BAD_CHECKER = new DateChecker(
+            CheckerDescriptionType.DateChecker,
+            null,
+            false,
+            null,
+            null,
+            null,
+            null
+    );
+
     @Override
     public String comment() {
         return "%s Date".formatted(pattern());
     }
+
     @Override
     public String buildImportDataExempleForheader() {
         return "a date with pattern %s".formatted(pattern());

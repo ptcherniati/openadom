@@ -7,6 +7,6 @@ import java.util.Map;
 public record AdditionalFileAuthorizationRequest(
         Map<String, AuthorizationInput> authorizations) {
     public AdditionalFileAuthorizationRequest(Map<String, AuthorizationInput> authorizations) {
-        this.authorizations = authorizations==null?null:ImmutableMap.copyOf(authorizations);
+        this.authorizations = authorizations == null ? null : ImmutableMap.copyOf(authorizations);
     }
 }

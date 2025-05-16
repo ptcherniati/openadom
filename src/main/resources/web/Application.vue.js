@@ -1,5 +1,5 @@
 export default {
-template: `
+    template: `
 <div>
   <div>
    <select v-model="application">
@@ -40,57 +40,65 @@ template: `
   </div>
 </div>
 `,
-  data() {
-    return {
-      application: '',
-      applications: [],
-      refType: '',
-      refValue: [],
-      refValues: [],
-      selectedRef: [],
-      selectedRefs: [],
-      dataType: '',
-      outColumn: "date;espece;plateforme;Nombre d'individus",
-      exportUrl: ''
-    }
-  },
-  methods: {
-    loadApplication() {
-        fetch("/api/v1/applications",
-          {method: "GET",
-           headers: {
-             'Accept': 'application/json'
-           }})
-          .then(response => {
-            if(response.ok) {
-              console.log("app loading ok");
-              return response.json();
-            } else {
-              throw new Error("Can't load application." + response.status);
-            }
-          })
-          .then(json => {this.applications = json})
-          .catch(error => console.error("login ko", error));
+    data() {
+        return {
+            application: '',
+            applications: [],
+            refType: '',
+            refValue: [],
+            refValues: [],
+            selectedRef: [],
+            selectedRefs: [],
+            dataType: '',
+            outColumn: "date;espece;plateforme;Nombre d'individus",
+            exportUrl: ''
+        }
     },
-    loadRefValue() {
-        fetch(`/api/v1/applications/${this.application.id}/references/${this.refType}`,
-          {method: "GET",
-           headers: {
-             'Accept': 'application/json'
-           }})
-          .then(response => {
-            if(response.ok) {
-              console.log("app loading ok");
-              return response.json();
-            } else {
-              throw new Error("Can't load application." + response.status);
-            }
-          })
-          .then(json => {this.refValues = json})
-          .catch(error => console.error("login ko", error));
-    },
-    addRefValue() {
-      this.selectedRefs = this.selectedRefs.concat(this.refValue);
+    methods: {
+        loadApplication() {
+            fetch("/api/v1/applications",
+                {
+                    method: "GET",
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("app loading ok");
+                        return response.json();
+                    } else {
+                        throw new Error("Can't load application." + response.status);
+                    }
+                })
+                .then(json => {
+                    this.applications = json
+                })
+                .catch(error => console.error("login ko", error));
+        },
+        loadRefValue() {
+            fetch(`/api/v1/applications/${this.application.id}/references/${this.refType}`,
+                {
+                    method: "GET",
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log("app loading ok");
+                        return response.json();
+                    } else {
+                        throw new Error("Can't load application." + response.status);
+                    }
+                })
+                .then(json => {
+                    this.refValues = json
+                })
+                .catch(error => console.error("login ko", error));
+        },
+        addRefValue() {
+            this.selectedRefs = this.selectedRefs.concat(this.refValue);
+        }
     }
-  }
 }

@@ -52,15 +52,30 @@ public class SchemaFlywayCallback implements Callback {
 
     }
 
+    private static void setRoleUserManager(Statement statement, OreSiRightOnApplicationRole userManagerOnApplicationRole) throws SQLException {
+        statement.execute("Set role \"%1$s\"".formatted(userManagerOnApplicationRole.getAsSqlRole()));
+    }
+
+    private static void createSchema(Statement statement, SqlSchemaForApplication sqlSchemaForApplication, OreSiRightOnApplicationRole applicationManagerOnApplicationRole) throws SQLException {
+        statement.execute(
+                "CREATE SCHEMA IF NOT EXISTS %s AUTHORIZATION \"%s\""
+                        .formatted(
+                                sqlSchemaForApplication.getName(),
+                                applicationManagerOnApplicationRole.getAsSqlRole()
+                        )
+        );
+    }
+
     @Override
     public boolean supports(Event event, Context context) {
-        return (creator!= null && event == Event.BEFORE_MIGRATE) || event == Event.AFTER_EACH_MIGRATE || event == Event.AFTER_MIGRATE;
+        return (creator != null && event == Event.BEFORE_MIGRATE) || event == Event.AFTER_EACH_MIGRATE || event == Event.AFTER_MIGRATE;
     }
 
     @Override
     public boolean canHandleInTransaction(Event event, Context context) {
         return event == Event.BEFORE_MIGRATE || event == Event.AFTER_EACH_MIGRATE;
     }
+
     public void handle(Event event, Context context) {
         if (event.equals(Event.BEFORE_MIGRATE)) {
             beforeMigrate(context);
@@ -88,7 +103,7 @@ public class SchemaFlywayCallback implements Callback {
             List<String> tableNames = new ArrayList<>();
             while (rs.next()) {
                 String tableName = rs.getString("tablename");
-                if(tableName.equals("flyway_schema_history")) {
+                if (tableName.equals("flyway_schema_history")) {
                     continue;
                 }
                 tableNames.add(tableName);
@@ -107,7 +122,6 @@ public class SchemaFlywayCallback implements Callback {
             throw new OreSiTechnicalException(ExceptionMessage.SQL_EXCEPTION.toMessage(), e);
         }
     }
-
 
     private void afterEachMigrate(Context context) {
         final Connection connection = context.getConnection();
@@ -134,10 +148,6 @@ public class SchemaFlywayCallback implements Callback {
         }
     }
 
-    private static void setRoleUserManager(Statement statement, OreSiRightOnApplicationRole userManagerOnApplicationRole) throws SQLException {
-        statement.execute("Set role \"%1$s\"".formatted(userManagerOnApplicationRole.getAsSqlRole()));
-    }
-
     private void setPrivilegesForApplicationManagerToExecuteUpdate(Statement statement, SqlSchemaForApplication sqlSchemaForApplication, OreSiRightOnApplicationRole applicationManagerOnApplicationRole) throws SQLException {
         // Accès complet au schéma de l'application
         statement.execute("GRANT ALL ON SCHEMA %s TO \"%s\"".formatted(sqlSchemaForApplication.getName(), applicationManagerOnApplicationRole.getAsSqlRole()));
@@ -151,7 +161,7 @@ public class SchemaFlywayCallback implements Callback {
         // Accès aux tables publiques
         statement.execute("GRANT USAGE ON SCHEMA public TO \"%s\"".formatted(applicationManagerOnApplicationRole.getAsSqlRole()));
         statement.execute("GRANT SELECT ON ALL TABLES IN SCHEMA public TO \"%s\"".formatted(applicationManagerOnApplicationRole.getAsSqlRole()));
-        
+
         /*
             applicationManager all acces to application for applicationName
          */
@@ -192,16 +202,6 @@ public class SchemaFlywayCallback implements Callback {
         statement.execute("GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA %s TO \"%s\"".formatted(sqlSchemaForApplication.getName(), userManagerOnApplicationRole.getAsSqlRole()));
         statement.execute("GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA %s TO \"%s\"".formatted(sqlSchemaForApplication.getName(), userManagerOnApplicationRole.getAsSqlRole()));
         statement.execute("GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA %s TO \"%s\"".formatted(sqlSchemaForApplication.getName(), userManagerOnApplicationRole.getAsSqlRole()));
-    }
-
-    private static void createSchema(Statement statement, SqlSchemaForApplication sqlSchemaForApplication, OreSiRightOnApplicationRole applicationManagerOnApplicationRole) throws SQLException {
-        statement.execute(
-                "CREATE SCHEMA IF NOT EXISTS %s AUTHORIZATION \"%s\""
-                        .formatted(
-                                sqlSchemaForApplication.getName(),
-                                applicationManagerOnApplicationRole.getAsSqlRole()
-                        )
-        );
     }
 
     private void configureRoles(Statement statement, OreSiRightOnApplicationRole applicationManagerOnApplicationRole, OreSiRightOnApplicationRole userManagerOnApplicationRole, OreSiRightOnApplicationRole readerOnApplicationRole, OreSiRightOnApplicationRole writerOnApplicationRole, SqlSchemaForApplication sqlSchemaForApplication, OreSiApplicationCreatorRole applicationCreator) throws SQLException {

@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.checker.type.AbstractType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.checker.type.StringType;
@@ -48,13 +47,13 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
                 }
                 case final Collection _ -> {
                     final List<FieldType<?>> fieldTypes = ((Collection<Object>) storedValue).stream()
-                            .map(AbstractType::readObject)
+                            .map(FieldType::readObject)
                             .collect(Collectors.toList());
                     referenceColumnValue = new DataColumnMultipleValue(fieldTypes);
 
                 }
                 case null, default ->
-                        referenceColumnValue = new DataColumnSingleValue(AbstractType.readObject(storedValue));
+                        referenceColumnValue = new DataColumnSingleValue(FieldType.readObject(storedValue));
             }
             result.put(referenceColumn, referenceColumnValue);
         }

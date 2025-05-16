@@ -15,6 +15,11 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
                                            ComponentType sqlType,
                                            Set<ComponentOrderBy> qualifiersColumns,
                                            Set<ComponentOrderBy> adjacentColumns) implements ComponentOrderByForExport {
+    private static Optional getMapType(ListType fieldType) {
+        return fieldType.getValue().stream()
+                .findFirst();
+    }
+
     @Override
     public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription) {
         String componentKey = componentKey();
@@ -28,7 +33,7 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
             values.add(valueopt.orElse(""));
             allColumns().stream()
                     .map(qualifier -> {
-                        if(qualifier.componentKey().contains("::")) {
+                        if (qualifier.componentKey().contains("::")) {
                             return getAdacentValue(language, dataRepository, dataDescription, qualifier, patternMapTypeOpt.get());
                         }
                         return getQualifierValue(language, dataRepository, dataDescription, qualifier, patternMapTypeOpt.get());
@@ -51,11 +56,6 @@ public record ComponentPatternValueOrderBy(String componentKey, String qualifier
 
     private String getValue(String language, DataRepositoryForBuffer dataRepository, StandardDataDescription dataDescription, MapType mapType) {
         return valueToString(language, dataRepository, dataDescription, (FieldType<?>) mapType.getValue().get(Column.__VALUE__));
-    }
-
-    private static Optional getMapType(ListType fieldType) {
-        return fieldType.getValue().stream()
-                .findFirst();
     }
 
     public List<ComponentOrderBy> allColumns() {

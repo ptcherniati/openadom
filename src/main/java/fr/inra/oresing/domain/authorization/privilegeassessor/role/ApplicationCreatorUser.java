@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 public record ApplicationCreatorUser(
         Set<String> applicationCreatorPatterns) implements ApplicationCreator {
     public static final String APPLICATION_CREATOR_ROLE = "applicationCreator";
+
     @Override
     public boolean canCreateApplication(String applicationName) {
         if (applicationCreatorPatterns()

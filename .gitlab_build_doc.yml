@@ -17,7 +17,7 @@ build_openadom_doc:
 
 pages:
   stage: pages
-  needs: ["build_openadom_doc"]
+  needs: [ "build_openadom_doc" ]
   script:
     - ls public
   artifacts:

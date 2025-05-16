@@ -64,16 +64,12 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
                 .findFirst();
     }
 
-    public Optional<Application> tryFindApplication(final UUID id) {
-        return tryFindApplication(id.toString());
-    }
-
     public Application findApplication(final UUID id) {
         return findApplication(id.toString());
     }
 
     public boolean addReferenceToAuthorizationScope(String applicationName, Collection<String> newDataIdentifiers) {
-        UnaryOperator<String> buildQueryAddIdentifier = identifier->buildQueryAddIdentifier(applicationName, identifier);
+        UnaryOperator<String> buildQueryAddIdentifier = identifier -> buildQueryAddIdentifier(applicationName, identifier);
         String query = newDataIdentifiers.stream()
                 .map(buildQueryAddIdentifier)
                 .collect(Collectors.joining("\n"));
@@ -82,7 +78,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
 
     private String buildQueryAddIdentifier(String applicationName, String identifier) {
         return """
-                    alter type %1$s.requiredauthorizations add attribute %2$s ltree;"""
+                alter type %1$s.requiredauthorizations add attribute %2$s ltree;"""
                 .formatted(applicationName, identifier);
     }
 

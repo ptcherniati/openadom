@@ -62,11 +62,11 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     public Optional<OreSiUser> findByLoginOrId(final String loginOrId) {
         try {
             Optional<OreSiUser> byLogin = findByLogin(loginOrId);
-            if(byLogin.isPresent()){
+            if (byLogin.isPresent()) {
                 return byLogin;
             }
             return tryFindById(UUID.fromString(loginOrId));
-        }catch (Exception e){
+        } catch (Exception e) {
             return Optional.empty();
         }
     }
@@ -175,7 +175,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         assert currentUserRoles != null;
         Optional<OreSiUser> oreSiUser = Optional.ofNullable(role)
                 .map(this::findByLoginOrId).orElse(null);
-        if(Objects.requireNonNull(oreSiUser).isPresent()) {
+        if (Objects.requireNonNull(oreSiUser).isPresent()) {
             currentUserRoles = currentUserRoles.withUSer(oreSiUser.get());
         }
         return currentUserRoles;

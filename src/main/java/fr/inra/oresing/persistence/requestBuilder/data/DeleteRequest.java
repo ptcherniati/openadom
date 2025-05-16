@@ -87,8 +87,7 @@ record DeleteRequest(
                             .map(vckob -> {
                                         final String cast = switch (vckob.sqlType()) {
                                             case final ComponentBooleanType componentBooleanType -> "BOOL";
-                                            case final ComponentDateType componentDateType ->
-                                                    "COMPOSITE_DATE::TIMESTAMP";
+                                            case final ComponentDateType componentDateType -> "COMPOSITE_DATE::TIMESTAMP";
                                             case final ComponentNumericType componentNumericType -> "NUMERIC";
                                             case final ComponentReferenceType componentReferenceType -> "LTREE";
                                             case final ComponentTextType componentTextType -> "TEXT";

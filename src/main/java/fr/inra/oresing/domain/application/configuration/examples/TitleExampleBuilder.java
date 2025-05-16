@@ -272,7 +272,7 @@ class TitleExampleBuilder {
             I18nType title,
             I18nType description
     ) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> map = new LinkedHashMap<>();
         map.put(ConfigurationSchemaNode.OA_TITLE, title);
         map.put(ConfigurationSchemaNode.OA_DESCRIPTION, description);
 

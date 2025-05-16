@@ -40,9 +40,7 @@ public interface BinaryFileService extends ServiceContainerBean {
     );
 
     AdditionalBinaryFileResult getAdditionalBinaryFileResult(
-            AdditionalBinaryFile additionalBinaryFile,
-            Application application);
+            AdditionalBinaryFile additionalBinaryFile);
 
     void setServiceContainer(ServiceContainer serviceContainer);
 }
-

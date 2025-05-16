@@ -9,7 +9,7 @@ import java.util.Map;
 
 public record CheckerFactory() implements CheckerType {
     public static CheckerType getCheckerTypeForName(final String checkerName) {
-        if(Strings.isNullOrEmpty(checkerName) || checkerName.equals("null")){
+        if (Strings.isNullOrEmpty(checkerName) || checkerName.equals("null")) {
             throw new SiOreConfigurationFormatException(
                     ConfigurationException.MISSING_CHECKER_NAME,
                     Map.of(

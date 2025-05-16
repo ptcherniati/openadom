@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 
 public class NotOpenAdomAdministratorForSystemException extends OreSiTechnicalException {
     public static final String NOT_OPEN_ADOM_ADMINISTRATOR_FOR_SYSTEM = "NOT_OPEN_ADOM_ADMINISTRATOR_FOR_SYSTEM";
+
     public NotOpenAdomAdministratorForSystemException() {
         super(NOT_OPEN_ADOM_ADMINISTRATOR_FOR_SYSTEM);
     }

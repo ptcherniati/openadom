@@ -81,8 +81,8 @@ public record TagsBuilder(RootBuilder rootBuilder) {
     }
 
     Parsing<Set<Tag>> buildDomainTagsOfApplication(final String path, final JsonNode tagsNode, final I18n i18n) {
-        if(tagsNode== null || tagsNode.isMissingNode() || tagsNode.isNull() || tagsNode.isEmpty()){
-            return new Parsing<>(i18n,Set.of());
+        if (tagsNode == null || tagsNode.isMissingNode() || tagsNode.isNull() || tagsNode.isEmpty()) {
+            return new Parsing<>(i18n, Set.of());
         }
         final Parsing<Set<Tag>> parseTag = buildTags(path, tagsNode, i18n);
         if (parseTag.result().stream().anyMatch(tag -> !(tag instanceof Tag.DomainTag))) {

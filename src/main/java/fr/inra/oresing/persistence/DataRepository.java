@@ -189,7 +189,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
      */
     public List<UUID> deleteReferenceType(final String refType, final MultiValueMap<String, String> params) {
         String sql = "delete from %1$s%n" +
-                     "WHERE application=:applicationId::uuid AND ReferenceType=:refType%n";
+                "WHERE application=:applicationId::uuid AND ReferenceType=:refType%n";
         final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
                 .addValue(REF_TYPE, refType);
 
@@ -486,9 +486,6 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return hierarchicalKeyByNaturalKey;
     }
 
-    public record DataValuesByDataType(String dataType, Set<DataRowIds> ids) {
-    }
-
     public Stream<DataValuesByDataType> getLinkedReferenceValuesStream(final Set<UUID> ids) {
         if (ids == null || ids.isEmpty()) {
             return Stream.of();
@@ -539,7 +536,6 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 });
     }
 
-
     public Flux<DataRows> findAllByDataTypeFlux(final DownloadDatasetQuery downloadDatasetQuery) {
         final Stream result;
         final SqlRequest sqlRequest = DataRequestBuilder.buildSelectRequest(downloadDatasetQuery);
@@ -570,14 +566,17 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
         return Flux.fromStream(
                 getNamedParameterJdbcTemplate().queryForStream(
-                                sql,
-                                params,
-                                (rs, rowNum) -> new FileContent(rs.getString("fileName"), rs.getString("fileContent"))
-                        )
+                        sql,
+                        params,
+                        (rs, rowNum) -> new FileContent(rs.getString("fileName"), rs.getString("fileContent"))
+                )
         );
     }
 
     public enum Order {
         ASC, DESC
+    }
+
+    public record DataValuesByDataType(String dataType, Set<DataRowIds> ids) {
     }
 }

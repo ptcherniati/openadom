@@ -34,7 +34,7 @@ public class HomeResourcesTest {
      * sans authentification
      */
     @Test
-     void testHomeRedirectsToSwaggerUI() throws Exception {
+    void testHomeRedirectsToSwaggerUI() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/swagger-ui/index.html"));
@@ -45,7 +45,7 @@ public class HomeResourcesTest {
      * (utile pour les vérifications CORS préliminaires)
      */
     @Test
-     void testOptionRequestToHomeIsAllowed() throws Exception {
+    void testOptionRequestToHomeIsAllowed() throws Exception {
         mockMvc.perform(options("/"))
                 .andExpect(status().isOk());
     }

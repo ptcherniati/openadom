@@ -27,7 +27,7 @@ public class DataTransformer {
     public DataTransformer(DataImporterContext dataImporterContext, RecursionStrategy recursionStrategy) {
         this.dataImporterContext = dataImporterContext;
         this.recursionStrategy = recursionStrategy;
-        this.configurationSi= new ConfigurationSi(dataImporterContext);
+        this.configurationSi = new ConfigurationSi(dataImporterContext);
     }
 
     public static Ltree getHierarchicalNodeFromNatural(final String naturalKey, final String refType) {
@@ -64,7 +64,7 @@ public class DataTransformer {
      */
     public KeysAndReferenceDatumAfterChecking computeKeys(final ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         DataDatum referenceDatum = referenceDatumAfterChecking.referenceDatumAfterChecking();
-        Ltree naturalKey = recursionStrategy .computeNaturalKey(referenceDatumAfterChecking);
+        Ltree naturalKey = recursionStrategy.computeNaturalKey(referenceDatumAfterChecking);
         DataDatum datumForColumnsInKey = new DataDatum(
                 referenceDatum.values().entrySet()
                         .stream().filter(entry ->

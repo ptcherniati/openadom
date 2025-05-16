@@ -27,7 +27,7 @@ import java.util.stream.IntStream;
  * https://www.postgresql.</a>org/docs/cu</a>rrent/ltree.html
  */
 @Value
-public class    Ltree implements Comparable<Ltree> {
+public class Ltree implements Comparable<Ltree> {
     /**
      * Déliminateur entre les différents niveaux d'un ltree postgresql.
      */
@@ -49,10 +49,6 @@ public class    Ltree implements Comparable<Ltree> {
 
     public static Ltree fromSqlWithoutCheck(String text) {
         return new Ltree(text);
-    }
-
-    public Ltree last() {
-        return Ltree.fromSql(getSql().replaceAll(".*\\.", ""));
     }
 
     /**
@@ -82,7 +78,6 @@ public class    Ltree implements Comparable<Ltree> {
         }
         return extracttolabelFromStringWithSpecialCharacters(key);
     }
-
 
     private static String extracttolabelFromStringWithSpecialCharacters(String key) {
         final String lowerCased = key.replace(Ltree.NULL_KEY, "____").toLowerCase();
@@ -163,6 +158,19 @@ public class    Ltree implements Comparable<Ltree> {
         return EMPTY_LTREE_SINGLETON;
     }
 
+    /**
+     * @param value
+     * @return
+     **/
+    @JsonCreator
+    public static Ltree fromJson(String value) {
+        return Ltree.fromSql(value);
+    }
+
+    public Ltree last() {
+        return Ltree.fromSql(getSql().replaceAll(".*\\.", ""));
+    }
+
     @Override
     public String toString() {
         return sql;
@@ -189,23 +197,14 @@ public class    Ltree implements Comparable<Ltree> {
         return others.stream().anyMatch(this::isAncestorOf);
     }
 
-    @Override
-    public int compareTo(Ltree o) {
-        return getSql().compareTo(o.getSql());
-    }
-    
     /**
      *  Ajouter l’annotation @JsonCreator pour indiquer à Jackson 
      *  comment construire un Ltree à partir d’un String.
      */
-     
-    /**
-     * @param value
-     * @return 
-     **/
-    @JsonCreator
-    public static Ltree fromJson(String value) {
-        return Ltree.fromSql(value);
+
+    @Override
+    public int compareTo(Ltree o) {
+        return getSql().compareTo(o.getSql());
     }
 
     public String toJson() {

@@ -10,6 +10,7 @@ import java.util.Map;
 
 class GroovyCheckerExampleBuilder {
     protected static final GroovyCheckerType T_11;
+    protected static final CheckerType INTERVAL_DATE;
 
     static {
         LinkedHashMap<String, I18nType> exceptionMessages = new LinkedHashMap<>();
@@ -33,8 +34,6 @@ class GroovyCheckerExampleBuilder {
                 Multiplicity.ONE
         );
     }
-
-    protected static final CheckerType INTERVAL_DATE;
 
     static {
         LinkedHashMap<String, I18nType> exceptionMessages = new LinkedHashMap<>();
@@ -111,8 +110,8 @@ class GroovyCheckerExampleBuilder {
     }
 
     protected static GroovyCheckerType buildGroovyChecker(final String expression, Map<String, I18nType> exceptionMessages, final Multiplicity multiplicity) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
-        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<>();
+        final Map<String, ConfigurationSchemaNodeType<?>> children = new HashMap<>();
+        final HashMap<String, ConfigurationSchemaNodeType<?>> params = new HashMap<>();
         final EnumType oaMultiplicity = EnumExampleBuilder.buildMultiplicityType(multiplicity);
         params.put(ConfigurationSchemaNode.OA_MULTIPLICITY, oaMultiplicity);
         params.put(ConfigurationSchemaNode.OA_GROOVY, new GroovyExpressionType(Map.of(ConfigurationSchemaNode.OA_EXPRESSION, new StringType(expression), ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS, new CollectionType.MapType<>(exceptionMessages, false, false, I18nType.EMPTY_INSTANCE()))));

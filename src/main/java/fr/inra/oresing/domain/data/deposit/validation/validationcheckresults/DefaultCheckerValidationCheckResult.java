@@ -21,6 +21,7 @@ public non-sealed class DefaultCheckerValidationCheckResult implements CheckerVa
     final Map<String, Object> messageParams;
 
     final FieldType<?> value;
+    final CheckerTarget target;
 
     public DefaultCheckerValidationCheckResult(final CheckerValidationCheckResult validationCheckResult) {
         this(
@@ -41,13 +42,11 @@ public non-sealed class DefaultCheckerValidationCheckResult implements CheckerVa
         this.value = value;
     }
 
-    final CheckerTarget target;
-
-    public static DefaultCheckerValidationCheckResult success(final CheckerTarget target, final FieldType<?>  value) {
+    public static DefaultCheckerValidationCheckResult success(final CheckerTarget target, final FieldType<?> value) {
         return new DefaultCheckerValidationCheckResult(ValidationLevel.SUCCESS, null, null, target, value);
     }
 
-    public static DefaultCheckerValidationCheckResult warn(final String message, final ImmutableMap<String, Object> messageParams, final CheckerTarget target, final FieldType<?>  value) {
+    public static DefaultCheckerValidationCheckResult warn(final String message, final ImmutableMap<String, Object> messageParams, final CheckerTarget target, final FieldType<?> value) {
         return new DefaultCheckerValidationCheckResult(ValidationLevel.WARN, message, messageParams, target, value);
     }
 

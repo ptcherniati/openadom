@@ -73,13 +73,13 @@ public class AuthenticationServiceTest {
     }
 
     @Test
-     void testSetRole() {
+    void testSetRole() {
         OreSiRoleToAccessDatabase anonymousRole = authenticationService.setRole(OreSiRole.anonymous());
         assertEquals(OreSiRole.anonymous(), anonymousRole);
     }
 
     @Test
-     void testCreateAndLogin() throws Throwable {
+    void testCreateAndLogin() throws Throwable {
         final ArgumentCaptor<SimpleMailMessage> messageArgumentCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         final String login = "toto";
         final String email = "toto@codelutin.com";

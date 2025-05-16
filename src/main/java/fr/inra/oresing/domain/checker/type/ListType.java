@@ -21,11 +21,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public non-sealed class ListType<F extends FieldType<?>> implements FieldType<List<F>> {
-    public static final ListType<StringType> EMPTY_LIST =  new ListType<>(StringType.getStringTypeFromStringValue(""));
+    public static final ListType<StringType> EMPTY_LIST = new ListType<>(StringType.getStringTypeFromStringValue(""));
+    final Supplier<ListType<F>> clone;
     @Getter
     private final F fieldType;
     List<F> value = new LinkedList<>();
-    final Supplier<ListType<F>> clone;
 
     public ListType(F fieldType) {
         this.fieldType = fieldType;
@@ -36,6 +36,10 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
         final ListType listType = new ListType(StringType.getStringTypeFromStringValue(""));
         listType.value = value;
         return listType;
+    }
+
+    public static ListType<StringType> ofStringType() {
+        return new ListType<>(new StringType(""));
     }
 
     @Override
@@ -126,10 +130,6 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
                 .map(SomethingToBeSentToFrontend::toJsonForFrontend)
                 .toArray();
 
-    }
-
-    public static ListType<StringType> ofStringType() {
-        return new ListType<>(new StringType(""));
     }
 
     public void add(final F value) {

@@ -92,7 +92,7 @@ public class MigrateService {
         }
     }
 
-    private String getCurrentDatabase()  {
+    private String getCurrentDatabase() {
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT current_database()")) {

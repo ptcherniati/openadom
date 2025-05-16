@@ -14,6 +14,7 @@ public record EnumType(String children,
     public static final EnumType MULTIPLICITY_ENUM = new EnumType(Multiplicity.ONE.name(), Multiplicity.VALUES);
     public static final EnumType CHECKER_NAME_ENUM = new EnumType(CheckerEnum.OA_string.name(), CheckerEnum.VALUES);
     public static final EnumType STRATEGY_ENUM = new EnumType(SubmissionType.OA_VERSIONING.name(), SubmissionType.VALUES);
+
     //public static final EnumType MANDATORY = new EnumType(ComponentPresenceConstraint.MANDATORY.name(), ComponentPresenceConstraint.VALUES);
     public EnumType(final String children, final Set<String> values) {
         this(children, values, true);

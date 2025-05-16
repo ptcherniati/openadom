@@ -36,10 +36,6 @@ public class DataCsvBuilderTest {
     static DownloadDatasetQuery downloadDatasetQueryAdvancedSearch;
     static List<DataRow> dataRows;
     static Flux<DataRow> datasFlux;
-    @BeforeEach
-    void setUp(){
-        MockitoAnnotations.openMocks(this);
-    }
 
     @BeforeAll
     static void getConfigurationFile() throws IOException {
@@ -72,9 +68,6 @@ public class DataCsvBuilderTest {
         datasFlux = Flux.fromStream(dataRows.stream());
     }
 
-    record DownloadDatasetQueryArguments(String description, DownloadDatasetQuery query) {
-    }
-
     static Stream<DownloadDatasetQueryArguments> provideDownloadDatasetQuery() {
 
         return Stream.of(/*
@@ -97,12 +90,17 @@ public class DataCsvBuilderTest {
         );
     }
 
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
     @ParameterizedTest(name = "{0} - test build")
     @MethodSource("provideDownloadDatasetQuery")
     @DisplayName("On peut builder")
     public void testBuildShouldReturnUUIDsfromData(DownloadDatasetQueryArguments arguments) throws IOException {
 
-        DataService dataService= mock(DataService.class);
+        DataService dataService = mock(DataService.class);
         doReturn(datasFlux).when(dataService).findDataFlux(any(DownloadDatasetQuery.class));
         final DataCsvBuilder builder = DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> null)
                 .withDownloadDatasetQuery(arguments.query())
@@ -117,5 +115,8 @@ public class DataCsvBuilderTest {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    record DownloadDatasetQueryArguments(String description, DownloadDatasetQuery query) {
     }
 }

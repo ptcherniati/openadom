@@ -39,18 +39,14 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     public static final String APPLICATION_DATA_WRITE = "APPLICATION_DATA_WRITE";
     public static final String APPLICATION_WRITE_FILE = "APPLICATION_WRITE_FILE";
     public static final String APPLICATION_DELETE_FILE = "APPLICATION_DELETE_FILE";
-
-    public  Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_USER_CONNECTED;
-    public  Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_ADMINISTRATION;
-
-    public  Function<String, PrivilegeAssessorDomainForApplication> APPLICATION_MANAGER;
-    public  Function<String, PrivilegeAssessorDomainForApplication> DATA_MANAGEMENT;
-    public  Function<String, PrivilegeAssessorDomainForApplication> DATA_READ;
-    public  Function<String, PrivilegeAssessorDomainForApplication> DATA_WRITE;
-    public  Function<String, PrivilegeAssessorDomainForApplication> DATA_ACCESS;
-
-
     private final AuthorizationService authorizationService;
+    public Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_USER_CONNECTED;
+    public Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_ADMINISTRATION;
+    public Function<String, PrivilegeAssessorDomainForApplication> APPLICATION_MANAGER;
+    public Function<String, PrivilegeAssessorDomainForApplication> DATA_MANAGEMENT;
+    public Function<String, PrivilegeAssessorDomainForApplication> DATA_READ;
+    public Function<String, PrivilegeAssessorDomainForApplication> DATA_WRITE;
+    public Function<String, PrivilegeAssessorDomainForApplication> DATA_ACCESS;
 
     public ApplicationPermissionEvaluator(AuthorizationService authorizationService) {
         this.authorizationService = authorizationService;
@@ -90,7 +86,7 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     }
 
     private boolean hasPermissionForSystem(OreSiAuthenticationToken oreSiAuthenticationToken, Object permission) {
-        return Optional.of( oreSiAuthenticationToken)
+        return Optional.of(oreSiAuthenticationToken)
                 .map(oreSiAuthenticationToken1 -> {
                     SystemPersona persona = switch (permission) {
                         case String roleApplicationCreate when SYSTEM_APPLICATION_CREATE.equals(roleApplicationCreate) ->
@@ -156,18 +152,18 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                     case String applicationAdminForAdd when APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD.equals(applicationAdminForAdd) ->
                             Optional.of(DATA_MANAGEMENT.apply(applicationName)
                                     .forManageAuthorizations());
-                    case String read when APPLICATION_DATA_READ.equals(read) ->
-                            dataNameOpt
+                    case String read when APPLICATION_DATA_READ.equals(read) -> dataNameOpt
                             .map(authorizationService
                                     .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
                                     ::forDataRead);
-                    case String read when APPLICATION_DATA_WRITE.equals(read) -> dataNameOpt.flatMap(dataName -> OreSiApiRequestContext.getAuthentication()
-                            .map(OreSiAuthenticationToken::getFileOrUUID)
-                            .map(FileOrUUID::topublish)
-                            .or(() -> Optional.of(false))
-                            .map(toPublish -> authorizationService
-                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
-                                    .forDataWrite(dataName, toPublish)));
+                    case String read when APPLICATION_DATA_WRITE.equals(read) ->
+                            dataNameOpt.flatMap(dataName -> OreSiApiRequestContext.getAuthentication()
+                                    .map(OreSiAuthenticationToken::getFileOrUUID)
+                                    .map(FileOrUUID::topublish)
+                                    .or(() -> Optional.of(false))
+                                    .map(toPublish -> authorizationService
+                                            .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
+                                            .forDataWrite(dataName, toPublish)));
                     case String writeFile when APPLICATION_WRITE_FILE.equals(writeFile) -> dataNameOpt
                             .map(dataName -> DATA_WRITE.apply(applicationName)
                                     .forDataWrite(dataName, false));

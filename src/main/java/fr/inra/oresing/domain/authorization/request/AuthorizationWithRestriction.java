@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 
 public record AuthorizationWithRestriction(
         Map<String, AuthorizationForScope> authorizationForScope
-)  {
+) {
     public AuthorizationWithRestriction {
         authorizationForScope = authorizationForScope.entrySet().stream()
                 .collect(Collectors.toMap(

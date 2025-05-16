@@ -35,7 +35,6 @@ class ApplicationPermissionEvaluatorTest {
     private ApplicationPermissionEvaluator permissionEvaluator;
 
 
-
     @BeforeEach
     void setUp() {
         // Définir une fabrique de privilèges qui retournera le bon type de persona selon le contexte

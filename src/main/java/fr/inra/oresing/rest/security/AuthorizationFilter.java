@@ -56,7 +56,6 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     public static final GrantedAuthority ROLE_AUTHENTIFIED_USER = new SimpleGrantedAuthority("ROLE_AUTHENTIFIED_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_UPDATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_UPDATE_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_CREATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_CREATE_USER");
-    private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
     public static final String APPLICATIONS = "applications";
     public static final String DATA = "data";
     public static final String SYNTHESIS = "synthesis";
@@ -66,8 +65,9 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     public static final String LOGIN_PARAMETER = "login";
     public static final String PASSWORD_PARAMETER = "password";
     public static final String ECHEC_TECHNIQUE = "Échec technique";
-    private final OreSiApiRequestContext requestContext;
+    private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
     private static JsonRowMapper<OreSiUserRequestClient> mapper;
+    private final OreSiApiRequestContext requestContext;
     private final OreExceptionHandler exceptionHandler;
     private final JWTExtractor jWTExtractor;
     private ServiceContainer serviceContainer;

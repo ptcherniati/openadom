@@ -20,6 +20,37 @@ import java.util.stream.Stream;
 
 public sealed interface ComponentOrderByForExport
         permits ComponentOrderBy, ComponentPatternOrderBy, ComponentPatternValueOrderBy, DynamicComponentOrderBy {
+    static Comparator<ComponentOrderByForExport> getComparator(StandardDataDescription dataDescription) {
+        return (componentOrderBy1, componentOrderBy2) -> switch (componentOrderBy1) {
+            case null -> 1;
+            default -> switch (componentOrderBy2) {
+                case null -> -1;
+                default -> {
+                    Integer component1Order = getComponentOrder(componentOrderBy1, dataDescription);
+                    Integer component2Order = getComponentOrder(componentOrderBy2, dataDescription);
+                    if (component1Order.equals(component2Order)) {
+                        yield componentOrderBy1.componentKey().compareTo(componentOrderBy2.componentKey());
+                    }
+                    yield component1Order.compareTo(component2Order);
+                }
+            };
+        };
+    }
+
+    private static int getComponentOrder(ComponentOrderByForExport componentOrderBy, StandardDataDescription dataDescription) {
+        return Optional.of(componentOrderBy)
+                .map(ComponentOrderByForExport::componentKey)
+                .map(dataDescription.componentDescriptions()::get)
+                .map(ComponentDescription::tags)
+                .map(tags -> tags.stream()
+                        .filter(Tag.OrderTag.class::isInstance)
+                        .map(Tag.OrderTag.class::cast)
+                        .map(Tag.OrderTag::tagOrder)
+                        .findFirst()
+                        .orElse(9999))
+                .orElse(9999);
+    }
+
     Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription);
 
     String componentKey();
@@ -56,37 +87,5 @@ public sealed interface ComponentOrderByForExport
                     .orElse(fieldType == null ? "" : fieldType.toString());
             default -> fieldType == null ? "" : fieldType.toString();
         };
-    }
-
-
-    static Comparator<ComponentOrderByForExport> getComparator(StandardDataDescription dataDescription) {
-        return (componentOrderBy1, componentOrderBy2) -> switch (componentOrderBy1) {
-            case null -> 1;
-            default -> switch (componentOrderBy2) {
-                case null -> -1;
-                default -> {
-                    Integer component1Order = getComponentOrder(componentOrderBy1, dataDescription);
-                    Integer component2Order = getComponentOrder(componentOrderBy2, dataDescription);
-                    if (component1Order.equals(component2Order)) {
-                        yield componentOrderBy1.componentKey().compareTo(componentOrderBy2.componentKey());
-                    }
-                    yield component1Order.compareTo(component2Order);
-                }
-            };
-        };
-    }
-
-    private static int getComponentOrder(ComponentOrderByForExport componentOrderBy, StandardDataDescription dataDescription) {
-        return Optional.of(componentOrderBy)
-                .map(ComponentOrderByForExport::componentKey)
-                .map(dataDescription.componentDescriptions()::get)
-                .map(ComponentDescription::tags)
-                .map(tags -> tags.stream()
-                        .filter(Tag.OrderTag.class::isInstance)
-                        .map(Tag.OrderTag.class::cast)
-                        .map(Tag.OrderTag::tagOrder)
-                        .findFirst()
-                        .orElse(9999))
-                .orElse(9999);
     }
 }

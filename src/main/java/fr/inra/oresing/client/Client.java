@@ -51,6 +51,14 @@ public class Client {
         new Client().run();
     }
 
+    private static void logError(String string) {
+        System.err.println(string);
+    }
+
+    private static void log(String message) {
+        System.out.println(message);
+    }
+
     public void run() throws IOException {
 
         ClientConfiguration clientConfiguration = readConfiguration();
@@ -60,8 +68,7 @@ public class Client {
 
         String login;
         String password;
-        boolean interactive = false;
-        Scanner scanner = new Scanner(System.in);
+        new Scanner(System.in);
         login = "poussin";
         password = "xxxx";
 
@@ -122,7 +129,7 @@ public class Client {
             );
 
             log("référentiels à importer :" + System.lineSeparator()
-                + String.join(System.lineSeparator(), data));
+                    + String.join(System.lineSeparator(), data));
 
            /* ClassicHttpRequest getApplicationDataTypesRequest = ClassicRequestBuilder
                     .get(uriFactory.forApplicationDataTypes(applicationName))
@@ -176,28 +183,6 @@ public class Client {
         //commands.addAll(dataCommands);
         return new LinkedList<>(dataCommands);
     }
-
-    private List<Command> getUploadDataCommands(String dataType) {
-        Path dataDirectoryForDataType = Path.of(dataType);
-        List<Command> commands;
-        if (dataDirectoryForDataType.toFile().exists()) {
-            if (dataDirectoryForDataType.toFile().isDirectory()) {
-                SortedSet<Path> csvFilePaths = findCsvFilePathsInDirectory(dataDirectoryForDataType);
-                commands = csvFilePaths.stream()
-                        .map(Path::toFile)
-                        .map(dataFile -> newUploadDataCommand(dataType, dataFile))
-                        .toList();
-            } else {
-                logError("le répertoire " + dataDirectoryForDataType + " est un fichier mais il devrait être un dossier. On l’ignore.");
-                commands = Collections.emptyList();
-            }
-        } else {
-            log("le répertoire " + dataDirectoryForDataType + " n’existe pas. Pas de données à importer pour " + dataType);
-            commands = Collections.emptyList();
-        }
-        return commands;
-    }
-
 
     private List<Command> getDataCommands(String dataName) {
         File dir = new File(dataName);
@@ -314,14 +299,6 @@ public class Client {
         System.exit(1);
     }
 
-    private static void logError(String string) {
-        System.err.println(string);
-    }
-
-    private static void log(String message) {
-        System.out.println(message);
-    }
-
     private <T> T parseJsonInResponseBody(ClassicHttpResponse response, TypeReference<T> valueTypeRef) {
         try (InputStream inputStream = response.getEntity().getContent()) {
             return new ObjectMapper().readValue(inputStream, valueTypeRef);
@@ -330,31 +307,14 @@ public class Client {
         }
     }
 
-    record CsvRowValidationCheckResult(
-            int lineNumber,
-            ValidationCheckResult validationCheckResult
-    ) {
-    }
+    /**
+     * Une étape du téléversement soit un fichier à téléverser, une requête HTTP et comment traiter la réponse.
+     */
+    interface Command extends HttpClientResponseHandler<Void> {
 
-    record ValidationCheckResult(
-            ValidationLevel level,
-            ValidationMessage message,
-            Map<String, Object> messageParams,
-            String target
-    ) {
-    }
+        String getDescription();
 
-    enum ValidationLevel {
-        SUCCESS, WARN, ERROR
-    }
-
-    enum ValidationMessage {
-        unexpectedHeaderColumn,
-        headerColumnPatternNotMatching,
-        unexpectedTokenCount,
-        invalidHeaders,
-        duplicatedHeaders,
-        emptyHeader
+        ClassicHttpRequest getRequest(UriFactory uriFactory);
     }
 
     /**
@@ -388,16 +348,6 @@ public class Client {
             String endpoint = "applications/%s/data".formatted(applicationName);
             return newUri(endpoint);
         }
-    }
-
-    /**
-     * Une étape du téléversement soit un fichier à téléverser, une requête HTTP et comment traiter la réponse.
-     */
-    interface Command extends HttpClientResponseHandler<Void> {
-
-        String getDescription();
-
-        ClassicHttpRequest getRequest(UriFactory uriFactory);
     }
 
     /**

@@ -66,6 +66,10 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
                 .collect(Collectors.joining("|", "name ~ '(", ")'"));
     }
 
+    public static OreSiUserRole getUserRole(final OreSiUser user) {
+        return OreSiUserRole.forUser(user);
+    }
+
     /**
      * Reprend le role de l'utilisateur utilisé pour la connexion à la base de données
      */
@@ -187,8 +191,8 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
     private LoginAdminResult toLoginResult(final OreSiUser oreSiUser, final CurrentUserRoles currentUserRoles) {
         final OreSiUserRole userRole = getUserRole(oreSiUser);
         db.setRole(userRole);
-        final boolean isopenAdomAdmin = db.hasRole(OreSiRole.openAdomAdmin());
-        final boolean authorizedForApplicationCreation = db.hasRole(OreSiRole.applicationCreator());
+        db.hasRole(OreSiRole.openAdomAdmin());
+        db.hasRole(OreSiRole.applicationCreator());
         return new LoginAdminResult(
                 oreSiUser.getId(),
                 oreSiUser.getLogin(),
@@ -234,24 +238,9 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
     }
 
     @Transactional
-    public CreateUserResult createRole(final UUID id) {
-        //Preconditions.checkArgument(userRepository.findByLogin(id.toString()).isEmpty(), "Il existe déjà un rôle dont l’identifiant est " + id.toString());
-        final OreSiUser result = new OreSiUser();
-        result.setLogin(id.toString());
-        result.setChartes(new HashMap<>());
-        final OreSiUserRole userRole = getUserRole(result);
-        db.createRole(userRole, "role de l'utilisateur %1$s".formatted(
-                result.getLogin()
-        ));
-        return CreateUserResult.of(result);
-    }
-
-    @Transactional
     public OreSiUser deleteUserRightopenAdomAdmin(final UUID userId) {
         resetRole();
-        OreSiUser oreSiUser = getOreSiUser(userId);
         final OreSiUserRole roleToModify = getUserRole(userId);
-        final OreSiopenAdomAdminRole roleToRevoke = OreSiRole.openAdomAdmin();
         db.removeUserInRole(roleToModify, OreSiopenAdomAdminRole.openAdomAdmin::getAsSqlRole);
         return userRepository.findById(userId);
     }
@@ -259,9 +248,7 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
     @Transactional
     public OreSiUser addUserRightopenAdomAdmin(final UUID userId) {
         resetRole();
-        OreSiUser oreSiUser = getOreSiUser(userId);
         final OreSiUserRole roleToModify = getUserRole(userId);
-        final OreSiopenAdomAdminRole roleToAdd = OreSiRole.openAdomAdmin();
         db.addUserInRole(roleToModify, OreSiopenAdomAdminRole.openAdomAdmin::getAsSqlRole);
         return userRepository.findById(userId);
     }
@@ -458,10 +445,6 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
         return rolesForCurrentUser;
     }
 
-    public static OreSiUserRole getUserRole(final OreSiUser user) {
-        return OreSiUserRole.forUser(user);
-    }
-
     public List<UserAuthorizationForApplication> getApplicationAuthorizations(Application application) {
         Function<Map<String, Timestamp>, Timestamp> getCharteTimestamp = chartes -> chartes.get(application.getId().toString());
         CurrentUserRoles currentUserRolesForCurrentUser = getCurrentUserRoles();
@@ -548,21 +531,26 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
 
     @Transactional
     public OreSiUser updateUser(NotConnectedUser notConnectedUser) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
-        return switch (notConnectedUser){
+        return switch (notConnectedUser) {
             case NotConnectedAuthentifiedActiveUser notConnectedAuthentifiedActiveUser -> updateAccount(
                     notConnectedAuthentifiedActiveUser.user(), notConnectedAuthentifiedActiveUser.createUserRequest());
             case NotConnectedAuthentifiedActiveUserNotSignedCharte notConnectedAuthentifiedActiveUserNotSignedCharte ->
-                    setCharteAsValidated(notConnectedAuthentifiedActiveUserNotSignedCharte.user(), notConnectedAuthentifiedActiveUserNotSignedCharte.createUserRequest(), notConnectedAuthentifiedActiveUserNotSignedCharte.charte());
-            case NotConnectedAuthentifiedClosedUser notConnectedAuthentifiedClosedUser -> throw  new AuthenticationFailure(AuthenticationFailure.CLOSED_ACCOUNT, notConnectedAuthentifiedClosedUser.loginAdminResult());
-            case NotConnectedAuthentifiedIdleUser notConnectedAuthentifiedIdleUser -> activeAccount(notConnectedAuthentifiedIdleUser.user(), notConnectedAuthentifiedIdleUser.createUserRequest().getVerificationKey());
-            case NotConnectedAuthentifiedMissingPasswordUser notConnectedAuthentifiedMissingPasswordUser -> updatePasswordLost(notConnectedAuthentifiedMissingPasswordUser.oreSiUser(), notConnectedAuthentifiedMissingPasswordUser.createUserRequest());
-            case NotConnectedAuthentifiedPendingUser notConnectedAuthentifiedPendingUser -> sendValidationKey(notConnectedAuthentifiedPendingUser.user());
-            case NotConnectedUnauthentifiedUser notConnectedUnauthentifiedUser -> throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, notConnectedUnauthentifiedUser.createUserRequest());
+                    setCharteAsValidated(notConnectedAuthentifiedActiveUserNotSignedCharte.user(), notConnectedAuthentifiedActiveUserNotSignedCharte.charte());
+            case NotConnectedAuthentifiedClosedUser notConnectedAuthentifiedClosedUser ->
+                    throw new AuthenticationFailure(AuthenticationFailure.CLOSED_ACCOUNT, notConnectedAuthentifiedClosedUser.loginAdminResult());
+            case NotConnectedAuthentifiedIdleUser notConnectedAuthentifiedIdleUser ->
+                    activeAccount(notConnectedAuthentifiedIdleUser.user(), notConnectedAuthentifiedIdleUser.createUserRequest().getVerificationKey());
+            case NotConnectedAuthentifiedMissingPasswordUser notConnectedAuthentifiedMissingPasswordUser ->
+                    updatePasswordLost(notConnectedAuthentifiedMissingPasswordUser.oreSiUser(), notConnectedAuthentifiedMissingPasswordUser.createUserRequest());
+            case NotConnectedAuthentifiedPendingUser notConnectedAuthentifiedPendingUser ->
+                    sendValidationKey(notConnectedAuthentifiedPendingUser.user());
+            case NotConnectedUnauthentifiedUser notConnectedUnauthentifiedUser ->
+                    throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, notConnectedUnauthentifiedUser.createUserRequest());
             case NotConnectedUnauthentifiedUserForCreate _ -> null;
         };
     }
 
-    private OreSiUser setCharteAsValidated(final OreSiUser loginResult, final CreateUserRequest createUserRequest, final String charte) {
+    private OreSiUser setCharteAsValidated(final OreSiUser loginResult, final String charte) {
         return Optional.ofNullable(loginResult)
                 .map(oreSiUser -> {
                     final Map<String, Timestamp> chartes = oreSiUser.getChartes() == null ? new HashMap<>() : oreSiUser.getChartes();

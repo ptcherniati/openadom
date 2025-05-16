@@ -33,7 +33,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -52,7 +51,6 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     private OreSiApiRequestContext request;
     @Autowired
     private JsonRowMapper jsonRowMapper;
-
 
 
     public static BinaryFileDataset deserialiseBinaryFileDatasetQuery(final String dataName, final String params) {
@@ -107,11 +105,10 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     @Transactional
     @Override
     public Optional<UUID> removeFile(Application application, UUID id) {
-        Function<BinaryFile, UUID> deleteBinaryFile = binaryFile -> getBinaryFileRepository(application).delete(binaryFile.getId()) ? binaryFile.getId() : null;
         return getFile(application.getName(), id)
                 .map(BinaryFile::getId)
                 .map(getBinaryFileRepository(application)::delete)
-                .orElse(false)?Optional.of(id):Optional.empty();
+                .orElse(false) ? Optional.of(id) : Optional.empty();
     }
 
     @Override
@@ -154,23 +151,21 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     @Override
     public List<BinaryFile> getFilesOnRepository(final String nameOrId, final String datatype, final BinaryFileDataset binaryFileDataset, final boolean overlap) {
         authenticationService.setRoleForClient();
-        Application application= serviceContainer.applicationService().getApplication(nameOrId);
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
         DataRepositoryForBuffer dataRepositoryForBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
-        Submission.SubmissionScope submissionScope = application.findSubmission(datatype)
+        application.findSubmission(datatype)
                 .map(Submission::submissionScope)
                 .orElse(null);
         return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepositoryForBuffer), overlap);
     }
 
     @Override
-    public AdditionalBinaryFileResult getAdditionalBinaryFileResult(
-            final AdditionalBinaryFile additionalBinaryFile,
-            final Application application) {
+    public AdditionalBinaryFileResult getAdditionalBinaryFileResult(AdditionalBinaryFile additionalBinaryFile) {
+
         Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
         AuthorizationService.authorizationsToParsedAuthorizations(
                 additionalBinaryFile.getAssociates(),
                 authorizationsParsed);
         return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsParsed);
     }
-
 }

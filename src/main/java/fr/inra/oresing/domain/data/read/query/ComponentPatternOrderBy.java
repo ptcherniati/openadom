@@ -29,7 +29,7 @@ public record ComponentPatternOrderBy(String componentKey, String qualifierKey, 
         values.add(valueToString(language, dataRepository, dataDescription, (FieldType<?>) valueOpt.get().getValue().get(Column.__VALUE__)));
         qualifiersColumns().stream()
                 .map(qualifier -> qualifier.valueToString(language, dataRepository, dataDescription, (FieldType<?>) valueOpt.get().getValue()
-                .get( qualifier.componentKey().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[1])))
+                        .get(qualifier.componentKey().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[1])))
                 .forEach(values::add);
         return values.stream();
     }

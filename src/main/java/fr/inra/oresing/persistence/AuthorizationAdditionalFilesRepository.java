@@ -41,7 +41,7 @@ public class AuthorizationAdditionalFilesRepository extends JsonTableInApplicati
         return OreSiAdditionalFileAuthorization.class;
     }
 
-    public List<OreSiAdditionalFileAuthorization> findAuthorizations(final UUID userId, final Application application) {
+    public List<OreSiAdditionalFileAuthorization> findAuthorizations(final UUID userId) {
         final String query = String.format("""
                         SELECT '%1$s' AS "@class", to_jsonb(t) AS json
                         FROM %2$s t

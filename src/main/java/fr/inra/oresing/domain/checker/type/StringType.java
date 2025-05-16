@@ -19,11 +19,17 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public non-sealed class StringType implements FieldType<String> {
+    final Supplier<StringType> clone;
     private final Predicate<String> predicate;
     private final String pattern;
     String value = "";
 
-    final Supplier<StringType> clone;
+    public StringType(final String pattern) {
+        super();
+        this.pattern = pattern;
+        predicate = Optional.ofNullable(pattern).filter(s -> !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
+        clone = () -> new StringType(pattern);
+    }
 
     public static StringType getStringTypeFromStringValue(final String value) {
         final StringType stringType = new StringType(null);
@@ -31,11 +37,8 @@ public non-sealed class StringType implements FieldType<String> {
         return stringType;
     }
 
-    public StringType(final String pattern) {
-        super();
-        this.pattern = pattern;
-        predicate = Optional.ofNullable(pattern).filter(s -> !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
-        clone = () -> new StringType(pattern);
+    private static Pattern compile(final String patternString) {
+        return Pattern.compile(patternString, Pattern.MULTILINE);
     }
 
     @Override
@@ -58,10 +61,6 @@ public non-sealed class StringType implements FieldType<String> {
     @Override
     public SqlPrimitiveType getSqlType() {
         return SqlPrimitiveType.TEXT;
-    }
-
-    private static Pattern compile(final String patternString) {
-        return Pattern.compile(patternString,Pattern.MULTILINE);
     }
 
     @Override
@@ -101,7 +100,7 @@ public non-sealed class StringType implements FieldType<String> {
 
     @Override
     public void serialize(final JsonGenerator gen) throws IOException {
-        if(value==null){
+        if (value == null) {
             gen.writeNull();
             return;
         }

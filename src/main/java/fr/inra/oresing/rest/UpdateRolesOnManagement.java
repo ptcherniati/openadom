@@ -142,7 +142,7 @@ public class UpdateRolesOnManagement {
         }
 
         if (!statements.isEmpty()) {
-            toBinaryFilePolicy(authorization, role, dataName,  statements)
+            toBinaryFilePolicy(authorization, role, dataName, statements)
                     .forEach(db::createPolicy);
         }
     }

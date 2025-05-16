@@ -16,11 +16,11 @@ public class Internationalizations {
     public static final String ADDITIONAL_FILES = "additionalFiles";
     Map<String, Map<Locale, String>> tags = Map.of();
     @Getter
-    InternationalizationTitle application ;
+    InternationalizationTitle application;
     @Getter
     Map<String, InternationalizationData> data = Map.of();
     @Getter
-    InternationalizationRightrequest rightsrequest= new InternationalizationRightrequest();
+    InternationalizationRightrequest rightsrequest = new InternationalizationRightrequest();
     @Getter
     Map<String, InternationalizationAdditionalFile> additionalFiles = Map.of();
 

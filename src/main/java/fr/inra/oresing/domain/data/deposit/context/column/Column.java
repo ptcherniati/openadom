@@ -20,14 +20,8 @@ public abstract class Column implements Comparable<Column> {
 
     @Getter
     private final DataColumn referenceColumn;
-
-    public Column as(String columnHeader){
-        return columnHeader.equals(getReferenceColumn().column())?this:null;
-    }
-
     @Getter
     private final ComponentPresenceConstraint presenceConstraint;
-
     @Getter
     private final ComputedValueUsage computedValueUsage;
 
@@ -160,6 +154,10 @@ public abstract class Column implements Comparable<Column> {
             }
         };
         return column;
+    }
+
+    public Column as(String columnHeader) {
+        return columnHeader.equals(getReferenceColumn().column()) ? this : null;
     }
 
     public boolean canHandle(final String header) {

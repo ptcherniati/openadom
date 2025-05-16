@@ -206,6 +206,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
     GetGrantableResult grantable;
     private AuthorizationsForApplicationUser authorizations;
     private PrivilegeApplicationDomainEnum privilegeApplicationDomainEnum;
+
     public PrivilegeAssessorDomainForApplicationFactory() {
         super();
     }

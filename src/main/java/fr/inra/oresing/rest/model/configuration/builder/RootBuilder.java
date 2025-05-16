@@ -26,12 +26,12 @@ import java.util.function.Consumer;
 import static fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode.*;
 
 public class RootBuilder {
+    @Getter
+    protected final CheckerDescriptionBuilder checkerDescriptionBuilder = new CheckerDescriptionBuilder(this);
     final Map<CheckerDescription.CheckerDescriptionType, Map<String, Map<String, List<CheckerDescription>>>> checkers = new HashMap<>();
     final ObjectMapper mapper = new ObjectMapper();
     final JsonNode rootNode;
     private final ApplicationdescriptionBuilder applicationdescriptionBuilder = new ApplicationdescriptionBuilder(this);
-    @Getter
-    protected final CheckerDescriptionBuilder checkerDescriptionBuilder = new CheckerDescriptionBuilder(this);
     private final TagsBuilder tagsBuilder = new TagsBuilder(this);
     @Getter
     private final ComputationBuilder computationBuilder = new ComputationBuilder(this);
@@ -267,7 +267,7 @@ public class RootBuilder {
                 .filter(componentDescription -> componentDescription.checker().multiplicity() == Multiplicity.MANY)
                 .map(ComponentDescription::componentKey)
                 .toList();
-        if(CollectionUtils.isNotEmpty(manyComponentInNaturalKey)){
+        if (CollectionUtils.isNotEmpty(manyComponentInNaturalKey)) {
             buildError(
                     ConfigurationException.MANY_COMPONENT_IN_NATURAL_KEY,
                     Map.of(

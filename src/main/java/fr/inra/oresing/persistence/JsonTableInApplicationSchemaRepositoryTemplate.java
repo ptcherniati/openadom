@@ -28,15 +28,16 @@ public abstract class JsonTableInApplicationSchemaRepositoryTemplate<T extends O
                 .orElse(null);
     }
 
+    static Map<String, ?> convertMapsqlparameterSourcetoMap(final MapSqlParameterSource sqlParameterSource) {
+        return Arrays.stream(Objects.requireNonNull(sqlParameterSource.getParameterNames()))
+                .collect(Collectors.toMap(param -> param, sqlParameterSource::getValue));
+    }
+
     protected SqlSchemaForApplication getSchema() {
         return schema;
     }
 
     protected Application getApplication() {
         return application;
-    }
-    static Map<String, ?> convertMapsqlparameterSourcetoMap(final MapSqlParameterSource sqlParameterSource){
-        return Arrays.stream(Objects.requireNonNull(sqlParameterSource.getParameterNames()))
-                .collect(Collectors.toMap(param->param, sqlParameterSource::getValue));
     }
 }

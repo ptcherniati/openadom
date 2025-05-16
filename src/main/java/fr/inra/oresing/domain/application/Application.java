@@ -19,10 +19,6 @@ import java.util.stream.Collectors;
 @Setter
 @ToString(callSuper = true)
 public class Application extends OreSiEntity {
-    public Timestamp getLastChartes() {
-        return lastChartes == null ? (new Timestamp(Long.MIN_VALUE)) : lastChartes;
-    }
-
     private Timestamp lastChartes;
     private String name;
     private String version;
@@ -31,6 +27,9 @@ public class Application extends OreSiEntity {
     private Configuration configuration;
     private UUID configFile; // lien vers un BinaryFile
 
+    public Timestamp getLastChartes() {
+        return lastChartes == null ? (new Timestamp(Long.MIN_VALUE)) : lastChartes;
+    }
 
     public Application applicationAccordingToRights() {
         Configuration configurationToSet = this.configuration;

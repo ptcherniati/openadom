@@ -13,11 +13,11 @@ public record DataVersioningResult(UUID dataId, List<ApplicationResult.DataSynth
 
     public DataVersioningResult {
         Objects.requireNonNull(dataId);
-        dataSynthesis= dataSynthesis== null?List.of():List.copyOf(dataSynthesis);
+        dataSynthesis = dataSynthesis == null ? List.of() : List.copyOf(dataSynthesis);
     }
 
     public static DataVersioningResult of(String nameOrId, String dataName, UUID dataId, List<ApplicationResult.DataSynthesis> dataSynthesis) {
         final String uri = UriUtils.encodePath(String.format(OreSiResources.DATA_SERVICE_PATH_PATTERN, nameOrId, dataName), Charset.defaultCharset());
-        return new DataVersioningResult(dataId,dataSynthesis,uri);
+        return new DataVersioningResult(dataId, dataSynthesis, uri);
     }
 }

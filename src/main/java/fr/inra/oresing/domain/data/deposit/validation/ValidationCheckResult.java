@@ -58,7 +58,7 @@ public interface ValidationCheckResult {
 
     default Object filterValue(Object value) {
         if (value instanceof Collection<?> collection) {
-            if(collection.size()<=MAX_COLLECTION_SIZE){
+            if (collection.size() <= MAX_COLLECTION_SIZE) {
                 return collection;
             }
             List<?> limitedList = collection.stream()

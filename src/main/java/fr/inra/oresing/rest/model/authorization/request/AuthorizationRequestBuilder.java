@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest.model.authorization.request;
 
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
@@ -29,12 +28,8 @@ Roles {
  */
 
 public class AuthorizationRequestBuilder {
-    public static final String NAME = "name";
-    static final YAMLMapper mapper = YAMLMapper.builder().build();
     @Getter
-    private final Application application;
-    @Getter
-    final AuthorizationForAllBuilder authorizationForAllBuilder = new AuthorizationForAllBuilder(this);
+    final AuthorizationForAllBuilder authorizationForAllBuilder = new AuthorizationForAllBuilder();
     @Getter
     final AuthorizationWithRestrictionBuilder authorizationWithRestrictionBuilder = new AuthorizationWithRestrictionBuilder(this);
     final List<AuthorizationRequestError> errors;
@@ -42,6 +37,8 @@ public class AuthorizationRequestBuilder {
     final List<UUID> allUsers;
     @Getter
     final List<OreSiAuthorization> authorizationsForCurrentUser;
+    @Getter
+    private final Application application;
 
     public AuthorizationRequestBuilder(Application application,
                                        List<UUID> allUsers,
@@ -53,16 +50,8 @@ public class AuthorizationRequestBuilder {
         this.errors = errors;
     }
 
-    private boolean isValidRequest() {
-        return errors.isEmpty();
-    }
-
     public void buildError(final AuthorizationRequestException exception, Map<String, Object> params) {
         errors.add(new AuthorizationRequestError(exception, params));
-    }
-
-    public void buildError(final AuthorizationRequestException exception) {
-        errors.add(new AuthorizationRequestError(exception, Map.of()));
     }
 
     public AuthorizationRequest build(

@@ -19,45 +19,44 @@ import java.util.Map;
 public class CheckerFactory {
 
 
-  private final DataRepository dataRepository;
+    private final DataRepository dataRepository;
 
-  public CheckerFactory(final DataRepository dataRepository) {
-    super();
-    this.dataRepository = dataRepository;
-  }
-
-  public ImmutableSet<LineChecker<FieldType<?>>> getCheckers(final Application application, final String dataName, final PublishContext.PublishContextBuilder publishContextBuilder) {
-    SiOreIllegalArgumentException.testExistsData(application, dataName);
-    final StandardDataDescription dataDescription = application.getConfiguration().dataDescription().get(dataName);
-    final ImmutableSet.Builder<LineChecker<FieldType<?>>> checkers = ImmutableSet.builder();
-    for (final Map.Entry<String, ComponentDescription> variableEntry : dataDescription.componentDescriptions().entrySet()) {
-      final String column = variableEntry.getKey();
-      final ComponentDescription componentDescription = variableEntry.getValue();
-      if (componentDescription.checker() != null) {
-        checkers.addAll(LineChecker.toLineChecker(
-                dataRepository,
-                publishContextBuilder,
-                componentDescription.transformation(),
-                variableEntry.getKey(),
-                componentDescription.checker()));
-      }
+    public CheckerFactory(final DataRepository dataRepository) {
+        super();
+        this.dataRepository = dataRepository;
     }
-    Map<String, CheckerDescription> validationCheckers = dataDescription.findValidationCheckers();
-    validationCheckers.forEach((key, checkerDescription) -> {
-        TransformationConfiguration transformation = null;
-        if (checkerDescription instanceof TransformationConfiguration tc) {
-            transformation = tc;
-        }
-        checkers.addAll(
-                LineChecker.toLineChecker(
+
+    public ImmutableSet<LineChecker<FieldType<?>>> getCheckers(final Application application, final String dataName, final PublishContext.PublishContextBuilder publishContextBuilder) {
+        SiOreIllegalArgumentException.testExistsData(application, dataName);
+        final StandardDataDescription dataDescription = application.getConfiguration().dataDescription().get(dataName);
+        final ImmutableSet.Builder<LineChecker<FieldType<?>>> checkers = ImmutableSet.builder();
+        for (final Map.Entry<String, ComponentDescription> variableEntry : dataDescription.componentDescriptions().entrySet()) {
+            final ComponentDescription componentDescription = variableEntry.getValue();
+            if (componentDescription.checker() != null) {
+                checkers.addAll(LineChecker.toLineChecker(
                         dataRepository,
                         publishContextBuilder,
-                        transformation,
-                        key,
-                        checkerDescription
-                )
-        );
-    });
-    return checkers.build();
-  }
+                        componentDescription.transformation(),
+                        variableEntry.getKey(),
+                        componentDescription.checker()));
+            }
+        }
+        Map<String, CheckerDescription> validationCheckers = dataDescription.findValidationCheckers();
+        validationCheckers.forEach((key, checkerDescription) -> {
+            TransformationConfiguration transformation = null;
+            if (checkerDescription instanceof TransformationConfiguration tc) {
+                transformation = tc;
+            }
+            checkers.addAll(
+                    LineChecker.toLineChecker(
+                            dataRepository,
+                            publishContextBuilder,
+                            transformation,
+                            key,
+                            checkerDescription
+                    )
+            );
+        });
+        return checkers.build();
+    }
 }

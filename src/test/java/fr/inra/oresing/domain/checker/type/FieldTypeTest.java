@@ -30,6 +30,17 @@ class FieldTypeTest {
     LineChecker.OneChecker lineChecker;
     DataColumn target = new DataColumn("column");
 
+    private static void testValue(FieldTypeCases testCase, ExceptionResponse response, Object value) {
+        switch (testCase.fieldType()) {
+            case DateType dateType when response.message().equals("badIntervalDateWithComponent") ->
+                    Assertions.assertTrue(value instanceof TemporalAccessor);
+            case DateType dateType -> Assertions.assertTrue(value == null);
+            case StringType stringType -> Assertions.assertTrue(value == null || value.equals(""));
+            case BooleanType booleanType -> Assertions.assertTrue(true);
+            default -> Assertions.assertTrue(true);
+        }
+    }
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
@@ -61,7 +72,6 @@ class FieldTypeTest {
         }
         Assertions.assertEquals(testCase.sqlType, testCase.fieldType.getSqlType());
     }
-
 
     private void testCheckFieldTypeWithValue(FieldTypeCases testCase, ResponseOrException token) {
         final CheckerValidationCheckResult check = testCase.fieldType().check(token.value(), lineChecker);
@@ -96,7 +106,8 @@ class FieldTypeTest {
                 testValue(testCase, exceptionResponse, value);
             }
             case ValidResponse validResponse -> {
-                if (testCase.fieldType() instanceof MapType<?, ?> || testCase.fieldType() instanceof PatternType) {                    Assertions.assertTrue(check == null);
+                if (testCase.fieldType() instanceof MapType<?, ?> || testCase.fieldType() instanceof PatternType) {
+                    Assertions.assertTrue(check == null);
                     return;
                 }
                 Assertions.assertTrue(check.isSuccess());
@@ -104,39 +115,6 @@ class FieldTypeTest {
                 final Object value = testCase.fieldType().getValue();
                 Assertions.assertEquals(validResponse.response(), value);
             }
-        }
-    }
-
-    private static void testValue(FieldTypeCases testCase, ExceptionResponse response, Object value) {
-        switch (testCase.fieldType()) {
-            case DateType dateType when response.message().equals("badIntervalDateWithComponent") ->
-                    Assertions.assertTrue(value instanceof TemporalAccessor);
-            case DateType dateType -> Assertions.assertTrue(value == null);
-            case StringType stringType -> Assertions.assertTrue(value == null || value.equals(""));
-            case BooleanType booleanType -> Assertions.assertTrue(true);
-            default -> Assertions.assertTrue(true);
-        }
-    }
-
-    record FieldTypeCases<T>(String name, FieldType<?> fieldType, SqlPrimitiveType sqlType,
-                             List<ResponseOrException<T>> values) {
-    }
-
-    record ValidResponse<T>(String value, T response) implements ResponseOrException {
-    }
-
-    record ExceptionResponse(String value, Map<String, Object> params, String message) implements ResponseOrException {
-    }
-
-    sealed interface ResponseOrException<T> permits ValidResponse, ExceptionResponse {
-        String value();
-
-        static <U> ResponseOrException<U> of(String value, U response) {
-            return new ValidResponse<>(value, response);
-        }
-
-        static <E extends Exception> ResponseOrException<Class<E>> of(String value, Map<String, Object> params, String message) {
-            return new ExceptionResponse(value, params, message);
         }
     }
 
@@ -278,5 +256,27 @@ class FieldTypeTest {
                         )
                 )
         );
+    }
+
+    sealed interface ResponseOrException<T> permits ValidResponse, ExceptionResponse {
+        static <U> ResponseOrException<U> of(String value, U response) {
+            return new ValidResponse<>(value, response);
+        }
+
+        static <E extends Exception> ResponseOrException<Class<E>> of(String value, Map<String, Object> params, String message) {
+            return new ExceptionResponse(value, params, message);
+        }
+
+        String value();
+    }
+
+    record FieldTypeCases<T>(String name, FieldType<?> fieldType, SqlPrimitiveType sqlType,
+                             List<ResponseOrException<T>> values) {
+    }
+
+    record ValidResponse<T>(String value, T response) implements ResponseOrException {
+    }
+
+    record ExceptionResponse(String value, Map<String, Object> params, String message) implements ResponseOrException {
     }
 }

@@ -24,7 +24,7 @@ public record Submission(
     public static final String DD_MM_YYYY = "dd/MM/yyyy";
 
     public BinaryFileDataset parseFileName(String fileName, BinaryFileDataset binaryFileDataset) {
-        if(binaryFileDataset==null){
+        if (binaryFileDataset == null) {
             binaryFileDataset = new BinaryFileDataset();
         }
         try {
@@ -40,7 +40,7 @@ public record Submission(
                 if (groupIndex == fileNameParsing().startDate()) {
                     if (Strings.isNullOrEmpty(binaryFileDataset.getFrom())) {
                         try {
-                            binaryFileDataset.setFrom(LocalDate.parse(value,DateTimeFormatter.ofPattern(DD_MM_YYYY_FOR_FILE)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
+                            binaryFileDataset.setFrom(LocalDate.parse(value, DateTimeFormatter.ofPattern(DD_MM_YYYY_FOR_FILE)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
                         } catch (DateTimeParseException dtpe) {
                             throw new SiOreAuthorizationRequestException(
                                     AuthorizationRequestException.BAD_FILE_NAME_START_DATE,
@@ -55,7 +55,7 @@ public record Submission(
                 } else if (groupIndex == fileNameParsing().endDate()) {
                     if (Strings.isNullOrEmpty(binaryFileDataset.getTo())) {
                         try {
-                            binaryFileDataset.setTo(LocalDate.parse(value,DateTimeFormatter.ofPattern(DD_MM_YYYY_FOR_FILE)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
+                            binaryFileDataset.setTo(LocalDate.parse(value, DateTimeFormatter.ofPattern(DD_MM_YYYY_FOR_FILE)).atStartOfDay().format(DataImporter.ISO_DATE_TIME_FORMATTER));
                         } catch (DateTimeParseException dtpe) {
                             throw new SiOreAuthorizationRequestException(
                                     AuthorizationRequestException.BAD_FILE_NAME_END_DATE,
@@ -91,7 +91,8 @@ public record Submission(
 
         }
     }
-    public record PatternPosition(int start, int end){
+
+    public record PatternPosition(int start, int end) {
 
         @Override
         public String toString() {
@@ -107,10 +108,11 @@ public record Submission(
     ) {
 
         public static final Pattern GROUP_CAPTURE_PATTERN = Pattern.compile("\\([^(]*\\)");
+
         public String patternToBeReplacedByGroupCapture() {
             String patternToBeReplacedByGroupCapture = pattern();
             for (int i = patternGroups().size(); i > 0; i--) {
-                PatternPosition patternGroup = patternGroups().get(i-1);
+                PatternPosition patternGroup = patternGroups().get(i - 1);
                 patternToBeReplacedByGroupCapture = patternToBeReplacedByGroupCapture.substring(0, patternGroup.start()) +
                         "%%%d$s".formatted(i) +
                         patternToBeReplacedByGroupCapture.substring(patternGroup.end());
@@ -118,30 +120,31 @@ public record Submission(
             return patternToBeReplacedByGroupCapture;
         }
 
-        public LinkedList<String> orderedGroups(){
+        public LinkedList<String> orderedGroups() {
             Map<Integer, String> orderedGroups = new HashMap<>();
             int scopeIndex = 0;
-            for (int i = 1; i < groupCount()+1; i++) {
-                if(i==startDate()){
+            for (int i = 1; i < groupCount() + 1; i++) {
+                if (i == startDate()) {
                     orderedGroups.put(i, ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN);
-                } else if(i==endDate()){
+                } else if (i == endDate()) {
                     orderedGroups.put(i, ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN);
-                }else{
+                } else {
                     orderedGroups.put(i, authorizationScopes().get(scopeIndex++));
                 }
             }
             return new LinkedList<>(orderedGroups.values());
         }
+
         public int groupCount() {
             Matcher matcher = GROUP_CAPTURE_PATTERN.matcher(pattern());
-            return patternGroups().size()                    ;
+            return patternGroups().size();
         }
 
-        public List<PatternPosition> patternGroups(){
+        public List<PatternPosition> patternGroups() {
             Matcher matcher = GROUP_CAPTURE_PATTERN.matcher(pattern());
             List<PatternPosition> matches = new LinkedList<>();
-            while(matcher.find()){
-                matches.add(new PatternPosition(matcher.start(),matcher.end()));
+            while (matcher.find()) {
+                matches.add(new PatternPosition(matcher.start(), matcher.end()));
             }
             return matches;
         }

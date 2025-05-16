@@ -66,9 +66,9 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
     Test if is applicationUserForReadingData
      */
     public ApplicationDataReaderUser forDataRead(String dataName) {
-        if(Optional.of(authorizations())
+        if (Optional.of(authorizations())
                 .filter(authorizationsForApplicationUser -> authorizationsForApplicationUser.canRead(dataName))
-                .isEmpty()){
+                .isEmpty()) {
             throw new NotApplicationDataReaderException(application().getName(), dataName);
         }
         return new ApplicationDataReaderUser(application());
@@ -103,23 +103,23 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
     }
 
     public ApplicationAdminUser forDeleteAuthorization() {
-        if(!authorizations().isApplicationManager()) {
+        if (!authorizations().isApplicationManager()) {
             throw new NotApplicationManagerRightsException(application.getName());
         }
-        return  new ApplicationAdminUser(application());
+        return new ApplicationAdminUser(application());
     }
 
     public ApplicationDataWriter forDataWrite(String dataName, boolean toPublish) {
         AuthorizationsForApplicationUser authorizationsForApplicationUser = Optional.of(authorizations())
                 .filter(authorizations -> authorizations.canWrite(dataName, toPublish))
                 .orElseThrow(() -> new NotApplicationDataWriterException(application().getName(), dataName));
-        if(authorizationsForApplicationUser.isApplicationManager()){
-            return new ApplicationAdminUser(application(),dataName);
+        if (authorizationsForApplicationUser.isApplicationManager()) {
+            return new ApplicationAdminUser(application(), dataName);
         }
-        if(authorizationsForApplicationUser.isUserManager()){
+        if (authorizationsForApplicationUser.isUserManager()) {
             return new ApplicationManagerUser(application(), dataName);
         }
-        if(toPublish || !application().isData(dataName)){
+        if (toPublish || !application().isData(dataName)) {
             return new ApplicationPublishWriterUser(
                     application(),
                     dataName,
@@ -141,10 +141,10 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
         AuthorizationsForApplicationUser authorizationsForApplicationUser = Optional.of(authorizations())
                 .filter(authorizations -> authorizations.canDelete(dataName, isRepository))
                 .orElseThrow(() -> new NotApplicationCanDeleteRightsException(application().getName(), dataName));
-        if(authorizationsForApplicationUser.isApplicationManager()){
-            return new ApplicationAdminUser(application(),dataName);
+        if (authorizationsForApplicationUser.isApplicationManager()) {
+            return new ApplicationAdminUser(application(), dataName);
         }
-        if(authorizationsForApplicationUser.isUserManager()){
+        if (authorizationsForApplicationUser.isUserManager()) {
             return new ApplicationManagerUser(application(), dataName);
         }
         return new ApplicationDeleteUser(

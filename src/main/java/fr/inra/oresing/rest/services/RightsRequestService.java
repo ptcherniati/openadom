@@ -28,7 +28,7 @@ import java.util.*;
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class RightsRequestService  implements ServiceContainerBean{
+public class RightsRequestService implements ServiceContainerBean {
 
     @Setter
     private ServiceContainer serviceContainer;

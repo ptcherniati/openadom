@@ -45,6 +45,7 @@ import java.util.Properties;
 @SpringBootApplication(scanBasePackages = "fr.inra.oresing")
 public class OreSiNg implements WebMvcConfigurer {
 
+    private final MigrateService migrate;
     @Value("${allowed.origin}")
     private String allowedOrigin;
 
@@ -56,8 +57,6 @@ public class OreSiNg implements WebMvcConfigurer {
         SpringApplication.run(OreSiNg.class, args);
     }
 
-    private final MigrateService migrate;
-
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
@@ -67,6 +66,19 @@ public class OreSiNg implements WebMvcConfigurer {
                 .setCachePeriod(0)
                 .resourceChain(false)
                 .addResolver(new PathResourceResolver());
+    }
+
+    @EventListener(ApplicationReadyEvent.class)
+    public void migrateFlywayDataBases() {
+        migrate.migrateAll();
+    }
+
+    @Bean
+    public MessageSource emailMessageSource() {
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        messageSource.setBasenames("emailMessage"); // Nom de base des fichiers de propriétés
+        messageSource.setDefaultEncoding("UTF-8");
+        return messageSource;
     }
 
     @Configuration
@@ -134,11 +146,6 @@ public class OreSiNg implements WebMvcConfigurer {
         }
     }
 
-    @EventListener(ApplicationReadyEvent.class)
-    public void migrateFlywayDataBases() {
-        migrate.migrateAll();
-    }
-
     @Profile("testmail")
     @Configuration
     public static class MailSenderForTest {
@@ -151,13 +158,5 @@ public class OreSiNg implements WebMvcConfigurer {
         public FileRepository fileRepository() {
             return fileInfos -> "mockedWebAddress";
         }
-    }
-
-    @Bean
-    public MessageSource emailMessageSource() {
-        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-        messageSource.setBasenames("emailMessage"); // Nom de base des fichiers de propriétés
-        messageSource.setDefaultEncoding("UTF-8");
-        return messageSource;
     }
 }

@@ -26,10 +26,12 @@ public record ConstantComponent(
     public ComponentDescription withSubmission(final String submission) {
         return new ConstantComponent(type(), componentKey(), defaultValue(), tags(), required(), mandatory(), checker(), constantImportHeader(), exportHeaderName(), submission);
     }
-    public int rowNumber(){
-        return switch (constantImportHeader()){
+
+    public int rowNumber() {
+        return switch (constantImportHeader()) {
             case ConstantImportHeader constantImportHeader -> constantImportHeader.rowNumber();
-            case SubmissionConstantHeader submissionConstantHeader -> throw new IllegalArgumentException("no row number for submissionComponent");
+            case SubmissionConstantHeader submissionConstantHeader ->
+                    throw new IllegalArgumentException("no row number for submissionComponent");
         };
     }
 }

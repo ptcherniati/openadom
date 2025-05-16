@@ -14,7 +14,6 @@ import fr.inra.oresing.domain.application.configuration.checker.*;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
-import fr.inra.oresing.domain.checker.type.AbstractType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
@@ -44,66 +43,18 @@ import java.util.stream.Collectors;
 @Primary
 public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
 
-    public JsonRowMapper(PropertyNamingStrategy strategies) {
-        buildMapper();
-    }
-
     /**
      * Mapper json pour la persistence (dialogue avec la base de données)
      */
     @Getter
     private ObjectMapper jsonMapper;
 
-    public JsonRowMapper() {
+    public JsonRowMapper(PropertyNamingStrategy strategies) {
         buildMapper();
     }
 
-    private void buildMapper() {
-        this.jsonMapper = JsonMapper.builder()
-                .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
-                .enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
-                .enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING)
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                .addModule(new JavaTimeModule())
-                .propertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE)
-                .build();
-
-
-        SimpleModule module = new SimpleModule()
-                .addDeserializer(Ltree.class, getLtreeDeserializer())
-                .addDeserializer(LocalDateTimeRange.class, getLocalDateTimeRangeJsonDeserializer())
-                .addDeserializer(FieldDescription.class, getFieldDescriptionJsonDeserializer())
-                .addDeserializer(Depends.class, getDependsJsonDeserializer())
-                .addDeserializer(Tag.class, getTagJsonDeserializer())
-                .addDeserializer(CheckerDescription.class, getDescriptionJsonDeserializer())
-                .addDeserializer(ComponentDescription.class, getComponentDescriptionJsonDeserializer())
-                .addDeserializer(ConstantImport.class, getImportJsonDeserializer())
-                .addDeserializer(AuthorizationForScope.class, getAuthorizationForScopeJsonDeserializer())
-                .addDeserializer(TemporalAccessor.class, getTemporalAccessorJsonDeserializer())
-                .addDeserializer(DataDatum.class, getDataDatumJsonDeserializer())
-                .addDeserializer(FieldType.class, getFieldTypeJsonDeserializer())
-                .addSerializer(LocalDateTimeRange.class, getLocalDateTimeRangeJsonSerializer())
-                .addSerializer(ValidationError.class, getValidationErrorJsonSerializer())
-                .addSerializer(InvalidDatasetContentException.class, getInvalidDatasetContentExceptionJsonSerializer())
-                .addSerializer(Ltree.class, getLtreeJsonSerializer())
-                .addSerializer(DataDatum.class, getDataDatumJsonSerializer())
-                .addSerializer(FieldType.class, getFieldTypeJsonSerializer())
-                .addSerializer(StringGroovyExpression.class, getStringGroovyExpressionJsonSerializer());
-        jsonMapper.registerModule(module);
-        jsonMapper.addHandler(new DeserializationProblemHandler() {
-            @Override
-            public Object handleUnexpectedToken(DeserializationContext ctxt,
-                                                JavaType targetType,
-                                                JsonToken t,
-                                                JsonParser p,
-                                                String failureMsg) throws IOException {
-                if (String.class == targetType.getRawClass() && (JsonToken.START_ARRAY == t || JsonToken.START_OBJECT == t)) {
-                    return null;
-                }
-                return super.handleUnexpectedToken(ctxt, targetType, t, p, failureMsg);
-            }
-        });
+    public JsonRowMapper() {
+        buildMapper();
     }
 
     private static JsonSerializer<StringGroovyExpression> getStringGroovyExpressionJsonSerializer() {
@@ -178,7 +129,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         return new JsonDeserializer<>() {
             @Override
             public FieldType<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                return AbstractType.readObject(p.readValueAs(Object.class));
+                return FieldType.readObject(p.readValueAs(Object.class));
             }
         };
     }
@@ -191,6 +142,92 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 return DataDatum.fromDatabaseJson(map);
             }
         };
+    }
+
+    private static JsonDeserializer<Tag> getTagJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public Tag deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                Tag.TagDefinitions type = Optional.ofNullable(node.get("tagdefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
+                return switch (type) {
+                    case NO_TAG -> node.isTextual() ? Tag.buildTag(node.asText()) : Tag.NoTag.instance();
+                    case DATA_TAG -> Tag.DataTag.instance();
+                    case REFFERENCE_TAG -> Tag.ReferenceTag.instance();
+                    case HIDDEN_TAG -> Tag.HiddenTag.instance();
+                    case ORDER_TAG ->
+                            Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
+                    case DOMAIN_TAG ->
+                            Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
+                };
+            }
+        };
+    }
+
+    private static JsonDeserializer<LocalDateTimeRange> getLocalDateTimeRangeJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public LocalDateTimeRange deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return LocalDateTimeRange.parseSql(p.getText());
+            }
+        };
+    }
+
+    private static JsonDeserializer<Ltree> getLtreeDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public Ltree deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return Ltree.fromSqlWithoutCheck(p.getText());
+            }
+        };
+    }
+
+    private void buildMapper() {
+        this.jsonMapper = JsonMapper.builder()
+                .enable(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES)
+                .enable(SerializationFeature.WRITE_ENUMS_USING_TO_STRING)
+                .enable(DeserializationFeature.READ_ENUMS_USING_TO_STRING)
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .addModule(new JavaTimeModule())
+                .propertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE)
+                .build();
+
+
+        SimpleModule module = new SimpleModule()
+                .addDeserializer(Ltree.class, getLtreeDeserializer())
+                .addDeserializer(LocalDateTimeRange.class, getLocalDateTimeRangeJsonDeserializer())
+                .addDeserializer(FieldDescription.class, getFieldDescriptionJsonDeserializer())
+                .addDeserializer(Depends.class, getDependsJsonDeserializer())
+                .addDeserializer(Tag.class, getTagJsonDeserializer())
+                .addDeserializer(CheckerDescription.class, getDescriptionJsonDeserializer())
+                .addDeserializer(ComponentDescription.class, getComponentDescriptionJsonDeserializer())
+                .addDeserializer(ConstantImport.class, getImportJsonDeserializer())
+                .addDeserializer(AuthorizationForScope.class, getAuthorizationForScopeJsonDeserializer())
+                .addDeserializer(TemporalAccessor.class, getTemporalAccessorJsonDeserializer())
+                .addDeserializer(DataDatum.class, getDataDatumJsonDeserializer())
+                .addDeserializer(FieldType.class, getFieldTypeJsonDeserializer())
+                .addSerializer(LocalDateTimeRange.class, getLocalDateTimeRangeJsonSerializer())
+                .addSerializer(ValidationError.class, getValidationErrorJsonSerializer())
+                .addSerializer(InvalidDatasetContentException.class, getInvalidDatasetContentExceptionJsonSerializer())
+                .addSerializer(Ltree.class, getLtreeJsonSerializer())
+                .addSerializer(DataDatum.class, getDataDatumJsonSerializer())
+                .addSerializer(FieldType.class, getFieldTypeJsonSerializer())
+                .addSerializer(StringGroovyExpression.class, getStringGroovyExpressionJsonSerializer());
+        jsonMapper.registerModule(module);
+        jsonMapper.addHandler(new DeserializationProblemHandler() {
+            @Override
+            public Object handleUnexpectedToken(DeserializationContext ctxt,
+                                                JavaType targetType,
+                                                JsonToken t,
+                                                JsonParser p,
+                                                String failureMsg) throws IOException {
+                if (String.class == targetType.getRawClass() && (JsonToken.START_ARRAY == t || JsonToken.START_OBJECT == t)) {
+                    return null;
+                }
+                return super.handleUnexpectedToken(ctxt, targetType, t, p, failureMsg);
+            }
+        });
     }
 
     private JsonDeserializer<TemporalAccessor> getTemporalAccessorJsonDeserializer() {
@@ -299,26 +336,6 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         };
     }
 
-    private static JsonDeserializer<Tag> getTagJsonDeserializer() {
-        return new JsonDeserializer<>() {
-            @Override
-            public Tag deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                JsonNode node = p.readValueAsTree();
-                Tag.TagDefinitions type = Optional.ofNullable(node.get("tagdefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
-                return switch (type) {
-                    case NO_TAG -> node.isTextual() ? Tag.buildTag(node.asText()) : Tag.NoTag.instance();
-                    case DATA_TAG -> Tag.DataTag.instance();
-                    case REFFERENCE_TAG -> Tag.ReferenceTag.instance();
-                    case HIDDEN_TAG -> Tag.HiddenTag.instance();
-                    case ORDER_TAG ->
-                            Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
-                    case DOMAIN_TAG ->
-                            Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
-                };
-            }
-        };
-    }
-
     private JsonDeserializer<Depends> getDependsJsonDeserializer() {
         return new JsonDeserializer<>() {
             @Override
@@ -345,24 +362,6 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                     case RightsRequestField -> jsonMapper.convertValue(node, RightsRequestField.class);
                     case AdditionalFileField -> jsonMapper.convertValue(node, AdditionalFileField.class);
                 };
-            }
-        };
-    }
-
-    private static JsonDeserializer<LocalDateTimeRange> getLocalDateTimeRangeJsonDeserializer() {
-        return new JsonDeserializer<>() {
-            @Override
-            public LocalDateTimeRange deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                return LocalDateTimeRange.parseSql(p.getText());
-            }
-        };
-    }
-
-    private static JsonDeserializer<Ltree> getLtreeDeserializer() {
-        return new JsonDeserializer<>() {
-            @Override
-            public Ltree deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                return Ltree.fromSqlWithoutCheck(p.getText());
             }
         };
     }

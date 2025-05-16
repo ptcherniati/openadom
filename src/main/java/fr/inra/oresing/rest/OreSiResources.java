@@ -31,6 +31,7 @@ import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
+import fr.inra.oresing.domain.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
@@ -152,8 +153,15 @@ public class OreSiResources implements ServiceContainerBean {
     public static final String BAD_REPORT = "Le rapport est incomplet ou contient des erreurs. L'e-mail n'a pas été envoyé.";
     public static final String BAD_BUNDLE = "Erreur lors de la création du bundle de téléchargement";
     public static final String BUNDLE_NAME = "%s-upload-bundle.zip";
+    public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
     @Autowired
     LocaleResolver localeResolver;
+    @Setter
+    private ServiceContainer serviceContainer;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private OreSiApiRequestContext request;
 
     public static Locale getDefaultLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -169,21 +177,6 @@ public class OreSiResources implements ServiceContainerBean {
         }
 
         return Locale.ENGLISH;
-    }
-
-    public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
-
-    @Setter
-    private ServiceContainer serviceContainer;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private OreSiApiRequestContext request;
-
-    private Flux<ReactiveResult> buildFluxRequestNDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
-        return Flux.create(fluxSink);
     }
 
     private static CreateRightsRequestRequest deserialiseRightsRequestOrUUIDQuery(final String params) {
@@ -218,6 +211,10 @@ public class OreSiResources implements ServiceContainerBean {
         } catch (final IOException e) {
             throw new BadFileOrUUIDQuery(e.getMessage());
         }
+    }
+
+    private Flux<ReactiveResult> buildFluxRequestNDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
+        return Flux.create(fluxSink);
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DELETE_FILE')")
@@ -360,14 +357,6 @@ public class OreSiResources implements ServiceContainerBean {
     public Flux<ReactiveResult> createApplication(@PathVariable("name") final String name,
                                                   @RequestParam(name = "comment", defaultValue = "") final String comment,
                                                   @RequestParam("file") final MultipartFile file) throws BadApplicationConfigurationException {
-
-        final Application application;
-        /*try {
-            log.info("Modification de l'application %s".formatted(name));
-            return changeConfiguration(name, file, comment);
-        } catch (final Exception e) {
-            log.info("Création de l'application %s".formatted(name));
-        }*/
 
         if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
             //TODO test à faire

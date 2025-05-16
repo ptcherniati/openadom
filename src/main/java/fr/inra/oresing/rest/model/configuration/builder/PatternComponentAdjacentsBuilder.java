@@ -53,7 +53,7 @@ public record PatternComponentAdjacentsBuilder(RootBuilder rootBuilder) {
                         .asText("");
                 if (Strings.isNullOrEmpty(importHeaderPattern)) {
                     rootBuilder().buildError(
-                            ConfigurationException.MISSING_IMPORT_HEADER_PATTERN ,
+                            ConfigurationException.MISSING_IMPORT_HEADER_PATTERN,
                             NodeSchemaValidator.joinPath(
                                     componentPath,
                                     ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS,
@@ -90,7 +90,7 @@ public record PatternComponentAdjacentsBuilder(RootBuilder rootBuilder) {
                 );
                 patternColumnComponentBuilder.put(label, patternColumnComponent);
                 componentDescriptionBuilder.put(
-                        Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentKey,label),
+                        Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentKey, label),
                         patternColumnComponent
                 );
             }

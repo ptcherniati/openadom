@@ -12,7 +12,7 @@ import fr.inra.oresing.domain.authorization.request.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public record  AuthorizationIndex(Application application) {
+public record AuthorizationIndex(Application application) {
     public String createIndexes() {
         StringBuilder sqlBuilder = new StringBuilder();
 
@@ -78,7 +78,6 @@ public record  AuthorizationIndex(Application application) {
         // Si des autorisations sont requises, créer un index supplémentaire
         if (hasRequiredAuthorizations[0] || hasTimeScope[0]) {
             List<String> authIndexColumns = new ArrayList<>();
-            List<String> timescopeIndexColumns = new ArrayList<>();
 
             if (hasRequiredAuthorizations[0]) {
                 authorizationScopes.forEach(scope ->
@@ -87,14 +86,14 @@ public record  AuthorizationIndex(Application application) {
 
 
                 indexSql.append(String.format("""
-                            CREATE INDEX IF NOT EXISTS %1$s_auth_index
-                            ON %2$s.referencevalue USING gin
-                            (
-                                %3$s
-                            )
-                            WHERE referencetype = '%4$s';
-                            
-                            """,
+                                CREATE INDEX IF NOT EXISTS %1$s_auth_index
+                                ON %2$s.referencevalue USING gin
+                                (
+                                    %3$s
+                                )
+                                WHERE referencetype = '%4$s';
+                                
+                                """,
                         indexName(dataname),
                         application().getName(),
                         String.join(",\n    ", authIndexColumns),
@@ -104,12 +103,12 @@ public record  AuthorizationIndex(Application application) {
 
             if (hasTimeScope[0]) {
                 indexSql.append(String.format("""
-                            CREATE INDEX IF NOT EXISTS %1$s_timescope_index
-                            ON %2$s.referencevalue USING gist
-                            %3$s
-                            WHERE referencetype = '%4$s';
-                            
-                            """,
+                                CREATE INDEX IF NOT EXISTS %1$s_timescope_index
+                                ON %2$s.referencevalue USING gist
+                                %3$s
+                                WHERE referencetype = '%4$s';
+                                
+                                """,
                         indexName(dataname),
                         application().getName(),
                         "(((\"authorization\").timescope))",

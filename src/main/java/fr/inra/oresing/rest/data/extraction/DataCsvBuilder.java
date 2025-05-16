@@ -140,16 +140,16 @@ public class DataCsvBuilder {
                         elementsToBeSortedInFirst);
         try {
             Function<String, String> getInternationalizedHeader = componentName -> Optional.ofNullable(
-                    downloadDatasetQuery.application()
-                            .getConfiguration().i18n())
+                            downloadDatasetQuery.application()
+                                    .getConfiguration().i18n())
                     .map(Internationalizations::getData)
-                    .map(data->data.get(downloadDatasetQuery.dataName()))
+                    .map(data -> data.get(downloadDatasetQuery.dataName()))
                     .map(InternationalizationData::getComponents)
-                    .map(components->components.get(componentName))
+                    .map(components -> components.get(componentName))
                     .map(InternationalizationComponent::getExportHeader)
                     .map(InternationalizationTitle::getTitle)
-                    .map(title->title.get(Locale.of(downloadDatasetQuery.getLanguage()))
-            ).orElse(componentName);
+                    .map(title -> title.get(Locale.of(downloadDatasetQuery.getLanguage()))
+                    ).orElse(componentName);
             Comparator<ComponentOrderByForExport> comparator = ComponentOrderByForExport.getComparator(dataDescription);
             DataCsvHeaderWriter dataCsvHeaderWriter = new DataCsvHeaderWriter(
                     writer,

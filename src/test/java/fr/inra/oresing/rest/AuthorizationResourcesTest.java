@@ -505,7 +505,7 @@ public class AuthorizationResourcesTest {
             {
                 // on donne les droits pour un pattern acbb
 
-                 mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorResult.userId().toString())
                                 .param("applicationPattern", "acbb")
                                 .cookie(dbUserCookies))

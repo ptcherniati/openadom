@@ -23,10 +23,12 @@ public interface SqlSchema extends WithSqlIdentifier {
     default String getSqlIdentifier() {
         return WithSqlIdentifier.escapeSqlIdentifier(getName());
     }
-    default String setSchemaOwnerSql(final OreSiRole owner){
+
+    default String setSchemaOwnerSql(final OreSiRole owner) {
         return "ALTER SCHEMA " + getSqlIdentifier() + " OWNER TO " + owner.getSqlIdentifier();
     }
-    default String setGrantToSql(final OreSiRole grantTo){
+
+    default String setGrantToSql(final OreSiRole grantTo) {
         return "GRANT USAGE ON SCHEMA " + getSqlIdentifier() + " TO " + grantTo.getSqlIdentifier();
     }
 }

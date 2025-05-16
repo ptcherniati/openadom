@@ -10,9 +10,9 @@ OA_application:
   OA_version: 1.0.1
 OA_data:
   tr_sites_sit:
-    OA_naturalKey: [sit_code]
-    OA_i18n:   #mandatory
-      OA_title:   #optional
+    OA_naturalKey: [ sit_code ]
+    OA_i18n: #mandatory
+      OA_title: #optional
         fr: "Sites"
         en: "Sites"
     OA_i18nDisplayPattern:
@@ -23,7 +23,7 @@ OA_data:
           {site_en}
     OA_basicComponents:
       sit_code:
-        OA_tags: [__HIDDEN__]
+        OA_tags: [ __HIDDEN__ ]
         OA_importHeader: site
         OA_exportHeader:
           OA_title:
@@ -42,36 +42,36 @@ OA_data:
           OA_title:
             en: Site
   t_zone_etude_zet:
-    OA_naturalKey:   #mandatory
+    OA_naturalKey: #mandatory
       - zet_date  #optional
       - zet_sit_id  #optional
-    OA_tags:   #optional
+    OA_tags: #optional
       - __DATA__
-    OA_i18n:   #mandatory
-      OA_title:   #optional
+    OA_i18n: #mandatory
+      OA_title: #optional
         fr: "Zone d'étude"
         en: "Study area"
-      OA_description:   #optional
+      OA_description: #optional
         fr: "Référentiel des zones d'études"
         en: "Study area repository"
 
     OA_basicComponents:
       zet_date:
         OA_importHeader: "date"
-        OA_tags: [__ORDER_1__]
+        OA_tags: [ __ORDER_1__ ]
         OA_checker:
           OA_name: OA_date
           OA_params:
             OA_pattern: dd/MM/yyyy
       zet_sit_id:
         OA_importHeader: "site"
-        OA_tags: [__ORDER_2__]
+        OA_tags: [ __ORDER_2__ ]
         OA_checker:
           OA_name: OA_reference
           OA_params:
             OA_reference:
               OA_name: tr_sites_sit
-    OA_submission:   #optional
+    OA_submission: #optional
       OA_strategy: OA_VERSIONING
       OA_submissionScope:
         OA_referenceScopes:

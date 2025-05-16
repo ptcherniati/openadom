@@ -5,10 +5,25 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
 import java.util.Map;
 
-public record BooleanCheckerType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType> children,
+public record BooleanCheckerType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                                  boolean required,
                                  boolean nullable) implements CheckerType {
-    public static SectionBuilder SECTION_BUILDER(){
+    public BooleanCheckerType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER(),
+                children,
+                true,
+                false);
+    }
+
+    public BooleanCheckerType(final SectionBuilder sectionBuilder, final Map<String, ConfigurationSchemaNodeType<?>> children, final boolean required, final boolean nullable) {
+        this.children = addNameNode(children);
+        this.sectionBuilder = sectionBuilder
+                .test(children().keySet());
+        this.required = required;
+        this.nullable = nullable;
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withMandatorySections(
                         new LabelDescription(ConfigurationSchemaNode.OA_NAME, EnumType.CHECKER_NAME_ENUM)
@@ -17,7 +32,8 @@ public record BooleanCheckerType(SectionBuilder sectionBuilder, Map<String, Conf
                         new LabelDescription(ConfigurationSchemaNode.OA_PARAMS, IntegerCheckerParamsType.EMPTY_INSTANCE())
                 );
     }
-    public static BooleanCheckerType  EMPTY_INSTANCE() {
+
+    public static BooleanCheckerType EMPTY_INSTANCE() {
         return new BooleanCheckerType(
                 Map.of(
                         ConfigurationSchemaNode.OA_NAME, new StringType(CheckerEnum.OA_boolean.name()),
@@ -28,20 +44,5 @@ public record BooleanCheckerType(SectionBuilder sectionBuilder, Map<String, Conf
     @Override
     public CheckerEnum getChecker() {
         return CheckerEnum.OA_boolean;
-    }
-
-    public BooleanCheckerType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER(),
-                children,
-                true,
-                false);
-    }
-
-    public BooleanCheckerType(final SectionBuilder sectionBuilder, final Map<String, ConfigurationSchemaNodeType> children, final boolean required, final boolean nullable) {
-        this.children = addNameNode(children);
-        this.sectionBuilder = sectionBuilder
-                .test(children().keySet());
-        this.required = required;
-        this.nullable = nullable;
     }
 }

@@ -6,11 +6,11 @@ public record StringType(String children,
     public static final StringType FR = new StringType("fr", false);
     public static final StringType EN = new StringType("en", false);
 
-    public static StringType  EMPTY_INSTANCE() {
-        return new StringType("");
-    }
-
     public StringType(final String children) {
         this(children, false);
+    }
+
+    public static StringType EMPTY_INSTANCE() {
+        return new StringType("");
     }
 }

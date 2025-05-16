@@ -15,6 +15,12 @@ public enum CheckerReturnType {
     SET_OF_STRING("Set<String>"),
     SET_OF_NUMBER("Set<Number>");
 
+    private final String name;
+
+    CheckerReturnType(final String name) {
+        this.name = name;
+    }
+
     public static SiOreIllegalArgumentException getError(final Object evaluation, final GroovyExpression expression, final Map<String, Object> context) {
         return new SiOreIllegalArgumentException(
                 "badGroovyExpressionCheckerReturnType",
@@ -41,12 +47,6 @@ public enum CheckerReturnType {
 
     public final String getName() {
         return name;
-    }
-
-    private final String name;
-
-    CheckerReturnType(final String name) {
-        this.name = name;
     }
 
     @Override

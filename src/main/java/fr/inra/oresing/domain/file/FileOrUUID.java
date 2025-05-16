@@ -45,7 +45,7 @@ public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, Boole
                 final String ltree = requiredAuthorizationForFileEntry.getValue().getFirst().getSql();
                 if (requiredAuthorizationInDataBase.get(scope).stream()
                         .noneMatch(pathAuthorized -> ltree.equals(pathAuthorized) ||
-                                                     ltree.startsWith(pathAuthorized + Ltree.SEPARATOR))
+                                ltree.startsWith(pathAuthorized + Ltree.SEPARATOR))
                 ) {
                     return false;
                 }

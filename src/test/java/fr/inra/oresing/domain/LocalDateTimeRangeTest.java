@@ -37,7 +37,7 @@ public class LocalDateTimeRangeTest {
         }
     }*/
     @Test
-     void testDayPattern() {
+    void testDayPattern() {
         LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020", getDateCheckerConfiguration("dd/MM/yyyy", "2 MONTHS"));
         assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
         range = LocalDateTimeRange.parse("01/01/2020", getDateCheckerConfiguration("dd/MM/yyyy", null));
@@ -45,7 +45,7 @@ public class LocalDateTimeRangeTest {
     }
 
     @Test
-     void testSemiHourlyPattern() {
+    void testSemiHourlyPattern() {
         LocalDateTimeRange range = LocalDateTimeRange.parse("01/01/2020 01:30:00", getDateCheckerConfiguration("dd/MM/yyyy HH:mm:ss", "30 MINUTES"));
         assertEquals("[\"2020-01-01 01:30:00\",\"2020-01-01 02:00:00\")", range.toSqlExpression());
         range = LocalDateTimeRange.parse("01/01/2020 01:30:00", getDateCheckerConfiguration("dd/MM/yyyy HH:mm:ss", null));
@@ -53,7 +53,7 @@ public class LocalDateTimeRangeTest {
     }
 
     @Test
-     void testMounthPattern() {
+    void testMounthPattern() {
         LocalDateTimeRange range = LocalDateTimeRange.parse("01/2020", getDateCheckerConfiguration("MM/yyyy", "2 MONTHS"));
         assertEquals("[\"2020-01-01 00:00:00\",\"2020-03-01 00:00:00\")", range.toSqlExpression());
         range = LocalDateTimeRange.parse("01/2020", getDateCheckerConfiguration("MM/yyyy", null));

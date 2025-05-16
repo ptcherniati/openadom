@@ -49,7 +49,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
                             return lt;
                         }
                 )
-                .orElse ( new ListType(NullType.INSTANCE));
+                .orElse(new ListType(NullType.INSTANCE));
     }
 
     @Override

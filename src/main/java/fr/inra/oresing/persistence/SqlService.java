@@ -110,9 +110,9 @@ public class SqlService {
 
     public void createRoleWithPublic(final OreSiRoleManagedByApplication roleManagedByApplication, String comment) {
         final String sql = """
-            CREATE ROLE %1$s IN ROLE "%2$s";
-            COMMENT ON ROLE %1$s IS %3$s;
-            """
+                CREATE ROLE %1$s IN ROLE "%2$s";
+                COMMENT ON ROLE %1$s IS %3$s;
+                """
                 .formatted(
                         roleManagedByApplication.getSqlIdentifier(),
                         SqlSchemaForApplication.PUBLIC_UUID.toString(),

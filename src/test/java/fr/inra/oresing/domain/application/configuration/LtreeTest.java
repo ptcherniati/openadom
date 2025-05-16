@@ -28,9 +28,9 @@ class LtreeTest {
     }
 
     @Test
-     void parseLabel() {
+    void parseLabel() {
         final String sql = Ltree.fromUnescapedString("composition <5%/µg").getSql();
-        
+
         // Remarque :
         // Le caractère 'µ' (MICRO SIGN, U+00B5) est automatiquement transformé par Java
         // en 'μ' (GREEK SMALL LETTER MU, U+03BC) lors de la normalisation ( par exemple via Normalizer.normalize ou StringUtils.stripAccents ).
@@ -47,19 +47,19 @@ class LtreeTest {
         Ltree nk = Ltree.fromUnescapedString(label);
         Assert.assertEquals(label, nk.getSql());
     }*/
-    
+
     @ParameterizedTest(name = "{0} match an encodingString")
-    @ValueSource(strings = {"%",">","$","?","&","@","°","µ"})
-    void testIsEcodedString(String aSign){
+    @ValueSource(strings = {"%", ">", "$", "?", "&", "@", "°", "µ"})
+    void testIsEcodedString(String aSign) {
         String aChar = Ltree.fromUnescapedString(aSign).getSql();
         assertTrue(Ltree.isEncodedString(aChar));
     }
-    
+
     @ParameterizedTest(name = "{0} doesn't match an encodingString")
-    @ValueSource(strings = {"_","A","2","a","²"})
-    // Les caractères ici ne doivent pas être considérés comme encodés.
-    // Exemple : '²' (SUPERSCRIPT TWO) est traité comme un caractère normal ici.
-    void testIsNotEncodedString(String aSign){
+    @ValueSource(strings = {"_", "A", "2", "a", "²"})
+        // Les caractères ici ne doivent pas être considérés comme encodés.
+        // Exemple : '²' (SUPERSCRIPT TWO) est traité comme un caractère normal ici.
+    void testIsNotEncodedString(String aSign) {
         String aChar = Ltree.fromUnescapedString(aSign).getSql();
         assertFalse(Ltree.isEncodedString(aChar));
     }

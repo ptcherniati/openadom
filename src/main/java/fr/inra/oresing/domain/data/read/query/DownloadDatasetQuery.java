@@ -23,9 +23,10 @@ public sealed interface DownloadDatasetQuery extends MessageInformations
     String dataName();
 
     OutPut outPut();
+
     boolean horizontalDisplay();
 
-    default long patternDefinitionCount(){
+    default long patternDefinitionCount() {
         return Optional.ofNullable(application())
                 .map(Application::getConfiguration)
                 .flatMap(configuration -> configuration.findData(dataName()))

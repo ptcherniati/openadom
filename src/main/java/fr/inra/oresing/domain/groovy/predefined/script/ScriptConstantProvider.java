@@ -11,8 +11,6 @@ import java.util.Map;
  */
 public sealed interface ScriptConstantProvider permits BuildCompositeKey, BuildExceptionProvider, BuildManyCompositeKey, EscapeLabelProvider, NaturalKeyProvider {
 
-    void bindToContext(Map<String, Object> context);
-
     static void addAllToContext(Map<String, Object> context) {
         // Utilisation de getPermittedSubclasses pour obtenir les implémentations
         Class<?>[] implementations = ScriptConstantProvider.class.getPermittedSubclasses();
@@ -29,4 +27,6 @@ public sealed interface ScriptConstantProvider permits BuildCompositeKey, BuildE
             }
         }
     }
+
+    void bindToContext(Map<String, Object> context);
 }

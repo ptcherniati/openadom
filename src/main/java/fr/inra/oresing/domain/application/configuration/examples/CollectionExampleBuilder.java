@@ -5,11 +5,106 @@ import fr.inra.oresing.domain.application.configuration.type.*;
 import java.util.*;
 
 class CollectionExampleBuilder {
-    protected static final CollectionType.MapType<BasicComponentType> ESPECE_BASIC_COMPONENTS = new CollectionType.MapType<>(
+    protected static final CollectionType.MapType<BasicComponentType> ESPECE_BASIC_COMPONENTS = new CollectionType.MapType<BasicComponentType>(
             createEspeceBasicComponentsMap(),
             false,
             false,
             BasicComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<BasicComponentType> SITES_BASIC_COMPONENTS = new CollectionType.MapType<BasicComponentType>(
+            createSitesBasicComponentsMap(),
+            false,
+            false,
+            BasicComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<ComputedComponentType> SITES_COMPUTED_COMPONENTS = new CollectionType.MapType<ComputedComponentType>(
+            createSitesComputedComponentsMap(),
+            false,
+            false,
+            ComputedComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<BasicComponentType> PROPRIETE_TAXON_BASIC_COMPONENTS = new CollectionType.MapType<>(
+            createProprieteTaxonBasicComponentsMap(),
+            false,
+            false,
+            BasicComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<BasicComponentType> TAXON_BASIC_COMPONENTS = new CollectionType.MapType<BasicComponentType>(Map.of("tax_taxon", BasicComponentExampleBuilder.TAXON_NOM), false, false, BasicComponentType.EMPTY_INSTANCE());
+    protected static final CollectionType.MapType<DynamicComponentType> TAXON_DYNAMIC_COMPONENTS = new CollectionType.MapType<DynamicComponentType>(Map.of("tax_propriete_taxon", DynamicComponentsExampleBuilder.PROPRIETE_TAXON), false, false, DynamicComponentType.EMPTY_INSTANCE());
+    protected static final CollectionType.MapType<ComputedComponentType> ESPECE_COMPUTED_COMPONENTS = new CollectionType.MapType<ComputedComponentType>(Map.of("spe_date_heure", ComputedComponentExampleBuilder.DATE_HEURE), false, false, ComputedComponentType.EMPTY_INSTANCE());
+    protected static final CollectionType.MapType<BasicComponentType> PROJET_BASIC_COMPONENTS = new CollectionType.MapType<BasicComponentType>(
+            createProjetBasicComponentsMap(),
+            false,
+            false,
+            BasicComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<BasicComponentType> TYPE_DE_SITES_BASIC_COMPONENTS = new CollectionType.MapType<>(
+            createTypeDeSitesBasicComponentsMap(),
+            false,
+            false,
+            BasicComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<BasicComponentType> DATA_BASIC_COMPONENTS = new CollectionType.MapType<>(
+            createDataBasicComponentsMap(),
+            false,
+            false,
+            BasicComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<ComputedComponentType> DATA_COMPUTED_COMPONENTS = new CollectionType.MapType<>(
+            Map.of("dat_date_heure", ComputedComponentExampleBuilder.DATA_DATE_HEURE), false, false, ComputedComponentType.EMPTY_INSTANCE());
+    protected static final CollectionType.MapType<PatternComponentType> DATA_PATTERN_COMPONENTS = new CollectionType.MapType<>(
+            createDataPatternComponentsMap(),
+            false,
+            false,
+            PatternComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<ConstantComponentType> DATA_CONSTANT_COMPONENTS = new CollectionType.MapType<>(
+            createDataConstantComponentsMap(),
+            false,
+            false,
+            ConstantComponentType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<ValidationType> DATA_VALIDATIONS = new CollectionType.MapType<>(
+            createDataValidationsMap(),
+            false,
+            false,
+            ValidationType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<AdditionalFileType> ADITIONNAL_FILES = new CollectionType.MapType<>(
+            createAdditionalFilesMap(),
+            false,
+            false,
+            AdditionalFileType.EMPTY_INSTANCE()
+    );
+    protected static final CollectionType.MapType<FormatType> RIGHT_REQUEST_FORM_FIELDS = new CollectionType.MapType<>(
+            createRightRequestFormFieldsMap(),
+            false,
+            false,
+            FormatType.EMPTY_INSTANCE()
+    );
+    protected static final TitleType ESPECE_DISPLAY = TitleExampleBuilder.buildTitle(
+            I18nExampleBuilder.buildI18n("\"{spe_species}\"", "\"{spe_species}\""),
+            I18nExampleBuilder.buildI18n("\"{spe_definition_fr}\"", "\"{spe_definition_en}\"")
+    );
+    protected static final TitleType NOM_ZET_DISPLAY = TitleExampleBuilder.buildTitle(
+            I18nExampleBuilder.buildI18n("\"'{zet_nom_fr}'\"", "\"'{zet_nom_en}'\""),
+            I18nExampleBuilder.buildI18n("\"'{zet_description_fr}'\"", "\"'{zet_description_fr}'\"")
+    );
+    protected static final TitleType PROJET_DISPLAY = TitleExampleBuilder.buildTitle(
+            I18nExampleBuilder.buildI18n("\"'{pro_nom_fr}'\"", "\"'{pro_nom_en}'\""),
+            I18nExampleBuilder.buildI18n("\"'{pro_definition_fr}'\"", "\"'{pro_definition_en}'\"")
+    );
+    protected static final TitleType NOM_TZE_DISPLAY = TitleExampleBuilder.buildTitle(
+            I18nExampleBuilder.buildI18n("\"'De type : {tze_nom_fr}'\"", "\"'Of type : {tze_nom_en}'\""),
+            I18nExampleBuilder.buildI18n("\"'{tze_definition_fr}'\"", "\"'{tze_definition_en}'\"")
+    );
+    protected static final TitleType TAXON_DISPLAY = TitleExampleBuilder.buildTitle(
+            I18nExampleBuilder.buildI18n("\"'{tax_taxon}'\"", "\"'{tax_taxon}'\""),
+            null
+    );
+    protected static final TitleType PROPRIETE_TAXON_DISPLAY = TitleExampleBuilder.buildTitle(
+            I18nExampleBuilder.buildI18n("\"'{ptx_propriete}'\"", "\"'{ptx_propriete}'\""),
+            null
     );
 
     private static Map<String, BasicComponentType> createEspeceBasicComponentsMap() {
@@ -27,13 +122,6 @@ class CollectionExampleBuilder {
         return map;
     }
 
-    protected static final CollectionType.MapType<BasicComponentType> SITES_BASIC_COMPONENTS = new CollectionType.MapType<>(
-            createSitesBasicComponentsMap(),
-            false,
-            false,
-            BasicComponentType.EMPTY_INSTANCE()
-    );
-
     private static Map<String, BasicComponentType> createSitesBasicComponentsMap() {
         Map<String, BasicComponentType> map = new LinkedHashMap<>();
         map.put("tze_type_nom", BasicComponentExampleBuilder.TYPE_DE_SITES);
@@ -45,20 +133,6 @@ class CollectionExampleBuilder {
         map.put("zet_chemin_parent", BasicComponentExampleBuilder.SITES_PARENT);
         return map;
     }
-
-    protected static final CollectionType.MapType<ComputedComponentType> SITES_COMPUTED_COMPONENTS = new CollectionType.MapType<>(
-            createSitesComputedComponentsMap(),
-            false,
-            false,
-            ComputedComponentType.EMPTY_INSTANCE()
-    );
-
-    protected static final CollectionType.MapType<BasicComponentType> PROPRIETE_TAXON_BASIC_COMPONENTS = new CollectionType.MapType<>(
-            createProprieteTaxonBasicComponentsMap(),
-            false,
-            false,
-            BasicComponentType.EMPTY_INSTANCE()
-    );
 
     private static Map<String, ComputedComponentType> createSitesComputedComponentsMap() {
         Map<String, ComputedComponentType> map = new LinkedHashMap<>();
@@ -72,30 +146,6 @@ class CollectionExampleBuilder {
         map.put("ptx_propriete", BasicComponentExampleBuilder.PROPRIETE);
         return map;
     }
-
-    protected static final CollectionType.MapType<BasicComponentType> TAXON_BASIC_COMPONENTS = new CollectionType.MapType<>(Map.of("tax_taxon", BasicComponentExampleBuilder.TAXON_NOM), false, false, BasicComponentType.EMPTY_INSTANCE());
-    protected static final CollectionType.MapType<DynamicComponentType> TAXON_DYNAMIC_COMPONENTS = new CollectionType.MapType<>(Map.of("tax_propriete_taxon", DynamicComponentsExampleBuilder.PROPRIETE_TAXON), false, false, DynamicComponentType.EMPTY_INSTANCE());
-    protected static final CollectionType.MapType<ComputedComponentType> ESPECE_COMPUTED_COMPONENTS = new CollectionType.MapType<>(Map.of("spe_date_heure", ComputedComponentExampleBuilder.DATE_HEURE), false, false, ComputedComponentType.EMPTY_INSTANCE());
-    protected static final CollectionType.MapType<BasicComponentType> PROJET_BASIC_COMPONENTS = new CollectionType.MapType<>(
-            createProjetBasicComponentsMap(),
-            false,
-            false,
-            BasicComponentType.EMPTY_INSTANCE()
-    );
-
-    protected static final CollectionType.MapType<BasicComponentType> TYPE_DE_SITES_BASIC_COMPONENTS = new CollectionType.MapType<>(
-            createTypeDeSitesBasicComponentsMap(),
-            false,
-            false,
-            BasicComponentType.EMPTY_INSTANCE()
-    );
-
-    protected static final CollectionType.MapType<BasicComponentType> DATA_BASIC_COMPONENTS = new CollectionType.MapType<>(
-            createDataBasicComponentsMap(),
-            false,
-            false,
-            BasicComponentType.EMPTY_INSTANCE()
-    );
 
     private static Map<String, BasicComponentType> createProjetBasicComponentsMap() {
         Map<String, BasicComponentType> map = new LinkedHashMap<>();
@@ -123,51 +173,6 @@ class CollectionExampleBuilder {
         map.put("dat_heure", BasicComponentType.EMPTY_INSTANCE());
         return map;
     }
-
-    protected static final CollectionType.MapType<ComputedComponentType> DATA_COMPUTED_COMPONENTS = new CollectionType.MapType<>(
-            Map.of("dat_date_heure", ComputedComponentExampleBuilder.DATA_DATE_HEURE), false, false, ComputedComponentType.EMPTY_INSTANCE());
-
-    protected static final CollectionType.MapType<PatternComponentType> DATA_PATTERN_COMPONENTS = new CollectionType.MapType<>(
-            createDataPatternComponentsMap(),
-            false,
-            false,
-            PatternComponentType.EMPTY_INSTANCE()
-    );
-
-    protected static final CollectionType.MapType<ConstantComponentType> DATA_CONSTANT_COMPONENTS = new CollectionType.MapType<>(
-            createDataConstantComponentsMap(),
-            false,
-            false,
-            ConstantComponentType.EMPTY_INSTANCE()
-    );
-
-    protected static final CollectionType.MapType<ValidationType> DATA_VALIDATIONS = new CollectionType.MapType<>(
-            createDataValidationsMap(),
-            false,
-            false,
-            ValidationType.EMPTY_INSTANCE()
-    );
-
-    protected static final CollectionType.MapType<AdditionalFileType> ADITIONNAL_FILES = new CollectionType.MapType<>(
-            createAdditionalFilesMap(),
-            false,
-            false,
-            AdditionalFileType.EMPTY_INSTANCE()
-    );
-
-    protected static final CollectionType.MapType<ApplicationType.ComponentType> COMPONENT_QUALIFIERS = new CollectionType.MapType<>(
-            createComponentQualifiersMap(),
-            false,
-            false,
-            PatternComponentQualifierType.EMPTY_INSTANCE()
-    );
-
-    protected static final CollectionType.MapType<FormatType> RIGHT_REQUEST_FORM_FIELDS = new CollectionType.MapType<>(
-            createRightRequestFormFieldsMap(),
-            false,
-            false,
-            FormatType.EMPTY_INSTANCE()
-    );
 
     private static Map<String, PatternComponentType> createDataPatternComponentsMap() {
         Map<String, PatternComponentType> map = new LinkedHashMap<>();
@@ -219,47 +224,12 @@ class CollectionExampleBuilder {
         return map;
     }
 
-    protected static final CollectionType.MapType<I18nType> ESPECE_DEFINITION = buildI18nColumns(Map.of("spe_definition_fr", I18nExampleBuilder.buildI18n("spe_definition_fr", "spe_definition_en")));
-    protected static final CollectionType.MapType<I18nType> NOM = buildI18nColumns(Map.of("pro_nom_key", I18nExampleBuilder.buildI18n("pro_nom_fr", "pro_nom_en")));
-    protected static final CollectionType.MapType<I18nType> SITE_NOM = buildI18nColumns(Map.of("zet_nom_key", I18nExampleBuilder.buildI18n("zet_nom_fr", "zet_nom_en")));
-    protected static final CollectionType.MapType<I18nType> TAXON_COLUMNS = buildI18nColumns(Map.of("tax_taxon", I18nExampleBuilder.buildI18n("Nom du taxon", "Taxa name")));
-    protected static final CollectionType.MapType<I18nType> PROPRIETE_TAXON_COLUMNS = buildI18nColumns(Map.of("ptx_propriete", I18nExampleBuilder.buildI18n("Nom de la propriété de taxon", "Taxa property name")));
-    protected static final CollectionType.MapType<I18nType> TYPE_SITE_NOM_DEFINITION = buildI18nColumns(
-            createTypeSiteNomDefinitionMap()
-    );
-
     private static Map<String, I18nType> createTypeSiteNomDefinitionMap() {
         Map<String, I18nType> map = new LinkedHashMap<>();
         map.put("tze_nom_key", I18nExampleBuilder.buildI18n("tze_nom_fr", "tze_nom_en"));
         map.put("tze_definition_fr", I18nExampleBuilder.buildI18n("tze_definition_fr", "tze_definition_en"));
         return map;
     }
-
-    protected static final TitleType ESPECE_DISPLAY = TitleExampleBuilder.buildTitle(
-            I18nExampleBuilder.buildI18n("\"{spe_species}\"", "\"{spe_species}\""),
-            I18nExampleBuilder.buildI18n("\"{spe_definition_fr}\"", "\"{spe_definition_en}\"")
-    );
-    protected static final TitleType NOM_ZET_DISPLAY = TitleExampleBuilder.buildTitle(
-            I18nExampleBuilder.buildI18n("\"'{zet_nom_fr}'\"", "\"'{zet_nom_en}'\""),
-            I18nExampleBuilder.buildI18n("\"'{zet_description_fr}'\"", "\"'{zet_description_fr}'\"")
-    );
-    protected static final TitleType PROJET_DISPLAY = TitleExampleBuilder.buildTitle(
-            I18nExampleBuilder.buildI18n("\"'{pro_nom_fr}'\"", "\"'{pro_nom_en}'\""),
-            I18nExampleBuilder.buildI18n("\"'{pro_definition_fr}'\"", "\"'{pro_definition_en}'\"")
-    );
-    protected static final TitleType NOM_TZE_DISPLAY = TitleExampleBuilder.buildTitle(
-            I18nExampleBuilder.buildI18n("\"'De type : {tze_nom_fr}'\"", "\"'Of type : {tze_nom_en}'\""),
-            I18nExampleBuilder.buildI18n("\"'{tze_definition_fr}'\"", "\"'{tze_definition_en}'\"")
-    );
-    protected static final TitleType TAXON_DISPLAY = TitleExampleBuilder.buildTitle(
-            I18nExampleBuilder.buildI18n("\"'{tax_taxon}'\"", "\"'{tax_taxon}'\""),
-            null
-    );
-    protected static final TitleType PROPRIETE_TAXON_DISPLAY = TitleExampleBuilder.buildTitle(
-            I18nExampleBuilder.buildI18n("\"'{ptx_propriete}'\"", "\"'{ptx_propriete}'\""),
-            null
-    );
-
 
     protected static CollectionType.MapType<I18nType> buildI18nColumns(final Map<String, I18nType> columns) {
         return new CollectionType.MapType<>(columns, false, false, I18nType.EMPTY_INSTANCE());

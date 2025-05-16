@@ -424,7 +424,8 @@ public class RelationalService implements ServiceContainerBean, InitializingBean
                             sqlComponents()
                                     .stream()
                                     .map(sqlComponent -> switch (this) {
-                                        case final SQLVariableForData sqlVariableForData -> sqlComponent.toRecordDefinition();
+                                        case final SQLVariableForData sqlVariableForData ->
+                                                sqlComponent.toRecordDefinition();
                                         case final SQLVariableForRefsLinkedTo sqlVariableForRefsLinkedTo ->
                                                 sqlComponent.toRecordDefinitionForRef();
                                     })
@@ -572,7 +573,7 @@ public class RelationalService implements ServiceContainerBean, InitializingBean
         }
 
         String toRecordDefinition() {
-            final String cast = sqlType().cast().contains("DATE")?"TEXT":sqlType().cast();
+            final String cast = sqlType().cast().contains("DATE") ? "TEXT" : sqlType().cast();
             return """
                     "%1$s" %2$s%3$s"""
                     .formatted(

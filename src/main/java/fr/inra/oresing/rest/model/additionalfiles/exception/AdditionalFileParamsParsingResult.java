@@ -44,7 +44,7 @@ public class AdditionalFileParamsParsingResult {
         private final List<ValidationCheckResult> validationCheckResults = new LinkedList<>();
 
         private Builder recordError(final String message, final ImmutableMap<String, Object> params) {
-            validationCheckResults.add(DefaultValidationCheckResult.error(message, params,null));
+            validationCheckResults.add(DefaultValidationCheckResult.error(message, params, null));
             return this;
         }
 

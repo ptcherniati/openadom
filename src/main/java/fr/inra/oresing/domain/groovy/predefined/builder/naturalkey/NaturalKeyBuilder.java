@@ -75,7 +75,7 @@ public record NaturalKeyBuilder(
                             .map(Object::toString)
                             .map(Ltree::escapeToLabel)
                             .filter(valueCodified::equals)
-                            .map(nk->partialKey.isEmpty()?nk:partialKey+nk)
+                            .map(nk -> partialKey.isEmpty() ? nk : partialKey + nk)
                             .filter(decorator.getNaturalKey()::equals)
                             .isPresent()
                     )

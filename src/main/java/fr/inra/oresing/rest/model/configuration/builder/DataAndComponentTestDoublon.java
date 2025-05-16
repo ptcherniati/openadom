@@ -29,6 +29,35 @@ public class DataAndComponentTestDoublon extends HashMap<String, Map<String, Lis
         this.rootBuilder = rootBuilder;
     }
 
+    private static void addImportHeader(final JsonNode dataNodes, final String path, final Map<String, List<String>> headerForData) {
+        JsonNode currentNode = dataNodes;
+        boolean first = true;
+        String headerName;
+        final String[] split = path.split(NodeSchemaValidator.PATH_SEPARATOR);
+        for (int i = 0; i < split.length; i++) {
+            final String label = split[i];
+            if (first) {
+                first = false;
+                continue;
+            }
+            currentNode = currentNode.findPath(label);
+            headerName = currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).asText(label);
+            if (i == split.length - 1) {
+                final boolean noHeader = currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isMissingNode() || currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isNull();
+                final String importHeaderPath = noHeader ? path : NodeSchemaValidator.joinPath(path, OA_IMPORT_HEADER, OA_HEADER_NAME);
+                headerForData.computeIfAbsent(headerName, l -> new LinkedList<>())
+                        .add(importHeaderPath);
+            }
+        }
+    }
+
+    private static void addPatternImportHeader(final JsonNode componentComponentNode, final String headerName, final String path, final Map<String, List<String>> headerForData) {
+        final boolean noHeader = componentComponentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isMissingNode() || componentComponentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isNull();
+        final String importHeaderPath = noHeader ? path : NodeSchemaValidator.joinPath(path, OA_IMPORT_HEADER, OA_HEADER_NAME);
+        headerForData.computeIfAbsent(headerName, l -> new LinkedList<>())
+                .add(importHeaderPath);
+    }
+
     public void testUniqueComponentsForData(final JsonNode dataNodes) {
         Arrays.stream(COMPONENT_SECTIONS)
                 .forEach(component -> testUniqueComponentsForData(dataNodes, component));
@@ -57,12 +86,12 @@ public class DataAndComponentTestDoublon extends HashMap<String, Map<String, Lis
                 for (Entry<String, List<String>> duplicatedByComponenComponentKeyEntry : componentEntry.getValue().entrySet()) {
                     String componentComponentKey = duplicatedByComponenComponentKeyEntry.getKey();
                     List<String> duplicatedPathes = duplicatedByComponenComponentKeyEntry.getValue();
-                    if(CollectionsUtils.hasItems(duplicatedPathes) && duplicatedPathes.size()>1) {
+                    if (CollectionsUtils.hasItems(duplicatedPathes) && duplicatedPathes.size() > 1) {
                         List<String> patternsOfComponentComponent = Arrays.stream(componentComponentKey.split(Column.COLUMN_IN_COLUMN_SEPARATOR)).toList();
                         rootBuilder.buildError(
                                 ConfigurationException.DUPLICATED_COMPONENT_HEADER_IN_PATTERN_COMPONENT,
                                 Map.of(
-                                        "data",dataName,
+                                        "data", dataName,
                                         "patternComponent", componentName,
                                         "qualifierName", patternsOfComponentComponent.get(1),
                                         "duplicatedPathes", duplicatedPathes
@@ -136,35 +165,6 @@ public class DataAndComponentTestDoublon extends HashMap<String, Map<String, Lis
                 headers
                         .computeIfAbsent(dataName, l -> new HashMap<>())
         );
-    }
-
-    private static void addImportHeader(final JsonNode dataNodes, final String path, final Map<String, List<String>> headerForData) {
-        JsonNode currentNode = dataNodes;
-        boolean first = true;
-        String headerName;
-        final String[] split = path.split(NodeSchemaValidator.PATH_SEPARATOR);
-        for (int i = 0; i < split.length; i++) {
-            final String label = split[i];
-            if (first) {
-                first = false;
-                continue;
-            }
-            currentNode = currentNode.findPath(label);
-            headerName = currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).asText(label);
-            if (i == split.length - 1) {
-                final boolean noHeader = currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isMissingNode() || currentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isNull();
-                final String importHeaderPath = noHeader ? path : NodeSchemaValidator.joinPath(path, OA_IMPORT_HEADER, OA_HEADER_NAME);
-                headerForData.computeIfAbsent(headerName, l -> new LinkedList<>())
-                        .add(importHeaderPath);
-            }
-        }
-    }
-
-    private static void addPatternImportHeader(final JsonNode componentComponentNode, final String headerName, final String path, final Map<String, List<String>> headerForData) {
-        final boolean noHeader = componentComponentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isMissingNode() || componentComponentNode.findPath(OA_IMPORT_HEADER).findPath(OA_HEADER_NAME).isNull();
-        final String importHeaderPath = noHeader ? path : NodeSchemaValidator.joinPath(path, OA_IMPORT_HEADER, OA_HEADER_NAME);
-        headerForData.computeIfAbsent(headerName, l -> new LinkedList<>())
-                .add(importHeaderPath);
     }
 
     public List<String> listDataKeys() {

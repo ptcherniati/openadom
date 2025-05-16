@@ -66,7 +66,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
         I18n localI18n = new I18n(i18n.i18n());
 
         Parsing<Set<String>> exceptionMessagesParsing = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS))
-                .map(exceptionsNode -> buildMessagesExceptions(localI18n, dataKey, componentKey, path, exceptionsNode))
+                .map(exceptionsNode -> buildMessagesExceptions(localI18n, dataKey, componentKey, exceptionsNode))
                 .orElse(new Parsing<>(localI18n, Set.of()));
         i18n = exceptionMessagesParsing.i18n();
         final Multiplicity multiplicity = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_MULTIPLICITY))
@@ -240,11 +240,6 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                         i18n,
                         dataKey,
                         componentKey,
-                        NodeSchemaValidator.joinPath(
-                                path,
-                                ConfigurationSchemaNode.OA_CHECKER,
-                                ConfigurationSchemaNode.OA_PARAMS
-                        ),
                         params.findPath(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS)
                 );
 
@@ -290,7 +285,6 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
     public Parsing<Set<String>> buildMessagesExceptions(I18n i18n,
                                                         String dataKey,
                                                         String componentOrvalidationKey,
-                                                        String path,
                                                         JsonNode exceptionsMessagesNode) {
         Set<String> exceptionMessages = new HashSet<>();
 

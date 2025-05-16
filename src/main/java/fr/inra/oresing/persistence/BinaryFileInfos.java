@@ -29,8 +29,16 @@ public record BinaryFileInfos(
         );
     }
 
-    public static BinaryFileInfos EMPTY_INSTANCE() {
-        return new BinaryFileInfos(false, null, null, null, null, null, BinaryFileDataset.EMPTY_INSTANCE());
+    public BinaryFileInfos markAsPublished(boolean published) {
+        return new BinaryFileInfos(
+                published,
+                published ? publisheduser() : null,
+                published ? publisheddate() : null,
+                createuser(),
+                createdate(),
+                comment(),
+                binaryFiledataset()
+        );
     }
 
     public BinaryFileInfos withBinaryFileDataset(BinaryFileDataset binaryfiledataset) {
@@ -42,18 +50,6 @@ public record BinaryFileInfos(
                 createdate(),
                 comment(),
                 binaryFiledataset
-        );
-    }
-
-    public BinaryFileInfos markAsPublished(boolean published) {
-        return new BinaryFileInfos(
-                published,
-                published?publisheduser():null,
-                published?publisheddate():null,
-                createuser(),
-                createdate(),
-                comment(),
-                binaryFiledataset()
         );
     }
 }

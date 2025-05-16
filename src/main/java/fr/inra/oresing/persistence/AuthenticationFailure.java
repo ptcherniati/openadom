@@ -40,36 +40,23 @@ public class AuthenticationFailure extends OreSiException {
         super(message);
         params = Optional.ofNullable(userRequest)
                 .map(lr -> Map.of(
-                        CONSTANT_LOGIN, lr.getLogin(),
-                        CONSTANT_EMAIL, lr.getEmail()
+                                CONSTANT_LOGIN, lr.getLogin(),
+                                CONSTANT_EMAIL, lr.getEmail()
                         )
                 )
                 .orElseGet(Map::of);
     }
 
-
-    private static Map getParams(final LoginAdminResult loginAdminResult) {
-        return Optional.ofNullable(loginAdminResult)
-                .map(lr -> Map.of(
-                        CONSTANT_LOGIN, Optional.ofNullable(lr.login()).orElse(""),
-                        CONSTANT_EMAIL, Optional.ofNullable(lr.email()).orElse(""),
-                        CONSTANT_ID, Optional.ofNullable(lr.id()).map(UUID::toString).orElse(""),
-                        CONSTANT_STATE, Optional.ofNullable(lr.state()).orElse(""),
-                        CONSTANT_SUBMISSION_SCOPE, Optional.ofNullable(lr.authorizations()).map(as-> String.join(",", as)).orElse("")
-                        )
-                )
-                .orElseGet(Map::of);
-    }
 
     public AuthenticationFailure(final String message, final OreSiUser loginResult) {
         super(message);
-        params =  Optional.ofNullable(loginResult)
+        params = Optional.ofNullable(loginResult)
                 .map(lr -> Map.of(
-                        CONSTANT_LOGIN, lr.getLogin(),
-                        CONSTANT_EMAIL, lr.getEmail(),
-                        CONSTANT_ID, lr.getId(),
-                        CONSTANT_STATE, "",
-                        CONSTANT_SUBMISSION_SCOPE, Optional.ofNullable(lr.getAuthorizations()).map(as-> String.join(",", as)).orElse("")
+                                CONSTANT_LOGIN, lr.getLogin(),
+                                CONSTANT_EMAIL, lr.getEmail(),
+                                CONSTANT_ID, lr.getId(),
+                                CONSTANT_STATE, "",
+                                CONSTANT_SUBMISSION_SCOPE, Optional.ofNullable(lr.getAuthorizations()).map(as -> String.join(",", as)).orElse("")
                         )
                 )
                 .orElseGet(Map::of);
@@ -78,5 +65,18 @@ public class AuthenticationFailure extends OreSiException {
     public AuthenticationFailure(final String message, final LoginAdminResult loginAdminResult) {
         super(message);
         params = getParams(loginAdminResult);
+    }
+
+    private static Map getParams(final LoginAdminResult loginAdminResult) {
+        return Optional.ofNullable(loginAdminResult)
+                .map(lr -> Map.of(
+                                CONSTANT_LOGIN, Optional.ofNullable(lr.login()).orElse(""),
+                                CONSTANT_EMAIL, Optional.ofNullable(lr.email()).orElse(""),
+                                CONSTANT_ID, Optional.ofNullable(lr.id()).map(UUID::toString).orElse(""),
+                                CONSTANT_STATE, Optional.ofNullable(lr.state()).orElse(""),
+                                CONSTANT_SUBMISSION_SCOPE, Optional.ofNullable(lr.authorizations()).map(as -> String.join(",", as)).orElse("")
+                        )
+                )
+                .orElseGet(Map::of);
     }
 }

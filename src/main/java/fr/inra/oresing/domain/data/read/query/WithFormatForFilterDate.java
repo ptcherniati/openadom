@@ -11,7 +11,7 @@ public sealed interface WithFormatForFilterDate extends WithFormat, ComponentFil
     List<String> filters();
 
     default List<Timestamp> getTimeStamps() {
-        if(CollectionUtils.isEmpty(filters())){
+        if (CollectionUtils.isEmpty(filters())) {
             return null;
         }
         return filters().stream()
@@ -21,7 +21,7 @@ public sealed interface WithFormatForFilterDate extends WithFormat, ComponentFil
     }
 
     default List<String> getIsoStrings() {
-        if(CollectionUtils.isEmpty(filters())){
+        if (CollectionUtils.isEmpty(filters())) {
             return null;
         }
         return getTimeStamps().stream()
@@ -29,4 +29,4 @@ public sealed interface WithFormatForFilterDate extends WithFormat, ComponentFil
                 .map(DateTimeFormatter.ISO_LOCAL_DATE_TIME::format)
                 .toList();
     }
-  }
+}

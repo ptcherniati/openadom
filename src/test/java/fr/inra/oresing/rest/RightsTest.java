@@ -122,13 +122,13 @@ public class RightsTest {
     }
 
     @Test
-     void noCookieTest() throws Exception {
+    void noCookieTest() throws Exception {
         mockMvc.perform(get("/api/v1/applications"))
                 .andExpect(status().isForbidden());
     }
 
     @Test
-     void timeOutCookie() throws Exception {
+    void timeOutCookie() throws Exception {
         OreSiUser oreSiUser = new OreSiUser();
         oreSiUser.setId(authUserId);
         OreSiUserRequestClient oreSiUserRequestClient = new OreSiUserRequestClient(authUserId, OreSiUserRole.forUser(oreSiUser));
@@ -176,7 +176,7 @@ public class RightsTest {
     }
 
     //@Test
-     void logoutShouldInvalidateSession() throws Exception {
+    void logoutShouldInvalidateSession() throws Exception {
         // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
         mockMvc.perform(get("/api/v1/applications")
                         .cookie(authCookie))
@@ -196,7 +196,7 @@ public class RightsTest {
     }
 
     @Test
-     void cookieMaxAgeIsResetOnEachCall() throws Exception {
+    void cookieMaxAgeIsResetOnEachCall() throws Exception {
         // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
         MvcResult result = mockMvc.perform(get("/api/v1/applications")
                         .cookie(authCookie))

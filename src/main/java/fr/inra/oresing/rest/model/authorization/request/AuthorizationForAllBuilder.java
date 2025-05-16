@@ -8,11 +8,7 @@ import java.util.Set;
 
 public class AuthorizationForAllBuilder {
 
-    public static final String AUTHORIZATION_FOR_ALL = "authorizationForAll";
-    final AuthorizationRequestBuilder authorizationRequestBuilder;
-
-    public AuthorizationForAllBuilder(final AuthorizationRequestBuilder authorizationRequestBuilder) {
-        this.authorizationRequestBuilder = authorizationRequestBuilder;
+    public AuthorizationForAllBuilder() {
     }
 
     public AuthorizationForAll build(Map<String, Set<OperationType>> authorizationForAll) {

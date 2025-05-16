@@ -152,7 +152,8 @@ public class AuthenticationResources {
             authenticationService.sendEmailValidation(login);
         } catch (final AuthenticationFailure e) {
             switch (OreSiResources.getDefaultLocale().getLanguage()) {
-                case "fr" -> throw new OreSiTechnicalException("Erreur lors de l'envoi de la mise à jour de validation");
+                case "fr" ->
+                        throw new OreSiTechnicalException("Erreur lors de l'envoi de la mise à jour de validation");
                 case "en" -> throw new OreSiTechnicalException("Error sending validation update");
                 case null, default -> throw new OreSiTechnicalException("Error sending validation update");
             }

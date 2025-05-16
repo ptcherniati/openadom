@@ -42,11 +42,11 @@ class ConstantComponentExampleBuilder {
         );
     }
 
-    private static LinkedHashMap<String, ConfigurationSchemaNodeType> getChildren(
+    private static LinkedHashMap<String, ConfigurationSchemaNodeType<?>> getChildren(
             TitleType exportHeaderType,
             boolean required,
             ConstantImportHeaderType constantImportHeaderType) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> children = new LinkedHashMap<>();
         children.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeaderType);
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
         children.put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_TARGET, constantImportHeaderType);
@@ -62,7 +62,7 @@ class ConstantComponentExampleBuilder {
             final CheckerType checker,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final Map<String, ConfigurationSchemaNodeType<?>> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required, false));
         if (importHeader != null) children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER, new StringType(importHeader));
         if (CollectionUtils.isNotEmpty(tags)) {

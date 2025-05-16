@@ -102,7 +102,7 @@ class CheckerDescriptionTest {
         Assertions.assertThat(referenceValueDecorator)
                 .hasFieldOrPropertyWithValue("hierarchicalKey", "hierarchical.key")
                 .hasFieldOrPropertyWithValue("naturalKey", "natural_key")
-                .hasFieldOrPropertyWithValue("refValues",  values);
+                .hasFieldOrPropertyWithValue("refValues", values);
     }
 
     @Test
@@ -137,7 +137,7 @@ class CheckerDescriptionTest {
         StringChecker checker = new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, true, ".*");
         StringType fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
         assertNotNull(fieldType);
-        assertEquals("",fieldType.getValue());
+        assertEquals("", fieldType.getValue());
         assertEquals("fr.inra.oresing.domain.checker.type.StringType", fieldType.getClass().getName());
     }
 
@@ -146,7 +146,7 @@ class CheckerDescriptionTest {
         ComputationChecker checker = new ComputationChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, true, "expression", Set.of(), Set.of());
         FieldType<?> fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
         assertNotNull(fieldType);
-        assertEquals("",fieldType.getValue());
+        assertEquals("", fieldType.getValue());
         assertEquals("fr.inra.oresing.domain.checker.type.StringType", fieldType.getClass().getName());
     }
 

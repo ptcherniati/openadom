@@ -18,15 +18,15 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PublishContextTest {
     public static final String DATA_NAME = "dataName";
+    private final List<String> currentRow = List.of("val3", "val4");
+    private final Application application = Mockito.mock(Application.class);
+    private final Function getDataByReference = Mockito.mock(Function.class);
     private FileOrUUID fileOrUUID;
     private List<List<String>> preHeaderRow;
     private List<List<String>> postHeaderRow;
     private List<String> headerRow;
-    private final List<String> currentRow = List.of("val3", "val4");
     private HeaderInfos headerInfos;
     private RowInfos rowInfos;
-    private final Application application = Mockito.mock(Application.class);
-    private final Function getDataByReference = Mockito.mock(Function.class);
 
     @BeforeEach
     void setUp() {

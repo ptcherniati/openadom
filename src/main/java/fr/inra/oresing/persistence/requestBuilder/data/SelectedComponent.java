@@ -17,14 +17,14 @@ record SelectedComponent(
                         #- '{%s}'::text[]
             """;
 
-    public static  List<BuildRemoveSqlSelectNotInValues> of(List<Map.Entry<String, ComponentDescription>> entries) {
+    public static List<BuildRemoveSqlSelectNotInValues> of(List<Map.Entry<String, ComponentDescription>> entries) {
         return entries
                 .stream()
-                .map(entry->new BuildRemoveSqlSelectNotInValues(
-                            valuesPathToHide.formatted(DataRequestBuilder.sanitize(entry.getKey())),
+                .map(entry -> new BuildRemoveSqlSelectNotInValues(
+                        valuesPathToHide.formatted(DataRequestBuilder.sanitize(entry.getKey())),
                         entry.getValue().isReference() ? refsLinkedToPathToHide.formatted(DataRequestBuilder.sanitize(entry.getKey())) : null
 
-                    ))
+                ))
                 .toList();
     }
 }

@@ -16,8 +16,8 @@ public class ReferenceScopeTypeExampleBuilder {
             )
     );
 
-    private static LinkedHashMap<String, ConfigurationSchemaNodeType> createReferenceScopeMap() {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+    private static LinkedHashMap<String, ConfigurationSchemaNodeType<?>> createReferenceScopeMap() {
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> map = new LinkedHashMap<>();
         map.put(ConfigurationSchemaNode.OA_COMPONENT, new StringType("dat_site", true));
         map.put(ConfigurationSchemaNode.OA_REFERENCE, new StringType("tr_zone_etude_zet", false));
         map.put(ConfigurationSchemaNode.OA_I_18_N, TitleExampleBuilder.SITE);

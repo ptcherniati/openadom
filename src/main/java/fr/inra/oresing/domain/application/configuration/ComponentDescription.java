@@ -21,9 +21,11 @@ import java.util.Set;
 
 public sealed interface ComponentDescription permits BasicComponent, ComputedComponent, ConstantComponent, DynamicComponent, FilteredDescriptionComponent, PatternComponent, PatternComponentAdjacents, PatternComponentQualifiers, ReferenceScopeComponent {
     ComponentDescriptionType type();
-    default String getReferenceCheckerType(){
+
+    default String getReferenceCheckerType() {
         return findReferenceCheckerType().orElse(CheckerDescription.CheckerDescriptionType.StringChecker.name());
     }
+
     default Optional<String> findReferenceCheckerType() {
         return Optional.ofNullable(checker())
                 .filter(checker -> CheckerDescription.CheckerDescriptionType.ReferenceChecker == checker.type())
@@ -54,6 +56,7 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
     }
 
     String submissionAuthorizationScope();
+
     List<Locale> langRestrictions();
 
     ComponentDescription withSubmission(String submission);
@@ -100,10 +103,11 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
     default ChartDescription getChartDescription() {
         return null;
     }
+
     default Boolean isHidden() {
         return Optional.ofNullable(tags())
-                        .filter(Tag.HiddenTag.HAS_HIDDEN_TAG_PREDICATE)
-                        .isPresent();
+                .filter(Tag.HiddenTag.HAS_HIDDEN_TAG_PREDICATE)
+                .isPresent();
     }
 
     default Boolean isHiddenOrHasLangRestriction(String locale) {
@@ -111,8 +115,8 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
                 isHidden();
     }
 
-    default Boolean hasLangRestriction(String locale){
-        if (CollectionUtils.isEmpty(langRestrictions())){
+    default Boolean hasLangRestriction(String locale) {
+        if (CollectionUtils.isEmpty(langRestrictions())) {
             return false;
         }
         return !langRestrictions().contains(Locale.of(locale));

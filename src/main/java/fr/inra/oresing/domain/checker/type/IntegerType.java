@@ -19,9 +19,10 @@ import java.util.function.Supplier;
 public non-sealed class IntegerType implements FieldType<Integer> {
     public static final String LOWER_THAN_MIN = "LOWER_THAN_MIN";
     public static final String HIGHER_THAN_MAX = "HIGHER_THAN_MAX";
+    final Supplier<IntegerType> clone;
     private final Integer min;
     private final Integer max;
-    final Supplier<IntegerType> clone;
+    Integer value;
 
     public IntegerType(final Integer min, final Integer max) {
         super();
@@ -29,8 +30,6 @@ public non-sealed class IntegerType implements FieldType<Integer> {
         this.max = max;
         clone = () -> new IntegerType(min, max);
     }
-
-    Integer value;
 
     public static IntegerType of(final Integer value) {
         final IntegerType integerType = new IntegerType(null, null);
@@ -93,6 +92,7 @@ public non-sealed class IntegerType implements FieldType<Integer> {
         integerType.value = value;
         return integerType;
     }
+
     @Override
     public String toString() {
         return Optional.ofNullable(value).map(Object::toString).orElse(null);
@@ -100,7 +100,7 @@ public non-sealed class IntegerType implements FieldType<Integer> {
 
     @Override
     public void serialize(final JsonGenerator gen) throws IOException {
-        if(value==null){
+        if (value == null) {
             gen.writeNull();
             return;
         }
@@ -117,6 +117,7 @@ public non-sealed class IntegerType implements FieldType<Integer> {
     public void serialize(final ObjectNode node, final ObjectMapper mapper, final String key) {
         node.put(key, value);
     }
+
     @Override
     public void serializeAddArray(final ArrayNode arrayNode) {
         arrayNode.add((int) value);

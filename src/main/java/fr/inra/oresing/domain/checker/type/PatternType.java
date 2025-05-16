@@ -21,8 +21,8 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
-    Map<K, V> value;
     final Supplier<PatternType> clone;
+    Map<K, V> value;
 
     public PatternType(final Map<K, V> map) {
         clone = () -> new PatternType(map);
@@ -143,7 +143,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
 
     public FieldType<?> getColumnValue() {
         return Optional.ofNullable(value)
-                .map(map->map.get(Column.__VALUE__))
+                .map(map -> map.get(Column.__VALUE__))
                 .map(FieldType.class::cast)
                 .orElse(NullType.INSTANCE);
     }

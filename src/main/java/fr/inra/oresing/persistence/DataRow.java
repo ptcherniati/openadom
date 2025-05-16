@@ -35,8 +35,8 @@ public record DataRow(
         Map<String, ListType<? extends FieldType<?>>> listTypeMap = patternComponentKeys.stream()
                 .map(componentKey -> {
 
-                    final ListType<MapType<?,?>> listTypes = new ListType<>(new MapType(Map.of()));
-                    dataRows.getValues().stream()
+                            final ListType<MapType<?, ?>> listTypes = new ListType<>(new MapType(Map.of()));
+                            dataRows.getValues().stream()
                                     .filter(value -> value.containsKey(componentKey))
                                     .map(value -> value.get(componentKey))
                                     .map(MapType.class::cast)

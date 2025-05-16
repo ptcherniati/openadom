@@ -29,7 +29,7 @@ public class SubmissionFileNameTypeExampleBuilder {
             StringType fileNamePattern,
             CollectionType.ArrayType<StringType> referenceScopeType
     ) {
-        Map<String, ConfigurationSchemaNodeType> map = new HashMap<>();
+        Map<String, ConfigurationSchemaNodeType<?>> map = new HashMap<>();
         map.put(ConfigurationSchemaNode.OA_FILE_PATTERN, fileNamePattern);
         map.put(ConfigurationSchemaNode.OA_MATCH_PATTERN_SCOPES, referenceScopeType);
 

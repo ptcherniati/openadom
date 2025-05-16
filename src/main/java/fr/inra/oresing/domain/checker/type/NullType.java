@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import org.apache.commons.lang3.ObjectUtils;
 
 import java.io.IOException;
 import java.util.function.Supplier;
@@ -18,7 +17,7 @@ public non-sealed class NullType implements FieldType<Void> {
     public static final NullType INSTANCE = new NullType();
     final Supplier<NullType> clone;
 
-    final Void value = null ;
+    final Void value = null;
 
     private NullType() {
         super();

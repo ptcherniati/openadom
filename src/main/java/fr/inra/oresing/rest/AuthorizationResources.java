@@ -40,14 +40,12 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -318,7 +316,7 @@ public class AuthorizationResources implements ServiceContainerBean {
         assert application != null;
         CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization =
                 serviceContainer.authorizationService()
-                .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
+                        .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
@@ -337,13 +335,12 @@ public class AuthorizationResources implements ServiceContainerBean {
         }
         final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService().addAuthorization(
                 application,
-                authorizationRequest,
-                authorizationsForCurrentUser,
-                isApplicationCreator);
+                authorizationRequest
+        );
         OreSiAuthorization oreSiAuthorization = oreSiAuthorizations.next();
         final UUID authId = oreSiAuthorization.getId();
         if (createAuthorizationRequest.uuid() == null) {
-            final OreSiRightOnApplicationRole roleForAuthorization = serviceContainer.authorizationService().createRoleForAuthorization(authorizationRequest, oreSiAuthorization);
+            serviceContainer.authorizationService().createRoleForAuthorization(authorizationRequest, oreSiAuthorization);
         }
         serviceContainer.authorizationService().updateRoleForManagement(oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/authorization/" + authId.toString(), Charset.defaultCharset());
@@ -400,13 +397,13 @@ public class AuthorizationResources implements ServiceContainerBean {
     }
 
 
-    @DeleteMapping(value = "/applications/{applicationNameOrId}/additionalFiles/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+   /* @DeleteMapping(value = "/applications/{applicationNameOrId}/additionalFiles/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> revokeAdditionalFilesAuthorization(
             @PathVariable("applicationNameOrId") final String applicationNameOrId,
             @PathVariable("authorizationId") final String authorizationId) {
         UUID revokeId = serviceContainer.authorizationService().revokeAdditionalFiles(applicationNameOrId, UUID.fromString(authorizationId));
         return ResponseEntity.ok(revokeId.toString());
-    }
+    }*/
 
     @PostMapping(value = "/applications/{nameOrId}/additionalFiles/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addAdditionalFileAuthorization(@PathVariable(name = "nameOrId") final String nameOrId,
@@ -423,12 +420,12 @@ public class AuthorizationResources implements ServiceContainerBean {
         final OreSiAdditionalFileAuthorization oreSiAuthorization = serviceContainer.authorizationService().addAdditionalFileAuthorizations(application, authorization, additionalFilesAuthorizationsForCurrentUser, true);
         final UUID authId = oreSiAuthorization.getId();
         if (authorization.getUuid() == null) {
-            OreSiRightOnApplicationRole roleForAuthorization = serviceContainer.authorizationService().createRoleForAuthorization(authorization, oreSiAuthorization);
+            serviceContainer.authorizationService().createRoleForAuthorization(authorization, oreSiAuthorization);
         }
         serviceContainer.authorizationService().updateRoleForReferenceManagement(previousUsers, oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/additionalFiles/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
-    }
+    }/*
 
     @GetMapping(value = "/applications/{nameOrId}/additionalfiles/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationAdditionalFilesResults> getAdditionalFilesAuthorizations(
@@ -444,7 +441,7 @@ public class AuthorizationResources implements ServiceContainerBean {
 
         GetAuthorizationAdditionalFilesResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationAdditionalFilesResults(getAuthorizationResults, authorizationsForUser, users);
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
-    }
+    }*/
 
     @PreAuthorize("""
                 #applicationNameOrId == null ?
@@ -603,9 +600,6 @@ public class AuthorizationResources implements ServiceContainerBean {
         return ResponseEntity.ok(getGrantableResult);
     }
 
-    record Health(ConnectedUser connectedUser, HealthComponent health) {
-    }
-
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_USER')")
     @GetMapping(value = "/status", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Health> getStatus() {
@@ -616,6 +610,9 @@ public class AuthorizationResources implements ServiceContainerBean {
                 .orElse(null);
         HealthComponent health = healthEndpoint.health();
         return ResponseEntity.ok().body(new Health(connectedUser, health));
+    }
+
+    record Health(ConnectedUser connectedUser, HealthComponent health) {
     }
 
 }

@@ -9,13 +9,15 @@ import java.util.List;
 public class NotApplicationCanManageReferenceRightsException extends OreSiTechnicalException {
     public static final String NO_RIGHT_FOR_MANAGE_REFERENCES_RIGHTS_APPLICATION = "NO_RIGHT_FOR_MANAGE_REFERENCES_RIGHTS_APPLICATION";
     final String applicationName;
-    String dataType;
     final List<String> authorizationsRestrictions;
+    String dataType;
+
     public NotApplicationCanManageReferenceRightsException(final String applicationName) {
         super(NO_RIGHT_FOR_MANAGE_REFERENCES_RIGHTS_APPLICATION);
         this.applicationName = applicationName;
         authorizationsRestrictions = List.of();
     }
+
     public NotApplicationCanManageReferenceRightsException(final String applicationName, final List<String> authorizationsRestrictions) {
         super(NO_RIGHT_FOR_MANAGE_REFERENCES_RIGHTS_APPLICATION);
         this.applicationName = applicationName;

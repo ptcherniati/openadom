@@ -14,19 +14,24 @@ public interface TransformationConfiguration extends GroovyDataInjectionConfigur
      * Si la valeur doit être transformée en l'échappant pour lui donner la forme d'une clé
      */
     boolean isCodify();
+
     Set<String> references();
+
     Set<String> datatypes();
+
     String expression();
+
     Set<String> exceptionMessages();
+
     Multiplicity multiplicity();
 
     @Override
-    default Set<String> getReferences(){
+    default Set<String> getReferences() {
         return references();
     }
 
     @Override
-    default Set<String> getData(){
+    default Set<String> getData() {
         return datatypes();
     }
 }

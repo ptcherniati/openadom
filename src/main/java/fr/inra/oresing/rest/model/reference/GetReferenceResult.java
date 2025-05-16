@@ -22,7 +22,10 @@ public record GetReferenceResult(Set<ReferenceValue> referenceValues,
         Map<String, FieldType<?>> values;
         Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo;
         Map referencingReference;
-        public String commparingValue(){return "%s_%s".formatted(hierarchicalKey, patternColumnName);}
+
+        public String commparingValue() {
+            return "%s_%s".formatted(hierarchicalKey, patternColumnName);
+        }
 
         @JsonGetter("values")
         @JsonRawValue

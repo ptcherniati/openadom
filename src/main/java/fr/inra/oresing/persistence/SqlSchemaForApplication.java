@@ -15,6 +15,26 @@ import java.util.stream.Stream;
 public record SqlSchemaForApplication(Application application) implements SqlSchema {
     public static final UUID PUBLIC_UUID = UUID.fromString("9032ffe5-bfc1-453d-814e-287cd678484a");
 
+    public static String requiredAuthorizationsAttributes(final Application app) {
+        return app.getConfiguration().requiredAuthorizationsAttributes().stream()
+                .map(s -> String.format("%s ltree[]", s))
+                .collect(Collectors.joining(",\n"));
+    }
+
+    public static String publicRoleId() {
+        return PUBLIC_UUID.toString();
+    }
+
+    public static String requiredAuthorizationsAttributesComparing(final Application app) {
+        final String requiredAuthorizationsAttributesComparing = app.getConfiguration().requiredAuthorizationsAttributes().stream()
+                .map(attribute -> String.format(
+                        "((authorized).requiredAuthorizations.%1$s is null or (COALESCE((authorized).requiredAuthorizations.%1$s, ''::ltree) @> COALESCE((\"authorization\").requiredAuthorizations.%1$s, ''::ltree)))",
+                        attribute
+                ))
+                .collect(Collectors.joining("\n AND "));
+        return requiredAuthorizationsAttributesComparing + (Strings.isNullOrEmpty(requiredAuthorizationsAttributesComparing) ? "" : " AND\n ");
+    }
+
     @Override
     public String getName() {
         return application.getName();
@@ -56,16 +76,6 @@ public record SqlSchemaForApplication(Application application) implements SqlSch
         return new SqlTable(this, tableName);
     }
 
-    public static String requiredAuthorizationsAttributes(final Application app) {
-        return app.getConfiguration().requiredAuthorizationsAttributes().stream()
-                .map(s -> String.format("%s ltree[]", s))
-                .collect(Collectors.joining(",\n"));
-    }
-
-    public static String publicRoleId() {
-        return PUBLIC_UUID.toString();
-    }
-
     private Stream<String> getAttributes() {
         return Optional.of(application.findData())
                 .map(d -> d.entrySet()
@@ -79,15 +89,5 @@ public record SqlSchemaForApplication(Application application) implements SqlSch
                         .flatMap(Set::stream)
                         .distinct())
                 .orElse(Set.of("").stream());
-    }
-
-    public static String requiredAuthorizationsAttributesComparing(final Application app) {
-        final String requiredAuthorizationsAttributesComparing = app.getConfiguration().requiredAuthorizationsAttributes().stream()
-                .map(attribute -> String.format(
-                        "((authorized).requiredAuthorizations.%1$s is null or (COALESCE((authorized).requiredAuthorizations.%1$s, ''::ltree) @> COALESCE((\"authorization\").requiredAuthorizations.%1$s, ''::ltree)))",
-                        attribute
-                ))
-                .collect(Collectors.joining("\n AND "));
-        return requiredAuthorizationsAttributesComparing + (Strings.isNullOrEmpty(requiredAuthorizationsAttributesComparing) ? "" : " AND\n ");
     }
 }

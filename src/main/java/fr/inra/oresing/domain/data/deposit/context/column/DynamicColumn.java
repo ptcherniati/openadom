@@ -58,7 +58,7 @@ public abstract class DynamicColumn extends Column {
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj instanceof final DynamicColumn dynamicColumn) {
+        if (obj instanceof final DynamicColumn dynamicColumn) {
             return getExpectedHeader().equals(dynamicColumn.getExpectedHeader());
         }
         return false;

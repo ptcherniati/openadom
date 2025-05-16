@@ -22,47 +22,6 @@ public class LocalDateTimeRange {
     public static final Set<String> ACCEPTED_END_OF_BOUNDS = Set.of("]", ")");
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-    public static SiOreIllegalArgumentException getError(final String boundValue, final String lowerBound, final String upperBound, final Set<String> acceptedValues) {
-        return new SiOreIllegalArgumentException(
-                "badBoundsForInterval",
-                Map.of(
-                        "boundValue", boundValue,
-                        "lowerBound", lowerBound,
-                        "upperBound", upperBound,
-                        "acceptedValues", acceptedValues
-                )
-        );
-    }
-
-    public static LocalDateTimeRange getTimeScope(final LocalDate fromDay, final LocalDate toDay) {
-        final LocalDateTimeRange timeScope;
-        if (fromDay == null) {
-            if (toDay == null) {
-                timeScope = always();
-            } else {
-                timeScope = until(toDay);
-            }
-        } else {
-            if (toDay == null) {
-                timeScope = since(fromDay);
-            } else {
-                timeScope = between(fromDay, toDay);
-            }
-        }
-        return timeScope;
-    }
-
-    public static SiOreIllegalArgumentException getErrorBoundType(final BoundType boundType) {
-        return new SiOreIllegalArgumentException(
-                "badBoundTypeForInterval",
-                Map.of(
-                        "boundType", boundType,
-                        "knownBoundType", Arrays.stream(BoundType.values()).map(BoundType::toString).collect(Collectors.toSet())
-                )
-        );
-    }
-
     private static final DateTimeFormatter SQL_TIMESTAMP_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final ImmutableSet<StringToLocalDateTimeRangeConverter> ALL_CONVERTERS = ImmutableSet.of(
@@ -167,15 +126,53 @@ public class LocalDateTimeRange {
             Maps.uniqueIndex(ALL_CONVERTERS, StringToLocalDateTimeRangeConverter::getPattern);
     public static final ImmutableSet<String> KNOWN_PATTERNS = CONVERTER_PER_PATTERNS.keySet();
     Range<LocalDateTime> range;
-
     public LocalDateTimeRange(final List<LocalDateTime> dates) {
         super();
         range = between(dates.get(0), dates.get(1)).range;
     }
-
     public LocalDateTimeRange(final Range<LocalDateTime> range) {
         super();
         this.range = range;
+    }
+
+    public static SiOreIllegalArgumentException getError(final String boundValue, final String lowerBound, final String upperBound, final Set<String> acceptedValues) {
+        return new SiOreIllegalArgumentException(
+                "badBoundsForInterval",
+                Map.of(
+                        "boundValue", boundValue,
+                        "lowerBound", lowerBound,
+                        "upperBound", upperBound,
+                        "acceptedValues", acceptedValues
+                )
+        );
+    }
+
+    public static LocalDateTimeRange getTimeScope(final LocalDate fromDay, final LocalDate toDay) {
+        final LocalDateTimeRange timeScope;
+        if (fromDay == null) {
+            if (toDay == null) {
+                timeScope = always();
+            } else {
+                timeScope = until(toDay);
+            }
+        } else {
+            if (toDay == null) {
+                timeScope = since(fromDay);
+            } else {
+                timeScope = between(fromDay, toDay);
+            }
+        }
+        return timeScope;
+    }
+
+    public static SiOreIllegalArgumentException getErrorBoundType(final BoundType boundType) {
+        return new SiOreIllegalArgumentException(
+                "badBoundTypeForInterval",
+                Map.of(
+                        "boundType", boundType,
+                        "knownBoundType", Arrays.stream(BoundType.values()).map(BoundType::toString).collect(Collectors.toSet())
+                )
+        );
     }
 
     public static LocalDateTimeRange always() {
@@ -351,6 +348,7 @@ public class LocalDateTimeRange {
         }
 
         LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateType dateType);
+
         LocalDateTimeRange toLocalDateTimeRange(LocalDateTime str, DateTimeFormatter dateTimeFormatter, DateType dateType);
     }
 

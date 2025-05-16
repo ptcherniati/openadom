@@ -44,6 +44,11 @@ public class SecurityConfig {
     public static final String API_V_1_LOGIN = "/api/v1/login";
     public static final String API_V_1_USERS = "/api/v1/users";
     public static final String BASE = "/";
+    public static final long MAX_AGE = 3600L;
+    @Value("${allowed.origin}")
+    String frontendOrigin;
+    @Value("${springdoc.swagger-ui.server-url}")
+    String swaggerUrl;
 
     /**/
     @Bean
@@ -61,15 +66,9 @@ public class SecurityConfig {
         return new ApplicationPermissionEvaluator(authorizationService);
     }
 
-    public static final long MAX_AGE = 3600L;
-    @Value("${allowed.origin}")
-    String frontendOrigin;
-    @Value("${springdoc.swagger-ui.server-url}")
-    String swaggerUrl;
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthorizationFilter authorizationFilter) throws Exception {
-       http
+        http
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(csrf -> csrf
@@ -131,7 +130,7 @@ public class SecurityConfig {
                             HttpMethod.DELETE.name(),
                             HttpMethod.GET.name(),
                             HttpMethod.OPTIONS.name()
-                            )
+                    )
                     .allowedHeaders("X-CSRF-TOKEN", "X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language")
                     .allowCredentials(true)
                     .maxAge(MAX_AGE);

@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, FieldType> {
 
     private static final String COLLECTION_AS_JSON_STRING_SEPARATOR = ",";
+    ListType values;
 
     public DataColumnMultipleValue(final List values) {
         super();
@@ -42,8 +43,6 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
         this.values = values;
     }
 
-    ListType values;
-
     @Override
     public ListType toJsonForDatabase() {
         return values;
@@ -57,7 +56,7 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
 
     @Override
     public DataColumnValue<ListType, FieldType> transform(Function<FieldType<?>, FieldType<?>> transformation) {
-        final ListType fieldType = Optional.ofNullable((FieldType<?>)values)
+        final ListType fieldType = Optional.ofNullable((FieldType<?>) values)
                 .map(transformation)
                 .filter(ListType.class::isInstance)
                 .map(ListType.class::cast)

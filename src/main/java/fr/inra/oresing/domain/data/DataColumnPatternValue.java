@@ -73,11 +73,11 @@ public record DataColumnPatternValue(
     public Map<String, Object> toObjectsExposedInGroovyContext() {
         Map<String, Object> result = new HashMap<>();
         for (Map.Entry<DataColumn, DataColumnValue> dataColumnDataColumnValueEntry : values.entrySet()) {
-                final Object valueThatMayBeNull = Optional.ofNullable(dataColumnDataColumnValueEntry.getValue())
-                        .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
-                        .map(Object::toString)
-                        .orElse(null);
-                result.put(dataColumnDataColumnValueEntry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+            final Object valueThatMayBeNull = Optional.ofNullable(dataColumnDataColumnValueEntry.getValue())
+                    .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
+                    .map(Object::toString)
+                    .orElse(null);
+            result.put(dataColumnDataColumnValueEntry.getKey().toJsonForDatabase(), valueThatMayBeNull);
         }
         return result;
     }

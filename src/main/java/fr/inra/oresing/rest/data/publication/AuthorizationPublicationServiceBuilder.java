@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
-import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 
 import java.util.List;
@@ -17,25 +16,23 @@ import java.util.function.Predicate;
 
 public class AuthorizationPublicationServiceBuilder {
 
-    public static StoredFileBuilder BUILDER(ReportErrors errors,
-                                            final Application application,
+    public static StoredFileBuilder BUILDER(final Application application,
                                             final String dataName,
                                             String fileName,
                                             FileOrUUID fileOrUUID,
                                             ApplicationDataWriter applicationDataWriter,
                                             Function<UUID, Optional<BinaryFile>> resolveFileById) {
         AuthorizationPublicationService builder = new AuthorizationPublicationService(
-                errors,
                 application,
                 dataName,
                 deserialiseFileOrUUIDQuery(dataName, fileOrUUID, resolveFileById),
                 applicationDataWriter);
         boolean hasSubmissionScope = application.findData(dataName)
-                                             .map(StandardDataDescription::submission)
-                                             .map(Submission::submissionScope)
-                                             .map(Submission.SubmissionScope::referenceScopes)
-                                             .map(List::size)
-                                             .orElse(-1) > 0;
+                .map(StandardDataDescription::submission)
+                .map(Submission::submissionScope)
+                .map(Submission.SubmissionScope::referenceScopes)
+                .map(List::size)
+                .orElse(-1) > 0;
         boolean hasNoFileId = Optional.of(builder)
                 .map(AuthorizationPublicationService::getFileOrUUID)
                 .isEmpty();
@@ -50,7 +47,7 @@ public class AuthorizationPublicationServiceBuilder {
             final String datatype,
             final FileOrUUID fileOrUUID,
             Function<UUID, Optional<BinaryFile>> resolveFileById) {
-        if (fileOrUUID==null) {
+        if (fileOrUUID == null) {
             return null;
         }
 
@@ -66,10 +63,10 @@ public class AuthorizationPublicationServiceBuilder {
         boolean isNotDefinedDatatype = Optional.ofNullable(fileOrUUID)
                 .map(FileOrUUID::binaryfiledataset)
                 .map(BinaryFileDataset::getDatatype).isEmpty();
-        if(isNotDefinedDatatype) {
+        if (isNotDefinedDatatype) {
             Optional<UUID> uuid = Optional.ofNullable(fileOrUUID)
                     .map(FileOrUUID::fileid);
-            if(uuid.isEmpty()) {
+            if (uuid.isEmpty()) {
                 return fileOrUUID;
             }
             return uuid

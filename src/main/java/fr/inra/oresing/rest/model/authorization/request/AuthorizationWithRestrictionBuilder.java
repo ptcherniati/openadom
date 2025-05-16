@@ -12,11 +12,11 @@ import java.util.Map;
 import java.util.Set;
 
 public class AuthorizationWithRestrictionBuilder {
-  final AuthorizationRequestBuilder authorizationRequestBuilder;
+    final AuthorizationRequestBuilder authorizationRequestBuilder;
 
-  public AuthorizationWithRestrictionBuilder(final AuthorizationRequestBuilder authorizationRequestBuilder) {
-    this.authorizationRequestBuilder = authorizationRequestBuilder;
-  }
+    public AuthorizationWithRestrictionBuilder(final AuthorizationRequestBuilder authorizationRequestBuilder) {
+        this.authorizationRequestBuilder = authorizationRequestBuilder;
+    }
 
     public AuthorizationWithRestriction build(
             Map<String, AuthorizationInput> authorizationsByReferences,
@@ -27,18 +27,18 @@ public class AuthorizationWithRestrictionBuilder {
             String reference = entryByOperation.getKey();
             AuthorizationInput authorizationForReference = entryByOperation.getValue();
             if (MapUtils.isNotEmpty(authorizationForReference.getRequiredAuthorizations()) ||
-                    authorizationForReference.getTimeScope()!=null) {
+                    authorizationForReference.getTimeScope() != null) {
                 //TODO catch exception and regroup by referencetype
                 authorizationWithrestriction.put(reference, AuthorizationForScope.of(authorizationForReference, dataRepositoryWithBuffer));
             }
+        }
+        if (!authorizationRequestBuilder.existsReferences(references)) {
+            return null;
+        }
+        if (MapUtils.isEmpty(authorizationWithrestriction)) {
+            return null;
+        }
+        return new AuthorizationWithRestriction(authorizationWithrestriction);
     }
-    if (!authorizationRequestBuilder.existsReferences(references)) {
-      return null;
-    }
-    if (MapUtils.isEmpty(authorizationWithrestriction)) {
-      return null;
-    }
-    return new AuthorizationWithRestriction(authorizationWithrestriction);
-  }
 
 }

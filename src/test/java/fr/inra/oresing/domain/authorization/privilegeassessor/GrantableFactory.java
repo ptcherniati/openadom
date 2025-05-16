@@ -9,11 +9,11 @@ import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import java.util.*;
 
 public class GrantableFactory {
-    private Set<ApplicationUserResult> users = new HashSet<>();
-    private AuthorizationsResult authorizationsResult;
     private final Map<String, List<GetGrantableResult.ReferenceScope>> refenceScopes = new HashMap<>();
     private final Map<String, List<AuthorizationForScope>> publicAuthorizations = new HashMap<>();
     private final Map<String, SortedMap<String, GetGrantableResult.ColumnDescription>> columnDesriptions = new HashMap<>();
+    private Set<ApplicationUserResult> users = new HashSet<>();
+    private AuthorizationsResult authorizationsResult;
 
     static GrantableFactory builder() {
         return new GrantableFactory();

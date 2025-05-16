@@ -81,7 +81,7 @@ public class TestReferencesErrors {
     private Cookie authCookie;
 
     @AfterAll
-     static void registerErrors() throws IOException {
+    static void registerErrors() throws IOException {
         String errorsAsString = new ObjectMapper().writeValueAsString(responses);
         final File errorsFile = new File("ui/cypress/fixtures/applications/errors/ref_ola_errors.json");
         final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
@@ -137,7 +137,7 @@ public class TestReferencesErrors {
 
 
     @Test
-     void testRecursivity() throws Exception {
+    void testRecursivity() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getRecursivityApplicationConfigurationResourceName());
         final Cookie recursivityCookie;
@@ -269,7 +269,7 @@ public class TestReferencesErrors {
     }
 
     @Test
-     void testRepeatedColumnsWithAllowUnexpectedColumns() throws Exception {
+    void testRepeatedColumnsWithAllowUnexpectedColumns() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsWithAllowUnexpectedColumnsApplicationConfigurationResourceName());
         final Cookie repeatedColumnCookie;
@@ -346,7 +346,7 @@ public class TestReferencesErrors {
     }
 
     @Test
-     void testRepeatedColumns() throws Exception {
+    void testRepeatedColumns() throws Exception {
 
         final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsApplicationConfigurationResourceName());
         final Cookie repeatedColumnsCookie;

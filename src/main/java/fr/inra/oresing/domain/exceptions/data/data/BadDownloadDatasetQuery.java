@@ -29,14 +29,11 @@ public class BadDownloadDatasetQuery extends OreSiTechnicalException {
     public static final String FILTER_BAD_FORMAT_FOR_END_NUMERIC = "componentFilter.badFormatForEndNumeric";
     public static final String FILTER_BAD_FORMAT_BAD_RANGE_FOR_NUMERICS = "componentFilter.badrangeForNumerics";
     public static final String FILTER_MISSING_FILTER_OR_INTERVAL = "componentFilter.missingFilterOrInterval";
-    public static final String FILTER_MISSING_COMPONENT_FOR_DATATYPE = "componentFilter.missingComponentForDatatype";
-    public static final String MISSING_FORMAT_FOR_FILTER_DATE = "componentFilter.missingFormatForFilterDate";
-    public static final String BAD_FORMAT_FOR_FILTER_DATE = "componentFilter.badFormatForFilterDate";
     public static final String NOT_INTERVAL_VALUE_TYPE_FOR_COMPONENT = "componentFilter.notIntervalValueTypeForcomponent";
-    public static final String BAD_PATTERN_FOR_DATE = "componentFilter.badPatternForDate";
 
 
     Map<String, Serializable> params;
+
     public BadDownloadDatasetQuery(final String message) {
         super(message);
     }

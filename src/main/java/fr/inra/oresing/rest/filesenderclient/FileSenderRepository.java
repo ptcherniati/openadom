@@ -43,28 +43,43 @@ import java.util.concurrent.Executors;
 @Log
 public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclient.FileRepository {
     public static final int DEFAULT_TRANSFER_DAYS_VALID = 2;
-
-    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
-
     private static final int UPLOAD_CHUNK_SIZE =
             5242880; // https://filesender.renater.fr/rest.php/info
     private static final int NUMBER_OF_DAYS_BEFORE_EXPIRATION = 15;
+    private static CookieStore cookieStore;
   
   /*private static final Gson gson =
       new GsonBuilder()
           .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
           .create();*/
-
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
     @Value("${filesender.baseurl}")
     private String BASE_URL;
-
     @Value("${filesender.username}")
     private String USERNAME;
-
     @Value("${filesender.apikey}")
     private String APIKEY;
     private int uploadChunkSize = -1;
-    private static CookieStore cookieStore;
+
+    private static String sanitizeFileName(String input) {
+        // Remplacer les caractères interdits par un tiret bas
+        return input.replaceAll("[\\\\/:*?\"<>|]", "_");
+    }
+
+    private static byte[] concatByteArrays(byte[] first, byte[] second) {
+        byte[] combined = new byte[first.length + second.length];
+        System.arraycopy(first, 0, combined, 0, first.length);
+        System.arraycopy(second, 0, combined, first.length, second.length);
+        return combined;
+    }
+
+    private static String bytesToHex(byte[] hashBytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
 
     @PostConstruct
     public void init() {
@@ -75,7 +90,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         try {
             JSONObject info = call("get", "/info", new HashMap<>(), null, null, new HashMap<>());
             return info.getInt("upload_chunk_size");
-        }catch (Exception e){
+        } catch (Exception e) {
             return -1;
         }
     }
@@ -134,15 +149,10 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
     }
 
     private int getChunkSize() {
-        if(uploadChunkSize <0){
+        if (uploadChunkSize < 0) {
             uploadChunkSize = getUploadChunkSize();
         }
         return uploadChunkSize;
-    }
-
-    private static String sanitizeFileName(String input) {
-        // Remplacer les caractères interdits par un tiret bas
-        return input.replaceAll("[\\\\/:*?\"<>|]", "_");
     }
 
     private JSONObject postTransfer(String userId, String from, JSONArray files, String recipient, String subject, String message, Long expires, JSONObject options) throws Exception {
@@ -176,7 +186,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
         return call("post", "/transfer", params, content, null, new HashMap<>());
     }
-
 
     private void putChunk(JSONObject file, byte[] chunk, long offset) throws Exception {
         Map<String, String> params = new HashMap<>();
@@ -286,13 +295,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         return String.join("&", flatParams);
     }
 
-    private static byte[] concatByteArrays(byte[] first, byte[] second) {
-        byte[] combined = new byte[first.length + second.length];
-        System.arraycopy(first, 0, combined, 0, first.length);
-        System.arraycopy(second, 0, combined, first.length, second.length);
-        return combined;
-    }
-
     private String generateSignature(String method, String path, Map<String, String> params,
                                      JSONObject content, byte[] rawContent) throws NoSuchAlgorithmException, InvalidKeyException {
         var charset = StandardCharsets.UTF_8;
@@ -360,13 +362,5 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
         byte[] hashBytes = mac.doFinal(signedString.getBytes(StandardCharsets.US_ASCII));
         return bytesToHex(hashBytes);*/
-    }
-
-    private static String bytesToHex(byte[] hashBytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hashBytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
     }
 }

@@ -17,13 +17,13 @@ class I18nExampleBuilder {
             StringType.EMPTY_INSTANCE()
     );
     protected static final CollectionType.ArrayType<StringType> LANG_RESTRICTION_EN = new CollectionType.ArrayType<>(
-            List.of( StringType.EN),
+            List.of(StringType.EN),
             false,
             false,
             StringType.EMPTY_INSTANCE()
     );
     protected static final CollectionType.ArrayType<StringType> LANG_RESTRICTION_FR_EN = new CollectionType.ArrayType<>(
-            List.of( StringType.FR, StringType.EN),
+            List.of(StringType.FR, StringType.EN),
             false,
             false,
             StringType.EMPTY_INSTANCE()

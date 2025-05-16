@@ -588,9 +588,6 @@ public class DataService implements ServiceContainerBean {
         return new DataRepositoryWithBuffer(application, dataRepository);
     }
 
-    private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
-    }
-
     public Mono<List<DownloadDatasetQueryByRowId>> getDownloadDatasetQueriesAsync(
             long patternDefinitionCount,
             Application application,
@@ -1003,7 +1000,6 @@ public class DataService implements ServiceContainerBean {
                 """.formatted(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
     }
 
-
     private void writeFileToZip(ZipOutputStream zipOutputStream, String fileName, URL resourceUrl) throws IOException {
         zipOutputStream.putNextEntry(new ZipEntry(fileName));
         byte[] fileBytes = Resources.toByteArray(resourceUrl);
@@ -1017,7 +1013,6 @@ public class DataService implements ServiceContainerBean {
         zipOutputStream.closeEntry();
     }
 
-
     @Transactional()
     public List<UUID> deleteData(final DownloadDatasetQuery downloadDatasetQuery) {
         serviceContainer.authenticationService().setRoleForClient();
@@ -1028,7 +1023,6 @@ public class DataService implements ServiceContainerBean {
     public Map<Ltree, List<DataValue>> getReferenceDisplaysById(final Application application, final Set<String> listOfDataIds) {
         return repository.getRepository(application).data().getReferenceDisplaysById(listOfDataIds);
     }
-
 
     public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
@@ -1044,7 +1038,6 @@ public class DataService implements ServiceContainerBean {
                         )
                 );
     }
-
 
     @Transactional(readOnly = true)
     public Map<String, Map<String, LineChecker>> getFormatChecked(final String nameOrId, final String references) {
@@ -1077,5 +1070,8 @@ public class DataService implements ServiceContainerBean {
             list = repository.getRepository(application).data().findDataColumn(refType, column);
         }
         return list;
+    }
+
+    private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
     }
 }

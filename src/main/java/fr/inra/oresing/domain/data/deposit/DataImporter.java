@@ -55,14 +55,6 @@ public class DataImporter {
     private final DataValidator dataValidator;
     private final CsvReader csvReader;
 
-    public RecursionStrategy getRecursionStrategy() {
-        return recursionStrategy;
-    }
-
-    public DataImporterContext getDataImporterContext() {
-        return dataImporterContext;
-    }
-
     public DataImporter(final DataImporterContext dataImporterContext, final Consumer<Stream<DataValue>> storeAll) {
         super();
         this.dataImporterContext = dataImporterContext;
@@ -75,6 +67,14 @@ public class DataImporter {
         this.dataTransformer = new DataTransformer(getDataImporterContext(), getRecursionStrategy());
         this.csvReader = new CsvReader(getDataImporterContext(), getRecursionStrategy());
         this.dataValidator = new DataValidator();
+    }
+
+    public RecursionStrategy getRecursionStrategy() {
+        return recursionStrategy;
+    }
+
+    public DataImporterContext getDataImporterContext() {
+        return dataImporterContext;
     }
 
     /**

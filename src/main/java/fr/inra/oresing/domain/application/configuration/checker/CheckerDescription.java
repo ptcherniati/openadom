@@ -11,7 +11,6 @@ import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -26,6 +25,20 @@ public sealed interface CheckerDescription permits
         StringChecker {
     CheckerDescription NO_CHECKER = new StringChecker(CheckerDescriptionType.StringChecker, Multiplicity.ONE, false, ".*");
 
+    static ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getUUidByNaturalKey(final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys) {
+        return ImmutableMap.copyOf(
+                referenceIdPerKeys.entrySet().stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        e -> e.getKey().identity(),
+                                        Collectors.mapping(
+                                                Map.Entry::getValue,
+                                                ImmutableSet.toImmutableSet()
+                                        )
+                                )
+                        )
+        );
+    }
 
     CheckerDescriptionType type();
 
@@ -56,7 +69,6 @@ public sealed interface CheckerDescription permits
             }
             case final GroovyExpressionChecker groovy -> {
                 final String expression = groovy.expression();
-                final Set<String> references = groovy.references();
                 yield new BooleanType(expression);
             }
             case final StringChecker stringChecker -> new StringType(stringChecker.pattern());
@@ -64,27 +76,11 @@ public sealed interface CheckerDescription permits
         };
     }
 
-    
-    static ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getUUidByNaturalKey(final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys) {
-        return ImmutableMap.copyOf(
-                referenceIdPerKeys.entrySet().stream()
-                        .collect(
-                                Collectors.groupingBy(
-                                        e-> e.getKey().identity(),
-                                        Collectors.mapping(
-                                                Map.Entry::getValue,
-                                                ImmutableSet.toImmutableSet()
-                                        )
-                                )
-                        )
-        );
-    }
-
-    default String comment(){
+    default String comment() {
         return "String";
     }
 
-    default String buildImportDataExempleForheader(){
+    default String buildImportDataExempleForheader() {
         return "a string";
     }
 

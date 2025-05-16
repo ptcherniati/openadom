@@ -22,7 +22,7 @@ public class OreSiAuthorization extends OreSiEntity {
     private Map<String, AuthorizationForScope> authorizations = new HashMap<>();
 
     public String toIdForReference(SqlPolicy.Statement statement, String datatype) {
-        return  OreSiAuthorization.class.getSimpleName() +
+        return OreSiAuthorization.class.getSimpleName() +
                 "_" +
                 getId().toString().substring(0, 7) +
                 "_data_" +

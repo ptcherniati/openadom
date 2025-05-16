@@ -15,8 +15,8 @@ class ApplicationDescriptionExampleBuilder {
         return new ApplicationDescriptionType(createApplicationDescriptionMap());
     }
 
-    private static Map<String, ConfigurationSchemaNodeType> createApplicationDescriptionMap() {
-        Map<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+    private static Map<String, ConfigurationSchemaNodeType<?>> createApplicationDescriptionMap() {
+        Map<String, ConfigurationSchemaNodeType<?>> map = new LinkedHashMap<>();
         map.put(ConfigurationSchemaNode.OA_NAME, StringExampleBuilder.MONSORE);
         map.put(ConfigurationSchemaNode.OA_VERSION, StringExampleBuilder.INITIAL_VERSION);
         map.put(ConfigurationSchemaNode.OA_COMMENT, StringExampleBuilder.COMMENT);

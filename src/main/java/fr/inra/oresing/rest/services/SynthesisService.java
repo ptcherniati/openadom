@@ -68,7 +68,7 @@ public class SynthesisService implements fr.inra.oresing.domain.services.synthes
             sql = application.getConfiguration().dataDescription().get(dataType).componentDescriptions().entrySet().stream()
                     .filter(entry -> Strings.isNullOrEmpty(variable) || entry.getKey().equals(variable))
                     .filter(entry -> entry.getValue().getChartDescription() != null)
-                    .map(entry -> entry.getValue().getChartDescription().toSQL(entry.getKey(), dataType))
+                    .map(entry -> entry.getValue().getChartDescription().toSQL())
                     .collect(Collectors.joining(", \n"));
         } else {
             sql = Chart.toSQL(dataType);

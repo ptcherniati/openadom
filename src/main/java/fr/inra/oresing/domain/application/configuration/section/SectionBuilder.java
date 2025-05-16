@@ -141,7 +141,7 @@ public class SectionBuilder {
     }
 
     private boolean isUnexpected(final String section) {
-            return getAllSections().stream()
+        return getAllSections().stream()
                 .map(Section::label)
                 .noneMatch(label -> label.equals(section));
     }
@@ -153,20 +153,14 @@ public class SectionBuilder {
 
     public Optional<ConfigurationSchemaNodeType> findSchema(final String childLabel) {
         return switch (childLabel) {
-            case NodeSchemaValidator.REFERENCE_SCOPES_FOR_FILE->
+            case NodeSchemaValidator.REFERENCE_SCOPES_FOR_FILE ->
                     Optional.of(StaticMapType.REFERENCE_SCOPES_FOR_FILE().type());
-            case ConfigurationSchemaNode.OA_ADDITIONAL_FILES ->
-                    Optional.of(StaticMapType.ADDITIONAL_FILES().type());
-            case ConfigurationSchemaNode.OA_DATA ->
-                    Optional.of(StaticMapType.DATA().type());
-            case ConfigurationSchemaNode.OA_VALIDATIONS ->
-                    Optional.of(StaticMapType.VALIDATIONS().type());
-            case ConfigurationSchemaNode.OA_REFERENCE_SCOPES ->
-                    Optional.of(StaticMapType.REFERENCE_SCOPES().type());
-            case ConfigurationSchemaNode.OA_FORM_FIELDS ->
-                    Optional.of(StaticMapType.FORMATS().type());
-            case ConfigurationSchemaNode.OA_BASIC_COMPONENTS ->
-                    Optional.of(StaticMapType.BASIC_COMPONENTS().type());
+            case ConfigurationSchemaNode.OA_ADDITIONAL_FILES -> Optional.of(StaticMapType.ADDITIONAL_FILES().type());
+            case ConfigurationSchemaNode.OA_DATA -> Optional.of(StaticMapType.DATA().type());
+            case ConfigurationSchemaNode.OA_VALIDATIONS -> Optional.of(StaticMapType.VALIDATIONS().type());
+            case ConfigurationSchemaNode.OA_REFERENCE_SCOPES -> Optional.of(StaticMapType.REFERENCE_SCOPES().type());
+            case ConfigurationSchemaNode.OA_FORM_FIELDS -> Optional.of(StaticMapType.FORMATS().type());
+            case ConfigurationSchemaNode.OA_BASIC_COMPONENTS -> Optional.of(StaticMapType.BASIC_COMPONENTS().type());
             case ConfigurationSchemaNode.OA_DYNAMIC_COMPONENTS ->
                     Optional.of(StaticMapType.DYNAMIC_COMPONENTS().type());
             case ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS ->
@@ -179,10 +173,15 @@ public class SectionBuilder {
                     Optional.of(StaticMapType.PATTERN_COMPONENTS_QUALIFIERS().type());
             case ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS ->
                     Optional.of(StaticMapType.PATTERN_COMPONENTS_ADJACENT().type());
-            case null, default -> getAllSections().stream()
-                    .filter(section -> section.matches(childLabel))
-                    .map(Section::type)
-                    .findFirst();
+            case null, default -> {
+                final Optional<ConfigurationSchemaNodeType> first = getAllSections().stream()
+                        .filter(section -> section.matches(childLabel))
+                        .map(Section::type)
+                        .filter(ConfigurationSchemaNodeType.class::isInstance)
+                        .map(ConfigurationSchemaNodeType.class::cast)
+                        .findFirst();
+                yield first;
+            }
         };
     }
 }

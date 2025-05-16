@@ -60,10 +60,6 @@ public class DownloadDatasetQuery {
 
     }
 
-    public long patternDefinitionCount() {
-        return application.patternDefinitionCount(dataName);
-    }
-
     public DownloadDatasetQuery(final Application application, final String dataType) {
         super();
         this.application = application;
@@ -139,7 +135,6 @@ public class DownloadDatasetQuery {
                     downloadDatasetQuery.componentSelects,
                     ComponentFilters.build(
                             downloadDatasetQuery.componentFilters,
-                            downloadDatasetQuery.authorizationDescriptions,
                             downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)),
 
                     Optional.ofNullable(downloadDatasetQuery.componentOrderBy)
@@ -175,6 +170,10 @@ public class DownloadDatasetQuery {
                 downloadDatasetQuery.isHorizontalDisplay()
         );
 
+    }
+
+    public long patternDefinitionCount() {
+        return application.patternDefinitionCount(dataName);
     }
 
 

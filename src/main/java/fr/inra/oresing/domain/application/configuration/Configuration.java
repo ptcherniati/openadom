@@ -111,10 +111,6 @@ public record Configuration(Version version, Set<Tag> tags,
         return nodes;
     }
 
-    public record InternationalizedSortedColumn(ComponentDescription componentDescription, String header) {
-
-    }
-
     public Map<String, InternationalizedSortedColumn> getInternationalizedSortedColumns(
             String dataname,
             String locale,
@@ -224,5 +220,9 @@ public record Configuration(Version version, Set<Tag> tags,
                         (a, b) -> a,
                         LinkedHashMap::new
                 ));
+    }
+
+    public record InternationalizedSortedColumn(ComponentDescription componentDescription, String header) {
+
     }
 }

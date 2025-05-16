@@ -62,12 +62,12 @@ public class DataRequestBuilder {
                             .formatted(
                                     sanitize(componentKey),
                                     intervalsValues.stream()
-                                                    .map(intervalValues ->
-                                                        "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
-                                                                intervalValues.fromFromNumeric(),
-                                                                intervalValues.fromToNumeric()
-                                                        )
+                                            .map(intervalValues ->
+                                                    "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
+                                                            intervalValues.fromFromNumeric(),
+                                                            intervalValues.fromToNumeric()
                                                     )
+                                            )
                                             .collect(Collectors.joining(DELIMITER_OR))
                             );
                     case MANY -> """
@@ -373,8 +373,8 @@ public class DataRequestBuilder {
                                 map.entrySet().stream().
                                         filter(componentEntry ->
                                                 componentEntry.getValue().isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage()) ||
-                                                downloadDatasetQuery.componentSelects() == null ||
-                                                !downloadDatasetQuery.componentSelects().contains(componentEntry.getKey())
+                                                        downloadDatasetQuery.componentSelects() == null ||
+                                                        !downloadDatasetQuery.componentSelects().contains(componentEntry.getKey())
                                         )
                                         .toList())
                         .map(SelectedComponent::of)

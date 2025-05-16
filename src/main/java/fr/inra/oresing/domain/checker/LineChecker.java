@@ -101,7 +101,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
         if (Strings.isNullOrEmpty(value)) {
             if (checkerDescription().required()) {
                 final CheckerTarget target = target();
-                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("component", ((DataColumn)target).column()), target);
+                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("component", ((DataColumn) target).column()), target);
             } else {
                 validationCheckResult = DefaultCheckerValidationCheckResult.success(target(), new StringType(value));
             }
@@ -138,7 +138,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                 if (configuration instanceof GroovyExpressionChecker) {
                     groovyExpression = BooleanGroovyExpression.forExpression(expression, exceptionMessages);
                 } else {
-                    groovyExpression = StringGroovyExpression.forExpression(expression,  exceptionMessages);
+                    groovyExpression = StringGroovyExpression.forExpression(expression, exceptionMessages);
                 }
                 final Set<String> references = configuration.references();
                 final TransformOneLineElementTransformer transformer =

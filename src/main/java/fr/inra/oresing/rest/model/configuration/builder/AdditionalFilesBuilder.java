@@ -44,7 +44,7 @@ public record AdditionalFilesBuilder(RootBuilder rootBuilder) {
                                                 additionalType,
                                                 ConfigurationSchemaNode.OA_FORM_FIELDS),
                                         NodeSchemaValidator.joinI18nPath(Internationalizations.ADDITIONAL_FILES, additionalType)
-                                        ))
+                                ))
                         .orElse(new Parsing<>(i18n1, null));
                 builder.put(additionalType, new AdditionalFileDescription(oaFormat.result()));
                 i18n1 = oaFormat.i18n();

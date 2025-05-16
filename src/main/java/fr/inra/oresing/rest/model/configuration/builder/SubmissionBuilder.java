@@ -247,12 +247,12 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
             }
         } else if (
                 rootBuilder().getCheckers()
-                .entrySet()
-                .stream()
-                .filter(entry-> entry.getKey().equals(CheckerDescription.CheckerDescriptionType.DateChecker))
-                .map(entry->entry.getValue().getOrDefault(dataKey, new HashMap<>()).keySet())
-                .flatMap(Set::stream)
-                .toList().contains(authorizationScopeReference)) {
+                        .entrySet()
+                        .stream()
+                        .filter(entry -> entry.getKey().equals(CheckerDescription.CheckerDescriptionType.DateChecker))
+                        .map(entry -> entry.getValue().getOrDefault(dataKey, new HashMap<>()).keySet())
+                        .flatMap(Set::stream)
+                        .toList().contains(authorizationScopeReference)) {
             rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
                             "referenceName", Objects.requireNonNull(authorizationScopeReference),
                             "allDataNames", rootBuilder.getListDataKeys()),
@@ -281,8 +281,8 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
         final List<String> listComponentKeys = rootBuilder().getCheckers()
                 .entrySet()
                 .stream()
-                .filter(entry-> entry.getKey().equals(CheckerDescription.CheckerDescriptionType.ReferenceChecker))
-                .map(entry->entry.getValue().getOrDefault(dataKey, new HashMap<>()).keySet())
+                .filter(entry -> entry.getKey().equals(CheckerDescription.CheckerDescriptionType.ReferenceChecker))
+                .map(entry -> entry.getValue().getOrDefault(dataKey, new HashMap<>()).keySet())
                 .flatMap(Set::stream)
                 .toList();
         if (component != null) {

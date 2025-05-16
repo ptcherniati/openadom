@@ -101,7 +101,6 @@
       },
       "targets": [
         {
-
           "datasource": {
             "type": "postgres",
             "name": "si-ore"
@@ -145,7 +144,6 @@
           "text": "monsore",
           "value": "monsore"
         },
-
         "datasource": {
           "type": "postgres",
           "name": "si-ore"
@@ -170,7 +168,6 @@
           "text": "especes",
           "value": "especes"
         },
-
         "datasource": {
           "type": "postgres",
           "name": "si-ore"
@@ -196,7 +193,6 @@
           "text": "esp_nom",
           "value": "esp_nom"
         },
-
         "datasource": {
           "type": "postgres",
           "name": "si-ore"

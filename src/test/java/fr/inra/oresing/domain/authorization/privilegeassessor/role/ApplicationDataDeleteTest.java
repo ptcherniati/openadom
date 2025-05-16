@@ -100,14 +100,6 @@ class ApplicationDataDeleteTest {
         when(authorizationParsed.operationTypes()).thenReturn(Set.of(OperationType.delete, OperationType.extraction));
     }
 
-    record TestRight(
-            String implName,
-            ApplicationDataDelete writer,
-            boolean expectedCanDelete,
-            boolean expectedCanPublish,
-            boolean expectedCanDeposit) {
-    }
-
     @ParameterizedTest(name = "{0} - Vérification des droits")
     @MethodSource("provideDeleteImplementations")
     @DisplayName("Les droits d'accès devraient être correctement définis pour chaque implémentation")
@@ -214,6 +206,14 @@ class ApplicationDataDeleteTest {
 
         assertThat("L'interface sealed devrait permettre ApplicationPublishWriterUser",
                 permittedClasses, hasItemInArray(ApplicationDeleteUser.class));
+    }
+
+    record TestRight(
+            String implName,
+            ApplicationDataDelete writer,
+            boolean expectedCanDelete,
+            boolean expectedCanPublish,
+            boolean expectedCanDeposit) {
     }
 
     private static record TestParameters(String implName, Supplier<ApplicationDataDelete> writer,

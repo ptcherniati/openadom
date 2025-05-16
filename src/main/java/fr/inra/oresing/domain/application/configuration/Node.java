@@ -18,7 +18,7 @@ public record Node(
         boolean isRecursive
 ) implements Comparable<Node> {
     public Node {
-        if(level==null){
+        if (level == null) {
             level = 0;
         }
     }
@@ -177,11 +177,11 @@ public record Node(
     }
 
     private Integer deepLevel(int deepLevel, SortedSet<Node> childrenLevel) {
-        if(CollectionUtils.isEmpty(children())){
+        if (CollectionUtils.isEmpty(children())) {
             return deepLevel;
         }
         return childrenLevel.stream()
-                .map(child->deepLevel(child.level(), child.children()))
+                .map(child -> deepLevel(child.level(), child.children()))
                 .max(Integer::compareTo)
                 .orElse(deepLevel);
     }

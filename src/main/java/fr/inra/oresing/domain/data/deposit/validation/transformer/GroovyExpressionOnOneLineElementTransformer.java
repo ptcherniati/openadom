@@ -12,12 +12,10 @@ import java.util.Set;
 
 public class GroovyExpressionOnOneLineElementTransformer implements TransformOneLineElementTransformer {
 
-    private final StringGroovyExpression groovyExpression;
-
-    private final ImmutableMap<String, Object> context;
-
-    private final CheckerTarget target;
     final Set<String> references;
+    private final StringGroovyExpression groovyExpression;
+    private final ImmutableMap<String, Object> context;
+    private final CheckerTarget target;
 
     public GroovyExpressionOnOneLineElementTransformer(final StringGroovyExpression groovyExpression,
                                                        final ImmutableMap<String, Object> context,

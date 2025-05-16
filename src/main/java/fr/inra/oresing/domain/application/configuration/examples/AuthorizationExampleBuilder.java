@@ -18,7 +18,7 @@ class AuthorizationExampleBuilder {
     protected static AuthorizationType buildAuthorization(
             List<StringType> authorizationsScope,
             StringType timeScope) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> children = new LinkedHashMap<>();
         children.put(ConfigurationSchemaNode.OA_AUTHORIZATION_SCOPES, new CollectionType.ArrayType(
                 authorizationsScope,
                 false,

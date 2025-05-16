@@ -14,7 +14,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 @Getter
@@ -25,20 +24,8 @@ public class AuthorizationInput {
     public static final String TO_DAY = "toDay";
     public static final String FORMAT = "format";
     LocalDateTimeRange timeScope = LocalDateTimeRange.always();
-    private Map<String, List<Ltree>> requiredAuthorizations = new HashMap<>();
-
-    public void setOperationTypes(Set<OperationType> operationTypes) {
-
-        if (operationTypes.contains(OperationType.publication)) {
-            operationTypes.add(OperationType.depot);
-        }
-        if (operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)) {
-            operationTypes.add(OperationType.extraction);
-        }
-        this.operationTypes = operationTypes;
-    }
-
     Set<OperationType> operationTypes = new HashSet<>();
+    private Map<String, List<Ltree>> requiredAuthorizations = new HashMap<>();
 
     public AuthorizationInput(Map<String, List<Ltree>> requiredAuthorizations,
                               LocalDateTimeRange timeScope,
@@ -56,6 +43,20 @@ public class AuthorizationInput {
         this.operationTypes = operationTypes;
     }
 
+    public AuthorizationInput() {
+    }
+
+    public void setOperationTypes(Set<OperationType> operationTypes) {
+
+        if (operationTypes.contains(OperationType.publication)) {
+            operationTypes.add(OperationType.depot);
+        }
+        if (operationTypes.contains(OperationType.depot) || operationTypes.contains(OperationType.delete)) {
+            operationTypes.add(OperationType.extraction);
+        }
+        this.operationTypes = operationTypes;
+    }
+
     public void setTimeScope(Map<String, String> dates) {
         this.timeScope = Optional.ofNullable(dates.get(FORMAT))
                 .map(DatePattern::of)
@@ -64,94 +65,31 @@ public class AuthorizationInput {
                     DateTimeFormatter formatter = datePattern.formatter();
                     if (type.equals(LocalDate.class)) {
                         LocalDate fromDay = Optional.ofNullable(dates.get(FROM_DAY))
-                                .map(from->LocalDate.parse(from, formatter))
+                                .map(from -> LocalDate.parse(from, formatter))
                                 .orElse(LocalDate.MIN);
                         LocalDate toDay = Optional.ofNullable(dates.get(TO_DAY))
-                                .map(from->LocalDate.parse(from, formatter))
+                                .map(from -> LocalDate.parse(from, formatter))
                                 .orElse(LocalDate.MAX);
                         return LocalDateTimeRange.between(fromDay, toDay);
                     } else if (type.equals(LocalTime.class)) {
                         LocalTime fromDay = Optional.ofNullable(dates.get(FROM_DAY))
-                                .map(from->LocalTime.parse(from, formatter))
+                                .map(from -> LocalTime.parse(from, formatter))
                                 .orElse(LocalTime.MIN);
                         LocalTime toDay = Optional.ofNullable(dates.get(TO_DAY))
-                                .map(from->LocalTime.parse(from, formatter))
+                                .map(from -> LocalTime.parse(from, formatter))
                                 .orElse(LocalTime.MAX);
-                        return LocalDateTimeRange.between(LocalDate.now().atTime(fromDay), LocalDate.now().atTime( toDay));
+                        return LocalDateTimeRange.between(LocalDate.now().atTime(fromDay), LocalDate.now().atTime(toDay));
                     } else if (type.equals(LocalDateTime.class)) {
                         LocalDateTime fromDay = Optional.ofNullable(dates.get(FROM_DAY))
-                                .map(from->LocalDateTime.parse(from, formatter))
+                                .map(from -> LocalDateTime.parse(from, formatter))
                                 .orElse(LocalDateTime.MIN);
                         LocalDateTime toDay = Optional.ofNullable(dates.get(TO_DAY))
-                                .map(from->LocalDateTime.parse(from, formatter))
+                                .map(from -> LocalDateTime.parse(from, formatter))
                                 .orElse(LocalDateTime.MAX);
-                        return LocalDateTimeRange.between( fromDay,  toDay);
+                        return LocalDateTimeRange.between(fromDay, toDay);
                     }
                     return null;
                 })
                 .orElse(null);
     }
-
-    public AuthorizationInput() {
-    }
-
-    public static String timescopeToSQL(LocalDateTimeRange timeScope) {
-        return String.format("'%s'", (timeScope == null ? LocalDateTimeRange.always() : timeScope).toSqlExpression());
-    }
-
-    public static String datagroupToSQL(List<String> dataGroups) {
-        return dataGroups.stream()
-                .map(dg -> String.format(String.format("'%s'", dg)))
-                .collect(Collectors.joining(",", "array[", "]::TEXT[]"));
-    }
-
-   /* public static String requiredAuthorizationsToSQL(List<String> attributes, Map<String, Ltree> requiredAuthorizations) {
-        return attributes.stream()
-                .map(attribute -> requiredAuthorizations.getOrDefault(attribute, Ltree.empty()))
-                .map(Ltree::getSql)
-                .collect(Collectors.joining(",", "'(", ")'::%1$s.requiredAuthorizations"));
-    }*/
-
-    public static LocalDateTimeRange getTimeScope(LocalDate fromDay, LocalDate toDay) {
-        LocalDateTimeRange timeScope;
-        if (fromDay == null) {
-            if (toDay == null) {
-                timeScope = LocalDateTimeRange.always();
-            } else {
-                timeScope = LocalDateTimeRange.until(toDay);
-            }
-        } else {
-            if (toDay == null) {
-                timeScope = LocalDateTimeRange.since(fromDay);
-            } else {
-                timeScope = LocalDateTimeRange.between(fromDay, toDay);
-            }
-        }
-        return timeScope;
-    }
-
-    /*public String getPath(List<String> attributes) {
-        List<String> pathes = new LinkedList<>();
-        return attributes.stream()
-                .filter(attribute -> requiredAuthorizations.containsKey(attribute))
-                .map(attribute -> requiredAuthorizations.get(attribute).getSql())
-                .collect(Collectors.joining("."));
-    }*/
-
-    public void setIntervalDates(Map<String, LocalDate> dates) {
-        this.timeScope = getTimeScope(dates.get(FROM_DAY), dates.get(TO_DAY));
-    }
-
-    /*public String toSQL(List<String> requiredAuthorizationsAttributes) {
-        List<String> sql = new LinkedList<>();
-        if (requiredAuthorizations == null) {
-            return " ";
-        } else {
-            sql.add(requiredAuthorizationsToSQL(requiredAuthorizationsAttributes, requiredAuthorizations)
-            );
-        }
-        sql.add(timescopeToSQL(timeScope));
-        return sql.stream()
-                .collect(Collectors.joining(",", "(", ")::%1$s.authorization"));
-    }*/
 }

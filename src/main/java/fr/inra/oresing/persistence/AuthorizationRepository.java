@@ -41,23 +41,6 @@ public class AuthorizationRepository extends JsonTableInApplicationSchemaReposit
         return OreSiAuthorization.class;
     }
 
-    public List<OreSiAuthorization> findByDataType(final String dataType) {
-        final String query = String.format("""
-                        SELECT '%1$s' AS "@class", to_jsonb(t) AS json
-                        FROM %2$s t
-                        WHERE t.application = :applicationId
-                          AND t.authorizations ?? :dataName
-                        """,
-                OreSiAuthorization.class.getName(),
-                getTable().getSqlIdentifier()
-        );
-
-        final MapSqlParameterSource sqlParams = new MapSqlParameterSource("applicationId", getApplication().getId())
-                .addValue("dataName", dataType);
-
-        return getNamedParameterJdbcTemplate().query(query, sqlParams, getJsonRowMapper());
-    }
-
     public List<OreSiAuthorization> findAuthorizationsByUserId(final UUID userId) {
         if (userId == null) {
             return List.of();

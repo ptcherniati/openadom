@@ -7,21 +7,19 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public record TagType(SectionBuilder sectionBuilder, I18nType children, boolean required,
-                      boolean nullable) implements ApplicationType {
-    public static SectionBuilder SECTION_BUILDER() {
-        return SectionBuilder.getInstance()
-                .withLocalType();
-    }
-    public static TagType  EMPTY_INSTANCE() {
-        return new TagType(I18nType.EMPTY_INSTANCE(), RootType.CHECKING.NO_CHECK);
-    }
+public record TagType(
+        SectionBuilder sectionBuilder,
+        I18nType children,
+        boolean required,
+        boolean nullable
+) implements ApplicationType<I18nType> {
     private TagType(final I18nType children, final RootType.CHECKING checking) {
         this(SECTION_BUILDER(),
                 children,
                 false,
                 false);
     }
+
     public TagType(final I18nType children) {
         this(SECTION_BUILDER()
                         .test(Optional.ofNullable(children)
@@ -32,6 +30,15 @@ public record TagType(SectionBuilder sectionBuilder, I18nType children, boolean 
                 children,
                 false,
                 false);
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
+        return SectionBuilder.getInstance()
+                .withLocalType();
+    }
+
+    public static TagType EMPTY_INSTANCE() {
+        return new TagType(I18nType.EMPTY_INSTANCE(), RootType.CHECKING.NO_CHECK);
     }
 
     @Override

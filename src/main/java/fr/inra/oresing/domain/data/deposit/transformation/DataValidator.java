@@ -27,42 +27,6 @@ import java.util.stream.Stream;
 
 public class DataValidator {
 
-    /**
-     * @return <p>
-     * Cela aura pour effet :
-     *
-     * <ul>
-     *     <li>de passer les vérifications et d'associer à la ligne les erreurs détectées</li>
-     *     <li>d'application les transformations (échappement, expressions groovy)</li>
-     *     <li>détecter les référentiels utilisés (et conserver les clés vers ceux utilisés pour fixer le refsLinkedTo)</li>
-     * </ul>
-     */
-    public <F extends FieldType<?>> List<ReferenceDatumAfterChecking> check(
-            Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
-            RecursionStrategy recursionStrategy,
-            final RowWithReferenceDatum rowWithReferenceDatum,
-            final ImmutableSet<LineChecker<F>> transformedLineCheckers,
-            PublishContext.PublishContextBuilder publishContextBuilder) {
-        final DataDatum referenceDatumBeforeChecking = rowWithReferenceDatum.referenceDatum();
-        final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<>();
-        final ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder = ImmutableList.builder();
-        final DataDatum referenceDatum = DataDatum.copyOf(referenceDatumBeforeChecking);
-        for (final LineChecker lineChecker : transformedLineCheckers) {
-            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
-            if (referenceDatumAfterCheckings != null) return referenceDatumAfterCheckings;
-        }
-        refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
-        ReferenceDatumAfterChecking referenceDatumAfterChecking = new ReferenceDatumAfterChecking(
-                rowWithReferenceDatum.lineNumber(),
-                rowWithReferenceDatum.patternColumnName(),
-                rowWithReferenceDatum.referenceDatum(),
-                referenceDatum,
-                ImmutableMap.copyOf(refsLinkedTo),
-                allCheckerErrorsBuilder.build()
-        );
-        return buildReferenceDataAfterChecking(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
-    }
-
     private static List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo, DataDatum referenceDatum, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
         if (matchingTarget(rowWithReferenceDatum, lineChecker)) {
             return null;
@@ -79,23 +43,6 @@ public class DataValidator {
             return registerErrors(recursionStrategy, rowWithReferenceDatum, lineChecker, validationCheckResults, referenceDatumBeforeChecking, allCheckerErrorsBuilder);
         }
         return null;
-    }
-
-    private <F extends FieldType<?>> List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker<F>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = List.of();
-        if (recursionStrategy instanceof WithRecursion withRecursion) {
-            addBuildedLineKeysToReferenceValues(buildKey, withRecursion, referenceDatumAfterChecking);
-            referenceDatumAfterCheckings = testLinesRegardingRecursivity(buildKey, withRecursion, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
-        }
-        referenceDatumAfterCheckings = ImmutableList.<ReferenceDatumAfterChecking>builder()
-                .add(referenceDatumAfterChecking)
-                .addAll(referenceDatumAfterCheckings)
-                .build();
-        if (recursionStrategy instanceof WithRecursion withRecursion) {
-            withRecursion.dataImporterContext().getMissingLines()
-                    .remove(buildKey.apply(referenceDatumAfterChecking).naturalKey());
-        }
-        return referenceDatumAfterCheckings;
     }
 
     static void registerCheckedValues(LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo, DataDatum referenceDatum) {
@@ -248,6 +195,59 @@ public class DataValidator {
                     return Stream.of(entry.getKey());
                 }).noneMatch(column -> column.equals(lineChecker.target()) ||
                         column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
+    }
+
+    /**
+     * @return <p>
+     * Cela aura pour effet :
+     *
+     * <ul>
+     *     <li>de passer les vérifications et d'associer à la ligne les erreurs détectées</li>
+     *     <li>d'application les transformations (échappement, expressions groovy)</li>
+     *     <li>détecter les référentiels utilisés (et conserver les clés vers ceux utilisés pour fixer le refsLinkedTo)</li>
+     * </ul>
+     */
+    public <F extends FieldType<?>> List<ReferenceDatumAfterChecking> check(
+            Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
+            RecursionStrategy recursionStrategy,
+            final RowWithReferenceDatum rowWithReferenceDatum,
+            final ImmutableSet<LineChecker<F>> transformedLineCheckers,
+            PublishContext.PublishContextBuilder publishContextBuilder) {
+        final DataDatum referenceDatumBeforeChecking = rowWithReferenceDatum.referenceDatum();
+        final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<>();
+        final ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder = ImmutableList.builder();
+        final DataDatum referenceDatum = DataDatum.copyOf(referenceDatumBeforeChecking);
+        for (final LineChecker lineChecker : transformedLineCheckers) {
+            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
+            if (referenceDatumAfterCheckings != null) return referenceDatumAfterCheckings;
+        }
+        refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
+        ReferenceDatumAfterChecking referenceDatumAfterChecking = new ReferenceDatumAfterChecking(
+                rowWithReferenceDatum.lineNumber(),
+                rowWithReferenceDatum.patternColumnName(),
+                rowWithReferenceDatum.referenceDatum(),
+                referenceDatum,
+                ImmutableMap.copyOf(refsLinkedTo),
+                allCheckerErrorsBuilder.build()
+        );
+        return buildReferenceDataAfterChecking(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
+    }
+
+    private <F extends FieldType<?>> List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker<F>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+        List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = List.of();
+        if (recursionStrategy instanceof WithRecursion withRecursion) {
+            addBuildedLineKeysToReferenceValues(buildKey, withRecursion, referenceDatumAfterChecking);
+            referenceDatumAfterCheckings = testLinesRegardingRecursivity(buildKey, withRecursion, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
+        }
+        referenceDatumAfterCheckings = ImmutableList.<ReferenceDatumAfterChecking>builder()
+                .add(referenceDatumAfterChecking)
+                .addAll(referenceDatumAfterCheckings)
+                .build();
+        if (recursionStrategy instanceof WithRecursion withRecursion) {
+            withRecursion.dataImporterContext().getMissingLines()
+                    .remove(buildKey.apply(referenceDatumAfterChecking).naturalKey());
+        }
+        return referenceDatumAfterCheckings;
     }
 
     private <F extends FieldType<?>> List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(

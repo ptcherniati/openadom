@@ -34,21 +34,10 @@ public class PatternColumnFactory {
 
     private final List<PatternDescription> patternComponentDescriptions;
     private final DataRepository dataRepository;
-
-    public OneValueStaticPatternColumn getExpectedPatternColumn(String headerInfile) {
-        return expectedPatternColumns.stream()
-                .filter(OneValueStaticPatternColumn.class::isInstance)
-                .map(OneValueStaticPatternColumn.class::cast)
-                .filter(column -> column.getHeaderInFile().equals(headerInfile))
-                .findFirst()
-                .orElse(null);
-    }
-
-    @Getter
-    private List<Column> expectedPatternColumns = ImmutableList.of();
     @Getter
     private final Map<String, PatternColumn> patternColumns = new HashMap<>();
-
+    @Getter
+    private List<Column> expectedPatternColumns = ImmutableList.of();
     public PatternColumnFactory(final DataRepository dataRepository, final List<PatternDescription> patternComponentDescriptions) {
         super();
         this.patternComponentDescriptions = patternComponentDescriptions;
@@ -61,6 +50,15 @@ public class PatternColumnFactory {
         return new PatternColumnFactory(
                 dataRepository,
                 PatternDescription.of(patternComponentDescriptions));
+    }
+
+    public OneValueStaticPatternColumn getExpectedPatternColumn(String headerInfile) {
+        return expectedPatternColumns.stream()
+                .filter(OneValueStaticPatternColumn.class::isInstance)
+                .map(OneValueStaticPatternColumn.class::cast)
+                .filter(column -> column.getHeaderInFile().equals(headerInfile))
+                .findFirst()
+                .orElse(null);
     }
 
     public DataDatum toQualifierDatum(final String patternComponentName, final PatternValueForHeader patternValueForHeader) {

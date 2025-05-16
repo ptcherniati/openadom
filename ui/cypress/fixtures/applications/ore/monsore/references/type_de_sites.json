@@ -1,1 +1,86 @@
-{"referenceValues":[{"id":"64c59a95-ff20-4c53-af85-c8d209d2482e","hierarchicalKey":"bassin_versant","hierarchicalReference":"type_de_sites","naturalKey":"bassin_versant","values":{"tze_nom_en":"Watershed","tze_nom_fr":"Bassin versant","tze_nom_key":"bassin_versant","__display_en":"Watershed","__display_fr":"Bassin versant","tze_definition_en":"Watershed","tze_definition_fr":"Bassin versant"},"refsLinkedTo":{},"referencingReference":{"a936e28c-8a11-42d5-a8e7-404409305c02":{"reference":["sites"]},"c610cfb3-9dd6-4a07-a84e-e143f001f543":{"reference":["sites"]},"d4925c80-5182-417d-a299-8309fa1a6389":{"reference":["sites"]}}},{"id":"11a1d02e-2d23-415f-8aab-01bf243f1963","hierarchicalKey":"plateforme","hierarchicalReference":"type_de_sites","naturalKey":"plateforme","values":{"tze_nom_en":"Platform","tze_nom_fr":"Plateforme","tze_nom_key":"plateforme","__display_en":"Platform","__display_fr":"Plateforme","tze_definition_en":"Measurement platform","tze_definition_fr":"Plateforme de mesure"},"refsLinkedTo":{},"referencingReference":{"12872632-29e1-48e8-a584-b0da0ff580e3":{"reference":["sites"]},"630bca5b-63cd-496c-abc0-38da2d8d7dfa":{"reference":["sites"]},"b9988cc0-13a4-499f-b393-99058ac89975":{"reference":["sites"]},"c6c53f31-3d2d-4d86-aa78-bc91090c97ea":{"reference":["sites"]},"f7bf03f6-0ca1-4fec-b3dd-24ee0843bb54":{"reference":["sites"]},"fae534f0-a64c-4159-92df-df2b287b0a3c":{"reference":["sites"]}}}],"referenceTypeForReferencingColumns":{}}
+{
+  "referenceValues": [
+    {
+      "id": "64c59a95-ff20-4c53-af85-c8d209d2482e",
+      "hierarchicalKey": "bassin_versant",
+      "hierarchicalReference": "type_de_sites",
+      "naturalKey": "bassin_versant",
+      "values": {
+        "tze_nom_en": "Watershed",
+        "tze_nom_fr": "Bassin versant",
+        "tze_nom_key": "bassin_versant",
+        "__display_en": "Watershed",
+        "__display_fr": "Bassin versant",
+        "tze_definition_en": "Watershed",
+        "tze_definition_fr": "Bassin versant"
+      },
+      "refsLinkedTo": {},
+      "referencingReference": {
+        "a936e28c-8a11-42d5-a8e7-404409305c02": {
+          "reference": [
+            "sites"
+          ]
+        },
+        "c610cfb3-9dd6-4a07-a84e-e143f001f543": {
+          "reference": [
+            "sites"
+          ]
+        },
+        "d4925c80-5182-417d-a299-8309fa1a6389": {
+          "reference": [
+            "sites"
+          ]
+        }
+      }
+    },
+    {
+      "id": "11a1d02e-2d23-415f-8aab-01bf243f1963",
+      "hierarchicalKey": "plateforme",
+      "hierarchicalReference": "type_de_sites",
+      "naturalKey": "plateforme",
+      "values": {
+        "tze_nom_en": "Platform",
+        "tze_nom_fr": "Plateforme",
+        "tze_nom_key": "plateforme",
+        "__display_en": "Platform",
+        "__display_fr": "Plateforme",
+        "tze_definition_en": "Measurement platform",
+        "tze_definition_fr": "Plateforme de mesure"
+      },
+      "refsLinkedTo": {},
+      "referencingReference": {
+        "12872632-29e1-48e8-a584-b0da0ff580e3": {
+          "reference": [
+            "sites"
+          ]
+        },
+        "630bca5b-63cd-496c-abc0-38da2d8d7dfa": {
+          "reference": [
+            "sites"
+          ]
+        },
+        "b9988cc0-13a4-499f-b393-99058ac89975": {
+          "reference": [
+            "sites"
+          ]
+        },
+        "c6c53f31-3d2d-4d86-aa78-bc91090c97ea": {
+          "reference": [
+            "sites"
+          ]
+        },
+        "f7bf03f6-0ca1-4fec-b3dd-24ee0843bb54": {
+          "reference": [
+            "sites"
+          ]
+        },
+        "fae534f0-a64c-4159-92df-df2b287b0a3c": {
+          "reference": [
+            "sites"
+          ]
+        }
+      }
+    }
+  ],
+  "referenceTypeForReferencingColumns": {}
+}

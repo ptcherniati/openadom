@@ -17,7 +17,6 @@ import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.ApplicationRepository;
-import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.MultiYaml;
@@ -56,11 +55,11 @@ public class ApplicationService implements ServiceContainerBean {
     public static final String APPLICATION_NAME = "applicationName";
     public static final String START = "start";
     public static final String END = "end";
-    @Setter
-    private ServiceContainer serviceContainer;
     private final OreSiRepository repository;
     private final BeanFactory beanFactory;
     private final OreSiApiRequestContext request;
+    @Setter
+    private ServiceContainer serviceContainer;
 
     public ApplicationService(OreSiRepository repository, BeanFactory beanFactory, OreSiApiRequestContext request) {
         this.repository = repository;
@@ -103,6 +102,7 @@ public class ApplicationService implements ServiceContainerBean {
                         .orElse(null))
                 .canCreateApplication(name);
         progression.pushProgression();
+        OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
 
         final Application application = new Application();
         application.setName(name);
@@ -237,7 +237,6 @@ public class ApplicationService implements ServiceContainerBean {
                         .orElse(null))
                 .canUpdateApplication();
         ReactiveProgression.ChangeApplicationProgression progression1 = progression;
-        final ReactiveProgression.ChangeApplicationProgressionMessagesLabel baseMessage = new ReactiveProgression.ChangeApplicationProgressionMessagesLabel();
         progression1.pushProgression();
         serviceContainer.relationalService().dropViews(nameOrId);
         serviceContainer.authenticationService().setRoleForClient();
@@ -267,10 +266,7 @@ public class ApplicationService implements ServiceContainerBean {
         if (log.isInfoEnabled()) {
             log.info("va migrer les données de {} de la version actuelle {} à la nouvelle version {}", applicationName, oldVersion, newVersion);
         }
-        final DataRepository dataRepository = repository.getRepository(application).data();
-        //TODO migration
 
-        // on supprime l'ancien fichier vu que tout c'est bien passé
         final boolean deleted = repository.getRepository(application).binaryFile().delete(oldConfigFileId);
         Preconditions.checkState(deleted);
 
@@ -358,9 +354,9 @@ public class ApplicationService implements ServiceContainerBean {
                 .map(application -> application.filterFieldsAndHidden(filters))
                 .map(application -> ApplicationLightResult.of(application, currentUserRoles, getDatynthesis.apply(application)))
                 .forEach(application -> {
-                    progression.fluxSink().next(new ReactiveTypeResult(application));
+                    progression.fluxSink().next(new ReactiveTypeResult<ApplicationLightResult>(application));
                     final double prog = progres.incrementAndGet() / ((double) applicationForUser.size());
-                    progression.fluxSink().next(new ReactiveTypeProgress(prog));
+                    progression.fluxSink().next(new ReactiveTypeProgress<Double>(prog));
                 });
         progression.complete();
     }

@@ -40,7 +40,7 @@ public class ApplicationConfigurationService {
         return ApplicationConfigurationService.parseConfigurationBytes(null,
                 fluxSink,
                 FileBomResolver.of(inputStream));
-}
+    }
 
     public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(final
                                                                                                                            String comment,
@@ -61,7 +61,7 @@ public class ApplicationConfigurationService {
 
             final Configuration configuration;
             configuration = ConfigurationBuilder.build(bytes, progression1, comment);
-            final ReactiveProgression.ChangeOrCreateApplicationProgression progressionForCheckSyntax = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression1.withSubLabel("CheckSyntax");
+            final ReactiveProgression.ChangeOrCreateApplicationProgression<?> progressionForCheckSyntax = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression1.withSubLabel("CheckSyntax");
             if (configuration == null) {
                 progression1.complete();
                 return null;
@@ -86,14 +86,9 @@ public class ApplicationConfigurationService {
                         () -> application.setAdditionalFiles(List.of())
                 );
         final String applicationName = configuration.applicationDescription().name();
-        final ReactiveProgression.ChangeOrCreateApplicationProgression progressionValidation = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression.withSubLabel("startValidation");
+        final ReactiveProgression.ChangeOrCreateApplicationProgression<?> progressionValidation = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression.withSubLabel("startValidation");
         progressionValidation.pushMessage("start", Map.of("applicationName", applicationName));
         application.setVersion(application.getConfiguration().applicationDescription().version().version());
         return application;
-    }
-
-
-    public static ApplicationConfigurationService createApplicationConfigurationService() {
-        return new ApplicationConfigurationService();
     }
 }

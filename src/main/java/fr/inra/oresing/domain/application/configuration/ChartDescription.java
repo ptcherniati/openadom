@@ -5,7 +5,7 @@ package fr.inra.oresing.domain.application.configuration;
  */
 public record ChartDescription() {
 
-    public String toSQL(String componentKey, String dataName) {
+    public String toSQL() {
         return "";
     }
 }

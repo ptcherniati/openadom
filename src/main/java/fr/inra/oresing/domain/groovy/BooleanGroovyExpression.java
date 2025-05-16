@@ -47,7 +47,7 @@ public final class BooleanGroovyExpression implements Expression<Boolean> {
             if (exceptionMessages.contains(groovyException.getMessage())) {
                 throw new GroovyException(
                         groovyException.getMessage()
-                        );
+                );
             }
             ImmutableMap<String, Object> params = ImmutableMap.<String, Object>builder()
                     .putAll(groovyException.getParams())

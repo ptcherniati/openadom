@@ -8,10 +8,10 @@ website:
   back-to-top-navigation: true
   bread-crumbs: true
   repo-url: https://forgemia.inra.fr/anaee-dev/openadom/backend/-/tree/develop
-  repo-actions: [edit, source, issue]
+  repo-actions: [ edit, source, issue ]
   title: "openadom"
   description: "Documentation des fichiers de configuration pour OpenADOM"
-  favicon: /img/Logos_OA.svg  
+  favicon: /img/Logos_OA.svg
   site-url: https://dev.openadom.fr
   sidebar:
     logo: /img/Logos_OpernADOM.png
@@ -43,9 +43,9 @@ website:
           - section:
             text: Données (OA_data)
             href: fichiers/fichier_echange/data/data.qmd
-            contents: 
+            contents:
               - section: Components
-                contents: 
+                contents:
                   - text: introduction
                     href: fichiers/fichier_echange/data/components/components.qmd
                   - text: Basic Components
@@ -58,10 +58,10 @@ website:
                     href: fichiers/fichier_echange/data/components/constant_components.qmd
                   - text: Pattern Components
                     href: fichiers/fichier_echange/data/components/pattern_components.qmd
-                  - section:  Paramétrage des composants
+                  - section: Paramétrage des composants
                     href: fichiers/fichier_echange/data/components/components_description.qmd
                   - text: Verificateurs
-                    href: fichiers/fichier_echange/data/verificateurs.qmd                          
+                    href: fichiers/fichier_echange/data/verificateurs.qmd
                   - text: Validations
                     href: fichiers/fichier_echange/data/validations.qmd
                   - section: Dépôt de fichier (OA_submission)
@@ -87,33 +87,33 @@ website:
           - text: Submission
             href: fichiers/pour_aller_plus_loin/submission.md
       - section: Base de données
-        contents: 
+        contents:
           - text: Introduction
             href: fichiers/autres/database.qmd
       - section: En réflexion
-        contents: 
+        contents:
           - text: Verificateurs
             href: fichiers/enReflexion/a_savoir.md
-          - text: Clefs étrangères 
+          - text: Clefs étrangères
             href: fichiers/enReflexion/reference_checker.md
       - section: Exemples
         contents:
           - text: Fichier de configuration minimale
             href: fichiers/examples/configuration_min/description.qmd
-          - section: Composantes 
-            contents: 
-            - text: Example d'utilisation des composants
-              href: fichiers/examples/meteo/description.qmd
-            - text: Example d'utilisation des composantes dynamiques(sites)
-              href: fichiers/examples/dynamicComponant/description.qmd
-            - text: Example d'utilisation des composantes dynamiques (taxons)
-              href: fichiers/examples/taxons/description.qmd
-            - text: Example d'utilisation des composantes basiques
-              href: fichiers/examples/basicComponents/description.qmd
+          - section: Composantes
+            contents:
+              - text: Example d'utilisation des composants
+                href: fichiers/examples/meteo/description.qmd
+              - text: Example d'utilisation des composantes dynamiques(sites)
+                href: fichiers/examples/dynamicComponant/description.qmd
+              - text: Example d'utilisation des composantes dynamiques (taxons)
+                href: fichiers/examples/taxons/description.qmd
+              - text: Example d'utilisation des composantes basiques
+                href: fichiers/examples/basicComponents/description.qmd
   navbar:
     search: true
     background: rgb(102, 196, 196)
-    left: 
+    left:
       - href: index.qmd
         text: Accueil
       - href: fichiers/readme.md
@@ -129,16 +129,16 @@ website:
         href: https://forgemia.inra.fr/anaee-dev/openadom
       - icon: oa
         href: https://openadom.fr
-  page-footer: 
+  page-footer:
     left: "Copyright 2025, OpenADOM"
-    right: 
+    right:
       - icon: gitlab
         href: https://forgemia.inra.fr/anaee-dev/openadom
-        
+
 format:
   html:
     smooth-scroll: true
-    theme: 
+    theme:
       - minty
       - style/global.scss
     template-partials:
@@ -152,7 +152,7 @@ format:
     highlight-style: kate
     mainfont: "Roboto, sans-serif"
     monofont: "Fira Code, monospace"
-    include-in-header: 
+    include-in-header:
       text: |
         <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&family=Fira+Code&display=swap" rel="stylesheet">
     page-layout: full

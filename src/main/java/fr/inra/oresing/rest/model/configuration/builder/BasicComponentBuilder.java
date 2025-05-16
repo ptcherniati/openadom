@@ -46,7 +46,7 @@ public record BasicComponentBuilder(RootBuilder rootBuilder) {
                     .orElse(Multiplicity.ONE);
             final Parsing<ComputationChecker> defaultValueParsing;
             final JsonNode defaultValueNode = componentNodeValue.get(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
-            if(defaultValueNode!=null) {
+            if (defaultValueNode != null) {
                 defaultValueParsing = rootBuilder.getComputationBuilder().build(
                         i18n,
                         required, multiplicity,
@@ -75,7 +75,7 @@ public record BasicComponentBuilder(RootBuilder rootBuilder) {
                         }
                     }
                 }
-            }else{
+            } else {
                 defaultValueParsing = new Parsing<>(i18n, null);
             }
             final Set<Tag> oaTags = TagsBuilder.validateDomainTagNames(

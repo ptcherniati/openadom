@@ -101,10 +101,10 @@ class ConfigurationBuilderTest {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
         String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
-                                        .writeValueAsString(dataDescriptionMap);
+                .writeValueAsString(dataDescriptionMap);
 
         JsonNode expectedNode = objectMapper.readTree(DATA_RESULT);
-        JsonNode actualNode   = objectMapper.readTree(actualJson);
+        JsonNode actualNode = objectMapper.readTree(actualJson);
 
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
 
@@ -117,26 +117,26 @@ class ConfigurationBuilderTest {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
         String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
-                                        .writeValueAsString(dataDescriptionMap);
+                .writeValueAsString(dataDescriptionMap);
 
         JsonNode expectedNode = objectMapper.readTree(DATA_MONSORE_RESULT);
-        JsonNode actualNode   = objectMapper.readTree(actualJson);
+        JsonNode actualNode = objectMapper.readTree(actualJson);
 
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
 
         // Désactivé, car sensible à l’ordre des attributs selon la version de Java
         // Assertions.assertThat(actualJson).isEqualTo(DATA_MONSORE_RESULT);
     }
-    
+
     private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
-        
+
         String DATA_EXAMPLE_RESULT_EXPECTED = new ObjectMapper().registerModule(new JavaTimeModule())
-                                                                .writer()
-                                                                .withDefaultPrettyPrinter()
-                                                                .writeValueAsString(dataDescriptionMap);
+                .writer()
+                .withDefaultPrettyPrinter()
+                .writeValueAsString(dataDescriptionMap);
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         JsonNode expectedNode = objectMapper.readTree(DATA_EXAMPLE_RESULT);
-        JsonNode actualNode   = objectMapper.readTree(DATA_EXAMPLE_RESULT_EXPECTED);
+        JsonNode actualNode = objectMapper.readTree(DATA_EXAMPLE_RESULT_EXPECTED);
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
         // Désactivé : l'ordre des attributs diffère selon la version du JDK
         // Assertions.assertThat(DATA_EXAMPLE_RESULT_EXPECTED)

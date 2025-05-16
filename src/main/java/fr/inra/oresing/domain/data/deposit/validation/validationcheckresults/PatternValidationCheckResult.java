@@ -14,10 +14,10 @@ public record PatternValidationCheckResult(
         Map<String, Object> messageParams,
         CheckerTarget target,
         PatternType value
-) implements CheckerValidationCheckResult<PatternType<?,?>> {
+) implements CheckerValidationCheckResult<PatternType<?, ?>> {
 
-    public  static CheckerValidationCheckResult of(CheckerValidationCheckResult checkerValidationCheckResult, PatternType patternType){
-        if(checkerValidationCheckResult.isError()){
+    public static CheckerValidationCheckResult of(CheckerValidationCheckResult checkerValidationCheckResult, PatternType patternType) {
+        if (checkerValidationCheckResult.isError()) {
             return checkerValidationCheckResult;
         }
         patternType.getValue().put(Column.__VALUE__, checkerValidationCheckResult.value());

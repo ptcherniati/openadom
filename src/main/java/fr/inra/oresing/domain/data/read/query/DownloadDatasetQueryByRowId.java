@@ -18,7 +18,7 @@ public record DownloadDatasetQueryByRowId(
         boolean horizontalDisplay) implements DownloadDatasetQuery {
     public DownloadDatasetQueryByRowId {
         Objects.requireNonNull(application, "You must provide a valide application");
-        if(!Strings.isNotEmpty(dataName)){
+        if (!Strings.isNotEmpty(dataName)) {
             throw new IllegalArgumentException("You must provide a valide datatype");
         }
         assert application.existsData(dataName) : "Datatype must be declared in configuration";

@@ -12,7 +12,7 @@ import java.util.Map;
 class ReferenceExampleBuilder {
 
     protected static ReferenceType buildReference(final String reference, final boolean isParent, final boolean isRecursive) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final Map<String, ConfigurationSchemaNodeType<?>> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_NAME, new StringType(reference, true));
         if (isParent) {
             children.put(ConfigurationSchemaNode.OA_IS_PARENT, new BooleanType(true));

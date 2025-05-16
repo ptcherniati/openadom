@@ -24,7 +24,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
     ) {
 
         try {
-            InputStream inputStream = file==null?null:file.getInputStream();
+            InputStream inputStream = file == null ? null : file.getInputStream();
             builder().binaryFile = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::fileid)
                     .flatMap(binaryFileRepository::tryFindByIdWithData)
                     .orElseGet(() -> {
@@ -62,7 +62,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
     public StoreFile testRights() {
         boolean isNewFileOrUUID = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::fileid).isEmpty();
         boolean publishing = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::topublish).orElse(false) ||
-                             isNewFileOrUUID && !builder().isRepository();
+                isNewFileOrUUID && !builder().isRepository();
         publishing = !application().isData(dataName()) || publishing;
         if (isNewFileOrUUID && !builder().applicationDataWriter().hasRightForDeposit(fileOrUuid())) {
             throw new NotApplicationDataWriterForDepositException(application().getName(), dataName());

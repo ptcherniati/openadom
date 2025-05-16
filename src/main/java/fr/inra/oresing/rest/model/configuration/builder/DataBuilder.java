@@ -130,7 +130,7 @@ public record DataBuilder(RootBuilder rootBuilder) {
         final Parsing<Submission> submissionParsing = rootBuilder.getSubmissionBuilder().buildSubmission(i18n, dataKey, jsonNode, localComponentDescription);
         if (
                 tags.stream().noneMatch(Tag.DataTag.class::isInstance) &&
-                Optional.of(submissionParsing).map(Parsing::result).map(Submission::strategy).filter(SubmissionType.OA_VERSIONING::equals).isPresent()
+                        Optional.of(submissionParsing).map(Parsing::result).map(Submission::strategy).filter(SubmissionType.OA_VERSIONING::equals).isPresent()
         ) {
             rootBuilder.buildError(ConfigurationException.UNEXPECTED_SUBMISSION,
                     Map.of()
@@ -198,18 +198,18 @@ public record DataBuilder(RootBuilder rootBuilder) {
                 .toList();
         list
                 .forEach(
-                badGroup -> rootBuilder.buildError(ConfigurationException.MISSING_COMPONENT_FOR_DISPLAY_PATTERN,
-                        Map.of(
-                                "badGroup", badGroup,
-                                "expectedComponent", listComponentKeys
-                        ),
-                        NodeSchemaValidator.joinPath(
-                                path,
-                                group,
-                                language
+                        badGroup -> rootBuilder.buildError(ConfigurationException.MISSING_COMPONENT_FOR_DISPLAY_PATTERN,
+                                Map.of(
+                                        "badGroup", badGroup,
+                                        "expectedComponent", listComponentKeys
+                                ),
+                                NodeSchemaValidator.joinPath(
+                                        path,
+                                        group,
+                                        language
+                                )
                         )
-                )
-        );
+                );
         return list.isEmpty();
     }
 
