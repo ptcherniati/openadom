@@ -39,14 +39,13 @@ public class MigrationTest {
     @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
     private Fixtures fixtures;
 
     private Cookie authCookie;
 
     @BeforeEach
     public void createApplication() throws Exception {
-        authCookie = fixtures.addMigrationApplication();
+        authCookie = fixtures.addMigrationApplication().cookie();
     }
 
     @Test

@@ -9,6 +9,7 @@ import java.util.Set;
 public class AuthorizationForAllBuilder {
 
     public AuthorizationForAllBuilder() {
+        super();
     }
 
     public AuthorizationForAll build(Map<String, Set<OperationType>> authorizationForAll) {

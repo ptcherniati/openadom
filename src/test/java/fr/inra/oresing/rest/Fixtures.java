@@ -14,14 +14,10 @@ import fr.inra.oresing.rest.security.JWTExtractor;
 import jakarta.servlet.http.Cookie;
 import lombok.Getter;
 import org.apache.commons.io.IOUtils;
-import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.stereotype.Component;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
@@ -40,37 +36,40 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
-@Component
 public class Fixtures {
 
-    @Autowired
     private MockMvc mockMvc;
 
-    @Autowired
     private AuthenticationService authenticationService;
-    @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
     private UserRepository userRepository;
-    @Getter
-    private Cookie cookie;
 
+    public Fixtures(MockMvc mockMvc, UserRepository userRepository, NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuthenticationService authenticationService) throws Exception {
 
-    static List<ReactiveTypeInfo> getInfos(final MvcResult result) throws UnsupportedEncodingException {
-        return Optional.ofNullable(getReactiveResultFromResult(result)
-                        .get(ReactiveType.REACTIVE_INFO))
-                .orElseGet(List::of)
-                .stream()
-                .map(ReactiveTypeInfo.class::cast)
-                .toList();
+        lambda = new CreateUser("lambda", "xxxxxxxx", "lambda@inrae.fr");
+        admin = new CreateUser("poussin", "xxxxxxxx", "poussin@inrae.fr");
+
+        this.mockMvc = mockMvc;
+        this.userRepository = userRepository;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        this.authenticationService = authenticationService;
+
+        lambdaConnection = createUserForUserDefinition(lambda, true, false);
+        adminConnection = createUserForUserDefinition(admin, true, true);
     }
+
+    public UserConnection lambdaConnection;
+    public UserConnection adminConnection;
+    public final CreateUser lambda;
+    public final CreateUser admin;
 
     static List<ReactiveTypeError> getErrors(final MvcResult result) throws UnsupportedEncodingException {
         return Optional.ofNullable(getReactiveResultFromResult(result)
@@ -87,15 +86,6 @@ public class Fixtures {
                 .orElseGet(List::of)
                 .stream()
                 .map(ReactiveTypeResult.class::cast)
-                .toList();
-    }
-
-    static List<ReactiveTypeProgress> getProgress(final MvcResult result) throws UnsupportedEncodingException {
-        return Optional.ofNullable(getReactiveResultFromResult(result)
-                        .get(ReactiveType.REACTIVE_PROGRESS))
-                .orElseGet(List::of)
-                .stream()
-                .map(ReactiveTypeProgress.class::cast)
                 .toList();
     }
 
@@ -120,6 +110,65 @@ public class Fixtures {
                                                 })
                                                 .collect(Collectors.toList())))
                 );
+    }
+
+    public record CreateUser(String login, String password, String email) {
+    }
+
+    public record UserConnection(CreateUserResult userResult, Cookie cookie) {
+    }
+
+    public UserConnection createUserForUserDefinition(CreateUser createUser, boolean isActive, boolean isAdmin) throws Exception {
+        CreateUserResult userResult;
+        Cookie cookie;
+        OreSiUser user;
+        try {
+            user = authenticationService.getByIdOrLogin(createUser.login());
+            userResult = Optional.ofNullable(user)
+                    .map(CreateUserResult::of)
+                    .orElseThrow();
+        } catch (final Exception e) {
+            userResult = createUserIfNotExists(createUser);
+
+        }
+        if (isActive) {
+            setToActive(userResult.userId());
+        }
+        if (isAdmin) {
+            addRoleAdmin(userResult);
+        }
+        cookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", createUser.login())
+                        .param("password", createUser.password()))
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+        user = authenticationService.getByIdOrLogin(createUser.login());
+        return new UserConnection(CreateUserResult.of(user), cookie);
+    }
+
+    public CreateUserResult createUserIfNotExists(CreateUser createUser) throws Exception {
+        if (mockMvc.perform(post("/api/v1/login")
+                        .param("login", createUser.login())
+                        .param("password", createUser.password()))
+                    .andReturn()
+                    .getResponse().getStatus() > 300) {
+            return authenticationService.createUser(createUser.login(), createUser.password(), createUser.email());
+        } else {
+            OreSiUser userByLogin = userRepository.findByLogin(createUser.login()).orElse(null);
+            return CreateUserResult.of(Objects.requireNonNull(userByLogin));
+        }
+
+    }
+
+    public void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
+        mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                        .param("userIdOrLogin", userId.toString())
+                        .param("applicationPattern", pattern)
+                        .with(csrf().asHeader())
+                        .cookie(adminConnection.cookie()))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
+                .andExpect(jsonPath("$.authorizations", hasItem(pattern)))
+                .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
     }
 
     public static String getApplicationWithComputedComponentsWithReferences() {
@@ -838,28 +887,23 @@ public class Fixtures {
     }
 
     public Cookie addopenAdomAdmin(final String applicationPattern) throws Exception {
-        if (cookie == null) {
-            final String aPassword = "xxxxxxxx";
-            final String aLogin = "openAdomAdmin";
-            final CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword, aLogin + "@inrae.fr");
-            authenticationService.addUserRightCreateApplication(createUserResult.userId(), applicationPattern);
-            cookie = mockMvc.perform(post("/api/v1/login")
-                            .param("login", aLogin)
-                            .param("password", aPassword))
-                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-        }
-        return cookie;
+        final String aPassword = "xxxxxxxx";
+        final String aLogin = "openAdomAdmin";
+        CreateUser openAdomAdmin = new CreateUser(aLogin, aPassword, aLogin + "@inrae.fr");
+        final UserConnection openAdomConnection = createUserForUserDefinition(openAdomAdmin, true, true);
+        authenticationService.addUserRightCreateApplication(openAdomConnection.userResult().userId(), applicationPattern);
+        return openAdomConnection.cookie();
     }
 
     @Transactional
     void addRoleAdmin(final CreateUserResult dbUserResult) {
         String sql = """
-                GRANT "openAdomAdmin" TO :userId WITH INHERIT TRUE
-                """;
+                GRANT "openAdomAdmin" TO "%s" WITH INHERIT TRUE
+                """.formatted(dbUserResult.userId().toString());
 
         namedParameterJdbcTemplate.update(
                 sql,
-                Map.of("userId", dbUserResult.userId().toString())
+                Map.of()
         );
     }
 
@@ -877,39 +921,26 @@ public class Fixtures {
         );
     }
 
-    public Cookie addApplicationCreatorUser(final String applicationPattern) throws Exception {
-        if (cookie == null) {
-            final String aPassword = "xxxxxxxx";
-            final String aLogin = "poussin";
-            final CreateUserResult createUserResult = authenticationService.createUser(aLogin, aPassword, aLogin + "@inrae.fr");
-            setToActive(createUserResult.userId());
-            addRoleAdmin(createUserResult);
-            MockHttpServletResponse response = mockMvc.perform(post("/api/v1/login")
-                            .param("login", aLogin)
-                            .param("password", aPassword))
-                    .andReturn().getResponse();
-            cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
-        }
+    public UserConnection addApplicationCreatorUser(final String applicationPattern) throws Exception {
+
         final String aPassword = "xxxxxxxx";
-        final CreateUserResult createUserResult = authenticationService.createUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
-        setToActive(createUserResult.userId());
-        UUID userId = createUserResult.userId();
-        final ResultActions resultActions = mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+        final CreateUser createUser = new CreateUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
+        final UserConnection createUserConnection = createUserForUserDefinition(createUser, true, true);
+        final UUID userId = createUserConnection.userResult().userId();
+        mockMvc.perform(put("/api/v1/authorization/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", applicationPattern)
-                        .cookie(cookie))
+                        .with(csrf())
+                        .cookie(createUserConnection.cookie()))
+
                 .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(userId.toString())))
-                .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
-                .andExpect(jsonPath("$.authorizations", Matchers.hasItem(applicationPattern)))
+                .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(userId.toString())))
+                .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
+                .andExpect(jsonPath("$.authorizations", hasItem(applicationPattern)))
                 .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
         OreSiUser user = userRepository.findById(userId);
         assertTrue(user.getAuthorizations().contains(applicationPattern));
-        setToActive(createUserResult.userId());
-        return mockMvc.perform(post("/api/v1/login")
-                        .param("login", applicationPattern)
-                        .param("password", aPassword))
-                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+        return createUserConnection;
     }
 
     public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {
@@ -932,9 +963,9 @@ public class Fixtures {
         }
     }
 
-    public Cookie addMonsoreApplication() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("monsore");
-        final String result = createApplicationMonSore(authCookie, "monsore");
+    public UserConnection addMonsoreApplication() throws Exception {
+        final UserConnection authConnection = addApplicationCreatorUser("monsore");
+        createApplicationMonSore(authConnection.cookie(), "monsore");
 
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : getMonsoreReferentielFiles().entrySet()) {
@@ -942,7 +973,7 @@ public class Fixtures {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", e.getKey())
                                 .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
+                                .cookie(authConnection.cookie()))
                         .andExpect(status().isCreated());
             }
         }
@@ -952,18 +983,18 @@ public class Fixtures {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
                             .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .cookie(authConnection.cookie()))
                     .andExpect(status().is2xxSuccessful());
         }
-        return authCookie;
+        return authConnection;
     }
 
-    public Cookie addMigrationApplication() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("fakeapp");
+    public UserConnection addMigrationApplication() throws Exception {
+        final UserConnection authConnection = addApplicationCreatorUser("fakeapp");
         try (final InputStream configurationFile = getClass().getResourceAsStream(getMigrationApplicationConfigurationResourceName(1))) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
 
-            getIdFromApplicationResult(loadApplication(configuration, authCookie, "fakeapp", "fakeapp"));
+            getIdFromApplicationResult(loadApplication(configuration, authConnection.cookie(), "fakeapp", "fakeapp"));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -973,7 +1004,7 @@ public class Fixtures {
             final MockMultipartFile refFile = new MockMultipartFile("file", "reference.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/couleurs")
                             .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .cookie(authConnection.cookie()))
                     .andExpect(status().isCreated());
         }
 
@@ -982,21 +1013,19 @@ public class Fixtures {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/jeu1")
                             .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .cookie(authConnection.cookie()))
                     .andExpect(status().is2xxSuccessful());
         }
 
-        return authCookie;
+        return authConnection;
     }
 
-    public Cookie addApplicationAcbb(Cookie authCookie) throws Exception {
-        Cookie authCookie1 = authCookie;
-        if (authCookie1 == null) {
-            authCookie1 = addApplicationCreatorUser("acbb");
-        }
+    public UserConnection addApplicationAcbb() throws Exception {
+        UserConnection authConnection = addApplicationCreatorUser("acbb");
+        final Cookie authCookie = authConnection.cookie();
         try (final InputStream configurationFile = getClass().getResourceAsStream(getAcbbApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
-            getIdFromApplicationResult(loadApplication(configuration, authCookie1, "acbb", "acbb"));
+            getIdFromApplicationResult(loadApplication(configuration, authCookie, "acbb", "acbb"));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -1007,18 +1036,18 @@ public class Fixtures {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/acbb/data/{refType}", e.getKey())
                                 .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie1))
+                                .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
         }
 
         // ajout de data
-        addFluxTours(authCookie1);
+        addFluxTours(authCookie);
 
-        addBiomasse(authCookie1);
+        addBiomasse(authCookie);
 
-        addSWC(authCookie1);
-        return authCookie1;
+        addSWC(authCookie);
+        return authConnection;
     }
 
     private void addSWC(final Cookie authCookie) throws Exception {
@@ -1051,21 +1080,24 @@ public class Fixtures {
         }
     }
 
-    public Cookie addApplicationHauteFrequence() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("hautefrequence");
+    public UserConnection addApplicationHauteFrequence() throws Exception {
+
+        UserConnection authConnection = addApplicationCreatorUser("hautefrequence");
+        final Cookie authCookie = authConnection.cookie();
         try (final InputStream configurationFile = getClass().getResourceAsStream(getHauteFrequenceApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
-            loadApplication(configuration, authCookie, "hautefrequence", "hautefrequence");
+            getIdFromApplicationResult(loadApplication(configuration, authCookie, "hautefrequence", "hautefrequence"));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
 
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : getHauteFrequenceReferentielFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+            try (final InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
+                final MockMultipartFile file = new MockMultipartFile("file", e.getValue(), "text/plain", in);
                 mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
+                                .file(file)
+                                .with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().is2xxSuccessful());
             }
@@ -1079,11 +1111,12 @@ public class Fixtures {
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
-        return authCookie;
+        return authConnection;
     }
 
-    public Cookie addApplicationOLAC() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("olac");
+    public UserConnection addApplicationOLAC() throws Exception {
+        final UserConnection authConnection = addApplicationCreatorUser("olac");
+        final Cookie authCookie = authConnection.cookie();
         try (final InputStream configurationFile = getClass().getResourceAsStream(getOlaApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
 
@@ -1097,7 +1130,8 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
+                                .file(refFile)
+                                .with(csrf().asHeader())
                                 .cookie(authCookie))
                         .andExpect(status().isCreated());
             }
@@ -1166,11 +1200,12 @@ public class Fixtures {
                     .andExpect(status().isCreated());
         }
 
-        return authCookie;
+        return authConnection;
     }
 
-    public Cookie addApplicationFORET() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("foret");
+    public UserConnection addApplicationFORET() throws Exception {
+        final UserConnection authConnection = addApplicationCreatorUser("foret");
+        final Cookie authCookie = authConnection.cookie();
         try (final InputStream configurationFile = getClass().getResourceAsStream(getForetApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
             loadApplication(configuration, authCookie, "foret", "foret");
@@ -1198,11 +1233,12 @@ public class Fixtures {
                     .andExpect(status().isCreated());
         }
 
-        return authCookie;
+        return authConnection;
     }
 
-    public void addApplicationRecursivity() throws Exception {
-        final Cookie authCookie = addApplicationCreatorUser("recursivite");
+    public UserConnection addApplicationRecursivity() throws Exception {
+        final UserConnection authConnection = addApplicationCreatorUser("recursivite");
+        final Cookie authCookie = authConnection.cookie();
         try (final InputStream in = getClass().getResourceAsStream(getRecursivityApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             loadApplication(configuration, authCookie, "recursivite", "recursivite");
@@ -1230,6 +1266,7 @@ public class Fixtures {
                         .andExpect(status().isCreated());
             }
         }
+        return authConnection;
     }
 
     @Getter

@@ -102,7 +102,6 @@ public class ApplicationService implements ServiceContainerBean {
                         .orElse(null))
                 .canCreateApplication(name);
         progression.pushProgression();
-        OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
 
         final Application application = new Application();
         application.setName(name);

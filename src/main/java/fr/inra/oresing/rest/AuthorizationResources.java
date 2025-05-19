@@ -51,19 +51,23 @@ import java.util.*;
 @RequestMapping("/api/v1")
 public class AuthorizationResources implements ServiceContainerBean {
 
-    @Autowired
-    private HealthEndpoint healthEndpoint;
+    public static final String AUTHORIZATION_ID = "authorizationId";
+    private final HealthEndpoint healthEndpoint;
 
     @Setter
     private ServiceContainer serviceContainer;
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private OreSiApiRequestContext request;
+    private final OreSiApiRequestContext request;
 
-    @Autowired
-    private OreSiRepository repo;
+    private final OreSiRepository repo;
+
+    public AuthorizationResources(HealthEndpoint healthEndpoint, UserRepository userRepository, OreSiApiRequestContext request, OreSiRepository repo) {
+        this.healthEndpoint = healthEndpoint;
+        this.userRepository = userRepository;
+        this.request = request;
+        this.repo = repo;
+    }
 
 
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
@@ -76,7 +80,7 @@ public class AuthorizationResources implements ServiceContainerBean {
     @GetMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResult> getAuthorizationById(
             @PathVariable("nameOrId") final String applicationNameOrId,
-            @PathVariable("authorizationId") final UUID authorizationId) {
+            @PathVariable(AUTHORIZATION_ID) final UUID authorizationId) {
         AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
         Application application = serviceContainer.authorizationService().getApplication(applicationNameOrId);
         final GetAuthorizationResult getAuthorizationResult = serviceContainer.authorizationService().getAuthorization(
@@ -101,35 +105,6 @@ public class AuthorizationResources implements ServiceContainerBean {
             summary = "Récupérer les utilisateurs avec leurs autorisations pour une application",
             description = "Liste les utilisateurs avec leurs droits d'accès aux données au SI pour une application spécifique identifiée par son nom ou son UUID",
             tags = {"Autorisations"})
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Liste des utilisateurs avec leurs autorisations récupérées avec succès pour l'application  nameOrId",
-                    content = @Content(
-                            schema = @Schema(implementation = UserAuthorizationForApplication[].class),
-                            examples = @ExampleObject(
-                                    name = "exemple_autorisations",
-                                    value = """
-                                            [{
-                                                "applicationName": "ClimateApp",
-                                                "id": "550e8400-e29b-41d4-a716-446655440000",
-                                                "login": "admin_eco",
-                                                "email": "admin@inrae.fr",
-                                                "state": "active",
-                                                "applicationManager": true,
-                                                "userManager": false,
-                                                "authorizations": ["DATA_CURATION","USER_ADMIN"],
-                                                "isValidCharte": true,
-                                                "isApplicationUser": true
-                                            }]"""
-                            ))),
-            @ApiResponse(
-                    responseCode = "404",
-                    description = "Application non trouvée"),
-            @ApiResponse(
-                    responseCode = "400",
-                    description = "Format d'identifiant invalide")
-    })
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ')")
     @GetMapping(value = "/{nameOrId}/authorizationAdminForApplication", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -300,9 +275,7 @@ public class AuthorizationResources implements ServiceContainerBean {
             @ApiResponse(responseCode = "400", description = "Requête invalide"),
             @ApiResponse(responseCode = "404", description = "Application non trouvée")
     })
-    @Parameters({
-            @Parameter(name = "nameOrId", description = "Nom ou ID de l'application", required = true)
-    })
+    @Parameter(name = "nameOrId", description = "Nom ou ID de l'application", required = true)
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @PostMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addAuthorization(
@@ -319,7 +292,6 @@ public class AuthorizationResources implements ServiceContainerBean {
                         .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
-        boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
         final List<OreSiAuthorization> authorizationsForCurrentUser = serviceContainer.authorizationService().findUserAuthorizationsForApplication(application);
         AuthorizationRequest authorizationRequest = serviceContainer.authorizationService().createAuthorizationRequestToAuthorizationRequest(
                 createAuthorizationRequestWithDependantAuthorization,
@@ -330,7 +302,7 @@ public class AuthorizationResources implements ServiceContainerBean {
         );
         if (!errors.isEmpty()) {
             final String uri = UriUtils.encodePath("/applications/authorization/null", Charset.defaultCharset());
-            return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", "null"));
+            return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, "null"));
 
         }
         final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService().addAuthorization(
@@ -344,7 +316,7 @@ public class AuthorizationResources implements ServiceContainerBean {
         }
         serviceContainer.authorizationService().updateRoleForManagement(oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/authorization/" + authId.toString(), Charset.defaultCharset());
-        return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
+        return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, authId.toString()));
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
@@ -366,7 +338,7 @@ public class AuthorizationResources implements ServiceContainerBean {
     @DeleteMapping(value = "/applications/{nameOrId}/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<UUID> revokeAuthorization(
             @PathVariable("nameOrId") final String applicationNameOrId,
-            @PathVariable("authorizationId") final UUID authorizationId) {
+            @PathVariable(AUTHORIZATION_ID) final UUID authorizationId) {
         Application application = OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getApplicationPersona)
                 .map(ApplicationPersona::application)
@@ -396,15 +368,6 @@ public class AuthorizationResources implements ServiceContainerBean {
         return serviceContainer.authorizationService().getAdditionalFilesAuthorizationsForUser(applicationNameOrId, userLoginOrId1);
     }
 
-
-   /* @DeleteMapping(value = "/applications/{applicationNameOrId}/additionalFiles/authorization/{authorizationId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> revokeAdditionalFilesAuthorization(
-            @PathVariable("applicationNameOrId") final String applicationNameOrId,
-            @PathVariable("authorizationId") final String authorizationId) {
-        UUID revokeId = serviceContainer.authorizationService().revokeAdditionalFiles(applicationNameOrId, UUID.fromString(authorizationId));
-        return ResponseEntity.ok(revokeId.toString());
-    }*/
-
     @PostMapping(value = "/applications/{nameOrId}/additionalFiles/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addAdditionalFileAuthorization(@PathVariable(name = "nameOrId") final String nameOrId,
                                                                               @RequestBody final CreateAdditionalFileAuthorizationRequest authorization) {
@@ -412,10 +375,6 @@ public class AuthorizationResources implements ServiceContainerBean {
         Application application = repo.application().findApplication(nameOrId);
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
         final List<OreSiAdditionalFileAuthorization> additionalFilesAuthorizationsForCurrentUser = serviceContainer.authorizationService().findUserAdditionalFilesAuthorizationsForApplicationAndDataType(application);
-        if (!isApplicationCreator) {
-            //TODO rights definition for additionnals
-            //throw new NotApplicationCanManageReferenceRightsException(application.getName());
-        }
         final Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
         final OreSiAdditionalFileAuthorization oreSiAuthorization = serviceContainer.authorizationService().addAdditionalFileAuthorizations(application, authorization, additionalFilesAuthorizationsForCurrentUser, true);
         final UUID authId = oreSiAuthorization.getId();
@@ -424,24 +383,8 @@ public class AuthorizationResources implements ServiceContainerBean {
         }
         serviceContainer.authorizationService().updateRoleForReferenceManagement(previousUsers, oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/" + authorization.getApplicationNameOrId() + "/additionalFiles/authorization/" + authId.toString(), Charset.defaultCharset());
-        return ResponseEntity.created(URI.create(uri)).body(Map.of("authorizationId", authId.toString()));
-    }/*
-
-    @GetMapping(value = "/applications/{nameOrId}/additionalfiles/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetAuthorizationAdditionalFilesResults> getAdditionalFilesAuthorizations(
-            @PathVariable("nameOrId") final String applicationNameOrId,
-            @RequestParam final MultiValueMap<String, String> params
-    ) {
-        AuthorizationsAdditionalFilesResult authorizationsForUser = getAdditionalFilesAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
-        final ImmutableSet<GetAuthorizationAdditionalFilesResult> getAuthorizationResults = serviceContainer.authorizationService().getAdditionalFilesuthorizations(applicationNameOrId, authorizationsForUser, params);
-        final Set<GetGrantableResult.User> users = serviceContainer.authorizationService().getGrantableUsers()
-                .stream()
-                .filter(user -> !"_public_".equals(user.label()))
-                .collect(Collectors.toSet());
-
-        GetAuthorizationAdditionalFilesResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationAdditionalFilesResults(getAuthorizationResults, authorizationsForUser, users);
-        return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
-    }*/
+        return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, authId.toString()));
+    }
 
     @PreAuthorize("""
                 #applicationNameOrId == null ?
@@ -451,12 +394,6 @@ public class AuthorizationResources implements ServiceContainerBean {
     @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an authorization for a user",
             description = "This service allows adding a specific authorization for a given user.")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Authorization successfully added"),
-            @ApiResponse(responseCode = "400", description = "Invalid request"),
-            @ApiResponse(responseCode = "403", description = "Access denied"),
-            @ApiResponse(responseCode = "404", description = "User or role not found")
-    })
     public ResponseEntity<OreSiUser> addAuthorization(
             @Parameter(description = "The role to add", required = true,
                     examples = {

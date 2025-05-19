@@ -837,7 +837,7 @@ public class AuthorizationService implements ServiceContainerBean, fr.inra.oresi
                 authorizationsForCurrentUser,
                 errors
         )
-                .build(createAuthorizationRequestWithDependantAuthorization, dataRepositoryWithBuffer);
+                .build(createAuthorizationRequestWithDependantAuthorization);
     }
 
     public OreSiUser getCurrentUser() {

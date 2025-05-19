@@ -119,7 +119,7 @@ public class VersioningService implements ServiceContainerBean {
         DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
         ReportErrors errors = new ReportErrors(jsonRowMapper);
         Function<UUID, Optional<BinaryFile>> resolveFileById = uuid -> binaryFileRepository(application).tryFindById(uuid);
-        return AuthorizationPublicationServiceBuilder.BUILDER(
+        return AuthorizationPublicationServiceBuilder.builder(
                         application,
                         dataName,
                         fileName,

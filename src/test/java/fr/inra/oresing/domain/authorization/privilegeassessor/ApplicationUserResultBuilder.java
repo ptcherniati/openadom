@@ -1,6 +1,5 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.rest.model.authorization.ApplicationUserResult;
 
 import java.util.Optional;
@@ -16,7 +15,7 @@ public class ApplicationUserResultBuilder {
     private UUID applicationId = UUID.randomUUID();
     private UUID id = UUID.randomUUID();
 
-    public static final ApplicationUserResultBuilder builder(Application application) {
+    public static final ApplicationUserResultBuilder builder() {
         return new ApplicationUserResultBuilder();
     }
 

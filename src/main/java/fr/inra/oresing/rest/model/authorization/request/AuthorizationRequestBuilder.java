@@ -6,26 +6,14 @@ import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.rest.model.authorization.CreateAuthorizationRequest;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 
+import java.io.Serializable;
 import java.util.*;
-
-/*
-Roles {
-        UPLOAD,
-        DOWNLOAD,
-        READ,
-        ADMIN,
-        PUBLICATION,
-        ANY,
-        DELETE
-    }
- */
 
 public class AuthorizationRequestBuilder {
     @Getter
@@ -55,8 +43,7 @@ public class AuthorizationRequestBuilder {
     }
 
     public AuthorizationRequest build(
-            CreateAuthorizationRequest authorizationRequest,
-            DataRepositoryForBuffer dataRepositoryWithBuffer) {
+            CreateAuthorizationRequest authorizationRequest) {
         UUID authorizationId = authorizationRequest.uuid();
         String name = authorizationRequest.name();
         Set<UUID> userId = authorizationRequest.usersId();
@@ -64,8 +51,7 @@ public class AuthorizationRequestBuilder {
                 MapUtils.isEmpty(authorizationRequest.authorizationsWithRestriction()) ?
                         null :
                         getAuthorizationWithRestrictionBuilder().build(
-                                authorizationRequest.authorizationsWithRestriction(),
-                                dataRepositoryWithBuffer
+                                authorizationRequest.authorizationsWithRestriction()
                         );
 
         AuthorizationForAll authorizationForAll =

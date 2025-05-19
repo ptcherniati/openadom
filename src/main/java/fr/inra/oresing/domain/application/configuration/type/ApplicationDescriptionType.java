@@ -39,7 +39,7 @@ public record ApplicationDescriptionType<T extends Map<String, ConfigurationSche
                 );
     }
 
-    public static ApplicationDescriptionType emptyInstance() {
+    public static ApplicationDescriptionType<Map<String, ConfigurationSchemaNodeType<?>>> emptyInstance() {
         return new ApplicationDescriptionType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
 

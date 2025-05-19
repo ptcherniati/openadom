@@ -7,7 +7,7 @@ import java.util.Map;
 
 public record AuthorizationType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                                 boolean required,
-                                boolean nullable) implements ApplicationType {
+                                boolean nullable) implements ApplicationType<Map<String, ConfigurationSchemaNodeType<?>>> {
     public AuthorizationType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),

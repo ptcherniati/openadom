@@ -59,7 +59,7 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
         return new CurrentUserRoles(memberOf(), isDataBaseSuper(), user);
     }
 
-    public Boolean applicationManagerOf(Application application) {
+    public boolean applicationManagerOf(Application application) {
         return memberOf().contains(OreSiRole.applicationManagerOf(application).getAsSqlRole());
     }
 

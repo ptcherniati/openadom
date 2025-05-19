@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
+import fr.inra.oresing.domain.repository.authorization.OperationType;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -141,31 +142,38 @@ public record AuthorizationIndex(Application application) {
                 });
 
         switch (authorization) {
-            case AuthorizationForTimeScope authorizationForTimeScope -> {
+            case AuthorizationForTimeScope(
+                    Set<OperationType> _,
+                    LocalDateTimeRange timeScope ) -> {
                 if (hasRequiredAuthorizations[0]) {
                     addEmptyReferenceConditions(conditions, dataName);
                 }
                 if (hasTimeScope[0] && withTimeScope) {
-                    addTimeCondition(conditions, authorizationForTimeScope.timeScope());
+                    addTimeCondition(conditions, timeScope);
                 }
             }
-            case AuthorizationForReferenceScope authorizationForReferenceScope -> {
-                if (hasRequiredAuthorizations[0]) {
-                    addReferenceConditions(conditions, authorizationForReferenceScope.authorizationScope());
-                }
+            case AuthorizationForReferenceScope(
+                    Set<OperationType> _,
+                    Map<String, List<Ltree>> authorizationScope
+            ) when hasRequiredAuthorizations[0] -> {
+                addReferenceConditions(conditions, authorizationScope);
             }
-            case AuthorizationForReferenceScopeAndTimeScope authorizationForReferenceScopeAndTimeScope -> {
+            case AuthorizationForReferenceScopeAndTimeScope(
+                    Set<OperationType> _,
+                    Map<String, List<Ltree>> authorizationScope,
+                    LocalDateTimeRange timeScope
+            ) -> {
                 if (hasRequiredAuthorizations[0]) {
-                    addReferenceConditions(conditions, authorizationForReferenceScopeAndTimeScope.authorizationScope());
+                    addReferenceConditions(conditions, authorizationScope);
                 }
                 if (hasTimeScope[0] && withTimeScope) {
-                    addTimeCondition(conditions, authorizationForReferenceScopeAndTimeScope.timeScope());
+                    addTimeCondition(conditions, timeScope);
                 }
             }
             default -> throw new IllegalArgumentException("Type d'autorisation non reconnu");
         }
 
-        return String.join(" AND ", conditions);
+        return String.join("\n AND ", conditions);
     }
 
 
@@ -186,17 +194,17 @@ public record AuthorizationIndex(Application application) {
 
     private void addReferenceConditions(List<String> conditions, Map<String, List<Ltree>> authorizationScope) {
         SortedMap<String, List<Ltree>> sortedScope = new TreeMap<>(authorizationScope);
-        for (String field : sortedScope.keySet()) {
-            List<Ltree> values = sortedScope.get(field);
+        for (Map.Entry<String, List<Ltree>> entry : sortedScope.entrySet()) {
+            List<Ltree> values = entry.getValue();
             if (!values.isEmpty()) {
                 List<Ltree> uniqueValues = eliminateNestedLtrees(values);
                 conditions.add("(\"authorization\").requiredauthorizations.%s @> ARRAY[%s]::ltree[]"
-                        .formatted(field, uniqueValues.stream()
+                        .formatted(entry.getKey(), uniqueValues.stream()
                                 .map(Ltree::getSql)
                                 .map(s -> "'" + s + "'")
                                 .collect(Collectors.joining(", "))));
             } else {
-                conditions.add("(\"authorization\").requiredauthorizations.%s IS NULL".formatted(field));
+                conditions.add("(\"authorization\").requiredauthorizations.%s IS NULL".formatted(entry.getKey()));
             }
         }
     }

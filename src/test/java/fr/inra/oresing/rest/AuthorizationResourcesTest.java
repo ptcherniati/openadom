@@ -17,7 +17,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.util.*;
@@ -57,6 +56,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Tag("core.auth")
 public class AuthorizationResourcesTest {
 
+    public static final String INRAE_FR = "@inrae.fr";
     @Autowired
     private UserRepository userRepository;
 
@@ -77,11 +77,21 @@ public class AuthorizationResourcesTest {
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
-    @Autowired
     private Fixtures fixtures;
 
-    @Test
-    @Disabled
+
+    @BeforeEach
+    public void init() throws Exception {
+        fixtures = new Fixtures(
+                mockMvc,
+                userRepository,
+                namedParameterJdbcTemplate,
+                authenticationService
+        );
+    }
+
+   // @Test
+
     public void testAddAuthorization() throws Exception {
         final CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx", "withrights@inrae.fr");
         fixtures.setToActive(withRightsUserResult.userId());
@@ -118,7 +128,7 @@ public class AuthorizationResourcesTest {
 
         final String readerUserId = readerUserResult.userId().toString();
 
-        final Cookie authCookie = fixtures.addApplicationAcbb(null);
+        final Cookie authCookie = fixtures.addApplicationAcbb().cookie();
         String token = Jwts.parser()
                 .verifyWith(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
                 .build()
@@ -161,22 +171,22 @@ public class AuthorizationResourcesTest {
         {
             // on met les droits administrateurs sur withAdminRigthsUser
             String json = "{\n" +
-                    "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
-                    "   \"applicationNameOrId\":\"acbb\",\n" +
-                    "   \"id\": null,\n" +
-                    "   \"name\": \"une submissionScope sur acbb\",\n" +
-                    "   \"authorizations\":{\n" +
-                    "   \"biomasse_production_teneur\":{\n" +
-                    "   \"admin\":[\n" +
-                    "      {\n" +
-                    "         \"requiredAuthorizations\":{\n" +
-                    "            \"localization\":\"theix\"\n" +
-                    "         }\n" +
-                    "      }\n" +
-                    "   ]\n" +
-                    "  }\n" +
-                    " }\n" +
-                    "}";
+                          "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
+                          "   \"applicationNameOrId\":\"acbb\",\n" +
+                          "   \"id\": null,\n" +
+                          "   \"name\": \"une submissionScope sur acbb\",\n" +
+                          "   \"authorizations\":{\n" +
+                          "   \"biomasse_production_teneur\":{\n" +
+                          "   \"admin\":[\n" +
+                          "      {\n" +
+                          "         \"requiredAuthorizations\":{\n" +
+                          "            \"localization\":\"theix\"\n" +
+                          "         }\n" +
+                          "      }\n" +
+                          "   ]\n" +
+                          "  }\n" +
+                          " }\n" +
+                          "}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
@@ -189,22 +199,22 @@ public class AuthorizationResourcesTest {
 
             // on met les droits administrateurs sur withBadAdminRigthsUser
             json = "{\n" +
-                    "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
-                    "   \"applicationNameOrId\":\"acbb\",\n" +
-                    "   \"id\": null,\n" +
-                    "   \"name\": \"une submissionScope sur acbb\",\n" +
-                    "   \"authorizations\":{\n" +
-                    "   \"biomasse_production_teneur\":{\n" +
-                    "   \"admin\":[\n" +
-                    "      {\n" +
-                    "         \"requiredAuthorizations\":{\n" +
-                    "            \"localization\":\"laqueuille\"\n" +
-                    "         }\n" +
-                    "      }\n" +
-                    "   ]\n" +
-                    "  }\n" +
-                    " }\n" +
-                    "}";
+                   "   \"usersId\":[\"" + withAdminRigthsUserId + "\"],\n" +
+                   "   \"applicationNameOrId\":\"acbb\",\n" +
+                   "   \"id\": null,\n" +
+                   "   \"name\": \"une submissionScope sur acbb\",\n" +
+                   "   \"authorizations\":{\n" +
+                   "   \"biomasse_production_teneur\":{\n" +
+                   "   \"admin\":[\n" +
+                   "      {\n" +
+                   "         \"requiredAuthorizations\":{\n" +
+                   "            \"localization\":\"laqueuille\"\n" +
+                   "         }\n" +
+                   "      }\n" +
+                   "   ]\n" +
+                   "  }\n" +
+                   " }\n" +
+                   "}";
 
             create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
@@ -219,86 +229,86 @@ public class AuthorizationResourcesTest {
 
         {
             String json = "{\n" +
-                    "   \"usersId\":[\"" + readerUserId + "\"],\n" +
-                    "   \"applicationNameOrId\":\"acbb\",\n" +
-                    "   \"id\": null,\n" +
-                    "   \"name\": \"une submissionScope sur acbb\",\n" +
-                    "   \"dataName\":\"biomasse_production_teneur\",\n" +
-                    "   \"authorizations\":{\n" +
-                    "   \"biomasse_production_teneur\":{\n" +
-                    "   \"extraction\":[\n" +
-                    "      {\n" +
-                    "         \"requiredAuthorizations\":{\n" +
-                    "            \"localization\":\"theix.theix__22\"\n" +
-                    "         },\n" +
-                    "         \"datagroups\":[\n" +
-                    "            \"all\"\n" +
-                    "         ],\n" +
-                    "         \"intervalDates\":{\n" +
-                    "            \"fromDay\":[\n" +
-                    "               2010,\n" +
-                    "               1,\n" +
-                    "               1\n" +
-                    "            ],\n" +
-                    "            \"toDay\":[\n" +
-                    "               2010,\n" +
-                    "               6,\n" +
-                    "               1\n" +
-                    "            ]\n" +
-                    "         }\n" +
-                    "      }\n" +
-                    "   ]\n" +
-                    "  }\n" +
-                    " }\n" +
-                    "}";
+                          "   \"usersId\":[\"" + readerUserId + "\"],\n" +
+                          "   \"applicationNameOrId\":\"acbb\",\n" +
+                          "   \"id\": null,\n" +
+                          "   \"name\": \"une submissionScope sur acbb\",\n" +
+                          "   \"dataName\":\"biomasse_production_teneur\",\n" +
+                          "   \"authorizations\":{\n" +
+                          "   \"biomasse_production_teneur\":{\n" +
+                          "   \"extraction\":[\n" +
+                          "      {\n" +
+                          "         \"requiredAuthorizations\":{\n" +
+                          "            \"localization\":\"theix.theix__22\"\n" +
+                          "         },\n" +
+                          "         \"datagroups\":[\n" +
+                          "            \"all\"\n" +
+                          "         ],\n" +
+                          "         \"intervalDates\":{\n" +
+                          "            \"fromDay\":[\n" +
+                          "               2010,\n" +
+                          "               1,\n" +
+                          "               1\n" +
+                          "            ],\n" +
+                          "            \"toDay\":[\n" +
+                          "               2010,\n" +
+                          "               6,\n" +
+                          "               1\n" +
+                          "            ]\n" +
+                          "         }\n" +
+                          "      }\n" +
+                          "   ]\n" +
+                          "  }\n" +
+                          " }\n" +
+                          "}";
 
             MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
-            String response = mockMvc.perform(create)
+            mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
 
             //on ajoute une autre submissionScope
             json = "{\n" +
-                    "   \"usersId\":[\"" + readerUserId + "\",\"" + authId + "\"],\n" +
-                    "   \"applicationNameOrId\":\"acbb\",\n" +
-                    "   \"id\": null,\n" +
-                    "   \"name\": \"une autre submissionScope sur acbb\",\n" +
-                    "   \"dataName\":\"biomasse_production_teneur\",\n" +
-                    "   \"authorizations\":{\n" +
-                    "   \"biomasse_production_teneur\":{\n" +
-                    "   \"extraction\":[\n" +
-                    "      {\n" +
-                    "         \"requiredAuthorizations\":{\n" +
-                    "            \"localization\":\"theix.theix__2\"\n" +
-                    "         },\n" +
-                    "         \"dataGroups\":[\n" +
-                    "            \"all\"\n" +
-                    "         ],\n" +
-                    "         \"intervalDates\":{\n" +
-                    "            \"fromDay\":[\n" +
-                    "               2009,\n" +
-                    "               1,\n" +
-                    "               1\n" +
-                    "            ],\n" +
-                    "            \"toDay\":[\n" +
-                    "               2009,\n" +
-                    "               6,\n" +
-                    "               1\n" +
-                    "            ]\n" +
-                    "         }\n" +
-                    "      }\n" +
-                    "   ]\n" +
-                    "  }\n" +
-                    " }\n" +
-                    "}";
+                   "   \"usersId\":[\"" + readerUserId + "\",\"" + authId + "\"],\n" +
+                   "   \"applicationNameOrId\":\"acbb\",\n" +
+                   "   \"id\": null,\n" +
+                   "   \"name\": \"une autre submissionScope sur acbb\",\n" +
+                   "   \"dataName\":\"biomasse_production_teneur\",\n" +
+                   "   \"authorizations\":{\n" +
+                   "   \"biomasse_production_teneur\":{\n" +
+                   "   \"extraction\":[\n" +
+                   "      {\n" +
+                   "         \"requiredAuthorizations\":{\n" +
+                   "            \"localization\":\"theix.theix__2\"\n" +
+                   "         },\n" +
+                   "         \"dataGroups\":[\n" +
+                   "            \"all\"\n" +
+                   "         ],\n" +
+                   "         \"intervalDates\":{\n" +
+                   "            \"fromDay\":[\n" +
+                   "               2009,\n" +
+                   "               1,\n" +
+                   "               1\n" +
+                   "            ],\n" +
+                   "            \"toDay\":[\n" +
+                   "               2009,\n" +
+                   "               6,\n" +
+                   "               1\n" +
+                   "            ]\n" +
+                   "         }\n" +
+                   "      }\n" +
+                   "   ]\n" +
+                   "  }\n" +
+                   " }\n" +
+                   "}";
             create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
-            response = mockMvc.perform(create)
+            mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             // on peut aussi rajouter une submissionScope avec withAdminRigthsUserId
@@ -306,7 +316,7 @@ public class AuthorizationResourcesTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(withAdminRigthsCookie)
                     .content(json);
-            response = mockMvc.perform(create)
+            mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             // on ne peut aussi rajouter une submissionScope avec withBadAdminRigthsUserId theix vs laqueuille
@@ -314,7 +324,7 @@ public class AuthorizationResourcesTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(withBadAdminRigthsCookie)
                     .content(json);
-            response = mockMvc.perform(create)
+            mockMvc.perform(create)
                     .andExpect(status().is4xxClientError())
                     .andExpect(jsonPath("$.localizedMessage", IsEqual.equalTo("NO_RIGHT_FOR_SET_RIGHTS_APPLICATION")))
                     .andReturn().getResponse().getContentAsString();
@@ -354,10 +364,9 @@ public class AuthorizationResourcesTest {
         }
     }
 
-    @Test
-    @Disabled
+   // @Test
     public void testAddAuthorizationOnTwoScopes() throws Exception {
-        final Cookie authCookie = fixtures.addApplicationHauteFrequence();
+        final Cookie authCookie = fixtures.addApplicationHauteFrequence().cookie();
 
         final CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx", "UnReader@inrae.fr");
         fixtures.setToActive(createUserResult.userId());
@@ -372,38 +381,38 @@ public class AuthorizationResourcesTest {
         {
 
             final String json = "{\n" +
-                    "   \"usersId\":[\"" + readerUserId + "\"],\n" +
-                    "   \"applicationNameOrId\":\"hautefrequence\",\n" +
-                    "   \"id\": null,\n" +
-                    "   \"name\": \"une submissionScope sur haute fréquence\",\n" +
-                    "   \"authorizations\":{\n" +
-                    "   \"hautefrequence\":{\n" +
-                    "   \"extraction\":[\n" +
-                    "      {\n" +
-                    "         \"requiredAuthorizations\":{\n" +
-                    "            \"localization\":\"bimont.bim13\",\n" +
-                    "            \"projet\":\"sou\"\n" +
-                    "         },\n" +
-                    "         \"datagroups\":[\n" +
-                    "            \"all\"\n" +
-                    "         ],\n" +
-                    "         \"intervalDates\":{\n" +
-                    "            \"fromDay\":[\n" +
-                    "               2016,\n" +
-                    "               1,\n" +
-                    "               1\n" +
-                    "            ],\n" +
-                    "            \"toDay\":[\n" +
-                    "               2017,\n" +
-                    "               1,\n" +
-                    "               1\n" +
-                    "            ]\n" +
-                    "         }\n" +
-                    "      }\n" +
-                    "   ]\n" +
-                    "  }\n" +
-                    " }\n" +
-                    "}";
+                                "   \"usersId\":[\"" + readerUserId + "\"],\n" +
+                                "   \"applicationNameOrId\":\"hautefrequence\",\n" +
+                                "   \"id\": null,\n" +
+                                "   \"name\": \"une submissionScope sur haute fréquence\",\n" +
+                                "   \"authorizations\":{\n" +
+                                "   \"hautefrequence\":{\n" +
+                                "   \"extraction\":[\n" +
+                                "      {\n" +
+                                "         \"requiredAuthorizations\":{\n" +
+                                "            \"localization\":\"bimont.bim13\",\n" +
+                                "            \"projet\":\"sou\"\n" +
+                                "         },\n" +
+                                "         \"datagroups\":[\n" +
+                                "            \"all\"\n" +
+                                "         ],\n" +
+                                "         \"intervalDates\":{\n" +
+                                "            \"fromDay\":[\n" +
+                                "               2016,\n" +
+                                "               1,\n" +
+                                "               1\n" +
+                                "            ],\n" +
+                                "            \"toDay\":[\n" +
+                                "               2017,\n" +
+                                "               1,\n" +
+                                "               1\n" +
+                                "            ]\n" +
+                                "         }\n" +
+                                "      }\n" +
+                                "   ]\n" +
+                                "  }\n" +
+                                " }\n" +
+                                "}";
 
             final MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization").with(csrf().asHeader())
                     .contentType(MediaType.APPLICATION_JSON)
@@ -462,66 +471,62 @@ public class AuthorizationResourcesTest {
     }
 
     @Test
-    @Disabled
+
     public void testAddApplicationMonsoere() throws Exception {
         fixtures.addMonsoreApplication();
     }
 
     @Test
-    @Disabled
+
     public void testAddRightForAddApplication() throws Exception {
 
         {
             final String TEST = "test";
-            final CreateUserResult dbUserResult = authenticationService.createUser(TEST, TEST, TEST + "@inrae.fr");
-            fixtures.setToActive(dbUserResult.userId());
-            Cookie dbUserCookies = mockMvc.perform(post("/api/v1/login")
-                            .param("login", TEST)
-                            .param("password", TEST))
-                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-            addRoleAdmin(dbUserResult);
+            Fixtures.CreateUser testUser = new Fixtures.CreateUser(TEST, TEST, TEST + INRAE_FR);
+            Fixtures.UserConnection testUserConnection = fixtures.createUserForUserDefinition(testUser, true, true);
             final String applicationCreatorLogin = "applicationCreator";
             final String applicationCreatorPassword = "xxxxxxxx";
-            final CreateUserResult applicationCreatorResult = authenticationService.createUser(applicationCreatorLogin, applicationCreatorPassword, applicationCreatorLogin + "@inrae.fr");
-            fixtures.setToActive(applicationCreatorResult.userId());
-            Cookie applicationCreatorCookies = mockMvc.perform(post("/api/v1/login")
-                            .param("login", applicationCreatorLogin)
-                            .param("password", applicationCreatorPassword))
-                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-            final String lambdaLogin = "lambda";
-            final String lambdaPassword = "xxxxxxxx";
-            final CreateUserResult lambdaResult = authenticationService.createUser(lambdaLogin, lambdaPassword, "lambdaLogin@inrae.fr");
-            fixtures.setToActive(lambdaResult.userId());
-            Cookie lambdaCookie = mockMvc.perform(post("/api/v1/login")
-                            .param("login", lambdaLogin)
-                            .param("password", lambdaPassword))
-                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+            Fixtures.CreateUser applicationCreator = new Fixtures.CreateUser(applicationCreatorLogin, applicationCreatorPassword, applicationCreatorLogin + INRAE_FR);
+            Fixtures.UserConnection applicationCreatorConnection = fixtures.createUserForUserDefinition(applicationCreator, true, false);
 
-            {
-                //l'administrateur peut créer des applications.
-                String monsoreResult = fixtures.createApplicationMonSore(dbUserCookies, "monsore");
+
+            try {
+                //l'administrateur ne peut créer des applications.
+                String monsoreResult = fixtures.createApplicationMonSore(fixtures.adminConnection.cookie(), "monsore");
                 assertFalse(Strings.isNullOrEmpty(monsoreResult));
+                fail();
+            } catch (OreSiTechnicalException e) {
+                assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", e.getMessage());
+            }
+            try {
+                String monsoreResult = fixtures.createApplicationMonSore(applicationCreatorConnection.cookie(), "monsore");
+                assertFalse(Strings.isNullOrEmpty(monsoreResult));
+                fail();
+            } catch (OreSiTechnicalException e) {
+                assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", e.getMessage());
             }
             {
                 // on donne les droits pour un pattern acbb
 
                 mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
-                                .param("userIdOrLogin", applicationCreatorResult.userId().toString())
+                                .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "acbb")
-                                .cookie(dbUserCookies))
+                                .cookie(fixtures.adminConnection.cookie()))
                         .andExpect(status().is2xxSuccessful())
-                        .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(applicationCreatorResult.userId().toString())))
+                        .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())))
+                        .andExpect(jsonPath("$.roles.user.login", IsEqual.equalTo(applicationCreatorLogin.toLowerCase())))
+                        .andExpect(jsonPath("$.roles.user.email", IsEqual.equalTo(applicationCreatorLogin.toLowerCase()+INRAE_FR)))
                         .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
                         .andExpect(jsonPath("$.authorizations", hasItem("acbb")))
-                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.userId().toString())));
+                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())));
 
                 //on peut déposer acbb
-                String acbbID = fixtures.createApplicationMonSore(applicationCreatorCookies, "acbb");
+                String acbbID = fixtures.createApplicationMonSore(applicationCreatorConnection.cookie(), "acbb");
                 assertFalse(Strings.isNullOrEmpty(acbbID));
 
                 try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-                    final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorCookies, "monsore", ""));
+                    final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
                     Map validationCheckResult = (((LinkedHashMap) errors.getFirst().result()));
                     fail();
                 } catch (NotApplicationCreatorRightsException notApplicationCreatorRightsException) {
@@ -534,36 +539,35 @@ public class AuthorizationResourcesTest {
             {
                 //on donne des droits pour le pattern monsore
                 mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
-                                .param("userIdOrLogin", applicationCreatorResult.userId().toString())
+                                .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "monsore")
-                                .cookie(dbUserCookies))
+                                .cookie(fixtures.adminConnection.cookie()))
                         .andExpect(status().is2xxSuccessful())
-                        .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(applicationCreatorResult.userId().toString())))
+                        .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())))
                         .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
                         .andExpect(jsonPath("$.authorizations", hasItem("monsore")))
-                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.userId().toString())));
+                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())));
 
                 //on peut déposer monsore
-                String acbbId = fixtures.createApplicationMonSore(applicationCreatorCookies, "acbb");
+                String acbbId = fixtures.createApplicationMonSore(applicationCreatorConnection.cookie(), "acbb");
                 assertFalse(Strings.isNullOrEmpty(acbbId));
 
             }
             {
                 //on supprime des droits pour le pattern monsore
                 final ResultActions resultActions = mockMvc.perform(delete("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
-                                .param("userIdOrLogin", applicationCreatorResult.userId().toString())
+                                .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "monsore")
-                                .cookie(dbUserCookies))
+                                .cookie(fixtures.adminConnection.cookie()))
                         .andExpect(status().is2xxSuccessful())
-                        .andExpect(jsonPath("$.roles.currentUser", IsEqual.equalTo(applicationCreatorResult.userId().toString())))
-                        .andExpect(jsonPath("$.roles.memberOf", not(hasItem("applicationCreator"))))
+                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())))
                         .andExpect(jsonPath("$.authorizations", not(hasItem("monsore"))))
-                        .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorResult.userId().toString())));
+                        .andExpect(jsonPath("$.authorizations", hasItem("acbb")));
 
                 //on ne peut déposer monsore
                 try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-                    final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorCookies, "monsore", ""));
+                    final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
                     fail();
                 } catch (final NotApplicationCreatorRightsException notApplicationCreatorRightsException) {
                     assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
@@ -574,18 +578,6 @@ public class AuthorizationResourcesTest {
             }
         }
 
-    }
-
-    @Transactional
-    void addRoleAdmin(final CreateUserResult dbUserResult) {
-        String sql = """
-                GRANT openadomadmin TO :userid WITH INHERIT TRUE
-                """;
-
-        namedParameterJdbcTemplate.update(
-                sql,
-                Map.of("userId", dbUserResult.userId().toString())
-        );
     }
 
 

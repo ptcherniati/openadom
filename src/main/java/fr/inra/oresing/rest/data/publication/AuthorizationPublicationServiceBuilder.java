@@ -16,7 +16,10 @@ import java.util.function.Predicate;
 
 public class AuthorizationPublicationServiceBuilder {
 
-    public static StoredFileBuilder BUILDER(final Application application,
+    private AuthorizationPublicationServiceBuilder() {
+    }
+
+    public static StoredFileBuilder builder(final Application application,
                                             final String dataName,
                                             String fileName,
                                             FileOrUUID fileOrUUID,

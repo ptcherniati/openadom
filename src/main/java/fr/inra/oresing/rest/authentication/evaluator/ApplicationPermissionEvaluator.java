@@ -40,13 +40,13 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     public static final String APPLICATION_WRITE_FILE = "APPLICATION_WRITE_FILE";
     public static final String APPLICATION_DELETE_FILE = "APPLICATION_DELETE_FILE";
     private final AuthorizationService authorizationService;
-    public Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_USER_CONNECTED;
-    public Supplier<PrivilegeAssessorDomainForSystem> SYSTEM_ADMINISTRATION;
-    public Function<String, PrivilegeAssessorDomainForApplication> APPLICATION_MANAGER;
-    public Function<String, PrivilegeAssessorDomainForApplication> DATA_MANAGEMENT;
-    public Function<String, PrivilegeAssessorDomainForApplication> DATA_READ;
-    public Function<String, PrivilegeAssessorDomainForApplication> DATA_WRITE;
-    public Function<String, PrivilegeAssessorDomainForApplication> DATA_ACCESS;
+    public Supplier<PrivilegeAssessorDomainForSystem<PrivilegeSystemDomainEnum>> SYSTEM_USER_CONNECTED;
+    public Supplier<PrivilegeAssessorDomainForSystem<PrivilegeSystemDomainEnum>> SYSTEM_ADMINISTRATION;
+    public Function<String, PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomainEnum>> APPLICATION_MANAGER;
+    public Function<String, PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomainEnum>> DATA_MANAGEMENT;
+    public Function<String, PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomainEnum>> DATA_READ;
+    public Function<String, PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomainEnum>> DATA_WRITE;
+    public Function<String, PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomainEnum>> DATA_ACCESS;
 
     public ApplicationPermissionEvaluator(AuthorizationService authorizationService) {
         this.authorizationService = authorizationService;

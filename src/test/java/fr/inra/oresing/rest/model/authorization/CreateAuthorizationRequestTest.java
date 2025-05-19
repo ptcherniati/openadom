@@ -124,7 +124,7 @@ class CreateAuthorizationRequestTest {
                 List.of(oreSiAuthorization),
                 errors
         );
-        AuthorizationRequest authorizationRequest = authorizationRequestBuilder.build(createAuthorizationRequest, dataRepositoryWithBuffer);
+        AuthorizationRequest authorizationRequest = authorizationRequestBuilder.build(createAuthorizationRequest);
         Assertions.assertEquals(0, errors.size());
         Assertions.assertEquals(applicationId, authorizationRequest.applicationId());
         Assertions.assertEquals(authorizationId, authorizationRequest.authorizationId());
@@ -159,7 +159,7 @@ class CreateAuthorizationRequestTest {
                 null,
                 errors
         )
-                .build(createAuthorizationRequest, dataRepositoryWithBuffer);
+                .build(createAuthorizationRequest);
         String expectedJson = """
                 {
                    "authorizationId" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",

@@ -4,6 +4,8 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.Fixtures;
 import fr.inra.oresing.rest.OreSiResourcesTest;
 import fr.inra.oresing.rest.ViewStrategy;
@@ -45,27 +47,38 @@ public class RelationalServiceTest {
     @Autowired
     private RelationalService relationalService;
 
-    @Autowired
     private Fixtures fixtures;
 
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private AuthenticationService authenticationService;
+    @Autowired
+    private UserRepository userRepository;
+
+
 
 
     @BeforeEach
     public void createApplication() throws Exception {
+        fixtures = new Fixtures(
+                mockMvc,
+                userRepository,
+                namedParameterJdbcTemplate,
+                authenticationService
+        );
         fixtures.addMonsoreApplication();
         //fixtures.addApplicationPRO();
         fixtures.addApplicationOLAC();
         fixtures.addApplicationFORET();
-        fixtures.addApplicationAcbb(null);
+        fixtures.addApplicationAcbb();
         fixtures.addApplicationRecursivity();
 
     }
 
-    @Test
+    //@Test
     @Disabled
     @Tag("integration.persistence\n")
     public void testCreateViews() {

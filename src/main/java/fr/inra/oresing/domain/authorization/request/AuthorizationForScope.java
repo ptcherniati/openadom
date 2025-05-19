@@ -3,7 +3,6 @@ package fr.inra.oresing.domain.authorization.request;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.rest.model.authorization.AuthorizationInput;
 import org.apache.commons.collections4.MapUtils;
 
@@ -12,7 +11,7 @@ import java.util.Map;
 import java.util.Set;
 
 public sealed interface AuthorizationForScope permits AuthorizationNoRestriction, AuthorizationForReferenceScope, AuthorizationForTimeScope, AuthorizationForReferenceScopeAndTimeScope {
-    static AuthorizationForScope of(AuthorizationInput authorization, DataRepositoryForBuffer dataRepositoryWithBuffer) {
+    static AuthorizationForScope of(AuthorizationInput authorization) {
         Map<String, List<Ltree>> authorizationScope = Map.of();
         if (MapUtils.isNotEmpty(authorization.getRequiredAuthorizations())) {
             authorizationScope = authorization.getRequiredAuthorizations();
@@ -41,7 +40,7 @@ public sealed interface AuthorizationForScope permits AuthorizationNoRestriction
     }
 
     default Map<String, List<Ltree>> authorizationScope() {
-        return null;
+        return Map.of();
     }
 
 }

@@ -67,7 +67,7 @@ public class AuthenticationFailure extends OreSiException {
         params = getParams(loginAdminResult);
     }
 
-    private static Map getParams(final LoginAdminResult loginAdminResult) {
+    private static Map<String, String> getParams(final LoginAdminResult loginAdminResult) {
         return Optional.ofNullable(loginAdminResult)
                 .map(lr -> Map.of(
                                 CONSTANT_LOGIN, Optional.ofNullable(lr.login()).orElse(""),

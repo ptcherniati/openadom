@@ -51,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Tag("SUITE")
 @Tag("core.auth")
-public class AuthenticationServiceTest {
+class AuthenticationServiceTest {
     @Value("${spring.mail.from}")
     String mailFrom;
 
@@ -84,16 +84,14 @@ public class AuthenticationServiceTest {
         final String login = "toto";
         final String email = "toto@codelutin.com";
         final String password = "xxxx";
-        MockHttpServletResponse response = mockMvc.perform(
+         mockMvc.perform(
                         post("/api/v1/users").with(csrf().asHeader())
                                 .param("login", login)
                                 .param("password", password)
                                 .param("email", email)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
-/*
-        final String authUserId = JsonPath.parse(response.getContentAsString()).read("$.id", String.class);
-*/
+
         Mockito.verify(mailSender).send(messageArgumentCaptor.capture());
         SimpleMailMessage message = messageArgumentCaptor.getValue();
         assertArrayEquals(new String[]{email}, message.getTo());

@@ -5,14 +5,9 @@ import com.jayway.jsonpath.JsonPath;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
-import fr.inra.oresing.rest.security.JWTExtractor;
-import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
-import org.hamcrest.Matchers;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.AfterAll;
@@ -33,7 +28,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.io.*;
 import java.net.URL;
@@ -45,8 +39,6 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -74,11 +66,10 @@ public class TestReferencesErrors {
     private MockMvc mockMvc;
     @Autowired
     private AuthenticationService authenticationService;
-    @Autowired
+
     private Fixtures fixtures;
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    private Cookie authCookie;
 
     @AfterAll
     static void registerErrors() throws IOException {
@@ -90,74 +81,32 @@ public class TestReferencesErrors {
     }
 
     @BeforeEach
-    public void createUser() throws Exception {
-        try {
-            authUser = authenticationService.createUser(LOGIN, PASSWORD, EMAIL);
-            setToActive(authUser.userId());
-        } catch (AuthenticationFailure e) {
-            LoginAdminResult login = authenticationService.login("poussin", "xxxxxxxx");
-            authUser = CreateUserResult.of(authenticationService.getByIdOrLogin(login.id().toString()));
-            setToActive(authUser.userId());
-            log.info("L'utilisateur existe déjà .... login");
-        }
-        try {
-            authenticationService.createUser("lambda", "xxxxxxxx", "lamnda@inrae.fr");
-        } catch (AuthenticationFailure e) {
-            log.info("L'utilisateur existe déjà .... login");
-        }
-        authCookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", LOGIN)
-                        .param("password", PASSWORD))
-                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-        addRoleAdmin(authUser);
-    }
-
-    @Transactional
-    void addRoleAdmin(final CreateUserResult dbUserResult) {
-        String sql = """
-                GRANT "openAdomAdmin" TO "%1$s" WITH INHERIT TRUE
-                """;
-
-        namedParameterJdbcTemplate.update(
-                String.format(sql, dbUserResult.userId().toString()),
-                Map.of()
+    public void init() throws Exception {
+        fixtures = new Fixtures(
+                mockMvc,
+                null,
+                namedParameterJdbcTemplate,
+                authenticationService
         );
-    }
-
-    @Transactional
-    void setToActive(final UUID userId) {
-        String sql = """
-                UPDATE public.oresiuser 
-                SET accountstate = 'active' 
-                WHERE id = :id
-                """;
-
-        namedParameterJdbcTemplate.update(sql, Map.of("id", userId));
     }
 
 
     @Test
     void testRecursivity() throws Exception {
-
+        Fixtures.UserConnection recursivityConnection;
         final URL resource = getClass().getResource(Fixtures.getRecursivityApplicationConfigurationResourceName());
-        final Cookie recursivityCookie;
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             //définition de l'application
-            CreateUserResult recursivityUser = authenticationService.createUser("recursivity", PASSWORD, "recursivity@inrae.fr");
-            setToActive(recursivityUser.userId());
-            final UUID recursivityUserId = recursivityUser.userId();
-            addUserRightCreateApplication(recursivityUserId, "recursivite");
-            recursivityCookie = mockMvc.perform(post("/api/v1/login")
-                            .param("login", "recursivity")
-                            .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+            Fixtures.CreateUser recursivity = new Fixtures.CreateUser("recursivity", PASSWORD, "recursivity@inrae.fr");
+            recursivityConnection = fixtures.createUserForUserDefinition(recursivity, true, false);
+            fixtures.addUserRightCreateApplication(recursivityConnection.userResult().userId(), "recursivite");
             final String id = fixtures.getIdFromApplicationResult(
-                    fixtures.loadApplication(configuration, recursivityCookie, "recursivite", "")
+                    fixtures.loadApplication(configuration, recursivityConnection.cookie(), "recursivite", "")
             );
             final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
                             .param("filter", "ALL")
-                            .cookie(recursivityCookie))
+                            .cookie(recursivityConnection.cookie()))
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon")))
                     .andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_")))
@@ -191,7 +140,7 @@ public class TestReferencesErrors {
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", "proprietes_taxon")
                                 .file(refFile).with(csrf().asHeader())
-                                .cookie(recursivityCookie))
+                                .cookie(recursivityConnection.cookie()))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
                 JSONAssert.assertEquals(e.getValue().get(2), response, JSONCompareMode.NON_EXTENSIBLE);
@@ -205,7 +154,7 @@ public class TestReferencesErrors {
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
                                 .file(refFile).with(csrf().asHeader())
-                                .cookie(recursivityCookie))
+                                .cookie(recursivityConnection.cookie()))
                         .andExpect(status().isCreated())
                         .andExpect(jsonPath("$.id", IsNull.notNullValue()))
                         .andReturn().getResponse().getContentAsString();
@@ -236,7 +185,7 @@ public class TestReferencesErrors {
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/condition_prelevements")
                                 .file(refFile).with(csrf().asHeader())
-                                .cookie(recursivityCookie))
+                                .cookie(recursivityConnection.cookie()))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
                 final Matcher m = Pattern.compile("(.*)\"referenceValues\":(\\{(.*?)\\})(.*)").matcher(response);
@@ -256,53 +205,32 @@ public class TestReferencesErrors {
         //System.out.println(responses);
     }
 
-    private void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
-        mockMvc.perform(put("/api/v1/authorization/applicationCreator")
-                        .param("userIdOrLogin", userId.toString())
-                        .param("applicationPattern", pattern).with(csrf().asHeader())
-                        .cookie(authCookie))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(userId.toString())))
-                .andExpect(jsonPath("$.roles.memberOf", Matchers.hasItem("applicationCreator")))
-                .andExpect(jsonPath("$.authorizations", Matchers.hasItem(pattern)))
-                .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
-    }
-
     @Test
     void testRepeatedColumnsWithAllowUnexpectedColumns() throws Exception {
-
+        Fixtures.CreateUser repeatedcolumns = new Fixtures.CreateUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
+        Fixtures.UserConnection repeatedcolumnsConnection = fixtures.createUserForUserDefinition(repeatedcolumns, true, false);
         final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsWithAllowUnexpectedColumnsApplicationConfigurationResourceName());
-        final Cookie repeatedColumnCookie;
+        String response;
+        fixtures.addUserRightCreateApplication(repeatedcolumnsConnection.userResult().userId(), "repeatedcolumns");
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
-            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
-            setToActive(recursivityUser.userId());
-            final UUID recursivityUserId = recursivityUser.userId();
-            addUserRightCreateApplication(recursivityUserId, "repeatedcolumns");
-            repeatedColumnCookie = mockMvc.perform(post("/api/v1/login")
-                            .param("login", "repeatedcolumns")
-                            .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnCookie, "repeatedcolumns", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedcolumnsConnection.cookie(), "repeatedcolumns", ""));
 
-            final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
                             .param("filter", "ALL")
-                            .cookie(repeatedColumnCookie))
+                            .cookie(repeatedcolumnsConnection.cookie()))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
-
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
-
-        String response;
         for (final Map.Entry<String, String> e : Fixtures.getRepeatedColumnsReferentielOrderFiles().entrySet()) {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
                                 .file(refFile).with(csrf().asHeader())
-                                .cookie(repeatedColumnCookie))
+                                .cookie(repeatedcolumnsConnection.cookie()))
                         .andDo(result -> {
                             if (result.getResponse().getStatus() > 300) {
                                 log.error(e.getKey());
@@ -335,7 +263,7 @@ public class TestReferencesErrors {
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
                                 .file(refFile).with(csrf().asHeader())
-                                .cookie(repeatedColumnCookie))
+                                .cookie(repeatedcolumnsConnection.cookie()))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
 
@@ -347,49 +275,37 @@ public class TestReferencesErrors {
 
     @Test
     void testRepeatedColumns() throws Exception {
-
-        final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsApplicationConfigurationResourceName());
-        final Cookie repeatedColumnsCookie;
-        try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
-            CreateUserResult recursivityUser = authenticationService.createUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
-            setToActive(recursivityUser.userId());
-            final UUID recursivityUserId = recursivityUser.userId();
-            addUserRightCreateApplication(recursivityUserId, "repeatedcolumns");
-            repeatedColumnsCookie = mockMvc.perform(post("/api/v1/login")
-                            .param("login", "repeatedcolumns")
-                            .param("password", PASSWORD))
-                    .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedColumnsCookie, "repeatedcolumns", ""));
-            final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
-                            .param("filter", "ALL")
-                            .cookie(repeatedColumnsCookie))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-
-        } catch (final Throwable e) {
-            throw new OreSiTechnicalException(e.getMessage(), e);
-        }
+        Fixtures.CreateUser repeatedcolumns = new Fixtures.CreateUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
+        Fixtures.UserConnection repeatedcolumnsConnection = fixtures.createUserForUserDefinition(repeatedcolumns, true, false);
+        fixtures.addUserRightCreateApplication(repeatedcolumnsConnection.userResult().userId(), "repeatedcolumns");
 
         String response;
-        for (final Map.Entry<String, String> e : Fixtures.getRepeatedColumnsReferentielOrderFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+        final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsApplicationConfigurationResourceName());
+        try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
 
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(repeatedColumnsCookie))
-                        .andDo(result -> {
-                            if (result.getResponse().getStatus() > 300) {
-                                log.error(e.getKey());
-                            }
-                        })
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
+            for (final Map.Entry<String, String> e : Fixtures.getRepeatedColumnsReferentielOrderFiles().entrySet()) {
+                try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                    final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                JsonPath.parse(response).read("$.id");
+                    final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedcolumnsConnection.cookie(), "repeatedcolumns", ""));
+                    response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
+                                    .file(refFile).with(csrf().asHeader())
+                                    .cookie(repeatedcolumnsConnection.cookie()))
+                            .andDo(result -> {
+                                if (result.getResponse().getStatus() > 300) {
+                                    log.error(e.getKey());
+                                }
+                            })
+                            .andExpect(status().isCreated())
+                            .andExpect(jsonPath("$.id", IsNull.notNullValue()))
+                            .andReturn().getResponse().getContentAsString();
+
+                    JsonPath.parse(response).read("$.id");
+                }
             }
+        } catch (final Throwable e) {
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         // test repository
         final URL resources = getClass().getResource(Fixtures.getSWCRepositoryResourceName());
@@ -411,7 +327,7 @@ public class TestReferencesErrors {
                 log.info(e.getKey());
                 response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
                                 .file(refFile).with(csrf().asHeader())
-                                .cookie(repeatedColumnsCookie))
+                                .cookie(repeatedcolumnsConnection.cookie()))
                         .andExpect(status().is4xxClientError())
                         .andReturn().getResponse().getContentAsString();
 
@@ -420,6 +336,4 @@ public class TestReferencesErrors {
             }
         }
     }
-
-
 }

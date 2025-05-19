@@ -81,7 +81,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             OreExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
         this.requestContext = requestContext;
-        this.mapper = jsonRowMapper;
+        AuthorizationFilter.mapper = jsonRowMapper;
         this.jWTExtractor = new JWTExtractor(
                 jsonRowMapper,
                 jwtExpiration,
@@ -180,7 +180,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         return oreSiAuthenticationToken;
     }
 
-    private Optional<? extends String> getWithFileId(OreSiAuthenticationToken oreSiAuthenticationToken, String path) {
+    private Optional<String> getWithFileId(OreSiAuthenticationToken oreSiAuthenticationToken, String path) {
         Pattern pattern = Pattern
                 .compile("/api/v1/applications/(%s)/file/(.*)".formatted(oreSiAuthenticationToken.getApplicationName()));
         final Optional<UUID> optionalUUID = Optional.ofNullable(path)

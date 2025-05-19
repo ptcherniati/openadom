@@ -11,7 +11,7 @@ class ApplicationDescriptionExampleBuilder {
     private ApplicationDescriptionExampleBuilder() {
     }
 
-    protected static ApplicationDescriptionType buildApplicationDesriptionSchema() {
+    protected static ApplicationDescriptionType<Map<String, ConfigurationSchemaNodeType<?>>> buildApplicationDesriptionSchema() {
         return new ApplicationDescriptionType(createApplicationDescriptionMap());
     }
 

@@ -77,8 +77,7 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
     }
 
     private String buildQueryAddIdentifier(String applicationName, String identifier) {
-        return """
-                alter type %1$s.requiredauthorizations add attribute %2$s ltree;"""
+        return "alter type %1$s.requiredauthorizations add attribute %2$s ltree;"
                 .formatted(applicationName, identifier);
     }
 

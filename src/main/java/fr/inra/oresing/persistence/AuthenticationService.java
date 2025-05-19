@@ -43,17 +43,20 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
     @Setter
     private ServiceContainer serviceContainer;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private SqlService db;
+    private final SqlService db;
 
-    @Autowired
-    private OreSiApiRequestContext request;
+    private final OreSiApiRequestContext request;
 
     @Value("${bcryptCost:12}")
     private int bcryptCost;
+
+    public AuthenticationService(UserRepository userRepository, SqlService db, OreSiApiRequestContext request) {
+        this.userRepository = userRepository;
+        this.db = db;
+        this.request = request;
+    }
 
     private static String generateVerificationKey(final OreSiUser oreSiUser) {
         final String s = oreSiUser.getEmail() + oreSiUser.getPassword() + oreSiUser.getCreationDate().toString();
@@ -162,7 +165,7 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
         final String verificationKey = generateVerificationKey(oreSiUser);
         userRepository.updateNewDate(oreSiUser, updateDate);
         setRoleForClient();
-        serviceContainer.emailService().sendEmailValidation(loginResult.getLogin(), loginResult.getEmail(), verificationKey, messages);
+        serviceContainer.emailService().sendEmailValidation(oreSiUser.getLogin(), loginResult.getEmail(), verificationKey, messages);
         return oreSiUser;
     }
 
@@ -530,22 +533,27 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
     }
 
     @Transactional
-    public OreSiUser updateUser(NotConnectedUser notConnectedUser) throws AuthenticationFailure, NoSuchAlgorithmException, InvalidKeySpecException, JsonProcessingException {
+    public OreSiUser updateUser(NotConnectedUser notConnectedUser) throws AuthenticationFailure, JsonProcessingException {
         return switch (notConnectedUser) {
-            case NotConnectedAuthentifiedActiveUser notConnectedAuthentifiedActiveUser -> updateAccount(
-                    notConnectedAuthentifiedActiveUser.user(), notConnectedAuthentifiedActiveUser.createUserRequest());
-            case NotConnectedAuthentifiedActiveUserNotSignedCharte notConnectedAuthentifiedActiveUserNotSignedCharte ->
-                    setCharteAsValidated(notConnectedAuthentifiedActiveUserNotSignedCharte.user(), notConnectedAuthentifiedActiveUserNotSignedCharte.charte());
-            case NotConnectedAuthentifiedClosedUser notConnectedAuthentifiedClosedUser ->
-                    throw new AuthenticationFailure(AuthenticationFailure.CLOSED_ACCOUNT, notConnectedAuthentifiedClosedUser.loginAdminResult());
-            case NotConnectedAuthentifiedIdleUser notConnectedAuthentifiedIdleUser ->
-                    activeAccount(notConnectedAuthentifiedIdleUser.user(), notConnectedAuthentifiedIdleUser.createUserRequest().getVerificationKey());
-            case NotConnectedAuthentifiedMissingPasswordUser notConnectedAuthentifiedMissingPasswordUser ->
-                    updatePasswordLost(notConnectedAuthentifiedMissingPasswordUser.oreSiUser(), notConnectedAuthentifiedMissingPasswordUser.createUserRequest());
-            case NotConnectedAuthentifiedPendingUser notConnectedAuthentifiedPendingUser ->
-                    sendValidationKey(notConnectedAuthentifiedPendingUser.user());
-            case NotConnectedUnauthentifiedUser notConnectedUnauthentifiedUser ->
-                    throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, notConnectedUnauthentifiedUser.createUserRequest());
+            case NotConnectedAuthentifiedActiveUser(OreSiUser user, CreateUserRequest createUserRequest )  -> updateAccount(
+                    user, createUserRequest);
+            case NotConnectedAuthentifiedActiveUserNotSignedCharte(
+                    OreSiUser user,
+                    CreateUserRequest _,
+                    String charte) ->
+                    setCharteAsValidated(user, charte);
+            case NotConnectedAuthentifiedClosedUser(LoginAdminResult loginAdminResult) ->
+                    throw new AuthenticationFailure(AuthenticationFailure.CLOSED_ACCOUNT, loginAdminResult);
+            case NotConnectedAuthentifiedIdleUser(OreSiUser user,
+                                                  CreateUserRequest createUserRequest) ->
+                    activeAccount(user, createUserRequest.getVerificationKey());
+            case NotConnectedAuthentifiedMissingPasswordUser(OreSiUser oreSiUser,
+                                                             CreateUserRequest createUserRequest) ->
+                    updatePasswordLost(oreSiUser, createUserRequest);
+            case NotConnectedAuthentifiedPendingUser(OreSiUser user) ->
+                    sendValidationKey(user);
+            case NotConnectedUnauthentifiedUser(CreateUserRequest createUserRequest) ->
+                    throw new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_OR_EMAIL_PASSWORD, createUserRequest);
             case NotConnectedUnauthentifiedUserForCreate _ -> null;
         };
     }
@@ -573,11 +581,11 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
         final OreSiUser oreSiUser = Optional.ofNullable(loginResult)
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_LOGIN_PASSWORD, (LoginAdminResult) null));
         validateValidationKey(oreSiUser, createUserRequest.getVerificationKey());
-        Optional.ofNullable(createUserRequest.getNewPassword())
+        final String verifiedPassword = Optional.ofNullable(createUserRequest.getNewPassword())
                 .filter(password -> !Strings.isNullOrEmpty(password))
                 .filter(password -> password.equals(createUserRequest.getNewPasswordConfirm()))
                 .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_PASSWORDS, (LoginAdminResult) null));
-        final String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, createUserRequest.getNewPassword().toCharArray());
+        final String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, verifiedPassword.toCharArray());
         oreSiUser.setPassword(bcrypted);
         setRoleAdmin();
         final OreSiUser update = userRepository.update(oreSiUser);
@@ -592,11 +600,11 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
                 .toLowerCase();
         final boolean emailChanged = !user.getEmail().toLowerCase().equals(email);
         if (createUserRequest.getNewPassword() != null) {
-            Optional.of(createUserRequest.getNewPassword())
+            final String verifiedPassword = Optional.of(createUserRequest.getNewPassword())
                     .filter(password -> !Strings.isNullOrEmpty(password))
                     .filter(password -> password.equals(createUserRequest.getNewPasswordConfirm()))
                     .orElseThrow(() -> new AuthenticationFailure(AuthenticationFailure.BAD_PASSWORDS, (LoginAdminResult) null));
-            final String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, createUserRequest.getNewPassword().toCharArray());
+            final String bcrypted = BCrypt.withDefaults().hashToString(bcryptCost, verifiedPassword.toCharArray());
             user.setPassword(bcrypted);
         }
         if (emailChanged) {

@@ -2,7 +2,6 @@ package fr.inra.oresing.rest.model.authorization.request;
 
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.rest.model.authorization.AuthorizationInput;
 import org.apache.commons.collections.MapUtils;
 
@@ -19,8 +18,7 @@ public class AuthorizationWithRestrictionBuilder {
     }
 
     public AuthorizationWithRestriction build(
-            Map<String, AuthorizationInput> authorizationsByReferences,
-            DataRepositoryForBuffer dataRepositoryWithBuffer) {
+            Map<String, AuthorizationInput> authorizationsByReferences) {
         Set<String> references = new HashSet<>();
         Map<String, AuthorizationForScope> authorizationWithrestriction = new HashMap<>();
         for (Map.Entry<String, AuthorizationInput> entryByOperation : authorizationsByReferences.entrySet()) {
@@ -29,7 +27,7 @@ public class AuthorizationWithRestrictionBuilder {
             if (MapUtils.isNotEmpty(authorizationForReference.getRequiredAuthorizations()) ||
                     authorizationForReference.getTimeScope() != null) {
                 //TODO catch exception and regroup by referencetype
-                authorizationWithrestriction.put(reference, AuthorizationForScope.of(authorizationForReference, dataRepositoryWithBuffer));
+                authorizationWithrestriction.put(reference, AuthorizationForScope.of(authorizationForReference));
             }
         }
         if (!authorizationRequestBuilder.existsReferences(references)) {
