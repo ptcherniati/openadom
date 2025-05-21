@@ -217,7 +217,6 @@ public class PatternColumnFactory {
                                     componentComponentKey,
                                     mandatoryForComponentComponent,
                                     multiplicityForComponentComponent,
-                                    dataRepository,
                                     defaultValue
                             );
                             qualifierColumns.add(patternQualifierColumn);
@@ -275,7 +274,6 @@ public class PatternColumnFactory {
                                 nextColumnName,
                                 resolvedAdjacentDescription.mandatoryForComponentComponent(),
                                 resolvedAdjacentDescription.multiplicityForComponentComponent(),
-                                dataRepository,
                                 defaultValue
                         ));
                     } else {
@@ -288,7 +286,6 @@ public class PatternColumnFactory {
                         potentialPatternColumn.columnHeader(),
                         mandatory,
                         multiplicity,
-                        dataRepository,
                         qualifierColumns,
                         adjacentColumns,
                         defaultValue

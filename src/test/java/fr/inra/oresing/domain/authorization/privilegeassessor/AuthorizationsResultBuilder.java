@@ -60,11 +60,6 @@ public class AuthorizationsResultBuilder {
         return this;
     }
 
-    public AuthorizationsResultBuilder withApplicationName(String applicationId, String applicationName) {
-        this.applicationName = applicationName;
-        return this;
-    }
-
     public AuthorizationsResult build() {
         return new AuthorizationsResult(
                 userAuthorization,

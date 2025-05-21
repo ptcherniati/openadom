@@ -73,7 +73,7 @@ class ConfigurationBuilderTest {
         HIERARCHICAL_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
     }
 
-    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
+    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException {
         testTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testInternationalisation(configuration.i18n());
@@ -81,7 +81,7 @@ class ConfigurationBuilderTest {
         testComponents(configuration.dataDescription());
     }
 
-    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
+    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException {
         testExampleTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testExampleInternationalisation(configuration.i18n());
@@ -107,9 +107,6 @@ class ConfigurationBuilderTest {
         JsonNode actualNode = objectMapper.readTree(actualJson);
 
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
-
-        // Ancienne version dépendante de l'ordre des champs (désactivée)
-        // assertEquals(actualJson, DATA_RESULT);
     }
 
 
@@ -123,9 +120,6 @@ class ConfigurationBuilderTest {
         JsonNode actualNode = objectMapper.readTree(actualJson);
 
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
-
-        // Désactivé, car sensible à l’ordre des attributs selon la version de Java
-        // Assertions.assertThat(actualJson).isEqualTo(DATA_MONSORE_RESULT);
     }
 
     private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
@@ -138,9 +132,6 @@ class ConfigurationBuilderTest {
         JsonNode expectedNode = objectMapper.readTree(DATA_EXAMPLE_RESULT);
         JsonNode actualNode = objectMapper.readTree(DATA_EXAMPLE_RESULT_EXPECTED);
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
-        // Désactivé : l'ordre des attributs diffère selon la version du JDK
-        // Assertions.assertThat(DATA_EXAMPLE_RESULT_EXPECTED)
-        //          .isEqualTo(DATA_EXAMPLE_RESULT);
     }
 
     private static void testApplicationDescription(final ApplicationDescription applicationDescription) {
@@ -189,10 +180,6 @@ class ConfigurationBuilderTest {
                 .isEqualTo(LOCALIZATION_MONSORE_RESULT);
     }
 
-    private static JSONObject toJsonObject(Object json) {
-        return new JsonRowMapper<>().convertValue(json, JSONObject.class);
-    }
-
     private static void testExampleInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
         Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
                 .isEqualTo(LOCALIZATION_EXAMPLE_RESULT);
@@ -227,7 +214,6 @@ class ConfigurationBuilderTest {
 
     @Test
     void buildApplicationTest() {
-        final YAMLMapper yamlMapper = YAMLMapper.builder().build();
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(CONFIGURATION.getBytes(), progression, "une application de test");
@@ -235,8 +221,6 @@ class ConfigurationBuilderTest {
                         testConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
-                        throw new OreSiTechnicalException(e.getMessage(), e);
-                    } catch (JSONException e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
@@ -257,7 +241,6 @@ class ConfigurationBuilderTest {
 
     @Test
     void buildApplicationSchemaTest() {
-        final YAMLMapper yamlMapper = YAMLMapper.builder().build();
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(SCHEMA.getBytes(), progression, "une application de test");
@@ -265,8 +248,6 @@ class ConfigurationBuilderTest {
                         testExampleConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
-                        throw new OreSiTechnicalException(e.getMessage(), e);
-                    } catch (JSONException e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
@@ -284,14 +265,8 @@ class ConfigurationBuilderTest {
                 .toString());
     }
 
-    private boolean throwErrors(final List<ValidationError> errors) {
-        this.errors = errors;
-        return false;
-    }
-
     @Test
     void buildHierarchicalTest() {
-        final YAMLMapper yamlMapper = YAMLMapper.builder().build();
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION.getBytes(), progression, "un commentaire");
@@ -324,7 +299,6 @@ class ConfigurationBuilderTest {
 
     @Test
     void buildMonsoreTest() {
-        final YAMLMapper yamlMapper = YAMLMapper.builder().build();
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
                     configuration = ConfigurationBuilder.build(MONSORE_CONFIGURATION.getBytes(), progression, "un commentaire");

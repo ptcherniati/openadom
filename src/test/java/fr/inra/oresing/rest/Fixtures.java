@@ -993,7 +993,6 @@ public class Fixtures {
         final UserConnection authConnection = addApplicationCreatorUser("fakeapp");
         try (final InputStream configurationFile = getClass().getResourceAsStream(getMigrationApplicationConfigurationResourceName(1))) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
-
             getIdFromApplicationResult(loadApplication(configuration, authConnection.cookie(), "fakeapp", "fakeapp"));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);

@@ -37,7 +37,7 @@ public record AuthorizationsForApplicationUser(
                         .anyMatch(actions::contains);
     }
 
-    public ArrayList<AuthorizationParsed> getAuthorizations(String dataName, Set<OperationType> actions) {
+    public List<AuthorizationParsed> getAuthorizations(String dataName, Set<OperationType> actions) {
         ArrayList<AuthorizationParsed> parsedAuthorisationForActions = Optional.of(userAuthorizations())
                 .map(authorizations -> authorizations.get(dataName))
                 .stream().flatMap(List::stream)

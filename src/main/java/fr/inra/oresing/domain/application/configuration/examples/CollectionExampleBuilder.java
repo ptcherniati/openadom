@@ -208,26 +208,12 @@ class CollectionExampleBuilder {
         return map;
     }
 
-    private static Map<String, ApplicationType.ComponentType> createComponentQualifiersMap() {
-        Map<String, ApplicationType.ComponentType> map = new LinkedHashMap<>();
-        map.put("profondeur", PatternComponentQualifierExampleBuilder.PROFONDEUR);
-        map.put("repetition", PatternComponentQualifierExampleBuilder.REPETITION);
-        return map;
-    }
-
     private static Map<String, FormatType> createRightRequestFormFieldsMap() {
         Map<String, FormatType> map = new LinkedHashMap<>();
         map.put("nom", FormatExampleBuilder.NOM);
         map.put("projet", FormatExampleBuilder.PROJET);
         map.put("start_date", FormatExampleBuilder.START_DATE);
         map.put("end_date", FormatExampleBuilder.ORGANISME);
-        return map;
-    }
-
-    private static Map<String, I18nType> createTypeSiteNomDefinitionMap() {
-        Map<String, I18nType> map = new LinkedHashMap<>();
-        map.put("tze_nom_key", I18nExampleBuilder.buildI18n("tze_nom_fr", "tze_nom_en"));
-        map.put("tze_definition_fr", I18nExampleBuilder.buildI18n("tze_definition_fr", "tze_definition_en"));
         return map;
     }
 

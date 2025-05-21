@@ -11,6 +11,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 class BooleanCheckerExampleBuilder {
+    private BooleanCheckerExampleBuilder() {
+    }
+
     protected static final BooleanCheckerType BOOLEAN_CHECKER_TYPE = buildBooleanChecker(Multiplicity.ONE);
 
     protected static BooleanCheckerType buildBooleanChecker(final Multiplicity multiplicity) {

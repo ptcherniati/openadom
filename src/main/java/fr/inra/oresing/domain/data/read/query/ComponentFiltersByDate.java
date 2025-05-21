@@ -26,7 +26,7 @@ public record ComponentFiltersByDate(String componentKey, String format, List<St
             throw new BadDownloadDatasetQuery(MISSING_FILTER);
         }
         filters = filters.stream().map(filter -> {
-            if (filter.matches("[0-9]*")) {
+            if (filter.matches("\\d*")) {
                 ZoneId zone = ZoneId.of("UTC");
                 LocalDate localDateTime = LocalDate.ofInstant(Instant.ofEpochMilli(Long.parseLong(filter)), zone);
                 filter = localDateTime.format(DateTimeFormatter.ofPattern(format));

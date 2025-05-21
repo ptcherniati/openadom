@@ -33,10 +33,10 @@ public class EmailService implements Email, ServiceContainerBean {
     private static final String NEW_ACCOUNT_EN = "You have just created an account on the OPENAdomoresie application. %n" +
             "To validate your e-mail, enter the validation key when connecting.%n\n";
     private static final String EMAIL_CHANGED_SUBJECT = "Validation email / Email validation";
-    private static final String EMAIL_CHANGED_FR = "Vous venez de modifier votre email. %n" +
-            "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
-    private static final String EMAIL_CHANGED_EN = "You have just changed your email. %n" +
-            "To validate your e-maioresil, enter the validation key when connecting.%n\n";
+    private static final String EMAIL_CHANGED_FR = "Vous venez de modifier votre email. \n" +
+            "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.";
+    private static final String EMAIL_CHANGED_EN = "You have just changed your email. \n" +
+            "To validate your e-mail, enter the validation key when connecting.";
     private static final String VALIDATION_KEY_SUBJECT = "Clef de validation / Validation key";
     private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_SUBJECTS = Map.of(
             UNPUBLISHED, Map.of(

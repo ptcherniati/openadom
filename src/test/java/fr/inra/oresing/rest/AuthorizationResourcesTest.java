@@ -10,7 +10,6 @@ import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.persistence.UserRepository;
-import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import fr.inra.oresing.rest.security.JWTExtractor;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -32,7 +31,6 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.io.InputStream;
@@ -108,7 +106,6 @@ public class AuthorizationResourcesTest {
                 .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
         final CreateUserResult withBadAdminRightsUserResult = authenticationService.createUser("withbadadminrigths", "xxxxxxxx", "withbadadminrigths@inrae.fr");
         fixtures.setToActive(withBadAdminRightsUserResult.userId());
-        final String withBadAdminRigthsUserId = withBadAdminRightsUserResult.userId().toString();
         final Cookie withBadAdminRigthsCookie = mockMvc.perform(post("/api/v1/login")
                         .param("login", "withbadadminrigths")
                         .param("password", "xxxxxxxx"))
@@ -192,7 +189,7 @@ public class AuthorizationResourcesTest {
                     .contentType(MediaType.APPLICATION_JSON)
                     .cookie(authCookie)
                     .content(json);
-            String response = mockMvc.perform(create)
+            mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
 
@@ -351,7 +348,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            final String json = mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur/json")
+            mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur/json")
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -435,7 +432,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            final String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence/json")
+             mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence/json")
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
@@ -461,7 +458,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            final String json = Objects.requireNonNull(mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence/json")
+            Objects.requireNonNull(mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence/json")
                             .cookie(authReaderCookie)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is4xxClientError())
@@ -483,7 +480,7 @@ public class AuthorizationResourcesTest {
         {
             final String TEST = "test";
             Fixtures.CreateUser testUser = new Fixtures.CreateUser(TEST, TEST, TEST + INRAE_FR);
-            Fixtures.UserConnection testUserConnection = fixtures.createUserForUserDefinition(testUser, true, true);
+            fixtures.createUserForUserDefinition(testUser, true, true);
             final String applicationCreatorLogin = "applicationCreator";
             final String applicationCreatorPassword = "xxxxxxxx";
             Fixtures.CreateUser applicationCreator = new Fixtures.CreateUser(applicationCreatorLogin, applicationCreatorPassword, applicationCreatorLogin + INRAE_FR);
@@ -526,8 +523,7 @@ public class AuthorizationResourcesTest {
 
                 try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-                    final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
-                    Map validationCheckResult = (((LinkedHashMap) errors.getFirst().result()));
+                    Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
                     fail();
                 } catch (NotApplicationCreatorRightsException notApplicationCreatorRightsException) {
                     assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
@@ -555,7 +551,7 @@ public class AuthorizationResourcesTest {
             }
             {
                 //on supprime des droits pour le pattern monsore
-                final ResultActions resultActions = mockMvc.perform(delete("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(delete("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "monsore")
                                 .cookie(fixtures.adminConnection.cookie()))
@@ -567,7 +563,7 @@ public class AuthorizationResourcesTest {
                 //on ne peut déposer monsore
                 try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-                    final List<ReactiveTypeError> errors = Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
+                    Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
                     fail();
                 } catch (final NotApplicationCreatorRightsException notApplicationCreatorRightsException) {
                     assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());

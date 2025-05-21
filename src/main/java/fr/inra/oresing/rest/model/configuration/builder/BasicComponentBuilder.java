@@ -15,7 +15,6 @@ import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import java.util.*;
 
 public record BasicComponentBuilder(RootBuilder rootBuilder) {
-
     I18n build(final String componentPath,
                final ImmutableMap.Builder<String, ComponentDescription> basicComponentDescriptions,
                final String key,
@@ -25,105 +24,114 @@ public record BasicComponentBuilder(RootBuilder rootBuilder) {
                 .findPath(ConfigurationSchemaNode.OA_BASIC_COMPONENTS);
         final Iterator<Map.Entry<String, JsonNode>> fields = basicComponents.fields();
         while (fields.hasNext()) {
-            final Map.Entry<String, JsonNode> componentEntry = fields.next();
-            final JsonNode componentNodeValue = componentEntry.getValue();
-            final String componentKey = componentEntry.getKey();
-            final boolean required = componentNodeValue.findPath(ConfigurationSchemaNode.OA_REQUIRED).asBoolean(false);
-            final Parsing<CheckerDescription> checkerDescriptionParsing = rootBuilder.getCheckerDescriptionBuilder()
-                    .build(i18n,
-                            componentKey,
-                            required,
-                            NodeSchemaValidator.joinPath(
-                                    componentPath,
-                                    ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
-                                    componentKey),
-                            componentNodeValue.get(ConfigurationSchemaNode.OA_CHECKER),
-                            key);
+            i18n = buildComponents(componentPath, basicComponentDescriptions, key, i18n, fields);
 
-            i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
-            Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
-                    .map(CheckerDescription::multiplicity)
-                    .orElse(Multiplicity.ONE);
-            final Parsing<ComputationChecker> defaultValueParsing;
-            final JsonNode defaultValueNode = componentNodeValue.get(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
-            if (defaultValueNode != null) {
-                defaultValueParsing = rootBuilder.getComputationBuilder().build(
-                        i18n,
-                        required, multiplicity,
+        }
+        return i18n;
+    }
+
+    private I18n buildComponents(String componentPath, ImmutableMap.Builder<String, ComponentDescription> basicComponentDescriptions, String key, I18n i18n, Iterator<Map.Entry<String, JsonNode>> fields) {
+        final Map.Entry<String, JsonNode> componentEntry = fields.next();
+        final JsonNode componentNodeValue = componentEntry.getValue();
+        final String componentKey = componentEntry.getKey();
+        final boolean required = componentNodeValue.findPath(ConfigurationSchemaNode.OA_REQUIRED).asBoolean(false);
+        final Parsing<CheckerDescription> checkerDescriptionParsing = rootBuilder.getCheckerDescriptionBuilder()
+                .build(i18n,
+                        componentKey,
+                        required,
                         NodeSchemaValidator.joinPath(
                                 componentPath,
                                 ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
-                                componentKey,
-                                ConfigurationSchemaNode.OA_DEFAULT_VALUE
-                        ),
-                        defaultValueNode
-                );
-                i18n = defaultValueParsing.i18n();
-                if (defaultValueParsing.result().getReferences() != null) {
-                    for (final String reference : defaultValueParsing.result().getReferences()) {
-                        if (!rootBuilder.getListDataKeys().contains(reference)) {
-                            rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
-                                            "referenceName", reference,
-                                            "allDataNames", rootBuilder.getListDataKeys()),
-                                    NodeSchemaValidator.joinPath(
-                                            componentPath,
-                                            ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
-                                            componentKey,
-                                            ConfigurationSchemaNode.OA_DEFAULT_VALUE,
-                                            ConfigurationSchemaNode.OA_REFERENCES
-                                    ));
-                        }
-                    }
-                }
-            } else {
-                defaultValueParsing = new Parsing<>(i18n, null);
-            }
-            final Set<Tag> oaTags = TagsBuilder.validateDomainTagNames(
-                    componentNodeValue,
+                                componentKey),
+                        componentNodeValue.get(ConfigurationSchemaNode.OA_CHECKER),
+                        key);
+
+        i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
+        Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
+                .map(CheckerDescription::multiplicity)
+                .orElse(Multiplicity.ONE);
+        final Parsing<ComputationChecker> defaultValueParsing;
+        final JsonNode defaultValueNode = componentNodeValue.get(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
+        if (defaultValueNode != null) {
+            defaultValueParsing = rootBuilder.getComputationBuilder().build(
+                    i18n,
+                    required, multiplicity,
                     NodeSchemaValidator.joinPath(
                             componentPath,
                             ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
                             componentKey,
-                            ConfigurationSchemaNode.OA_TAGS
+                            ConfigurationSchemaNode.OA_DEFAULT_VALUE
                     ),
-                    rootBuilder);
-            final String importHeader;
-            if (!componentNodeValue
-                    .findPath(ConfigurationSchemaNode.OA_IMPORT_HEADER)
-                    .isEmpty()
-            ) {
-                importHeader = componentNodeValue
-                        .get(ConfigurationSchemaNode.OA_IMPORT_HEADER)
-                        .findPath(ConfigurationSchemaNode.OA_HEADER_NAME)
-                        .asText(componentKey).trim();
-            } else {
-                importHeader = componentNodeValue
-                        .findPath(ConfigurationSchemaNode.OA_IMPORT_HEADER)
-                        .asText(componentKey).trim();
+                    defaultValueNode
+            );
+            i18n = defaultValueParsing.i18n();
+            if (defaultValueParsing.result().getReferences() != null) {
+                testReferences(componentPath, defaultValueParsing, componentKey);
             }
-            final Parsing<String> exportHeaderParsing = rootBuilder.addExportHeaders(key, i18n, componentEntry, ConfigurationSchemaNode.OA_BASIC_COMPONENTS);
-            String exportHeaderName = null;
-            if (exportHeaderParsing != null) {
-                i18n = exportHeaderParsing.i18n();
-                exportHeaderName = exportHeaderParsing.result();
-            }
-            final ComponentPresenceConstraint mandatory = RootBuilder.isMandatory(componentNodeValue);
-            basicComponentDescriptions.put(
-                    componentKey,
-                    new BasicComponent(
-                            ComponentDescription.ComponentDescriptionType.BasicComponent,
-                            componentKey,
-                            defaultValueParsing.result(),
-                            oaTags,
-                            importHeader,
-                            exportHeaderName,
-                            rootBuilder().getLangRestrictions(componentPath, componentNodeValue),
-                            required,
-                            mandatory,
-                            checkerDescriptionParsing.result(),
-                            null));
-
+        } else {
+            defaultValueParsing = new Parsing<>(i18n, null);
         }
+        final Set<Tag> oaTags = TagsBuilder.validateDomainTagNames(
+                componentNodeValue,
+                NodeSchemaValidator.joinPath(
+                        componentPath,
+                        ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
+                        componentKey,
+                        ConfigurationSchemaNode.OA_TAGS
+                ),
+                rootBuilder);
+        final String importHeader;
+        if (!componentNodeValue
+                .findPath(ConfigurationSchemaNode.OA_IMPORT_HEADER)
+                .isEmpty()
+        ) {
+            importHeader = componentNodeValue
+                    .get(ConfigurationSchemaNode.OA_IMPORT_HEADER)
+                    .findPath(ConfigurationSchemaNode.OA_HEADER_NAME)
+                    .asText(componentKey).trim();
+        } else {
+            importHeader = componentNodeValue
+                    .findPath(ConfigurationSchemaNode.OA_IMPORT_HEADER)
+                    .asText(componentKey).trim();
+        }
+        final Parsing<String> exportHeaderParsing = rootBuilder.addExportHeaders(key, i18n, componentEntry, ConfigurationSchemaNode.OA_BASIC_COMPONENTS);
+        String exportHeaderName = null;
+        if (exportHeaderParsing != null) {
+            i18n = exportHeaderParsing.i18n();
+            exportHeaderName = exportHeaderParsing.result();
+        }
+        final ComponentPresenceConstraint mandatory = RootBuilder.isMandatory(componentNodeValue);
+        basicComponentDescriptions.put(
+                componentKey,
+                new BasicComponent(
+                        ComponentDescription.ComponentDescriptionType.BasicComponent,
+                        componentKey,
+                        defaultValueParsing.result(),
+                        oaTags,
+                        importHeader,
+                        exportHeaderName,
+                        rootBuilder().getLangRestrictions(componentPath, componentNodeValue),
+                        required,
+                        mandatory,
+                        checkerDescriptionParsing.result(),
+                        null));
         return i18n;
+    }
+
+    private void testReferences(String componentPath, Parsing<ComputationChecker> defaultValueParsing, String componentKey) {
+        for (final String reference : defaultValueParsing.result().getReferences()) {
+            if (!rootBuilder.getListDataKeys().contains(reference)) {
+                rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
+                                "referenceName", reference,
+                                "allDataNames", rootBuilder.getListDataKeys()),
+                        NodeSchemaValidator.joinPath(
+                                componentPath,
+                                ConfigurationSchemaNode.OA_BASIC_COMPONENTS,
+                                componentKey,
+                                ConfigurationSchemaNode.OA_DEFAULT_VALUE,
+                                ConfigurationSchemaNode.OA_REFERENCES
+                        ));
+            }
+        }
     }
 }

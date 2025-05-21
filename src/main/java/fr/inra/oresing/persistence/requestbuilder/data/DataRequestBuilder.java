@@ -1,4 +1,4 @@
-package fr.inra.oresing.persistence.requestBuilder.data;
+package fr.inra.oresing.persistence.requestbuilder.data;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.Ltree;

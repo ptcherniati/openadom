@@ -98,7 +98,8 @@ class AuthenticationServiceTest {
         assertEquals(mailFrom, message.getFrom());
         String[] lines = Objects.requireNonNull(message.getText()).split("\n");
         String validationKey = lines[6];
-        String user = mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
+        String user = mockMvc.perform(put("/api/v1/users")
+                        .with(csrf().asHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))

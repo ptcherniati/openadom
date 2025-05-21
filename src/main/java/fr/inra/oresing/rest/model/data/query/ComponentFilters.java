@@ -30,7 +30,7 @@ public class ComponentFilters {
         super();
     }
 
-    public ComponentFilters(final String componentKey, final List<String> filters, final FieldType type, final String format, final List<IntervalValues> intervalsValues, final Boolean isRegExp) {
+    public ComponentFilters(final String componentKey, final List<String> filters, final List<IntervalValues> intervalsValues, final Boolean isRegExp) {
         super();
         this.componentKey = componentKey;
         this.filters = filters;

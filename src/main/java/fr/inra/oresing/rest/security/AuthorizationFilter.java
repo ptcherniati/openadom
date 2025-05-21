@@ -126,7 +126,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             OreSiAuthenticationToken token = buildAuthentication(request, response, request.isSecure());
             requestContext.setAuthenticationToken(token);
         } catch (AuthenticationFailure e) {
-            ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
+            ResponseEntity<String> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCode().value());
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             String body = mapper.toJson(handle.getBody());

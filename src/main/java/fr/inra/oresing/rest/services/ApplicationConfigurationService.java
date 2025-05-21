@@ -42,10 +42,10 @@ public class ApplicationConfigurationService {
                 FileBomResolver.of(inputStream));
     }
 
-    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(final
-                                                                                                                           String comment,
-                                                                                                                           P progression,
-                                                                                                                           final FileBomResolver fileBomResolver) {
+    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(
+            final String comment,
+            P progression,
+            final FileBomResolver fileBomResolver) {
         progression.pushMessage("testYamlIsvalid", null);
         try {
             byte[] bytes = fileBomResolver.readAllBytes();

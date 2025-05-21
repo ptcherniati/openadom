@@ -15,7 +15,6 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
-import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
@@ -26,14 +25,12 @@ import fr.inra.oresing.rest.services.ServiceContainer;
 import fr.inra.oresing.rest.services.ServiceContainerBean;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.Setter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.http.MediaType;
@@ -290,7 +287,6 @@ public class AuthorizationResources implements ServiceContainerBean {
         CreateAuthorizationRequest createAuthorizationRequestWithDependantAuthorization =
                 serviceContainer.authorizationService()
                         .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
-        CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
         final List<OreSiAuthorization> authorizationsForCurrentUser = serviceContainer.authorizationService().findUserAuthorizationsForApplication(application);
         AuthorizationRequest authorizationRequest = serviceContainer.authorizationService().createAuthorizationRequestToAuthorizationRequest(
@@ -373,7 +369,6 @@ public class AuthorizationResources implements ServiceContainerBean {
                                                                               @RequestBody final CreateAdditionalFileAuthorizationRequest authorization) {
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         Application application = repo.application().findApplication(nameOrId);
-        boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
         final List<OreSiAdditionalFileAuthorization> additionalFilesAuthorizationsForCurrentUser = serviceContainer.authorizationService().findUserAdditionalFilesAuthorizationsForApplicationAndDataType(application);
         final Set<UUID> previousUsers = authorization.getUuid() == null ? new HashSet<>() : authorization.getUsersId();
         final OreSiAdditionalFileAuthorization oreSiAuthorization = serviceContainer.authorizationService().addAdditionalFileAuthorizations(application, authorization, additionalFilesAuthorizationsForCurrentUser, true);

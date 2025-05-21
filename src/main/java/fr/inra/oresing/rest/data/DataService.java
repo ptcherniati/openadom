@@ -300,14 +300,12 @@ public class DataService implements ServiceContainerBean {
                                     headerForReferenceColumn,
                                     mandatory,
                                     multiplicity,
-                                    referenceValueRepository,
                                     defaultValueConfiguration))
                             .orElseGet(() -> Column.staticColumnDescriptionToColumn(
                                     referenceColumn,
                                     headerForReferenceColumn,
                                     mandatory,
                                     multiplicity,
-                                    referenceValueRepository,
                                     defaultValue));
                 }).collect(ImmutableSet.toImmutableSet());
 

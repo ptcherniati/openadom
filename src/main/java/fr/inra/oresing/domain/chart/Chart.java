@@ -30,14 +30,4 @@ public record Chart(
         );
     }
 
-    public String toSQL(String componentName, String dataName) {
-        return String.format(
-                VAR_SQL_TEMPLATE,
-                this.aggregationComponent(),
-                this.value(),
-                dataName,
-                this.gap() == null ? "0" : gap
-        );
-    }
-
 }

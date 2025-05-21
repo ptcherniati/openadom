@@ -2,7 +2,6 @@ package fr.inra.oresing.rest.model.authorization.exception;
 
 import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
 
-import java.io.Serializable;
 import java.util.Map;
 
 public class AuthorizationRequestError extends Throwable {

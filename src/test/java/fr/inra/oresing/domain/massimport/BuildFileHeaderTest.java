@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 @Tag("domain.model")
-public class BuildFileHeaderTest {
+class BuildFileHeaderTest {
     static final String RESOURCE_PATH = "fr/inra/oresing/domain/massimport/massimport.yaml";
 
     @ParameterizedTest

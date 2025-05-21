@@ -6,7 +6,7 @@ import fr.inra.oresing.persistence.BinaryFileInfos;
 
 import java.util.*;
 
-public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, Boolean topublish) {
+public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, boolean topublish) {
 
 
     public static FileOrUUID from(FileOrUUID params, UUID fileId) {

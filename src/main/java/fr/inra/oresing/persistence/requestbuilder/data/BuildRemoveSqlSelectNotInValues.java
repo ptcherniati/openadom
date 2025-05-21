@@ -1,4 +1,4 @@
-package fr.inra.oresing.persistence.requestBuilder.data;
+package fr.inra.oresing.persistence.requestbuilder.data;
 
 record BuildRemoveSqlSelectNotInValues(String valuePathToHide, String refsLinkedToPathToHide) {
 }

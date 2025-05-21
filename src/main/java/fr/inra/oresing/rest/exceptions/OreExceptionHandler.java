@@ -35,6 +35,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static fr.inra.oresing.rest.security.AuthorizationFilter.ECHEC_TECHNIQUE;
+
 @RestControllerAdvice
 @Slf4j
 public class OreExceptionHandler extends ResponseEntityExceptionHandler {
@@ -71,8 +73,9 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(eee);
     }
 
+
     @ExceptionHandler(AuthenticationFailure.class)
-    public ResponseEntity<AuthenticationFailure> handle(final AuthenticationFailure eee) {
+    public ResponseEntity<String> handle(final AuthenticationFailure eee) {
         return switch (eee.getMessage()) {
             case "INACTIVE_ACCOUNT" -> {
                 final HttpHeaders responseHeaders = new HttpHeaders();
@@ -82,15 +85,15 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
                 responseHeaders.set("Result__State", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("state"))).orElse(""));
                 yield ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
                         .headers(responseHeaders)
-                        .body(eee);
+                        .body(eee.getMessage());
             }
-            case "EXISTING_LOGIN" -> ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(eee);
-            case "BAD_LOGIN_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
-            case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
-            case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
-            default -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee);
+            case "EXISTING_LOGIN" -> ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(eee.getMessage());
+            case "BAD_LOGIN_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            case ECHEC_TECHNIQUE -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("BAD_REQUEST");
+            default -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
         };
-        //return ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
     }
 
     @ExceptionHandler

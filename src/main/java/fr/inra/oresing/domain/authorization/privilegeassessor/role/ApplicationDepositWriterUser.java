@@ -6,13 +6,12 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public record ApplicationDepositWriterUser(
         Application application,
         String dataName,
-        ArrayList<AuthorizationParsed> authorizations
+        List<AuthorizationParsed> authorizations
 ) implements ApplicationDataWriter {
     @Override
     public boolean canDelete(FileOrUUID fileOrUUID) {

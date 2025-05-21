@@ -15,9 +15,6 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
 
     public static final CurrentUserRoles EMPTY = new CurrentUserRoles(null, false, null);
 
-    public CurrentUserRoles(final String currentUser, final List<String> memberOf) {
-        this(memberOf, false, null);
-    }
 
     public CurrentUserRoles(
             final List<String> memberOf,

@@ -143,7 +143,6 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
     }
 
     private ConstantImportHeader getAndtestConstantImportHeader(final JsonNode importHeaderNode, final String dataKey, final Integer headerLine, final Integer firstRowLine, final String path) {
-        ConstantImportHeader importHeader;
         final JsonNode rowNomberNode = importHeaderNode.findPath(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_ROW_NUMBER);
         if (rowNomberNode.isMissingNode() || rowNomberNode.isNull() || !rowNomberNode.isInt()) {
             rootBuilder.buildError(

@@ -12,7 +12,6 @@ import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 
-import java.io.Serializable;
 import java.util.*;
 
 public class AuthorizationRequestBuilder {

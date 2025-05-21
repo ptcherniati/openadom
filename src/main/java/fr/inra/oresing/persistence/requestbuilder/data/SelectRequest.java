@@ -1,4 +1,4 @@
-package fr.inra.oresing.persistence.requestBuilder.data;
+package fr.inra.oresing.persistence.requestbuilder.data;
 
 import fr.inra.oresing.domain.data.read.query.*;
 import org.apache.commons.collections4.CollectionUtils;

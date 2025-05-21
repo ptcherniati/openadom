@@ -9,7 +9,7 @@ import java.util.Map;
 public sealed interface CheckerType<T> extends ApplicationType<T>
         permits BooleanCheckerType, CheckerFactory, DateCheckerType, FloatCheckerType, GroovyCheckerType, IntegerCheckerType, ReferenceCheckerType, StringCheckerType {
 
-    static CheckerType EMPTY_INSTANCE() {
+    static CheckerType<?> EMPTY_INSTANCE() {
         return new CheckerFactory();
     }
 

@@ -62,7 +62,7 @@ public sealed interface ComponentOrderByForExport
             DataRepositoryForBuffer dataRepository,
             StandardDataDescription dataDescription,
             FieldType<?> fieldType) {
-        if (fieldType instanceof MapType mapType) {
+        if (fieldType instanceof MapType _) {
             return "pas trouvé";
         }
         return switch (sqlType()) {

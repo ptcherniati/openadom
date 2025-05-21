@@ -2,6 +2,8 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.UserRepository;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
@@ -14,6 +16,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebM
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -38,6 +41,12 @@ public class MigrationTest {
 
     @Autowired
     private MockMvc mockMvc;
+    @Autowired
+    private AuthenticationService authenticationService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     private Fixtures fixtures;
 
@@ -45,11 +54,16 @@ public class MigrationTest {
 
     @BeforeEach
     public void createApplication() throws Exception {
+        fixtures = new Fixtures(
+                mockMvc,
+                userRepository,
+                namedParameterJdbcTemplate,
+                authenticationService
+        );
         authCookie = fixtures.addMigrationApplication().cookie();
     }
 
-    @Test
-    @Disabled
+    //@Test
     public void testMigrate() throws Exception {
         try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMigrationApplicationConfigurationResourceName(2))) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);

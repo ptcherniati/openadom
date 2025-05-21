@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -25,7 +24,6 @@ import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -40,17 +38,20 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 
 public class BinaryFileService implements fr.inra.oresing.domain.services.file.BinaryFileService {
-    @Autowired
-    private OreSiRepository repository;
+    private final OreSiRepository repository;
 
     @Setter
     private ServiceContainer serviceContainer;
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private OreSiApiRequestContext request;
-    @Autowired
-    private JsonRowMapper jsonRowMapper;
+    private final AuthenticationService authenticationService;
+    private final OreSiApiRequestContext request;
+    private final JsonRowMapper<?> jsonRowMapper;
+
+    public BinaryFileService(OreSiRepository repository, AuthenticationService authenticationService, OreSiApiRequestContext request, JsonRowMapper jsonRowMapper) {
+        this.repository = repository;
+        this.authenticationService = authenticationService;
+        this.request = request;
+        this.jsonRowMapper = jsonRowMapper;
+    }
 
 
     public static BinaryFileDataset deserialiseBinaryFileDatasetQuery(final String dataName, final String params) {
@@ -153,9 +154,6 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         authenticationService.setRoleForClient();
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         DataRepositoryForBuffer dataRepositoryForBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
-        application.findSubmission(datatype)
-                .map(Submission::submissionScope)
-                .orElse(null);
         return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepositoryForBuffer), overlap);
     }
 

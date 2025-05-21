@@ -8,7 +8,7 @@ public sealed interface ConfigurationSchemaNodeType<T> permits FinalType, Interm
     String buildExample(int level);
 
     default StringBuilder getBuilder() {
-        return new StringBuilder("%s\n".formatted(required() ? "  #mandatory" : "  #optional"));
+        return new StringBuilder("%s%n".formatted(required() ? "  #mandatory" : "  #optional"));
     }
 
     default boolean required() {

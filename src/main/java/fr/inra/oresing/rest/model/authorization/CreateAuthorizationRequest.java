@@ -22,13 +22,6 @@ public record CreateAuthorizationRequest(
                                       Set<UUID> usersId,
                                       Map<String, Set<OperationType>> authorizationForAll,
                                       Map<String, AuthorizationInput> authorizationsWithRestriction) {
-        /*Objects.requireNonNull(usersId);
-        if(usersId.isEmpty()){
-            throw new SiOreAuthorizationRequestException(
-                    AuthorizationRequestException.NO_USER_IDS,
-                    Map.of()
-            );
-        }*/
         Objects.requireNonNull(name);
         if (name.isEmpty()) {
             throw new SiOreAuthorizationRequestException(

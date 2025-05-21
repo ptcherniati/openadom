@@ -26,7 +26,6 @@ public class AuthorizationWithRestrictionBuilder {
             AuthorizationInput authorizationForReference = entryByOperation.getValue();
             if (MapUtils.isNotEmpty(authorizationForReference.getRequiredAuthorizations()) ||
                     authorizationForReference.getTimeScope() != null) {
-                //TODO catch exception and regroup by referencetype
                 authorizationWithrestriction.put(reference, AuthorizationForScope.of(authorizationForReference));
             }
         }

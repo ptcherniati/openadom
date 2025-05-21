@@ -44,26 +44,6 @@ class CreateAuthorizationRequestTest {
     @Test
     @Tag("core.auth")
     void toAuthorizationRequest() throws IOException {
-        CreateAuthorizationRequest createAuthorizationRequest1 = new CreateAuthorizationRequest(
-                UUID.fromString("e7570009-35fb-489d-ad3b-5bb335e7c5d5"),
-                "une submissionScope sur le référentiel monsore",
-                "une description",
-                Set.of(UUID.fromString("f7570009-38fb-489d-ad3b-5bb335e7c5d5")),
-                Map.of(
-                        "type_de_sites", Set.of(OperationType.extraction),
-                        "sites", Set.of(OperationType.extraction)
-                ),
-                Map.of(
-                        "pem", new AuthorizationInput(
-                                Map.of("projet", List.of(Ltree.fromSql("projet_atlantique"), Ltree.fromSql("projet_manche"))),
-                                LocalDateTimeRange.between(
-                                        LocalDate.of(2024, 3, 29),
-                                        LocalDate.of(2024, 3, 29)
-                                ),
-                                Set.of(OperationType.depot)
-                        )
-                )
-        );
         final CreateAuthorizationRequest createAuthorizationRequest = new JsonRowMapper<CreateAuthorizationRequest>().readValue(CreateAuthorizationRequestTest.createAuthorization, CreateAuthorizationRequest.class);
         Assertions.assertEquals("e7570009-35fb-489d-ad3b-5bb335e7c5d5", createAuthorizationRequest.uuid().toString());
         Assertions.assertEquals("une submissionScope sur le référentiel monsore", createAuthorizationRequest.name());

@@ -6,16 +6,10 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.JsonRowMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
@@ -36,8 +30,11 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
+import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -54,18 +51,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class TestReferencesErrors {
 
     public static final Map<String, String> responses = new HashMap<>();
-    public static final String LOGIN = "poussinreferenceserrors";
     public static final String PASSWORD = "xxxxxxxx";
-    public static final String EMAIL = "poussinreferenceserrors@inrae.fr";
-    private static CreateUserResult authUser = null;
-    @Autowired
-    private ObjectMapper objectMapper;
-    @Autowired
-    private JsonRowMapper jsonRowMapper;
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private AuthenticationService authenticationService;
+    private static ObjectMapper mapper = new ObjectMapper();
 
     private Fixtures fixtures;
     @Autowired
@@ -82,17 +73,152 @@ public class TestReferencesErrors {
 
     @BeforeEach
     public void init() throws Exception {
-        fixtures = new Fixtures(
-                mockMvc,
-                null,
-                namedParameterJdbcTemplate,
-                authenticationService
+        fixtures = new Fixtures(mockMvc, null, namedParameterJdbcTemplate, authenticationService);
+    }
+
+    record RecursivityTestCase(String name, String replace, String by, String expectedResponse) {
+        static RecursivityTestCase of(Map.Entry<String, List<String>> entry) {
+            return new RecursivityTestCase(entry.getKey(), entry.getValue().get(0), entry.getValue().get(1), entry.getValue().get(2));
+        }
+    }
+
+    public static Stream<RecursivityTestCase> getRecursiviteReferentielErrorsStringReplace() {
+        return Fixtures.getRecursiviteReferentielErrorsStringReplace().entrySet().stream().map(RecursivityTestCase::of);
+    }
+
+    public static Stream<RecursivityTestCase> getRecursiviteDataErrorsStringReplace() {
+        return Fixtures.getRecursiviteDataErrorsStringReplace().entrySet().stream().map(RecursivityTestCase::of);
+    }
+
+    public static Stream<RecursivityTestCase> getRepeatedColumnsgWithAllowUnexpectedColumnsDataErrorsStringReplace() {
+        return Fixtures.getRepeatedColumnsgWithAllowUnexpectedColumnsDataErrorsStringReplace().entrySet().stream().map(RecursivityTestCase::of);
+    }
+
+    public static Stream<RecursivityTestCase> getRepeatedColumnsDataErrorsStringReplace() {
+        return Fixtures.getRepeatedColumnsDataErrorsStringReplace().entrySet().stream().map(RecursivityTestCase::of);
+    }
+
+    @TestFactory
+    @DisplayName("Tests des erreurs csv")
+    Stream<DynamicNode> testRecursivity() throws IOException {
+        final Fixtures.UserConnection recursivityConnection = initAndLoadRecursivity();
+        final String proprieteTaxonCSV = loadProprieteTaxonCSV();
+
+        final String site = "leman";
+        final String monRepositoryCSV = getRepositoryCSV(Fixtures.getConditionsPrelevementRepositoryResourceName(site));
+        return Stream.of(
+                dynamicContainer(
+                        "RecursiviteReferentielErrors",
+                        getRecursiviteReferentielErrorsStringReplace()
+                                .map(recursivityTestCase -> dynamicTest(
+                                                recursivityTestCase.name(),
+                                                () -> {
+                                                    String response;
+                                                    final String textCsvModify = proprieteTaxonCSV.replace(recursivityTestCase.replace(), recursivityTestCase.by());
+                                                    try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
+                                                        final MockMultipartFile refFile = new MockMultipartFile("file", recursivityTestCase.name() + ".csv", "text/plain", refStream);
+                                                        log.info(recursivityTestCase.name());
+                                                        final ObjectMapper mapper = new ObjectMapper();
+                                                        response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", "proprietes_taxon").file(refFile).with(csrf().asHeader()).cookie(recursivityConnection.cookie())).andExpect(status().is4xxClientError()).andReturn().getResponse().getContentAsString();
+                                                        Assertions.assertEquals(mapper.readTree(recursivityTestCase.expectedResponse()), mapper.readTree(response));
+                                                        responses.put(recursivityTestCase.name(), response);
+                                                    }
+                                                }
+                                        )
+                                )
+                ),
+                dynamicTest("load references",
+                        () -> {
+                            try {
+                                loadRecursivityReferences(recursivityConnection);
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                ),
+                dynamicContainer(
+                        "RecursiviteDataErrors",
+                        getRecursiviteDataErrorsStringReplace()
+                                .map(recursivityTestCase -> dynamicTest(
+                                                recursivityTestCase.name(),
+                                                () -> {
+                                                    String response;
+                                                    final String textCsvModify = monRepositoryCSV.replace(recursivityTestCase.replace(), recursivityTestCase.by());
+                                                    try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
+                                                        final MockMultipartFile refFile = new MockMultipartFile("file", "suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", "text/plain", refStream);
+                                                        log.info(recursivityTestCase.name());
+                                                        response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/condition_prelevements").file(refFile).with(csrf().asHeader()).cookie(recursivityConnection.cookie())).andExpect(status().is4xxClientError()).andReturn().getResponse().getContentAsString();
+                                                        final Matcher m = Pattern.compile("(.*)\"referenceValues\":(\\{(.*?)\\})(.*)").matcher(response);
+                                                        responses.put(recursivityTestCase.name(), response);
+                                                        if (m.matches()) {
+                                                            response = String.format("%s[%s]%s", m.group(1), Arrays.stream(m.group(3).split(",")).map(s -> s.split(":")[0]).sorted().collect(Collectors.joining(",")), m.group(4));
+                                                        }
+                                                        Assertions.assertEquals(mapper.readTree(recursivityTestCase.expectedResponse()), mapper.readTree(response));
+                                                    }
+                                                }
+                                        )
+                                )
+                )
         );
     }
 
 
-    @Test
-    void testRecursivity() throws Exception {
+    @TestFactory
+    @DisplayName("Tests des erreurs unexpected Columns")
+    Stream<DynamicNode> testRepeatedColumnsWithAllowUnexpectedColumns() throws Exception {
+        final Fixtures.UserConnection repeatedColumnsConnection = initRepeatedColumn();
+        loadRepeatedColumn(repeatedColumnsConnection);
+        loadRepeatedColumnRefrences(repeatedColumnsConnection);
+        final String monRepositoryCSV = getRepositoryCSV(Fixtures.getSWCRepositoryResourceName());
+        return getRepeatedColumnsgWithAllowUnexpectedColumnsDataErrorsStringReplace()
+                .map(recursivityTestCase -> dynamicTest(
+                                recursivityTestCase.name(),
+                                () -> {
+                                    String response;
+                                    final String textCsvModify = monRepositoryCSV.replace(recursivityTestCase.replace(), recursivityTestCase.by());
+                                    try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
+                                        final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
+                                        log.info(recursivityTestCase.name());
+                                        response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc").file(refFile).with(csrf().asHeader()).cookie(repeatedColumnsConnection.cookie())).andExpect(status().is4xxClientError()).andReturn().getResponse().getContentAsString();
+
+                                        Assertions.assertEquals(mapper.readTree(recursivityTestCase.expectedResponse()), mapper.readTree(response));
+                                        responses.put(recursivityTestCase.name(), response);
+                                    }
+                                }
+                        )
+                );
+    }
+
+    private void loadRecursivityReferences(Fixtures.UserConnection recursivityConnection) throws Exception {
+        String response;
+        for (final Map.Entry<String, String> e : Fixtures.getRecursiviteReferentielOrderFiles().entrySet()) {
+            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
+                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
+
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(recursivityConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+
+                JsonPath.parse(response).read("$.id");
+            }
+        }
+    }
+
+    private String loadProprieteTaxonCSV() throws IOException {
+        final String proprietes_taxon_path = Fixtures.getRecursiviteReferentielOrderFiles().get("proprietes_taxon");
+        final StringBuilder textBuilder = new StringBuilder();
+        try (final InputStream refStream = getClass().getResourceAsStream(proprietes_taxon_path)) {
+            assert refStream != null;
+            try (final Reader reader = new BufferedReader(new InputStreamReader(refStream, StandardCharsets.UTF_8))) {
+                int c;
+                while ((c = reader.read()) != -1) {
+                    textBuilder.append((char) c);
+                }
+            }
+        }
+        final String monCSV = textBuilder.toString();
+        return monCSV;
+    }
+
+    private Fixtures.UserConnection initAndLoadRecursivity() {
         Fixtures.UserConnection recursivityConnection;
         final URL resource = getClass().getResource(Fixtures.getRecursivityApplicationConfigurationResourceName());
         try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
@@ -101,76 +227,20 @@ public class TestReferencesErrors {
             Fixtures.CreateUser recursivity = new Fixtures.CreateUser("recursivity", PASSWORD, "recursivity@inrae.fr");
             recursivityConnection = fixtures.createUserForUserDefinition(recursivity, true, false);
             fixtures.addUserRightCreateApplication(recursivityConnection.userResult().userId(), "recursivite");
-            final String id = fixtures.getIdFromApplicationResult(
-                    fixtures.loadApplication(configuration, recursivityConnection.cookie(), "recursivite", "")
-            );
-            final String response = mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite")
-                            .param("filter", "ALL")
-                            .cookie(recursivityConnection.cookie()))
-                    .andExpect(status().is2xxSuccessful())
-                    .andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon")))
-                    .andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_")))
-                    .andExpect(jsonPath("$.configuration.i18n.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties")))
-                    .andReturn().getResponse().getContentAsString();
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, recursivityConnection.cookie(), "recursivite", ""));
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite").param("filter", "ALL").cookie(recursivityConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.configuration.i18n.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties"))).andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
+        return recursivityConnection;
+    }
 
-        String response;
-        // Ajout de referentiel
-        final String proprietes_taxon_path = Fixtures.getRecursiviteReferentielOrderFiles().get("proprietes_taxon");
-        final StringBuilder textBuilder = new StringBuilder();
-        try (final InputStream refStream = getClass().getResourceAsStream(proprietes_taxon_path)) {
-            assert refStream != null;
-            try (final Reader reader = new BufferedReader(new InputStreamReader
-                    (refStream, StandardCharsets.UTF_8))) {
-                int c;
-                while ((c = reader.read()) != -1) {
-                    textBuilder.append((char) c);
-                }
-            }
-        }
-        final String monCSV = textBuilder.toString();
-
-        for (final Map.Entry<String, List<String>> e : Fixtures.getRecursiviteReferentielErrorsStringReplace().entrySet()) {
-            final String textCsvModify = monCSV.replace(e.getValue().get(0), e.getValue().get(1));
-            try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getKey() + ".csv", "text/plain", refStream);
-                log.info(e.getKey());
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", "proprietes_taxon")
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(recursivityConnection.cookie()))
-                        .andExpect(status().is4xxClientError())
-                        .andReturn().getResponse().getContentAsString();
-                JSONAssert.assertEquals(e.getValue().get(2), response, JSONCompareMode.NON_EXTENSIBLE);
-                responses.put(e.getKey(), response);
-            }
-        }
-        //System.out.println(responses);
-        for (final Map.Entry<String, String> e : Fixtures.getRecursiviteReferentielOrderFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(recursivityConnection.cookie()))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
-
-                JsonPath.parse(response).read("$.id");
-            }
-        }
-
-        // ajout de data
-        // test repository
-        final String site = "leman";
-        final URL resources = getClass().getResource(Fixtures.getConditionsPrelevementRepositoryResourceName(site));
+    private String getRepositoryCSV(String SWCRepositoryResourceName) throws IOException {
+        final URL resources = getClass().getResource(SWCRepositoryResourceName);
         final StringBuilder textBuild = new StringBuilder();
         try (final InputStream refStream = Objects.requireNonNull(resources).openStream()) {
-            try (final Reader reader = new BufferedReader(new InputStreamReader
-                    (refStream, StandardCharsets.UTF_8))) {
+            try (final Reader reader = new BufferedReader(new InputStreamReader(refStream, StandardCharsets.UTF_8))) {
                 int c;
                 while ((c = reader.read()) != -1) {
                     textBuild.append((char) c);
@@ -178,103 +248,69 @@ public class TestReferencesErrors {
             }
         }
         final String monRepositoryCSV = textBuild.toString();
-        for (final Map.Entry<String, List<String>> e : Fixtures.getRecursiviteDataErrorsStringReplace().entrySet()) {
-            final String textCsvModify = monRepositoryCSV.replace(e.getValue().get(0), e.getValue().get(1));
-            try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", "suivi_des_lacs_leman_conditions_prelevements_01-01-2020_31-12-2020.csv", "text/plain", refStream);
-                log.info(e.getKey());
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/condition_prelevements")
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(recursivityConnection.cookie()))
-                        .andExpect(status().is4xxClientError())
-                        .andReturn().getResponse().getContentAsString();
-                final Matcher m = Pattern.compile("(.*)\"referenceValues\":(\\{(.*?)\\})(.*)").matcher(response);
-                responses.put(e.getKey(), response);
-                if (m.matches()) {
-                    response = String.format("%s[%s]%s",
-                            m.group(1),
-                            Arrays.stream(m.group(3).split(","))
-                                    .map(s -> s.split(":")[0])
-                                    .sorted()
-                                    .collect(Collectors.joining(",")),
-                            m.group(4));
-                }
-                JSONAssert.assertEquals(e.getValue().get(2), response, JSONCompareMode.NON_EXTENSIBLE);
-            }
-        }
-        //System.out.println(responses);
+        return monRepositoryCSV;
     }
 
-    @Test
-    void testRepeatedColumnsWithAllowUnexpectedColumns() throws Exception {
+    private Fixtures.UserConnection initRepeatedColumn() throws Exception {
         Fixtures.CreateUser repeatedcolumns = new Fixtures.CreateUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
         Fixtures.UserConnection repeatedcolumnsConnection = fixtures.createUserForUserDefinition(repeatedcolumns, true, false);
-        final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsWithAllowUnexpectedColumnsApplicationConfigurationResourceName());
-        String response;
         fixtures.addUserRightCreateApplication(repeatedcolumnsConnection.userResult().userId(), "repeatedcolumns");
-        try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedcolumnsConnection.cookie(), "repeatedcolumns", ""));
+        return repeatedcolumnsConnection;
+    }
 
-            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns")
-                            .param("filter", "ALL")
-                            .cookie(repeatedcolumnsConnection.cookie()))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-        } catch (final Throwable e) {
-            throw new OreSiTechnicalException(e.getMessage(), e);
-        }
+    private void loadRepeatedColumnRefrences(Fixtures.UserConnection repeatedcolumnsConnection) throws Exception {
+        String response;
         for (final Map.Entry<String, String> e : Fixtures.getRepeatedColumnsReferentielOrderFiles().entrySet()) {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(repeatedcolumnsConnection.cookie()))
-                        .andDo(result -> {
-                            if (result.getResponse().getStatus() > 300) {
-                                log.error(e.getKey());
-                            }
-                        })
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(repeatedcolumnsConnection.cookie())).andDo(result -> {
+                    if (result.getResponse().getStatus() > 300) {
+                        log.error(e.getKey());
+                    }
+                }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
         }
-        // test repository
-        final URL resources = getClass().getResource(Fixtures.getSWCRepositoryResourceName());
-        final StringBuilder textBuild = new StringBuilder();
-        try (final InputStream refStream = Objects.requireNonNull(resources).openStream()) {
-            try (final Reader reader = new BufferedReader(new InputStreamReader
-                    (refStream, StandardCharsets.UTF_8))) {
-                int c;
-                while ((c = reader.read()) != -1) {
-                    textBuild.append((char) c);
-                }
-            }
-        }
-        final String monRepositoryCSV = textBuild.toString();
-        for (final Map.Entry<String, List<String>> e : Fixtures.getRepeatedColumnsgWithAllowUnexpectedColumnsDataErrorsStringReplace().entrySet()) {
-            final String textCsvModify = monRepositoryCSV.replace(e.getValue().get(0), e.getValue().get(1));
-            try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
-                log.info(e.getKey());
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(repeatedcolumnsConnection.cookie()))
-                        .andExpect(status().is4xxClientError())
-                        .andReturn().getResponse().getContentAsString();
+    }
 
-                assertEquals(e.getValue().get(2), response);
-                responses.put(e.getKey(), response);
-            }
+    private void loadRepeatedColumn(Fixtures.UserConnection repeatedcolumnsConnection) {
+        final URL resource = getClass().getResource(Fixtures.getRepeatedColumnsWithAllowUnexpectedColumnsApplicationConfigurationResourceName());
+        try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
+            final MockMultipartFile configuration = new MockMultipartFile("file", "repeatedcolumns.yaml", "text/plain", in);
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedcolumnsConnection.cookie(), "repeatedcolumns", ""));
+
+            mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/repeatedcolumns").param("filter", "ALL").cookie(repeatedcolumnsConnection.cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+        } catch (final Throwable e) {
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 
-    @Test
-    void testRepeatedColumns() throws Exception {
+
+    @TestFactory
+    @DisplayName("Tests des erreurs sus les repeated Columns")
+    Stream<DynamicNode> repeatedColumnsTest() throws Exception {
+        final Fixtures.UserConnection repeatedcolumnsConnection = initAndLoadRepeatedColumn();
+        final String monRepositoryCSV = getRepositoryCSV(Fixtures.getSWCRepositoryResourceName());
+        return getRepeatedColumnsDataErrorsStringReplace()
+                .map(recursivityTestCase -> {
+                    return dynamicTest(recursivityTestCase.name(), () -> {
+                        String response;
+                        final String textCsvModify = monRepositoryCSV.replace(recursivityTestCase.replace(), recursivityTestCase.by());
+                        try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
+                            final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
+                            log.info(recursivityTestCase.name());
+                            response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc").file(refFile).with(csrf().asHeader()).cookie(repeatedcolumnsConnection.cookie())).andExpect(status().is4xxClientError()).andReturn().getResponse().getContentAsString();
+
+                            assertEquals(recursivityTestCase.expectedResponse(), response);
+                            responses.put(recursivityTestCase.name(), response);
+                        }
+                    });
+                });
+    }
+
+    private Fixtures.UserConnection initAndLoadRepeatedColumn() throws Exception {
         Fixtures.CreateUser repeatedcolumns = new Fixtures.CreateUser("repeatedcolumns", PASSWORD, "repeatedcolumns@inrae.fr");
         Fixtures.UserConnection repeatedcolumnsConnection = fixtures.createUserForUserDefinition(repeatedcolumns, true, false);
         fixtures.addUserRightCreateApplication(repeatedcolumnsConnection.userResult().userId(), "repeatedcolumns");
@@ -289,17 +325,11 @@ public class TestReferencesErrors {
                     final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                     final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, repeatedcolumnsConnection.cookie(), "repeatedcolumns", ""));
-                    response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey())
-                                    .file(refFile).with(csrf().asHeader())
-                                    .cookie(repeatedcolumnsConnection.cookie()))
-                            .andDo(result -> {
-                                if (result.getResponse().getStatus() > 300) {
-                                    log.error(e.getKey());
-                                }
-                            })
-                            .andExpect(status().isCreated())
-                            .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                            .andReturn().getResponse().getContentAsString();
+                    response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(repeatedcolumnsConnection.cookie())).andDo(result -> {
+                        if (result.getResponse().getStatus() > 300) {
+                            log.error(e.getKey());
+                        }
+                    }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                     JsonPath.parse(response).read("$.id");
                 }
@@ -307,33 +337,6 @@ public class TestReferencesErrors {
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
-        // test repository
-        final URL resources = getClass().getResource(Fixtures.getSWCRepositoryResourceName());
-        final StringBuilder textBuild = new StringBuilder();
-        try (final InputStream refStream = Objects.requireNonNull(resources).openStream()) {
-            try (final Reader reader = new BufferedReader(new InputStreamReader
-                    (refStream, StandardCharsets.UTF_8))) {
-                int c;
-                while ((c = reader.read()) != -1) {
-                    textBuild.append((char) c);
-                }
-            }
-        }
-        final String monRepositoryCSV = textBuild.toString();
-        for (final Map.Entry<String, List<String>> e : Fixtures.getRepeatedColumnsDataErrorsStringReplace().entrySet()) {
-            final String textCsvModify = monRepositoryCSV.replace(e.getValue().get(0), e.getValue().get(1));
-            try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", "SWC_truncated.csv", "text/plain", refStream);
-                log.info(e.getKey());
-                response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/repeatedcolumns/data/swc")
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(repeatedcolumnsConnection.cookie()))
-                        .andExpect(status().is4xxClientError())
-                        .andReturn().getResponse().getContentAsString();
-
-                assertEquals(e.getValue().get(2), response);
-                responses.put(e.getKey(), response);
-            }
-        }
+        return repeatedcolumnsConnection;
     }
 }

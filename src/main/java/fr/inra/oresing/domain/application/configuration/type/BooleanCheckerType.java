@@ -7,7 +7,7 @@ import java.util.Map;
 
 public record BooleanCheckerType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                                  boolean required,
-                                 boolean nullable) implements CheckerType {
+                                 boolean nullable) implements CheckerType<Map<String, ConfigurationSchemaNodeType<?>>> {
     public BooleanCheckerType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER(),
                 children,

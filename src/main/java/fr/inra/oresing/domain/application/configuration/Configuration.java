@@ -26,7 +26,7 @@ public record Configuration(Version version, Set<Tag> tags,
     public static final String OPEN_ADOM_VERSION_PATTERN = "2.0.1";
     public static final Version OPEN_ADOM_VERSION = new Version(OPEN_ADOM_VERSION_PATTERN);
     private static final String IDENTIFIER_PATTERN = "[a-z][a-z_0-9]{%d,%d}";
-    private static final String IDENTIFIER_SECTION_PATTERN = "[a-z][a-zA-Z_0-9]{1,49}";
+    private static final String IDENTIFIER_SECTION_PATTERN = "[a-z]\\w{1,49}";
 
     public static Predicate<String> getIsValidIdentifierPattern(int min, int max) {
         int min1 = min > 0 ? min : 1;
@@ -51,7 +51,7 @@ public record Configuration(Version version, Set<Tag> tags,
         );
     }
 
-    public LinkedHashMap<String, StandardDataDescription> componentDescriptionAccordingToRights() {
+    public Map<String, StandardDataDescription> componentDescriptionAccordingToRights() {
         return dataDescription().entrySet().stream()
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
@@ -92,7 +92,7 @@ public record Configuration(Version version, Set<Tag> tags,
                 .map(getDataDescription);
     }
 
-    public TreeSet<Node> orderedNodes() {
+    public SortedSet<Node> orderedNodes() {
         TreeSet<Node> nodes = new TreeSet<>();
         hierarchicalNodes().stream()
                 .map(this::getNodesRecursivly)
