@@ -106,7 +106,7 @@ class OreExceptionHandlerTest {
         AuthenticationFailure failure = new AuthenticationFailure(message,
                 oreSiUser
         );
-        ResponseEntity<AuthenticationFailure> response = exceptionHandler.handle(failure);
+        ResponseEntity<String> response = exceptionHandler.handle(failure);
 
         assertDoesNotThrow(() -> objectMapper.writeValueAsString(response.getBody()));
     }
