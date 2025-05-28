@@ -53,15 +53,12 @@ public class Fixtures {
     private UserRepository userRepository;
 
     public Fixtures(MockMvc mockMvc, UserRepository userRepository, NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuthenticationService authenticationService) throws Exception {
-
-        lambda = new CreateUser("lambda", "xxxxxxxx", "lambda@inrae.fr");
-        admin = new CreateUser("poussin", "xxxxxxxx", "poussin@inrae.fr");
-
         this.mockMvc = mockMvc;
         this.userRepository = userRepository;
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.authenticationService = authenticationService;
-
+        lambda = new CreateUser("lambda", "xxxxxxxx", "lambda@inrae.fr");
+        admin = new CreateUser("poussin", "xxxxxxxx", "poussin@inrae.fr");
         lambdaConnection = createUserForUserDefinition(lambda, true, false);
         adminConnection = createUserForUserDefinition(admin, true, true);
     }

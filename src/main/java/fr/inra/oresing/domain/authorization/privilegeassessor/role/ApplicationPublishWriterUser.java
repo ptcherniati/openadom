@@ -1,6 +1,7 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.file.FileOrUUID;
@@ -41,7 +42,11 @@ public record ApplicationPublishWriterUser(
 
     @Override
     public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
-        return hasRightForPublishOrUnPublish(fileOrUUID);
+
+        return application().getConfiguration().findData(dataName())
+                .flatMap(StandardDataDescription::findSubmissionScope)
+                .map(_ ->  hasRightForPublishOrUnPublish(fileOrUUID))
+                .orElse(true);
     }
 
     public OreSiTechnicalException getException() {

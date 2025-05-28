@@ -32,9 +32,11 @@ public class JWTExtractor {
     private Function<UUID, OreSiUserRole> getUserRole;
 
     public JWTExtractor(
+            Function<UUID, OreSiUserRole> getUserRole,
             JsonRowMapper<OreSiUserRequestClient> mapper,
             int jwtExpiration,
             String jwtSecret) {
+        this.getUserRole = getUserRole;
         this.mapper = mapper;
         final String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
         final byte[] keyBytes = secureEnoughJwtSecret.getBytes();

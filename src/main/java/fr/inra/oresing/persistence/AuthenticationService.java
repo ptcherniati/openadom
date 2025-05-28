@@ -19,7 +19,6 @@ import fr.inra.oresing.rest.model.authorization.CurrentUserRolesResult;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.model.authorization.UserAuthorizationForApplication;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -36,7 +35,7 @@ import java.util.stream.Collectors;
 
 @Component
 @Transactional(readOnly = true)
-public class AuthenticationService implements ServiceContainerBean, AuthenticationServiceImpl {
+public class AuthenticationService implements AuthenticationServiceImpl {
     @Setter
     private ServiceContainer serviceContainer;
 
@@ -49,10 +48,15 @@ public class AuthenticationService implements ServiceContainerBean, Authenticati
     @Value("${bcryptCost:12}")
     private int bcryptCost;
 
-    public AuthenticationService(UserRepository userRepository, SqlService db, OreSiApiRequestContext request) {
+    public AuthenticationService(
+            UserRepository userRepository,
+            SqlService db,
+            OreSiApiRequestContext request,
+            ServiceContainer serviceContainer) {
         this.userRepository = userRepository;
         this.db = db;
         this.request = request;
+        this.serviceContainer = serviceContainer;
     }
 
     private static String generateVerificationKey(final OreSiUser oreSiUser) {

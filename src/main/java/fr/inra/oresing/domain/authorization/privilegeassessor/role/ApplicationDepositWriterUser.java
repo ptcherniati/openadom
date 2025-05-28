@@ -1,12 +1,14 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import org.apache.commons.collections.CollectionUtils;
 
 import java.util.List;
+import java.util.Objects;
 
 public record ApplicationDepositWriterUser(
         Application application,
@@ -26,21 +28,30 @@ public record ApplicationDepositWriterUser(
     @Override
     public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
         if (isData()) {
-            if (CollectionUtils.isEmpty(authorizations)) {
+            if (CollectionUtils.isEmpty(authorizations())) {
                 throw getException();
             }
             return true;
         }
-        List<AuthorizationParsed> authorizationParseds = authorizations().stream()
-                .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
-                .toList();
-        if (authorizationParseds.isEmpty()) {
-            throw getException();
-        }
-        if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
-            return true;
-        }
-        throw getException();
+        return application().getConfiguration().findData(dataName())
+                .flatMap(StandardDataDescription::findSubmissionScope)
+                .filter(Objects::nonNull)
+                .map(submissionScope -> {
+                    if(fileOrUUID==null) {
+                        throw new NotApplicationDataWriterForDepositException(applicationName(), dataName());
+                    }
+                    List<AuthorizationParsed> authorizationParseds = authorizations().stream()
+                            .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
+                            .toList();
+                    if (authorizationParseds.isEmpty()) {
+                        throw getException();
+                    }
+                    if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
+                        return true;
+                    }
+                    throw getException();
+                })
+                .orElse(true);
     }
 
     @Override

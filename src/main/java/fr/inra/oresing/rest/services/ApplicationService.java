@@ -51,7 +51,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class ApplicationService implements ServiceContainerBean {
+public class ApplicationService{
     public static final String APPLICATION_NAME = "applicationName";
     public static final String START = "start";
     public static final String END = "end";
@@ -61,10 +61,15 @@ public class ApplicationService implements ServiceContainerBean {
     @Setter
     private ServiceContainer serviceContainer;
 
-    public ApplicationService(OreSiRepository repository, BeanFactory beanFactory, OreSiApiRequestContext request) {
+    public ApplicationService(
+            OreSiRepository repository,
+            BeanFactory beanFactory,
+            OreSiApiRequestContext request,
+            ServiceContainer serviceContainer) {
         this.repository = repository;
         this.beanFactory = beanFactory;
         this.request = request;
+        this.serviceContainer= serviceContainer;
     }
 
     public Application getApplication(final String nameOrId) {
@@ -289,10 +294,10 @@ public class ApplicationService implements ServiceContainerBean {
         if (Objects.requireNonNull(configurationFile.getOriginalFilename()).matches(".*\\.zip")) {
             InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile);
             progressionForParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(comment, progressionForConfiguration, FileBomResolver.of(multiYAmlInput));
+            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(multiYAmlInput));
         } else {
             progressionForParsingConfiguration.pushMessage("forSingle", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(comment, progressionForConfiguration, FileBomResolver.of(configurationFile.getInputStream()));
+            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(configurationFile.getInputStream()));
         }
         if (application == null) {
             return progression;
@@ -366,7 +371,7 @@ public class ApplicationService implements ServiceContainerBean {
             if (Objects.requireNonNull(file.getOriginalFilename()).matches(".*\\.zip")) {
                 application = ApplicationConfigurationService.unzipConfiguration(file, fluxSink);
             } else {
-                application = ApplicationConfigurationService.parseConfigurationBytes(null, fluxSink, FileBomResolver.of(file.getInputStream()));
+                application = ApplicationConfigurationService.parseConfigurationBytes("","", fluxSink, FileBomResolver.of(file.getInputStream()));
             }
             return application;
         } catch (final IOException e) {

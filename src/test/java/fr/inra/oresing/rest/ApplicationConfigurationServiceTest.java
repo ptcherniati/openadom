@@ -1291,6 +1291,7 @@ public class ApplicationConfigurationServiceTest {
             byte[] configBytes = fileBomResolver.readAllBytes();
 
             Application application = ApplicationConfigurationService.parseConfigurationBytes(
+                    "",
                     "test",
                     progression,
                     FileBomResolver.of(configBytes)
@@ -1305,7 +1306,8 @@ public class ApplicationConfigurationServiceTest {
     private void testConfiguration(ReactiveProgression.CreateApplicationProgression progression, String config, boolean expectedValidity) throws IOException {
         byte[] configBytes = config.getBytes(StandardCharsets.UTF_8);
         FileBomResolver fileBomResolver = FileBomResolver.of(new ByteArrayInputStream(configBytes));
-        ApplicationConfigurationService.parseConfigurationBytes("", progression, fileBomResolver);
+        ApplicationConfigurationService.parseConfigurationBytes("", "",
+                progression, fileBomResolver);
     }
 
 
@@ -1349,7 +1351,7 @@ public class ApplicationConfigurationServiceTest {
                 final Object test = buildFluxRequestJDJson(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(new ReactiveProgression.DefaultCounter(0L), fluxSink, new ReactiveProgression.CreateApplicationProgressionMessagesLabel());
                     try {
-                        ApplicationConfigurationService.parseConfigurationBytes("test", progression, FileBomResolver.of(wrongYaml));
+                        ApplicationConfigurationService.parseConfigurationBytes("", "test", progression, FileBomResolver.of(wrongYaml));
                     } catch (IOException e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
                     }

@@ -85,7 +85,7 @@ public class DataCsvBuilder {
         final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.EXCEL)
                 .setDelimiter(dataDescription.separator())
                 .setSkipHeaderRecord(true)
-                .build();
+                .get();
 
         ZipEntry zipEntry = new ZipEntry(String.format(fileNamePattern, downloadDatasetQuery.dataName()));
         if (outputStream instanceof ZipOutputStream zipOutputStream) {

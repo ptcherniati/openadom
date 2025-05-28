@@ -22,7 +22,6 @@ import fr.inra.oresing.rest.data.publication.StoreFile;
 import fr.inra.oresing.rest.exceptions.OreExceptionHandler;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
@@ -52,7 +51,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Component
-public class AuthorizationFilter extends GenericFilterBean implements ServiceContainerBean {
+public class AuthorizationFilter extends GenericFilterBean {
     public static final GrantedAuthority ROLE_AUTHENTIFIED_USER = new SimpleGrantedAuthority("ROLE_AUTHENTIFIED_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_UPDATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_UPDATE_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_CREATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_CREATE_USER");
@@ -74,6 +73,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
 
     @Autowired
     public AuthorizationFilter(
+            ServiceContainer serviceContainer,
             OreSiApiRequestContext requestContext,
             JsonRowMapper<OreSiUserRequestClient> jsonRowMapper,
             @Value("${jwt.expiration:3600}") int jwtExpiration,
@@ -83,10 +83,12 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
         this.requestContext = requestContext;
         AuthorizationFilter.mapper = jsonRowMapper;
         this.jWTExtractor = new JWTExtractor(
+                serviceContainer.authenticationService()::getUserRole,
                 jsonRowMapper,
                 jwtExpiration,
                 jwtSecret
         );
+        this.serviceContainer = serviceContainer;
     }
 
     @Override
@@ -313,11 +315,5 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                 request.getRequestURI(),
                 List.of(ROLE_AUTHENTIFIED_USER)
         );
-    }
-
-    @Override
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-        jWTExtractor.setSetGetUserRole(serviceContainer.authenticationService()::getUserRole);
-        this.serviceContainer = serviceContainer;
     }
 }

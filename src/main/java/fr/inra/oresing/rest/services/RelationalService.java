@@ -12,7 +12,6 @@ import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -27,16 +26,25 @@ import java.util.stream.Collectors;
 @Slf4j
 @Component
 @Transactional()
-public class RelationalService implements ServiceContainerBean, InitializingBean, DisposableBean {
+public class RelationalService implements InitializingBean, DisposableBean {
     private static final String IDENTIFIER_PATTERN = "[a-z][a-z_0-9]{%d,%d}";
-    @Autowired
-    private SqlService db;
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-    @Autowired
-    private OreSiRepository repository;
+    private final SqlService db;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final OreSiRepository repository;
+    private final ServiceContainer serviceContainer;
     @Value("${viewStrategy:DISABLED}")
     private ViewStrategy viewStrategy;
+
+    public RelationalService(
+            SqlService db,
+            NamedParameterJdbcTemplate namedParameterJdbcTemplate,
+            OreSiRepository repository,
+            ServiceContainer serviceContainer) {
+        this.db = db;
+        this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
+        this.repository = repository;
+        this.serviceContainer = serviceContainer;
+    }
 
     public static Predicate<String> getIsValidIdentifierPattern(int min, int max) {
         int min1 = min > 0 ? min : 1;
@@ -345,11 +353,6 @@ public class RelationalService implements ServiceContainerBean, InitializingBean
                 """.formatted(schema.getSqlIdentifier());
         log.info(formatted);
         db.dropSchema(schema);
-    }
-
-    @Override
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-
     }
 
 

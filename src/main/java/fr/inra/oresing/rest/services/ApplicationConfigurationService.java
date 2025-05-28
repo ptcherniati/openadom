@@ -37,12 +37,14 @@ public class ApplicationConfigurationService {
 
     public static Application unzipConfiguration(final MultipartFile file, ReactiveProgression.CreateApplicationProgression fluxSink) throws IOException {
         InputStream inputStream = MultiYaml.parseConfigurationBytes(file);
-        return ApplicationConfigurationService.parseConfigurationBytes(null,
+        return ApplicationConfigurationService.parseConfigurationBytes(
+                "", "",
                 fluxSink,
                 FileBomResolver.of(inputStream));
     }
 
     public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(
+            final String applicationName,
             final String comment,
             P progression,
             final FileBomResolver fileBomResolver) {

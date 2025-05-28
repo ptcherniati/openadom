@@ -22,7 +22,6 @@ import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -46,7 +45,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1")
-public class AuthorizationResources implements ServiceContainerBean {
+public class AuthorizationResources {
 
     public static final String AUTHORIZATION_ID = "authorizationId";
     private final HealthEndpoint healthEndpoint;
@@ -59,11 +58,17 @@ public class AuthorizationResources implements ServiceContainerBean {
 
     private final OreSiRepository repo;
 
-    public AuthorizationResources(HealthEndpoint healthEndpoint, UserRepository userRepository, OreSiApiRequestContext request, OreSiRepository repo) {
+    public AuthorizationResources(
+            HealthEndpoint healthEndpoint,
+            UserRepository userRepository,
+            ServiceContainer serviceContainer,
+            OreSiApiRequestContext request,
+            OreSiRepository repo) {
         this.healthEndpoint = healthEndpoint;
         this.userRepository = userRepository;
         this.request = request;
         this.repo = repo;
+        this.serviceContainer = serviceContainer;
     }
 
 

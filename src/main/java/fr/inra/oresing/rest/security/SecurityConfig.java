@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
@@ -53,13 +54,14 @@ public class SecurityConfig {
     /**/
     @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
-            AuthorizationService authorizationService) {
+            PermissionEvaluator applicationPermissionEvaluator) {
         DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
-        handler.setPermissionEvaluator(new ApplicationPermissionEvaluator(authorizationService));
+        handler.setPermissionEvaluator(applicationPermissionEvaluator);
         return handler;
     }
 
     @Bean
+    @Lazy
     public PermissionEvaluator applicationPermissionEvaluator(
             AuthorizationService authorizationService
     ) {

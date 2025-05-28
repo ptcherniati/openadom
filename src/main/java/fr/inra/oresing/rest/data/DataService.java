@@ -48,7 +48,6 @@ import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
 import fr.inra.oresing.rest.model.data.LineCheckerResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -76,7 +75,7 @@ import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @Component
-public class DataService implements ServiceContainerBean {
+public class DataService {
     public static final String OPEN_ADOM_CLIENT_GROOVY = "OpenAdomClient.groovy";
     public static final String OPEN_ADOM_CLIENT_CONFIGURATION_JSON = "openAdom-client-configuration.json";
     public static final String README_FILE_NAME = "LISEZ-MOI.txt";
@@ -84,16 +83,23 @@ public class DataService implements ServiceContainerBean {
     public static final String SETUP_SCRIPT_NAME = "setup.sh";
     @Setter
     ServiceContainer serviceContainer;
-    @Autowired
-    private OreSiRepository repo;
-    @Autowired
-    private JsonRowMapper jsonRowMapper;
+    private final OreSiRepository repo;
+    private final JsonRowMapper jsonRowMapper;
+    private final OreSiRepository repository;
+    private final FileRepository fileRepository;
 
-    private DataRepository dataRepository;
-    @Autowired
-    private OreSiRepository repository;
-    @Autowired
-    private FileRepository fileRepository;
+    public DataService(
+            OreSiRepository repo,
+            JsonRowMapper jsonRowMapper,
+            OreSiRepository repository,
+            FileRepository fileRepository,
+            ServiceContainer serviceContainer) {
+        this.repo = repo;
+        this.jsonRowMapper = jsonRowMapper;
+        this.repository = repository;
+        this.fileRepository = fileRepository;
+        this.serviceContainer = serviceContainer;
+    }
 
     private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription) {
         final String reference = referenceDynamicColumnDescription.reference();
@@ -500,7 +506,7 @@ public class DataService implements ServiceContainerBean {
                 .isPresent()) {
             return Flux.empty();
         }
-        dataRepository = getDataRepository(downloadDatasetQuery);
+        DataRepository dataRepository = getDataRepository(downloadDatasetQuery);
         serviceContainer.authenticationService().setRoleForClient();
         return dataRepository.findAllByDataTypeFlux(downloadDatasetQuery)
                 .map(dataRows -> DataRow
@@ -562,7 +568,7 @@ public class DataService implements ServiceContainerBean {
     }
 
     public Boolean getDataFromStoredCsvStream(ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
-        dataRepository = repo.getRepository(application).data();
+        DataRepository dataRepository = repo.getRepository(application).data();
         Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
         return storedData
@@ -583,6 +589,7 @@ public class DataService implements ServiceContainerBean {
     }
 
     public DataRepositoryForBuffer getDataRepositoryWithBuffer(Application application) {
+        final DataRepository dataRepository = repository.getRepository(application).data();
         return new DataRepositoryWithBuffer(application, dataRepository);
     }
 

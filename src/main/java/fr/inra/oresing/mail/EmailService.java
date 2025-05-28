@@ -7,7 +7,6 @@ import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,7 +22,7 @@ import static fr.inra.oresing.mail.EmailService.UPLOAD_STATE.UNPUBLISHED;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService implements Email, ServiceContainerBean {
+public class EmailService implements Email {
     public static final String OPENADOM_INRAE_FR = "openadom@inrae.fr";
     public static final String MSG_ERROR_SUBJECT_FR = "Une erreur c'est produite lors de  l'opération sur le type de   données % de l'application %s";
     public static final String MSG_ERROR_SUBJECT_EN = "An error occurred while operating on data type % of application %s";
@@ -98,12 +97,18 @@ public class EmailService implements Email, ServiceContainerBean {
             "Bonjour %1$s%n%n" +
                     "%2$s%n" +
                     "L'équipe d'OpenAdom";
-    @Autowired
     private final JavaMailSender mailSender;
+    private final ServiceContainer serviceContainer;
     @Value("${spring.mail.from}")
     String mailFrom;
-    @Autowired
     private LocaleResolver localeResolver;
+
+    @Autowired
+    public EmailService(JavaMailSender mailSender, LocaleResolver localeResolver, ServiceContainer serviceContainer) {
+        this.mailSender = mailSender;
+        this.localeResolver = localeResolver;
+        this.serviceContainer = serviceContainer;
+    }
 
     @Override
     public void sendEmail(final String login, final String to, final String subject, final String message) {
@@ -119,11 +124,6 @@ public class EmailService implements Email, ServiceContainerBean {
     public void sendEmailValidation(final String login, final String email, final String verificationKey, final MESSAGES messages) {
         String message = String.format(MAIL_VERIFICATION_TEMPLATE, verificationKey, messages.title_fr, messages.title_en);
         sendEmail(login, email, messages.subject, message);
-    }
-
-    @Override
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-
     }
 
     @Override

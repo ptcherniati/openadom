@@ -45,7 +45,7 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class AdditionalFileService implements ServiceContainerBean {
+public class AdditionalFileService {
     public static final String CHARTE = "__charte__";
     @Value("classpath:charte/default_charte.pdf")
     Resource defaultCharte;
@@ -53,13 +53,21 @@ public class AdditionalFileService implements ServiceContainerBean {
     @Setter
     private ServiceContainer serviceContainer;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private OreSiRepository repository;
-    @Autowired
-    private RepositoryEntityLinks repositoryEntityLinks;
+    private final OreSiRepository repository;
+    private final RepositoryEntityLinks repositoryEntityLinks;
+
+    public AdditionalFileService(
+            UserRepository userRepository,
+            ServiceContainer serviceContainer,
+            OreSiRepository repository,
+            RepositoryEntityLinks repositoryEntityLinks) {
+        this.userRepository = userRepository;
+        this.repository = repository;
+        this.repositoryEntityLinks = repositoryEntityLinks;
+        this.serviceContainer = serviceContainer;
+    }
 
     @Transactional
     void addAdditionalfile(final Application application, final String refType, final MultipartFile file, final UUID fileId) {

@@ -138,7 +138,7 @@ public record DataRepositoryWithBuffer(
             }
 
 
-            Map<String, String> data = repository.findHierarchicalKeysByKeyForReferenceTypes(parents);
+            Map<String, String> data = repository().findHierarchicalKeysByKeyForReferenceTypes(parents);
             saveToDisk(filePrefix, data, this::dataToStreamHierarchical);
             return streamProcessor.apply(validateAndProcessStream(dataToStreamHierarchical(data), 3));
         }

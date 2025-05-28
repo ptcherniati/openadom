@@ -93,7 +93,7 @@ public class DownloadDatasetQuery {
                     downloadDatasetQuery.isHorizontalDisplay()
             );
         }
-        if (CollectionUtils.isNotEmpty(downloadDatasetQuery.rowIds)) {
+        if (CollectionUtils.isNotEmpty(downloadDatasetQuery.getRowIds())) {
             return new DownloadDatasetQueryByRowId(
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
@@ -115,6 +115,7 @@ public class DownloadDatasetQuery {
                                     .collect(Collectors.toSet())
                             ).orElse(null),
                     downloadDatasetQuery.rowIds.stream()
+                            .filter(Objects::nonNull)
                             .map(UUID::fromString)
                             .map(DataRowIds::new)
                             .collect(Collectors.toSet()),

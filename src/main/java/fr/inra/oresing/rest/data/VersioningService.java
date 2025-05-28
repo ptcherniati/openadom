@@ -22,10 +22,7 @@ import fr.inra.oresing.rest.data.publication.*;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,15 +35,18 @@ import java.util.function.Function;
 @Component
 @Transactional(readOnly = true)
 
-public class VersioningService implements ServiceContainerBean {
-    @Setter
-    private ServiceContainer serviceContainer;
-    @Autowired
-    private OreSiRepository repository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private JsonRowMapper jsonRowMapper;
+public class VersioningService {
+    private final ServiceContainer serviceContainer;
+    private final OreSiRepository repository;
+    private final UserRepository userRepository;
+    private final JsonRowMapper jsonRowMapper;
+
+    public VersioningService(ServiceContainer serviceContainer, OreSiRepository repository, UserRepository userRepository, JsonRowMapper jsonRowMapper) {
+        this.serviceContainer = serviceContainer;
+        this.repository = repository;
+        this.userRepository = userRepository;
+        this.jsonRowMapper = jsonRowMapper;
+    }
 
     @Transactional
     public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, MultipartFile file, String params, boolean beforeDelete) throws IOException {
@@ -61,7 +61,6 @@ public class VersioningService implements ServiceContainerBean {
                 .map(ApplicationDataWriter.class::cast)
                 .orElse(null);
 
-        DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
         State state = getStoreFile(application, dataName, fileOrUUIDOpt.orElse(null), fileName, applicationDataWriter)
                 .loadOrCreateFile(file, binaryFileRepository(application), serviceContainer.binaryFileService());
         EmailService.UPLOAD_STATE uploadState;

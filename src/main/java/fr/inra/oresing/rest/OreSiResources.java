@@ -65,7 +65,6 @@ import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
 import fr.inra.oresing.rest.services.RelationalService;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
@@ -115,7 +114,7 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
-public class OreSiResources implements ServiceContainerBean {
+public class OreSiResources {
     public static final String HEADER_ACCEPT_LANGUAGE = "Accept-Language";
     public static final String JS_UNDEFINED = "undefined";
     public static final String NOT_FOUND_DATA_NAME = "notFoundDataName";
@@ -153,14 +152,23 @@ public class OreSiResources implements ServiceContainerBean {
     public static final String BAD_BUNDLE = "Erreur lors de la création du bundle de téléchargement";
     public static final String BUNDLE_NAME = "%s-upload-bundle.zip";
     public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
-    @Autowired
+    final
     LocaleResolver localeResolver;
     @Setter
     private ServiceContainer serviceContainer;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private OreSiApiRequestContext request;
+    private final UserRepository userRepository;
+    private final OreSiApiRequestContext request;
+
+    public OreSiResources(
+            LocaleResolver localeResolver,
+            UserRepository userRepository,
+            OreSiApiRequestContext request,
+            ServiceContainer serviceContainer) {
+        this.localeResolver = localeResolver;
+        this.userRepository = userRepository;
+        this.request = request;
+        this.serviceContainer = serviceContainer;
+    }
 
     public static Locale getDefaultLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -1183,9 +1191,11 @@ public class OreSiResources implements ServiceContainerBean {
                     .map(DownloadDatasetQuery::getOutPut)
                     .map(OutPut::locale)
                     .orElseGet(OreSiResources::getDefaultLocale);
-            /*Optional.of(downloadDatasetQuery.getOutPut())
+            Optional.of(downloadDatasetQuery)
+                    .map(DownloadDatasetQuery::getOutPut)
+                    .or(()-> Optional.of(new OutPut(locale, null, null)))
                     .map(outPut -> new OutPut(locale, outPut.offset(), outPut.limit()))
-                    .ifPresent(downloadDatasetQuery::setOutPut);*/
+                    .ifPresent(downloadDatasetQuery::setOutPut);
             return DownloadDatasetQuery.build(downloadDatasetQuery);
         } catch (final Exception e) {
             throw new BadDownloadDatasetQuery(e.getMessage());

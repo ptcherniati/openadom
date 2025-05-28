@@ -41,13 +41,14 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     private final OreSiRepository repository;
 
     @Setter
-    private ServiceContainer serviceContainer;
+    private final ServiceContainer serviceContainer;
     private final AuthenticationService authenticationService;
     private final OreSiApiRequestContext request;
     private final JsonRowMapper<?> jsonRowMapper;
 
-    public BinaryFileService(OreSiRepository repository, AuthenticationService authenticationService, OreSiApiRequestContext request, JsonRowMapper jsonRowMapper) {
+    public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, OreSiApiRequestContext request, JsonRowMapper jsonRowMapper) {
         this.repository = repository;
+        this.serviceContainer = serviceContainer;
         this.authenticationService = authenticationService;
         this.request = request;
         this.jsonRowMapper = jsonRowMapper;
