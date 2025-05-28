@@ -73,6 +73,19 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
         }
         return new ApplicationDataReaderUser(application());
     }
+    public ApplicationDataReaderUser forDataReadSome() {
+        if(authorizations().isApplicationManager() || authorizations().isUserManager()) {
+            return new ApplicationDataReaderUser(application());
+        }
+        if (Optional.of(authorizations())
+                .map(AuthorizationsForApplicationUser::roles)
+                .stream()
+                .flatMap(List::stream)
+                .noneMatch("writer"::equals)) {
+            throw new NotApplicationDataReaderException(application().getName());
+        }
+        return new ApplicationDataReaderUser(application());
+    }
 
     public Map<AuthorizationsForUserResult.Roles, Boolean> getAuthorizationsForUser(String dataName) {
         Map<AuthorizationsForUserResult.Roles, Boolean> roleForDatatype = new HashMap<>();

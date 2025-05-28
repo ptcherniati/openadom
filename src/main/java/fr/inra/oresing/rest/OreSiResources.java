@@ -578,12 +578,10 @@ public class OreSiResources {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ_SOME')")
     public ResponseEntity<List<String>> listData(@PathVariable("nameOrId") final String nameOrId) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
         List<String> allDataNames = application.getAllDataNames();
-
-
         return ResponseEntity.ok(allDataNames);
     }
 

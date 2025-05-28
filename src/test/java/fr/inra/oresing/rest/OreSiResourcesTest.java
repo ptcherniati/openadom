@@ -142,7 +142,7 @@ public class OreSiResourcesTest {
 
     public static void registerFile(final String filePath, final String jsonContent) throws IOException {
         final File errorsFile = new File(filePath);
-        log.debug(errorsFile.getAbsolutePath());
+        log.debug("register file %s".formatted(errorsFile.getAbsolutePath()));
         final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
         writer.write(jsonContent);
         writer.close();
@@ -258,7 +258,101 @@ public class OreSiResourcesTest {
                 }),
                 dynamicContainer("chargement de MONSOERE",
                         loadMonsore()
-                )
+                ),
+                dynamicContainer("vérification des chargements et enregitrement des résultats",
+                        checkAndRegisterresults()
+                )/*,
+                dynamicTest("delete pem", () -> {
+
+                    final String filterPattern = """
+                                {
+                                  "offset": null,
+                                  "limit": 10,
+                                  "componentSelects": [],
+                                  "componentFilters": [
+                                    {
+                                      "componentKey": {
+                                        "variable": "Nombre d'individus",
+                                        "component": "value"
+                                      },
+                                      "filter": %1$s,
+                                      "type": "numeric",
+                                      "format": "integer",
+                                      "intervalValues": %2$s,
+                                      "isRegExp": null
+                                    }
+                                  ],
+                                  "componentOrderBy": [],
+                                  "authorizationDescriptions": []
+                                }
+                            """;
+                    final String filter = filterPattern.formatted(null, "{\"from\":\"15\",\"to\":\"15\"}");
+                    mockMvc.perform(delete("/api/v1/applications/monsoresimple/data/pem").with(csrf().asHeader())
+                                    .param("downloadDatasetQuery", filter)
+                                    .cookie(monsoresimpleConnection.cookie()))
+                            .andExpect(status().is2xxSuccessful())
+                            .andDo(result -> {
+                                String[] uuids = result.getResponse().getContentAsString().split(",");
+                                final int expectedUUIDs = 24;
+                                Assertions.assertEquals(expectedUUIDs, uuids.length, String.format("On attend %d lignes; la requête en renvoie %d", expectedUUIDs, uuids.length));
+
+                            });
+                }),
+                dynamicTest("authorizations", () ->
+                        mockMvc.perform(get("/api/v1/applications/monsoresimple/authorization")
+                                        .cookie(withRightsUserConnection.cookie())
+                                        .accept(MediaType.APPLICATION_JSON))
+                                .andExpect(status().is2xxSuccessful())
+                                .andReturn().getResponse().getContentAsString()
+                ),
+                dynamicTest("grantables", () ->
+                        mockMvc.perform(get("/api/v1/applications/monsoresimple/grantable")
+                                        .cookie(withRightsUserConnection.cookie())
+                                        .accept(MediaType.APPLICATION_JSON))
+                                .andExpect(status().is2xxSuccessful())
+                                .andReturn().getResponse().getContentAsString()
+                )*/
+        );
+    }
+
+    private Stream<? extends DynamicNode> checkAndRegisterresults() {
+        return Stream.of(
+                dynamicTest("check and load Configuration",
+                        () -> {
+
+                            String getMonsoere = mockMvc.perform(get("/api/v1/applications/monsoresimple")
+                                            .cookie(monsoresimpleConnection.cookie())
+                                            .accept(MediaType.APPLICATION_JSON))
+                                    .andExpect(status().is2xxSuccessful())
+                                    .andReturn().getResponse().getContentAsString();
+                            registerFile("ui/cypress/fixtures/applications/ore/monsore/monsoere.json", getMonsoere);
+                        }),
+                dynamicContainer("check and load References",
+                        Fixtures.getMonsoreReferentielFiles()
+                                .entrySet().stream()
+                                .map(entry ->
+                                        dynamicTest(
+                                                "check and load Reference %s".formatted(entry.getKey()),
+                                                () -> {
+                                                    String getReference = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/{reference}/json", entry.getKey())
+                                                                    .cookie(monsoresimpleConnection.cookie())
+                                                                    .accept(MediaType.APPLICATION_JSON))
+                                                            .andExpect(status().is2xxSuccessful())
+                                                            .andReturn().getResponse().getContentAsString();
+                                                    registerFile("ui/cypress/fixtures/applications/ore/monsore/references/%s.json".formatted(entry.getKey()), getReference);
+                                                }
+                                        )
+                                )
+                ),
+                dynamicTest("check and load pem",
+                        () -> {
+                            String getPem = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
+                                            .cookie(monsoresimpleConnection.cookie())
+                                            .accept(MediaType.APPLICATION_JSON))
+                                    .andExpect(status().is2xxSuccessful())
+                                    .andReturn().getResponse().getContentAsString();
+                            registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json", getPem);
+                        })
         );
     }
 
@@ -658,7 +752,7 @@ public class OreSiResourcesTest {
                                                                             .andReturn().getResponse().getContentAsString();
                                                                 })
                                                         )),
-                                                dynamicTest("extraction d'un zip",()->{
+                                                dynamicTest("extraction d'un zip", () -> {
                                                     final String expectedCsv = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsore/compare/export.csv")), StandardCharsets.UTF_8);
                                                     mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/zip")
                                                                             .cookie(monsoresimpleConnection.cookie())
@@ -675,7 +769,7 @@ public class OreSiResourcesTest {
                                                                     "references/sites.csv")
                                                             ));
                                                 }),
-                                                dynamicTest("test d'un fichier en erreur",()->{
+                                                dynamicTest("test d'un fichier en erreur", () -> {
                                                     try (final InputStream in = getClass().getResourceAsStream(Fixtures.getPemDataResourceName())) {
                                                         final String csv = IOUtils.toString(Objects.requireNonNull(in), StandardCharsets.UTF_8);
                                                         final String invalidCsv = csv
@@ -705,500 +799,6 @@ public class OreSiResourcesTest {
 
         );
 
-
-    }
-
-    @Test
-    @Tag("OTHERS_TEST")
-    @Tag("app.monsoere")
-    @Tag("MONSOERE")
-    public void addApplicationMonsore() throws Exception {
-        final String appId;
-        monsoresimpleConnection = fixtures.createUserForUserDefinition(monsoresimple, true, false);
-        withRightsUserConnection = fixtures.createUserForUserDefinition(withRightsUser, true, false);
-        testPublic();
-
-        URL resource = getClass().getResource(Fixtures.getMonsoreApplicationConfigurationResourceName());
-        try (final InputStream in = Objects.requireNonNull(resource).openStream()) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "monsoresimple.yaml", "text/plain", in);
-
-            // on n'a pas le droit de creer de nouvelle application
-            NotApplicationCreatorRightsException resolvedException =
-                    (NotApplicationCreatorRightsException) fixtures.loadApplicationWithError(
-                            configuration,
-                            monsoresimpleConnection.cookie(),
-                            "monsoresimple"
-                    );
-            fixtures.addUserRightCreateApplication(monsoresimpleConnection.userResult().userId(), "monsoresimple");
-            assert resolvedException != null;
-
-            final MvcResult resultApplication = fixtures.loadApplication(configuration, monsoresimpleConnection.cookie(), "monsoresimple", "");
-            appId = fixtures.getIdFromApplicationResult(resultApplication);
-        } catch (final Throwable e) {
-            log.error(e.getMessage(), e);
-            throw new OreSiTechnicalException(e.getMessage(), e);
-        }
-
-        String response = mockMvc.perform(get("/api/v1/applications/{appId}", appId)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .param("filter", "ALL")
-                        .cookie(monsoresimpleConnection.cookie()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                // id
-                .andExpect(jsonPath("$.id", Is.is(appId)))
-                .andReturn().getResponse().getContentAsString();
-
-        final ApplicationResult applicationResult = (ApplicationResult) jsonRowMapper.readValue(response, ApplicationResult.class);
-
-        Assertions.assertEquals("Fichier de test de l'application brokenADOM version initiale", applicationResult.comment());
-        Assertions.assertEquals("monsoresimple", applicationResult.name());
-        Assertions.assertEquals(new TreeSet<>(Set.of("themes", "especes", "site_theme_datatype", "variables", "type_de_sites", "unites", "projet", "valeurs_qualitatives", "type_de_fichiers", "variables_et_unites_par_types_de_donnees")), new TreeSet<>(applicationResult.references().keySet()));
-        Assertions.assertEquals(Set.of("pem"), ((LinkedHashMap) applicationResult.dataTypes()).keySet());
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : Fixtures.getMonsoreReferentielEspecestoTrimFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-
-
-                response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(monsoresimpleConnection.cookie()))
-                        .andExpect(status().isCreated())
-                        .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                        .andReturn().getResponse().getContentAsString();
-
-                JsonPath.parse(response).read("$.id");
-            }
-        }
-        //test de la reference especetoTrim
-         mockMvc.perform(get("/api/v1/applications/monsoresimple/data/especes/json")
-                        .contentType(MediaType.APPLICATION_JSON)
-                         .locale(Locale.FRENCH)
-                        .cookie(monsoresimpleConnection.cookie()))
-                .andExpect(status().isOk())
-                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.rows[*][?(@.hierarchicalKey=='especesKlpf')].values.esp_definition_fr", IsNull.notNullValue()))
-                //la colonne "esp_nom" et la colonne "esp_definition_fr"  ont bien été lues sans espaces
-                .andExpect(jsonPath("$.rows[*][?(@.hierarchicalKey=='especesKlpf')].values.esp_definition_fr", hasItem("LPF")))
-                //les valeurs de la colonne "esp_definition_fr"  ont bien été lues sans espaces
-                .andReturn().getResponse().getContentAsString();
-
-        // Ajout de referentiel
-        {
-            for (final Map.Entry<String, String> e : Fixtures.getMonsoreReferentielFiles().entrySet()) {
-                try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                    final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                    response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/{refType}", e.getKey())
-                                    .file(refFile)
-                                    .cookie(monsoresimpleConnection.cookie()).with(csrf().asHeader()))
-                            .andDo(result -> {
-                                final int status = result.getResponse().getStatus();
-                                if (status > 300) {
-                                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                                }
-                            })
-                            .andExpect(status().isCreated())
-                            .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                            .andReturn().getResponse().getContentAsString();
-
-                    JsonPath.parse(response).read("$.id");
-                }
-            }
-            mockMvc.perform(get("/api/v1/applications/{appId}", appId)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .param("filter", "ALL")
-                            .cookie(monsoresimpleConnection.cookie()))
-                    .andExpect(status().isOk());
-
-            final String getReferencesResponse = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/sites/json")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .cookie(monsoresimpleConnection.cookie()))
-                    .andExpect(status().isOk())
-                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-                    //.andExpect(jsonPath("$.totalRows", is(9)))
-                    .andExpect(jsonPath("$.rows", hasSize(9)))
-                    .andReturn().getResponse().getContentAsString();
-
-            mockMvc.perform(
-                            asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsoresimple/data/sites/csv")
-                                            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                                            .cookie(monsoresimpleConnection.cookie()))
-                                    .andExpect(status().isOk())
-                                    .andExpect(request().asyncStarted())
-                                    .andReturn()
-                            )
-                    )
-                    .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_OCTET_STREAM))
-                    .andExpect(result -> {
-                        final List<String> expected = """
-                                "tze_type_nom";"zet_chemin_parent";"definition";"Site name";"zet_nom_key"
-                                "Watershed";"";"Oir catchment";"Oir";"oir"
-                                "Watershed";"";"Watershed Nivelle";"Nivelle";"nivelle"
-                                "Watershed";"";"Watershed Scarff";"Scarff";"scarff"
-                                "Platform";"- Oir";"";"P2";"p2"
-                                "Platform";"- Oir";"";"P1";"p1"
-                                "Platform";"NULL_KEY__oir - P1";"";"A";"a"
-                                "Platform";"NULL_KEY__oir - P1";"";"B";"b"
-                                "Platform";"- Nivelle";"";"P1";"p1"
-                                "Platform";"- Scarff";"";"P1";"p1\""""
-                                .lines().collect(Collectors.toCollection(LinkedList::new));
-                        final List<String> actual = new String(result.getResponse().getContentAsByteArray())
-                                .lines().collect(Collectors.toCollection(LinkedList::new));
-                        Assertions.assertEquals(expected, actual, "Bad site.csv ");
-                    });
-        }
-        resource = getClass().getResource(Fixtures.getPemDataResourceName());
-
-        try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/{refType}", "pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(monsoresimpleConnection.cookie()))
-                    .andExpect(status().isCreated())
-                    .andExpect(jsonPath("$.id", IsNull.notNullValue()))
-                    .andReturn().getResponse().getContentAsString();
-
-            JsonPath.parse(response).read("$.id");
-        }
-
-        try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-            // sans droit on ne peut pas
-            Assertions.assertInstanceOf(NotApplicationDataWriterException.class, mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(withRightsUserConnection.cookie()))
-                    .andDo(result -> {
-                        final int status = result.getResponse().getStatus();
-                        if (status > 300) {
-                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                        }
-                    })
-                    .andExpect(status().is4xxClientError())
-                    .andReturn().getResolvedException());
-            //ajout de droits withRignesthsUserId
-            if (true) {// TODO remove
-                return;
-            }
-
-            String jsonRightsForMonsoere = getJsonRightsForAll(withRightsUserConnection.userResult().userId().toString(),
-                    List.of(OperationType.publication.name()),
-                    "monsoresimple",
-                    "pem",
-                    monsoresimpleConnection.cookie());
-            String jsonRightsForMonsoereId = JsonPath.parse(jsonRightsForMonsoere).read("$.authorizationId");
-            //avec les droits on peut publier
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(monsoresimpleConnection.cookie()/*withRightsUserConnection.cookie()*/))
-                    .andDo(result -> {
-                        final int status = result.getResponse().getStatus();
-                        if (status > 300) {
-                            System.out.println(result.getResolvedException().getMessage());
-                        }
-                    })
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-
-
-            //sans droit on ne peut pas
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(fixtures.lambdaConnection.cookie()))
-                    .andExpect(status().is4xxClientError())
-                    .andReturn().getResponse().getContentAsString();
-
-            //ajout de droits public
-            String publicRightsId = JsonPath.parse(setJsonRightsForMonsoere(monsoresimpleConnection.cookie(), "9032ffe5-bfc1-453d-814e-287cd678484a", OperationType.publication.name(), "pem")).read("$.authorizationId");
-
-
-            //avec les droits public on peut publier même sans droit
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(fixtures.lambdaConnection.cookie()))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-
-            // on supprime les droits public
-            mockMvc.perform(delete("/api/v1/applications/monsoresimple/authorization/" + publicRightsId).with(csrf().asHeader())
-                            .cookie(monsoresimpleConnection.cookie()))
-                    .andExpect(status().is2xxSuccessful());
-
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(fixtures.lambdaConnection.cookie()))
-                    .andExpect(status().is4xxClientError())
-                    .andReturn().getResponse().getContentAsString();
-
-
-        }
-        // ajout de data avec trim à faire
-        resource = getClass().getResource(Fixtures.getPemDataToTrimResourceName());
-        try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(withRightsUserConnection.cookie()))
-                    .andExpect(status().is2xxSuccessful())
-                    .andReturn().getResponse().getContentAsString();
-            final String actualJson = getPemData("monsoresimple", monsoresimpleConnection.cookie());
-        }
-        final String contentAsString = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
-                        .cookie(monsoresimpleConnection.cookie()))
-                .andExpect(jsonPath("$.rows[*].values" +
-                                    "[?(@.projet.value=='projet_atlantique' )]" +
-                                    "[?(@.date.value=='date:1984-01-01T00:00:00:dd/MM/yyyy' )]" +
-                                    "[?(@.site.chemin=='plateforme.nivelle.nivelle__p1' )]" +
-                                    "[?(@.espece.value=='lpf' )]" +
-                                    "[?(@['Couleur des individus'].value=='couleur_des_individus__bleu' )]" +
-                                    "['Nombre d\\'individus'].value",
-                        hasItems(54)))
-                .andReturn().getResponse().getContentAsString();
-
-        net.minidev.json.JSONArray rowIds = JsonPath.parse(contentAsString)
-                .read("$.rows[0,1].rowId");
-        final List<String> filterByRowId = new LinkedList<>();
-        for (Object rowId : rowIds) {
-            filterByRowId.add(rowId.toString());
-        }
-
-        final String query = String.format("""
-                        {
-                          "rowIds": [%s]
-                        }""",
-                filterByRowId.stream()
-                        .map(s -> String.format("""
-                                "%s"
-                                """, s))
-                        .collect(Collectors.joining(",")));
-        mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
-                        .param("downloadDatasetQuery", query)
-                        .cookie(monsoresimpleConnection.cookie()))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.rows.length()", equalTo(2)))
-                .andExpect(jsonPath("$.rows[*].rowId", hasItems(filterByRowId.get(0), filterByRowId.get(1))))
-                .andReturn().getResponse().getContentAsString();
-
-        //récupération du data
-
-        try (final InputStream pem = getClass().getResourceAsStream(Fixtures.getPemDataResourceName())) {
-            final String data = IOUtils.toString(Objects.requireNonNull(pem), StandardCharsets.UTF_8);
-            final String wrongData = data.replace("plateforme", "entete_inconnu");
-            final byte[] bytes = wrongData.getBytes(StandardCharsets.UTF_8);
-            final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", bytes);
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(monsoresimpleConnection.cookie()))
-                    .andExpect(status().isBadRequest())
-                    .andReturn().getResponse().getContentAsString();
-
-        } catch (final IOException e) {
-            throw new OreSiTechnicalException("impossible de lire le fichier de test", e);
-        }
-
-        // list des types de data
-        response = mockMvc.perform(get("/api/v1/applications/monsoresimple/data")
-                        .cookie(monsoresimpleConnection.cookie()))
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString();
-
-
-        {
-            final String expectedJson = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.json")), StandardCharsets.UTF_8);
-            final JSONArray jsonArray = new JSONArray(expectedJson);
-            final List<String> list = new ArrayList<>();
-
-            final String actualJson = getPemData("monsoresimple", monsoresimpleConnection.cookie());
-        }
-        String filter = """
-                {
-                  "componentFilters": [
-                    {
-                      "componentKey": {
-                        "variable": "date",
-                        "component": "value"
-                      },
-                      "intervalValues": {
-                        "from": "01/01/1984",
-                        "to": "02/01/1984"
-                      }
-                    },
-                    {
-                      "componentKey": {
-                        "variable": "Nombre d'individus",
-                        "component": "value"
-                      },
-                      "intervalValues": {
-                        "from": 20,
-                        "to": 29
-                      }
-                    },
-                    {
-                      "componentKey": {
-                        "variable": "Couleur des individus",
-                        "component": "value"
-                      },
-                      "filter": "couleur_des_individus__vert"
-                    }
-                  ],
-                  "componentOrderBy": [
-                    {
-                      "componentKey": {
-                        "variable": "site",
-                        "component": "plateforme"
-                      },
-                      "order": "ASC",
-                      "type": null,
-                      "format": null
-                    }
-                  ]
-                }""";
-        {
-            final String actualJson = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
-                            .cookie(monsoresimpleConnection.cookie())
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.rows", hasSize(272)))
-                    .andExpect(jsonPath("$.rows[*].values.date[?(@.value == 'date:1984-01-01T00:00:00:dd/MM/yyyy')]", hasSize(56)))
-                    .andExpect(jsonPath("$.rows[*].values['Nombre d\\'individus'][?(@.value ==25)]", hasSize(32)))
-                    .andExpect(jsonPath("$.rows[*].values['Couleur des individus'][?(@.value =='couleur_des_individus__vert')]", hasSize(96)))
-                    .andReturn().getResponse().getContentAsString();
-
-        }
-
-        // restitution de data csv
-        {
-            final String expectedCsv = Resources.toString(Objects.requireNonNull(getClass().getResource("/data/monsoresimple/compare/export.csv")), StandardCharsets.UTF_8);
-            mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/zip")
-                                    .cookie(monsoresimpleConnection.cookie())
-                                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
-                            .andExpect(status().isOk())
-                            .andExpect(request().asyncStarted())
-                            .andReturn()))
-                    .andExpect(testZip(List.of("pem.csv",
-                            "reference/especes.csv",
-                            "reference/type_de_sites.csv",
-                            "reference/unites.csv",
-                            "reference/projet.csv",
-                            "reference/valeurs_qualitatives.csv",
-                            "reference/sites.csv")
-                    ));
-        }
-
-        try (final InputStream in = getClass().getResourceAsStream(Fixtures.getPemDataResourceName())) {
-            final String csv = IOUtils.toString(Objects.requireNonNull(in), StandardCharsets.UTF_8);
-            final String invalidCsv = csv
-                    .replace("projet_manche", "projet_manch")
-                    .replace("projet_atlantique", "projet_atlantiqu");
-            final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", invalidCsv.getBytes(StandardCharsets.UTF_8));
-            response = mockMvc.perform(multipart("/api/v1/applications/monsoresimple/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(monsoresimpleConnection.cookie()))
-                    .andExpect(status().is4xxClientError())
-                    .andReturn().getResponse().getContentAsString();
-
-            Assertions.assertTrue(response.contains("projet_manch"));
-            Assertions.assertTrue(response.contains("projet_atlantiqu"));
-            final String finalResponse = response;
-            Assertions.assertTrue(() -> finalResponse.contains("41"), "Il faut mentionner les lignes en erreur");
-            Assertions.assertTrue(() -> finalResponse.contains("42"), "Il faut mentionner les lignes en erreur");
-            Assertions.assertTrue(() -> finalResponse.contains("43"), "Il faut mentionner les lignes en erreur");
-            Assertions.assertTrue(() -> finalResponse.contains("10"), "Il faut mentionner les lignes en erreur");
-            Assertions.assertFalse(() -> finalResponse.contains("141"), "L'erreur doit être tronquée");
-            Assertions.assertFalse(() -> finalResponse.contains("142"), "L'erreur doit être tronquée");
-            Assertions.assertFalse(() -> finalResponse.contains("143"), "L'erreur doit être tronquée");
-        }
-        String getMonsoere = mockMvc.perform(get("/api/v1/applications/monsoresimple")
-                        .cookie(fixtures.adminConnection.cookie())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse().getContentAsString();
-        String getSites = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/sites")
-                        .cookie(monsoresimpleConnection.cookie())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        String getTypeSites = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/type_de_sites")
-                        .cookie(monsoresimpleConnection.cookie())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        String getProjet = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/projet")
-                        .cookie(monsoresimpleConnection.cookie())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        String getPem = mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
-                        .cookie(monsoresimpleConnection.cookie())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        mockMvc.perform(delete("/api/v1/applications/monsoresimple/data/pem").with(csrf().asHeader())
-                        .param("downloadDatasetQuery", filter)
-                        .cookie(monsoresimpleConnection.cookie()))
-                .andExpect(status().is2xxSuccessful())
-                .andDo(result -> {
-                    String[] uuids = result.getResponse().getContentAsString().split(",");
-                    final int expectedUUIDs = 24;
-                    Assertions.assertEquals(expectedUUIDs, uuids.length, String.format("On attend %d lignes; la requête en renvoie %d", expectedUUIDs, uuids.length));
-
-                });
-        // fix issue #165
-        final String filterPattern = """
-                    {
-                      "offset": null,
-                      "limit": 10,
-                      "componentSelects": [],
-                      "componentFilters": [
-                        {
-                          "componentKey": {
-                            "variable": "Nombre d'individus",
-                            "component": "value"
-                          },
-                          "filter": %1$s,
-                          "type": "numeric",
-                          "format": "integer",
-                          "intervalValues": %2$s,
-                          "isRegExp": null
-                        }
-                      ],
-                      "componentOrderBy": [],
-                      "authorizationDescriptions": []
-                    }
-                """;
-        /*filter = filterPattern.formatted("\"15\"", null);
-        mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
-                            .cookie(monsoresimpleConnection.cookie())
-                            .param("downloadDatasetQuery", filter)
-                            .accept(MediaType.APPLICATION_JSON))
-                    .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.rows", Matchers.not(Matchers.empty())));*/
-
-        filter = filterPattern.formatted(null, "{\"from\":\"15\",\"to\":\"15\"}");
-        mockMvc.perform(get("/api/v1/applications/monsoresimple/data/pem/json")
-                        .cookie(monsoresimpleConnection.cookie())
-                        .param("downloadDatasetQuery", filter)
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.rows", not(empty())));
-
-        String getAuthorizations = mockMvc.perform(get("/api/v1/applications/monsoresimple/authorization")
-                        .cookie(withRightsUserConnection.cookie())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        String getGrantable = mockMvc.perform(get("/api/v1/applications/monsoresimple/grantable")
-                        .cookie(withRightsUserConnection.cookie())
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().is2xxSuccessful())
-                .andReturn().getResponse().getContentAsString();
-        registerFile("ui/cypress/fixtures/applications/ore/monsore/monsoere.json", getMonsoere);
-        registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/pem.json", getPem);
-        registerFile("ui/cypress/fixtures/applications/ore/monsore/reference/type_de_sites.json", getTypeSites);
-        registerFile("ui/cypress/fixtures/applications/ore/monsore/reference/sites.json", getSites);
-        registerFile("ui/cypress/fixtures/applications/ore/monsore/reference/projet.json", getProjet);
-        registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/authorisation/grantable.json", getGrantable);
-        registerFile("ui/cypress/fixtures/applications/ore/monsore/datatypes/authorisation/authorizations.json", getAuthorizations);
 
     }
 
@@ -2287,26 +1887,26 @@ public class OreSiResourcesTest {
             Cookie authenticateCookie) throws Exception {
         Cookie authenticateCookie1 = authenticateCookie == null ? fixtures.adminConnection.cookie() : authenticateCookie;
         String json = String.format("""
-                {
-                   "usersId":["%6$s"],
-                   "uuid": null,
-                   "name": "une submissionScope sur monsore%7$s",
-                   "description": "une description de submissionScope sur monsore",
-                   "authorizationsWithRestriction":{
-                        "%1$s":{
-                               "operationTypes": ["%5$s"],
-                               "requiredAuthorizations":{
-                                     "projet":["projetKprojet_manche"],
-                                     "sites":["%2$s"]
-                                 },
-                                "timeScope":{
-                                   "format": "dd/MM/yyyy",
-                                   "fromDay": "%3$s",
-                                   "toDay": "%4$s"
-                                }
-                           }
-                      }
-                }""",
+                        {
+                           "usersId":["%6$s"],
+                           "uuid": null,
+                           "name": "une submissionScope sur monsore%7$s",
+                           "description": "une description de submissionScope sur monsore",
+                           "authorizationsWithRestriction":{
+                                "%1$s":{
+                                       "operationTypes": ["%5$s"],
+                                       "requiredAuthorizations":{
+                                             "projet":["projetKprojet_manche"],
+                                             "sites":["%2$s"]
+                                         },
+                                        "timeScope":{
+                                           "format": "dd/MM/yyyy",
+                                           "fromDay": "%3$s",
+                                           "toDay": "%4$s"
+                                        }
+                                   }
+                              }
+                        }""",
                 datatype,
                 localization,
                 from,
@@ -2338,15 +1938,15 @@ public class OreSiResourcesTest {
             Cookie authenticateCookie) throws Exception {
         Cookie authenticateCookie1 = authenticateCookie == null ? fixtures.adminConnection.cookie() : authenticateCookie;
         String json = String.format("""
-                {
-                   "usersId":["%3$s"],
-                   "uuid": null,
-                   "name": "une submissionScope sur monsore%4$s",
-                   "description": "une description de submissionScope sur monsore",
-                   "authorizationForAll":{
-                         "%1$s": ["%2$s"]
-                      }
-                }""",
+                        {
+                           "usersId":["%3$s"],
+                           "uuid": null,
+                           "name": "une submissionScope sur monsore%4$s",
+                           "description": "une description de submissionScope sur monsore",
+                           "authorizationForAll":{
+                                 "%1$s": ["%2$s"]
+                              }
+                        }""",
                 datatype,
                 String.join("\",\"", roles),
                 withRigthsUserId,

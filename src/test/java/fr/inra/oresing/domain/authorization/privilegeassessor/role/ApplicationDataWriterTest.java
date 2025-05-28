@@ -2,6 +2,9 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,11 +19,13 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 @Tag("core.auth")
@@ -31,6 +36,12 @@ class ApplicationDataWriterTest {
     public static AuthorizationParsed authorizationParsed;
     @Mock
     private static Application mockApplication;
+    @Mock
+    private static Configuration mockConfiguration;
+    @Mock
+    private static StandardDataDescription mockStandardDataDescription;
+    @Mock
+    private static Submission.SubmissionScope mockSubmissionScope;
     @Mock
     private FileOrUUID mockFileOrUUID;
 
@@ -89,6 +100,9 @@ class ApplicationDataWriterTest {
         when(mockApplication.getName()).thenReturn("Test Application");
         when(mockApplication.isData("testData")).thenReturn(false);
         when(mockFileOrUUID.binaryfiledataset()).thenReturn(mockBinaryFileDataset);
+        when(mockApplication.getConfiguration()).thenReturn(mockConfiguration);
+        when(mockConfiguration.findData(eq("testData"))).thenReturn(Optional.of(mockStandardDataDescription));
+        when(mockStandardDataDescription.findSubmissionScope()).thenReturn(Optional.of(mockSubmissionScope));
     }
 
     @ParameterizedTest(name = "{0} - Vérification des droits")

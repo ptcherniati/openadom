@@ -36,6 +36,7 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     public static final String APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE = "APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE";
     public static final String APPLICATION_ROLE_MANAGEMENT_FOR_DELETE = "APPLICATION_ROLE_MANAGEMENT_FOR_DELETE";
     public static final String APPLICATION_DATA_READ = "APPLICATION_DATA_READ";
+   public static final String APPLICATION_DATA_READ_SOME = "APPLICATION_DATA_READ_SOME";
     public static final String APPLICATION_DATA_WRITE = "APPLICATION_DATA_WRITE";
     public static final String APPLICATION_WRITE_FILE = "APPLICATION_WRITE_FILE";
     public static final String APPLICATION_DELETE_FILE = "APPLICATION_DELETE_FILE";
@@ -156,6 +157,11 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                             .map(authorizationService
                                     .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
                                     ::forDataRead);
+                    case String read when APPLICATION_DATA_READ_SOME.equals(read) ->
+                        Optional.of(authorizationService)
+                            .map(as->as
+                                    .getPrivilegeAssessorForApplication(PrivilegeApplicationDomainEnum.DATA_READ, applicationName)
+                                    .forDataReadSome());
                     case String read when APPLICATION_DATA_WRITE.equals(read) ->
                             dataNameOpt.flatMap(dataName -> OreSiApiRequestContext.getAuthentication()
                                     .map(OreSiAuthenticationToken::getFileOrUUID)
