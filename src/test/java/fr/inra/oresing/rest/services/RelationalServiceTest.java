@@ -5,12 +5,13 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.Fixtures;
 import fr.inra.oresing.rest.OreSiResourcesTest;
 import fr.inra.oresing.rest.ViewStrategy;
+import fr.inra.oresing.rest.fixtures.MonSoereFixture;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,11 +26,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -42,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class RelationalServiceTest {
+class RelationalServiceTest {
 
     @Autowired
     private RelationalService relationalService;
@@ -54,11 +50,11 @@ public class RelationalServiceTest {
     @Autowired
     private MockMvc mockMvc;
     @Autowired
+    private JsonRowMapper jsonRowMapper;
+    @Autowired
     private AuthenticationService authenticationService;
     @Autowired
     private UserRepository userRepository;
-
-
 
 
     @BeforeEach
@@ -69,7 +65,8 @@ public class RelationalServiceTest {
                 namedParameterJdbcTemplate,
                 authenticationService
         );
-        fixtures.addMonsoreApplication();
+        MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures, mockMvc, userRepository, jsonRowMapper);
+        monSoereFixture.addMonsoreApplication();
         //fixtures.addApplicationPRO();
         //fixtures.addApplicationOLAC();
         //fixtures.addApplicationFORET();
@@ -80,7 +77,7 @@ public class RelationalServiceTest {
 
     @Test
     @Tag("integration.persistence\n")
-    public void testCreateViews() {
+    void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
         final ImmutableSet<Fixtures.Application> applications = ImmutableSet
                 .of(

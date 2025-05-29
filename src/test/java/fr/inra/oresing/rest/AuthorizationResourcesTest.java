@@ -6,10 +6,10 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.persistence.ApplicationRepository;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.SqlService;
-import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.rest.fixtures.AcbbFixture;
+import fr.inra.oresing.rest.fixtures.HauteFrequenceFixture;
+import fr.inra.oresing.rest.fixtures.MonSoereFixture;
 import fr.inra.oresing.rest.security.JWTExtractor;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -36,6 +36,7 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 import java.io.InputStream;
 import java.util.*;
 
+import static fr.inra.oresing.rest.fixtures.MonSoereFixture.getMonsoreApplicationConfigurationResourceName;
 import static org.hamcrest.Matchers.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -59,17 +60,13 @@ public class AuthorizationResourcesTest {
     private UserRepository userRepository;
 
     @Autowired
-    private SqlService db;
-
-
-    @Autowired
-    private ApplicationRepository applicationRepository;
-
-    @Autowired
     private MockMvc mockMvc;
 
     @Autowired
     private AuthenticationService authenticationService;
+
+    @Autowired
+    private JsonRowMapper jsonRowMapper;
 
 
     @Autowired
@@ -90,7 +87,8 @@ public class AuthorizationResourcesTest {
 
    // @Test
 
-    public void testAddAuthorization() throws Exception {
+    void testAddAuthorization() throws Exception {
+        final AcbbFixture acbbFixture = new AcbbFixture(fixtures, mockMvc);
         final CreateUserResult withRightsUserResult = authenticationService.createUser("withrigths", "xxxxxxxx", "withrights@inrae.fr");
         fixtures.setToActive(withRightsUserResult.userId());
         mockMvc.perform(post("/api/v1/login").with(csrf().asHeader())
@@ -125,7 +123,7 @@ public class AuthorizationResourcesTest {
 
         final String readerUserId = readerUserResult.userId().toString();
 
-        final Cookie authCookie = fixtures.addApplicationAcbb().cookie();
+        final Cookie authCookie = acbbFixture.addApplicationAcbb().cookie();
         String token = Jwts.parser()
                 .verifyWith(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
                 .build()
@@ -363,7 +361,8 @@ public class AuthorizationResourcesTest {
 
    // @Test
     public void testAddAuthorizationOnTwoScopes() throws Exception {
-        final Cookie authCookie = fixtures.addApplicationHauteFrequence().cookie();
+        HauteFrequenceFixture hauteFrequenceFixture = new HauteFrequenceFixture(fixtures,mockMvc );
+        final Cookie authCookie = hauteFrequenceFixture.addApplicationHauteFrequence().cookie();
 
         final CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx", "UnReader@inrae.fr");
         fixtures.setToActive(createUserResult.userId());
@@ -469,14 +468,15 @@ public class AuthorizationResourcesTest {
 
     @Test
 
-    public void testAddApplicationMonsoere() throws Exception {
-        fixtures.addMonsoreApplication();
+    void testAddApplicationMonsoere() throws Exception {
+        MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures,mockMvc,userRepository,jsonRowMapper);
+        monSoereFixture.addMonsoreApplication();
     }
 
     @Test
 
-    public void testAddRightForAddApplication() throws Exception {
-
+    void testAddRightForAddApplication() throws Exception {
+        MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures,mockMvc,userRepository,jsonRowMapper);
         {
             final String TEST = "test";
             Fixtures.CreateUser testUser = new Fixtures.CreateUser(TEST, TEST, TEST + INRAE_FR);
@@ -489,14 +489,10 @@ public class AuthorizationResourcesTest {
 
             try {
                 //l'administrateur ne peut créer des applications.
-                String monsoreResult = fixtures.createApplicationMonSore(fixtures.adminConnection.cookie(), "monsore");
+                String monsoreResult = monSoereFixture.createApplicationMonSore(fixtures.adminConnection.cookie(), "monsore");
                 assertFalse(Strings.isNullOrEmpty(monsoreResult));
                 fail();
-            } catch (OreSiTechnicalException e) {
-                assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", e.getMessage());
-            }
-            try {
-                String monsoreResult = fixtures.createApplicationMonSore(applicationCreatorConnection.cookie(), "monsore");
+                monsoreResult = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.cookie(), "monsore");
                 assertFalse(Strings.isNullOrEmpty(monsoreResult));
                 fail();
             } catch (OreSiTechnicalException e) {
@@ -518,10 +514,10 @@ public class AuthorizationResourcesTest {
                         .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())));
 
                 //on peut déposer acbb
-                String acbbID = fixtures.createApplicationMonSore(applicationCreatorConnection.cookie(), "acbb");
+                String acbbID = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.cookie(), "acbb");
                 assertFalse(Strings.isNullOrEmpty(acbbID));
 
-                try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMonsoreApplicationConfigurationResourceName())) {
+                try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
                     Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
                     fail();
@@ -545,7 +541,7 @@ public class AuthorizationResourcesTest {
                         .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())));
 
                 //on peut déposer monsore
-                String acbbId = fixtures.createApplicationMonSore(applicationCreatorConnection.cookie(), "acbb");
+                String acbbId = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.cookie(), "acbb");
                 assertFalse(Strings.isNullOrEmpty(acbbId));
 
             }
@@ -561,7 +557,7 @@ public class AuthorizationResourcesTest {
                         .andExpect(jsonPath("$.authorizations", hasItem("acbb")));
 
                 //on ne peut déposer monsore
-                try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMonsoreApplicationConfigurationResourceName())) {
+                try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
                     Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
                     fail();

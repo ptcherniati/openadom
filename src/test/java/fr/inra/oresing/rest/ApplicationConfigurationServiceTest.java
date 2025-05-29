@@ -11,13 +11,13 @@ import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurati
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.rest.fixtures.AcbbFixture;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.services.ApplicationConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
@@ -38,6 +38,8 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static fr.inra.oresing.rest.fixtures.MonSoereFixture.getMonsoreApplicationConfigurationResourceName;
+import static fr.inra.oresing.rest.fixtures.MonSoereFixture.getMonsoreApplicationConfigurationWithRepositoryResourceName;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
@@ -1225,10 +1227,10 @@ public class ApplicationConfigurationServiceTest {
     void parseConfigurationFile() {
         List<String> block = Collections.singletonList(buildFluxRequestJDJson(fluxSink -> {
             ImmutableSet<String> configFiles = ImmutableSet.of(
-                    Fixtures.getAcbbApplicationConfigurationResourceName(),
-                    Fixtures.getMonsoreApplicationConfigurationResourceName(),
+                    AcbbFixture.getAcbbApplicationConfigurationResourceName(),
+                    getMonsoreApplicationConfigurationResourceName(),
                     Fixtures.getRecursivityApplicationConfigurationResourceName(),
-                    Fixtures.getMonsoreApplicationConfigurationWithRepositoryResourceName(),
+                    getMonsoreApplicationConfigurationWithRepositoryResourceName(),
                     Fixtures.getPatternApplicationConfigurationResourceName()
                     //Fixtures.getOlaApplicationConfigurationResourceName(),
                     //Fixtures.getHauteFrequenceApplicationConfigurationResourceName(),

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.io.Resources;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AuthenticationService;
@@ -13,20 +12,23 @@ import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.security.JWTExtractor;
 import jakarta.servlet.http.Cookie;
 import lombok.Getter;
-import org.apache.commons.io.IOUtils;
 import org.hamcrest.core.IsEqual;
+import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
+import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -35,6 +37,8 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -45,13 +49,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 public class Fixtures {
 
-    private MockMvc mockMvc;
+    public final CreateUser lambda;
+    public final CreateUser admin;
+    public UserConnection lambdaConnection;
+    public UserConnection adminConnection;
 
-    private AuthenticationService authenticationService;
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    public UserConnection getMonsoresimpleConnection() {
+        return monsoresimpleConnection;
+    }
 
-    private UserRepository userRepository;
+    public UserConnection getWithRightsUserConnection() {
+        return withRightsUserConnection;
+    }
 
+    public Fixtures.UserConnection monsoresimpleConnection;
+    public Fixtures.UserConnection withRightsUserConnection;
+
+    private final MockMvc mockMvc;
+    private final AuthenticationService authenticationService;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+    private final UserRepository userRepository;
     public Fixtures(MockMvc mockMvc, UserRepository userRepository, NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuthenticationService authenticationService) throws Exception {
         this.mockMvc = mockMvc;
         this.userRepository = userRepository;
@@ -62,11 +79,6 @@ public class Fixtures {
         lambdaConnection = createUserForUserDefinition(lambda, true, false);
         adminConnection = createUserForUserDefinition(admin, true, true);
     }
-
-    public UserConnection lambdaConnection;
-    public UserConnection adminConnection;
-    public final CreateUser lambda;
-    public final CreateUser admin;
 
     static List<ReactiveTypeError> getErrors(final MvcResult result) throws UnsupportedEncodingException {
         return Optional.ofNullable(getReactiveResultFromResult(result)
@@ -109,65 +121,6 @@ public class Fixtures {
                 );
     }
 
-    public record CreateUser(String login, String password, String email) {
-    }
-
-    public record UserConnection(CreateUserResult userResult, Cookie cookie) {
-    }
-
-    public UserConnection createUserForUserDefinition(CreateUser createUser, boolean isActive, boolean isAdmin) throws Exception {
-        CreateUserResult userResult;
-        Cookie cookie;
-        OreSiUser user;
-        try {
-            user = authenticationService.getByIdOrLogin(createUser.login());
-            userResult = Optional.ofNullable(user)
-                    .map(CreateUserResult::of)
-                    .orElseThrow();
-        } catch (final Exception e) {
-            userResult = createUserIfNotExists(createUser);
-
-        }
-        if (isActive) {
-            setToActive(userResult.userId());
-        }
-        if (isAdmin) {
-            addRoleAdmin(userResult);
-        }
-        cookie = mockMvc.perform(post("/api/v1/login")
-                        .param("login", createUser.login())
-                        .param("password", createUser.password()))
-                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-        user = authenticationService.getByIdOrLogin(createUser.login());
-        return new UserConnection(CreateUserResult.of(user), cookie);
-    }
-
-    public CreateUserResult createUserIfNotExists(CreateUser createUser) throws Exception {
-        if (mockMvc.perform(post("/api/v1/login")
-                        .param("login", createUser.login())
-                        .param("password", createUser.password()))
-                    .andReturn()
-                    .getResponse().getStatus() > 300) {
-            return authenticationService.createUser(createUser.login(), createUser.password(), createUser.email());
-        } else {
-            OreSiUser userByLogin = userRepository.findByLogin(createUser.login()).orElse(null);
-            return CreateUserResult.of(Objects.requireNonNull(userByLogin));
-        }
-
-    }
-
-    public void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
-        mockMvc.perform(put("/api/v1/authorization/applicationCreator")
-                        .param("userIdOrLogin", userId.toString())
-                        .param("applicationPattern", pattern)
-                        .with(csrf().asHeader())
-                        .cookie(adminConnection.cookie()))
-                .andExpect(status().is2xxSuccessful())
-                .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
-                .andExpect(jsonPath("$.authorizations", hasItem(pattern)))
-                .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
-    }
-
     public static String getApplicationWithComputedComponentsWithReferences() {
         return "/data/minotaur/minotaur.yaml";
     }
@@ -184,10 +137,6 @@ public class Fixtures {
         final Map<String, String> dataFiles = new HashMap<>();
         dataFiles.put("dataset", "/data/minotaur/data/datateSet.csv");
         return dataFiles;
-    }
-
-    public static String getMonsoreApplicationName() {
-        return Application.MONSORE.getName();
     }
 
     public static String getTeledetectionConfigurationResourceName() {
@@ -225,51 +174,6 @@ public class Fixtures {
         return data;
     }
 
-    public static String getMonsoreApplicationConfigurationWithRepositoryResourceName() {
-        return "/data/monsore/monsore-with-repository.yaml";
-    }
-
-    public static String getMonsoreApplicationConfigurationResourceName() {
-        return "/data/monsore/monsore.yaml";
-    }
-
-    public static Map<String, String> getMonsoreReferentielEspecestoTrimFiles() {
-        final Map<String, String> referentielFiles = new HashMap<>();
-        referentielFiles.put("especes", "/data/monsore/refdatas/especesToTrim.csv");
-        return referentielFiles;
-    }
-
-    public static Map<String, String> getMonsoreReferentielFiles() {
-        final Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("especes", "/data/monsore/refdatas/especes.csv");
-        referentielFiles.put("projet", "/data/monsore/refdatas/projet.csv");
-        referentielFiles.put("type_de_sites", "/data/monsore/refdatas/type_de_sites.csv");
-        referentielFiles.put("sites", "/data/monsore/refdatas/sites.csv");
-        referentielFiles.put("themes", "/data/monsore/refdatas/themes.csv");
-        referentielFiles.put("type_de_fichiers", "/data/monsore/refdatas/type_de_fichiers.csv");
-        referentielFiles.put("site_theme_datatype", "/data/monsore/refdatas/types_de_donnees_par_themes_de_sites_et_projet.csv");
-        referentielFiles.put("unites", "/data/monsore/refdatas/unites.csv");
-        referentielFiles.put("valeurs_qualitatives", "/data/monsore/refdatas/valeurs_qualitatives.csv");
-        referentielFiles.put("variables", "/data/monsore/refdatas/variables.csv");
-        referentielFiles.put("variables_et_unites_par_types_de_donnees", "/data/monsore/refdatas/variables_et_unites_par_types_de_donnees.csv");
-        referentielFiles.put("pem", "/data/monsore/data-pem.csv");
-        return referentielFiles;
-    }
-
-    public static String getPemDataResourceName() {
-        return "/data/monsore/data-pem.csv";
-    }
-
-    public static String getPemDataToTrimResourceName() {
-        return "/data/monsore/data-pem-to-trim.csv";
-    }
-
-    public static String getPemRepositoryDataResourceName(final String projet, final String site) {
-        String localSite = site
-                .replaceAll("^NULL_KEY__", "");
-        return String.format("/data/monsore/%s-%s-p1-pem.csv", projet, localSite);
-    }
-
     public static String getForetRepositoryParams(final String fileName, final String datatype) {
         //fougeres-fou_4_swc_j_01-01-1999_31-01-1999.csv
         Pattern pattern = Pattern.compile("(.*)_" + datatype + "_(.*)_(.*).csv");
@@ -277,10 +181,10 @@ public class Fixtures {
         if (!matcher.matches()) {
             return null;
         }
-        String zone_etude = matcher.group(1);
-        String[] parent_site = zone_etude.split("-");
+        String zoneEtude = matcher.group(1);
+        String[] parent_site = zoneEtude.split("-");
         if (parent_site.length > 1) {
-            zone_etude = String.format("%1$s.%1$s__%2$s", parent_site[0], parent_site[1]);
+            zoneEtude = String.format("%1$s.%1$s__%2$s", parent_site[0], parent_site[1]);
         }
         DateTimeFormatter formaterIn = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         DateTimeFormatter formaterOut = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -300,7 +204,7 @@ public class Fixtures {
                       "to":"%3$s"
                    },
                    "topublish":true
-                }""", zone_etude, dateDebut, dateFin);
+                }""", zoneEtude, dateDebut, dateFin);
     }
 
     public static String getPemRepositoryParamsWithId(final String projet, final String plateforme, final String site, final String fileId, final boolean toPublish) {
@@ -317,35 +221,6 @@ public class Fixtures {
                    },
                    "topublish":%5$s
                 }""", fileId, projet, plateforme, site, toPublish);
-    }
-
-    public static String getPemRepositoryParams(final String projet, final String plateforme, final String site, final boolean toPublish) {
-        return String.format("""
-                {
-                   "fileid":null,
-                   "binaryfiledataset":{
-                      "datatype":"monsore",
-                      "requiredAuthorizations":{
-                         "projet":["projet_%1$s"],
-                         "sites":["%3$s__p1"]
-                      },
-                      "from":"1984-01-01 00:00:00",
-                      "to":"1984-01-05 00:00:00"
-                   },
-                   "topublish":%4$s
-                }""", projet, plateforme, site, toPublish);
-    }
-
-    public static String getPemRepositoryId(final String plateforme, final String projet, final String site) {
-        return String.format("""
-                {
-                      "requiredAuthorizations":{
-                         "projet":["projet_%2$s"],
-                         "sites":["%3$s__p1"]
-                      },
-                      "from":"1984-01-01 00:00:00",
-                      "to":"1984-01-05 00:00:00"
-                   }""", plateforme, projet, site);
     }
 
     public static String getConditionsPrelevementRepositoryId(final String site) {
@@ -558,33 +433,6 @@ public class Fixtures {
         return referentielFiles;
     }
 
-    public static String getAcbbApplicationName() {
-        return Application.ACBB.getName();
-    }
-
-    public static String getAcbbApplicationConfigurationResourceName() {
-        return "/data/acbb/acbb_openAdom_V2.yaml";
-    }
-
-    public static Map<String, String> getAcbbReferentielFiles() {
-        final Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("tr_agroecosystemes_agr", "/data/acbb/agroecosysteme.csv");
-        referentielFiles.put("tr_sites_sit", "/data/acbb/sites.csv");
-        referentielFiles.put("tr_parcelles_par", "/data/acbb/parcelle.csv");
-        referentielFiles.put("tr_unites_unit", "/data/acbb/unites.csv");
-        referentielFiles.put("tr_modalites_mod", "/data/acbb/modalites.csv");
-        referentielFiles.put("tr_version_de_traitement_vdt", "/data/acbb/version_de_traitement.csv");
-        return referentielFiles;
-    }
-
-    public static String getFluxToursDataResourceName() {
-        return "/data/acbb/Flux_tours.csv";
-    }
-
-    public static String getBiomasseProductionTeneurDataResourceName() {
-        return "/data/acbb/biomasse_production_teneur.csv";
-    }
-
     public static String getMigrationApplicationConfigurationResourceName(final int version) {
         return "/data/migration/fake-app_v" + version + ".yaml";
     }
@@ -599,26 +447,6 @@ public class Fixtures {
 
     public static String getValidationApplicationConfigurationResourceName() {
         return "/data/validation/broken-fake-app.yaml";
-    }
-
-    public static String getHauteFrequenceApplicationConfigurationResourceName() {
-        return "/data/hautefrequence/hautefrequence.yaml";
-    }
-
-    public static Map<String, String> getHauteFrequenceReferentielFiles() {
-        final Map<String, String> referentielFiles = new LinkedHashMap<>();
-        referentielFiles.put("a", "/data/hautefrequence/a.csv");
-        referentielFiles.put("b", "/data/hautefrequence/b.csv");
-        referentielFiles.put("outil", "/data/hautefrequence/outil.csv");
-        referentielFiles.put("projet", "/data/hautefrequence/projet.csv");
-        referentielFiles.put("site", "/data/hautefrequence/site.csv");
-        referentielFiles.put("plateforme", "/data/hautefrequence/plateforme.csv");
-        referentielFiles.put("variable", "/data/hautefrequence/variable.csv");
-        return referentielFiles;
-    }
-
-    public static String getHauteFrequenceDataResourceName() {
-        return "/data/hautefrequence/rnt_bimont_haute_frequence_14-06-2016_14-03-2017.csv";
     }
 
     public static String getDuplicatedApplicationConfigurationResourceName() {
@@ -786,6 +614,80 @@ public class Fixtures {
         return "/data/multiplicity/data/bugs.csv";
     }
 
+    public static ResultMatcher testZip(final List<String> expectedEntries) {
+        return result -> {
+            final byte[] contentAsByteArray = result.getResponse().getContentAsByteArray();
+            Files.write(Path.of("/tmp/data.zip"), contentAsByteArray);
+            final List<String> findedEntries = new LinkedList<>();
+            try (final ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(contentAsByteArray))) {
+                ZipEntry entry = zi.getNextEntry();
+                while (entry != null) {
+                    Assertions.assertNotNull(entry, "l'entrée est nulle ");
+                    findedEntries.add(entry.getName());
+                    entry = zi.getNextEntry();
+                }
+                expectedEntries
+                        .forEach(e ->
+                                Assertions.assertTrue(() -> findedEntries.contains(e), String.format("Le zip doit contenir %s", e)));
+            } catch (final IOException e) {
+                throw new OreSiTechnicalException(e.getMessage(), e);
+            }
+        };
+    }
+
+    public UserConnection createUserForUserDefinition(CreateUser createUser, boolean isActive, boolean isAdmin) throws Exception {
+        CreateUserResult userResult;
+        Cookie cookie;
+        OreSiUser user;
+        try {
+            user = authenticationService.getByIdOrLogin(createUser.login());
+            userResult = Optional.ofNullable(user)
+                    .map(CreateUserResult::of)
+                    .orElseThrow();
+        } catch (final Exception e) {
+            userResult = createUserIfNotExists(createUser);
+
+        }
+        if (isActive) {
+            setToActive(userResult.userId());
+        }
+        if (isAdmin) {
+            addRoleAdmin(userResult);
+        }
+        cookie = mockMvc.perform(post("/api/v1/login")
+                        .param("login", createUser.login())
+                        .param("password", createUser.password()))
+                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+        user = authenticationService.getByIdOrLogin(createUser.login());
+        return new UserConnection(CreateUserResult.of(user), cookie);
+    }
+
+    public CreateUserResult createUserIfNotExists(CreateUser createUser) throws Exception {
+        if (mockMvc.perform(post("/api/v1/login")
+                        .param("login", createUser.login())
+                        .param("password", createUser.password()))
+                    .andReturn()
+                    .getResponse().getStatus() > 300) {
+            return authenticationService.createUser(createUser.login(), createUser.password(), createUser.email());
+        } else {
+            OreSiUser userByLogin = userRepository.findByLogin(createUser.login()).orElse(null);
+            return CreateUserResult.of(Objects.requireNonNull(userByLogin));
+        }
+
+    }
+
+    public void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
+        mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+                        .param("userIdOrLogin", userId.toString())
+                        .param("applicationPattern", pattern)
+                        .with(csrf().asHeader())
+                        .cookie(adminConnection.cookie()))
+                .andExpect(status().is2xxSuccessful())
+                .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
+                .andExpect(jsonPath("$.authorizations", hasItem(pattern)))
+                .andExpect(jsonPath("$.id", IsEqual.equalTo(userId.toString())));
+    }
+
     public String getIdFromApplicationResult(final MvcResult result) throws UnsupportedEncodingException {
         return (String) getResults(result).getFirst().result();
 
@@ -867,22 +769,6 @@ public class Fixtures {
                 .andReturn();
     }
 
-    public InputStream openSwcDataResourceName(final boolean truncated) {
-        final String resourceName = "/data/acbb/SWC.csv";
-        if (truncated) {
-            try {
-                final String collect = Resources.asCharSource(Objects.requireNonNull(getClass().getResource(resourceName)), StandardCharsets.UTF_8).lines()
-                        .limit(100)
-                        .collect(Collectors.joining("\n"));
-                return IOUtils.toInputStream(collect, StandardCharsets.UTF_8);
-            } catch (final IOException e) {
-                throw new OreSiTechnicalException("ne devrait pas arriver", e);
-            }
-        } else {
-            return getClass().getResourceAsStream(resourceName);
-        }
-    }
-
     public Cookie addopenAdomAdmin(final String applicationPattern) throws Exception {
         final String aPassword = "xxxxxxxx";
         final String aLogin = "openAdomAdmin";
@@ -940,52 +826,6 @@ public class Fixtures {
         return createUserConnection;
     }
 
-    public String createApplicationMonSore(final Cookie authCookie, final String applicationName) {
-        MvcResult result;
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-            result = loadApplication(configuration, authCookie, (applicationName == null ? "monsore" : applicationName), (applicationName == null ? "monsore" : applicationName));
-
-            return getIdFromApplicationResult(result);
-        } catch (final Throwable e) {
-            throw new OreSiTechnicalException(e.getMessage(), e);
-        }
-    }
-
-    public Exception createApplicationMonSoreWithError(final Cookie authCookie, final String applicationName) throws Exception {
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-            return loadApplicationWithError(configuration, authCookie, (applicationName == null ? "monsore" : applicationName));
-
-        }
-    }
-
-    public UserConnection addMonsoreApplication() throws Exception {
-        final UserConnection authConnection = addApplicationCreatorUser("monsore");
-        createApplicationMonSore(authConnection.cookie(), "monsore");
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : getMonsoreReferentielFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(authConnection.cookie()))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data
-        try (final InputStream refStream = getClass().getResourceAsStream(getPemDataResourceName())) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "data-pem.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authConnection.cookie()))
-                    .andExpect(status().is2xxSuccessful());
-        }
-        return authConnection;
-    }
-
     public UserConnection addMigrationApplication() throws Exception {
         final UserConnection authConnection = addApplicationCreatorUser("fakeapp");
         try (final InputStream configurationFile = getClass().getResourceAsStream(getMigrationApplicationConfigurationResourceName(1))) {
@@ -1013,100 +853,6 @@ public class Fixtures {
                     .andExpect(status().is2xxSuccessful());
         }
 
-        return authConnection;
-    }
-
-    public UserConnection addApplicationAcbb() throws Exception {
-        UserConnection authConnection = addApplicationCreatorUser("acbb");
-        final Cookie authCookie = authConnection.cookie();
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getAcbbApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
-            getIdFromApplicationResult(loadApplication(configuration, authCookie, "acbb", "acbb"));
-        } catch (final Throwable e) {
-            throw new OreSiTechnicalException(e.getMessage(), e);
-        }
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : getAcbbReferentielFiles().entrySet()) {
-            try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
-                final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/acbb/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
-                        .andExpect(status().isCreated());
-            }
-        }
-
-        // ajout de data
-        addFluxTours(authCookie);
-
-        addBiomasse(authCookie);
-
-        addSWC(authCookie);
-        return authConnection;
-    }
-
-    private void addSWC(final Cookie authCookie) throws Exception {
-        try (final InputStream in = openSwcDataResourceName(true)) {
-            final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/SWC")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
-    }
-
-    private void addBiomasse(final Cookie authCookie) throws Exception {
-        try (final InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
-    }
-
-    private void addFluxTours(final Cookie authCookie) throws Exception {
-        try (final InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/flux_tours")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
-    }
-
-    public UserConnection addApplicationHauteFrequence() throws Exception {
-
-        UserConnection authConnection = addApplicationCreatorUser("hautefrequence");
-        final Cookie authCookie = authConnection.cookie();
-        try (final InputStream configurationFile = getClass().getResourceAsStream(getHauteFrequenceApplicationConfigurationResourceName())) {
-            final MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
-            getIdFromApplicationResult(loadApplication(configuration, authCookie, "hautefrequence", "hautefrequence"));
-        } catch (final Throwable e) {
-            throw new OreSiTechnicalException(e.getMessage(), e);
-        }
-
-        // Ajout de referentiel
-        for (final Map.Entry<String, String> e : getHauteFrequenceReferentielFiles().entrySet()) {
-            try (final InputStream in = getClass().getResourceAsStream(getFluxToursDataResourceName())) {
-                final MockMultipartFile file = new MockMultipartFile("file", e.getValue(), "text/plain", in);
-                mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey())
-                                .file(file)
-                                .with(csrf().asHeader())
-                                .cookie(authCookie))
-                        .andExpect(status().is2xxSuccessful());
-            }
-        }
-
-        // ajout de data
-        try (final InputStream refStream = getClass().getResourceAsStream(getHauteFrequenceDataResourceName())) {
-            final MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
-                    .andExpect(status().is2xxSuccessful());
-        }
         return authConnection;
     }
 
@@ -1241,8 +987,6 @@ public class Fixtures {
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
-
-        String response;
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : getRecursiviteReferentielOrderFiles().entrySet()) {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
@@ -1284,5 +1028,11 @@ public class Fixtures {
             this.dataTypes = dataTypes;
         }
 
+    }
+
+    public record CreateUser(String login, String password, String email) {
+    }
+
+    public record UserConnection(CreateUserResult userResult, Cookie cookie) {
     }
 }
