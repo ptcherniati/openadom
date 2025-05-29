@@ -1,7 +1,6 @@
 package fr.inra.oresing.domain.services.synthesis;
 
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
-import fr.inra.oresing.rest.services.ServiceContainer;
 
 import java.util.List;
 import java.util.Map;

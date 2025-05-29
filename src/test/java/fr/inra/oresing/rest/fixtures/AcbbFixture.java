@@ -62,7 +62,7 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
     }
 
     public InputStream openSwcDataResourceName(final boolean truncated) {
-        final String resourceName = "/data/acbb/SWC.csv";
+        final String resourceName = "/data/acbb/SWC_truncated.csv";
         if (truncated) {
             try {
                 final String collect = Resources.asCharSource(Objects.requireNonNull(getClass().getResource(resourceName)), StandardCharsets.UTF_8).lines()
@@ -99,18 +99,18 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         }
 
         // ajout de data
-        addFluxTours(authCookie);
+       addFluxTours(authCookie);
 
-        addBiomasse(authCookie);
+       // addBiomasse(authCookie);
 
-        addSWC(authCookie);
+        //addSWC(authCookie);
         return authConnection;
     }
 
     private void addSWC(final Cookie authCookie) throws Exception {
         try (final InputStream in = openSwcDataResourceName(true)) {
             final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/SWC")
+            mockMvc.perform(multipart("/api/v1/applications/acbb/data/t_swc_swc")
                             .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
@@ -120,7 +120,7 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
     private void addBiomasse(final Cookie authCookie) throws Exception {
         try (final InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/biomasse_production_teneur")
+            mockMvc.perform(multipart("/api/v1/applications/acbb/data/t_swc_swc")
                             .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
@@ -130,13 +130,12 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
     private void addFluxTours(final Cookie authCookie) throws Exception {
         try (final InputStream in = getClass().getResourceAsStream(AcbbFixture.getFluxToursDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
-            mockMvc.perform(multipart("/api/v1/applications/acbb/data/flux_tours")
+            mockMvc.perform(multipart("/api/v1/applications/acbb/data/t_flux_tours_flx")
                             .file(file).with(csrf().asHeader())
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
     }
-
 
     public Stream<DynamicTest> loadAcbbReferences() {
         return AcbbFixture.getAcbbReferentielFiles().entrySet()

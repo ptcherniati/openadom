@@ -9,4 +9,12 @@ public class IntervalValues {
     public String from;
     public String to;
 
+    public IntervalValues() {
+        super();
+    }
+
+    public IntervalValues(String from, String to) {
+        this.from = from;
+        this.to = to;
+    }
 }

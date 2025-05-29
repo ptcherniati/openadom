@@ -46,8 +46,8 @@ public class ComponentFilters {
         } else if (Strings.isEmpty(componentFilter.componentKey)) {
             throw new BadDownloadDatasetQuery(MISSING_COMPONENT_KEY_COMPONENT);
         }
-        final CheckerDescription formatForFieldType = Optional.ofNullable(dataDescription)
-                .map(StandardDataDescription::componentDescriptions)
+            final CheckerDescription formatForFieldType = Optional.ofNullable(dataDescription)
+                    .map(StandardDataDescription::componentDescriptions)
                 .stream()
                 .flatMap(map -> map.values().stream()) // Transforme le Stream<Map> en Stream des valeurs
                 .filter(component -> Objects.equals(component.componentKey(), componentFilter.componentKey))
@@ -126,7 +126,7 @@ public class ComponentFilters {
                 case null, default -> throw new BadDownloadDatasetQuery(
                         NOT_INTERVAL_VALUE_TYPE_FOR_COMPONENT,
                         Map.of(
-                                "component", componentFilter.componentKey
+                                "component", componentFilter.getComponentKey()
                         )
                 );
             };

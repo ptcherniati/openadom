@@ -3,7 +3,6 @@ package fr.inra.oresing.rest.model.data.query;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.read.query.*;
-import jakarta.annotation.Nullable;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
@@ -21,11 +20,11 @@ public class DownloadDatasetQuery {
     Long limit;
     Set<String> rowIds;
     Set<Ltree> naturalKeys;
-    @Nullable
+   
     Set<String> componentSelects;
-    @Nullable
+   
     Set<ComponentFilters> componentFilters;
-    @Nullable
+   
     Set<ComponentOrderBy> componentOrderBy;
 
     Set<AuthorizationDescription> authorizationDescriptions;
@@ -35,7 +34,7 @@ public class DownloadDatasetQuery {
         super();
     }
 
-    public DownloadDatasetQuery(final Long offset, final Long limit, @Nullable final Set<String> componentSelects, @Nullable final Set<ComponentFilters> componentFilters, @Nullable final Set<ComponentOrderBy> componentOrderBy) {
+    public DownloadDatasetQuery(final Long offset, final Long limit, final Set<String> componentSelects, final Set<ComponentFilters> componentFilters, final Set<ComponentOrderBy> componentOrderBy) {
         super();
         this.offset = offset;
         this.limit = limit;
@@ -46,7 +45,7 @@ public class DownloadDatasetQuery {
         dataName = null;
     }
 
-    public DownloadDatasetQuery(final Application application, final Long offset, final String dataType, @Nullable final Set<String> componentSelects, @Nullable final Set<ComponentFilters> componentFilters, @Nullable final Set<ComponentOrderBy> componentOrderBy, final Set<AuthorizationDescription> authorizationDescriptions, final Long limit, final Set<String> rowIds) {
+    public DownloadDatasetQuery(final Application application, final Long offset, final String dataType, final Set<String> componentSelects, final Set<ComponentFilters> componentFilters, final Set<ComponentOrderBy> componentOrderBy, final Set<AuthorizationDescription> authorizationDescriptions, final Long limit, final Set<String> rowIds) {
         super();
         this.dataName = dataType;
         this.offset = offset;
@@ -57,14 +56,12 @@ public class DownloadDatasetQuery {
         this.componentOrderBy = componentOrderBy;
         this.authorizationDescriptions = authorizationDescriptions;
         this.application = application;
-
     }
 
     public DownloadDatasetQuery(final Application application, final String dataType) {
         super();
         this.application = application;
-        this.dataName = dataType;
-    }
+        this.dataName = dataType;    }
 
     public static fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery build(
             final DownloadDatasetQuery downloadDatasetQuery) {

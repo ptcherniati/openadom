@@ -13,7 +13,11 @@ import java.util.Map;
 
  */
 public class AuthorizationDescription {
-
     private IntervalValues timeScope;
     private Map<String, Ltree> requiredAuthorizations = new HashMap<>();
+
+    public AuthorizationDescription(IntervalValues timeScope, Map<String, Ltree> requiredAuthorizations) {
+        this.timeScope = timeScope;
+        this.requiredAuthorizations = requiredAuthorizations;
+    }
 }
