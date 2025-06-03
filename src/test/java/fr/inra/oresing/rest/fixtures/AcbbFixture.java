@@ -46,6 +46,7 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         referentielFiles.put("tr_unites_unit", "/data/acbb/unites.csv");
         referentielFiles.put("tr_modalites_mod", "/data/acbb/modalites.csv");
         referentielFiles.put("tr_version_de_traitement_vdt", "/data/acbb/version_de_traitement.csv");
+        referentielFiles.put("tr_variables_var", "/data/acbb/variables.csv");
         return referentielFiles;
     }
 
@@ -99,11 +100,11 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         }
 
         // ajout de data
-       addFluxTours(authCookie);
+       //addFluxTours(authCookie);
 
        // addBiomasse(authCookie);
 
-        //addSWC(authCookie);
+        addSWC(authCookie);
         return authConnection;
     }
 

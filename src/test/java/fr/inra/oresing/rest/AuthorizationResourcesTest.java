@@ -111,22 +111,13 @@ public class AuthorizationResourcesTest {
                 .parseSignedClaims(authCookie.getValue())
                 .getPayload()
                 .getSubject();
-        String authId = JsonPath.parse(token).read("$.requestClient.id");
+        String authId = JsonPath.parse(token).read("$.requestclient.id");
         {
             assertEquals(1, Arrays.stream(getApplicationsFlux(authCookie, "ALL")
                     )
 
                     .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class)))
-                    .filter(s -> "acbb".equals(JsonPath.parse(s).read("$.result.name", String.class)))
-                    .count(), "Le créateur de l'application doit pouvoir la retrouver dans la liste");
-        }
-
-        {
-            assertEquals(1, Arrays.stream(getApplicationsFlux(authCookie, "ALL")
-                    )
-
-                    .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class)))
-                    .filter(s -> "acbb".equals(JsonPath.parse(s).read("$.result.name", String.class)))
+                    .filter(s -> "acbb".equals(JsonPath.parse(s).read("$.result.application.name", String.class)))
                     .count(), "Le créateur de l'application doit pouvoir la retrouver dans la liste");
         }
 

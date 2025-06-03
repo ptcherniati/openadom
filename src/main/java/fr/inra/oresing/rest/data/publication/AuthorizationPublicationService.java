@@ -18,7 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public class AuthorizationPublicationService {
-    public static final String DATA_NAME_CAN_T_BE_NULL = "dataName Can't be null";
+    public static final String DATA_NAME_NOT_FOUND = "dataName not found";
     protected final StandardDataDescription dataDescription;
     protected final Application application;
     @Getter
@@ -47,7 +47,7 @@ public class AuthorizationPublicationService {
     protected StandardDataDescription buildDataDescription(Application application) {
         return Optional.ofNullable(application)
                 .map(name -> application.findData(dataName)
-                        .orElseThrow(() -> new IllegalArgumentException(DATA_NAME_CAN_T_BE_NULL))
+                        .orElseThrow(() -> new IllegalArgumentException(DATA_NAME_NOT_FOUND))
                 )
                 .orElse(null);
     }

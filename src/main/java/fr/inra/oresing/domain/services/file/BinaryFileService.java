@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
+import fr.inra.oresing.rest.services.ServiceContainer;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 

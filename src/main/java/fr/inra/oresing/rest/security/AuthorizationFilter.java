@@ -65,8 +65,9 @@ public class AuthorizationFilter extends GenericFilterBean {
     public static final String PASSWORD_PARAMETER = "password";
     public static final String ECHEC_TECHNIQUE = "Échec technique";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
-    private static JsonRowMapper<OreSiUserRequestClient> mapper;
+    public static final String BAD_REQUEST = "BAD_REQUEST";
     private final OreSiApiRequestContext requestContext;
+    private static JsonRowMapper<OreSiUserRequestClient> mapper;
     private final OreExceptionHandler exceptionHandler;
     private final JWTExtractor jWTExtractor;
     private ServiceContainer serviceContainer;
@@ -202,7 +203,7 @@ public class AuthorizationFilter extends GenericFilterBean {
     }
 
     private void extractBinaryFileAndFindDataName(OreSiAuthenticationToken oreSiAuthenticationToken, IllegalArgumentException e, Optional<UUID> optionalUUID, Optional<String> dataNameOpt) {
-        if (AuthorizationPublicationService.DATA_NAME_CAN_T_BE_NULL.equals(e.getMessage())) {
+        if (AuthorizationPublicationService.DATA_NAME_NOT_FOUND.equals(e.getMessage())) {
             optionalUUID
                     .flatMap(fileId -> serviceContainer.binaryFileService().getFile(oreSiAuthenticationToken.getApplicationName(), fileId))
                     .ifPresent(binaryFile -> {
@@ -273,11 +274,11 @@ public class AuthorizationFilter extends GenericFilterBean {
                         request.getRequestURI(),
                         List.of(ROLE_AUTHENTIFIED_USER)
                 );
-            } catch (AuthenticationFailure _) {
-                throw new AuthenticationFailure(ECHEC_TECHNIQUE, (OreSiUser) null);
+            } catch (AuthenticationFailure e) {
+                throw new AuthenticationFailure(BAD_REQUEST, (OreSiUser) null);
             }
         }
-        throw new AuthenticationFailure(ECHEC_TECHNIQUE, (OreSiUser) null);
+        throw new AuthenticationFailure(BAD_REQUEST, (OreSiUser) null);
     }
 
 
