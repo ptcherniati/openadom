@@ -27,6 +27,7 @@ services:
       - "8083:80"
     volumes:
       - ./docker-pg-servers.json:/pgadmin4/servers.json
+      - ./storage:/var/lib/pgadmin/storage
     environment:
       PGADMIN_DEFAULT_EMAIL: "si-ore-developpement@list.forge.codelutin.com"
       PGADMIN_DEFAULT_PASSWORD: "test"

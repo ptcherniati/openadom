@@ -48,7 +48,6 @@ public class AdditionalFileService implements ServiceContainerBean {
     public static final String CHARTE = "__charte__";
     @Value("classpath:charte/default_charte.pdf")
     Resource defaultCharte;
-
     @Setter
     private ServiceContainer serviceContainer;
 
