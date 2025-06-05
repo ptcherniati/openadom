@@ -32,14 +32,44 @@ public class JWTExtractor {
     private Function<UUID, OreSiUserRole> getUserRole;
 
     public JWTExtractor(
+            Function<UUID, OreSiUserRole> getUserRole,
             JsonRowMapper<OreSiUserRequestClient> mapper,
             int jwtExpiration,
             String jwtSecret) {
+        this.getUserRole = getUserRole;
         this.mapper = mapper;
         final String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
         final byte[] keyBytes = secureEnoughJwtSecret.getBytes();
         key = Keys.hmacShaKeyFor(keyBytes);
         JWTExtractor.jwtExpiration = jwtExpiration;
+    }
+
+    public static void addJwtHeader(HttpServletResponse response, String jwt) {
+        response.setHeader(AUTHORIZATION, BEARER_ + jwt);
+    }
+
+    public static void addCookie(String jwt, HttpServletResponse response, boolean secureEnvironment) {
+        Cookie cookie = getCookie(jwt);
+        cookie.setSecure(secureEnvironment);
+        response.addCookie(cookie);
+    }
+
+    public static Cookie getCookie(String jwt) {
+        final Cookie cookie = new Cookie(JWT_COOKIE_NAME, jwt);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(jwtExpiration);
+        return cookie;
+    }
+
+    public static String buildToken(String json) {
+        Date issuedAt = new Date();
+        return Jwts.builder()
+                .subject(json)
+                .issuedAt(issuedAt)
+                .expiration(DateUtils.addSeconds(issuedAt, jwtExpiration))
+                .signWith(key)
+                .compact();
     }
 
     public String extractJwtCookie(HttpServletRequest request) {
@@ -92,38 +122,9 @@ public class JWTExtractor {
         }
     }
 
-    public static void addJwtHeader(HttpServletResponse response, String jwt) {
-        response.setHeader("Authorization", "Bearer " + jwt);
-    }
-
-    public static void addCookie(String jwt, HttpServletResponse response, boolean secureEnvironment) {
-        Cookie cookie = getCookie(jwt);
-        cookie.setSecure(secureEnvironment);
-        response.addCookie(cookie);
-    }
-
-    public static Cookie getCookie(String jwt) {
-        final Cookie cookie = new Cookie(JWT_COOKIE_NAME, jwt);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(jwtExpiration);
-        return cookie;
-    }
-
-    public static String buildToken(String json) {
-        Date issuedAt = new Date();
-        return Jwts.builder()
-                .subject(json)
-                .issuedAt(issuedAt)
-                .expiration(DateUtils.addSeconds(issuedAt, jwtExpiration))
-                .signWith(key)
-                .compact();
-    }
-
     public void setSetGetUserRole(Function<UUID, OreSiUserRole> getUserRole) {
         this.getUserRole = getUserRole;
     }
-
 
 
     protected void clearSession(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) {

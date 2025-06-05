@@ -36,10 +36,6 @@ public class Ltree implements Comparable<Ltree> {
     private static final Pattern LABEL_INVALID_CHARACTERS_REGEX = Pattern.compile("[^a-zA-Z0-9_]");
     private static final Pattern VALID_LABEL_REGEX = Pattern.compile("[a-zA-Z0-9_]+");
     private static final Ltree EMPTY_LTREE_SINGLETON = new Ltree("");
-    /*public static Set<String> KNOWN_SYMBOL_CODES = IntStream.range(Character.MIN_CODE_POINT, Character.MAX_CODE_POINT)
-            .filter(Character::isValidCodePoint)
-            .filter(Character::isDefined)
-            .mapToObj(i -> Character.getName(i).replaceAll("[ -]", "")).collect(Collectors.toCollection(HashSet::new));*/
     public static Set<String> KNOWN_SYMBOL_CODES = IntStream.range(0, 0x3FF)
             .filter(Character::isValidCodePoint)
             .filter(Character::isDefined)
@@ -53,10 +49,6 @@ public class Ltree implements Comparable<Ltree> {
 
     public static Ltree fromSqlWithoutCheck(String text) {
         return new Ltree(text);
-    }
-
-    public Ltree last() {
-        return Ltree.fromSql(getSql().replaceAll(".*\\.", ""));
     }
 
     /**
@@ -87,7 +79,6 @@ public class Ltree implements Comparable<Ltree> {
         return extracttolabelFromStringWithSpecialCharacters(key);
     }
 
-
     private static String extracttolabelFromStringWithSpecialCharacters(String key) {
         final String lowerCased = key.replace(Ltree.NULL_KEY, "____").toLowerCase();
         final String withAccentsStripped = StringUtils.stripAccents(lowerCased);
@@ -99,7 +90,7 @@ public class Ltree implements Comparable<Ltree> {
                 .collect(Collectors.joining());
         checkLabelSyntax(escaped);
         return escaped
-                .replaceAll("________", "__NULL_KEY__")
+                .replace("________", "__NULL_KEY__")
                 .replaceAll("^______", "NULL_KEY__")
                 .replaceAll("______$", "__NULL_KEY");
     }
@@ -167,6 +158,19 @@ public class Ltree implements Comparable<Ltree> {
         return EMPTY_LTREE_SINGLETON;
     }
 
+    /**
+     * @param value
+     * @return
+     **/
+    @JsonCreator
+    public static Ltree fromJson(String value) {
+        return Ltree.fromSql(value);
+    }
+
+    public Ltree last() {
+        return Ltree.fromSql(getSql().replaceAll(".*\\.", ""));
+    }
+
     @Override
     public String toString() {
         return sql;
@@ -193,23 +197,14 @@ public class Ltree implements Comparable<Ltree> {
         return others.stream().anyMatch(this::isAncestorOf);
     }
 
-    @Override
-    public int compareTo(Ltree o) {
-        return getSql().compareTo(o.getSql());
-    }
-    
     /**
      *  Ajouter l’annotation @JsonCreator pour indiquer à Jackson 
      *  comment construire un Ltree à partir d’un String.
      */
-     
-    /**
-     * @param value
-     * @return 
-     **/
-    @JsonCreator
-    public static Ltree fromJson(String value) {
-        return Ltree.fromSql(value);
+
+    @Override
+    public int compareTo(Ltree o) {
+        return getSql().compareTo(o.getSql());
     }
 
     public String toJson() {

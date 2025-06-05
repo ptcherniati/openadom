@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.application.configuration.examples;
 
-import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.*;
+import fr.inra.oresing.domain.checker.Multiplicity;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +30,7 @@ class FormatExampleBuilder {
     );
 
     protected static FormatType buildFormFieldsSchema(final TitleType title, final boolean required, final CheckerType checker) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final Map<String, ConfigurationSchemaNodeType<?>> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_I_18_N, title);
         if (required) {
             children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(true));

@@ -2,9 +2,9 @@ package fr.inra.oresing.rest.model.configuration.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
 import fr.inra.oresing.domain.application.configuration.checker.*;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
+import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
 import fr.inra.oresing.domain.application.configuration.type.CheckerEnum;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
@@ -59,14 +59,13 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
             );
         }
         if (name == null) {
-            // TODO -> je ne vois pas quand on passe ici
             return null;
         }
         final JsonNode params = checkerNode.findPath(ConfigurationSchemaNode.OA_PARAMS);
         I18n localI18n = new I18n(i18n.i18n());
 
         Parsing<Set<String>> exceptionMessagesParsing = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS))
-                .map(exceptionsNode -> buildMessagesExceptions(localI18n, dataKey, componentKey, path, exceptionsNode))
+                .map(exceptionsNode -> buildMessagesExceptions(localI18n, dataKey, componentKey, exceptionsNode))
                 .orElse(new Parsing<>(localI18n, Set.of()));
         i18n = exceptionMessagesParsing.i18n();
         final Multiplicity multiplicity = Optional.ofNullable(params.get(ConfigurationSchemaNode.OA_MULTIPLICITY))
@@ -78,7 +77,7 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                         .findPath(ConfigurationSchemaNode.OA_NAME)
                         .asText("null");
                 if (reference.charAt(0) == '\"' &&
-                        reference.charAt(reference.length() - 1) == '\"') {
+                    reference.charAt(reference.length() - 1) == '\"') {
                     reference = reference.substring(1, reference.length() - 1);
                 }
                 if ("null".equals(reference)) {
@@ -189,91 +188,11 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
                     yield DateChecker.BAD_CHECKER;
                 }
             }
-            case OA_float -> {
-                final Float min = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_MIN))
-                        .filter(JsonNode::isNumber)
-                        .map(JsonNode::floatValue)
-                        .orElse(Float.NEGATIVE_INFINITY);
-                final Float max = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_MAX))
-                        .filter(JsonNode::isNumber)
-                        .map(JsonNode::floatValue)
-                        .orElse(Float.POSITIVE_INFINITY);
-                yield new FloatChecker(
-                        CheckerDescription.CheckerDescriptionType.FloatChecker,
-                        multiplicity,
-                        required,
-                        min,
-                        max);
-            }
-            case OA_integer -> {
-                final Integer minInteger = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_MIN))
-                        .filter(JsonNode::isInt)
-                        .map(JsonNode::intValue)
-                        .orElse(Integer.MIN_VALUE);
-                final Integer maxInteger = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_MAX))
-                        .filter(JsonNode::isInt)
-                        .map(JsonNode::intValue)
-                        .orElse(Integer.MAX_VALUE);
-                yield new IntegerChecker(
-                        CheckerDescription.CheckerDescriptionType.IntegerChecker,
-                        multiplicity,
-                        required,
-                        minInteger,
-                        maxInteger);
-            }
-            case OA_boolean -> {
-                final boolean isTrue = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_IS_TRUE))
-                        .map(JsonNode::booleanValue)
-                        .orElse(false);
-                yield new BooleanChecker(CheckerDescription.CheckerDescriptionType.BooleanChecker, multiplicity, required, isTrue);
-            }
-            case OA_string -> {
-                final String pattern = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_PATTERN))
-                        .map(JsonNode::asText)
-                        .orElse("");
-                yield new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker, multiplicity, required, pattern);
-            }
-            case OA_groovyExpression -> {
-                final String expression = params.findPath(ConfigurationSchemaNode.OA_EXPRESSION).asText();
-                final Set<String> references = rootBuilder.getMapper().convertValue(params.findPath(ConfigurationSchemaNode.OA_REFERENCES), Set.class);
-                exceptionMessagesParsing = buildMessagesExceptions(
-                        i18n,
-                        dataKey,
-                        componentKey,
-                        NodeSchemaValidator.joinPath(
-                                path,
-                                ConfigurationSchemaNode.OA_CHECKER,
-                                ConfigurationSchemaNode.OA_PARAMS
-                        ),
-                        params.findPath(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS)
-                );
-
-                i18n = exceptionMessagesParsing.i18n();
-                try {
-                    new GroovyExpression(expression);
-                } catch (SiOreIllegalArgumentException siOreIllegalArgumentException) {
-                    HashMap<String, Object> messages = new HashMap<>();
-                    messages.put("expression", expression);
-                    messages.put("message", siOreIllegalArgumentException.getMessage());
-                    rootBuilder.buildError(ConfigurationException.BAD_GROOVY_EXPRESSION,
-                            messages,
-                            NodeSchemaValidator.joinPath(
-                                    path,
-                                    ConfigurationSchemaNode.OA_CHECKER,
-                                    ConfigurationSchemaNode.OA_PARAMS,
-                                    ConfigurationSchemaNode.OA_EXPRESSION
-                            )
-                    );
-                }
-                yield new GroovyExpressionChecker(
-                        CheckerDescription.CheckerDescriptionType.GroovyExpressionChecker,
-                        multiplicity,
-                        required,
-                        expression,
-                        references,
-                        exceptionMessagesParsing.result()
-                );
-            }
+            case OA_float -> buildFloatChecker(params, multiplicity, required);
+            case OA_integer -> buildIntegerChecker(params, multiplicity, required);
+            case OA_boolean -> buildBooleanChecker(params, multiplicity, required);
+            case OA_string -> buildStringChecker(params, multiplicity, required );
+            case OA_groovyExpression -> buildGroovyExpressionChecker(exceptionMessagesParsing, path,params, i18n, multiplicity, required, dataKey, componentKey);
         };
         if (dataKey != null) {
             rootBuilder.getCheckers().computeIfAbsent(
@@ -287,10 +206,104 @@ public record CheckerDescriptionBuilder(RootBuilder rootBuilder) {
         return new Parsing<>(i18n, checkerDescription);
     }
 
+    private CheckerDescription buildFloatChecker(JsonNode params, Multiplicity multiplicity, boolean required) {
+        {
+            final Float min = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_MIN))
+                    .filter(JsonNode::isNumber)
+                    .map(JsonNode::floatValue)
+                    .orElse(Float.NEGATIVE_INFINITY);
+            final Float max = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_MAX))
+                    .filter(JsonNode::isNumber)
+                    .map(JsonNode::floatValue)
+                    .orElse(Float.POSITIVE_INFINITY);
+            return new FloatChecker(
+                    CheckerDescription.CheckerDescriptionType.FloatChecker,
+                    multiplicity,
+                    required,
+                    min,
+                    max);
+        }
+    }
+
+    private CheckerDescription buildIntegerChecker(JsonNode params, Multiplicity multiplicity, boolean required) {
+        {
+            final Integer minInteger = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_MIN))
+                    .filter(JsonNode::isInt)
+                    .map(JsonNode::intValue)
+                    .orElse(Integer.MIN_VALUE);
+            final Integer maxInteger = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_MAX))
+                    .filter(JsonNode::isInt)
+                    .map(JsonNode::intValue)
+                    .orElse(Integer.MAX_VALUE);
+            return new IntegerChecker(
+                    CheckerDescription.CheckerDescriptionType.IntegerChecker,
+                    multiplicity,
+                    required,
+                    minInteger,
+                    maxInteger);
+        }
+    }
+
+    private CheckerDescription buildBooleanChecker(JsonNode params, Multiplicity multiplicity, boolean required) {
+        {
+            final boolean isTrue = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_IS_TRUE))
+                    .map(JsonNode::booleanValue)
+                    .orElse(false);
+            return new BooleanChecker(CheckerDescription.CheckerDescriptionType.BooleanChecker, multiplicity, required, isTrue);
+        }
+    }
+
+    private CheckerDescription buildStringChecker(JsonNode params, Multiplicity multiplicity, boolean required) {
+        {
+            final String pattern = Optional.ofNullable(params.findPath(ConfigurationSchemaNode.OA_PATTERN))
+                    .map(JsonNode::asText)
+                    .orElse("");
+            return new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker, multiplicity, required, pattern);
+        }
+    }
+
+    private CheckerDescription buildGroovyExpressionChecker(Parsing<Set<String>> exceptionMessagesParsing, String path,  JsonNode params, I18n i18n, Multiplicity multiplicity, boolean required, String dataKey, String componentKey) {
+        {
+            final String expression = params.findPath(ConfigurationSchemaNode.OA_EXPRESSION).asText();
+            final Set<String> references = rootBuilder.getMapper().convertValue(params.findPath(ConfigurationSchemaNode.OA_REFERENCES), Set.class);
+            exceptionMessagesParsing = buildMessagesExceptions(
+                    i18n,
+                    dataKey,
+                    componentKey,
+                    params.findPath(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS)
+            );
+
+            i18n = exceptionMessagesParsing.i18n();
+            try {
+                new GroovyExpression(expression);
+            } catch (SiOreIllegalArgumentException siOreIllegalArgumentException) {
+                HashMap<String, Object> messages = new HashMap<>();
+                messages.put("expression", expression);
+                messages.put("message", siOreIllegalArgumentException.getMessage());
+                rootBuilder.buildError(ConfigurationException.BAD_GROOVY_EXPRESSION,
+                        messages,
+                        NodeSchemaValidator.joinPath(
+                                path,
+                                ConfigurationSchemaNode.OA_CHECKER,
+                                ConfigurationSchemaNode.OA_PARAMS,
+                                ConfigurationSchemaNode.OA_EXPRESSION
+                        )
+                );
+            }
+            return new GroovyExpressionChecker(
+                    CheckerDescription.CheckerDescriptionType.GroovyExpressionChecker,
+                    multiplicity,
+                    required,
+                    expression,
+                    references,
+                    exceptionMessagesParsing.result()
+            );
+        }
+    }
+
     public Parsing<Set<String>> buildMessagesExceptions(I18n i18n,
                                                         String dataKey,
                                                         String componentOrvalidationKey,
-                                                        String path,
                                                         JsonNode exceptionsMessagesNode) {
         Set<String> exceptionMessages = new HashSet<>();
 

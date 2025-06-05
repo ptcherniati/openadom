@@ -18,6 +18,6 @@ public record FloatValidationCheckResult(ValidationLevel level,
     }
 
     public static FloatValidationCheckResult error(final CheckerTarget target, final String message, final ImmutableMap<String, Object> messageParams) {
-        return new FloatValidationCheckResult(ValidationLevel.ERROR, message, messageParams, target,  null);
+        return new FloatValidationCheckResult(ValidationLevel.ERROR, message, messageParams, target, null);
     }
 }

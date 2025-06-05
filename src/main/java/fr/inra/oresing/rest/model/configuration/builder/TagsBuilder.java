@@ -3,9 +3,9 @@ package fr.inra.oresing.rest.model.configuration.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.Tag;
 import fr.inra.oresing.domain.application.configuration.Validation;
+import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.HashSet;
@@ -81,8 +81,8 @@ public record TagsBuilder(RootBuilder rootBuilder) {
     }
 
     Parsing<Set<Tag>> buildDomainTagsOfApplication(final String path, final JsonNode tagsNode, final I18n i18n) {
-        if(tagsNode== null || tagsNode.isMissingNode() || tagsNode.isNull() || tagsNode.isEmpty()){
-            return new Parsing<>(i18n,Set.of());
+        if (tagsNode == null || tagsNode.isMissingNode() || tagsNode.isNull() || tagsNode.isEmpty()) {
+            return new Parsing<>(i18n, Set.of());
         }
         final Parsing<Set<Tag>> parseTag = buildTags(path, tagsNode, i18n);
         if (parseTag.result().stream().anyMatch(tag -> !(tag instanceof Tag.DomainTag))) {

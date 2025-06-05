@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.Optional;
 
 public record FileSenderInternationalisationForDownloadDatasetQuery(DownloadDatasetQuery downloadDatasetQuery)
-implements FileSenderInternationalisation{
+        implements FileSenderInternationalisation {
     private static final Map<Locale, String> SUBJECT_PATTERN = Map.of(
             Locale.FRENCH, "Chargement des données de l'application \"%s\"",
             Locale.ENGLISH, "Loading data of application \"%s\""
@@ -35,14 +35,17 @@ implements FileSenderInternationalisation{
                     
                     The link will expire in %s days"""
     );
-    public String subjectPattern(){
+
+    public String subjectPattern() {
         return Optional.ofNullable(SUBJECT_PATTERN.get(downloadDatasetQuery.outPut().locale()))
                 .orElse(SUBJECT_PATTERN.get(getDefaultLanguage()));
     }
-    public String messagePattern(){
+
+    public String messagePattern() {
         return Optional.ofNullable(MESSAGE_PATTERN.get(downloadDatasetQuery.outPut().locale()))
                 .orElse(MESSAGE_PATTERN.get(getDefaultLanguage()));
     }
+
     public String getInternationnalizedApplication(Locale locale) {
         return Optional.ofNullable(downloadDatasetQuery().application().getConfiguration())
                 .map(Configuration::i18n)
@@ -50,6 +53,7 @@ implements FileSenderInternationalisation{
                 .map(i18napplication -> i18napplication.getTitle().get(Locale.of(locale.getLanguage())))
                 .orElse(null);
     }
+
     public String getInternationnalizedApplicationDescription(Locale locale) {
         return Optional.ofNullable(downloadDatasetQuery().application().getConfiguration())
                 .map(Configuration::i18n)

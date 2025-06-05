@@ -7,9 +7,24 @@ import java.util.Map;
 
 public record ReferenceCheckerParamsType(
         SectionBuilder sectionBuilder,
-        Map<String, ConfigurationSchemaNodeType> children, boolean required,
+        Map<String, ConfigurationSchemaNodeType<?>> children, boolean required,
         boolean nullable) implements IntermediaryType.CheckerParamType {
-    public static SectionBuilder SECTION_BUILDER(){
+    private ReferenceCheckerParamsType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
+        this(SECTION_BUILDER(),
+                children,
+                false,
+                false);
+    }
+
+    public ReferenceCheckerParamsType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER()
+                        .test(children.keySet()),
+                children,
+                false,
+                false);
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withMandatorySections(
                         new LabelDescription(ConfigurationSchemaNode.OA_REFERENCE, ReferenceType.EMPTY_INSTANCE())
@@ -20,24 +35,9 @@ public record ReferenceCheckerParamsType(
                         new LabelDescription(ConfigurationSchemaNode.OA_IS_RECURSIVE, new BooleanType(false))
                 );
     }
-    public static ReferenceCheckerParamsType  EMPTY_INSTANCE(){
+
+    public static ReferenceCheckerParamsType EMPTY_INSTANCE() {
         return new ReferenceCheckerParamsType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
 
-
-    private ReferenceCheckerParamsType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
-                children,
-                false,
-                false);
-    }
-    public ReferenceCheckerParamsType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER()
-                        .test(children.keySet()),
-                children,
-                false,
-                false);
-    }
-
 }
-

@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
@@ -13,17 +14,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.when;
 
 /**
  * Factory pour créer des instances de PrivilegeAssessorDomainForApplication pour les tests
  */
 public class PrivilegeAssessorDomainForApplicationFactory {
-    
+
     // Constante du nom de la donnée par défaut utilisée dans les tests
     public static final String DEFAULT_DATA_NAME = "dataName";
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec le rôle USER_MANAGER
      * Permet d'ajouter des autorisations (forAddAuthorization)
@@ -34,7 +34,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                             .withIsApplicationManager(true)
                             .build())
             .build();
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec le rôle USER_MANAGER
      * Permet de gérer les utilisateurs (forUserManager)
@@ -45,7 +45,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                             .withIsUserManager(true)
                             .build())
             .build();
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec le rôle APPLICATION_MANAGER
      * Permet de gérer l'application (foApplicationManager)
@@ -56,7 +56,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                             .withIsApplicationManager(true)
                             .build())
             .build();
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec le rôle APPLICATION_MANAGER
      * Permet de gérer les administrateurs (forManageAdministrator)
@@ -67,7 +67,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                             .withIsApplicationManager(true)
                             .build())
             .build();
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec le rôle DATA_READER
      * Autorisations extraction sur dataName (forDataRead)
@@ -91,19 +91,19 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                             .withIsApplicationManager(true)
                             .build())
             .build();
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec des droits de dépôt
      * Autorisations depot sur dataName (forDataDeposit)
      */
     public static final PrivilegeAssessorDomainForApplication DATA_DEPOSIT_WRITER;
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec des droits de publication
      * Autorisations publication sur dataName (forDataPublish)
      */
     public static final PrivilegeAssessorDomainForApplication DATA_PUBLISH_WRITER;
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec le rôle APPLICATION_MANAGER
      * Permet de mettre à jour l'application (forUpdateApplication)
@@ -114,7 +114,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                             .withIsApplicationManager(true)
                             .build())
             .build();
-    
+
     /**
      * PrivilegeAssessorDomainForApplication avec le rôle USER_MANAGER
      * Permet de gérer les autorisations (forManageAuthorizations)
@@ -125,7 +125,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                             .withIsUserManager(true)
                             .build())
             .build();
-    
+
     /**
      * PrivilegeAssessorDomainForApplication sans aucun droit
      * Utile pour tester les cas d'erreur
@@ -135,7 +135,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                     AuthorizationsForApplicationUserFactory.builder()
                             .build())
             .build();
-    
+
     // Initialisation des constantes nécessitant des mocks
     static {
         // Initialisation de DATA_READER
@@ -148,10 +148,10 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                                 .withUserAuthorizations(extractionAuthorizations)
                                 .build())
                 .build();
-        
+
         // Initialisation de DATA_DEPOSIT_WRITER
         AuthorizationParsed depotAuth = Mockito.mock(AuthorizationParsed.class);
-        when(depotAuth.operationTypes()).thenReturn(Set.of(OperationType.depot, OperationType.publication,OperationType.extraction, OperationType.delete));
+        when(depotAuth.operationTypes()).thenReturn(Set.of(OperationType.depot, OperationType.publication, OperationType.extraction, OperationType.delete));
         Map<String, List<AuthorizationParsed>> depotAuthorizations = Map.of(DEFAULT_DATA_NAME, List.of(depotAuth));
         DATA_DEPOSIT_WRITER = builder()
                 .withAuthorizations(
@@ -161,7 +161,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                 .build();
 
         // Initialisation de DATA_DELETE_WITH_REPOSITORY
-        AuthorizationParsed deleteWithrepositoryAuth = Mockito.mock(AuthorizationParsed.class, "deleteWithrepositoryAuth" );
+        AuthorizationParsed deleteWithrepositoryAuth = Mockito.mock(AuthorizationParsed.class, "deleteWithrepositoryAuth");
         when(deleteWithrepositoryAuth.operationTypes()).thenReturn(Set.of(OperationType.delete));
         Map<String, List<AuthorizationParsed>> deleteWithRepositoryAuthorizations = Map.of(DEFAULT_DATA_NAME, List.of(deleteWithrepositoryAuth));
         Application applicationForDeleteWithRepository = Mockito.mock(Application.class, "applicationForDeleteWithRepository");
@@ -188,7 +188,7 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                                 .withUserAuthorizations(deleteWithoutRepositoryAuthorizations)
                                 .build())
                 .build();
-        
+
         // Initialisation de DATA_PUBLISH_WRITER
         AuthorizationParsed publishAuth = Mockito.mock(AuthorizationParsed.class);
         when(publishAuth.operationTypes()).thenReturn(Set.of(OperationType.publication));
@@ -201,25 +201,26 @@ public class PrivilegeAssessorDomainForApplicationFactory {
                 .build();
     }
 
-    public Application getApplication() {
-        return application;
-    }
-
     // Attributs d'instance pour le builder
     Application application = Mockito.mock(Application.class);
     GetGrantableResult grantable;
     private AuthorizationsForApplicationUser authorizations;
-    private PrivilegeAssessorDomain domain;
+    private PrivilegeApplicationDomainEnum privilegeApplicationDomainEnum;
 
     public PrivilegeAssessorDomainForApplicationFactory() {
+        super();
     }
 
     public static PrivilegeAssessorDomainForApplicationFactory builder() {
         return new PrivilegeAssessorDomainForApplicationFactory();
     }
 
+    public Application getApplication() {
+        return application;
+    }
+
     public PrivilegeAssessorDomainForApplication build() {
-        final PrivilegeAssessorDomainForApplication privilegeAssessorDomainForApplication = new PrivilegeAssessorDomainForApplication(authorizations, domain, application, grantable);
+        final PrivilegeAssessorDomainForApplication privilegeAssessorDomainForApplication = new PrivilegeAssessorDomainForApplication(authorizations, privilegeApplicationDomainEnum, application, grantable);
         return privilegeAssessorDomainForApplication;
     }
 
@@ -228,8 +229,8 @@ public class PrivilegeAssessorDomainForApplicationFactory {
         return this;
     }
 
-    public PrivilegeAssessorDomainForApplicationFactory withDomain(PrivilegeAssessorDomain domain) {
-        this.domain = domain;
+    public PrivilegeAssessorDomainForApplicationFactory withDomain(PrivilegeApplicationDomainEnum domain) {
+        this.privilegeApplicationDomainEnum = domain;
         return this;
     }
 

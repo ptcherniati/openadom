@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -64,7 +64,7 @@
         <license.licenseName>lgpl_v3</license.licenseName>
 
         <!-- Java Version -->
-        <java.version>21</java.version>
+        <java.version>23</java.version>
 
         <jwt.version>0.12.6</jwt.version>
         <flyway.version>11.7.2</flyway.version>
@@ -79,18 +79,19 @@
         <vue.version>3.5.13</vue.version>
         <testcontainer.postgresql.version>1.20.1</testcontainer.postgresql.version>
         <groovy.version-jsr223>3.0.24</groovy.version-jsr223>
-        
+
         <!--sonar-->
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec
+        </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec</sonar.coverage.jacoco.xmlReportPaths>
         <sonar.language>java</sonar.language>
         <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
         <sonar.projectName>openADOM-backend</sonar.projectName>
         <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
-        
+
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
-         
+
         <!-- for lombock with java23+ -->
         <maven.compiler.proc>full</maven.compiler.proc>
 
@@ -243,12 +244,12 @@
             <groupId>org.junit.platform</groupId>
             <artifactId>junit-platform-suite-engine</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
@@ -262,7 +263,7 @@
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-config</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
@@ -275,7 +276,7 @@
             <artifactId>vue</artifactId>
             <version>${vue.version}</version>
         </dependency>
-        
+
         <!-- Old Vue 2 
         <dependency> 
             <groupId>org.webjars.bowergithub.vuejs</groupId>
@@ -294,14 +295,14 @@
                 </exclusion>
             </exclusions>
         </dependency> -->
-        
+
         <!-- 
         <dependency>
             <groupId>pl.project13.maven</groupId>
             <artifactId>git-commit-id-plugin</artifactId>
             <version>4.9.10</version>
         </dependency> -->
-        
+
         <!-- 
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
@@ -330,14 +331,14 @@
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
         </dependency> -->
-        
+
         <!-- Apache HttpClient 
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
             <version>4.5.14</version>
         </dependency> -->
-        
+
         <!-- <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -348,13 +349,13 @@
             <artifactId>commons-io</artifactId>
             <version>${commons-io.version}</version>
         </dependency> -->
- 
+
         <!--
         <dependency>
             <groupId>org.apache.httpcomponents.core5</groupId>
             <artifactId>httpcore5</artifactId>
         </dependency> -->
-        
+
         <!--
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -388,6 +389,7 @@
                 <version>0.8.13</version>
                 <executions>
                     <execution>
+                        <id>prepare-agent</id>
                         <goals>
                             <goal>prepare-agent</goal>
                         </goals>
@@ -417,11 +419,6 @@
                     <generateGitPropertiesFile>true</generateGitPropertiesFile>
                     <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
                     </generateGitPropertiesFilename>
-                    <!--<includeOnlyProperties>
-                        <includeOnlyProperty>^git.branch$</includeOnlyProperty>
-                        <includeOnlyProperty>^git.commit.id.abbrev$</includeOnlyProperty>
-                        <includeOnlyProperty>^git.commit.time$</includeOnlyProperty>
-                    </includeOnlyProperties>-->
                 </configuration>
             </plugin>
             <plugin>
@@ -432,11 +429,10 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <compilerArgs>
-                        <arg>-parameters</arg>
+                    <compilerArgs>--enable-preview
                     </compilerArgs>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>23</source>
+                    <target>23</target>
                 </configuration>
             </plugin>
             <plugin>
@@ -465,9 +461,27 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version> <!-- Version explicite importante -->
+                <executions>
+                    <execution>
+                        <id>resolve-mockito-path</id>
+                        <phase>initialize</phase> <!-- Phase explicite -->
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <!-- Utilisez une version récente pour être certain du support adéquat de JUnit 5 -->
-                <version>${maven-surefire-plugin.version}</version>
+                <configuration>
+                    <argLine>
+                        @{argLine}
+                        -javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"
+                    </argLine>
+                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

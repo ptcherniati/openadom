@@ -10,12 +10,12 @@ import java.util.Map;
 public abstract class OneValueStaticColumn extends Column {
 
     public OneValueStaticColumn(final DataColumn referenceColumn, final String headerForColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage) {
-        super(referenceColumn, headerForColumn, presenceConstraint, computedValueUsage);
+        super(referenceColumn, presenceConstraint, computedValueUsage);
     }
 
     @Override
     public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
-        final DataColumnValue<FieldType, FieldType> referenceColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent));
+        final DataColumnValue<FieldType<?>, FieldType<?>> referenceColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent));
         referenceDatum.put(getReferenceColumn(), referenceColumnValue);
     }
 

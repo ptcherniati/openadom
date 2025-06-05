@@ -6,18 +6,18 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
 import java.util.Map;
 
-public record StringCheckerType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType> children,
+public record StringCheckerType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                                 boolean required,
                                 boolean nullable) implements CheckerType {
 
-    public StringCheckerType(final Map<String, ConfigurationSchemaNodeType> children) {
+    public StringCheckerType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER(),
                 children,
                 false,
                 false);
     }
 
-    public StringCheckerType(final SectionBuilder sectionBuilder, final Map<String, ConfigurationSchemaNodeType> children, final boolean required, final boolean nullable) {
+    public StringCheckerType(final SectionBuilder sectionBuilder, final Map<String, ConfigurationSchemaNodeType<?>> children, final boolean required, final boolean nullable) {
         this.children = addNameNode(children);
         this.sectionBuilder = sectionBuilder
                 .test(children().keySet());

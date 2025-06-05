@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.application.configuration.examples;
 
-import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.*;
+import fr.inra.oresing.domain.checker.Multiplicity;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -14,8 +14,8 @@ class FloatCheckerExampleBuilder {
     protected static final CheckerType STANDARD_DEVIATION = buildFloatChecker(0f, 500f, Multiplicity.ONE);
 
     protected static FloatCheckerType buildFloatChecker(final Float min, final Float max, final Multiplicity multiplicity) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
-        final HashMap<String, ConfigurationSchemaNodeType> params = new HashMap<>();
+        final Map<String, ConfigurationSchemaNodeType<?>> children = new HashMap<>();
+        final HashMap<String, ConfigurationSchemaNodeType<?>> params = new HashMap<>();
         final EnumType oaMultiplicity = EnumExampleBuilder.buildMultiplicityType(multiplicity);
         params.put(ConfigurationSchemaNode.OA_MULTIPLICITY, oaMultiplicity);
         Optional.ofNullable(min)

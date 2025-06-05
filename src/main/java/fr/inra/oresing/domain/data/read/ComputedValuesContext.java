@@ -7,6 +7,6 @@ import fr.inra.oresing.domain.data.Datum;
 
 import java.util.function.Function;
 
-public record ComputedValuesContext(ImmutableMap<String, Function<Datum, FieldType>> defaultValueFns,
+public record ComputedValuesContext(ImmutableMap<String, Function<Datum, FieldType<?>>> defaultValueFns,
                                     ImmutableSet<String> replaceEnabled) {
 }

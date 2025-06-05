@@ -14,16 +14,14 @@ import java.util.UUID;
 @ToString(callSuper = true)
 public class RightsRequest extends OreSiEntity {
 
-    public static RightsRequest EMPTY_INSTANCE() {
-        return new RightsRequest();
-    }
-
     UUID application;
     UUID user;
-
     String comment;
     Map<String, String> rightsRequestForm;
     OreSiAuthorization rightsRequest;
-
     boolean setted;
+
+    public static RightsRequest EMPTY_INSTANCE() {
+        return new RightsRequest();
+    }
 }

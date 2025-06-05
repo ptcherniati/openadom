@@ -32,13 +32,6 @@ public record StandardDataDescription(
 ) {
     private static final Logger log = LoggerFactory.getLogger(StandardDataDescription.class);
 
-    public Optional<ComponentDescription> findParentDescription(String dataName) {
-        Predicate<ComponentDescription> isParentComponentOfDataName = componentDescription -> componentDescription.isParent(dataName);
-        return componentDescriptions().values().stream()
-                .filter(isParentComponentOfDataName)
-                .findFirst();
-    }
-
     public StandardDataDescription(final char separator,
                                    final Integer dataHeaderLine,
                                    final Integer dataFirstLine,
@@ -78,9 +71,17 @@ public record StandardDataDescription(
                                     }
                                     default:
                                         yield null;
-                                }).orElse(null)).filter(Objects::nonNull).collect(Collectors.toList()),
+                                }).orElse(null)).filter(Objects::nonNull)
+                        .collect(Collectors.toList()),
                 null
         );
+    }
+
+    public Optional<ComponentDescription> findParentDescription(String dataName) {
+        Predicate<ComponentDescription> isParentComponentOfDataName = componentDescription -> componentDescription.isParent(dataName);
+        return componentDescriptions().values().stream()
+                .filter(isParentComponentOfDataName)
+                .findFirst();
     }
 
     public <T extends ComponentDescription> Map<String, T> getComponentByType(final Class<T> clazz) {
@@ -175,7 +176,7 @@ public record StandardDataDescription(
     public void buildEmptyFile(OutputStream output) throws IOException {
         CSVFormat customFormat = CSVFormat.Builder.create()
                 .setDelimiter(Optional.of(separator()).orElse(';'))
-                .build();
+                .get();
         OutputStreamWriter outputStreamWriter = new OutputStreamWriter(output);
         CSVPrinter csvPrinter = new CSVPrinter(outputStreamWriter, customFormat);
         buildPreOrPostHeader(csvPrinter, true);

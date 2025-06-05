@@ -6,7 +6,9 @@ import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 
 
 public record ApplicationLightResult(
@@ -20,7 +22,7 @@ public record ApplicationLightResult(
         Timestamp charteSignedAt = Optional.ofNullable(currentUserRoles)
                 .map(CurrentUserRoles::user)
                 .map(OreSiUser::getChartes)
-                .map(chartes->chartes.get(application.getId().toString()))
+                .map(chartes -> chartes.get(application.getId().toString()))
                 .orElse(null);
         Timestamp lastChartes = application.getLastChartes();
         return new ApplicationLightResult(

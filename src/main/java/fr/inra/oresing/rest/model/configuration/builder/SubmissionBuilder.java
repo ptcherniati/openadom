@@ -4,14 +4,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.ComponentDescription;
+import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
+import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationSubmissionComponent;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-
 import jakarta.annotation.Nullable;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -244,12 +247,12 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
             }
         } else if (
                 rootBuilder().getCheckers()
-                .entrySet()
-                .stream()
-                .filter(entry-> entry.getKey().equals(CheckerDescription.CheckerDescriptionType.DateChecker))
-                .map(entry->entry.getValue().getOrDefault(dataKey, new HashMap<>()).keySet())
-                .flatMap(Set::stream)
-                .toList().contains(authorizationScopeReference)) {
+                        .entrySet()
+                        .stream()
+                        .filter(entry -> entry.getKey().equals(CheckerDescription.CheckerDescriptionType.DateChecker))
+                        .map(entry -> entry.getValue().getOrDefault(dataKey, new HashMap<>()).keySet())
+                        .flatMap(Set::stream)
+                        .toList().contains(authorizationScopeReference)) {
             rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
                             "referenceName", Objects.requireNonNull(authorizationScopeReference),
                             "allDataNames", rootBuilder.getListDataKeys()),
@@ -278,8 +281,8 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
         final List<String> listComponentKeys = rootBuilder().getCheckers()
                 .entrySet()
                 .stream()
-                .filter(entry-> entry.getKey().equals(CheckerDescription.CheckerDescriptionType.ReferenceChecker))
-                .map(entry->entry.getValue().getOrDefault(dataKey, new HashMap<>()).keySet())
+                .filter(entry -> entry.getKey().equals(CheckerDescription.CheckerDescriptionType.ReferenceChecker))
+                .map(entry -> entry.getValue().getOrDefault(dataKey, new HashMap<>()).keySet())
                 .flatMap(Set::stream)
                 .toList();
         if (component != null) {

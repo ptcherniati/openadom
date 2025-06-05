@@ -6,10 +6,10 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
@@ -18,7 +18,6 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.logout.CookieClearingLogoutHandler;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -33,59 +32,68 @@ import java.io.IOException;
 @EnableGlobalMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
+    public static final String ACTUATOR = "/actuator";
+    public static final String SWAGGER_UI = "/swagger-ui";
+    public static final String API_DOCS = "/api-docs";
+    public static final String API_PUBLIC = "/api/public";
+    public static final String API_DOCS_YAML = "/api-docs.yaml";
+    public static final String ERROR = "/error";
+    public static final String LOGIN = "/login";
+    public static final String USERS = "/users";
+    public static final String ALL = "%s/**";
+    public static final String API_V_1_LOGOUT = "/api/v1/logout";
+    public static final String API_V_1_LOGIN = "/api/v1/login";
+    public static final String API_V_1_USERS = "/api/v1/users";
+    public static final String BASE = "/";
+    public static final long MAX_AGE = 3600L;
+    @Value("${allowed.origin}")
+    String frontendOrigin;
+    @Value("${springdoc.swagger-ui.server-url}")
+    String swaggerUrl;
+
     /**/
     @Bean
     public MethodSecurityExpressionHandler methodSecurityExpressionHandler(
-            AuthorizationService authorizationService) {
+            PermissionEvaluator applicationPermissionEvaluator) {
         DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
-        handler.setPermissionEvaluator(new ApplicationPermissionEvaluator(authorizationService));
+        handler.setPermissionEvaluator(applicationPermissionEvaluator);
         return handler;
     }
 
     @Bean
+    @Lazy
     public PermissionEvaluator applicationPermissionEvaluator(
             AuthorizationService authorizationService
     ) {
         return new ApplicationPermissionEvaluator(authorizationService);
     }
 
-    public static final long MAX_AGE = 3600L;
-    @Autowired
-    private AuthorizationFilter authorizationFilter;
-    @Value("${allowed.origin}")
-    String frontendOrigin;
-    @Value("${springdoc.swagger-ui.server-url}")
-    String swaggerUrl;
-
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        CookieClearingLogoutHandler cookies = new CookieClearingLogoutHandler(JWTExtractor.JWT_COOKIE_NAME);
-
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthorizationFilter authorizationFilter) throws Exception {
         http
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                        .ignoringRequestMatchers("/", "/swagger-ui/**", "/v3/api-docs/**", "/api-docs/**", "/api/public/**")
-                        .ignoringRequestMatchers("/api/v1/login", "/api/v1/users", "/api/v1/logout")
+                        .ignoringRequestMatchers(BASE, ALL.formatted(SWAGGER_UI), ALL.formatted(API_DOCS), ALL.formatted(API_PUBLIC))
+                        .ignoringRequestMatchers(API_V_1_LOGIN, API_V_1_USERS, API_V_1_LOGOUT)
                 )
                 .authorizeHttpRequests(auth ->
                         auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                                 .requestMatchers(
-                                        "/",
-                                        "/api/v1/logout",
-                                        "/actuator/**",
-                                        "/swagger-ui/**",
-                                        "/api-docs/**",
-                                        "/v3/api-docs/**",
-                                        "/api/public/**",
-                                        "/api-docs.yaml",
-                                        "/error").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/v1/login").hasAuthority(AuthorizationFilter.ROLE_AUTHENTIFIED_USER.getAuthority())
-                                .requestMatchers(HttpMethod.POST, "/api/v1/users").hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
-                                .requestMatchers(HttpMethod.PUT, "/api/v1/users").hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
+                                        BASE,
+                                        API_V_1_LOGOUT,
+                                        ALL.formatted(ACTUATOR),
+                                        ALL.formatted(SWAGGER_UI),
+                                        ALL.formatted(API_DOCS),
+                                        ALL.formatted(API_PUBLIC),
+                                        API_DOCS_YAML,
+                                        ERROR).permitAll()
+                                .requestMatchers(HttpMethod.POST, API_V_1_LOGIN).hasAuthority(AuthorizationFilter.ROLE_AUTHENTIFIED_USER.getAuthority())
+                                .requestMatchers(HttpMethod.POST, API_V_1_USERS).hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
+                                .requestMatchers(HttpMethod.PUT, API_V_1_USERS).hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
                                 .anyRequest().authenticated())
                 .addFilterAfter(authorizationFilter, BasicAuthenticationFilter.class)
                 .addFilterAfter(new CsrfCookieFilter(), AuthorizationFilter.class)
@@ -118,15 +126,22 @@ public class SecurityConfig {
             // Configuration CORS pour les endpoints API
             registry.addMapping("/api/**")
                     .allowedOrigins(swaggerUrl, frontendOrigin)
-                    .allowedMethods("POST", "PUT", "GET", "DELETE", "OPTIONS")
+                    .allowedMethods(
+                            HttpMethod.POST.name(),
+                            HttpMethod.PUT.name(),
+                            HttpMethod.DELETE.name(),
+                            HttpMethod.GET.name(),
+                            HttpMethod.OPTIONS.name()
+                    )
                     .allowedHeaders("X-CSRF-TOKEN", "X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language")
                     .allowCredentials(true)
                     .maxAge(MAX_AGE);
 
             // Configuration CORS spécifique pour la racine
-            registry.addMapping("/")
+            registry.addMapping(BASE)
                     .allowedOrigins(swaggerUrl, frontendOrigin)
-                    .allowedMethods("GET", "OPTIONS")
+                    .allowedMethods(HttpMethod.GET.name(),
+                            HttpMethod.OPTIONS.name())
                     .allowedHeaders("*")
                     .allowCredentials(true)
                     .maxAge(MAX_AGE);

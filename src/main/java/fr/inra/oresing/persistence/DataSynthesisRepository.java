@@ -1,10 +1,10 @@
 package fr.inra.oresing.persistence;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.chart.OreSiSynthesis;
-import com.google.common.base.Strings;
 import fr.inra.oresing.domain.repository.synthesis.SynthesisRepository;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -18,7 +18,7 @@ import java.util.UUID;
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 public class DataSynthesisRepository extends JsonTableInApplicationSchemaRepositoryTemplate<OreSiSynthesis>
-implements SynthesisRepository {
+        implements SynthesisRepository {
     public static final String BUILD_SYNTHESIS_SQL = """
             with
                  vars (agregation, variable, "datatype", gap) as (
@@ -70,7 +70,7 @@ implements SynthesisRepository {
                        mindate,
                        maxdate,
                        bool_and(continuous) continuous
-
+            
                 from infos
                 group by application, "datatype", variable, requiredAuthorizations, aggregation, range, mindate, maxdate
             ),
@@ -230,7 +230,7 @@ implements SynthesisRepository {
             return new LinkedList<>();
         }
         final String query = String.format(
-                hasChartDescription?BUILD_SYNTHESIS_SQL:BUILD_GENERIC_SYNTHESIS_SQL,
+                hasChartDescription ? BUILD_SYNTHESIS_SQL : BUILD_GENERIC_SYNTHESIS_SQL,
                 getTable().schema().getSqlIdentifier(),
                 varsSql,
                 getEntityClass().getName(),
@@ -247,15 +247,15 @@ implements SynthesisRepository {
 
     public int removeSynthesisByApplicationDatatype(final UUID applicationId, final String dataType) {
         Preconditions.checkArgument(applicationId != null && !Strings.isNullOrEmpty(dataType));
-        final String query =String.format(SYNTHESIS_DELETE_BY_APPLICATION_AND_DATATYPE1, getTable().getSqlIdentifier());
+        final String query = String.format(SYNTHESIS_DELETE_BY_APPLICATION_AND_DATATYPE1, getTable().getSqlIdentifier());
         return getNamedParameterJdbcTemplate().update(query, ImmutableMap.of("application", applicationId, "datatype", dataType));
     }
 
     public int removeSynthesisByApplicationDatatypeAndVariable(final UUID applicationId, final String dataType, final String variable) {
         Preconditions.checkArgument(applicationId != null && !Strings.isNullOrEmpty(dataType) && !Strings.isNullOrEmpty(variable));
         final String query = String.format(SYNTHESIS_DELETE_BY_APPLICATION_DATATYPE_AND_VARIABLE,
-getTable().getSqlIdentifier()
-                );
+                getTable().getSqlIdentifier()
+        );
         return getNamedParameterJdbcTemplate().update(query, ImmutableMap.of("application", applicationId, "datatype", dataType, "variable", variable));
     }
 

@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public record DataColumnPatternValue(
         Map<DataColumn, DataColumnValue> values) implements DataColumnValue<Map<String, Object>, Map<String, Object>> {
 
-    public DataColumnPatternValue(FieldType valuesToCheck) {
+    public DataColumnPatternValue(FieldType<?> valuesToCheck) {
         this(switch (valuesToCheck) {
             case PatternType patternType -> patternType.getValue();
             case null, default -> new HashMap<>();
@@ -23,16 +23,16 @@ public record DataColumnPatternValue(
 
     @Override
     public PatternType getValuesToCheck() {
-        Map<String, FieldType> valuesToCheck = values().entrySet()
+        Map<String, FieldType<?>> valuesToCheck = values().entrySet()
                 .stream().collect(Collectors.toMap(e -> e.getKey().column(), e -> e.getValue().getValuesToCheck()));
         return new PatternType<>(valuesToCheck);
     }
 
     @Override
-    public DataColumnPatternValue transform(final Function<FieldType, FieldType> transformation) {
+    public DataColumnPatternValue transform(final Function<FieldType<?>, FieldType<?>> transformation) {
         transformation.apply(values().get(new DataColumn(Column.__VALUE__)).getValuesToCheck());
         final Map<Ltree, String> transformedValues = null;//Maps.transformValues(values, transformation::apply);
-        return new DataColumnPatternValue((FieldType) null);
+        return new DataColumnPatternValue((FieldType<?>) null);
     }
 
     @Override
@@ -73,11 +73,11 @@ public record DataColumnPatternValue(
     public Map<String, Object> toObjectsExposedInGroovyContext() {
         Map<String, Object> result = new HashMap<>();
         for (Map.Entry<DataColumn, DataColumnValue> dataColumnDataColumnValueEntry : values.entrySet()) {
-                final Object valueThatMayBeNull = Optional.ofNullable(dataColumnDataColumnValueEntry.getValue())
-                        .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
-                        .map(Object::toString)
-                        .orElse(null);
-                result.put(dataColumnDataColumnValueEntry.getKey().toJsonForDatabase(), valueThatMayBeNull);
+            final Object valueThatMayBeNull = Optional.ofNullable(dataColumnDataColumnValueEntry.getValue())
+                    .map(SomethingToBeStoredAsJsonInDatabase::toJsonForDatabase)
+                    .map(Object::toString)
+                    .orElse(null);
+            result.put(dataColumnDataColumnValueEntry.getKey().toJsonForDatabase(), valueThatMayBeNull);
         }
         return result;
     }

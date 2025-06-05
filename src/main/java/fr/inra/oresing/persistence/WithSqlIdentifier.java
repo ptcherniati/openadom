@@ -4,8 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 
 public interface WithSqlIdentifier {
 
-    String getSqlIdentifier();
-
     static String escapeSqlIdentifier(final String sqlIdentifier) {
         final String escaped;
         if (StringUtils.containsAny(sqlIdentifier, " ", "-")) {
@@ -15,5 +13,7 @@ public interface WithSqlIdentifier {
         }
         return escaped;
     }
+
+    String getSqlIdentifier();
 
 }

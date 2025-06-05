@@ -1,11 +1,13 @@
 package fr.inra.oresing.rest.reactive;
+
+import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
-import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import reactor.core.publisher.FluxSink;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.function.DoubleUnaryOperator;
 
 public class ReactiveProgression {
@@ -51,12 +53,14 @@ public class ReactiveProgression {
         P up();
 
 
-        default void pushError(final ValidationError error){
+        default void pushError(final ValidationError error) {
             fluxSink().next(new ReactiveTypeError(error));
         }
+
         default void pushError(final IOException e) {
             fluxSink().next(new ReactiveTypeError(e));
         }
+
         default void pushError(final ValidationCheckResult validationCheckResult) {
             record ValidationCheckResultError(List<ValidationCheckResult> validationCheckResults) {
                 ValidationCheckResultError(final List<ValidationCheckResult> validationCheckResults) {
@@ -66,8 +70,8 @@ public class ReactiveProgression {
             fluxSink().next(
                     new ReactiveTypeError(
                             new ValidationCheckResultError(List.of(validationCheckResult))
-                            )
-                    );
+                    )
+            );
         }
 
         default void pushError(final Exception e) {
@@ -76,11 +80,11 @@ public class ReactiveProgression {
             );
         }
 
-        default void pushError(final ConfigurationException configurationException){
+        default void pushError(final ConfigurationException configurationException) {
             pushError(new ValidationError(configurationException, null));
         }
 
-        default void pushError(final ConfigurationException configurationException, final Map<String, Object> params){
+        default void pushError(final ConfigurationException configurationException, final Map<String, Object> params) {
             pushError(new ValidationError(configurationException, params));
         }
     }
@@ -93,13 +97,13 @@ public class ReactiveProgression {
 
         String label();
 
-        default <PM extends ProgressionMessagesLabel> PM withSubLabel(final String subLabel) {
+        default <P extends ProgressionMessagesLabel> P withSubLabel(final String subLabel) {
             return newProgressionMessageLabel(COMPOSITION_LABEL.formatted(label(), subLabel));
         }
 
-        <PM extends ProgressionMessagesLabel> PM newProgressionMessageLabel(String formatted);
+        <P extends ProgressionMessagesLabel> P newProgressionMessageLabel(String formatted);
 
-        default <PM extends ProgressionMessagesLabel> PM up() {
+        default <P extends ProgressionMessagesLabel> P up() {
             return newProgressionMessageLabel(label().replaceAll("\\.[^\\.]*", ""));
         }
     }
@@ -201,8 +205,8 @@ public class ReactiveProgression {
         }
 
         @Override
-        public <PM extends ProgressionMessagesLabel> PM newProgressionMessageLabel(final String label) {
-            return (PM) new CreateApplicationProgressionMessagesLabel(label);
+        public <P extends ProgressionMessagesLabel> P newProgressionMessageLabel(final String label) {
+            return (P) new CreateApplicationProgressionMessagesLabel(label);
         }
     }
 
@@ -213,8 +217,8 @@ public class ReactiveProgression {
         }
 
         @Override
-        public <PM extends ProgressionMessagesLabel> PM newProgressionMessageLabel(final String label) {
-            return (PM) new ChangeApplicationProgressionMessagesLabel(label);
+        public <P extends ProgressionMessagesLabel> P newProgressionMessageLabel(final String label) {
+            return (P) new ChangeApplicationProgressionMessagesLabel(label);
         }
     }
 
@@ -225,8 +229,8 @@ public class ReactiveProgression {
         }
 
         @Override
-        public <PM extends ProgressionMessagesLabel> PM newProgressionMessageLabel(final String label) {
-            return (PM) new CreateApplicationProgressionMessagesLabel(label);
+        public <P extends ProgressionMessagesLabel> P newProgressionMessageLabel(final String label) {
+            return (P) new CreateApplicationProgressionMessagesLabel(label);
         }
     }
 }

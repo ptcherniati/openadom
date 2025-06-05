@@ -4,9 +4,11 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.type.CheckerEnum;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.rest.MultiYaml;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import lombok.extern.slf4j.Slf4j;
@@ -22,22 +24,30 @@ import java.util.*;
 public class ApplicationConfigurationService {
     private static final ImmutableSet<CheckerEnum> CHECKER_ON_TARGET_NAMES =
             ImmutableSet.of(CheckerEnum.OA_date, CheckerEnum.OA_integer, CheckerEnum.OA_float, CheckerEnum.OA_string, CheckerEnum.OA_reference);
-    private static final ImmutableSet<CheckerEnum> ALL_CHECKER_NAMES = ImmutableSet.<CheckerEnum>builder()
-            .addAll(CHECKER_ON_TARGET_NAMES)
-            .add(CheckerEnum.OA_groovyExpression)
-            .build();
+
+    static {
+        ImmutableSet.<CheckerEnum>builder()
+                .addAll(CHECKER_ON_TARGET_NAMES)
+                .add(CheckerEnum.OA_groovyExpression)
+                .build();
+    }
+
+    private ApplicationConfigurationService() {
+    }
 
     public static Application unzipConfiguration(final MultipartFile file, ReactiveProgression.CreateApplicationProgression fluxSink) throws IOException {
         InputStream inputStream = MultiYaml.parseConfigurationBytes(file);
-        return ApplicationConfigurationService.parseConfigurationBytes(null,
+        return ApplicationConfigurationService.parseConfigurationBytes(
+                "", "",
                 fluxSink,
                 FileBomResolver.of(inputStream));
-}
+    }
 
-    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(final
-                                                                                                                           String comment,
-                                                                                                                           P progression,
-                                                                                                                           final FileBomResolver fileBomResolver) {
+    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(
+            final String applicationName,
+            final String comment,
+            P progression,
+            final FileBomResolver fileBomResolver) {
         progression.pushMessage("testYamlIsvalid", null);
         try {
             byte[] bytes = fileBomResolver.readAllBytes();
@@ -53,14 +63,14 @@ public class ApplicationConfigurationService {
 
             final Configuration configuration;
             configuration = ConfigurationBuilder.build(bytes, progression1, comment);
-            final ReactiveProgression.ChangeOrCreateApplicationProgression progressionForCheckSyntax = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression1.withSubLabel("CheckSyntax");
+            final ReactiveProgression.ChangeOrCreateApplicationProgression<?> progressionForCheckSyntax = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression1.withSubLabel("CheckSyntax");
             if (configuration == null) {
                 progression1.complete();
                 return null;
             }
             return getConfigurationParsingResultForSyntacticallyValidYaml(progressionForCheckSyntax, configuration);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage());
         }
     }
 
@@ -78,11 +88,9 @@ public class ApplicationConfigurationService {
                         () -> application.setAdditionalFiles(List.of())
                 );
         final String applicationName = configuration.applicationDescription().name();
-        final ReactiveProgression.ChangeOrCreateApplicationProgression progressionValidation = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression.withSubLabel("startValidation");
+        final ReactiveProgression.ChangeOrCreateApplicationProgression<?> progressionValidation = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression.withSubLabel("startValidation");
         progressionValidation.pushMessage("start", Map.of("applicationName", applicationName));
         application.setVersion(application.getConfiguration().applicationDescription().version().version());
         return application;
     }
-
-
 }

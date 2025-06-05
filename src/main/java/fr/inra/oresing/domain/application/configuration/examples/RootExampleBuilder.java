@@ -8,7 +8,7 @@ import java.util.LinkedHashMap;
 
 public class RootExampleBuilder {
     public static RootType buildRootSchema() {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> children = new LinkedHashMap<>();
         children.put(ConfigurationSchemaNode.OA_VERSION, StringExampleBuilder.OPENADOM_VERSION);
         children.put(ConfigurationSchemaNode.OA_APPLICATION, ApplicationDescriptionExampleBuilder.buildApplicationDesriptionSchema());
         children.put(ConfigurationSchemaNode.OA_TAGS, TagExampleBuilder.buildTagSchema());

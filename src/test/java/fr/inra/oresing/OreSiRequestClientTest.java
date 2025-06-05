@@ -1,0 +1,29 @@
+package fr.inra.oresing;
+
+import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
+import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
+import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.Test;
+
+import static fr.inra.oresing.OreSiRequestClient.DISCONECTED_EXCEPTION;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
+
+class OreSiRequestClientTest {
+    static OreSiRequestClientForTest client = new OreSiRequestClientForTest();
+
+    @Test
+    void id() {
+        assertThatThrownBy(() -> client.id())
+                .isInstanceOf(DisconnectedException.class)
+                .hasMessageContaining(DISCONECTED_EXCEPTION);
+    }
+
+    @Test
+    void role() {
+        Assertions.assertThat(client.role()).isEqualTo(OreSiRole.anonymous());
+    }
+
+    static class OreSiRequestClientForTest implements OreSiRequestClient {
+
+    }
+}

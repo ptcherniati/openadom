@@ -1,10 +1,6 @@
 package fr.inra.oresing.persistence;
 
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -18,7 +14,6 @@ import fr.inra.oresing.domain.application.configuration.checker.*;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
-import fr.inra.oresing.domain.checker.type.AbstractType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
@@ -38,18 +33,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.TemporalAccessor;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 @Primary
 public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
-    private PropertyNamingStrategy strategies = PropertyNamingStrategies.LOWER_CASE;
-
-    public JsonRowMapper(PropertyNamingStrategy strategies) {
-        this.strategies = strategies;
-        buildMapper();
-    }
 
     /**
      * Mapper json pour la persistence (dialogue avec la base de données)
@@ -57,8 +49,137 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
     @Getter
     private ObjectMapper jsonMapper;
 
+    public JsonRowMapper(PropertyNamingStrategy strategies) {
+        buildMapper();
+    }
+
     public JsonRowMapper() {
         buildMapper();
+    }
+
+    private static JsonSerializer<StringGroovyExpression> getStringGroovyExpressionJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(StringGroovyExpression value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeString(value.toString());
+            }
+        };
+    }
+
+    private static JsonSerializer<FieldType> getFieldTypeJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(FieldType value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                value.serialize(gen);
+            }
+        };
+    }
+
+    private static JsonSerializer<DataDatum> getDataDatumJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(DataDatum value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                ImmutableMap<String, FieldType<?>> jsonForDatabase = value.toJsonForDatabase();
+                gen.writeStartObject();
+                for (Map.Entry<String, FieldType<?>> fieldType : jsonForDatabase.entrySet()) {
+                    fieldType.getValue().serialize(gen, fieldType.getKey());
+                }
+                gen.writeEndObject();
+            }
+        };
+    }
+
+    private static JsonSerializer<Ltree> getLtreeJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(Ltree value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeString(value.getSql());
+            }
+        };
+    }
+
+    private static JsonSerializer<InvalidDatasetContentException> getInvalidDatasetContentExceptionJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(InvalidDatasetContentException value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeObject(value);
+            }
+        };
+    }
+
+    private static JsonSerializer<ValidationError> getValidationErrorJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(ValidationError value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeObject(value.toJsonObject());
+            }
+        };
+    }
+
+    private static JsonSerializer<LocalDateTimeRange> getLocalDateTimeRangeJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(LocalDateTimeRange value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
+                gen.writeString(value.toSqlExpression());
+            }
+        };
+    }
+
+    private static JsonDeserializer<FieldType<?>> getFieldTypeJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public FieldType<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return FieldType.readObject(p.readValueAs(Object.class));
+            }
+        };
+    }
+
+    private static JsonDeserializer<DataDatum> getDataDatumJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public DataDatum deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                Map map = p.readValueAs(Map.class);
+                return DataDatum.fromDatabaseJson(map);
+            }
+        };
+    }
+
+    private static JsonDeserializer<Tag> getTagJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public Tag deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                JsonNode node = p.readValueAsTree();
+                Tag.TagDefinitions type = Optional.ofNullable(node.get("tagdefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
+                return switch (type) {
+                    case NO_TAG -> node.isTextual() ? Tag.buildTag(node.asText()) : Tag.NoTag.instance();
+                    case DATA_TAG -> Tag.DataTag.instance();
+                    case REFFERENCE_TAG -> Tag.ReferenceTag.instance();
+                    case HIDDEN_TAG -> Tag.HiddenTag.instance();
+                    case ORDER_TAG ->
+                            Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
+                    case DOMAIN_TAG ->
+                            Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
+                };
+            }
+        };
+    }
+
+    private static JsonDeserializer<LocalDateTimeRange> getLocalDateTimeRangeJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public LocalDateTimeRange deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return LocalDateTimeRange.parseSql(p.getText());
+            }
+        };
+    }
+
+    private static JsonDeserializer<Ltree> getLtreeDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public Ltree deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                return Ltree.fromSqlWithoutCheck(p.getText());
+            }
+        };
     }
 
     private void buildMapper() {
@@ -107,93 +228,6 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 return super.handleUnexpectedToken(ctxt, targetType, t, p, failureMsg);
             }
         });
-    }
-
-    private static JsonSerializer<StringGroovyExpression> getStringGroovyExpressionJsonSerializer() {
-        return new JsonSerializer<>() {
-            @Override
-            public void serialize(StringGroovyExpression value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                gen.writeString(value.toString());
-            }
-        };
-    }
-
-    private static JsonSerializer<FieldType> getFieldTypeJsonSerializer() {
-        return new JsonSerializer<>() {
-            @Override
-            public void serialize(FieldType value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                value.serialize(gen);
-            }
-        };
-    }
-
-    private static JsonSerializer<DataDatum> getDataDatumJsonSerializer() {
-        return new JsonSerializer<>() {
-            @Override
-            public void serialize(DataDatum value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                ImmutableMap<String, FieldType> jsonForDatabase = value.toJsonForDatabase();
-                gen.writeStartObject();
-                for (Map.Entry<String, FieldType> fieldType : jsonForDatabase.entrySet()) {
-                    fieldType.getValue().serialize(gen, fieldType.getKey());
-                }
-                gen.writeEndObject();
-            }
-        };
-    }
-
-    private static JsonSerializer<Ltree> getLtreeJsonSerializer() {
-        return new JsonSerializer<>() {
-            @Override
-            public void serialize(Ltree value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                gen.writeString(value.getSql());
-            }
-        };
-    }
-
-    private static JsonSerializer<InvalidDatasetContentException> getInvalidDatasetContentExceptionJsonSerializer() {
-        return new JsonSerializer<>() {
-            @Override
-            public void serialize(InvalidDatasetContentException value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                gen.writeObject(value);
-            }
-        };
-    }
-
-    private static JsonSerializer<ValidationError> getValidationErrorJsonSerializer() {
-        return new JsonSerializer<>() {
-            @Override
-            public void serialize(ValidationError value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                gen.writeObject(value.toJsonObject());
-            }
-        };
-    }
-
-    private static JsonSerializer<LocalDateTimeRange> getLocalDateTimeRangeJsonSerializer() {
-        return new JsonSerializer<>() {
-            @Override
-            public void serialize(LocalDateTimeRange value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
-                gen.writeString(value.toSqlExpression());
-            }
-        };
-    }
-
-    private static JsonDeserializer<FieldType> getFieldTypeJsonDeserializer() {
-        return new JsonDeserializer<>() {
-            @Override
-            public FieldType deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                return AbstractType.readObject(p.readValueAs(Object.class));
-            }
-        };
-    }
-
-    private static JsonDeserializer<DataDatum> getDataDatumJsonDeserializer() {
-        return new JsonDeserializer<>() {
-            @Override
-            public DataDatum deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                Map map = p.readValueAs(Map.class);
-                return DataDatum.fromDatabaseJson(map);
-            }
-        };
     }
 
     private JsonDeserializer<TemporalAccessor> getTemporalAccessorJsonDeserializer() {
@@ -302,26 +336,6 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         };
     }
 
-    private static JsonDeserializer<Tag> getTagJsonDeserializer() {
-        return new JsonDeserializer<>() {
-            @Override
-            public Tag deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                JsonNode node = p.readValueAsTree();
-                Tag.TagDefinitions type = Optional.ofNullable(node.get("tagdefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
-                return switch (type) {
-                    case NO_TAG -> node.isTextual() ? Tag.buildTag(node.asText()) : Tag.NoTag.instance();
-                    case DATA_TAG -> Tag.DataTag.instance();
-                    case REFFERENCE_TAG -> Tag.ReferenceTag.instance();
-                    case HIDDEN_TAG -> Tag.HiddenTag.instance();
-                    case ORDER_TAG ->
-                            Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
-                    case DOMAIN_TAG ->
-                            Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
-                };
-            }
-        };
-    }
-
     private JsonDeserializer<Depends> getDependsJsonDeserializer() {
         return new JsonDeserializer<>() {
             @Override
@@ -348,24 +362,6 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                     case RightsRequestField -> jsonMapper.convertValue(node, RightsRequestField.class);
                     case AdditionalFileField -> jsonMapper.convertValue(node, AdditionalFileField.class);
                 };
-            }
-        };
-    }
-
-    private static JsonDeserializer<LocalDateTimeRange> getLocalDateTimeRangeJsonDeserializer() {
-        return new JsonDeserializer<>() {
-            @Override
-            public LocalDateTimeRange deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                return LocalDateTimeRange.parseSql(p.getText());
-            }
-        };
-    }
-
-    private static JsonDeserializer<Ltree> getLtreeDeserializer() {
-        return new JsonDeserializer<>() {
-            @Override
-            public Ltree deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-                return Ltree.fromSqlWithoutCheck(p.getText());
             }
         };
     }

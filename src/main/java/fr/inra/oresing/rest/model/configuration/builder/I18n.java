@@ -17,20 +17,23 @@ import java.util.stream.Collectors;
 public record I18n(Map i18n) {
     public static final Map<String, String> titles = ImmutableMap.of(
             ConfigurationSchemaNode.OA_TITLE, InternationalizationTitle.TITLE,
-            ConfigurationSchemaNode.OA_DESCRIPTION , InternationalizationTitle.DESCRIPTION
+            ConfigurationSchemaNode.OA_DESCRIPTION, InternationalizationTitle.DESCRIPTION
     );
+
     public I18n add(final String path, final Map i18n) {
-        if(MapUtils.isEmpty(i18n)){
+        if (MapUtils.isEmpty(i18n)) {
             return this;
         }
         Set<String> titleI18nKeys = titles.keySet();
-        if(titleI18nKeys.stream()
+        if (titleI18nKeys.stream()
                 .anyMatch(i18n.keySet()::contains)
-        ){
+        ) {
             final Map<String, Map> localizations = i18n();
             for (String titleI18nKey : titleI18nKeys) {
                 Map internationalizationForTitleI18nKey = (Map) i18n.get(titleI18nKey);
-                if(MapUtils.isEmpty(internationalizationForTitleI18nKey)) {continue;}
+                if (MapUtils.isEmpty(internationalizationForTitleI18nKey)) {
+                    continue;
+                }
                 String pathForTitleI18nKey = String.join(".", path, titles.get(titleI18nKey));
                 localizations.putAll(add(pathForTitleI18nKey, internationalizationForTitleI18nKey).i18n());
             }

@@ -4,20 +4,18 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
-import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.data.SomethingThatCanProvideEvaluationContext;
+import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.Set;
 
 public class GroovyExpressionOnOneLineElementTransformer implements TransformOneLineElementTransformer {
 
-    private final StringGroovyExpression groovyExpression;
-
-    private final ImmutableMap<String, Object> context;
-
-    private final CheckerTarget target;
     final Set<String> references;
+    private final StringGroovyExpression groovyExpression;
+    private final ImmutableMap<String, Object> context;
+    private final CheckerTarget target;
 
     public GroovyExpressionOnOneLineElementTransformer(final StringGroovyExpression groovyExpression,
                                                        final ImmutableMap<String, Object> context,
@@ -36,7 +34,7 @@ public class GroovyExpressionOnOneLineElementTransformer implements TransformOne
     }
 
     @Override
-    public FieldType transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, final FieldType value) {
+    public FieldType<?> transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext, final FieldType<?> value) {
         final ImmutableMap<String, Object> context = ImmutableMap.<String, Object>builder()
                 .putAll(this.context)
                 .putAll(somethingThatCanProvideEvaluationContext.getEvaluationContext())

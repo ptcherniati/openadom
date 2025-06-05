@@ -30,7 +30,7 @@ public class ComponentFilters {
         super();
     }
 
-    public ComponentFilters(final String componentKey, final List<String> filters, final FieldType type, final String format, final List<IntervalValues> intervalsValues, final Boolean isRegExp) {
+    public ComponentFilters(final String componentKey, final List<String> filters, final List<IntervalValues> intervalsValues, final Boolean isRegExp) {
         super();
         this.componentKey = componentKey;
         this.filters = filters;
@@ -46,8 +46,8 @@ public class ComponentFilters {
         } else if (Strings.isEmpty(componentFilter.componentKey)) {
             throw new BadDownloadDatasetQuery(MISSING_COMPONENT_KEY_COMPONENT);
         }
-        final CheckerDescription formatForFieldType = Optional.ofNullable(dataDescription)
-                .map(StandardDataDescription::componentDescriptions)
+            final CheckerDescription formatForFieldType = Optional.ofNullable(dataDescription)
+                    .map(StandardDataDescription::componentDescriptions)
                 .stream()
                 .flatMap(map -> map.values().stream()) // Transforme le Stream<Map> en Stream des valeurs
                 .filter(component -> Objects.equals(component.componentKey(), componentFilter.componentKey))
@@ -61,15 +61,14 @@ public class ComponentFilters {
                         CheckerDescription.CheckerDescriptionType type, Multiplicity multiplicity1, boolean required,
                         String pattern, TemporalAccessor min, TemporalAccessor max, String duration
                 ) -> switch (DatePattern.of(pattern).getFieldType()) {
-                    case DATE ->
-                            new ComponentFiltersForIntervalByDate(
+                    case DATE -> new ComponentFiltersForIntervalByDate(
                             componentFilter.componentKey,
                             componentFilter.getIntervalsValues().stream()
-                                    .map(intervalValues -> 
-                                        new IntervalValuesDate(
-                                                intervalValues.getFrom(),
-                                                intervalValues.getTo(),
-                                                pattern)
+                                    .map(intervalValues ->
+                                            new IntervalValuesDate(
+                                                    intervalValues.getFrom(),
+                                                    intervalValues.getTo(),
+                                                    pattern)
                                     )
                                     .collect(Collectors.toCollection(LinkedList::new)),
                             multiplicity
@@ -89,10 +88,10 @@ public class ComponentFilters {
                             componentFilter.componentKey,
                             componentFilter.getIntervalsValues().stream()
                                     .map(intervalValues ->
-                                                    new IntervalValuesDateTime(
-                                                            intervalValues.from,
-                                                            intervalValues.to,
-                                                            pattern)
+                                            new IntervalValuesDateTime(
+                                                    intervalValues.from,
+                                                    intervalValues.to,
+                                                    pattern)
                                     )
                                     .collect(Collectors.toCollection(LinkedList::new)),
                             multiplicity
@@ -106,9 +105,9 @@ public class ComponentFilters {
                         componentFilter.componentKey,
                         componentFilter.getIntervalsValues().stream()
                                 .map(intervalValues ->
-                                                new IntervalValuesNumeric(
-                                                        intervalValues.from,
-                                                        intervalValues.to)
+                                        new IntervalValuesNumeric(
+                                                intervalValues.from,
+                                                intervalValues.to)
                                 )
                                 .collect(Collectors.toCollection(LinkedList::new)),
                         multiplicity
@@ -117,9 +116,9 @@ public class ComponentFilters {
                         componentFilter.componentKey,
                         componentFilter.getIntervalsValues().stream()
                                 .map(intervalValues ->
-                                                new IntervalValuesNumeric(
-                                                        intervalValues.from,
-                                                        intervalValues.to)
+                                        new IntervalValuesNumeric(
+                                                intervalValues.from,
+                                                intervalValues.to)
                                 )
                                 .collect(Collectors.toCollection(LinkedList::new)),
                         multiplicity
@@ -127,7 +126,7 @@ public class ComponentFilters {
                 case null, default -> throw new BadDownloadDatasetQuery(
                         NOT_INTERVAL_VALUE_TYPE_FOR_COMPONENT,
                         Map.of(
-                                "component", componentFilter.componentKey
+                                "component", componentFilter.getComponentKey()
                         )
                 );
             };
@@ -196,7 +195,6 @@ public class ComponentFilters {
 
     public static Set<fr.inra.oresing.domain.data.read.query.ComponentFilters> build(
             final Set<ComponentFilters> componentFilters,
-            final Set<AuthorizationDescription> authorizationDescriptions,
             final StandardDataDescription dataTypeDescription) {
         if (CollectionUtils.isNotEmpty(componentFilters)) {
             return componentFilters.stream()

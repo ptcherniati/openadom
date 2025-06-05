@@ -1,23 +1,23 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.collect.Sets;
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
+import fr.inra.oresing.persistence.*;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 public class UpdateRolesOnAdditionalFilesManagement {
+    final SqlService db;
+    final AuthenticationService authenticationService;
+    private final OreSiRepository repository;
     private Set<UUID> previousUsers;
     private Set<UUID> newUsers;
     private OreSiAdditionalFileAuthorization modifiedAuthorization;
-    private final OreSiRepository repository;
-    final SqlService db;
-    final AuthenticationService authenticationService;
     private Application application;
     private AuthorizationAdditionalFilesRepository authorizationAdditionalFilesRepository;
 
@@ -26,6 +26,18 @@ public class UpdateRolesOnAdditionalFilesManagement {
         this.repository = repository;
         this.db = db;
         this.authenticationService = authenticationService;
+    }
+
+    private static String createExpression(final OreSiAdditionalFileAuthorization authorization, final Set<String> usingExpressionElements, final Application application, final SqlSchemaForApplication sqlSchemaForApplication, final OperationAdditionalFileType operation) {
+        if (authorization.getAdditionalFiles().containsKey(operation) &&
+                !CollectionUtils.isEmpty(authorization.getAdditionalFiles().get(operation))) {
+            return authorization.getAdditionalFiles().get(operation).stream()
+                    .collect(Collectors.joining(",", "filetype  = any('{", "}'::text[])")
+
+
+                    );
+        }
+        return "";
     }
 
     public void init(final Set<UUID> previousUsers, final OreSiAdditionalFileAuthorization modifiedAuthorization) {
@@ -75,7 +87,6 @@ public class UpdateRolesOnAdditionalFilesManagement {
                 .forEach(db::dropPolicy);
     }
 
-
     private void addOrRemoveAuthorizationForUsers(final Set<UUID> previousUsers, final Set<UUID> newUsers, final OreSiRightOnApplicationRole oreSiRightOnApplicationRole) {
         final Set<UUID> usersNotChanged = Sets.difference(previousUsers, newUsers);
         previousUsers.stream()
@@ -87,7 +98,6 @@ public class UpdateRolesOnAdditionalFilesManagement {
                 .map(authenticationService::getUserRole)
                 .forEach(user -> db.addUserInRole(user, oreSiRightOnApplicationRole));
     }
-
 
     private List<SqlPolicy> toAdditionalFilePolicy(final OreSiAdditionalFileAuthorization authorization, final OreSiRightOnApplicationRole oreSiRightOnApplicationRole, final OperationAdditionalFileType operation, final List<SqlPolicy.Statement> statements) {
         final Set<String> usingExpressionElements = new LinkedHashSet<>();
@@ -106,9 +116,8 @@ public class UpdateRolesOnAdditionalFilesManagement {
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.UPDATE || statement == SqlPolicy.Statement.SELECT || statement == SqlPolicy.Statement.DELETE ? expression : null,
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.INSERT || statement == SqlPolicy.Statement.UPDATE ? expression : null
                 ))
-                .collect(Collectors.toList());
+                .toList();
     }
-
 
     private List<SqlPolicy> toBinaryFilePolicy(final OreSiAdditionalFileAuthorization authorization, final OreSiRightOnApplicationRole oreSiRightOnApplicationRole, final OperationAdditionalFileType operation, final List<SqlPolicy.Statement> statements) {
         final Set<String> usingExpressionElements = new LinkedHashSet<>();
@@ -117,7 +126,7 @@ public class UpdateRolesOnAdditionalFilesManagement {
 
         return statements.stream()
                 .map(statement -> new SqlPolicy(
-                        OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString().substring(0, 13)+ "_bf_" + "_AdditionalFile_" +  statement.name().substring(0, 3),
+                        OreSiAuthorization.class.getSimpleName() + "_" + authorization.getId().toString().substring(0, 13) + "_bf_" + "_AdditionalFile_" + statement.name().substring(0, 3),
                         sqlSchemaForApplication.binaryFile(),
                         SqlPolicy.PermissiveOrRestrictive.PERMISSIVE,
                         Collections.singletonList(statement),
@@ -125,19 +134,7 @@ public class UpdateRolesOnAdditionalFilesManagement {
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.UPDATE || statement == SqlPolicy.Statement.SELECT || statement == SqlPolicy.Statement.DELETE ? "true" : null,
                         statement == SqlPolicy.Statement.ALL || statement == SqlPolicy.Statement.INSERT || statement == SqlPolicy.Statement.UPDATE ? "true" : null
                 ))
-                .collect(Collectors.toList());
-    }
-
-    private static String createExpression(final OreSiAdditionalFileAuthorization authorization, final Set<String> usingExpressionElements, final Application application, final SqlSchemaForApplication sqlSchemaForApplication, final OperationAdditionalFileType operation) {
-        if (authorization.getAdditionalFiles().containsKey(operation) &&
-                !CollectionUtils.isEmpty(authorization.getAdditionalFiles().get(operation))) {
-                   return authorization.getAdditionalFiles().get(operation).stream()
-                            .collect(Collectors.joining(",", "filetype  = any('{" ,"}'::text[])")
-
-
-            );
-        }
-        return "";
+                .toList();
     }
 
     public UUID revoke(final Application application, final UUID authorizationId) {

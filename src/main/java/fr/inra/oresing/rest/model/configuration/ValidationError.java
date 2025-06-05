@@ -32,7 +32,8 @@ public class ValidationError extends Throwable {
     }
 
     public Record toJsonObject() {
-        record JsonString(String message, Map<String, Object> params){}
+        record JsonString(String message, Map<String, Object> params) {
+        }
         return new JsonString(getMessage(), getParams());
     }
 

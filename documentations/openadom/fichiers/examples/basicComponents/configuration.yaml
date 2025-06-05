@@ -12,13 +12,13 @@ OA_application:
   OA_defaultLanguage: fr  # optional par défaut fr
   OA_comment: Cas d'usage des composantes basiques
 OA_data:
-  tr_type_de_sites_tds: 
+  tr_type_de_sites_tds:
     OA_dataHeaderLine: 1
     OA_dataFirstLine: 2
     OA_naturalKey:
       - tds_nom
     OA_basicComponents:
-      tds_nom: 
+      tds_nom:
         OA_importHeader: nom
   tr_sites_sit:
     OA_dataHeaderLine: 1
@@ -26,8 +26,8 @@ OA_data:
     OA_naturalKey:
       - sit_nom_type_de_site
       - sit_nom_du_site
-    OA_basicComponents: 
-      sit_nom_type_de_site: 
+    OA_basicComponents:
+      sit_nom_type_de_site:
         OA_importHeader: nom_type_de_site
         OA_checker:
           OA_name: OA_reference
@@ -35,18 +35,18 @@ OA_data:
             OA_reference:
               OA_isParent: true
               OA_name: tr_type_de_sites_tds
-      sit_nom_du_site:  
+      sit_nom_du_site:
         OA_importHeader: nom du site
   tr_parcelles_par:
-    OA_dataHeaderLine: 1 
+    OA_dataHeaderLine: 1
     OA_dataFirstLine: 2
     OA_naturalKey:
       - par_nom_du_site
       - par_nom_de_la_parcelle
-    OA_basicComponents: 
+    OA_basicComponents:
       par_nom_de_la_parcelle:
-        OA_importHeader: nom de la parcelle 
-      par_nom_du_site: 
+        OA_importHeader: nom de la parcelle
+      par_nom_du_site:
         OA_importHeader: nom du site
         OA_checker:
           OA_name: OA_reference

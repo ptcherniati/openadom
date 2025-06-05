@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -227,7 +228,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     public UUID store(BinaryFile entity) {
         Optional<InputStream> inputStreamOpt = Optional.ofNullable(entity)
                 .map(BinaryFile::getFileData);
-        assert entity != null;
+        Preconditions.checkState(entity != null);
         entity.setFileData(null);
         UUID fileId = super.store(entity);
 
@@ -235,7 +236,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             try {
                 storeFileContent(fileId, inputStream, inputStream.available());
             } catch (IOException e) {
-                throw new RuntimeException("Error storing file content", e);
+                throw new OreSiTechnicalException("Error storing file content", e);
             }
         });
 
@@ -243,7 +244,7 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     }
 
     public void storeFileContent(UUID fileId, InputStream inputStream, long fileSize) {
-        if(fileSize==0L){
+        if (fileSize == 0L) {
             return;
         }
         String query = "UPDATE %s SET fileData = ?, size = ? WHERE id = ?::uuid".formatted(getTable().getSqlIdentifier());

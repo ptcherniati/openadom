@@ -7,6 +7,6 @@ public record ColumnConstantHeaderByHeaderName(
         ConstantImportHeaderType type,
         int rowNumber,
         String headerName,
-        List<Locale>langRestrictions
+        List<Locale> langRestrictions
 ) implements ColumnConstantHeader {
 }

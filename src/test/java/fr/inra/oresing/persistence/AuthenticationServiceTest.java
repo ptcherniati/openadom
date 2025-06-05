@@ -7,10 +7,7 @@ import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
-import fr.inra.oresing.rest.security.JWTExtractor;
 import org.hamcrest.Matchers;
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -34,11 +31,12 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.servlet.http.Cookie;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -53,7 +51,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Tag("SUITE")
 @Tag("core.auth")
-public class AuthenticationServiceTest {
+class AuthenticationServiceTest {
     @Value("${spring.mail.from}")
     String mailFrom;
 
@@ -75,35 +73,33 @@ public class AuthenticationServiceTest {
     }
 
     @Test
-    public void testSetRole() {
+    void testSetRole() {
         OreSiRoleToAccessDatabase anonymousRole = authenticationService.setRole(OreSiRole.anonymous());
         assertEquals(OreSiRole.anonymous(), anonymousRole);
     }
 
     @Test
-    public void testCreateAndLogin() throws Throwable {
+    void testCreateAndLogin() throws Throwable {
         final ArgumentCaptor<SimpleMailMessage> messageArgumentCaptor = ArgumentCaptor.forClass(SimpleMailMessage.class);
         final String login = "toto";
         final String email = "toto@codelutin.com";
         final String password = "xxxx";
-        MockHttpServletResponse response = mockMvc.perform(
+         mockMvc.perform(
                         post("/api/v1/users").with(csrf().asHeader())
                                 .param("login", login)
                                 .param("password", password)
                                 .param("email", email)
                                 .contentType(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
-        Cookie cookie = response.getCookie(JWTExtractor.JWT_COOKIE_NAME);
-/*
-        final String authUserId = JsonPath.parse(response.getContentAsString()).read("$.id", String.class);
-*/
+
         Mockito.verify(mailSender).send(messageArgumentCaptor.capture());
         SimpleMailMessage message = messageArgumentCaptor.getValue();
         assertArrayEquals(new String[]{email}, message.getTo());
         assertEquals(mailFrom, message.getFrom());
         String[] lines = Objects.requireNonNull(message.getText()).split("\n");
         String validationKey = lines[6];
-        String user = mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
+        String user = mockMvc.perform(put("/api/v1/users")
+                        .with(csrf().asHeader())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))

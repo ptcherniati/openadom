@@ -24,8 +24,13 @@ public abstract class JsonTableInApplicationSchemaRepositoryTemplate<T extends O
 
     public static String escapeSql(final String string) {
         return Optional.ofNullable(string)
-                .map(s -> s.replaceAll("'", "''"))
+                .map(s -> s.replace("'", "''"))
                 .orElse(null);
+    }
+
+    static Map<String, ?> convertMapsqlparameterSourcetoMap(final MapSqlParameterSource sqlParameterSource) {
+        return Arrays.stream(Objects.requireNonNull(sqlParameterSource.getParameterNames()))
+                .collect(Collectors.toMap(param -> param, sqlParameterSource::getValue));
     }
 
     protected SqlSchemaForApplication getSchema() {
@@ -34,9 +39,5 @@ public abstract class JsonTableInApplicationSchemaRepositoryTemplate<T extends O
 
     protected Application getApplication() {
         return application;
-    }
-    static Map<String, ?> convertMapsqlparameterSourcetoMap(final MapSqlParameterSource sqlParameterSource){
-        return Arrays.stream(Objects.requireNonNull(sqlParameterSource.getParameterNames()))
-                .collect(Collectors.toMap(param->param, sqlParameterSource::getValue));
     }
 }

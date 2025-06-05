@@ -10,10 +10,6 @@ public class GroovyException extends OreSiTechnicalException implements Serializ
 
     final Map<String, Object> params;
 
-    public Map<String, Object> getParams() {
-        return params == null ? Map.of() : params;
-    }
-
     public GroovyException(String message) {
         this(message, null);
     }
@@ -21,5 +17,9 @@ public class GroovyException extends OreSiTechnicalException implements Serializ
     public GroovyException(String message, Map<String, Object> params) {
         super(message);
         this.params = params == null ? Map.of() : params;
+    }
+
+    public Map<String, Object> getParams() {
+        return params == null ? Map.of() : params;
     }
 }

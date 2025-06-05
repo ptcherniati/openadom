@@ -24,6 +24,6 @@ public class BinaryFile extends OreSiEntity {
     }
 
     public void markAsPublished(boolean published) {
-        params= params.markAsPublished(published);
+        params = params.markAsPublished(published);
     }
 }

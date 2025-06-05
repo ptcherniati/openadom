@@ -55,9 +55,9 @@ public class MultiYaml {
 
         String fileName = pathParts[pathParts.length - 1];
         String key = FilenameUtils.removeExtension(fileName);
-        if(current.containsKey(key)){
-            ((Map)current.get(key)).putAll(object);
-        }else {
+        if (current.containsKey(key)) {
+            ((Map) current.get(key)).putAll(object);
+        } else {
             current.put(key, object);
         }
     }

@@ -11,19 +11,20 @@ import java.sql.SQLException;
 @Setter
 @ToString(callSuper = true)
 public class PolicyDescription {
-    public static PolicyDescription convert(final ResultSet rs, final int rowNum)  {
+    String policyname;
+    String schemaname;
+    String tablename;
+
+    public static PolicyDescription convert(final ResultSet rs, final int rowNum) {
         try {
             PolicyDescription policyDescription = new PolicyDescription();
             policyDescription.policyname = rs.getString("policyname");
             policyDescription.schemaname = rs.getString("schemaname");
             policyDescription.tablename = rs.getString("tablename");
             return policyDescription;
-        }catch (final SQLException  e){
+        } catch (final SQLException e) {
             return null;
         }
     }
-    String policyname;
-    String schemaname;
-    String tablename;
-   // List<String> roles;
+    // List<String> roles;
 }

@@ -8,9 +8,10 @@ import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import java.util.Map;
 import java.util.stream.Stream;
 
-public record DynamicComponentOrderBy(String componentKey, Map<String, ComponentOrderBy> dynamicColumns) implements ComponentOrderByForExport {
+public record DynamicComponentOrderBy(String componentKey,
+                                      Map<String, ComponentOrderBy> dynamicColumns) implements ComponentOrderByForExport {
     @Override
-    public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription) {
+    public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription) {
         String componentKey = componentKey();
         Map<String, StringType> values = (Map<String, StringType>) dataRowValues.get(componentKey).getValue();
         return dynamicColumns().keySet().stream()
@@ -18,6 +19,7 @@ public record DynamicComponentOrderBy(String componentKey, Map<String, Component
                 .map(FieldType::toString);
 
     }
+
     @Override
     public ComponentType sqlType() {
         return new ComponentTextType();

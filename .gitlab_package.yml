@@ -34,7 +34,7 @@ maven_registry:
 npm:
   image: node:12-alpine
   stage: package
-  needs: ["maven_test_rest_1","maven_test_rest_others"]
+  needs: [ "maven_test_rest_1","maven_test_rest_others" ]
   script:
     - cd ui
     - npm ci

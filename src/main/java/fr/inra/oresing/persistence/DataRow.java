@@ -20,7 +20,7 @@ public record DataRow(
         List<String> patternColumnName,
         Ltree naturalKey,
         Ltree hierarchicalKey,
-        Map<String, FieldType> values,
+        Map<String, FieldType<?>> values,
         Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
         List<String> allPatternColumnNames
 ) {
@@ -31,11 +31,11 @@ public record DataRow(
                         .filter(component -> component.getValue() instanceof PatternComponent)
                         .map(Map.Entry::getKey)
                 ).toList();
-        Map<String, FieldType> values = new HashMap<>(dataRows.getValues().getFirst());
-        Map<String, ListType> listTypeMap = patternComponentKeys.stream()
+        Map<String, FieldType<?>> values = new HashMap<>(dataRows.getValues().getFirst());
+        Map<String, ListType<? extends FieldType<?>>> listTypeMap = patternComponentKeys.stream()
                 .map(componentKey -> {
 
-                            ListType<MapType> listTypes = new ListType<>(new MapType(Map.<String, FieldType>of()));
+                            final ListType<MapType<?, ?>> listTypes = new ListType<>(new MapType(Map.of()));
                             dataRows.getValues().stream()
                                     .filter(value -> value.containsKey(componentKey))
                                     .map(value -> value.get(componentKey))

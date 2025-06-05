@@ -11,7 +11,7 @@ public record BinaryFileInfosResult(
         String publisheddate,
         UserDescriptionResult publisheduser
 ) {
-    public static BinaryFileInfosResult of(BinaryFileInfos binaryFileInfos, UserDescriptionResult createuser, UserDescriptionResult publisheduser){
+    public static BinaryFileInfosResult of(BinaryFileInfos binaryFileInfos, UserDescriptionResult createuser, UserDescriptionResult publisheduser) {
         return new BinaryFileInfosResult(
                 BinaryFileDatasetResult.of(binaryFileInfos.binaryFiledataset()),
                 binaryFileInfos.comment(),

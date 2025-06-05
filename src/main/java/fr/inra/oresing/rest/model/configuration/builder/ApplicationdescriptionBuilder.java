@@ -3,11 +3,11 @@ package fr.inra.oresing.rest.model.configuration.builder;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.ApplicationDescription;
-import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
+import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.Version;
+import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 
 import java.util.Locale;
 import java.util.Map;

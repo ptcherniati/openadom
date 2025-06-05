@@ -6,45 +6,60 @@ import fr.inra.oresing.mail.Email;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.VersioningService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 
-public record ServiceContainer(
-        ApplicationService applicationService,
-        AuthorizationService authorizationService,
-        AuthenticationService authenticationService,
-        DataService dataService,
-        VersioningService versioningService,
-        SynthesisService synthesisService,
-        BinaryFileService binaryFileService,
-        AdditionalFileService additionalFileService,
-        RightsRequestService rightsRequestService,
-        RelationalService relationalService,
-        Email emailService
-) {
-    public static ServiceContainer of(
-            ApplicationService applicationService,
-            AuthorizationService authorizationService,
-            AuthenticationService authenticationService,
-            DataService dataService,
-            VersioningService versioningService,
-            SynthesisService synthesisService,
-            BinaryFileService binaryFileService,
-            AdditionalFileService additionalFileService,
-            RightsRequestService rightsRequestService,
-            RelationalService relationalService,
-            Email emailService
-    ) {
-        return new ServiceContainer(
-                applicationService,
-                authorizationService,
-                authenticationService,
-                dataService,
-                versioningService,
-                synthesisService,
-                binaryFileService,
-                additionalFileService,
-                rightsRequestService,
-                relationalService,
-                emailService
-        );
+@Component
+public class ServiceContainer {
+
+    private final ApplicationContext context;
+
+    public ServiceContainer(ApplicationContext context) {
+        this.context = context;
+    }
+
+    public ApplicationService applicationService() {
+        return (ApplicationService) context.getBean("applicationService");
+    }
+
+    public AuthorizationService authorizationService() {
+        return (AuthorizationService) context.getBean("authorizationService");
+    }
+
+    public AuthenticationService authenticationService() {
+        return (AuthenticationService) context.getBean("authenticationService");
+    }
+
+    public DataService dataService() {
+        return (DataService) context.getBean("dataService");
+    }
+
+    public VersioningService versioningService() {
+        return (VersioningService) context.getBean("versioningService");
+    }
+
+    public SynthesisService synthesisService() {
+        return (SynthesisService) context.getBean("synthesisService");
+    }
+
+    public BinaryFileService binaryFileService() {
+        return (BinaryFileService) context.getBean("binaryFileService");
+    }
+
+    public AdditionalFileService additionalFileService() {
+        return (AdditionalFileService) context.getBean("additionalFileService");
+    }
+
+    public RightsRequestService rightsRequestService() {
+        return (RightsRequestService) context.getBean("rightsRequestService");
+    }
+
+    public RelationalService relationalService() {
+        return (RelationalService) context.getBean("relationalService");
+    }
+
+    public Email emailService() {
+        return (Email) context.getBean("emailService");
     }
 }

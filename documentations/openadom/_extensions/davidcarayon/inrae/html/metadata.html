@@ -1,23 +1,23 @@
-<meta charset="utf-8" />
+<meta charset="utf-8"/>
 $if(quarto-version)$
-<meta name="generator" content="quarto-$quarto-version$" />
+<meta content="quarto-$quarto-version$" name="generator"/>
 $else$
-<meta name="generator" content="quarto" />
+<meta content="quarto" name="generator"/>
 $endif$
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+<meta content="width=device-width, initial-scale=1.0, user-scalable=yes" name="viewport"/>
 
 $for(author-meta)$
-<meta name="author" content="$author-meta$" />
+<meta content="$author-meta$" name="author"/>
 $endfor$
 $if(date-meta)$
-<meta name="dcterms.date" content="$date-meta$" />
+<meta content="$date-meta$" name="dcterms.date"/>
 $endif$
 $if(keywords)$
-<meta name="keywords" content="$for(keywords)$$keywords$$sep$, $endfor$" />
+<meta content="$for(keywords)$$keywords$$sep$, $endfor$" name="keywords"/>
 $endif$
 $if(description-meta)$
-<meta name="description" content="$description-meta$" />
+<meta content="$description-meta$" name="description"/>
 $endif$
 
 <title>$if(title-prefix)$$title-prefix$ – $endif$$pagetitle$</title>

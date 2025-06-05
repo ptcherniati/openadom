@@ -34,10 +34,10 @@ public record SubmissionComponentResolver(RootBuilder rootBuilder) {
         final ComponentDescription componentDescription = componentDescriptions.get(componentName);
         try {
             Submission.SubmissionScope.ReferenceScope referenceScopeFromComponent = findReferenceScopeFromComponent(componentDescription, reference);
-            if(referenceScopeFromComponent!=null){
+            if (referenceScopeFromComponent != null) {
                 return referenceScopeFromComponent;
             }
-            if(Strings.isNullOrEmpty(reference)){
+            if (Strings.isNullOrEmpty(reference)) {
                 throw new SiOreConfigurationFormatException(
                         ConfigurationException.MISSING_REFERENCE_NAME,//TODO
                         Map.of("componentName", componentName)
@@ -67,9 +67,9 @@ public record SubmissionComponentResolver(RootBuilder rootBuilder) {
                     componentName,
                     reference
             );
-            componentDescriptions.put(componentName,submissionConstantHeaderComponentDescription);
+            componentDescriptions.put(componentName, submissionConstantHeaderComponentDescription);
             return new Submission.SubmissionScope.ReferenceScope(reference, componentName);
-        }catch (SiOreConfigurationFormatException configurationFormatException){
+        } catch (SiOreConfigurationFormatException configurationFormatException) {
             rootBuilder().buildError(configurationFormatException.getException(),
                     configurationFormatException.getParams(),
                     componentPath);
@@ -80,10 +80,10 @@ public record SubmissionComponentResolver(RootBuilder rootBuilder) {
     private Submission.SubmissionScope.ReferenceScope findReferenceScopeFromComponent(ComponentDescription componentDescription, String reference) {
         Optional<String> reftype = Optional.ofNullable(componentDescription)
                 .flatMap(ComponentDescription::findReferenceCheckerType);
-        if(reftype.isEmpty()){
+        if (reftype.isEmpty()) {
             return null;
         }
-        if(reftype.get().equals(reference)){
+        if (reftype.get().equals(reference)) {
             return new Submission.SubmissionScope.ReferenceScope(reference, componentDescription.componentKey());
         }
         throw new SiOreConfigurationFormatException(

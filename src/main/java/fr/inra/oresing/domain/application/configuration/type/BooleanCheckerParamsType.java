@@ -7,31 +7,32 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 import java.util.Map;
 
 public record BooleanCheckerParamsType(SectionBuilder sectionBuilder,
-                                       Map<String, ConfigurationSchemaNodeType> children, boolean required,
+                                       Map<String, ConfigurationSchemaNodeType<?>> children, boolean required,
                                        boolean nullable) implements IntermediaryType.CheckerParamType {
-    public static BooleanCheckerParamsType  EMPTY_INSTANCE() {
-        return new BooleanCheckerParamsType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-    public static SectionBuilder SECTION_BUILDER(){
-        return SectionBuilder.getInstance()
-                .withOptionalSections(
-                        new LabelDescription(ConfigurationSchemaNode.OA_MULTIPLICITY, EnumType.MULTIPLICITY_ENUM)
-                );
-    }
-
-
-    public BooleanCheckerParamsType(final Map<String, ConfigurationSchemaNodeType> children) {
+    public BooleanCheckerParamsType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),
                 children,
                 false,
                 false);
     }
-    private BooleanCheckerParamsType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
+
+    private BooleanCheckerParamsType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
         this(SECTION_BUILDER(),
                 children,
                 false,
                 false);
+    }
+
+    public static BooleanCheckerParamsType EMPTY_INSTANCE() {
+        return new BooleanCheckerParamsType(Map.of(), RootType.CHECKING.NO_CHECK);
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
+        return SectionBuilder.getInstance()
+                .withOptionalSections(
+                        new LabelDescription(ConfigurationSchemaNode.OA_MULTIPLICITY, EnumType.MULTIPLICITY_ENUM)
+                );
     }
 
 }

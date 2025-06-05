@@ -7,27 +7,27 @@ import java.util.List;
 import java.util.Map;
 
 public record DynamicComponentType(SectionBuilder sectionBuilder,
-                                   Map<String, ConfigurationSchemaNodeType> children,
+                                   Map<String, ConfigurationSchemaNodeType<?>> children,
                                    boolean required,
-                                   boolean nullable) implements ApplicationType.ComponentType {
+                                   boolean nullable) implements ApplicationType.ComponentType<Map<String, ConfigurationSchemaNodeType<?>>> {
 
-    public static DynamicComponentType  EMPTY_INSTANCE() {
-        return new DynamicComponentType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-
-    private DynamicComponentType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
+    private DynamicComponentType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
         this(SECTION_BUILDER(),
                 children,
                 false,
                 false);
     }
 
-    public DynamicComponentType(final Map<String, ConfigurationSchemaNodeType> children) {
+    public DynamicComponentType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),
                 children,
                 false,
                 false);
+    }
+
+    public static DynamicComponentType EMPTY_INSTANCE() {
+        return new DynamicComponentType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
 
     public static SectionBuilder SECTION_BUILDER() {

@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.DisconnectedException;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.type.BooleanType;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
@@ -34,7 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.Mockito.when;
 
 class OreExceptionHandlerTest {
@@ -62,7 +61,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testValidationErrorSerializability() {
+    void testValidationErrorSerializability() {
         ValidationError error = new ValidationError("Test error");
         ResponseEntity<ValidationError> response = exceptionHandler.handle(error);
 
@@ -70,7 +69,7 @@ class OreExceptionHandlerTest {
     }
 
     //@Test
-    public void testDisconnectedExceptionSerializability() {
+    void testDisconnectedExceptionSerializability() {
         /*DisconnectedException exception = new DisconnectedException("User disconnected");
         ResponseEntity<DisconnectedException> response = exceptionHandler.handle(exception);
 
@@ -78,7 +77,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testSiOreIllegalArgumentExceptionSerializability() {
+    void testSiOreIllegalArgumentExceptionSerializability() {
         SiOreIllegalArgumentException exception = new SiOreIllegalArgumentException("Illegal argument", Map.of("param", "param"));
         ResponseEntity<SiOreIllegalArgumentException> response = exceptionHandler.handle(exception);
 
@@ -86,7 +85,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testAuthenticationFailureSerializability() {
+    void testAuthenticationFailureSerializability() {
         // Tester différents cas de AuthenticationFailure
         testAuthFailureCase("INACTIVE_ACCOUNT");
         testAuthFailureCase("EXISTING_LOGIN");
@@ -98,7 +97,7 @@ class OreExceptionHandlerTest {
 
     private void testAuthFailureCase(String message) {
         OreSiUser oreSiUser = new OreSiUser();
-        oreSiUser.setId( UUID.randomUUID());
+        oreSiUser.setId(UUID.randomUUID());
         oreSiUser.setLogin("testuser");
         oreSiUser.setEmail("test@example.com");
         oreSiUser.setAccountstate(OreSiUser.OreSiUserStates.active);
@@ -112,14 +111,14 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testWebExchangeBindExceptionSerializability() {
+    void testWebExchangeBindExceptionSerializability() {
         List<ObjectError> errors = exceptionHandler.exception(webExchangeBindException);
 
         assertDoesNotThrow(() -> objectMapper.writeValueAsString(errors));
     }
 
     @Test
-    public void testBadSqlGrammarExceptionSerializability() {
+    void testBadSqlGrammarExceptionSerializability() {
         when(badSqlGrammarException.getCause()).thenReturn(psqlException);
         when(psqlException.getMessage()).thenReturn("permission denied");
 
@@ -129,7 +128,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testNoSuchApplicationExceptionSerializability() {
+    void testNoSuchApplicationExceptionSerializability() {
         NoSuchApplicationException exception = new NoSuchApplicationException("Application not found");
         ResponseEntity<String> response = exceptionHandler.handle(exception);
 
@@ -137,7 +136,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testBadApplicationConfigurationExceptionSerializability() {
+    void testBadApplicationConfigurationExceptionSerializability() {
         ConfigurationException configException = ConfigurationException.IO_EXCEPTION;
         BadApplicationConfigurationException exception = new BadApplicationConfigurationException("Configuration error", configException);
         ResponseEntity<ConfigurationException> response = exceptionHandler.handle(exception);
@@ -146,7 +145,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testOreSiTechnicalExceptionSerializability() {
+    void testOreSiTechnicalExceptionSerializability() {
         // Cas d'autorisation
         OreSiTechnicalException authException = new OreSiTechnicalException("Auth error") {
             public String getPackageName() {
@@ -163,7 +162,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testInvalidDatasetContentExceptionSerializability() {
+    void testInvalidDatasetContentExceptionSerializability() {
         List<CsvRowValidationCheckResult> errors = List.of(
                 new CsvRowValidationCheckResult(
                         new BooleanValidationCheckResult(
@@ -193,7 +192,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testBadBinaryFileDatasetQuerySerializability() {
+    void testBadBinaryFileDatasetQuerySerializability() {
         BadBinaryFileDatasetQuery exception = new BadBinaryFileDatasetQuery("Bad binary file query");
         ResponseEntity<String> response = exceptionHandler.handle(exception);
 
@@ -201,7 +200,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testBadDownloadDatasetQuerySerializability() {
+    void testBadDownloadDatasetQuerySerializability() {
         BadDownloadDatasetQuery exception = new BadDownloadDatasetQuery("Bad download query");
         ResponseEntity<String> response = exceptionHandler.handle(exception);
 
@@ -209,7 +208,7 @@ class OreExceptionHandlerTest {
     }
 
     @Test
-    public void testBadFileOrUUIDQuerySerializability() {
+    void testBadFileOrUUIDQuerySerializability() {
         BadFileOrUUIDQuery exception = new BadFileOrUUIDQuery("Bad file or UUID");
         ResponseEntity<String> response = exceptionHandler.handle(exception);
 

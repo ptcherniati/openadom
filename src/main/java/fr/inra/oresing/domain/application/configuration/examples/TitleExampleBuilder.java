@@ -1,7 +1,9 @@
 package fr.inra.oresing.domain.application.configuration.examples;
 
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.type.*;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
+import fr.inra.oresing.domain.application.configuration.type.I18nType;
+import fr.inra.oresing.domain.application.configuration.type.TitleType;
 
 import java.util.LinkedHashMap;
 
@@ -270,7 +272,7 @@ class TitleExampleBuilder {
             I18nType title,
             I18nType description
     ) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> map = new LinkedHashMap<>();
         map.put(ConfigurationSchemaNode.OA_TITLE, title);
         map.put(ConfigurationSchemaNode.OA_DESCRIPTION, description);
 

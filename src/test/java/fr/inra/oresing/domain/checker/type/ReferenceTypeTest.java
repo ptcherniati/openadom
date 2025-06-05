@@ -42,7 +42,7 @@ class ReferenceTypeTest {
         Mockito.when(checker.target()).thenReturn(dataColumn);
         checkGood = (ReferenceValidationCheckResult) buildReference().check(goodValue, checker);
         checkGoodValueNotLabel = (ReferenceValidationCheckResult) buildReference().check(goodValueNotLabel, checker);
-        checkBad =(ReferenceValidationCheckResult)  buildReference().check(badValue, checker);
+        checkBad = (ReferenceValidationCheckResult) buildReference().check(badValue, checker);
     }
 
     ReferenceType buildReference() {
@@ -60,12 +60,12 @@ class ReferenceTypeTest {
     void check() {
         Assertions.assertTrue(checkGood.isSuccess());
         Assertions.assertEquals(goodValue, checkGood.value().getValue().toString());
-        Assertions.assertEquals(goodValue, checkGood.matchedReferenceHierarchicalKey ().stream().map(Ltree::toString).findFirst().orElse("null"));
-        Assertions.assertEquals(uuid1, checkGood.matchedReferenceId ().stream().findFirst().orElse(null));
+        Assertions.assertEquals(goodValue, checkGood.matchedReferenceHierarchicalKey().stream().map(Ltree::toString).findFirst().orElse("null"));
+        Assertions.assertEquals(uuid1, checkGood.matchedReferenceId().stream().findFirst().orElse(null));
         Assertions.assertTrue(checkGoodValueNotLabel.isSuccess());
         Assertions.assertEquals(goodValue, checkGoodValueNotLabel.value().getValue().toString());
-        Assertions.assertEquals(goodValue, checkGoodValueNotLabel.matchedReferenceHierarchicalKey ().stream().map(Ltree::toString).findFirst().orElse("null"));
-        Assertions.assertEquals(uuid1, checkGoodValueNotLabel.matchedReferenceId ().stream().findFirst().orElse(null));
+        Assertions.assertEquals(goodValue, checkGoodValueNotLabel.matchedReferenceHierarchicalKey().stream().map(Ltree::toString).findFirst().orElse("null"));
+        Assertions.assertEquals(uuid1, checkGoodValueNotLabel.matchedReferenceId().stream().findFirst().orElse(null));
         Assertions.assertFalse(checkBad.isSuccess());
     }
 }

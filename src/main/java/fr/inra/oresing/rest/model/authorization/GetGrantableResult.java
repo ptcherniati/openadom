@@ -2,10 +2,10 @@ package fr.inra.oresing.rest.model.authorization;
 
 import com.google.common.collect.ImmutableSortedSet;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
-import fr.inra.oresing.domain.internationalization.Internationalization;
 import fr.inra.oresing.domain.data.AuthorizationColumnsDescription;
-import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope.Context;
+import fr.inra.oresing.domain.internationalization.Internationalization;
+import fr.inra.oresing.domain.repository.authorization.OperationType;
 
 import java.util.*;
 import java.util.stream.Collectors;

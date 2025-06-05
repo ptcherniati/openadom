@@ -19,6 +19,7 @@ public record ReferenceScopeComponent(ComponentDescriptionType type,
     public List<Locale> langRestrictions() {
         throw new NotImplementedException();
     }
+
     @Override
     public CheckerDescription checker() {
         return null;

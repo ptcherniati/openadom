@@ -12,12 +12,14 @@ public class NotApplicationCanDeleteRightsException extends OreSiTechnicalExcept
     final String applicationName;
     final String dataType;
     final List<Authorization> authorizationsRestrictions;
+
     public NotApplicationCanDeleteRightsException(final String applicationName, final String dataType) {
         super(NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION);
         this.applicationName = applicationName;
         this.dataType = dataType;
         authorizationsRestrictions = List.of();
     }
+
     public NotApplicationCanDeleteRightsException(final String applicationName, final String dataType, final List<Authorization> authorizationsRestrictions) {
         super(NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION);
         this.applicationName = applicationName;

@@ -5,9 +5,24 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
 import java.util.Map;
 
-public record TitleType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType> children,
+public record TitleType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                         boolean required,
                         boolean nullable) implements ApplicationType {
+    public TitleType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER()
+                        .test(children.keySet()),
+                children,
+                true,
+                false);
+    }
+
+    private TitleType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
+        this(SECTION_BUILDER(),
+                children,
+                true,
+                false);
+    }
+
     public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withAnyOfMandatorySections(
@@ -16,22 +31,7 @@ public record TitleType(SectionBuilder sectionBuilder, Map<String, Configuration
                 );
     }
 
-    public static TitleType  EMPTY_INSTANCE() {
+    public static TitleType EMPTY_INSTANCE() {
         return new TitleType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-
-    public TitleType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER()
-                        .test(children.keySet()),
-                children,
-                true,
-                false);
-    }
-
-    private TitleType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
-                children,
-                true,
-                false);
     }
 }

@@ -8,12 +8,12 @@ import java.util.LinkedList;
 import java.util.List;
 
 public class ReferenceScopeBuilder {
+    MenuType menuType = MenuType.authorization;
+    List<ReferenceScope.TreeNode> nodes = new LinkedList<>();
+
     public static final ReferenceScopeBuilder builder() {
         return new ReferenceScopeBuilder();
     }
-
-    MenuType menuType = MenuType.authorization;
-    List<ReferenceScope.TreeNode> nodes = new LinkedList<>();
 
     public GetGrantableResult.ReferenceScope build() {
         return new GetGrantableResult.ReferenceScope(

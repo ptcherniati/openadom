@@ -4,18 +4,27 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import jakarta.xml.bind.DatatypeConverter;
 import lombok.extern.java.Log;
-
+import org.apache.hc.client5.http.classic.methods.*;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.cookie.CookieStore;
-
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Repository;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.*;
+import java.io.InputStream;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,25 +35,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
-import org.apache.hc.core5.http.HttpEntity;
-import org.apache.hc.client5.http.classic.methods.HttpGet;
-import org.apache.hc.client5.http.classic.methods.HttpPost;
-import org.apache.hc.client5.http.classic.methods.HttpPut;
-import org.apache.hc.client5.http.classic.methods.HttpDelete;
-
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import org.apache.hc.client5.http.classic.methods.HttpUriRequest;
-import org.apache.hc.client5.http.classic.methods.HttpUriRequestBase;
-
-import org.apache.hc.client5.http.impl.classic.HttpClients;
-import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
-import org.apache.hc.core5.http.io.entity.StringEntity;
-import org.apache.hc.core5.http.io.entity.ByteArrayEntity;
-import org.apache.hc.core5.http.io.entity.EntityUtils;
-import org.apache.hc.core5.http.ContentType;
-import org.json.JSONObject;
 
 /**
  * @author jrobert
@@ -53,28 +43,43 @@ import org.json.JSONObject;
 @Log
 public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclient.FileRepository {
     public static final int DEFAULT_TRANSFER_DAYS_VALID = 2;
-
-    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
-
     private static final int UPLOAD_CHUNK_SIZE =
             5242880; // https://filesender.renater.fr/rest.php/info
     private static final int NUMBER_OF_DAYS_BEFORE_EXPIRATION = 15;
+    private static CookieStore cookieStore;
   
   /*private static final Gson gson =
       new GsonBuilder()
           .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
           .create();*/
-
+    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
     @Value("${filesender.baseurl}")
     private String BASE_URL;
-
     @Value("${filesender.username}")
     private String USERNAME;
-
     @Value("${filesender.apikey}")
     private String APIKEY;
     private int uploadChunkSize = -1;
-    private static CookieStore cookieStore;
+
+    private static String sanitizeFileName(String input) {
+        // Remplacer les caractères interdits par un tiret bas
+        return input.replaceAll("[\\\\/:*?\"<>|]", "_");
+    }
+
+    private static byte[] concatByteArrays(byte[] first, byte[] second) {
+        byte[] combined = new byte[first.length + second.length];
+        System.arraycopy(first, 0, combined, 0, first.length);
+        System.arraycopy(second, 0, combined, first.length, second.length);
+        return combined;
+    }
+
+    private static String bytesToHex(byte[] hashBytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : hashBytes) {
+            sb.append(String.format("%02x", b));
+        }
+        return sb.toString();
+    }
 
     @PostConstruct
     public void init() {
@@ -85,7 +90,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         try {
             JSONObject info = call("get", "/info", new HashMap<>(), null, null, new HashMap<>());
             return info.getInt("upload_chunk_size");
-        }catch (Exception e){
+        } catch (Exception e) {
             return -1;
         }
     }
@@ -144,15 +149,10 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
     }
 
     private int getChunkSize() {
-        if(uploadChunkSize <0){
+        if (uploadChunkSize < 0) {
             uploadChunkSize = getUploadChunkSize();
         }
         return uploadChunkSize;
-    }
-
-    private static String sanitizeFileName(String input) {
-        // Remplacer les caractères interdits par un tiret bas
-        return input.replaceAll("[\\\\/:*?\"<>|]", "_");
     }
 
     private JSONObject postTransfer(String userId, String from, JSONArray files, String recipient, String subject, String message, Long expires, JSONObject options) throws Exception {
@@ -186,7 +186,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
         return call("post", "/transfer", params, content, null, new HashMap<>());
     }
-
 
     private void putChunk(JSONObject file, byte[] chunk, long offset) throws Exception {
         Map<String, String> params = new HashMap<>();
@@ -296,13 +295,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         return String.join("&", flatParams);
     }
 
-    private static byte[] concatByteArrays(byte[] first, byte[] second) {
-        byte[] combined = new byte[first.length + second.length];
-        System.arraycopy(first, 0, combined, 0, first.length);
-        System.arraycopy(second, 0, combined, first.length, second.length);
-        return combined;
-    }
-
     private String generateSignature(String method, String path, Map<String, String> params,
                                      JSONObject content, byte[] rawContent) throws NoSuchAlgorithmException, InvalidKeyException {
         var charset = StandardCharsets.UTF_8;
@@ -348,7 +340,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
         String flatParams = String.join("&", copyOfParams.entrySet().stream()
                 .map(e -> e.getKey() + "=" + e.getValue())
-                .collect(Collectors.toList()));
+                .toList());
 
         String baseUrlWithoutProtocol = BASE_URL.replaceFirst("https?://", "");
         String signedString = String.format("%s&%s%s%s%s",
@@ -370,13 +362,5 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
 
         byte[] hashBytes = mac.doFinal(signedString.getBytes(StandardCharsets.US_ASCII));
         return bytesToHex(hashBytes);*/
-    }
-
-    private static String bytesToHex(byte[] hashBytes) {
-        StringBuilder sb = new StringBuilder();
-        for (byte b : hashBytes) {
-            sb.append(String.format("%02x", b));
-        }
-        return sb.toString();
     }
 }

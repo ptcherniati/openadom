@@ -15,7 +15,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public sealed interface ApplicationDataWriter extends ApplicationUser
         permits ApplicationAdminUser, ApplicationDataDelete, ApplicationDeleteUser, ApplicationDepositWriterUser, ApplicationManagerUser, ApplicationPublishWriterUser {
@@ -62,11 +61,12 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
         }
         return submissionScopes.stream()
                 .allMatch(sc -> authorizationScopes.contains(sc.getSql()));
-    }default boolean isDateInRangeAuthorized(
+    }
+
+    default boolean isDateInRangeAuthorized(
             BinaryFileDataset binaryfiledataset,
             List<AuthorizationParsed> authorizationParseds
     ) {
-        // Extraction des dates de soumission
         LocalDateTime from = Optional.ofNullable(binaryfiledataset)
                 .map(BinaryFileDataset::getFrom)
                 .filter(Predicate.not(Strings::isNullOrEmpty))
@@ -81,7 +81,6 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
 
         LocalDateTimeRange submissionIntervalScope = LocalDateTimeRange.between(from, to);
 
-        // Liste des intervalles d'intersection
         List<LocalDateTimeRange> authorizationMatchingIntervals = new ArrayList<>();
 
         for (AuthorizationParsed authorizationParsed : authorizationParseds) {
@@ -96,11 +95,9 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
                             .orElse(LocalDateTime.MAX)
             );
 
-            // Vérification du chevauchement
             if (!submissionIntervalScope.getRange().lowerEndpoint().isAfter(authorizationIntervalScope.getRange().upperEndpoint()) &&
-                !submissionIntervalScope.getRange().upperEndpoint().isBefore(authorizationIntervalScope.getRange().lowerEndpoint())) {
+                    !submissionIntervalScope.getRange().upperEndpoint().isBefore(authorizationIntervalScope.getRange().lowerEndpoint())) {
 
-                // Calcul de l'intervalle d'intersection
                 LocalDateTimeRange intersectionInterval = LocalDateTimeRange.between(
                         !submissionIntervalScope.getRange().lowerEndpoint().isAfter(authorizationIntervalScope.getRange().lowerEndpoint()) ?
                                 authorizationIntervalScope.getRange().lowerEndpoint() :
@@ -113,16 +110,13 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
                 authorizationMatchingIntervals.add(intersectionInterval);
             }
         }
-
-        // Vérification de la couverture totale
-        return !verifyCoverageCompleteness(submissionIntervalScope, authorizationMatchingIntervals);
+        return verifyCoverageCompleteness(submissionIntervalScope, authorizationMatchingIntervals);
     }
 
     private boolean verifyCoverageCompleteness(
             LocalDateTimeRange submissionIntervalScope,
             List<LocalDateTimeRange> authorizationMatchingIntervals
     ) {
-        // Trier les intervalles par date de début
         List<LocalDateTimeRange> sortedIntervals = authorizationMatchingIntervals.stream()
                 .sorted(Comparator.comparing(interval -> interval.getRange().lowerEndpoint()))
                 .toList();
@@ -130,18 +124,15 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
         LocalDateTime currentCoverageEnd = submissionIntervalScope.getRange().lowerEndpoint();
 
         for (LocalDateTimeRange interval : sortedIntervals) {
-            // Vérifier si l'intervalle couvre le trou précédent
             if (interval.getRange().lowerEndpoint().isAfter(currentCoverageEnd)) {
-                return false;  // Trou dans la couverture
+                return false;
             }
 
-            // Mettre à jour la fin de couverture
             currentCoverageEnd = interval.getRange().upperEndpoint().isAfter(currentCoverageEnd)
                     ? interval.getRange().upperEndpoint()
                     : currentCoverageEnd;
         }
 
-        // Vérifier si la couverture atteint la fin de l'intervalle de soumission
         boolean isFullyCovered = !currentCoverageEnd.isBefore(submissionIntervalScope.getRange().upperEndpoint());
 
         if (!isFullyCovered) {

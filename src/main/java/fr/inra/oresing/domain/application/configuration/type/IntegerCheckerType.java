@@ -6,11 +6,26 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
 import java.util.Map;
 
-public record IntegerCheckerType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType> children,
+public record IntegerCheckerType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                                  boolean required,
                                  boolean nullable) implements CheckerType {
 
-    public static SectionBuilder SECTION_BUILDER(){
+    public IntegerCheckerType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER(),
+                children,
+                true,
+                false);
+    }
+
+    public IntegerCheckerType(final SectionBuilder sectionBuilder, final Map<String, ConfigurationSchemaNodeType<?>> children, final boolean required, final boolean nullable) {
+        this.children = addNameNode(children);
+        this.sectionBuilder = sectionBuilder
+                .test(children().keySet());
+        this.required = required;
+        this.nullable = nullable;
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withMandatorySections(
                         new LabelDescription(ConfigurationSchemaNode.OA_NAME, EnumType.CHECKER_NAME_ENUM)
@@ -19,27 +34,13 @@ public record IntegerCheckerType(SectionBuilder sectionBuilder, Map<String, Conf
                         new LabelDescription(ConfigurationSchemaNode.OA_PARAMS, IntegerCheckerParamsType.EMPTY_INSTANCE())
                 );
     }
-    public static IntegerCheckerType  EMPTY_INSTANCE(){
+
+    public static IntegerCheckerType EMPTY_INSTANCE() {
         return new IntegerCheckerType(
                 Map.of(
                         ConfigurationSchemaNode.OA_NAME, new StringType(CheckerEnum.OA_integer.name()),
                         ConfigurationSchemaNode.OA_PARAMS, IntegerCheckerParamsType.EMPTY_INSTANCE()
                 ));
-    }
-
-    public IntegerCheckerType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER(),
-                children,
-                true,
-                false);
-    }
-
-    public IntegerCheckerType(final SectionBuilder sectionBuilder, final Map<String, ConfigurationSchemaNodeType> children, final boolean required, final boolean nullable) {
-        this.children = addNameNode(children);
-        this.sectionBuilder = sectionBuilder
-                .test(children().keySet());
-        this.required = required;
-        this.nullable = nullable;
     }
 
     @Override

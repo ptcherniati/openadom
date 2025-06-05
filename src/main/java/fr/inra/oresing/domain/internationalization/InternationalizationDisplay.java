@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.internationalization;
 
+import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.ApplicationDescription;
 import fr.inra.oresing.domain.application.configuration.Configuration;
@@ -10,10 +11,8 @@ import fr.inra.oresing.domain.data.DataColumnSingleValue;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
-//import io.swagger.annotations.ApiModelProperty;
 import lombok.Getter;
 import lombok.Setter;
-import com.google.common.base.Strings;
 
 import java.util.List;
 import java.util.Locale;
@@ -136,13 +135,13 @@ public class InternationalizationDisplay {
         return getPatternSplitStream(pattern)
                 .map(k -> k.length > 1 ? k[1] : "")
                 .filter(k -> !Strings.isNullOrEmpty(k))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public static List<PatternSection> parsePattern(final String pattern) {
         return getPatternSplitStream(pattern)
                 .map(PatternSection::new)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private static Stream<String[]> getPatternSplitStream(final String pattern) {

@@ -18,6 +18,8 @@ class AdditionalFileBuildExample {
                     I18nExampleBuilder.buildI18n("Données brutes à traiter", "Initial data to analyse")
             )
     );
+    private AdditionalFileBuildExample() {
+    }
 
     protected static AdditionalFileType buildAdditionalFileSchema(final TitleType title) {
         return new AdditionalFileType(
@@ -25,13 +27,13 @@ class AdditionalFileBuildExample {
         );
     }
 
-    private static LinkedHashMap<String, ConfigurationSchemaNodeType> getChildren(TitleType title) {
+    private static LinkedHashMap<String, ConfigurationSchemaNodeType<?>> getChildren(TitleType title) {
 
         return createChildrenMap(title);
     }
 
-    private static LinkedHashMap<String, ConfigurationSchemaNodeType> createChildrenMap(TitleType title) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+    private static LinkedHashMap<String, ConfigurationSchemaNodeType<?>> createChildrenMap(TitleType title) {
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> map = new LinkedHashMap<>();
         map.put(ConfigurationSchemaNode.OA_I_18_N, title);
         map.put(ConfigurationSchemaNode.OA_FORM_FIELDS, createFormFieldsMap());
         return map;

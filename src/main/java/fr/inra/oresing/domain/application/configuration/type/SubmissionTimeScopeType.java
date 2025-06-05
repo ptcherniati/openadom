@@ -6,32 +6,32 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 import java.util.Map;
 
 public record SubmissionTimeScopeType(SectionBuilder sectionBuilder,
-                                      Map<String, ConfigurationSchemaNodeType> children,
+                                      Map<String, ConfigurationSchemaNodeType<?>> children,
                                       boolean required,
                                       boolean nullable) implements ApplicationType {
-    public static SectionBuilder SECTION_BUILDER(){
-        return SectionBuilder.getInstance()
-                .withMandatorySections(
-                        new LabelDescription(ConfigurationSchemaNode.OA_COMPONENT, StringType.EMPTY_INSTANCE())
-                );
-    }
-    public static SubmissionTimeScopeType EMPTY_INSTANCE(){
-        return new SubmissionTimeScopeType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-
-
-    private SubmissionTimeScopeType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
+    private SubmissionTimeScopeType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
         this(SECTION_BUILDER(),
                 children,
                 false,
                 false);
     }
 
-    public SubmissionTimeScopeType(final Map<String, ConfigurationSchemaNodeType> children) {
+    public SubmissionTimeScopeType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),
                 children,
                 false,
                 false);
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
+        return SectionBuilder.getInstance()
+                .withMandatorySections(
+                        new LabelDescription(ConfigurationSchemaNode.OA_COMPONENT, StringType.EMPTY_INSTANCE())
+                );
+    }
+
+    public static SubmissionTimeScopeType EMPTY_INSTANCE() {
+        return new SubmissionTimeScopeType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
 }

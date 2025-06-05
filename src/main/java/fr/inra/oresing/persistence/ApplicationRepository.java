@@ -11,7 +11,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 @Component
@@ -64,16 +64,12 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
                 .findFirst();
     }
 
-    public Optional<Application> tryFindApplication(final UUID id) {
-        return tryFindApplication(id.toString());
-    }
-
     public Application findApplication(final UUID id) {
         return findApplication(id.toString());
     }
 
     public boolean addReferenceToAuthorizationScope(String applicationName, Collection<String> newDataIdentifiers) {
-        Function<String, String> buildQueryAddIdentifier = identifier->buildQueryAddIdentifier(applicationName, identifier);
+        UnaryOperator<String> buildQueryAddIdentifier = identifier -> buildQueryAddIdentifier(applicationName, identifier);
         String query = newDataIdentifiers.stream()
                 .map(buildQueryAddIdentifier)
                 .collect(Collectors.joining("\n"));
@@ -81,15 +77,14 @@ public class ApplicationRepository extends JsonTableRepositoryTemplate<Applicati
     }
 
     private String buildQueryAddIdentifier(String applicationName, String identifier) {
-        return """
-                    alter type %1$s.requiredauthorizations add attribute %2$s ltree;"""
+        return "alter type %1$s.requiredauthorizations add attribute %2$s ltree;"
                 .formatted(applicationName, identifier);
     }
 
     public void updateAuthorizationIndexes(Application application) {
         AuthorizationIndex authorizationIndex = new AuthorizationIndex(application);
         String sql = authorizationIndex.dropIndexes();
-        int updateAuthorizationIndexes = getNamedParameterJdbcTemplate().update(sql, Map.of());
+        getNamedParameterJdbcTemplate().update(sql, Map.of());
         authorizationIndex.createIndexes();
     }
 }

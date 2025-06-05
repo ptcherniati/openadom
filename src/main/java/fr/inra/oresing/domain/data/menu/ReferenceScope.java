@@ -4,7 +4,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import org.apache.logging.log4j.util.Strings;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public record ReferenceScope(Map<Context, MenuNode> menuNodes) {
     public ReferenceScope() {

@@ -7,7 +7,7 @@ import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnSingleValue;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.DataDatum;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
+import fr.inra.oresing.domain.data.deposit.transformation.DataTransformer;
 import org.apache.logging.log4j.util.Strings;
 
 /**
@@ -30,7 +30,7 @@ public record ForCompositeReferenceChild(HierarchicalNode node,
             if (Strings.isEmpty(parentHierarchicalKeyAsString)) {
                 return naturalKey;
             }
-            parentHierarchicalKey = DataImporter.getHierarchicalNodeFromNatural(parentHierarchicalKeyAsString, node().node().parent());
+            parentHierarchicalKey = DataTransformer.getHierarchicalNodeFromNatural(parentHierarchicalKeyAsString, node().node().parent());
         }
 
         return parentHierarchicalKey == null ? naturalKey : Ltree.join(parentHierarchicalKey, naturalKey);

@@ -8,11 +8,22 @@ import groovy.lang.Closure;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public record BuildCompositeKey() implements ScriptConstantProvider {
-    public static final Function<String, String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
+    public static final UnaryOperator<String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
+
+    public static String buildNaturelKeyFromLabels(List<String> values) {
+        if (values.stream().allMatch(Strings::isNullOrEmpty)) {
+            return "";
+        }
+        return values.stream()
+                .map(nullOrEmptyToNull)
+                .map(label -> label.matches(DateType.PATTERN_DATE_REGEXP_FIND_DATE) ? DateType.sorteableDateToFormattedDate(label).replace("/", "_") : label)
+                .map(Ltree::escapeToLabel)
+                .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
+    }
 
     @Override
     public void bindToContext(Map<String, Object> context) {
@@ -28,16 +39,5 @@ public record BuildCompositeKey() implements ScriptConstantProvider {
             }
         };
         context.put("OA_buildCompositeKey", buildCompositeKey);
-    }
-
-    public static String buildNaturelKeyFromLabels(List<String> values) {
-        if (values.stream().allMatch(Strings::isNullOrEmpty)) {
-            return "";
-        }
-        return values.stream()
-                .map(nullOrEmptyToNull)
-                .map(label -> label.matches(DateType.PATTERN_DATE_REGEXP_FIND_DATE) ? DateType.sorteableDateToFormattedDate(label).replaceAll("/", "_") : label)
-                .map(Ltree::escapeToLabel)
-                .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
     }
 }

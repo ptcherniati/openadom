@@ -2,9 +2,12 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.UserRepository;
+import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,13 +16,13 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebM
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import jakarta.servlet.http.Cookie;
 import java.io.InputStream;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -38,19 +41,29 @@ public class MigrationTest {
 
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
+    private AuthenticationService authenticationService;
+    @Autowired
+    private UserRepository userRepository;
+    @Autowired
+    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
+
     private Fixtures fixtures;
 
     private Cookie authCookie;
 
     @BeforeEach
     public void createApplication() throws Exception {
-        authCookie = fixtures.addMigrationApplication();
+        fixtures = new Fixtures(
+                mockMvc,
+                userRepository,
+                namedParameterJdbcTemplate,
+                authenticationService
+        );
+        authCookie = fixtures.addMigrationApplication().cookie();
     }
 
-    @Test
-    @Disabled
+    //@Test
     public void testMigrate() throws Exception {
         try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMigrationApplicationConfigurationResourceName(2))) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
@@ -59,8 +72,8 @@ public class MigrationTest {
 
         {
             final String actualCsv = mockMvc.perform(get("/api/v1/applications/fakeapp/data/jeu1/zip")
-                    .cookie(authCookie)
-                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                            .cookie(authCookie)
+                            .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
         }

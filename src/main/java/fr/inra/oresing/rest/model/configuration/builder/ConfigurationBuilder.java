@@ -20,7 +20,6 @@ public record ConfigurationBuilder(RootBuilder rootBuilder) {
 
         final YAMLMapper mapper = YAMLMapper.builder().build();
         mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
-        final boolean hasErrors = false;
         JsonNode rootNode;
         DocumentContext documentContext;
         try {

@@ -5,25 +5,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 
-import java.util.function.Supplier;
-
 import java.io.IOException;
-import java.util.*;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 public non-sealed class StringType implements FieldType<String> {
+    final Supplier<StringType> clone;
     private final Predicate<String> predicate;
     private final String pattern;
     String value = "";
 
-    final Supplier<StringType> clone;
+    public StringType(final String pattern) {
+        super();
+        this.pattern = pattern;
+        predicate = Optional.ofNullable(pattern).filter(s -> !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
+        clone = () -> new StringType(pattern);
+    }
 
     public static StringType getStringTypeFromStringValue(final String value) {
         final StringType stringType = new StringType(null);
@@ -31,11 +37,20 @@ public non-sealed class StringType implements FieldType<String> {
         return stringType;
     }
 
-    public StringType(final String pattern) {
-        super();
-        this.pattern = pattern;
-        predicate = Optional.ofNullable(pattern).filter(s -> !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
-        clone = () -> new StringType(pattern);
+    private static Pattern compile(final String patternString) {
+        return Pattern.compile(patternString, Pattern.MULTILINE);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        StringType that = (StringType) o;
+        return Objects.equals(pattern, that.pattern) && Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(pattern, value);
     }
 
     @Override
@@ -48,14 +63,10 @@ public non-sealed class StringType implements FieldType<String> {
         return SqlPrimitiveType.TEXT;
     }
 
-    private static Pattern compile(final String patternString) {
-        return Pattern.compile(patternString,Pattern.MULTILINE);
-    }
-
     @Override
     public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         final CheckerValidationCheckResult validationCheckResult;
-        final CheckerTarget target = lineChecker.target();
+        final DataColumn target = lineChecker.target();
         if (predicate == null) {
             this.value = value;
             validationCheckResult = DefaultCheckerValidationCheckResult.success(target, this);
@@ -64,14 +75,14 @@ public non-sealed class StringType implements FieldType<String> {
                 this.value = value;
                 validationCheckResult = DefaultCheckerValidationCheckResult.success(target, this);
             } else {
-                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("patternNotMatched"), ImmutableMap.of("target", target, "pattern", pattern, "value", value), target);
+                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("patternNotMatched"), ImmutableMap.of("component", target.column(), "pattern", pattern, "value", value), target);
             }
         }
         return validationCheckResult;
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 
@@ -89,7 +100,7 @@ public non-sealed class StringType implements FieldType<String> {
 
     @Override
     public void serialize(final JsonGenerator gen) throws IOException {
-        if(value==null){
+        if (value == null) {
             gen.writeNull();
             return;
         }

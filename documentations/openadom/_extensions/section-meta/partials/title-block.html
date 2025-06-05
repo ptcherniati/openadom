@@ -1,125 +1,130 @@
-<header id="title-block-header" class="quarto-title-block default">
-<div class="quarto-title">
-$if(title)$
-<h1 class="title">$title$</h1>
-$endif$
-$if(subtitle)$
-<p class="subtitle lead">$subtitle$</p>
-$endif$
-</div>
-
-<div class="quarto-title-meta">
-$if(date)$
-<div>
-  <div class="quarto-title-meta-heading">Date de publication</div>
-  <div class="quarto-title-meta-contents">
-    <p class="date">$date$</p>
-  </div>
-</div>
-$endif$
-
-$if(date-modified)$
-<div>
-  <div class="quarto-title-meta-heading">$labels.modified$</div>
-  <div class="quarto-title-meta-contents">
-    <p class="date-modified">$date-modified$</p>
-  </div>
-</div>
-$endif$
-</div>
-
-$if(abstract)$
-<div>
-  <div class="abstract">
-    <div class="abstract-title">Résumé</div>
-    $abstract$
-  </div>
-</div>
-$endif$
-
-<!-- Section Structure -->
-$if(sections)$
-<div class="callout callout-style-default callout-note callout-titled" title="Sections attendues">
-  <div class="callout-header d-flex align-content-center collapsed" data-bs-toggle="collapse" data-bs-target=".callout-sections-contents" aria-controls="callout-sections" aria-expanded="false" aria-label="Toggle callout">
-    <div class="callout-icon-container">
-      <i class="callout-icon"></i>
+<header class="quarto-title-block default" id="title-block-header">
+    <div class="quarto-title">
+        $if(title)$
+        <h1 class="title">$title$</h1>
+        $endif$
+        $if(subtitle)$
+        <p class="subtitle lead">$subtitle$</p>
+        $endif$
     </div>
-    <div class="callout-title-container flex-fill">
-      Sections attendues
-    </div>
-    <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end">
-      <i class="callout-toggle"></i>
-    </div>
-  </div>
-  <div id="callout-sections" class="callout-sections-contents callout-collapse collapse">
-    <div class="callout-body-container callout-body">
-      <!-- Mandatory Sections -->
-      $if(sections.mandatory)$
-      <div class="mandatory-sections">
-        <h3>Sections obligatoires</h3>
-        <ul>
-        $for(sections.mandatory)$
-          <li><code>$it$</code></li>
-        $endfor$
-        </ul>
-      </div>
-      $endif$
 
-      <!-- Optional Sections -->
-      $if(sections.optional)$
-      <div class="optional-sections">
-        <h3>Sections facultatives</h3>
-        <ul>
-        $for(sections.optional)$
-          <li><code>$it$</code></li>
-        $endfor$
-        </ul>
-      </div>
-      $endif$
-
-      <!-- Alternative Sections -->
-      $if(sections.alternative)$
-      <div class="alternative-sections">
-        <h3>Sections alternatives</h3>
-        $for(sections.alternative)$
-        <div class="alternative-group">
-          <p>Une des sections suivantes doit être présente :</p>
-          <ul>
-          $for(it.components)$
-            <li><code>$it$</code></li>
-          $endfor$
-          </ul>
+    <div class="quarto-title-meta">
+        $if(date)$
+        <div>
+            <div class="quarto-title-meta-heading">Date de publication</div>
+            <div class="quarto-title-meta-contents">
+                <p class="date">$date$</p>
+            </div>
         </div>
-        $endfor$
-      </div>
-      $endif$
+        $endif$
+
+        $if(date-modified)$
+        <div>
+            <div class="quarto-title-meta-heading">$labels.modified$</div>
+            <div class="quarto-title-meta-contents">
+                <p class="date-modified">$date-modified$</p>
+            </div>
+        </div>
+        $endif$
     </div>
-  </div>
-</div>
-$endif$
+
+    $if(abstract)$
+    <div>
+        <div class="abstract">
+            <div class="abstract-title">Résumé</div>
+            $abstract$
+        </div>
+    </div>
+    $endif$
+
+    <!-- Section Structure -->
+    $if(sections)$
+    <div class="callout callout-style-default callout-note callout-titled" title="Sections attendues">
+        <div aria-controls="callout-sections" aria-expanded="false"
+             aria-label="Toggle callout" class="callout-header d-flex align-content-center collapsed" data-bs-target=".callout-sections-contents"
+             data-bs-toggle="collapse">
+            <div class="callout-icon-container">
+                <i class="callout-icon"></i>
+            </div>
+            <div class="callout-title-container flex-fill">
+                Sections attendues
+            </div>
+            <div class="callout-btn-toggle d-inline-block border-0 py-1 ps-1 pe-0 float-end">
+                <i class="callout-toggle"></i>
+            </div>
+        </div>
+        <div class="callout-sections-contents callout-collapse collapse" id="callout-sections">
+            <div class="callout-body-container callout-body">
+                <!-- Mandatory Sections -->
+                $if(sections.mandatory)$
+                <div class="mandatory-sections">
+                    <h3>Sections obligatoires</h3>
+                    <ul>
+                        $for(sections.mandatory)$
+                        <li><code>$it$</code></li>
+                        $endfor$
+                    </ul>
+                </div>
+                $endif$
+
+                <!-- Optional Sections -->
+                $if(sections.optional)$
+                <div class="optional-sections">
+                    <h3>Sections facultatives</h3>
+                    <ul>
+                        $for(sections.optional)$
+                        <li><code>$it$</code></li>
+                        $endfor$
+                    </ul>
+                </div>
+                $endif$
+
+                <!-- Alternative Sections -->
+                $if(sections.alternative)$
+                <div class="alternative-sections">
+                    <h3>Sections alternatives</h3>
+                    $for(sections.alternative)$
+                    <div class="alternative-group">
+                        <p>Une des sections suivantes doit être présente :</p>
+                        <ul>
+                            $for(it.components)$
+                            <li><code>$it$</code></li>
+                            $endfor$
+                        </ul>
+                    </div>
+                    $endfor$
+                </div>
+                $endif$
+            </div>
+        </div>
+    </div>
+    $endif$
 </header>
 
 <style>
-.section-structure h3 {
-    color: #495057;
-    font-size: 1.1em;
-    margin-top: 1em;
-    margin-bottom: 0.5em;
-}
-.section-structure code {
-    color: #e83e8c;
-    background-color: #f1f3f5;
-    padding: 2px 4px;
-    border-radius: 3px;
-}
-.abstract {
-    margin: 1em 0;
-    padding: 1em;
-    background-color: #fff;
-    border-left: 4px solid #17a2b8;
-}
-.abstract-title {
-    font-weight: bold;
-    margin-bottom: 0.5em;
-}
+    .section-structure h3 {
+        color: #495057;
+        font-size: 1.1em;
+        margin-top: 1em;
+        margin-bottom: 0.5em;
+    }
+
+    .section-structure code {
+        color: #e83e8c;
+        background-color: #f1f3f5;
+        padding: 2px 4px;
+        border-radius: 3px;
+    }
+
+    .abstract {
+        margin: 1em 0;
+        padding: 1em;
+        background-color: #fff;
+        border-left: 4px solid #17a2b8;
+    }
+
+    .abstract-title {
+        font-weight: bold;
+        margin-bottom: 0.5em;
+    }
 </style>

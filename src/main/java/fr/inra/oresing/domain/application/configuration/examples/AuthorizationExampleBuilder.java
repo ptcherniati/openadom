@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.application.configuration.type.StringType;
 
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 class AuthorizationExampleBuilder {
     public static final AuthorizationType DATA_AUTHORIZATION = buildAuthorization(
@@ -15,11 +16,14 @@ class AuthorizationExampleBuilder {
             new StringType("dat_date_heure", false)
     );
 
+    private AuthorizationExampleBuilder() {
+    }
+
     protected static AuthorizationType buildAuthorization(
             List<StringType> authorizationsScope,
             StringType timeScope) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
-        children.put(ConfigurationSchemaNode.OA_AUTHORIZATION_SCOPES, new CollectionType.ArrayType(
+        Map<String, ConfigurationSchemaNodeType<?>> children = new LinkedHashMap<>();
+        children.put(ConfigurationSchemaNode.OA_AUTHORIZATION_SCOPES, new CollectionType.ArrayType<>(
                 authorizationsScope,
                 false,
                 false,

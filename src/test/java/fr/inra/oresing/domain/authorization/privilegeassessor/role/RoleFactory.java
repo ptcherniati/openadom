@@ -1,7 +1,6 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import org.mockito.Mockito;
 
 import java.util.ArrayList;
@@ -29,8 +28,8 @@ public class RoleFactory {
     /**
      * Génère un ApplicationDataReader avec une application mock
      */
-    public static ApplicationDataReader createDataReader() {
-        return new ApplicationDataReader(createMockApplication());
+    public static ApplicationDataReaderUser createDataReader() {
+        return new ApplicationDataReaderUser(createMockApplication());
     }
 
     /**

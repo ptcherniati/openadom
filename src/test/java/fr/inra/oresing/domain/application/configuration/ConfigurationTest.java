@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import lombok.SneakyThrows;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 import java.util.*;
@@ -122,9 +125,6 @@ class ConfigurationTest {
         Mockito.doReturn(Optional.of(dataDescription)).when(configuration).findData(Mockito.anyString());
     }
 
-    public record ComponentDefinition(String label, String name, Integer order) {
-    }
-
     private JsonNode buildComponentNode(ComponentDefinition componentDefinition) {
         Set<fr.inra.oresing.domain.application.configuration.Tag> tags = componentDefinition.order() == null ?
                 Set.of(fr.inra.oresing.domain.application.configuration.Tag.NoTag.instance()) :
@@ -147,7 +147,7 @@ class ConfigurationTest {
                     MAPPER.toJson(component)
             );
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 
@@ -232,5 +232,8 @@ class ConfigurationTest {
                 new LinkedHashSet<>(Arrays.asList("sixth", "first", "second", "third", "fourth", "fifth")),
                 internationalizedSortedColumns.keySet()
         );
+    }
+
+    public record ComponentDefinition(String label, String name, Integer order) {
     }
 }

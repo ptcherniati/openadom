@@ -10,13 +10,14 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.context.column.PatternColumnFactory;
 import fr.inra.oresing.domain.data.deposit.context.hierarchicalkey.HierarchicalKeyFactory;
+import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
 import fr.inra.oresing.persistence.DataRepository;
@@ -37,74 +38,48 @@ import java.util.stream.Collectors;
 
 public class DataImporterContext {
     public static final String COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR = "__";
+    final Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey;
+    final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey;
+    final boolean allowUnexpectedColumns;
     private final ContextConstants constants;
     /**
      *
      */
-    private final ImmutableSet<LineChecker> lineCheckers;
+    private final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers;
     /**
      * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
      */
     private final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences;
     private final ImmutableSet<Column> columns;
     @Getter
-    private ImmutableSet<LineChecker> transformedLineCheckers;
-
-    @Getter
-    private ImmutableSet<Column> columnsWithPatternColumns;
-    @Getter
     private final PatternColumnFactory patternColumnFactory;
     @Getter
     private final Mapper jsonRowMapper;
-    final Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey;
-    final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey;
-    final boolean allowUnexpectedColumns;
     @Getter
     private final List<ReferenceScope.NodeDescription> nodesForMenu;
     @Getter
     private final PublishContext.PublishContextBuilder publishContextBuilder;
-    private final Map<Ltree, List<DataImporter.RowWithReferenceDatum>> missingParentLines = new HashMap<>();
+    private final Map<Ltree, List<RowWithReferenceDatum>> missingParentLines = new HashMap<>();
+    @Getter
+    private ImmutableSet<LineChecker<FieldType<?>>> transformedLineCheckers;
+    @Getter
+    private ImmutableSet<Column> columnsWithPatternColumns;
     @Setter
     @Getter
     private Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = new HashMap<>();
 
-    public Optional<UUID> getKnownId(final Ltree naturalKey) {
-        return getAfterPreloadReferenceUuids().entrySet().stream()
-                .filter(entry -> entry.getKey().naturalKey().equals(naturalKey))
-                .map(Map.Entry::getValue)
-                .findFirst();
-    }
-
-    public void setReferenceValuesForSelfType(Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType) {
-        Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = referenceValuesForSelfType.entrySet().stream()
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> entry.getValue().stream().findFirst().orElse(UUID.randomUUID())
-                ));
-        setAfterPreloadReferenceUuids(afterPreloadReferenceUuids);
-    }
-
-    public Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType() {
-        return getAfterPreloadReferenceUuids().entrySet()
-                .stream().collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        entry -> ImmutableSet.of(entry.getValue())
-                ));
-    }
-
-
-    public DataImporterContext(final ContextConstants constants,
-                               final ImmutableSet<LineChecker> lineCheckers,
-                               final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences,
-                               final ImmutableSet<Column> columns,
-                               final PatternColumnFactory patternColumnFactory,
-                               final Mapper jsonRowMapper,
-                               final Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
-                               final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey,
-                               final boolean allowUnexpectedColumns,
-                               final String reftype,
-                               PublishContext.PublishContextBuilder publishContextBuilder,
-                               List<ReferenceScope.NodeDescription> nodesForMenu) {
+    public <F extends FieldType<?>> DataImporterContext(final ContextConstants constants,
+                                                        final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers,
+                                                        final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences,
+                                                        final ImmutableSet<Column> columns,
+                                                        final PatternColumnFactory patternColumnFactory,
+                                                        final Mapper jsonRowMapper,
+                                                        final Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
+                                                        final Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey,
+                                                        final boolean allowUnexpectedColumns,
+                                                        final String reftype,
+                                                        PublishContext.PublishContextBuilder publishContextBuilder,
+                                                        List<ReferenceScope.NodeDescription> nodesForMenu) {
         super();
         this.constants = constants;
         this.lineCheckers = lineCheckers;
@@ -119,6 +94,37 @@ public class DataImporterContext {
         this.nodesForMenu = nodesForMenu;
     }
 
+    /**
+     * Séparateur pour les clés naturelles composites.
+     */
+    public static String getCompositeNaturalKeyComponentsSeparator() {
+        return COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR;
+    }
+
+    public Optional<UUID> getKnownId(final Ltree naturalKey) {
+        return getAfterPreloadReferenceUuids().entrySet().stream()
+                .filter(entry -> entry.getKey().naturalKey().equals(naturalKey))
+                .map(Map.Entry::getValue)
+                .findFirst();
+    }
+
+    public Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType() {
+        return getAfterPreloadReferenceUuids().entrySet()
+                .stream().collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> ImmutableSet.of(entry.getValue())
+                ));
+    }
+
+    public void setReferenceValuesForSelfType(Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType) {
+        Map<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids = referenceValuesForSelfType.entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream().findFirst().orElse(UUID.randomUUID())
+                ));
+        setAfterPreloadReferenceUuids(afterPreloadReferenceUuids);
+    }
+
     public String getDisplayNamesByReferenceAndNaturalKey(final String referencedColumn, final String naturalKey, final String locale) {
         return displayNamesByReferenceAndNaturalKey.getOrDefault(referencedColumn, new HashMap<>())
                 .getOrDefault(naturalKey, new HashMap<>())
@@ -129,13 +135,6 @@ public class DataImporterContext {
         return displayDescriptionsByReferenceAndNaturalKey.getOrDefault(referencedColumn, new HashMap<>())
                 .getOrDefault(naturalKey, new HashMap<>())
                 .getOrDefault(locale, naturalKey);
-    }
-
-    /**
-     * Séparateur pour les clés naturelles composites.
-     */
-    public static String getCompositeNaturalKeyComponentsSeparator() {
-        return COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR;
     }
 
     public String getRefType() {
@@ -323,7 +322,7 @@ public class DataImporterContext {
                 .toList();
     }
 
-    public void setTransformedLineCheckers(ImmutableSet<LineChecker> transformedLineCheckers) {
+    public <F extends FieldType<?>> void setTransformedLineCheckers(ImmutableSet<LineChecker<F>> transformedLineCheckers) {
         ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = transformedLineCheckers.stream()
                 .map(LineChecker::fieldTypeForOne)
                 .filter(ReferenceType.class::isInstance)
@@ -351,13 +350,13 @@ public class DataImporterContext {
         }
     }
 
-    public void registerMissingLine(Ltree hierarchicalParentKey, DataImporter.RowWithReferenceDatum rowWithReferenceDatum) {
+    public void registerMissingLine(Ltree hierarchicalParentKey, RowWithReferenceDatum rowWithReferenceDatum) {
         this.missingParentLines
                 .computeIfAbsent(hierarchicalParentKey, k -> new LinkedList<>())
                 .add(rowWithReferenceDatum);
     }
 
-    public Map<Ltree, List<DataImporter.RowWithReferenceDatum>> getMissingLines() {
+    public Map<Ltree, List<RowWithReferenceDatum>> getMissingLines() {
         return this.missingParentLines;
     }
 }

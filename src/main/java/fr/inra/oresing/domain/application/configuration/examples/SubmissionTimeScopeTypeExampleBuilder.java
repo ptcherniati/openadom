@@ -12,10 +12,9 @@ public class SubmissionTimeScopeTypeExampleBuilder {
     public static final SubmissionTimeScopeType TIME_SCOPE = buildTimeScope();
 
     private static SubmissionTimeScopeType buildTimeScope() {
-        Map<String, ConfigurationSchemaNodeType> map = new HashMap<>();
+        Map<String, ConfigurationSchemaNodeType<?>> map = new HashMap<>();
         map.put(ConfigurationSchemaNode.OA_COMPONENT, new StringType("dat_date_heure", true));
 
         return new SubmissionTimeScopeType(map);
     }
 }
-

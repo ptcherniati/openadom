@@ -1,11 +1,11 @@
 package fr.inra.oresing.persistence;
 
 import com.google.common.base.Strings;
+import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
+import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.AdditionalFileDescription;
 import fr.inra.oresing.domain.application.configuration.FieldDescription;
-import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
-import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import lombok.Getter;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.util.CollectionUtils;
@@ -19,9 +19,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 public class AdditionalFileSearchHelper {
+    private final AtomicInteger i = new AtomicInteger();
     AdditionalFilesInfos additionalFilesInfos;
     Application application;
-    private final AtomicInteger i = new AtomicInteger();
     @Getter
     private MapSqlParameterSource paramSource = new MapSqlParameterSource();
 
@@ -35,9 +35,30 @@ public class AdditionalFileSearchHelper {
     public AdditionalFileSearchHelper() {
     }
 
+    private static List<MemoryFile> getMemoriesFiles(final AdditionalBinaryFile additionalBinaryFile) {
+        final List<MemoryFile> memoryFiles = new LinkedList<>();
+        memoryFiles.add(formatFileInfos(additionalBinaryFile));
+        memoryFiles.add(fileToMemoryFile(additionalBinaryFile));
+        return memoryFiles;
+    }
+
+    private static MemoryFile fileToMemoryFile(final AdditionalBinaryFile additionalBinaryFile) {
+        return new MemoryFile(additionalBinaryFile.getFileType(), additionalBinaryFile.getFileName(), additionalBinaryFile.getFileName(), additionalBinaryFile.getData());
+    }
+
+    private static MemoryFile formatFileInfos(final AdditionalBinaryFile additionalBinaryFile) {
+        return new MemoryFile(additionalBinaryFile.getFileType(),
+                additionalBinaryFile.getFileName(),
+                additionalBinaryFile.getFileName().replaceAll("\\.[^\\.]*", "") + "_infos.txt",
+                Optional.ofNullable(additionalBinaryFile.getFileInfos()).orElse(new HashMap<>()).entrySet().stream()
+                        .map(e -> String.format("%s : %s", e.getKey(), e.getValue()))
+                        .collect(Collectors.joining("\n"))
+                        .getBytes(StandardCharsets.UTF_8));
+    }
+
     private String addArgumentAndReturnSubstitution(final Object value) {
-        final int i = this.i.incrementAndGet();
-        final String paramName = String.format("arg%d", i);
+        final int counter = this.i.incrementAndGet();
+        final String paramName = String.format("arg%d", counter);
         paramSource.addValue(paramName, value);
         return String.format(":%s", paramName);
     }
@@ -93,12 +114,11 @@ public class AdditionalFileSearchHelper {
                     .ifPresent(where::add);
         }
         return where.stream()
-                        .filter(Objects::nonNull).collect(Collectors
-                                .joining(" and ", "(", ")"));
+                .filter(Objects::nonNull).collect(Collectors
+                        .joining(" and ", "(", ")"));
     }
 
     private String whereForField(final AdditionalFilesInfos.FieldFilters filter, final FieldDescription additionalFileFieldFormat) {
-        final boolean isRegExp = filter.isRegExp != null && filter.isRegExp;
         final List<String> filters = new LinkedList<>();
         if (!Strings.isNullOrEmpty(filter.filter)) {
             filters.add(String.format(
@@ -120,32 +140,31 @@ public class AdditionalFileSearchHelper {
                         )
                 );
             }
-        } else if (filter.intervalValues != null && "numeric".equals(filter.type)) {
-            if (!Strings.isNullOrEmpty(filter.intervalValues.from) || !Strings.isNullOrEmpty(filter.intervalValues.to)) {
-                //fileinfos #> '{"t","value"}'@@ '$. double() >= 1 && $. double() <= 2'
-                final List<String> filterList = new LinkedList<>();
-                if (!Strings.isNullOrEmpty(filter.intervalValues.from)) {
-                    filterList.add(String.format(
-                                    "$. double() >= '||%s||'",
-                                    addArgumentAndReturnSubstitution(filter.intervalValues.from)
-                            )
-                    );
-                }
-                if (!Strings.isNullOrEmpty(filter.intervalValues.to)) {
-                    filterList.add(String.format(
-                                    "$. double() <= '||%s||'",
-                                    addArgumentAndReturnSubstitution(filter.intervalValues.to)
-                            )
-                    );
-                }
-                filters.add(
-                        String.format("fileinfos #> '{\"%s\"}'@@ ('%s')::jsonpath",
-                                JsonTableInApplicationSchemaRepositoryTemplate.escapeSql(filter.getField()),
-                                String.join(" && ", filterList)
+        } else if (filter.intervalValues != null && "numeric".equals(filter.type) && (!Strings.isNullOrEmpty(filter.intervalValues.from) || !Strings.isNullOrEmpty(filter.intervalValues.to))) {
+            //fileinfos #> '{"t","value"}'@@ '$. double() >= 1 && $. double() <= 2'
+            final List<String> filterList = new LinkedList<>();
+            if (!Strings.isNullOrEmpty(filter.intervalValues.from)) {
+                filterList.add(String.format(
+                                "$. double() >= '||%s||'",
+                                addArgumentAndReturnSubstitution(filter.intervalValues.from)
                         )
                 );
             }
+            if (!Strings.isNullOrEmpty(filter.intervalValues.to)) {
+                filterList.add(String.format(
+                                "$. double() <= '||%s||'",
+                                addArgumentAndReturnSubstitution(filter.intervalValues.to)
+                        )
+                );
+            }
+            filters.add(
+                    String.format("fileinfos #> '{\"%s\"}'@@ ('%s')::jsonpath",
+                            JsonTableInApplicationSchemaRepositoryTemplate.escapeSql(filter.getField()),
+                            String.join(" && ", filterList)
+                    )
+            );
         }
+
         if (CollectionUtils.isEmpty(filters)) {
             return "";
         }
@@ -175,27 +194,6 @@ public class AdditionalFileSearchHelper {
             zipOutputStream.flush();
             zipOutputStream.closeEntry();
         }
-    }
-
-    private static List<MemoryFile> getMemoriesFiles(final AdditionalBinaryFile additionalBinaryFile) {
-        final List<MemoryFile> memoryFiles = new LinkedList<>();
-        memoryFiles.add(formatFileInfos(additionalBinaryFile));
-        memoryFiles.add(fileToMemoryFile(additionalBinaryFile));
-        return memoryFiles;
-    }
-
-    private static MemoryFile fileToMemoryFile(final AdditionalBinaryFile additionalBinaryFile) {
-        return new MemoryFile(additionalBinaryFile.getFileType(), additionalBinaryFile.getFileName(), additionalBinaryFile.getFileName(), additionalBinaryFile.getData());
-    }
-
-    private static MemoryFile formatFileInfos(final AdditionalBinaryFile additionalBinaryFile) {
-        return new MemoryFile(additionalBinaryFile.getFileType(),
-                additionalBinaryFile.getFileName(),
-                additionalBinaryFile.getFileName().replaceAll("\\.[^\\.]*", "") + "_infos.txt",
-                Optional.ofNullable(additionalBinaryFile.getFileInfos()).orElse(new HashMap<>()).entrySet().stream()
-                        .map(e -> String.format("%s : %s", e.getKey(), e.getValue()))
-                        .collect(Collectors.joining("\n"))
-                        .getBytes(StandardCharsets.UTF_8));
     }
 
     public static class MemoryFile {

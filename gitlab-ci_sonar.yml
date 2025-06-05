@@ -11,7 +11,7 @@ stages:
 sonarqube-check:
   stage: sonarqube-check
   
-  script: 
+  script:
     - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
   allow_failure: true
   rules:

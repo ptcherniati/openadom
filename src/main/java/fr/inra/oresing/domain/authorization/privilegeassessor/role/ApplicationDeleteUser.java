@@ -8,17 +8,16 @@ import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public record ApplicationDeleteUser(
         Application application,
         String dataName,
-        ArrayList<AuthorizationParsed> authorizations,
+        List<AuthorizationParsed> authorizations,
         boolean isRepository
 ) implements ApplicationDataDelete, ApplicationDataWriter {
-    public ApplicationDeleteUser(Application application, String dataName, ArrayList<AuthorizationParsed> authorizations) {
+    public ApplicationDeleteUser(Application application, String dataName, List<AuthorizationParsed> authorizations) {
         this(application, dataName, authorizations, application.findSubmission(dataName).isPresent());
     }
 
@@ -27,17 +26,17 @@ public record ApplicationDeleteUser(
         List<AuthorizationParsed> authorizationParseds = authorizations().stream()
                 .filter(authorizationParsed -> Optional.ofNullable(authorizationParsed)
                         .map(AuthorizationParsed::operationTypes)
-                        .stream().anyMatch(operationTypes->operationTypes.contains(OperationType.delete))
+                        .stream().anyMatch(operationTypes -> operationTypes.contains(OperationType.delete))
                 )
                 .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
                 .toList();
-        if(authorizationParseds.isEmpty()){
+        if (authorizationParseds.isEmpty()) {
             throw getException();
         }
-        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
-            throw getException();
+        if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
+            return true;
         }
-        return true;
+        throw getException();
     }
 
     @Override
@@ -45,23 +44,23 @@ public record ApplicationDeleteUser(
         List<AuthorizationParsed> authorizationParseds = authorizations().stream()
                 .filter(authorizationParsed -> Optional.ofNullable(authorizationParsed)
                         .map(AuthorizationParsed::operationTypes)
-                        .stream().anyMatch(operationTypes->operationTypes.contains(OperationType.delete))
+                        .stream().anyMatch(operationTypes -> operationTypes.contains(OperationType.delete))
                 )
                 .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
                 .toList();
-        if(!isRepository()){
-            if(CollectionUtils.isEmpty(authorizationParseds)){
+        if (!isRepository()) {
+            if (CollectionUtils.isEmpty(authorizationParseds)) {
                 throw getException();
             }
             return false;
         }
-        if(authorizationParseds.isEmpty()){
+        if (authorizationParseds.isEmpty()) {
             throw getException();
         }
-        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
-            throw getException();
+        if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
+            return true;
         }
-        return false;
+        throw getException();
     }
 
     @Override

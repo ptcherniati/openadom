@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 
 import static fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserReaderRightsException.NO_RIGHT_FOR_APPLICATION_USER_READER_RIGHT_EXCEPTION;
 
-public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
+public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicationDomainEnum>(
         AuthorizationsForApplicationUser authorizations,
-        PrivilegeApplicationDomain domain,
+        P domain,
         Application application,
         GetGrantableResult grantable) implements PrivilegeAssessorDomain {
     /*
@@ -65,13 +65,26 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
     /*
     Test if is applicationUserForReadingData
      */
-    public ApplicationDataReader forDataRead(String dataName) {
-        if(Optional.of(authorizations())
+    public ApplicationDataReaderUser forDataRead(String dataName) {
+        if (Optional.of(authorizations())
                 .filter(authorizationsForApplicationUser -> authorizationsForApplicationUser.canRead(dataName))
-                .isEmpty()){
+                .isEmpty()) {
             throw new NotApplicationDataReaderException(application().getName(), dataName);
         }
-        return new ApplicationDataReader(application());
+        return new ApplicationDataReaderUser(application());
+    }
+    public ApplicationDataReaderUser forDataReadSome() {
+        if(authorizations().isApplicationManager() || authorizations().isUserManager()) {
+            return new ApplicationDataReaderUser(application());
+        }
+        if (Optional.of(authorizations())
+                .map(AuthorizationsForApplicationUser::roles)
+                .stream()
+                .flatMap(List::stream)
+                .noneMatch("writer"::equals)) {
+            throw new NotApplicationDataReaderException(application().getName());
+        }
+        return new ApplicationDataReaderUser(application());
     }
 
     public Map<AuthorizationsForUserResult.Roles, Boolean> getAuthorizationsForUser(String dataName) {
@@ -103,23 +116,23 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
     }
 
     public ApplicationAdminUser forDeleteAuthorization() {
-        if(!authorizations().isApplicationManager()) {
+        if (!authorizations().isApplicationManager()) {
             throw new NotApplicationManagerRightsException(application.getName());
         }
-        return  new ApplicationAdminUser(application());
+        return new ApplicationAdminUser(application());
     }
 
     public ApplicationDataWriter forDataWrite(String dataName, boolean toPublish) {
         AuthorizationsForApplicationUser authorizationsForApplicationUser = Optional.of(authorizations())
                 .filter(authorizations -> authorizations.canWrite(dataName, toPublish))
                 .orElseThrow(() -> new NotApplicationDataWriterException(application().getName(), dataName));
-        if(authorizationsForApplicationUser.isApplicationManager()){
-            return new ApplicationAdminUser(application(),dataName);
+        if (authorizationsForApplicationUser.isApplicationManager()) {
+            return new ApplicationAdminUser(application(), dataName);
         }
-        if(authorizationsForApplicationUser.isUserManager()){
+        if (authorizationsForApplicationUser.isUserManager()) {
             return new ApplicationManagerUser(application(), dataName);
         }
-        if(toPublish || !application().isData(dataName)){
+        if (toPublish || !application().isData(dataName)) {
             return new ApplicationPublishWriterUser(
                     application(),
                     dataName,
@@ -141,10 +154,10 @@ public record PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomain>(
         AuthorizationsForApplicationUser authorizationsForApplicationUser = Optional.of(authorizations())
                 .filter(authorizations -> authorizations.canDelete(dataName, isRepository))
                 .orElseThrow(() -> new NotApplicationCanDeleteRightsException(application().getName(), dataName));
-        if(authorizationsForApplicationUser.isApplicationManager()){
-            return new ApplicationAdminUser(application(),dataName);
+        if (authorizationsForApplicationUser.isApplicationManager()) {
+            return new ApplicationAdminUser(application(), dataName);
         }
-        if(authorizationsForApplicationUser.isUserManager()){
+        if (authorizationsForApplicationUser.isUserManager()) {
             return new ApplicationManagerUser(application(), dataName);
         }
         return new ApplicationDeleteUser(

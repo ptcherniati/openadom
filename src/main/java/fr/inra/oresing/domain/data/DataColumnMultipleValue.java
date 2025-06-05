@@ -24,6 +24,7 @@ import java.util.stream.Collectors;
 public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, FieldType> {
 
     private static final String COLLECTION_AS_JSON_STRING_SEPARATOR = ",";
+    ListType values;
 
     public DataColumnMultipleValue(final List values) {
         super();
@@ -42,8 +43,6 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
         this.values = values;
     }
 
-    ListType values;
-
     @Override
     public ListType toJsonForDatabase() {
         return values;
@@ -56,14 +55,16 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
     }
 
     @Override
-    public DataColumnMultipleValue transform(final Function<FieldType, FieldType> transformation) {
-        final ListType fieldType = (ListType) Optional.ofNullable(values)
+    public DataColumnValue<ListType, FieldType> transform(Function<FieldType<?>, FieldType<?>> transformation) {
+        final ListType fieldType = Optional.ofNullable((FieldType<?>) values)
                 .map(transformation)
+                .filter(ListType.class::isInstance)
+                .map(ListType.class::cast)
                 .orElse(values);
         return Optional.ofNullable(fieldType)
                 .map(ListType::getValue)
                 .map(DataColumnMultipleValue::new)
-                .orElse(new DataColumnMultipleValue(ListType.EMPTY_LIST));
+                .orElse(new DataColumnMultipleValue<>(ListType.EMPTY_LIST));
     }
 
     private U stringToValue(final String s) {
@@ -86,12 +87,15 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
     public String getCsvCellContent() {
         return (String) values.getValue().stream()
                 .map(Object::toString)
-                .peek(value -> Preconditions.checkState(
-                                !value.toString().contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
-                                ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
-                                value,
-                                ManyValuesStaticColumn.CSV_CELL_SEPARATOR
-                        )
+                .map(value -> {
+                            Preconditions.checkState(
+                                    !value.toString().contains(ManyValuesStaticColumn.CSV_CELL_SEPARATOR),
+                                    ExceptionMessage.SEPARATOR_USING_IN_VALUE.toMessage(),
+                                    value,
+                                    ManyValuesStaticColumn.CSV_CELL_SEPARATOR
+                            );
+                            return values;
+                        }
                 )
                 .collect(Collectors.joining(ManyValuesStaticColumn.CSV_CELL_SEPARATOR));
 

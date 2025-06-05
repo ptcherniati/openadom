@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.model.configuration;
 
-import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonLocation;
+import com.fasterxml.jackson.core.JsonParseException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.HashMap;

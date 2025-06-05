@@ -5,22 +5,10 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
 import java.util.Map;
 
-public record SubmissionScopeType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType> children,
+public record SubmissionScopeType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                                   boolean required,
                                   boolean nullable) implements ApplicationType {
-    public static SectionBuilder SECTION_BUILDER(){
-        return SectionBuilder.getInstance()
-                .withOptionalSections(
-                        new LabelDescription(ConfigurationSchemaNode.OA_REFERENCE_SCOPES, StaticMapType.REFERENCE_SCOPES().type),
-                        new LabelDescription(ConfigurationSchemaNode.OA_TIME_SCOPE, TimeScopeType.EMPTY_INSTANCE())
-                );
-    }
-    public static SubmissionScopeType EMPTY_INSTANCE() {
-        return new SubmissionScopeType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-
-
-    public SubmissionScopeType(final Map<String, ConfigurationSchemaNodeType> children) {
+    public SubmissionScopeType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),
                 children,
@@ -28,10 +16,22 @@ public record SubmissionScopeType(SectionBuilder sectionBuilder, Map<String, Con
                 false);
     }
 
-    private SubmissionScopeType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
+    private SubmissionScopeType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
         this(SECTION_BUILDER(),
                 children,
                 true,
                 false);
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
+        return SectionBuilder.getInstance()
+                .withOptionalSections(
+                        new LabelDescription(ConfigurationSchemaNode.OA_REFERENCE_SCOPES, StaticMapType.REFERENCE_SCOPES().type),
+                        new LabelDescription(ConfigurationSchemaNode.OA_TIME_SCOPE, TimeScopeType.EMPTY_INSTANCE())
+                );
+    }
+
+    public static SubmissionScopeType EMPTY_INSTANCE() {
+        return new SubmissionScopeType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
 }

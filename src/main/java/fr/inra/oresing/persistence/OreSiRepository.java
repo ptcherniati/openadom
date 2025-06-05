@@ -28,6 +28,7 @@ public class OreSiRepository {
         final Application application = application().findApplication(applicationNameOrId);
         return getRepository(application);
     }
+
     public class RepositoryForApplication {
 
         private final Application application;

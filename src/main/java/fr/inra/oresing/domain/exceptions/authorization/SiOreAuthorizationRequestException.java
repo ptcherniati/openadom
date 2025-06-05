@@ -10,7 +10,7 @@ import java.util.Map;
 @Value
 @JsonIgnoreProperties({"stackTrace", "detailMassage", "cause", "depth", "suppressedExeceptions"})
 public class
-SiOreAuthorizationRequestException extends IllegalArgumentException{
+SiOreAuthorizationRequestException extends IllegalArgumentException {
     AuthorizationRequestException exception;
     Map<String, Object> params;
 }

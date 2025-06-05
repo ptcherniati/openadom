@@ -1,19 +1,19 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import org.apache.commons.collections.CollectionUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public record ApplicationPublishWriterUser(
         Application application,
         String dataName,
-        ArrayList<AuthorizationParsed> authorizations
+        List<AuthorizationParsed> authorizations
 ) implements ApplicationDataWriter {
     @Override
     public boolean canDelete(FileOrUUID fileOrUUID) {
@@ -22,27 +22,31 @@ public record ApplicationPublishWriterUser(
 
     @Override
     public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
-        if(isData()){
-            if(CollectionUtils.isEmpty(authorizations())){
+        if (isData()) {
+            if (CollectionUtils.isEmpty(authorizations())) {
                 throw getException();
             }
-            return false;
+            return true;
         }
         List<AuthorizationParsed> authorizationParseds = authorizations().stream()
                 .filter(authorizationParsed -> testRequiredAuthorizations(authorizationParsed.requiredAuthorizations(), fileOrUUID.binaryfiledataset().getRequiredAuthorizations()))
                 .toList();
-        if(authorizationParseds.isEmpty()){
+        if (authorizationParseds.isEmpty()) {
             throw getException();
         }
-        if(isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)){
-            throw getException();
+        if (isDateInRangeAuthorized(fileOrUUID.binaryfiledataset(), authorizationParseds)) {
+            return true;
         }
-        return false;
+        throw getException();
     }
 
     @Override
     public boolean hasRightForDeposit(FileOrUUID fileOrUUID) {
-        return !hasRightForPublishOrUnPublish(fileOrUUID);
+
+        return application().getConfiguration().findData(dataName())
+                .flatMap(StandardDataDescription::findSubmissionScope)
+                .map(_ ->  hasRightForPublishOrUnPublish(fileOrUUID))
+                .orElse(true);
     }
 
     public OreSiTechnicalException getException() {

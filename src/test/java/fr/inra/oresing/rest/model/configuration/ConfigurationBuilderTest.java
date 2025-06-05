@@ -3,12 +3,11 @@ package fr.inra.oresing.rest.model.configuration;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
@@ -16,11 +15,8 @@ import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
 import org.json.JSONException;
-import org.json.JSONObject;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.skyscreamer.jsonassert.JSONAssert;
-import org.skyscreamer.jsonassert.JSONCompareMode;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -74,132 +70,7 @@ class ConfigurationBuilderTest {
         HIERARCHICAL_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
     }
 
-    @Test
-    void buildApplicationTest() {
-        final YAMLMapper yamlMapper = YAMLMapper.builder().build();
-        errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(CONFIGURATION.getBytes(), progression, "une application de test");
-                    try {
-                        testConfiguration(Objects.requireNonNull(configuration));
-                        fluxSink.complete();
-                    } catch (final JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .flatMap(reactiveResult -> switch (reactiveResult) {
-                    case final ReactiveTypeError re -> Mono.just(re);
-                    default -> Mono.empty();
-                })
-                .map(ReactiveTypeError::result)
-                .map(ValidationError.class::cast)
-                .collectList()
-                .block();
-        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
-                .map(ValidationError::getValidationErrorString)
-                .toList()
-                .toString());
-
-    }
-
-    @Test
-    void buildApplicationSchemaTest() {
-        final YAMLMapper yamlMapper = YAMLMapper.builder().build();
-        errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(SCHEMA.getBytes(), progression, "une application de test");
-                    try {
-                        testExampleConfiguration(Objects.requireNonNull(configuration));
-                        fluxSink.complete();
-                    } catch (final JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    } catch (JSONException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .flatMap(reactiveResult -> switch (reactiveResult) {
-                    case final ReactiveTypeError re -> Mono.just(re);
-                    default -> Mono.empty();
-                })
-                .map(ReactiveTypeError::result)
-                .map(ValidationError.class::cast)
-                .collectList()
-                .block();
-        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
-                .map(ValidationError::getValidationErrorString)
-                .toList()
-                .toString());
-    }
-
-    private boolean throwErrors(final List<ValidationError> errors) {
-        this.errors = errors;
-        return false;
-    }
-
-    @Test
-    void buildHierarchicalTest() {
-        final YAMLMapper yamlMapper = YAMLMapper.builder().build();
-        errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION.getBytes(), progression, "un commentaire");
-                    assertNotNull(configuration);
-                    try{
-                    testHierarchicalNodes( configuration.hierarchicalNodes());
-                        fluxSink.complete();
-                    } catch (final JsonProcessingException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .flatMap(reactiveResult -> switch (reactiveResult) {
-                    case final ReactiveTypeError re -> Mono.just(re);
-                    default -> Mono.empty();
-                })
-                .map(ReactiveTypeError::result)
-                .map(ValidationError.class::cast)
-                .collectList()
-                .block();
-        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
-                .map(ValidationError::getValidationErrorString)
-                .toList()
-                .toString());
-    }
-
-    private void testHierarchicalNodes(SortedSet<Node> nodes) throws JsonProcessingException {
-        Assertions.assertThat(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(nodes))
-                .isEqualTo(HIERARCHICAL_RESULT);
-    }
-
-    @Test
-    void buildMonsoreTest() {
-        final YAMLMapper yamlMapper = YAMLMapper.builder().build();
-        errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(MONSORE_CONFIGURATION.getBytes(), progression, "un commentaire");
-                    try {
-                        testMonsoreConfiguration(Objects.requireNonNull(configuration));
-                        fluxSink.complete();
-                    } catch (final JsonProcessingException | JSONException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .flatMap(reactiveResult -> switch (reactiveResult) {
-                    case final ReactiveTypeError re -> Mono.just(re);
-                    default -> Mono.empty();
-                })
-                .map(ReactiveTypeError::result)
-                .map(ValidationError.class::cast)
-                .collectList()
-                .block();
-        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
-                .map(ValidationError::getValidationErrorString)
-                .toList()
-                .toString());
-    }
-
-
-    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
+    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException {
         testTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testInternationalisation(configuration.i18n());
@@ -207,7 +78,7 @@ class ConfigurationBuilderTest {
         testComponents(configuration.dataDescription());
     }
 
-    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
+    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException {
         testExampleTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testExampleInternationalisation(configuration.i18n());
@@ -227,45 +98,37 @@ class ConfigurationBuilderTest {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
         String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
-                                        .writeValueAsString(dataDescriptionMap);
+                .writeValueAsString(dataDescriptionMap);
 
         JsonNode expectedNode = objectMapper.readTree(DATA_RESULT);
-        JsonNode actualNode   = objectMapper.readTree(actualJson);
+        JsonNode actualNode = objectMapper.readTree(actualJson);
 
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
-
-        // Ancienne version dépendante de l'ordre des champs (désactivée)
-        // assertEquals(actualJson, DATA_RESULT);
     }
+
 
     private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
         String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
-                                        .writeValueAsString(dataDescriptionMap);
+                .writeValueAsString(dataDescriptionMap);
 
         JsonNode expectedNode = objectMapper.readTree(DATA_MONSORE_RESULT);
-        JsonNode actualNode   = objectMapper.readTree(actualJson);
+        JsonNode actualNode = objectMapper.readTree(actualJson);
 
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
-
-        // Désactivé, car sensible à l’ordre des attributs selon la version de Java
-        // Assertions.assertThat(actualJson).isEqualTo(DATA_MONSORE_RESULT);
     }
-    
+
     private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
-        
+
         String DATA_EXAMPLE_RESULT_EXPECTED = new ObjectMapper().registerModule(new JavaTimeModule())
-                                                                .writer()
-                                                                .withDefaultPrettyPrinter()
-                                                                .writeValueAsString(dataDescriptionMap);
+                .writer()
+                .withDefaultPrettyPrinter()
+                .writeValueAsString(dataDescriptionMap);
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         JsonNode expectedNode = objectMapper.readTree(DATA_EXAMPLE_RESULT);
-        JsonNode actualNode   = objectMapper.readTree(DATA_EXAMPLE_RESULT_EXPECTED);
+        JsonNode actualNode = objectMapper.readTree(DATA_EXAMPLE_RESULT_EXPECTED);
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
-        // Désactivé : l'ordre des attributs diffère selon la version du JDK
-        // Assertions.assertThat(DATA_EXAMPLE_RESULT_EXPECTED)
-        //          .isEqualTo(DATA_EXAMPLE_RESULT);
     }
 
     private static void testApplicationDescription(final ApplicationDescription applicationDescription) {
@@ -291,6 +154,7 @@ class ConfigurationBuilderTest {
                 .isEqualTo("un commentaire");
 
     }
+
     private static void testExampleApplicationDescription(final ApplicationDescription applicationDescription) {
         Assertions.assertThat(applicationDescription.name())
                 .isEqualTo("monsore");
@@ -311,10 +175,6 @@ class ConfigurationBuilderTest {
     private static void testMonsoreInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
         Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
                 .isEqualTo(LOCALIZATION_MONSORE_RESULT);
-    }
-
-    private static JSONObject toJsonObject(Object json) {
-        return new JsonRowMapper<>().convertValue(json, JSONObject.class);
     }
 
     private static void testExampleInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
@@ -341,10 +201,122 @@ class ConfigurationBuilderTest {
                         new Tag.DomainTag("temporal"))
                 .hasSize(5);
     }
+
     private static void testExampleTags(final Set<Tag> tags) {
         Assertions.assertThat(tags)
                 .contains(new Tag.DomainTag("context"),
                         new Tag.DomainTag("data"))
                 .hasSize(2);
+    }
+
+    @Test
+    void buildApplicationTest() {
+        errors = Flux.<ReactiveResult>create(fluxSink -> {
+                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
+                    configuration = ConfigurationBuilder.build(CONFIGURATION.getBytes(), progression, "une application de test");
+                    try {
+                        testConfiguration(Objects.requireNonNull(configuration));
+                        fluxSink.complete();
+                    } catch (final JsonProcessingException e) {
+                        throw new OreSiTechnicalException(e.getMessage(), e);
+                    }
+                })
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
+                })
+                .map(ReactiveTypeError::result)
+                .map(ValidationError.class::cast)
+                .collectList()
+                .block();
+        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
+                .map(ValidationError::getValidationErrorString)
+                .toList()
+                .toString());
+
+    }
+
+    @Test
+    void buildApplicationSchemaTest() {
+        errors = Flux.<ReactiveResult>create(fluxSink -> {
+                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
+                    configuration = ConfigurationBuilder.build(SCHEMA.getBytes(), progression, "une application de test");
+                    try {
+                        testExampleConfiguration(Objects.requireNonNull(configuration));
+                        fluxSink.complete();
+                    } catch (final JsonProcessingException e) {
+                        throw new OreSiTechnicalException(e.getMessage(), e);
+                    }
+                })
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
+                })
+                .map(ReactiveTypeError::result)
+                .map(ValidationError.class::cast)
+                .collectList()
+                .block();
+        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
+                .map(ValidationError::getValidationErrorString)
+                .toList()
+                .toString());
+    }
+
+    @Test
+    void buildHierarchicalTest() {
+        errors = Flux.<ReactiveResult>create(fluxSink -> {
+                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
+                    configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION.getBytes(), progression, "un commentaire");
+                    assertNotNull(configuration);
+                    try {
+                        testHierarchicalNodes(configuration.hierarchicalNodes());
+                        fluxSink.complete();
+                    } catch (final JsonProcessingException e) {
+                        throw new OreSiTechnicalException(e.getMessage(), e);
+                    }
+                })
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
+                })
+                .map(ReactiveTypeError::result)
+                .map(ValidationError.class::cast)
+                .collectList()
+                .block();
+        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
+                .map(ValidationError::getValidationErrorString)
+                .toList()
+                .toString());
+    }
+
+    private void testHierarchicalNodes(SortedSet<Node> nodes) throws JsonProcessingException {
+        Assertions.assertThat(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(nodes))
+                .isEqualTo(HIERARCHICAL_RESULT);
+    }
+
+    @Test
+    void buildMonsoreTest() {
+        errors = Flux.<ReactiveResult>create(fluxSink -> {
+                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
+                    configuration = ConfigurationBuilder.build(MONSORE_CONFIGURATION.getBytes(), progression, "un commentaire");
+                    try {
+                        testMonsoreConfiguration(Objects.requireNonNull(configuration));
+                        fluxSink.complete();
+                    } catch (final JsonProcessingException | JSONException e) {
+                        throw new OreSiTechnicalException(e.getMessage(), e);
+                    }
+                })
+                .flatMap(reactiveResult -> switch (reactiveResult) {
+                    case final ReactiveTypeError re -> Mono.just(re);
+                    default -> Mono.empty();
+                })
+                .map(ReactiveTypeError::result)
+                .map(ValidationError.class::cast)
+                .collectList()
+                .block();
+        assertTrue(CollectionUtils.isEmpty(errors), errors.stream()
+                .map(ValidationError::getValidationErrorString)
+                .toList()
+                .toString());
     }
 }

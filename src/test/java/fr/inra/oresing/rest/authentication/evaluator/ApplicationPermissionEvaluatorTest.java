@@ -15,10 +15,10 @@ import org.springframework.security.core.Authentication;
 
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 import static org.mockito.ArgumentMatchers.*;
@@ -27,12 +27,13 @@ import static org.mockito.Mockito.mock;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Tests de l'évaluateur de permissions annotation @PreAuthorize")
-public class ApplicationPermissionEvaluatorTest {
+class ApplicationPermissionEvaluatorTest {
 
     @Mock
     private AuthorizationService authorizationService;
 
     private ApplicationPermissionEvaluator permissionEvaluator;
+
 
     @BeforeEach
     void setUp() {
@@ -40,15 +41,15 @@ public class ApplicationPermissionEvaluatorTest {
         PrivilegeFactory privilegeFactory = new PrivilegeFactory();
 
         // Configurer le service d'autorisation pour utiliser cette fabrique
-        lenient().when(authorizationService.getPrivilegeAssessorForSystem(any(PrivilegeSystemDomain.class)))
+        lenient().when(authorizationService.getPrivilegeAssessorForSystem(any(PrivilegeSystemDomainEnum.class)))
                 .thenAnswer(invocation -> {
-                    PrivilegeSystemDomain domain = invocation.getArgument(0);
+                    PrivilegeSystemDomainEnum domain = invocation.getArgument(0);
                     return privilegeFactory.createSystemAssessor(domain);
                 });
 
-        lenient().when(authorizationService.getPrivilegeAssessorForApplication(any(PrivilegeApplicationDomain.class), anyString()))
+        lenient().when(authorizationService.getPrivilegeAssessorForApplication(any(PrivilegeApplicationDomainEnum.class), anyString()))
                 .thenAnswer(invocation -> {
-                    PrivilegeApplicationDomain domain = invocation.getArgument(0);
+                    PrivilegeApplicationDomainEnum domain = invocation.getArgument(0);
                     String applicationName = invocation.getArgument(1);
                     return privilegeFactory.createApplicationAssessor(domain, applicationName);
                 });
@@ -56,17 +57,299 @@ public class ApplicationPermissionEvaluatorTest {
         permissionEvaluator = new ApplicationPermissionEvaluator(authorizationService);
     }
 
+    /**
+     * Crée un token d'authentification pour les tests
+     */
+    private OreSiAuthenticationToken createToken(UUID userId, String role) {
+        OreSiUserRequestClient userRequestClient = new OreSiUserRequestClient(userId, new OreSiUserRole());
+        return new OreSiAuthenticationToken(userRequestClient, role, Collections.emptyList());
+    }
+
+    /**
+     * Liste des cas de test
+     */
+    private List<UserTest> getPermissionTestCases() {
+        OreSiAuthenticationToken openAdomAdmin = createToken(UUID.randomUUID(), "openAdomAdmin");
+        OreSiAuthenticationToken applicationCreatorUser = createToken(UUID.randomUUID(), "applicationCreatorUser");
+        OreSiAuthenticationToken connectedUser = createToken(UUID.randomUUID(), "connectedUser");
+        OreSiAuthenticationToken applicationDataReaderUser = createToken(UUID.randomUUID(), "applicationDataReaderUser");
+        OreSiAuthenticationToken applicationAdminUser = createToken(UUID.randomUUID(), "applicationAdminUser");
+        OreSiAuthenticationToken applicationDeleteUser = createToken(UUID.randomUUID(), "applicationDeleteUser");
+        OreSiAuthenticationToken applicationManagerUser = createToken(UUID.randomUUID(), "applicationManagerUser");
+        OreSiAuthenticationToken applicationDepositWriterUser = createToken(UUID.randomUUID(), "applicationDepositWriterUser");
+        OreSiAuthenticationToken applicationPublishWriterUser = createToken(UUID.randomUUID(), "applicationPublishWriterUser");
+        OreSiAuthenticationToken applicationToken = createToken(UUID.randomUUID(), "nobody");
+        applicationToken.setApplicationName("testApplication");
+        applicationToken.setDataName("testData");
+
+        return List.of(
+                // Tests pour le domaine SYSTEM
+                new UserTest(
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_USER,
+                        "Utilisateur système connecté",
+                        List.of(connectedUser),
+                        List.of()
+                ),
+                new UserTest(
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_OPENADOM_ADMIN,
+                        "Administrateur OpenADOM",
+                        List.of(openAdomAdmin),
+                        List.of()
+                ),
+                new UserTest(
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_APPLICATION_CREATOR,
+                        "Création d'application",
+                        List.of(openAdomAdmin, applicationCreatorUser),
+                        List.of()
+                ),
+                new UserTest(
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_UPDATE,
+                        "Gestion des rôles système - mise à jour",
+                        List.of(openAdomAdmin),
+                        List.of()
+                ),
+                new UserTest(
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_DELETE,
+                        "Gestion des rôles système - suppression",
+                        List.of(openAdomAdmin),
+                        List.of()
+                ),
+                new UserTest(
+                        permissionEvaluator.SYSTEM,
+                        permissionEvaluator.SYSTEM_USER_READER,
+                        "Lecteur d'utilisateurs système",
+                        List.of(openAdomAdmin),
+                        List.of()
+                ),
+
+                // Tests pour le domaine APPLICATION
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_APPLICATION_MODIFY,
+                        "Modification d'application",
+                        List.of(applicationToken),
+                        List.of(applicationAdminUser, applicationManagerUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_DELETE,
+                        "Gestion des rôles - suppression",
+                        List.of(applicationToken),
+                        List.of(applicationAdminUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE,
+                        "Gestion des rôles - mise à jour",
+                        List.of(applicationToken),
+                        List.of(applicationAdminUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ,
+                        "Gestion des autorisations - lecture",
+                        List.of(applicationToken),
+                        List.of(applicationAdminUser, applicationManagerUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE,
+                        "Gestion des autorisations - suppression",
+                        List.of(applicationToken),
+                        List.of(applicationAdminUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE,
+                        "Gestion des autorisations - mise à jour",
+                        List.of(applicationToken),
+                        List.of(applicationAdminUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD,
+                        "Gestion des autorisations - ajout",
+                        List.of(applicationToken),
+                        List.of(applicationAdminUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_DATA_READ,
+                        "Lecture de données",
+                        List.of(applicationToken),
+                        List.of(applicationAdminUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_DATA_WRITE,
+                        "Écriture de données",
+                        List.of(applicationToken),
+                        List.of(applicationDataReaderUser, applicationDeleteUser, applicationPublishWriterUser,
+                                applicationDepositWriterUser, applicationCreatorUser, applicationManagerUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_WRITE_FILE,
+                        "Écriture de fichier",
+                        List.of(applicationToken),
+                        List.of(applicationDeleteUser, applicationPublishWriterUser,
+                                applicationCreatorUser, applicationManagerUser) // Token sans nom d'application
+                ),
+                new UserTest(
+                        permissionEvaluator.APPLICATION,
+                        permissionEvaluator.APPLICATION_DELETE_FILE,
+                        "Suppression de fichier",
+                        List.of(applicationToken),
+                        List.of(applicationDeleteUser, applicationPublishWriterUser,
+                                applicationCreatorUser, applicationManagerUser) // Token sans nom d'application
+                )
+        );
+    }
+
+    /**
+     * Test pour un cas autorisé
+     */
+    private void testAuthorizedPermission(UserTest testCase, OreSiAuthenticationToken token) {
+        // Exécution
+        boolean result = permissionEvaluator.hasPermission(token, testCase.targetDomain, testCase.permission);
+
+        // Vérification
+        assertTrue(result, "La permission " + testCase.permission + " devrait être accordée pour le domaine " + testCase.targetDomain);
+
+        // Vérifier que la persona a été assignée au token
+        if (testCase.targetDomain.equals(ApplicationPermissionEvaluator.SYSTEM)) {
+            assertNotNull(token.getSystemPersona());
+        } else if (testCase.targetDomain.equals(ApplicationPermissionEvaluator.APPLICATION)
+                && token.getApplicationName() != null) {
+            assertNotNull(token.getApplicationPersona());
+        }
+    }
+
+    /**
+     * Test pour un cas non autorisé
+     */
+    private void testUnauthorizedPermission(UserTest testCase, OreSiAuthenticationToken token) {
+        // Exécution
+        boolean result = permissionEvaluator.hasPermission(token, testCase.targetDomain, testCase.permission);
+
+        // Vérification
+        assertFalse(result, "La permission " + testCase.permission + " devrait être refusée pour le domaine " + testCase.targetDomain);
+    }
+
+    /**
+     * Factory pour générer les tests par target, permission et token
+     */
+    @TestFactory
+    @DisplayName("Tests des combinaisons de domaines et permissions")
+    Stream<DynamicNode> permissionTests() {
+        return getPermissionTestCases().stream()
+                .map(testCase -> dynamicContainer(
+                        testCase.targetDomain + " - " + testCase.permission + " - " + testCase.description,
+                        Stream.of(
+                                dynamicContainer(
+                                        "utilisateurs autorisés",
+                                        testCase.authorizedTokens.stream()
+                                                .map(token -> dynamicTest(
+                                                        "%s (%s)".formatted(token.getCredentials(), testCase.description),
+                                                        () -> testAuthorizedPermission(testCase, token)
+                                                ))
+                                ),
+                                dynamicContainer(
+                                        "utilisateurs non autorisés",
+                                        testCase.unauthorizedTokens.stream()
+                                                .map(token -> dynamicTest(
+                                                        "%s (%s)".formatted(token.getCredentials(), testCase.description),
+                                                        () -> testUnauthorizedPermission(testCase, token)
+                                                ))
+                                )
+                        )
+                ));
+    }
+
+    /**
+     * Autre organisation: tests par target
+     */
+    @TestFactory
+    @DisplayName("Tests organisés par domaine cible")
+    Stream<DynamicNode> targetDomainTests() {
+        Map<String, List<UserTest>> testsByTarget = getPermissionTestCases().stream()
+                .collect(Collectors.groupingBy(UserTest::targetDomain));
+
+        return testsByTarget.entrySet().stream()
+                .map(entry -> dynamicContainer(
+                        "Domaine: " + entry.getKey(),
+                        entry.getValue().stream()
+                                .map(testCase -> dynamicContainer(
+                                        testCase.permission + " - " + testCase.description,
+                                        Stream.of(
+                                                dynamicContainer(
+                                                        "utilisateurs autorisés",
+                                                        testCase.authorizedTokens.stream()
+                                                                .map(token -> dynamicTest(
+                                                                        "%s (%s)".formatted(token.getCredentials(), testCase.description),
+                                                                        () -> testAuthorizedPermission(testCase, token)
+                                                                ))
+                                                ),
+                                                dynamicContainer(
+                                                        "utilisateurs non autorisés",
+                                                        testCase.unauthorizedTokens.stream()
+                                                                .map(token -> dynamicTest(
+                                                                        "Token ID: " + (token.getPrincipal() instanceof OreSiUserRequestClient ?
+                                                                                ((OreSiUserRequestClient) token.getPrincipal()).id() : "inconnu"),
+                                                                        () -> testUnauthorizedPermission(testCase, token)
+                                                                ))
+                                                )
+                                        )
+                                ))
+                ));
+    }
+
+    /**
+     * Teste le fonctionnement avec un token invalide
+     */
+    @TestFactory
+    @DisplayName("Tests avec authentification invalide")
+    Stream<DynamicTest> invalidAuthenticationTests() {
+        BiFunction<Authentication, String, DynamicTest> createTest = (authentication, description) ->
+                dynamicTest(description, () -> {
+                    boolean result = permissionEvaluator.hasPermission(authentication, ApplicationPermissionEvaluator.SYSTEM, ApplicationPermissionEvaluator.SYSTEM_USER);
+                    assertFalse(result, "La permission devrait être refusée pour une authentification invalide");
+                });
+
+        return Stream.of(
+                createTest.apply(null, "Token null"),
+                createTest.apply(mock(Authentication.class), "Token non OreSiAuthenticationToken")
+        );
+    }
+
+    /**
+     * Configuration d'un cas de test pour l'évaluateur de permissions
+     */
+    record UserTest(
+            String targetDomain,
+            String permission,
+            String description,
+            List<OreSiAuthenticationToken> authorizedTokens,
+            List<OreSiAuthenticationToken> unauthorizedTokens
+    ) {
+    }
+
     // Classe interne pour gérer la création des assessors et personas
     private class PrivilegeFactory {
         // Cache des assessors pour éviter de recréer des objets
-        private final Map<PrivilegeSystemDomain, PrivilegeAssessorDomainForSystem> systemAssessors = new HashMap<>();
-        private final Map<String, Map<PrivilegeApplicationDomain, PrivilegeAssessorDomainForApplication>> applicationAssessors = new HashMap<>();
+        private final Map<PrivilegeSystemDomainEnum, PrivilegeAssessorDomainForSystem> systemAssessors = new EnumMap<>(PrivilegeSystemDomainEnum.class);
+        private final Map<String, Map<PrivilegeApplicationDomainEnum, PrivilegeAssessorDomainForApplication>> applicationAssessors = new HashMap<>();
 
         // Cache des personas pour garantir la cohérence
         private final Map<String, SystemPersona> systemPersonas = new HashMap<>();
         private final Map<String, ApplicationPersona> applicationPersonas = new HashMap<>();
 
-        public PrivilegeAssessorDomainForSystem createSystemAssessor(PrivilegeSystemDomain domain) {
+        public PrivilegeAssessorDomainForSystem createSystemAssessor(PrivilegeSystemDomainEnum domain) {
             return systemAssessors.computeIfAbsent(domain, d -> {
                 PrivilegeAssessorDomainForSystem assessor = mock(PrivilegeAssessorDomainForSystem.class);
 
@@ -87,9 +370,9 @@ public class ApplicationPermissionEvaluatorTest {
             });
         }
 
-        public PrivilegeAssessorDomainForApplication createApplicationAssessor(PrivilegeApplicationDomain domain, String applicationName) {
+        public PrivilegeAssessorDomainForApplication createApplicationAssessor(PrivilegeApplicationDomainEnum domain, String applicationName) {
             return applicationAssessors
-                    .computeIfAbsent(applicationName, name -> new HashMap<>())
+                    .computeIfAbsent(applicationName, name -> new EnumMap<>(PrivilegeApplicationDomainEnum.class))
                     .computeIfAbsent(domain, d -> {
                         PrivilegeAssessorDomainForApplication assessor = mock(PrivilegeAssessorDomainForApplication.class);
 
@@ -109,7 +392,7 @@ public class ApplicationPermissionEvaluatorTest {
                                 break;
                             case DATA_READ:
                                 lenient().when(assessor.forDataRead(anyString()))
-                                        .thenReturn((ApplicationDataReader) getOrCreateApplicationPersona("ApplicationDataReader"));
+                                        .thenReturn((ApplicationDataReaderUser) getOrCreateApplicationPersona("ApplicationDataReader"));
                                 lenient().when(assessor.forDataDelete(anyString()))
                                         .thenReturn((ApplicationDataDelete) getOrCreateApplicationPersona("ApplicationDeleteUser"));
                                 lenient().when(assessor.forDataWrite(anyString(), eq(false)))
@@ -123,6 +406,8 @@ public class ApplicationPermissionEvaluatorTest {
                                 lenient().when(assessor.forDataWrite(anyString(), eq(true)))
                                         .thenReturn((ApplicationDataWriter) getOrCreateApplicationPersona("ApplicationPublishWriter"));
                                 break;
+                            default:
+                                throw new IllegalStateException("Unexpected value: " + d);
                         }
 
                         return assessor;
@@ -152,7 +437,7 @@ public class ApplicationPermissionEvaluatorTest {
                     case "ApplicationAdminUser":
                         return mock(ApplicationAdminUser.class);
                     case "ApplicationDataReader":
-                        return mock(ApplicationDataReader.class);
+                        return mock(ApplicationDataReaderUser.class);
                     case "ApplicationDepositWriter":
                         return mock(ApplicationDepositWriterUser.class);
                     case "ApplicationPublishWriter":
@@ -164,377 +449,5 @@ public class ApplicationPermissionEvaluatorTest {
                 }
             });
         }
-    }
-
-
-    /**
-     * Configuration d'un cas de test pour l'évaluateur de permissions
-     */
-    record PermissionTestCase(
-            String targetDomain,
-            String permission,
-            String description,
-            Class<? extends SystemPersona> systemPersonaClass,
-            Class<? extends ApplicationPersona> applicationPersonaClass,
-            List<OreSiAuthenticationToken> authorizedTokens,
-            List<OreSiAuthenticationToken> unauthorizedTokens
-    ) {
-        // Nouvelle méthode pour aider à la configuration des tests
-        public static PermissionTestCase forUser(
-                String targetDomain,
-                String permission,
-                String description,
-                String userRole,  // Le rôle de l'utilisateur
-                OreSiAuthenticationToken token,
-                OreSiAuthenticationToken unauthorizedToken) {
-
-            if (targetDomain.equals(ApplicationPermissionEvaluator.SYSTEM)) {
-                return new PermissionTestCase(
-                        targetDomain,
-                        permission,
-                        description,
-                        determineSystemPersonaClass(userRole),  // Méthode pour déterminer la classe de persona
-                        null,
-                        List.of(token),
-                        List.of(unauthorizedToken)
-                );
-            } else {
-                return new PermissionTestCase(
-                        targetDomain,
-                        permission,
-                        description,
-                        null,
-                        determineApplicationPersonaClass(userRole),  // Méthode pour déterminer la classe de persona
-                        List.of(token),
-                        List.of(unauthorizedToken)
-                );
-            }
-        }
-
-        private static Class<? extends SystemPersona> determineSystemPersonaClass(String userRole) {
-            return switch (userRole) {
-                case "ConnectedUser" -> ConnectedUser.class;
-                case "OpenAdomAdmin" -> OpenAdomAdmin.class;
-                case "ApplicationCreator" -> ApplicationCreatorUser.class;
-                default -> null;
-            };
-        }
-
-        private static Class<? extends ApplicationPersona> determineApplicationPersonaClass(String userRole) {
-            return switch (userRole) {
-                case "ApplicationManager" -> ApplicationManagerUser.class;
-                case "ApplicationAdminUser" -> ApplicationAdminUser.class;
-                case "ApplicationDataReader" -> ApplicationDataReader.class;
-                case "ApplicationDepositWriter" -> ApplicationDepositWriterUser.class;
-                case "ApplicationPublishWriter" -> ApplicationPublishWriterUser.class;
-                case "ApplicationDeleteUser" -> ApplicationDeleteUser.class;
-                default -> null;
-            };
-        }
-    }
-
-    /**
-     * Crée un token d'authentification pour les tests
-     */
-    private OreSiAuthenticationToken createToken(UUID userId) {
-        OreSiUserRequestClient userRequestClient = new OreSiUserRequestClient(userId, new OreSiUserRole());
-        return new OreSiAuthenticationToken(userRequestClient, "credentials", Collections.emptyList());
-    }
-
-    /**
-     * Liste des cas de test
-     */
-    private List<PermissionTestCase> getPermissionTestCases() {
-        OreSiAuthenticationToken systemToken = createToken(UUID.randomUUID());
-        OreSiAuthenticationToken applicationToken = createToken(UUID.randomUUID());
-        applicationToken.setApplicationName("testApplication");
-        applicationToken.setDataName("testData");
-
-        return List.of(
-                // Tests pour le domaine SYSTEM
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_USER,
-                        "Utilisateur système connecté",
-                        null, // Pas besoin de définir le type de persona ici
-                        null,
-                        List.of(systemToken),
-                        List.of()
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_OPENADOM_ADMIN,
-                        "Administrateur OpenADOM",
-                        null,
-                        null,
-                        List.of(systemToken),
-                        List.of()
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_APPLICATION_CREATE,
-                        "Création d'application",
-                        null,
-                        null,
-                        List.of(systemToken),
-                        List.of()
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_APPLICATION_CREATOR,
-                        "Créateur d'application",
-                        null,
-                        null,
-                        List.of(systemToken),
-                        List.of()
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_UPDATE,
-                        "Gestion des rôles système - mise à jour",
-                        null,
-                        null,
-                        List.of(systemToken),
-                        List.of()
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_DELETE,
-                        "Gestion des rôles système - suppression",
-                        null,
-                        null,
-                        List.of(systemToken),
-                        List.of()
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.SYSTEM,
-                        ApplicationPermissionEvaluator.SYSTEM_USER_READER,
-                        "Lecteur d'utilisateurs système",
-                        null,
-                        null,
-                        List.of(systemToken),
-                        List.of()
-                ),
-
-                // Tests pour le domaine APPLICATION
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_APPLICATION_MODIFY,
-                        "Modification d'application",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_DELETE,
-                        "Gestion des rôles - suppression",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE,
-                        "Gestion des rôles - mise à jour",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ,
-                        "Gestion des autorisations - lecture",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE,
-                        "Gestion des autorisations - suppression",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE,
-                        "Gestion des autorisations - mise à jour",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD,
-                        "Gestion des autorisations - ajout",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_DATA_READ,
-                        "Lecture de données",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_DATA_WRITE,
-                        "Écriture de données",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_WRITE_FILE,
-                        "Écriture de fichier",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                ),
-                new PermissionTestCase(
-                        ApplicationPermissionEvaluator.APPLICATION,
-                        ApplicationPermissionEvaluator.APPLICATION_DELETE_FILE,
-                        "Suppression de fichier",
-                        null,
-                        null,
-                        List.of(applicationToken),
-                        List.of(systemToken) // Token sans nom d'application
-                )
-        );
-    }
-
-    /**
-     * Test pour un cas autorisé
-     */
-    private void testAuthorizedPermission(PermissionTestCase testCase, OreSiAuthenticationToken token) {
-        // Exécution
-        boolean result = permissionEvaluator.hasPermission(token, testCase.targetDomain, testCase.permission);
-
-        // Vérification
-        assertEquals(true, result,
-                "La permission " + testCase.permission + " devrait être accordée pour le domaine " + testCase.targetDomain);
-
-        // Vérifier que la persona a été assignée au token
-        if (testCase.targetDomain.equals(ApplicationPermissionEvaluator.SYSTEM)) {
-            assertNotNull(token.getSystemPersona());
-        } else if (testCase.targetDomain.equals(ApplicationPermissionEvaluator.APPLICATION)
-                && token.getApplicationName() != null) {
-            assertNotNull(token.getApplicationPersona());
-        }
-    }
-
-    /**
-     * Test pour un cas non autorisé
-     */
-    private void testUnauthorizedPermission(PermissionTestCase testCase, OreSiAuthenticationToken token) {
-        // Exécution
-        boolean result = permissionEvaluator.hasPermission(token, testCase.targetDomain, testCase.permission);
-
-        // Vérification
-        assertEquals(false, result,
-                "La permission " + testCase.permission + " devrait être refusée pour le domaine " + testCase.targetDomain);
-    }
-
-    /**
-     * Factory pour générer les tests par target, permission et token
-     */
-    @TestFactory
-    @DisplayName("Tests des combinaisons de domaines et permissions")
-    Stream<DynamicNode> permissionTests() {
-        return getPermissionTestCases().stream()
-                .map(testCase -> dynamicContainer(
-                        testCase.targetDomain + " - " + testCase.permission + " - " + testCase.description,
-                        Stream.of(
-                                dynamicContainer(
-                                        "utilisateurs autorisés",
-                                        testCase.authorizedTokens.stream()
-                                                .map(token -> dynamicTest(
-                                                        "Token ID: " + ((OreSiUserRequestClient) token.getPrincipal()).id(),
-                                                        () -> testAuthorizedPermission(testCase, token)
-                                                ))
-                                ),
-                                dynamicContainer(
-                                        "utilisateurs non autorisés",
-                                        testCase.unauthorizedTokens.stream()
-                                                .map(token -> dynamicTest(
-                                                        "Token ID: " + (token.getPrincipal() instanceof OreSiUserRequestClient ?
-                                                                ((OreSiUserRequestClient) token.getPrincipal()).id() : "inconnu"),
-                                                        () -> testUnauthorizedPermission(testCase, token)
-                                                ))
-                                )
-                        )
-                ));
-    }
-
-    /**
-     * Autre organisation: tests par target
-     */
-    @TestFactory
-    @DisplayName("Tests organisés par domaine cible")
-    Stream<DynamicNode> targetDomainTests() {
-        Map<String, List<PermissionTestCase>> testsByTarget = getPermissionTestCases().stream()
-                .collect(java.util.stream.Collectors.groupingBy(PermissionTestCase::targetDomain));
-
-        return testsByTarget.entrySet().stream()
-                .map(entry -> dynamicContainer(
-                        "Domaine: " + entry.getKey(),
-                        entry.getValue().stream()
-                                .map(testCase -> dynamicContainer(
-                                        testCase.permission + " - " + testCase.description,
-                                        Stream.of(
-                                                dynamicContainer(
-                                                        "utilisateurs autorisés",
-                                                        testCase.authorizedTokens.stream()
-                                                                .map(token -> dynamicTest(
-                                                                        "Token ID: " + ((OreSiUserRequestClient) token.getPrincipal()).id(),
-                                                                        () -> testAuthorizedPermission(testCase, token)
-                                                                ))
-                                                ),
-                                                dynamicContainer(
-                                                        "utilisateurs non autorisés",
-                                                        testCase.unauthorizedTokens.stream()
-                                                                .map(token -> dynamicTest(
-                                                                        "Token ID: " + (token.getPrincipal() instanceof OreSiUserRequestClient ?
-                                                                                ((OreSiUserRequestClient) token.getPrincipal()).id() : "inconnu"),
-                                                                        () -> testUnauthorizedPermission(testCase, token)
-                                                                ))
-                                                )
-                                        )
-                                ))
-                ));
-    }
-
-    /**
-     * Teste le fonctionnement avec un token invalide
-     */
-    @TestFactory
-    @DisplayName("Tests avec authentification invalide")
-    Stream<DynamicTest> invalidAuthenticationTests() {
-        BiFunction<Authentication, String, DynamicTest> createTest = (authentication, description) ->
-                dynamicTest(description, () -> {
-                    boolean result = permissionEvaluator.hasPermission(authentication, ApplicationPermissionEvaluator.SYSTEM, ApplicationPermissionEvaluator.SYSTEM_USER);
-                    assertEquals(false, result, "La permission devrait être refusée pour une authentification invalide");
-                });
-
-        return Stream.of(
-                createTest.apply(null, "Token null"),
-                createTest.apply(mock(Authentication.class), "Token non OreSiAuthenticationToken")
-        );
     }
 }

@@ -1,7 +1,10 @@
 package fr.inra.oresing.domain.application.configuration.examples;
 
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.type.*;
+import fr.inra.oresing.domain.application.configuration.type.CollectionType;
+import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
+import fr.inra.oresing.domain.application.configuration.type.FileNameType;
+import fr.inra.oresing.domain.application.configuration.type.StringType;
 
 import java.util.HashMap;
 import java.util.List;
@@ -26,7 +29,7 @@ public class SubmissionFileNameTypeExampleBuilder {
             StringType fileNamePattern,
             CollectionType.ArrayType<StringType> referenceScopeType
     ) {
-        Map<String, ConfigurationSchemaNodeType> map = new HashMap<>();
+        Map<String, ConfigurationSchemaNodeType<?>> map = new HashMap<>();
         map.put(ConfigurationSchemaNode.OA_FILE_PATTERN, fileNamePattern);
         map.put(ConfigurationSchemaNode.OA_MATCH_PATTERN_SCOPES, referenceScopeType);
 

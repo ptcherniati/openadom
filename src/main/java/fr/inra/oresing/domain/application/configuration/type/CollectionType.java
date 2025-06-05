@@ -6,12 +6,16 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 import java.util.List;
 import java.util.Map;
 
-public sealed interface CollectionType<T, C extends ConfigurationSchemaNodeType> extends IntermediaryType<T> permits CollectionType.ArrayType, CollectionType.MapType {
+public sealed interface CollectionType<T, C extends ConfigurationSchemaNodeType<?>>
+        extends IntermediaryType<T>
+        permits CollectionType.ArrayType, CollectionType.MapType {
     C type();
 
-    record MapType<C extends ConfigurationSchemaNodeType>(Map<String, C> children, boolean required,
-                                                          boolean nullable,
-                                                          C type) implements CollectionType<Map<String, C>, C> {
+    record MapType<C extends ConfigurationSchemaNodeType<?>>(
+            Map<String, C> children, boolean required,
+            boolean nullable,
+            C type)
+            implements CollectionType<Map<String, C>, C> {
 
         public static MapType<PatternComponentQualifierType> PATTERN_COMPONENT_QUALIFIER_EMPTY_INSTANCE() {
             return new MapType<>(Map.of(), false, false, PatternComponentQualifierType.EMPTY_INSTANCE());
@@ -41,8 +45,12 @@ public sealed interface CollectionType<T, C extends ConfigurationSchemaNodeType>
         }
     }
 
-    record ArrayType<C extends ConfigurationSchemaNodeType>(List<C> children, boolean required, boolean nullable,
-                                                            C type) implements CollectionType<List<C>, C> {
+    record ArrayType<C extends ConfigurationSchemaNodeType<?>>(
+            List<C> children,
+            boolean required,
+            boolean nullable,
+            C type
+    ) implements CollectionType<List<C>, C> {
 
         public static ArrayType<PatternComponentType> PATTERN_COMPONENT_EMPTY_INSTANCE() {
             return new ArrayType<>(List.of(), false, false, PatternComponentType.EMPTY_INSTANCE());

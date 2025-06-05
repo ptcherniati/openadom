@@ -13,7 +13,14 @@ import java.util.UUID;
 
 @Component
 public class OreSiApiRequestContext {
-    public static Optional<OreSiAuthenticationToken> getAuthentication(){
+    public static Optional<OreSiAuthenticationToken> getAuthentication() {
+        return Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .filter(OreSiAuthenticationToken.class::isInstance)
+                .map(OreSiAuthenticationToken.class::cast);
+    }
+
+    private static Optional<OreSiAuthenticationToken> getAuthenticationTokenOptional() {
         return Optional.ofNullable(SecurityContextHolder.getContext())
                 .map(SecurityContext::getAuthentication)
                 .filter(OreSiAuthenticationToken.class::isInstance)
@@ -43,14 +50,7 @@ public class OreSiApiRequestContext {
                 .map(OreSiAuthenticationToken::getRequestClient);
     }
 
-    private static Optional<OreSiAuthenticationToken> getAuthenticationTokenOptional() {
-        return Optional.ofNullable(SecurityContextHolder.getContext())
-                .map(SecurityContext::getAuthentication)
-                .filter(OreSiAuthenticationToken.class::isInstance)
-                .map(OreSiAuthenticationToken.class::cast);
-    }
-
-    public UUID getRequestUserId(){
+    public UUID getRequestUserId() {
         return getRequestClientOptional()
                 .map(OreSiRequestClient::id)
                 .orElse(null);

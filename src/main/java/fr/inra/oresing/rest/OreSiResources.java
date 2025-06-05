@@ -28,6 +28,7 @@ import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
 import fr.inra.oresing.domain.data.read.query.OutPut;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
@@ -64,7 +65,6 @@ import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
 import fr.inra.oresing.rest.services.RelationalService;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.Explode;
@@ -115,8 +115,45 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
-public class OreSiResources implements ServiceContainerBean {
-    @Autowired
+public class OreSiResources {
+    public static final String HEADER_ACCEPT_LANGUAGE = "Accept-Language";
+    public static final String JS_UNDEFINED = "undefined";
+    public static final String NOT_FOUND_DATA_NAME = "notFoundDataName";
+    public static final String FILE_ID = "fileId";
+    public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
+    public static final String HEADER_ATTACHMENT_FILENAME = "attachment;filename=";
+    public static final String ERROR_EMPTY_FILE = "EmptyFile";
+    public static final String HEADER_ATTACHMENT_FILENAME_S_CSV = "attachment; filename=%s.csv";
+    public static final String HEADER_PRAGMA = "Pragma";
+    public static final String HEADER_EXPIRES = "Expires";
+    public static final String EXPIRED_TIME = "0";
+    public static final String HEADER_NO_CACHE = "no-cache";
+    public static final String HEADER_ACCEPT_RANGES = "Accept-Ranges";
+    public static final String HEADER_BYTES = "bytes";
+    public static final String IO_ERROR_FR = "Exception lors de la lecture et du streaming de données ";
+    public static final String IO_ERROR_EN = "Exception while reading and streaming data  ";
+    public static final String HEADER_ZIP = "attachment; filename=additionalFiles.zip";
+    public static final String HEADER_APPLICATION_ZIP_CHARSET_UTF_8 = "application/zip;charset=UTF-8";
+    public static final String LIST_DELIMITER = ",";
+    public static final String IO_DELETE_ERROR = "Erreur lors de la suppression du fichier temporaire";
+    public static final String IO_ERROR_WRITE = "Error writing to one of the outputs";
+    public static final String HEADER_ATTACHMENT_FILENAME_DATA_ZIP = "attachment; filename=\"data.zip\"";
+    public static final String HEADER_ZIP_MIME = "application/zip";
+    public static final String EMAIL_ERROR = "Erreur lors de l'envoi du lien ZIP par e-mail";
+    public static final String IO_ADDING_ERROR = "Error adding error file to ZIP";
+    public static final String IO_WRITING_CSV_ERROR = "Erreur lors de l'écriture des données CSV";
+    public static final String IO_UPOAD_ERROR_FR = "Une erreur s'est produite lors du téléchargement.";
+    public static final String IO_UPOAD_ERROR_EN = "An error occurred during download.";
+    public static final String FILE_ERROR = "error.txt";
+    public static final String FR = "fr";
+    public static final String EN = "en";
+    public static final String TMP = "/tmp";
+    public static final String UPLOAD_BUNDLE = "upload-bundle-";
+    public static final String BAD_REPORT = "Le rapport est incomplet ou contient des erreurs. L'e-mail n'a pas été envoyé.";
+    public static final String BAD_BUNDLE = "Erreur lors de la création du bundle de téléchargement";
+    public static final String BUNDLE_NAME = "%s-upload-bundle.zip";
+    public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
+    final
     LocaleResolver localeResolver;
     @Value("${allowed.origin}")
     String frontendOrigin;
@@ -124,7 +161,7 @@ public class OreSiResources implements ServiceContainerBean {
 
     public static Locale getDefaultLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String acceptLanguage = request.getHeader("Accept-Language");
+        String acceptLanguage = request.getHeader(HEADER_ACCEPT_LANGUAGE);
 
         if (acceptLanguage != null && !acceptLanguage.isEmpty()) {
             return Locale.LanguageRange.parse(acceptLanguage)
@@ -138,24 +175,9 @@ public class OreSiResources implements ServiceContainerBean {
         return Locale.ENGLISH;
     }
 
-    public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
-
-    @Setter
-    private ServiceContainer serviceContainer;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private OreSiApiRequestContext request;
-
-    private Flux<ReactiveResult> buildFluxRequestNDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
-        return Flux.create(fluxSink);
-    }
-
     private static CreateRightsRequestRequest deserialiseRightsRequestOrUUIDQuery(final String params) {
         try {
-            return params != null && !"undefined".equals(params) ? new ObjectMapper().readValue(params, CreateRightsRequestRequest.class) : null;
+            return params != null && !JS_UNDEFINED.equals(params) ? new ObjectMapper().readValue(params, CreateRightsRequestRequest.class) : null;
         } catch (final IOException e) {
             throw new BadRightsRequestOrUUIDQuery(e.getMessage());
         }
@@ -163,7 +185,7 @@ public class OreSiResources implements ServiceContainerBean {
 
     private static RightsRequestInfos deserialiseRightsRequestQuery(final String params) {
         try {
-            return params != null && !"undefined".equals(params) ? new ObjectMapper().readValue(params, RightsRequestInfos.class) : null;
+            return params != null && !JS_UNDEFINED.equals(params) ? new ObjectMapper().readValue(params, RightsRequestInfos.class) : null;
         } catch (final IOException e) {
             throw new BadRightsRequestInfosQuery(e.getMessage());
         }
@@ -171,7 +193,7 @@ public class OreSiResources implements ServiceContainerBean {
 
     private static CreateAdditionalFileRequest deserialiseAdditionalFileOrUUIDQuery(final String params) {
         try {
-            return params != null && !"undefined".equals(params) ?
+            return params != null && !JS_UNDEFINED.equals(params) ?
                     new JsonRowMapper<CreateAdditionalFileRequest>().readValue(params, CreateAdditionalFileRequest.class) :
                     null;
         } catch (final IOException e) {
@@ -181,10 +203,14 @@ public class OreSiResources implements ServiceContainerBean {
 
     private static AdditionalFilesInfos deserialiseAdditionalFilesInfos(final String params) {
         try {
-            return params != null && !"undefined".equals(params) ? new ObjectMapper().readValue(params, AdditionalFilesInfos.class) : null;
+            return params != null && !JS_UNDEFINED.equals(params) ? new ObjectMapper().readValue(params, AdditionalFilesInfos.class) : null;
         } catch (final IOException e) {
             throw new BadFileOrUUIDQuery(e.getMessage());
         }
+    }
+
+    private Flux<ReactiveResult> buildFluxRequestNDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
+        return Flux.create(fluxSink);
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DELETE_FILE')")
@@ -200,11 +226,11 @@ public class OreSiResources implements ServiceContainerBean {
                 .map(OreSiAuthenticationToken::getStoreFile)
                 .map(State::fileOrUuid);
         if (fileId.isEmpty()) {
-            throw new SiOreIllegalArgumentException(SiOreIllegalArgumentException.NO_FILE_To_DELETE, Map.of("fileId", id));
+            throw new SiOreIllegalArgumentException(SiOreIllegalArgumentException.NO_FILE_To_DELETE, Map.of(FILE_ID, id));
         }
         String dataName = OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getDataName)
-                .orElse("notFoundDataName");
+                .orElse(NOT_FOUND_DATA_NAME);
         Optional<ApplicationUser> applicationUser = OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getApplicationPersona)
                 .filter(ApplicationUser.class::isInstance)
@@ -229,7 +255,7 @@ public class OreSiResources implements ServiceContainerBean {
             throw new NotApplicationCanDeleteRightsException(applicationName, dataName);
         }
         if (!storeFile.builder().getFileOrUUID().topublish()) {
-            if (applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
+            if (!applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
             DataVersioningResult dataVersioningResult = serviceContainer.versioningService()
@@ -288,7 +314,7 @@ public class OreSiResources implements ServiceContainerBean {
 
             return ResponseEntity.ok()
                     .contentLength(binaryFile.getSize())
-                    .header("Content-Disposition", "attachment;filename=" + filename)
+                    .header(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME.formatted(filename))
                     .body(body);
         } else {
             return ResponseEntity.notFound().build();
@@ -300,7 +326,7 @@ public class OreSiResources implements ServiceContainerBean {
     public Flux<ReactiveResult> getApplications(@RequestParam(required = false, defaultValue = "") final String[] filter) {
         final List<ApplicationInformation> filters = Arrays.stream(filter)
                 .map(ApplicationInformation::valueOf)
-                .collect(Collectors.toList());
+                .toList();
         return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.GetApplicationProgression progression = new ReactiveProgression.GetApplicationProgression(0L, fluxSink);
             serviceContainer.applicationService().getApplications(progression, filters);
@@ -327,14 +353,6 @@ public class OreSiResources implements ServiceContainerBean {
     public Flux<ReactiveResult> createApplication(@PathVariable("name") final String name,
                                                   @RequestParam(name = "comment", defaultValue = "") final String comment,
                                                   @RequestParam("file") final MultipartFile file) throws BadApplicationConfigurationException {
-
-        final Application application;
-        /*try {
-            log.info("Modification de l'application %s".formatted(name));
-            return changeConfiguration(name, file, comment);
-        } catch (final Exception e) {
-            log.info("Création de l'application %s".formatted(name));
-        }*/
 
         if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
             //TODO test à faire
@@ -373,7 +391,7 @@ public class OreSiResources implements ServiceContainerBean {
 
         return buildFluxRequestNDJson(fluxSink -> {
             if (file.isEmpty()) {
-                fluxSink.error(new IllegalArgumentException("EmptyFile"));
+                fluxSink.error(new IllegalArgumentException(ERROR_EMPTY_FILE));
             }
             final ReactiveProgression.ChangeApplicationProgression progression = new ReactiveProgression.ChangeApplicationProgression(0D, fluxSink);
             final UUID uuid = serviceContainer.applicationService().changeApplicationConfiguration(progression, nameOrId, file, comment);
@@ -493,9 +511,9 @@ public class OreSiResources implements ServiceContainerBean {
 
         final StreamingResponseBody streamResponseBody = out -> serviceContainer.dataService().getDataCsvStream(out, nameOrId, refType, language, false);
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-        response.setHeader("Content-Disposition", String.format("attachment; filename=%s.csv", refType));
-        response.addHeader("Pragma", "no-cache");
-        response.addHeader("Expires", "0");
+        response.setHeader(HEADER_CONTENT_DISPOSITION, String.format(HEADER_ATTACHMENT_FILENAME_S_CSV, refType));
+        response.addHeader(HEADER_PRAGMA, HEADER_NO_CACHE);
+        response.addHeader(HEADER_EXPIRES, EXPIRED_TIME);
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
 
         return ResponseEntity.ok()
@@ -549,12 +567,10 @@ public class OreSiResources implements ServiceContainerBean {
     }
 
     @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ_SOME')")
     public ResponseEntity<List<String>> listData(@PathVariable("nameOrId") final String nameOrId) {
         final Application application = serviceContainer.applicationService().getApplication(nameOrId);
         List<String> allDataNames = application.getAllDataNames();
-
-
         return ResponseEntity.ok(allDataNames);
     }
 
@@ -588,7 +604,7 @@ public class OreSiResources implements ServiceContainerBean {
             //@ApiParam(required = false, value = "The parameters for filter the search")
             @RequestParam(value = "params", required = false) final String params) throws
             BadAdditionalFileParamsSearchException {
-        final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
+        final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || JS_UNDEFINED.equals(params) ? null : deserialiseAdditionalFilesInfos(params);
 
         final StreamingResponseBody streamResponseBody;
         if ("__charte__".equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
@@ -601,17 +617,17 @@ public class OreSiResources implements ServiceContainerBean {
                     serviceContainer.additionalFileService().getAdditionalFilesNamesZipStream(zipOutputStream, nameOrId, additionalFilesInfos);
                 } catch (final IOException ioe) {
                     switch (OreSiResources.getDefaultLocale().getLanguage()) {
-                        case "fr" -> log.error("Exception lors de la lecture et du streaming de données ", ioe);
-                        case "en" -> log.error("Exception while reading and streaming data  ", ioe);
-                        default -> log.error("Exception while reading and streaming data ", ioe);
+                        case FR -> log.error(IO_ERROR_FR, ioe);
+                        case EN -> log.error(IO_ERROR_EN, ioe);
+                        default -> log.error(IO_ERROR_EN, ioe);
                     }
                 }
             };
-            response.setHeader("Content-Disposition", "attachment; filename=additionalFiles.zip");
-            response.setHeader("Content-type", "application/zip;charset=UTF-8");
+            response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ZIP);
+            response.setContentType(HEADER_APPLICATION_ZIP_CHARSET_UTF_8);
         }
-        response.addHeader("Pragma", "no-cache");
-        response.addHeader("Expires", "0");
+        response.addHeader(HEADER_PRAGMA, HEADER_NO_CACHE);
+        response.addHeader(HEADER_EXPIRES, EXPIRED_TIME);
 
         return ResponseEntity.ok()
                 .body(streamResponseBody);
@@ -625,10 +641,10 @@ public class OreSiResources implements ServiceContainerBean {
             //@ApiParam(required = false, value = "The parameters for filter the search")
             @RequestParam(value = "params", required = false) final String params) throws
             BadAdditionalFileParamsSearchException {
-        final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFilesInfos(params);
+        final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || JS_UNDEFINED.equals(params) ? null : deserialiseAdditionalFilesInfos(params);
         final List<UUID> deletedFiles = serviceContainer.additionalFileService().deleteAdditionalFiles(nameOrId, additionalFilesInfos);
         if (deletedFiles != null && !deletedFiles.isEmpty()) {
-            return ResponseEntity.ok(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(",")));
+            return ResponseEntity.ok(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
         } else {
             return ResponseEntity.notFound().build();
         }
@@ -639,7 +655,7 @@ public class OreSiResources implements ServiceContainerBean {
                                                      @PathVariable("additionalFileName") final String additionalFileName,
                                                      @RequestParam(value = "file", required = false) final MultipartFile file,
                                                      @RequestParam(value = "params") final String params) {
-        final CreateAdditionalFileRequest createAdditionalFileRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseAdditionalFileOrUUIDQuery(params);
+        final CreateAdditionalFileRequest createAdditionalFileRequest = Strings.isNullOrEmpty(params) || JS_UNDEFINED.equals(params) ? null : deserialiseAdditionalFileOrUUIDQuery(params);
         final UUID fileUUID = serviceContainer.additionalFileService().createOrUpdate(createAdditionalFileRequest, additionalFileName, nameOrId, file);
         return ResponseEntity.ok(fileUUID);
 
@@ -989,7 +1005,7 @@ public class OreSiResources implements ServiceContainerBean {
                         variables,
                         locale.getLanguage(),
                         dataRepositoryWithBuffer))
-                .collect(Collectors.toList());
+                .toList();
         final Map<String, String> referenceTypeForReferencingColumns =
                 Optional.ofNullable(checkedFormatcomponents.get(ReferenceType.class.getSimpleName()))
                         .map(checkedFormatColumn -> checkedFormatColumn.entrySet()
@@ -1029,7 +1045,7 @@ public class OreSiResources implements ServiceContainerBean {
             @RequestParam(value = "downloadDatasetQuery", required = false) final String params) {
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, false);
         final List<UUID> deletedData = serviceContainer.dataService().deleteData(downloadDatasetQuery);
-        return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(",")));
+        return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
 
     }
 
@@ -1065,8 +1081,8 @@ public class OreSiResources implements ServiceContainerBean {
 
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataType, false);
 
-        response.setContentType("application/zip");
-        response.setHeader("Content-Disposition", "attachment; filename=\"data.zip\"");
+        response.setContentType(HEADER_ZIP_MIME);
+        response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME_DATA_ZIP);
 
         AtomicReference<OreSiUser> user = new AtomicReference<>();
         StreamingResponseBody responseBody = outputStream -> {
@@ -1074,7 +1090,7 @@ public class OreSiResources implements ServiceContainerBean {
             Path tempFile;
             try {
                 user.set(userRepository.findById(request.getRequestClient().id()));
-                tempFile = Files.createTempFile(Paths.get("/tmp"), "data-" + UUID.randomUUID(), ".zip");
+                tempFile = Files.createTempFile(Paths.get(TMP), "data-" + UUID.randomUUID(), ".zip");
 
                 try (OutputStream fileOutputStream = Files.newOutputStream(tempFile);
                      TeeOutputStream teeOutputStream = new TeeOutputStream(outputStream, fileOutputStream)) {
@@ -1082,7 +1098,7 @@ public class OreSiResources implements ServiceContainerBean {
                     zipOutputStream = new KeepAliveZipOutputStream(new BufferedOutputStream(teeOutputStream, 2000));
                     serviceContainer.dataService().buildDataZip(zipOutputStream, downloadDatasetQuery);
                 } catch (IOException e) {
-                    log.error("Error writing to one of the outputs", e);
+                    log.error(IO_ERROR_WRITE, e);
                     // Handle specific output stream errors if necessary
                 }
 
@@ -1093,12 +1109,12 @@ public class OreSiResources implements ServiceContainerBean {
                     try {
                         serviceContainer.dataService().sendZipLinkByMail(finalTempFile, downloadDatasetQuery, user.get());
                     } catch (Exception e) {
-                        log.error("Erreur lors de l'envoi du lien ZIP par e-mail", e);
+                        log.error(EMAIL_ERROR, e);
                     } finally {
                         try {
                             Files.deleteIfExists(finalTempFile);
                         } catch (IOException e) {
-                            log.error("Erreur lors de la suppression du fichier temporaire", e);
+                            log.error(IO_DELETE_ERROR, e);
                         }
                         executorService.shutdown();
                     }
@@ -1109,29 +1125,29 @@ public class OreSiResources implements ServiceContainerBean {
                     try {
                         addErrorFileToZip(zipOutputStream, e);
                     } catch (IOException ioe) {
-                        log.error("Error adding error file to ZIP", ioe);
+                        log.error(IO_ADDING_ERROR, ioe);
                     }
                 }
-                throw new RuntimeException("Erreur lors de l'écriture des données CSV", e);
+                throw new OreSiTechnicalException(IO_WRITING_CSV_ERROR, e);
             }
         };
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"data.zip\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME_DATA_ZIP)
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(responseBody);
     }
 
 
     private void addErrorFileToZip(ZipOutputStream zipOutputStream, Exception e) throws IOException {
-        ZipEntry errorEntry = new ZipEntry("error.txt");
+        ZipEntry errorEntry = new ZipEntry(FILE_ERROR);
         zipOutputStream.putNextEntry(errorEntry);
 
         try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream, StandardCharsets.UTF_8))) {
             String errorMessage = switch (OreSiResources.getDefaultLocale().getLanguage()) {
-                case "fr" -> "Une erreur s'est produite lors du téléchargement.";
-                case "en" -> "An error occurred during download.";
-                default -> "An error occurred during download.";
+                case FR -> IO_UPOAD_ERROR_FR;
+                case EN -> IO_UPOAD_ERROR_EN;
+                default -> IO_UPOAD_ERROR_EN;
             };
             writer.write(errorMessage);
             writer.newLine();
@@ -1162,6 +1178,11 @@ public class OreSiResources implements ServiceContainerBean {
                     .map(DownloadDatasetQuery::getOutPut)
                     .map(OutPut::locale)
                     .orElseGet(OreSiResources::getDefaultLocale);
+            Optional.of(downloadDatasetQuery)
+                    .map(DownloadDatasetQuery::getOutPut)
+                    .or(()-> Optional.of(new OutPut(locale, null, null)))
+                    .map(outPut -> new OutPut(locale, outPut.offset(), outPut.limit()))
+                    .ifPresent(downloadDatasetQuery::setOutPut);
             return DownloadDatasetQuery.build(downloadDatasetQuery);
         } catch (final Exception e) {
             throw new BadDownloadDatasetQuery(e.getMessage());
@@ -1179,7 +1200,7 @@ public class OreSiResources implements ServiceContainerBean {
                     .stream()
                     .collect(Collectors.toMap(
                                     Map.Entry::getKey,
-                                    e -> e.getValue().stream().map(SynthesisResult::new).collect(Collectors.toList())
+                                    e -> e.getValue().stream().map(SynthesisResult::new).toList()
                             )
                     );
             return ResponseEntity.created(URI.create(uri)).body(synthesisResults);
@@ -1242,11 +1263,11 @@ public class OreSiResources implements ServiceContainerBean {
                 request.getServerPort()
         );
 
-        response.setContentType("application/zip");
-        String fileName = "%s-upload-bundle.zip".formatted(nameOrId);
-        response.setHeader("Content-Disposition", "attachment; filename=%s".formatted(fileName));
-        response.addHeader("Pragma", "no-cache");
-        response.addHeader("Expires", "0");
+        response.setContentType(HEADER_ZIP_MIME);
+        String fileName = BUNDLE_NAME.formatted(nameOrId);
+        response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME.formatted(fileName));
+        response.addHeader(HEADER_PRAGMA, HEADER_NO_CACHE);
+        response.addHeader(HEADER_EXPIRES, EXPIRED_TIME);
 
         AtomicReference<BuildBundleReport> reportRef = new AtomicReference<>();
 
@@ -1256,7 +1277,7 @@ public class OreSiResources implements ServiceContainerBean {
             AtomicReference<OreSiUser> user = new AtomicReference<>();
             try {
                 user.set(userRepository.findById(this.request.getRequestClient().id()));
-                tempFile = Files.createTempFile(Paths.get("/tmp"), "upload-bundle-" + UUID.randomUUID(), ".zip");
+                tempFile = Files.createTempFile(Paths.get(TMP), UPLOAD_BUNDLE + UUID.randomUUID(), ".zip");
 
                 try (OutputStream fileOutputStream = Files.newOutputStream(tempFile);
                      TeeOutputStream teeOutputStream = new TeeOutputStream(outputStream, fileOutputStream)) {
@@ -1265,7 +1286,7 @@ public class OreSiResources implements ServiceContainerBean {
                     BuildBundleReport report = serviceContainer.dataService().writeUploadBundle(instanceUrl, nameOrId, withData, locale, zipOutputStream);
                     reportRef.set(report);
                 } catch (IOException e) {
-                    log.error("Error writing to one of the outputs", e);
+                    log.error(IO_ERROR_WRITE, e);
                 }
 
                 if (reportRef.get() != null && reportRef.get().referentielsEnErreur().isEmpty()) {
@@ -1275,22 +1296,22 @@ public class OreSiResources implements ServiceContainerBean {
                         try {
                             serviceContainer.dataService().sendZipLinkByMail(tempFile, reportRef.get(), user.get());
                         } catch (Exception e) {
-                            log.error("Erreur lors de l'envoi du lien ZIP par e-mail", e);
+                            log.error(EMAIL_ERROR, e);
                         } finally {
                             try {
                                 Files.deleteIfExists(tempFile);
                             } catch (IOException e) {
-                                log.error("Erreur lors de la suppression du fichier temporaire", e);
+                                log.error(IO_DELETE_ERROR, e);
                             }
                             executorService.shutdown();
                         }
                     });
                 } else {
-                    log.warn("Le rapport est incomplet ou contient des erreurs. L'e-mail n'a pas été envoyé.");
+                    log.warn(BAD_REPORT);
                     try {
                         Files.deleteIfExists(tempFile);
                     } catch (IOException e) {
-                        log.error("Erreur lors de la suppression du fichier temporaire", e);
+                        log.error(IO_DELETE_ERROR, e);
                     }
                 }
 
@@ -1299,10 +1320,10 @@ public class OreSiResources implements ServiceContainerBean {
                     try {
                         addErrorFileToZip(zipOutputStream, e);
                     } catch (IOException ioe) {
-                        log.error("Error adding error file to ZIP", ioe);
+                        log.error(IO_ADDING_ERROR, ioe);
                     }
                 }
-                throw new RuntimeException("Erreur lors de la création du bundle de téléchargement", e);
+                throw new OreSiTechnicalException(BAD_BUNDLE, e);
             }
         };
 

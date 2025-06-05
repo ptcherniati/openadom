@@ -1,7 +1,10 @@
 package fr.inra.oresing.domain.application.configuration.examples;
 
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.type.*;
+import fr.inra.oresing.domain.application.configuration.type.FileNameType;
+import fr.inra.oresing.domain.application.configuration.type.StringType;
+import fr.inra.oresing.domain.application.configuration.type.SubmissionScopeType;
+import fr.inra.oresing.domain.application.configuration.type.SubmissionType;
 
 import java.util.LinkedHashMap;
 

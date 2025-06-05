@@ -2,9 +2,11 @@ package fr.inra.oresing.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import org.apache.commons.io.file.AccumulatorPathVisitor;
 import org.apache.commons.io.file.Counters;
-import org.apache.hc.client5.http.classic.methods   .HttpPost;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
 import org.apache.hc.client5.http.cookie.BasicCookieStore;
 import org.apache.hc.client5.http.cookie.CookieStore;
 import org.apache.hc.client5.http.entity.mime.FileBody;
@@ -18,7 +20,9 @@ import org.apache.hc.core5.http.io.HttpClientResponseHandler;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.io.support.ClassicRequestBuilder;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -47,6 +51,14 @@ public class Client {
         new Client().run();
     }
 
+    private static void logError(String string) {
+        System.err.println(string);
+    }
+
+    private static void log(String message) {
+        System.out.println(message);
+    }
+
     public void run() throws IOException {
 
         ClientConfiguration clientConfiguration = readConfiguration();
@@ -56,8 +68,7 @@ public class Client {
 
         String login;
         String password;
-        boolean interactive = false;
-        Scanner scanner = new Scanner(System.in);
+        new Scanner(System.in);
         login = "poussin";
         password = "xxxx";
 
@@ -118,7 +129,7 @@ public class Client {
             );
 
             log("référentiels à importer :" + System.lineSeparator()
-                + String.join(System.lineSeparator(), data));
+                    + String.join(System.lineSeparator(), data));
 
            /* ClassicHttpRequest getApplicationDataTypesRequest = ClassicRequestBuilder
                     .get(uriFactory.forApplicationDataTypes(applicationName))
@@ -172,28 +183,6 @@ public class Client {
         //commands.addAll(dataCommands);
         return new LinkedList<>(dataCommands);
     }
-
-    private List<Command> getUploadDataCommands(String dataType) {
-        Path dataDirectoryForDataType = Path.of(dataType);
-        List<Command> commands;
-        if (dataDirectoryForDataType.toFile().exists()) {
-            if (dataDirectoryForDataType.toFile().isDirectory()) {
-                SortedSet<Path> csvFilePaths = findCsvFilePathsInDirectory(dataDirectoryForDataType);
-                commands = csvFilePaths.stream()
-                        .map(Path::toFile)
-                        .map(dataFile -> newUploadDataCommand(dataType, dataFile))
-                        .toList();
-            } else {
-                logError("le répertoire " + dataDirectoryForDataType + " est un fichier mais il devrait être un dossier. On l’ignore.");
-                commands = Collections.emptyList();
-            }
-        } else {
-            log("le répertoire " + dataDirectoryForDataType + " n’existe pas. Pas de données à importer pour " + dataType);
-            commands = Collections.emptyList();
-        }
-        return commands;
-    }
-
 
     private List<Command> getDataCommands(String dataName) {
         File dir = new File(dataName);
@@ -259,9 +248,9 @@ public class Client {
                                 resultMap.put(MESSAGE_PARAMS, ((Map<String, Object>) record.get("validationCheckResult")).get(MESSAGE_PARAMS));
                                 return resultMap;
                             })
-                            .collect(Collectors.toList());
+                            .toList();
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
             }
 
@@ -301,7 +290,7 @@ public class Client {
                     .collect(Collectors.toCollection(TreeSet::new));
             return Collections.unmodifiableSortedSet(csvFilePathsInDirectory);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
         }
     }
 
@@ -310,47 +299,22 @@ public class Client {
         System.exit(1);
     }
 
-    private static void logError(String string) {
-        System.err.println(string);
-    }
-
-    private static void log(String message) {
-        System.out.println(message);
-    }
-
     private <T> T parseJsonInResponseBody(ClassicHttpResponse response, TypeReference<T> valueTypeRef) {
         try (InputStream inputStream = response.getEntity().getContent()) {
             return new ObjectMapper().readValue(inputStream, valueTypeRef);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
         }
     }
 
-    record CsvRowValidationCheckResult(
-            int lineNumber,
-            ValidationCheckResult validationCheckResult
-    ) {
-    }
+    /**
+     * Une étape du téléversement soit un fichier à téléverser, une requête HTTP et comment traiter la réponse.
+     */
+    interface Command extends HttpClientResponseHandler<Void> {
 
-    record ValidationCheckResult(
-            ValidationLevel level,
-            ValidationMessage message,
-            Map<String, Object> messageParams,
-            String target
-    ) {
-    }
+        String getDescription();
 
-    enum ValidationLevel {
-        SUCCESS, WARN, ERROR
-    }
-
-    enum ValidationMessage {
-        unexpectedHeaderColumn,
-        headerColumnPatternNotMatching,
-        unexpectedTokenCount,
-        invalidHeaders,
-        duplicatedHeaders,
-        emptyHeader
+        ClassicHttpRequest getRequest(UriFactory uriFactory);
     }
 
     /**
@@ -362,7 +326,7 @@ public class Client {
             try {
                 return new URI("%s/api/v1/%s".formatted(instanceUrl, endpoint));
             } catch (URISyntaxException e) {
-                throw new RuntimeException("ne devrait pas arriver", e);
+                throw new OreSiTechnicalException("ne devrait pas arriver", e);
             }
         }
 
@@ -384,16 +348,6 @@ public class Client {
             String endpoint = "applications/%s/data".formatted(applicationName);
             return newUri(endpoint);
         }
-    }
-
-    /**
-     * Une étape du téléversement soit un fichier à téléverser, une requête HTTP et comment traiter la réponse.
-     */
-    interface Command extends HttpClientResponseHandler<Void> {
-
-        String getDescription();
-
-        ClassicHttpRequest getRequest(UriFactory uriFactory);
     }
 
     /**

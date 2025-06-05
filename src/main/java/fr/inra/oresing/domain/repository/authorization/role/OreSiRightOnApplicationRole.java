@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.persistence.SqlSchemaForApplication;
 
 import java.util.UUID;
+
 public record OreSiRightOnApplicationRole(
         UUID applicationId,
         String profile,
@@ -43,7 +44,7 @@ public record OreSiRightOnApplicationRole(
     }
 
     public static OreSiRightOnApplicationRole writerOn(final Application application) {
-        return new OreSiRightOnApplicationRole(application.getId(), "writer",  """
+        return new OreSiRightOnApplicationRole(application.getId(), "writer", """
                 Writer permission on application %s
                 Requires policies to write.""".formatted(application.getName()), null);
     }
@@ -54,8 +55,8 @@ public record OreSiRightOnApplicationRole(
     public static OreSiRightOnApplicationRole managementRole(final Application application, final UUID uuid) {
         return new OreSiRightOnApplicationRole(application.getId(), String.format("mgt_%s", uuid.toString().substring(0, 8)),
                 """
-                Mamagement of data  permission on application %s
-                with policies to write and/or to read data and binaryfiles.""".formatted(application.getName()), uuid);
+                        Mamagement of data  permission on application %s
+                        with policies to write and/or to read data and binaryfiles.""".formatted(application.getName()), uuid);
     }
 
     @Override

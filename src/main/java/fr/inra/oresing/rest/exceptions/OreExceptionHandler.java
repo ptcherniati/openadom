@@ -6,18 +6,20 @@ import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.domain.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
+import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
+import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.postgresql.util.PSQLException;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.ObjectError;
@@ -57,7 +59,7 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(DisconnectedException.class)
-    public ResponseEntity<?> handle(final DisconnectedException disconnectedException) {
+    public ResponseEntity handle(final DisconnectedException disconnectedException) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(disconnectedException);
     }
 

@@ -25,7 +25,7 @@ class PatternComponentQualifierExampleBuilder {
             final TitleType exportHeader,
             final List<String> tags,
             final CheckerType checker) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> map = new LinkedHashMap<>();
 
         map.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);
         map.put(ConfigurationSchemaNode.OA_REQUIRED, BooleanExampleBuilder.TRUE);
@@ -49,7 +49,7 @@ class PatternComponentQualifierExampleBuilder {
             final CheckerType checker,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final Map<String, ConfigurationSchemaNodeType<?>> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required, false));
         if (importHeader != null) children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER, new StringType(importHeader));
         if (CollectionUtils.isNotEmpty(tags)) {
