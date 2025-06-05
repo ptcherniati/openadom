@@ -20,7 +20,7 @@ RUN ls -la /app/target/
 ######################################################
 
 # FROM amazoncorretto:21 AS runtime-stage
-FROM openjdk:21-jdk AS runtime-stage
+FROM openjdk:23-jdk AS runtime-stage
 
 # Set the working directory
 WORKDIR /app
