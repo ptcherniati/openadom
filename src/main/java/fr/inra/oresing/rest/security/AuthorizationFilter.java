@@ -56,6 +56,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_UPDATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_UPDATE_USER");
     public static final GrantedAuthority ROLE_UNAUTHENTIFIED_CREATE_USER = new SimpleGrantedAuthority("ROLE_UNAUTHENTIFIED_CREATE_USER");
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
+    public static final String BAD_REQUEST = "BAD_REQUEST";
     private final OreSiApiRequestContext requestContext;
     private static JsonRowMapper<OreSiUserRequestClient> mapper;
     private final OreExceptionHandler exceptionHandler;
@@ -116,7 +117,7 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
             OreSiAuthenticationToken token = buildAuthentication(request, response, request.isSecure());
             requestContext.setAuthenticationToken(token);
         } catch (AuthenticationFailure e) {
-            ResponseEntity<AuthenticationFailure> handle = exceptionHandler.handle(e);
+            ResponseEntity<String> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCode().value());
             response.setContentType("application/json");
             String body = mapper.toJson(handle.getBody());
@@ -259,10 +260,10 @@ public class AuthorizationFilter extends GenericFilterBean implements ServiceCon
                         List.of(ROLE_AUTHENTIFIED_USER)
                 );
             } catch (AuthenticationFailure e) {
-                throw new AuthenticationFailure("Échec technique", (OreSiUser) null);
+                throw new AuthenticationFailure(BAD_REQUEST, (OreSiUser) null);
             }
         }
-        throw new AuthenticationFailure("Échec technique", (OreSiUser) null);
+        throw new AuthenticationFailure(BAD_REQUEST, (OreSiUser) null);
     }
 
 

@@ -77,6 +77,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -117,6 +118,9 @@ import java.util.zip.ZipOutputStream;
 public class OreSiResources implements ServiceContainerBean {
     @Autowired
     LocaleResolver localeResolver;
+    @Value("${allowed.origin}")
+    String frontendOrigin;
+
 
     public static Locale getDefaultLocale() {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
@@ -589,7 +593,7 @@ public class OreSiResources implements ServiceContainerBean {
         final StreamingResponseBody streamResponseBody;
         if ("__charte__".equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
-            response.setHeader("Accept-Ranges", "bytes");
+            response.setHeader("Content-Security-Policy", "frame-ancestors %s".formatted(frontendOrigin));
             streamResponseBody = out -> serviceContainer.additionalFileService().getCharte(out, response, nameOrId, additionalFilesInfos);
         } else {
             streamResponseBody = out -> {
