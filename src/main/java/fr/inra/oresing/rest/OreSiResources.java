@@ -72,11 +72,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -154,9 +152,25 @@ public class OreSiResources {
     public static final String BUNDLE_NAME = "%s-upload-bundle.zip";
     public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
     final
-    LocaleResolver localeResolver;
-    @Value("${allowed.origin}")
-    String frontendOrigin;
+    OreSiApiRequestContext request;
+    final UserRepository userRepository;
+    final ServiceContainer serviceContainer;
+    final LocaleResolver localeResolver;
+    final String frontendOrigin;
+
+    public OreSiResources(
+            OreSiApiRequestContext request,
+            UserRepository userRepository,
+            ServiceContainer serviceContainer,
+            LocaleResolver localeResolver,
+            @Value("${allowed.origin}") String frontendOrigin
+    ) {
+        this.request = request;
+        this.userRepository = userRepository;
+        this.serviceContainer = serviceContainer;
+        this.localeResolver = localeResolver;
+        this.frontendOrigin = frontendOrigin;
+    }
 
 
     public static Locale getDefaultLocale() {
@@ -1180,7 +1194,7 @@ public class OreSiResources {
                     .orElseGet(OreSiResources::getDefaultLocale);
             Optional.of(downloadDatasetQuery)
                     .map(DownloadDatasetQuery::getOutPut)
-                    .or(()-> Optional.of(new OutPut(locale, null, null)))
+                    .or(() -> Optional.of(new OutPut(locale, null, null)))
                     .map(outPut -> new OutPut(locale, outPut.offset(), outPut.limit()))
                     .ifPresent(downloadDatasetQuery::setOutPut);
             return DownloadDatasetQuery.build(downloadDatasetQuery);
