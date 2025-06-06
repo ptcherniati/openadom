@@ -24,6 +24,7 @@ public record DatePattern<T extends TemporalAccessor>(
     public static final String MM_YYYY = "MM/yyyy";
     public static final String YYYY = "yyyy";
     public static final String DD_MM_YYYY = "dd/MM/yyyy";
+    public static final DatePattern DEFAULT = DatePattern.of(DD_MM_YYYY);
 
     public static <T extends TemporalAccessor> DatePattern<T> of(final String pattern) {
         switch (pattern) {

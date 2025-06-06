@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -301,6 +302,21 @@ public class LocalDateTimeRange {
 
     private static String formatBound(final LocalDateTime bound) {
         return "\"" + SQL_TIMESTAMP_DATE_TIME_FORMATTER.format(bound) + "\"";
+    }
+
+    public static LocalDateTimeRange of(DatePattern datePattern, TemporalAccessor from, TemporalAccessor to) {
+        return switch (datePattern.typeOfDate()) {
+            case DATE -> LocalDateTimeRange.between(((LocalDate) from).atStartOfDay(), ((LocalDate) to).atStartOfDay());
+            case DATETIME -> LocalDateTimeRange.between(((LocalDateTime) from), ((LocalDateTime) to));
+            case TIME ->
+                    LocalDateTimeRange.between(((LocalTime) from).atDate(LocalDate.MIN), ((LocalTime) to).atDate(LocalDate.MIN));
+        };
+    }
+
+    public static LocalDateTimeRange of(DatePattern datePattern, String from, String to) {
+        TemporalAccessor fromTemporal = datePattern.format(from);
+        TemporalAccessor totemporal = datePattern.format(to, true);
+        return of(datePattern,fromTemporal , totemporal);
     }
 
     public String toSqlExpression() {

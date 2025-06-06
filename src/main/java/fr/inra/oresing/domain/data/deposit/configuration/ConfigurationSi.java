@@ -6,6 +6,7 @@ import fr.inra.oresing.domain.Authorization;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.configuration.AuthorizationScopeComponentData;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.DateType;
@@ -13,7 +14,6 @@ import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.DataDatum;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
@@ -24,6 +24,8 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 public class ConfigurationSi {
@@ -77,22 +79,23 @@ public class ConfigurationSi {
         }
 
         LocalDateTimeRange dateTimeRange;
+        DatePattern datePattern = dataImporterContext.getDatepattern();
         if (binaryFileDataset.getFrom() == null && binaryFileDataset.getTo() == null) {
             return;
         }
-        LocalDateTime from = binaryFileDataset.getFrom() == null ?
+        final TemporalAccessor from = binaryFileDataset.getFrom() == null ?
                 null :
-                LocalDate.from(DataImporter.ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getFrom())).atStartOfDay();
+                datePattern.format(binaryFileDataset.getFrom());
         ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
-        builder.put("from", DataImporter.DISPLAY_DATE_FORMATTER_DDMMYYYY.format(Objects.requireNonNull(from)));
+        builder.put("from", binaryFileDataset.getFrom());
         LocalDateTime lowerBound = timeScope.getRange().hasLowerBound() ? timeScope.getRange().lowerEndpoint() : LocalDateTime.MIN;
-        builder.put("value", DataImporter.DISPLAY_DATE_FORMATTER_DDMMYYYY.format(lowerBound));
-        LocalDateTime to = binaryFileDataset.getTo() == null ?
+        builder.put("value", datePattern.formatter().format(lowerBound));
+        TemporalAccessor to = binaryFileDataset.getTo() == null ?
                 null :
-                LocalDate.from(DataImporter.ISO_DATE_TIME_FORMATTER.parse(binaryFileDataset.getTo())).plusDays(1).atStartOfDay();
-        dateTimeRange = LocalDateTimeRange.between(from, to);
+                datePattern.format(binaryFileDataset.getTo(), true);
+        dateTimeRange = LocalDateTimeRange.of(datePattern, from, to);
         assert to != null;
-        builder.put("to", DataImporter.DISPLAY_DATE_FORMATTER_DDMMYYYY.format(to));
+        builder.put("to", binaryFileDataset.getTo());
         if (!dateTimeRange.getRange().encloses(timeScope.getRange())) {
             errors.add(new CsvRowValidationCheckResult(DefaultValidationCheckResult.error("timeRangeOutOfInterval", builder.build(), null), rowNumber));
         }

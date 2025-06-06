@@ -7,7 +7,9 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.FieldType;
@@ -210,7 +212,7 @@ public class DataImporterContext {
         return getLineCheckers().stream()
                 .filter(lineChecker -> lineChecker.underlyingType() instanceof ReferenceType &&
 
-                        ((ReferenceType) lineChecker.underlyingType()).getRefType().equals(getRefType()))
+                                       ((ReferenceType) lineChecker.underlyingType()).getRefType().equals(getRefType()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("pas de computationChecker sur " + getRefType() + " alors qu'on est sur un référentiel récursif"));
     }
@@ -292,11 +294,11 @@ public class DataImporterContext {
 
     public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue> constantColumnsValues) {
         return columnsWithPatternColumns.stream()
-                .map(registeredColumn -> registeredColumn.as(column.column()))
-                .anyMatch(Objects::nonNull) ||
-                constantColumnsValues.keySet().stream()
-                        .map(DataColumn::column)
-                        .anyMatch(c -> c.equals(column.column()));
+                       .map(registeredColumn -> registeredColumn.as(column.column()))
+                       .anyMatch(Objects::nonNull) ||
+               constantColumnsValues.keySet().stream()
+                       .map(DataColumn::column)
+                       .anyMatch(c -> c.equals(column.column()));
     }
 
     public void withPatternColumn() {
@@ -358,5 +360,20 @@ public class DataImporterContext {
 
     public Map<Ltree, List<RowWithReferenceDatum>> getMissingLines() {
         return this.missingParentLines;
+    }
+
+    public DatePattern getDatepattern() {
+        final String timeScope = Optional.ofNullable(getAuthorization())
+                .map(Authorization::timeScope)
+                .orElse("");
+        return Optional.ofNullable(getDataDescription())
+                .map(StandardDataDescription::componentDescriptions)
+                .map(dataDescriptions -> dataDescriptions.get(timeScope))
+                .map(ComponentDescription::checker)
+                .filter(DateChecker.class::isInstance)
+                .map(DateChecker.class::cast)
+                .map(DateChecker::pattern)
+                .map(DatePattern::of)
+                .orElse(DatePattern.DEFAULT);
     }
 }
