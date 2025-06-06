@@ -363,17 +363,6 @@ public class DataImporterContext {
     }
 
     public DatePattern getDatepattern() {
-        final String timeScope = Optional.ofNullable(getAuthorization())
-                .map(Authorization::timeScope)
-                .orElse("");
-        return Optional.ofNullable(getDataDescription())
-                .map(StandardDataDescription::componentDescriptions)
-                .map(dataDescriptions -> dataDescriptions.get(timeScope))
-                .map(ComponentDescription::checker)
-                .filter(DateChecker.class::isInstance)
-                .map(DateChecker.class::cast)
-                .map(DateChecker::pattern)
-                .map(DatePattern::of)
-                .orElse(DatePattern.DEFAULT);
+        return getApplication().findSubmissionDatePattern(getRefType());
     }
 }

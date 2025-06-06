@@ -710,14 +710,20 @@ public class OreSiResourcesTest {
                 Assertions.assertEquals("projet_manche", ((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").getFirst().getSql());
             }
 
-            String createRights = getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.depot.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "05/01/1984", fixtures.adminConnection.cookie());
+            String createRights = getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.depot.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
 
             //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
             for (int i = 0; i < 3; i++) {
-                response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").file(refFile).with(csrf().asHeader()).param("params", getPemRepositoryParams(projet, plateforme, site, false)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+                        .file(refFile)
+                        .with(csrf().asHeader())
+                        .param("params", getPemRepositoryParams(projet, plateforme, site, false)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
             }
             //on regarde les versions déposées
-            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem").param("repositoryId", getPemRepositoryId(plateforme, projet, site)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(0))).andReturn().getResponse().getContentAsString();
+            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
+                    .param("repositoryId", getPemRepositoryId(plateforme, projet, site))
+                    .cookie(fixtures.getWithRightsUserConnection().cookie()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(0))).andReturn().getResponse().getContentAsString();
 
             //récupération de l'identifiant de la dernière version déposée
             oirFilesUUID = JsonPath.parse(response).read("$[2].id");

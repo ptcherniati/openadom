@@ -81,11 +81,11 @@ class SubmissionTest {
     @Test
     void parseFileNameWithInvalidStartDate() {
         try {
-            submission.parseFileName("leProjet_leSite_01-01/1984_05-01-1984.csv", binaryFileDataset);
+            submission.parseFileName("leProjet_leSite_01-01x1984_05-01-1984.csv", binaryFileDataset);
         } catch (SiOreAuthorizationRequestException e) {
             assertEquals(AuthorizationRequestException.BAD_FILE_NAME_START_DATE, e.getException());
             assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv", e.getParams().get("fileNameFormat"));
-            assertEquals("01-01/1984", e.getParams().get("startDate"));
+            assertEquals("01-01x1984", e.getParams().get("startDate"));
             assertEquals("dd-MM-yyyy", e.getParams().get("dateformat"));
         }
 

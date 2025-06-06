@@ -216,8 +216,8 @@ public class Fixtures {
                          "projet":["projetKprojet_%2$s"],
                          "sites":["type_de_sitesK%3$s.sitesK%4$s.sitesK%4$s__p1"]
                       },
-                      "from":"1984-01-01 00:00:00",
-                      "to":"1984-01-05 00:00:00"
+                      "from":"01/01/1984",
+                      "to":"06/01/1984"
                    },
                    "topublish":%5$s
                 }""", fileId, projet, plateforme, site, toPublish);

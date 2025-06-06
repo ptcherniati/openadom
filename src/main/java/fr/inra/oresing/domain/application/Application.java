@@ -2,6 +2,8 @@ package fr.inra.oresing.domain.application;
 
 import fr.inra.oresing.domain.OreSiEntity;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
@@ -222,5 +224,25 @@ public class Application extends OreSiEntity {
                 .map(InternationalizationTitle::getTitle)
                 .map(title -> title.get(locale))
                 .orElse(null);
+    }
+
+    public DatePattern findSubmissionDatePattern(String dataName) {
+        String timescope = findData(dataName)
+                .map(StandardDataDescription::submission)
+                .map(Submission::submissionScope)
+                .map(Submission.SubmissionScope::timescope)
+                .map(Submission.SubmissionScope.TimeScope::component)
+                .orElse("");
+        return findData(dataName)
+                .map(StandardDataDescription::componentDescriptions)
+                .map(Map::values)
+                .stream().flatMap(Collection::stream)
+                .filter(component -> timescope.equals(component.componentKey()))
+                .map(ComponentDescription::checker)
+                .filter(DateChecker.class::isInstance)
+                .map(DateChecker.class::cast)
+                .map(DateChecker::pattern)
+                .map(DatePattern::of)
+                .findFirst().orElse(DatePattern.DEFAULT);
     }
 }

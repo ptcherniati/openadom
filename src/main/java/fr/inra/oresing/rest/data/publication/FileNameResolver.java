@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public record FileNameResolver(
         AuthorizationPublicationService builder) implements State {
-    public StoredFileBuilder resolveFileName(String fileName) {
+    public StoredFileBuilder resolveFileName(String fileName, String format) {
         BinaryFileDataset binaryFileDataset = fileOrUuid() == null ? new BinaryFileDataset() : fileOrUuid().binaryfiledataset();
         BinaryFileDataset resolvedBinaryFileDataset = Optional.ofNullable(dataDescription())
                 .map(StandardDataDescription::submission)

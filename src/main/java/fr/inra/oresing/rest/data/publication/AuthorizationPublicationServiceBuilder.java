@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
 import fr.inra.oresing.domain.file.FileOrUUID;
 
@@ -40,8 +41,9 @@ public class AuthorizationPublicationServiceBuilder {
                 .map(AuthorizationPublicationService::getFileOrUUID)
                 .isEmpty();
         if (hasNoFileId && hasSubmissionScope) {
+            final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
             return new FileNameResolver(builder)
-                    .resolveFileName(fileName);
+                    .resolveFileName(fileName, submissionDatePattern.pattern());
         }
         return new StoredFileBuilder(builder);
     }

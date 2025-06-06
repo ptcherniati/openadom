@@ -429,8 +429,8 @@ public record MonSoereFixture(Fixtures fixtures, MockMvc mockMvc, UserRepository
                          "projet":["projet_%1$s"],
                          "sites":["%3$s__p1"]
                       },
-                      "from":"1984-01-01 00:00:00",
-                      "to":"1984-01-05 00:00:00"
+                      "from":"01/01/1984",
+                      "to":"06/01/1984"
                    },
                    "topublish":%4$s
                 }""", projet, plateforme, site, toPublish);
@@ -443,8 +443,8 @@ public record MonSoereFixture(Fixtures fixtures, MockMvc mockMvc, UserRepository
                          "projet":["projet_%2$s"],
                          "sites":["%3$s__p1"]
                       },
-                      "from":"1984-01-01 00:00:00",
-                      "to":"1984-01-05 00:00:00"
+                      "from":"01/01/1984",
+                      "to":"06/01/1984"
                    }""", plateforme, projet, site);
     }
 

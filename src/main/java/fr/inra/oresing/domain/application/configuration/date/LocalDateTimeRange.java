@@ -127,10 +127,12 @@ public class LocalDateTimeRange {
             Maps.uniqueIndex(ALL_CONVERTERS, StringToLocalDateTimeRangeConverter::getPattern);
     public static final ImmutableSet<String> KNOWN_PATTERNS = CONVERTER_PER_PATTERNS.keySet();
     Range<LocalDateTime> range;
+
     public LocalDateTimeRange(final List<LocalDateTime> dates) {
         super();
         range = between(dates.get(0), dates.get(1)).range;
     }
+
     public LocalDateTimeRange(final Range<LocalDateTime> range) {
         super();
         this.range = range;
@@ -146,24 +148,6 @@ public class LocalDateTimeRange {
                         "acceptedValues", acceptedValues
                 )
         );
-    }
-
-    public static LocalDateTimeRange getTimeScope(final LocalDate fromDay, final LocalDate toDay) {
-        final LocalDateTimeRange timeScope;
-        if (fromDay == null) {
-            if (toDay == null) {
-                timeScope = always();
-            } else {
-                timeScope = until(toDay);
-            }
-        } else {
-            if (toDay == null) {
-                timeScope = since(fromDay);
-            } else {
-                timeScope = between(fromDay, toDay);
-            }
-        }
-        return timeScope;
     }
 
     public static SiOreIllegalArgumentException getErrorBoundType(final BoundType boundType) {
@@ -309,14 +293,37 @@ public class LocalDateTimeRange {
             case DATE -> LocalDateTimeRange.between(((LocalDate) from).atStartOfDay(), ((LocalDate) to).atStartOfDay());
             case DATETIME -> LocalDateTimeRange.between(((LocalDateTime) from), ((LocalDateTime) to));
             case TIME ->
-                    LocalDateTimeRange.between(((LocalTime) from).atDate(LocalDate.MIN), ((LocalTime) to).atDate(LocalDate.MIN));
+                    LocalDateTimeRange.between(((LocalTime) from).atDate(LocalDate.EPOCH), ((LocalTime) to).atDate(LocalDate.EPOCH));
         };
     }
 
     public static LocalDateTimeRange of(DatePattern datePattern, String from, String to) {
-        TemporalAccessor fromTemporal = datePattern.format(from);
-        TemporalAccessor totemporal = datePattern.format(to, true);
-        return of(datePattern,fromTemporal , totemporal);
+        TemporalAccessor fromTemporal = null;
+        TemporalAccessor totemporal = null;
+        if (from == null || to == null) {
+            return LocalDateTimeRange.always();
+        }
+        if (from != null) {
+            fromTemporal = datePattern.format(from);
+        }
+        if (to != null) {
+            totemporal = datePattern.format(to,true);
+        }
+        if (fromTemporal == null) {
+            return switch (datePattern.typeOfDate()) {
+                case DATETIME -> LocalDateTimeRange.until((LocalDateTime) totemporal);
+                case DATE -> LocalDateTimeRange.until((LocalDate) totemporal);
+                case TIME -> LocalDateTimeRange.until(((LocalTime) totemporal).atDate(LocalDate.EPOCH));
+            };
+        }
+        if (totemporal == null) {
+            return switch (datePattern.typeOfDate()) {
+                case DATETIME -> LocalDateTimeRange.since((LocalDateTime) fromTemporal);
+                case DATE -> LocalDateTimeRange.since((LocalDate) fromTemporal);
+                case TIME -> LocalDateTimeRange.since(((LocalTime) fromTemporal).atDate(LocalDate.EPOCH));
+            };
+        }
+        return of(datePattern, fromTemporal, totemporal);
     }
 
     public String toSqlExpression() {
@@ -366,6 +373,12 @@ public class LocalDateTimeRange {
         LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateType dateType);
 
         LocalDateTimeRange toLocalDateTimeRange(LocalDateTime str, DateTimeFormatter dateTimeFormatter, DateType dateType);
+    }
+    public LocalDateTime getLowerPointOrMin(){
+        return getRange().hasLowerBound()?getRange().lowerEndpoint():LocalDateTime.MIN;
+    }
+    public LocalDateTime getUpperEndpointOrMax(){
+        return getRange().hasUpperBound()?getRange().upperEndpoint():LocalDateTime.MAX;
     }
 
 }
