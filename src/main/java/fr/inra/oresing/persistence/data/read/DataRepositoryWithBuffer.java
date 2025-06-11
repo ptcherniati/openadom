@@ -66,7 +66,8 @@ public record DataRepositoryWithBuffer(
     @Override
     public String findDisplayByReferenceTypeAndNaturalKeyAndLocale(String referenceType, String naturalKey, String locale) {
         return getDataFromFileOrRepository(fileWithPrefix(referenceType, PREFIX_FOR_DISPLAY),
-                stream -> stream.filter(parts -> parts[1].equals(naturalKey) && parts[2].equals(locale))
+                stream -> stream
+                        .filter(parts -> parts[1].equals(naturalKey) && parts[2].equals(locale) && parts.length>=4)
                         .map(parts -> parts[3])
                         .findFirst()
                         .orElse(null)
