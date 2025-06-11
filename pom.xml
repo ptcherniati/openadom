@@ -51,9 +51,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git@forgemia.inra.fr:anaee-dev/openadom/backend.git</connection>
-        <developerConnection>scm:git:git@forgemia.inra.fr:anaee-dev/openadom/backend.git</developerConnection>
-        <url>https://forgemia.inra.fr/anaee-dev/openadom/backend</url>
+        <connection>scm:git:git@forge.inra.fr:anaee-dev/openadom/backend.git</connection>
+        <developerConnection>scm:git:git@forge.inra.fr:anaee-dev/openadom/backend.git</developerConnection>
+        <url>https://forge.inra.fr/anaee-dev/openadom/backend</url>
     </scm>
 
     <properties>
@@ -502,17 +502,17 @@
             <repositories>
                 <repository>
                     <id>gitlab-maven</id>
-                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                    <url>https://forge.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
                 </repository>
             </repositories>
             <distributionManagement>
                 <repository>
                     <id>gitlab-maven</id>
-                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                    <url>https://forge.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
                 </repository>
                 <snapshotRepository>
                     <id>gitlab-maven</id>
-                    <url>https://forgemia.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+                    <url>https://forge.inra.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
                 </snapshotRepository>
             </distributionManagement>
             <build>

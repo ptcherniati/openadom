@@ -7,7 +7,7 @@ website:
   page-navigation: true
   back-to-top-navigation: true
   bread-crumbs: true
-  repo-url: https://forgemia.inra.fr/anaee-dev/openadom/backend/-/tree/develop
+  repo-url: https://forge.inra.fr/anaee-dev/openadom/backend/-/tree/develop
   repo-actions: [ edit, source, issue ]
   title: "openadom"
   description: "Documentation des fichiers de configuration pour OpenADOM"
@@ -126,14 +126,14 @@ website:
         text: A propos
     right:
       - icon: gitlab
-        href: https://forgemia.inra.fr/anaee-dev/openadom
+        href: https://forge.inra.fr/anaee-dev/openadom
       - icon: oa
         href: https://openadom.fr
   page-footer:
     left: "Copyright 2025, OpenADOM"
     right:
       - icon: gitlab
-        href: https://forgemia.inra.fr/anaee-dev/openadom
+        href: https://forge.inra.fr/anaee-dev/openadom
 
 format:
   html:
