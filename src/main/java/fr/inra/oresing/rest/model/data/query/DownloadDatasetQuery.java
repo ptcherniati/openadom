@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 import org.apache.commons.collections.CollectionUtils;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -21,11 +20,11 @@ public class DownloadDatasetQuery {
     Long limit;
     Set<String> rowIds;
     Set<Ltree> naturalKeys;
-    @Nullable
+   
     Set<String> componentSelects;
-    @Nullable
+   
     Set<ComponentFilters> componentFilters;
-    @Nullable
+   
     Set<ComponentOrderBy> componentOrderBy;
 
     Set<AuthorizationDescription> authorizationDescriptions;
@@ -35,7 +34,7 @@ public class DownloadDatasetQuery {
         super();
     }
 
-    public DownloadDatasetQuery(final Long offset, final Long limit, @Nullable final Set<String> componentSelects, @Nullable final Set<ComponentFilters> componentFilters, @Nullable final Set<ComponentOrderBy> componentOrderBy) {
+    public DownloadDatasetQuery(final Long offset, final Long limit, final Set<String> componentSelects, final Set<ComponentFilters> componentFilters, final Set<ComponentOrderBy> componentOrderBy) {
         super();
         this.offset = offset;
         this.limit = limit;
@@ -46,7 +45,7 @@ public class DownloadDatasetQuery {
         dataName = null;
     }
 
-    public DownloadDatasetQuery(final Application application, final Long offset, final String dataType, @Nullable final Set<String> componentSelects, @Nullable final Set<ComponentFilters> componentFilters, @Nullable final Set<ComponentOrderBy> componentOrderBy, final Set<AuthorizationDescription> authorizationDescriptions, final Long limit, final Set<String> rowIds) {
+    public DownloadDatasetQuery(final Application application, final Long offset, final String dataType, final Set<String> componentSelects, final Set<ComponentFilters> componentFilters, final Set<ComponentOrderBy> componentOrderBy, final Set<AuthorizationDescription> authorizationDescriptions, final Long limit, final Set<String> rowIds) {
         super();
         this.dataName = dataType;
         this.offset = offset;
@@ -57,18 +56,12 @@ public class DownloadDatasetQuery {
         this.componentOrderBy = componentOrderBy;
         this.authorizationDescriptions = authorizationDescriptions;
         this.application = application;
-
-    }
-
-    public long patternDefinitionCount() {
-        return application.patternDefinitionCount(dataName);
     }
 
     public DownloadDatasetQuery(final Application application, final String dataType) {
         super();
         this.application = application;
-        this.dataName = dataType;
-    }
+        this.dataName = dataType;    }
 
     public static fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery build(
             final DownloadDatasetQuery downloadDatasetQuery) {
@@ -97,7 +90,7 @@ public class DownloadDatasetQuery {
                     downloadDatasetQuery.isHorizontalDisplay()
             );
         }
-        if (CollectionUtils.isNotEmpty(downloadDatasetQuery.rowIds)) {
+        if (CollectionUtils.isNotEmpty(downloadDatasetQuery.getRowIds())) {
             return new DownloadDatasetQueryByRowId(
                     downloadDatasetQuery.getApplication(),
                     downloadDatasetQuery.dataName,
@@ -119,6 +112,7 @@ public class DownloadDatasetQuery {
                                     .collect(Collectors.toSet())
                             ).orElse(null),
                     downloadDatasetQuery.rowIds.stream()
+                            .filter(Objects::nonNull)
                             .map(UUID::fromString)
                             .map(DataRowIds::new)
                             .collect(Collectors.toSet()),
@@ -139,7 +133,6 @@ public class DownloadDatasetQuery {
                     downloadDatasetQuery.componentSelects,
                     ComponentFilters.build(
                             downloadDatasetQuery.componentFilters,
-                            downloadDatasetQuery.authorizationDescriptions,
                             downloadDatasetQuery.getApplication().findData(downloadDatasetQuery.getDataName()).orElse(null)),
 
                     Optional.ofNullable(downloadDatasetQuery.componentOrderBy)
@@ -175,6 +168,10 @@ public class DownloadDatasetQuery {
                 downloadDatasetQuery.isHorizontalDisplay()
         );
 
+    }
+
+    public long patternDefinitionCount() {
+        return application.patternDefinitionCount(dataName);
     }
 
 

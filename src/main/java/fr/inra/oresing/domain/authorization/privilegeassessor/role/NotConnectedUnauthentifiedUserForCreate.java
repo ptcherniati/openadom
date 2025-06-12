@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.rest.security.AuthorizationFilter;
 import org.springframework.security.core.GrantedAuthority;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -43,5 +44,3 @@ public record NotConnectedUnauthentifiedUserForCreate() implements NotConnectedU
         return true; // Actif pour cette action
     }
 }
-
-

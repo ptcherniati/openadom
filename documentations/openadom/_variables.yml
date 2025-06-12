@@ -26,11 +26,11 @@ link-styles:
     text: "{text}"
     link: '::: {.card} [{text}]({href}) :::'
 page-refs:
-  index: 
-    ancre:  "[Créer une ancre](/index.qmd)" #chemin absolu depuis openadom
+  index:
+    ancre: "[Créer une ancre](/index.qmd)" #chemin absolu depuis openadom
   openadom:
     version: 2.0.1
-# Section Introduction
+  # Section Introduction
   intro:
     href: /fichiers/introduction/introduction.qmd
     text: Introduction
@@ -155,7 +155,7 @@ page-refs:
     OA_patternForComponents: "[OA_patternForComponents](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_patternForComponents_def)"
     OA_componentAdjacents: "[OA_componentAdjacents](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_componentAdjacents_def)"
     OA_importHeaderPattern: "[OA_importHeaderPattern](/fichiers/fichier_echange/data/components/pattern_components.qmd#OA_importHeaderPattern_def)"
-  checker: 
+  checker:
     href: /fichiers/fichier_echange/data/verificateurs.qmd
     text: Vérificateurs (OA_checker)
     link: "[Vérificateurs (OA_checker)](/fichiers/fichier_echange/data/verificateurs.qmd)"
@@ -175,19 +175,19 @@ page-refs:
     oa-references: "[OA_references](/fichiers/fichier_echange/data/verificateurs.qmd#oa_references)"
     oa-defaultValue: "[OA_defaultValue](/fichiers/fichier_echange/data/verificateurs.qmd##OA_defaultValue)"
   # additionalFiles
-  additionalFiles: 
+  additionalFiles:
     href: /fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd
     text: Fichiers additionnels
     link: "[Fichiers additionnels](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
     oa: "[OA_additionalFiles](/fichiers/fichier_echange/additionalFiles/additionnalFiles.qmd)"
   # rightsRequest
-  rightsRequest: 
+  rightsRequest:
     href: /fichiers/fichier_echange/rightsRequest.qmd
     text: Demandes de droits
     link: "[Demandes de droits](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
     oa: "[OA_rightsRequest](/fichiers/fichier_echange/rightsRequest/rightsRequest.qmd)"
   # section pour aller plus loin
-  authorization: 
+  authorization:
     text: Authorization
     href: /fichiers/pour_aller_plus_loin/authorization.md
     link: "[Authorization](/fichiers/pour_aller_plus_loin/authorization.md)"
@@ -243,6 +243,6 @@ page-refs:
     href: about.md
     text: A propos
     link: "[A propos](about.md)"
-# example
+  # example
   meteo:
     link: "[Exemple de data complet](fichiers/examples/meteo/description.qmd)"

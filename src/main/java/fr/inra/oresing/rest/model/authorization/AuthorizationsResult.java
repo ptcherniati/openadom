@@ -16,7 +16,7 @@ public record AuthorizationsResult(
         Boolean activeApplicationUser
 ) {
     public AuthorizationsResult(Map<String, List<AuthorizationParsed>> userAuthorization, Map<String, AuthorizationParsed> publicAuthorization, String applicationName, Boolean applicationCreator, Boolean applicationManager, Boolean userManager, Boolean applicationUser, Boolean activeApplicationUser) {
-        this(userAuthorization, publicAuthorization, applicationName, applicationCreator, applicationManager, applicationCreator||applicationManager, userManager, applicationUser, activeApplicationUser);
+        this(userAuthorization, publicAuthorization, applicationName, applicationCreator, applicationManager, applicationCreator || applicationManager, userManager, applicationUser, activeApplicationUser);
     }
 
 }

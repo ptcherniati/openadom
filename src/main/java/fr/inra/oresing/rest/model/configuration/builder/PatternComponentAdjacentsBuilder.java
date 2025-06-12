@@ -6,7 +6,10 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.ComponentDescription;
+import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
+import fr.inra.oresing.domain.application.configuration.PatternComponentAdjacents;
+import fr.inra.oresing.domain.application.configuration.Tag;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
@@ -50,7 +53,7 @@ public record PatternComponentAdjacentsBuilder(RootBuilder rootBuilder) {
                         .asText("");
                 if (Strings.isNullOrEmpty(importHeaderPattern)) {
                     rootBuilder().buildError(
-                            ConfigurationException.MISSING_IMPORT_HEADER_PATTERN ,
+                            ConfigurationException.MISSING_IMPORT_HEADER_PATTERN,
                             NodeSchemaValidator.joinPath(
                                     componentPath,
                                     ConfigurationSchemaNode.OA_COMPONENT_ADJACENTS,
@@ -87,7 +90,7 @@ public record PatternComponentAdjacentsBuilder(RootBuilder rootBuilder) {
                 );
                 patternColumnComponentBuilder.put(label, patternColumnComponent);
                 componentDescriptionBuilder.put(
-                        Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentKey,label),
+                        Column.COLUMN_IN_COLUMN_PATTERN.formatted(componentKey, label),
                         patternColumnComponent
                 );
             }

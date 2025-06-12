@@ -1,14 +1,14 @@
 package fr.inra.oresing.rest.model.additionalfiles.exception;
 
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
-import fr.inra.oresing.persistence.AdditionalFileSearchHelper;
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
+import fr.inra.oresing.persistence.AdditionalFileSearchHelper;
+import jakarta.annotation.Nullable;
 import lombok.Value;
 
-import javax.annotation.Nullable;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -30,10 +30,6 @@ public class AdditionalFileParamsParsingResult {
         return new Builder();
     }
 
-    /*public static Builder builder(AdditionalFileSearchHelper) {
-        return new Builder();
-    }*/
-
     @Nullable
     public AdditionalFileSearchHelper getResult() {
         return result;
@@ -48,10 +44,9 @@ public class AdditionalFileParamsParsingResult {
         private final List<ValidationCheckResult> validationCheckResults = new LinkedList<>();
 
         private Builder recordError(final String message, final ImmutableMap<String, Object> params) {
-            validationCheckResults.add(DefaultValidationCheckResult.error(message, params,null));
+            validationCheckResults.add(DefaultValidationCheckResult.error(message, params, null));
             return this;
         }
-        //Set<String> availableFileNames = application.getConfiguration().getAdditionalFiles().keySet();
 
         public void unknownAdditionalFilename(final String fileName, final Set<String> availableFileNames) {
             recordError("unknownAdditionalFileNameInAdditionalFileError",

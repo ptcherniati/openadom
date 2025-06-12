@@ -2,14 +2,18 @@ package fr.inra.oresing.persistence.index;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.Authorization;
+import fr.inra.oresing.domain.application.configuration.AuthorizationScopeComponentData;
+import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
+import fr.inra.oresing.domain.repository.authorization.OperationType;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public record  AuthorizationIndex(Application application) {
+public record AuthorizationIndex(Application application) {
     public String createIndexes() {
         StringBuilder sqlBuilder = new StringBuilder();
 
@@ -75,7 +79,6 @@ public record  AuthorizationIndex(Application application) {
         // Si des autorisations sont requises, créer un index supplémentaire
         if (hasRequiredAuthorizations[0] || hasTimeScope[0]) {
             List<String> authIndexColumns = new ArrayList<>();
-            List<String> timescopeIndexColumns = new ArrayList<>();
 
             if (hasRequiredAuthorizations[0]) {
                 authorizationScopes.forEach(scope ->
@@ -84,14 +87,14 @@ public record  AuthorizationIndex(Application application) {
 
 
                 indexSql.append(String.format("""
-                            CREATE INDEX IF NOT EXISTS %1$s_auth_index
-                            ON %2$s.referencevalue USING gin
-                            (
-                                %3$s
-                            )
-                            WHERE referencetype = '%4$s';
-                            
-                            """,
+                                CREATE INDEX IF NOT EXISTS %1$s_auth_index
+                                ON %2$s.referencevalue USING gin
+                                (
+                                    %3$s
+                                )
+                                WHERE referencetype = '%4$s';
+                                
+                                """,
                         indexName(dataname),
                         application().getName(),
                         String.join(",\n    ", authIndexColumns),
@@ -101,12 +104,12 @@ public record  AuthorizationIndex(Application application) {
 
             if (hasTimeScope[0]) {
                 indexSql.append(String.format("""
-                            CREATE INDEX IF NOT EXISTS %1$s_timescope_index
-                            ON %2$s.referencevalue USING gist
-                            %3$s
-                            WHERE referencetype = '%4$s';
-                            
-                            """,
+                                CREATE INDEX IF NOT EXISTS %1$s_timescope_index
+                                ON %2$s.referencevalue USING gist
+                                %3$s
+                                WHERE referencetype = '%4$s';
+                                
+                                """,
                         indexName(dataname),
                         application().getName(),
                         "(((\"authorization\").timescope))",
@@ -139,31 +142,38 @@ public record  AuthorizationIndex(Application application) {
                 });
 
         switch (authorization) {
-            case AuthorizationForTimeScope authorizationForTimeScope -> {
+            case AuthorizationForTimeScope(
+                    Set<OperationType> _,
+                    LocalDateTimeRange timeScope ) -> {
                 if (hasRequiredAuthorizations[0]) {
                     addEmptyReferenceConditions(conditions, dataName);
                 }
                 if (hasTimeScope[0] && withTimeScope) {
-                    addTimeCondition(conditions, authorizationForTimeScope.timeScope());
+                    addTimeCondition(conditions, timeScope);
                 }
             }
-            case AuthorizationForReferenceScope authorizationForReferenceScope -> {
-                if (hasRequiredAuthorizations[0]) {
-                    addReferenceConditions(conditions, authorizationForReferenceScope.authorizationScope());
-                }
+            case AuthorizationForReferenceScope(
+                    Set<OperationType> _,
+                    Map<String, List<Ltree>> authorizationScope
+            ) when hasRequiredAuthorizations[0] -> {
+                addReferenceConditions(conditions, authorizationScope);
             }
-            case AuthorizationForReferenceScopeAndTimeScope authorizationForReferenceScopeAndTimeScope -> {
+            case AuthorizationForReferenceScopeAndTimeScope(
+                    Set<OperationType> _,
+                    Map<String, List<Ltree>> authorizationScope,
+                    LocalDateTimeRange timeScope
+            ) -> {
                 if (hasRequiredAuthorizations[0]) {
-                    addReferenceConditions(conditions, authorizationForReferenceScopeAndTimeScope.authorizationScope());
+                    addReferenceConditions(conditions, authorizationScope);
                 }
                 if (hasTimeScope[0] && withTimeScope) {
-                    addTimeCondition(conditions, authorizationForReferenceScopeAndTimeScope.timeScope());
+                    addTimeCondition(conditions, timeScope);
                 }
             }
             default -> throw new IllegalArgumentException("Type d'autorisation non reconnu");
         }
 
-        return String.join(" AND ", conditions);
+        return String.join("\n AND ", conditions);
     }
 
 
@@ -184,17 +194,17 @@ public record  AuthorizationIndex(Application application) {
 
     private void addReferenceConditions(List<String> conditions, Map<String, List<Ltree>> authorizationScope) {
         SortedMap<String, List<Ltree>> sortedScope = new TreeMap<>(authorizationScope);
-        for (String field : sortedScope.keySet()) {
-            List<Ltree> values = sortedScope.get(field);
+        for (Map.Entry<String, List<Ltree>> entry : sortedScope.entrySet()) {
+            List<Ltree> values = entry.getValue();
             if (!values.isEmpty()) {
                 List<Ltree> uniqueValues = eliminateNestedLtrees(values);
                 conditions.add("(\"authorization\").requiredauthorizations.%s @> ARRAY[%s]::ltree[]"
-                        .formatted(field, uniqueValues.stream()
+                        .formatted(entry.getKey(), uniqueValues.stream()
                                 .map(Ltree::getSql)
                                 .map(s -> "'" + s + "'")
                                 .collect(Collectors.joining(", "))));
             } else {
-                conditions.add("(\"authorization\").requiredauthorizations.%s IS NULL".formatted(field));
+                conditions.add("(\"authorization\").requiredauthorizations.%s IS NULL".formatted(entry.getKey()));
             }
         }
     }
@@ -205,7 +215,7 @@ public record  AuthorizationIndex(Application application) {
                 .filter(ltree -> ltrees.stream()
                         .filter(other -> !other.equals(ltree))
                         .noneMatch(other -> other.isAncestorOf(ltree)))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public String indexName(String dataname) {

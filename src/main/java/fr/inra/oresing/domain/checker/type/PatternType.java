@@ -13,16 +13,16 @@ import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.PatternValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
-    Map<K, V> value;
     final Supplier<PatternType> clone;
+    Map<K, V> value;
 
     public PatternType(final Map<K, V> map) {
         clone = () -> new PatternType(map);
@@ -55,7 +55,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
     }*/
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 
@@ -78,7 +78,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
             final V value1 = kvEntry.getValue();
             final K key = kvEntry.getKey();
             if (value1 instanceof SomethingToBeSentToFrontend) {
-                final Object jsonForFrontend = ((SomethingToBeSentToFrontend) value1).toJsonForFrontend();
+                final Object jsonForFrontend = ((SomethingToBeSentToFrontend<?>) value1).toJsonForFrontend();
                 returnMap.put(key, jsonForFrontend);
             } else {
                 returnMap.put(key, value1);
@@ -102,7 +102,7 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
                 case Boolean bool -> mapNode.put((String) kvEntry.getKey(), bool);
                 case BooleanType booleanType -> mapNode.put((String) kvEntry.getKey(), booleanType.getValue());
                 case NullType ignored -> mapNode.set((String) kvEntry.getKey(), NullNode.getInstance());
-                case FieldType fieldType -> mapNode.put((String) kvEntry.getKey(), fieldType.toString());
+                case FieldType<?> fieldType -> mapNode.put((String) kvEntry.getKey(), fieldType.toString());
                 default -> mapNode.put((String) kvEntry.getKey(), kvEntry.getValue().toString());
             }
         }
@@ -141,10 +141,10 @@ public non-sealed class PatternType<K, V> implements FieldType<Map<K, V>> {
         return PatternValidationCheckResult.of(checkerValidationCheckResult, this);
     }
 
-    public FieldType getColumnValue() {
+    public FieldType<?> getColumnValue() {
         return Optional.ofNullable(value)
-                .map(map->map.get(Column.__VALUE__))
+                .map(map -> map.get(Column.__VALUE__))
                 .map(FieldType.class::cast)
-                .orElseGet(NullType::new);
+                .orElse(NullType.INSTANCE);
     }
 }

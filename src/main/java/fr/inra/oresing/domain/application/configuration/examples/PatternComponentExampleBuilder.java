@@ -4,7 +4,10 @@ import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.*;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 class PatternComponentExampleBuilder {
     protected static final String SWC_PATTERN = "\"SWC_(.*)_(.*)\"";
@@ -25,7 +28,7 @@ class PatternComponentExampleBuilder {
             final TitleType exportHeader,
             final String prefix
     ) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> children = new LinkedHashMap<>();
 
         children.put(ConfigurationSchemaNode.OA_PATTERN_FOR_COMPONENTS, new StringType(pattern));
         children.put(ConfigurationSchemaNode.OA_TAGS, new CollectionType.ArrayType<>(
@@ -51,7 +54,7 @@ class PatternComponentExampleBuilder {
             final CheckerType checker,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final Map<String, ConfigurationSchemaNodeType<?>> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required, false));
         if (importHeader != null) children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER, new StringType(importHeader));
         if (CollectionUtils.isNotEmpty(tags)) {

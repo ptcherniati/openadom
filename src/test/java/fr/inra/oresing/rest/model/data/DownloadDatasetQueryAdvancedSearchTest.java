@@ -1,16 +1,19 @@
 package fr.inra.oresing.rest.model.data;
 
 import fr.inra.oresing.domain.data.read.query.*;
-import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.JsonRowMapper;
 import org.apache.commons.collections.CollectionUtils;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,9 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Tag("integration.persistence\n")
 class DownloadDatasetQueryAdvancedSearchTest {
-    public static JsonRowMapper mapper;
     public static final Set<String> rowIds = Set.of("addf3698-88f2-43f9-8926-0b64a86f3678", "0aef7ed1-1df9-4fbf-a676-1932e87ced9d", "2c527cbe-3ed7-4883-b7d1-8f29eff99eb1");
-
+    public static JsonRowMapper mapper;
     private fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery downloadDatasetQueryAdvancedSearch;
 
     @BeforeAll
@@ -34,6 +36,26 @@ class DownloadDatasetQueryAdvancedSearchTest {
 
     private static void testcomponent(final ForComponent componentFilters, final String componentKey) {
         assertEquals(componentKey, componentFilters.componentKey(), "component must be %s".formatted(componentKey));
+    }
+
+    static void comparemap(final Map<String, Object> map1, final Map map2) {
+        assertEquals(map1.size(), map2.size());
+        map1.forEach((key, value) -> {
+            assertTrue(map2.containsKey(key), "params must contains %s".formatted(key));
+            assertEquals(value, map2.get(key), "params %s must be %s".formatted(key, value));
+        });
+    }
+
+    private static void testFormat(final WithFormat withFormat, final String format) {
+        assertEquals(format, withFormat.format());
+    }
+
+    private static void testIntervalValue(final List<? extends WithIntervalValues> intervalsValues, final String from, final String to) {
+        intervalsValues.forEach(
+                intervalValue -> {
+                    assertEquals(from, intervalValue.from(), "Interval value from must be %s".formatted(from));
+                    assertEquals(to, intervalValue.to(), "Interval value to must be %s".formatted(to));
+                });
     }
 
     @BeforeEach
@@ -149,7 +171,7 @@ class DownloadDatasetQueryAdvancedSearchTest {
                                 testIntervalValue(componentFiltersForIntervalByTime.intervalsValues(), "12:20:45", "16:21:32");
                             }
                             case final ComponentFiltersForIntervalByDateTime componentFiltersForIntervalByDateTime -> {
-                                testcomponent(componentFiltersForIntervalByDateTime,  "datetime");
+                                testcomponent(componentFiltersForIntervalByDateTime, "datetime");
                                 testIntervalValue(componentFiltersForIntervalByDateTime.intervalsValues(), "01/01/1984 12:20:45", "01/01/1984 16:21:32");
                             }
                             default -> fail("must be defined");
@@ -237,26 +259,6 @@ class DownloadDatasetQueryAdvancedSearchTest {
         }
     }
 
-    static void comparemap(final Map<String, Object> map1, final Map map2) {
-        assertEquals(map1.size(), map2.size());
-        map1.forEach((key, value) -> {
-            assertTrue(map2.containsKey(key), "params must contains %s".formatted(key));
-            assertEquals(value, map2.get(key), "params %s must be %s".formatted(key, value));
-        });
-    }
-
-    private static void testFormat(final WithFormat withFormat, final String format) {
-        assertEquals(format, withFormat.format());
-    }
-
-    private static void testIntervalValue(final List<? extends WithIntervalValues> intervalsValues, final String from, final String to) {
-        intervalsValues.forEach(
-                intervalValue -> {
-                    assertEquals(from, intervalValue.from(), "Interval value from must be %s".formatted(from));
-                    assertEquals(to, intervalValue.to(), "Interval value to must be %s".formatted(to));
-                });
-    }
-
     record TestError(
             String from,
             String replace,
@@ -272,47 +274,47 @@ class DownloadDatasetQueryAdvancedSearchTest {
         static Stream<TestError> params() {
 
             final String advancedSearchJson = """
-                {
-                  "offset": 0,
-                  "limit": null,
-                  "componentSelects": [],
-                  "componentFilters": [
                     {
-                      "componentKey": "projet",
-                      "filters": ["projet_manche"]
+                      "offset": 0,
+                      "limit": null,
+                      "componentSelects": [],
+                      "componentFilters": [
+                        {
+                          "componentKey": "projet",
+                          "filters": ["projet_manche"]
+                        }
+                        {
+                          "componentKey": "color_unit",
+                          "filters": ["sans_unite"]
+                        },
+                        {
+                          "componentKey": "color_value",
+                          "filters": ["couleur_des_individus__rouge"]
+                        },
+                        {
+                          "componentKey": "espece",
+                          "filters": ["trf"]
+                        },
+                        {
+                          "componentKey": "individusNumber_unit",
+                          "filters": ["sans_unite"]
+                        },
+                        {
+                          "componentKey": "individusNumbervalue",
+                          "filters": ["24"]
+                        },
+                        {
+                          "componentKey": "site",
+                          "filters": ["oir", "nivelle"]
+                        }
+                      ],
+                      "componentOrderBy": [],
+                      "authorizationDescriptions": [],
+                      "outPut": {
+                        "locale": "fr"
+                      }
                     }
-                    {
-                      "componentKey": "color_unit",
-                      "filters": ["sans_unite"]
-                    },
-                    {
-                      "componentKey": "color_value",
-                      "filters": ["couleur_des_individus__rouge"]
-                    },
-                    {
-                      "componentKey": "espece",
-                      "filters": ["trf"]
-                    },
-                    {
-                      "componentKey": "individusNumber_unit",
-                      "filters": ["sans_unite"]
-                    },
-                    {
-                      "componentKey": "individusNumbervalue",
-                      "filters": ["24"]
-                    },
-                    {
-                      "componentKey": "site",
-                      "filters": ["oir", "nivelle"]
-                    }
-                  ],
-                  "componentOrderBy": [],
-                  "authorizationDescriptions": [],
-                  "outPut": {
-                    "locale": "fr"
-                  }
-                }
-                """;
+                    """;
             return Stream.of(
                     new TestError(
                             advancedSearchJson,

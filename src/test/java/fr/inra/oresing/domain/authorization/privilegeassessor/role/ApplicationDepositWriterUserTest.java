@@ -2,6 +2,9 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
@@ -18,6 +21,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -31,11 +35,15 @@ import static org.mockito.Mockito.any;
 class ApplicationDepositWriterUserTest {
 
     @Mock
-    private Application mockApplication;
-
-    @Mock
     private static AuthorizationParsed authorizationParsed;
-
+    @Mock
+    private Application mockApplication;
+    @Mock
+    private static Configuration mockConfiguration;
+    @Mock
+    private static StandardDataDescription mockStandardDataDescription;
+    @Mock
+    private static Submission.SubmissionScope mockSubmissionScope;
     @Mock
     private FileOrUUID mockFileOrUUID;
 
@@ -44,14 +52,6 @@ class ApplicationDepositWriterUserTest {
 
     @Mock
     private AuthorizationParsed mockAuthorization;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-        when(mockApplication.getName()).thenReturn("Test Application");
-        when(mockFileOrUUID.binaryfiledataset()).thenReturn(mockBinaryFileDataset);
-        when(mockBinaryFileDataset.getRequiredAuthorizations()).thenReturn(new HashMap<>());
-    }
 
     /**
      * Fournit des scénarios de test pour les droits de dépôt
@@ -99,6 +99,17 @@ class ApplicationDepositWriterUserTest {
         );
     }
 
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        when(mockApplication.getName()).thenReturn("Test Application");
+        when(mockFileOrUUID.binaryfiledataset()).thenReturn(mockBinaryFileDataset);
+        when(mockBinaryFileDataset.getRequiredAuthorizations()).thenReturn(new HashMap<>());
+        when(mockApplication.getConfiguration()).thenReturn(mockConfiguration);
+        when(mockConfiguration.findData(eq("testData"))).thenReturn(Optional.of(mockStandardDataDescription));
+        when(mockStandardDataDescription.findSubmissionScope()).thenReturn(Optional.of(mockSubmissionScope));
+    }
+
     @ParameterizedTest(name = "{0}")
     @MethodSource("provideDepositScenarios")
     @DisplayName("Les droits de dépôt devraient être correctement évalués")
@@ -125,7 +136,7 @@ class ApplicationDepositWriterUserTest {
             doReturn(authorizationsMatch).when(depositWriter).testRequiredAuthorizations(
                     any(), any()
             );
-            doReturn(false).when(depositWriter).isDateInRangeAuthorized(any(), any());
+            doReturn(true).when(depositWriter).isDateInRangeAuthorized(any(), any());
         }
 
         if (shouldThrowException) {
@@ -216,8 +227,7 @@ class ApplicationDepositWriterUserTest {
         );
 
         // Vérifier l'implémentation de l'interface
-        assertTrue(depositWriter instanceof ApplicationDataWriter,
-                "Devrait implémenter ApplicationDataWriter");
+        assertInstanceOf(ApplicationDataWriter.class, depositWriter, "Devrait implémenter ApplicationDataWriter");
 
         // Vérifier l'accès à travers l'interface
         ApplicationDataWriter asWriter = depositWriter;

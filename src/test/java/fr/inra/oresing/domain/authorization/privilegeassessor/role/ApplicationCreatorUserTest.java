@@ -79,10 +79,10 @@ class ApplicationCreatorUserTest {
             Set<String> patterns,
             String applicationName,
             boolean shouldBeValid) {
-        
+
         // Arrangement
         ApplicationCreatorUser creatorUser = new ApplicationCreatorUser(patterns);
-        
+
         if (shouldBeValid) {
             // Action et assertion - ne devrait pas lever d'exception
             assertDoesNotThrow(() -> creatorUser.canCreateApplication(applicationName),
@@ -94,7 +94,7 @@ class ApplicationCreatorUserTest {
                     () -> creatorUser.canCreateApplication(applicationName),
                     description + " : " + applicationName + " ne devrait pas être autorisé"
             );
-            
+
             // Vérifier que l'exception contient les informations pertinentes
             assertThat(exception.getMessage(), containsString(NO_RIGHT_FOR_APPLICATION_CREATION));
         }
@@ -105,14 +105,14 @@ class ApplicationCreatorUserTest {
     void emptyPatternsShouldNotAllowAnyName() {
         // Arrangement
         ApplicationCreatorUser creatorUser = new ApplicationCreatorUser(new HashSet<>());
-        
+
         // Action et assertion
         NotApplicationCreatorRightsException exception = assertThrows(
                 NotApplicationCreatorRightsException.class,
                 () -> creatorUser.canCreateApplication("test-application"),
                 "Un ensemble vide de motifs ne devrait pas autoriser la création d'application"
         );
-        
+
         assertThat(exception.getMessage(), containsString(NotApplicationCreatorRightsException.NO_RIGHT_FOR_APPLICATION_CREATION));
     }
 
@@ -129,14 +129,13 @@ class ApplicationCreatorUserTest {
     void shouldImplementApplicationCreator() {
         // Arrangement
         ApplicationCreatorUser creatorUser = new ApplicationCreatorUser(Set.of("test.*"));
-        
+
         // Vérifier l'implémentation de l'interface
-        assertTrue(creatorUser instanceof ApplicationCreator,
-                "ApplicationCreatorUser devrait implémenter ApplicationCreator");
-        
+        assertInstanceOf(ApplicationCreator.class, creatorUser, "ApplicationCreatorUser devrait implémenter ApplicationCreator");
+
         // Vérifier le cast vers l'interface
         ApplicationCreator asCreator = creatorUser;
-        
+
         // Vérifier l'accès aux méthodes via l'interface
         assertDoesNotThrow(() -> asCreator.canCreateApplication("test-app"),
                 "La méthode canCreateApplication devrait être accessible via l'interface");
@@ -146,15 +145,15 @@ class ApplicationCreatorUserTest {
     @DisplayName("L'interface sealed ApplicationCreator devrait restreindre les implémentations autorisées")
     void sealedInterfaceShouldRestrictAllowedImplementations() {
         // Vérifier que ApplicationCreator est une interface scellée
-        assertTrue(ApplicationCreator.class.isSealed(), 
+        assertTrue(ApplicationCreator.class.isSealed(),
                 "ApplicationCreator devrait être une interface sealed");
-        
+
         // Obtenir les implémentations autorisées
         Class<?>[] permittedClasses = ApplicationCreator.class.getPermittedSubclasses();
-        
+
         assertThat("L'interface sealed devrait avoir des sous-classes autorisées",
                 permittedClasses, is(notNullValue()));
-        
+
         // Vérifier que ApplicationCreatorUser est une implémentation autorisée
         assertThat("L'interface sealed devrait permettre ApplicationCreatorUser",
                 permittedClasses, hasItemInArray(ApplicationCreatorUser.class));

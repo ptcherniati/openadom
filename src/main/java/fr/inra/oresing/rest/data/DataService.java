@@ -42,12 +42,12 @@ import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.filesenderclient.*;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.data.DefaultLineCheckerResult;
 import fr.inra.oresing.rest.model.data.LineCheckerResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -75,7 +75,7 @@ import java.util.zip.ZipOutputStream;
 
 @Slf4j
 @Component
-public class DataService implements ServiceContainerBean {
+public class DataService {
     public static final String OPEN_ADOM_CLIENT_GROOVY = "OpenAdomClient.groovy";
     public static final String OPEN_ADOM_CLIENT_CONFIGURATION_JSON = "openAdom-client-configuration.json";
     public static final String README_FILE_NAME = "LISEZ-MOI.txt";
@@ -83,16 +83,23 @@ public class DataService implements ServiceContainerBean {
     public static final String SETUP_SCRIPT_NAME = "setup.sh";
     @Setter
     ServiceContainer serviceContainer;
-    @Autowired
-    private OreSiRepository repo;
-    @Autowired
-    private JsonRowMapper jsonRowMapper;
+    private final OreSiRepository repo;
+    private final JsonRowMapper jsonRowMapper;
+    private final OreSiRepository repository;
+    private final FileRepository fileRepository;
 
-    private DataRepository dataRepository;
-    @Autowired
-    private OreSiRepository repository;
-    @Autowired
-    private FileRepository fileRepository;
+    public DataService(
+            OreSiRepository repo,
+            JsonRowMapper jsonRowMapper,
+            OreSiRepository repository,
+            FileRepository fileRepository,
+            ServiceContainer serviceContainer) {
+        this.repo = repo;
+        this.jsonRowMapper = jsonRowMapper;
+        this.repository = repository;
+        this.fileRepository = fileRepository;
+        this.serviceContainer = serviceContainer;
+    }
 
     private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription) {
         final String reference = referenceDynamicColumnDescription.reference();
@@ -200,7 +207,7 @@ public class DataService implements ServiceContainerBean {
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
         Function<String, List<DataValue>> getDatavaluesByReference = reference -> referenceValueRepository.findAllByReferenceTypeStream(reference).toList();
         PublishContext.PublishContextBuilder publishContextBuilder = new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference);
-        final ImmutableSet<LineChecker> lineCheckers = checkerFactory.getCheckers(application, dataName,
+        final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers = checkerFactory.getCheckers(application, dataName,
                 publishContextBuilder);
         ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences = referenceValueRepository.getDataIdPerKeys(dataName);
 
@@ -299,14 +306,12 @@ public class DataService implements ServiceContainerBean {
                                     headerForReferenceColumn,
                                     mandatory,
                                     multiplicity,
-                                    referenceValueRepository,
                                     defaultValueConfiguration))
                             .orElseGet(() -> Column.staticColumnDescriptionToColumn(
                                     referenceColumn,
                                     headerForReferenceColumn,
                                     mandatory,
                                     multiplicity,
-                                    referenceValueRepository,
                                     defaultValue));
                 }).collect(ImmutableSet.toImmutableSet());
 
@@ -423,7 +428,7 @@ public class DataService implements ServiceContainerBean {
                 final Set<String> evaluate = computationExpression.evaluate(evaluationContext);
                 return Optional.ofNullable(evaluate)
                         .map(l -> l.stream().map(StringType::getStringTypeFromStringValue)
-                                .collect(Collectors.toCollection(LinkedList<FieldType>::new)))
+                                .collect(Collectors.toCollection(LinkedList<FieldType<?>>::new)))
                         .map(DataColumnMultipleValue::new);
             }
         };
@@ -477,7 +482,10 @@ public class DataService implements ServiceContainerBean {
         serviceContainer.authenticationService().setRoleForClient();
         return getReferenceValueRepository(application)
                 .findAllByReferenceTypeWithReferencingReferencesStream(refType, params)
-                .peek(referenceValue -> referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents)))
+                .map(referenceValue -> {
+                    referenceValue.setRefValues(referenceValue.getRefValues().filterHidden(hiddenComponents));
+                    return referenceValue;
+                })
                 .toList();
     }
 
@@ -498,7 +506,7 @@ public class DataService implements ServiceContainerBean {
                 .isPresent()) {
             return Flux.empty();
         }
-        dataRepository = getDataRepository(downloadDatasetQuery);
+        DataRepository dataRepository = getDataRepository(downloadDatasetQuery);
         serviceContainer.authenticationService().setRoleForClient();
         return dataRepository.findAllByDataTypeFlux(downloadDatasetQuery)
                 .map(dataRows -> DataRow
@@ -560,7 +568,7 @@ public class DataService implements ServiceContainerBean {
     }
 
     public Boolean getDataFromStoredCsvStream(ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
-        dataRepository = repo.getRepository(application).data();
+        DataRepository dataRepository = repo.getRepository(application).data();
         Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
         return storedData
@@ -581,10 +589,8 @@ public class DataService implements ServiceContainerBean {
     }
 
     public DataRepositoryForBuffer getDataRepositoryWithBuffer(Application application) {
+        final DataRepository dataRepository = repository.getRepository(application).data();
         return new DataRepositoryWithBuffer(application, dataRepository);
-    }
-
-    private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
     }
 
     public Mono<List<DownloadDatasetQueryByRowId>> getDownloadDatasetQueriesAsync(
@@ -643,7 +649,7 @@ public class DataService implements ServiceContainerBean {
                     try {
                         zipOutputStream.close();
                     } catch (IOException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                     }
                 });
         //TODO add additionalFiles
@@ -661,7 +667,7 @@ public class DataService implements ServiceContainerBean {
                                 dataRepositoryWithBuffer,
                                 zipOutputStream);
                     } catch (Exception e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
                 })
                 .doOnError(e -> {
@@ -686,7 +692,7 @@ public class DataService implements ServiceContainerBean {
                             try {
                                 new AdditionalFileSearchHelper().addAdditionalFilesToZip(additionalFile, zipOutputStream, "additionalFiles/");
                             } catch (final IOException e) {
-                                throw new RuntimeException("Erreur lors de l'ajout des fichiers additionnels", e);
+                                throw new OreSiTechnicalException("Erreur lors de l'ajout des fichiers additionnels", e);
                             }
                         });
             }
@@ -710,7 +716,7 @@ public class DataService implements ServiceContainerBean {
                     .addDatas(datas)
                     .build(fileNamePattern);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
         }
 
     }
@@ -760,9 +766,8 @@ public class DataService implements ServiceContainerBean {
                             fileSenderInternationalisation,
                             internationnalizedDataName
                     );*/
-                    break;
                 } catch (Exception e) {
-                    throw new RuntimeException(e);
+                    throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
             }
             case BuildBundleReport buildBundleReport -> {
@@ -801,10 +806,9 @@ public class DataService implements ServiceContainerBean {
                     String downloadUrl = fileRepository.postTransfer(fileInfos);
                     log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
 
-                    break;
                 } catch (Exception e) {
                     log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
-                    throw new RuntimeException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                    throw new OreSiTechnicalException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
                 }
             }
             default -> throw new IllegalStateException("Unexpected value: " + messageInformations);
@@ -1001,7 +1005,6 @@ public class DataService implements ServiceContainerBean {
                 """.formatted(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
     }
 
-
     private void writeFileToZip(ZipOutputStream zipOutputStream, String fileName, URL resourceUrl) throws IOException {
         zipOutputStream.putNextEntry(new ZipEntry(fileName));
         byte[] fileBytes = Resources.toByteArray(resourceUrl);
@@ -1015,7 +1018,6 @@ public class DataService implements ServiceContainerBean {
         zipOutputStream.closeEntry();
     }
 
-
     @Transactional()
     public List<UUID> deleteData(final DownloadDatasetQuery downloadDatasetQuery) {
         serviceContainer.authenticationService().setRoleForClient();
@@ -1026,7 +1028,6 @@ public class DataService implements ServiceContainerBean {
     public Map<Ltree, List<DataValue>> getReferenceDisplaysById(final Application application, final Set<String> listOfDataIds) {
         return repository.getRepository(application).data().getReferenceDisplaysById(listOfDataIds);
     }
-
 
     public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
@@ -1042,7 +1043,6 @@ public class DataService implements ServiceContainerBean {
                         )
                 );
     }
-
 
     @Transactional(readOnly = true)
     public Map<String, Map<String, LineChecker>> getFormatChecked(final String nameOrId, final String references) {
@@ -1075,5 +1075,8 @@ public class DataService implements ServiceContainerBean {
             list = repository.getRepository(application).data().findDataColumn(refType, column);
         }
         return list;
+    }
+
+    private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
     }
 }

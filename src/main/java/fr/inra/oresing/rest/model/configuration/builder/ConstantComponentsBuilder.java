@@ -9,17 +9,17 @@ import fr.inra.oresing.domain.application.configuration.checker.CheckerDescripti
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
+import jakarta.annotation.Nullable;
 
-import javax.annotation.Nullable;
 import java.util.*;
 
 public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
 
-    
+
     private ColumnConstantHeaderByHeaderName getColumnConstantHeaderByHeaderColumnName(final String path, final JsonNode importHeaderColumnName, final int constantRowNumber, final String dataKey) {
         final String constantHeaderName = importHeaderColumnName.asText();
         final List<String> listComponentKeys = rootBuilder.getListComponentKeys(dataKey);
-        if(!listComponentKeys.contains(constantHeaderName)){
+        if (!listComponentKeys.contains(constantHeaderName)) {
             rootBuilder.buildError(ConfigurationException.UNKNOWN_COMPONENT_FOR_COMPONENT_NAME, Map.of(
                             "unknownComponent", constantHeaderName,
                             "knownComponents", listComponentKeys),
@@ -143,7 +143,6 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
     }
 
     private ConstantImportHeader getAndtestConstantImportHeader(final JsonNode importHeaderNode, final String dataKey, final Integer headerLine, final Integer firstRowLine, final String path) {
-        ConstantImportHeader importHeader;
         final JsonNode rowNomberNode = importHeaderNode.findPath(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_ROW_NUMBER);
         if (rowNomberNode.isMissingNode() || rowNomberNode.isNull() || !rowNomberNode.isInt()) {
             rootBuilder.buildError(
@@ -176,7 +175,7 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
         final JsonNode importHeaderColumnNumber = importHeaderNode.findPath(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_COLUMN_NUMBER);
         final JsonNode importHeaderColumnName = importHeaderNode.findPath(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_COLUMN_NAME);
         final boolean isMissingImportHeaderColumnNumber = importHeaderColumnNumber.isMissingNode() || importHeaderColumnNumber.isNull();
-        if(constantRowNumber<headerLine){
+        if (constantRowNumber < headerLine) {
             return getFileColumnConstantHeader(path, importHeaderColumnNumber, constantRowNumber, isMissingImportHeaderColumnNumber);
         }
         final boolean isMissingImportHeaderColumnName = importHeaderColumnName.isMissingNode() || Strings.isNullOrEmpty(importHeaderColumnName.asText());
@@ -217,6 +216,7 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
                 constantColumnNumber
         );
     }
+
     private FileColumnConstantHeader getFileColumnConstantHeader(final String path, final JsonNode importHeaderColumnNumber, final int constantRowNumber, final boolean isMissingImportHeaderColumnNumber) {
         if (isMissingImportHeaderColumnNumber) {
             rootBuilder.buildError(

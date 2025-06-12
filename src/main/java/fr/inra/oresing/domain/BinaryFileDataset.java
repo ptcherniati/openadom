@@ -16,15 +16,15 @@ import java.util.stream.Collectors;
 @Getter
 @Setter
 public class BinaryFileDataset {
-    public static BinaryFileDataset EMPTY_INSTANCE() {
-        return new BinaryFileDataset();
-    }
-
     private String datatype;
     private Map<String, List<Ltree>> requiredAuthorizations = new HashMap<>();
     private String from;
     private String to;
     private String comment;
+
+    public static BinaryFileDataset EMPTY_INSTANCE() {
+        return new BinaryFileDataset();
+    }
 
     @Override
     public String toString() {

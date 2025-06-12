@@ -5,13 +5,14 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
+import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DateValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DateValidationCheckResult;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -19,10 +20,12 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.chrono.ChronoLocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQueries;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -31,6 +34,8 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
 
     public static final String PATTERN_DATE_REGEXP = "^date:.{19}:";
     public static final String PATTERN_DATE_REGEXP_FIND_DATE = "^date:(.{19}):(.*)";
+    public static final String LOWER_THAN_MIN = "LOWER_THAN_MIN";
+    public static final String HIGHER_THAN_MAX = "HIGHER_THAN_MAX";
     public final String pattern;
     @JsonIgnore
     public final DateTimeFormatter formatter;
@@ -38,43 +43,23 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
     public String sortableDate;
     public TemporalAccessor minDate;
     public TemporalAccessor maxDate;
-    public static final String LOWER_THAN_MIN = "LOWER_THAN_MIN";
-    public static final String HIGHER_THAN_MAX = "HIGHER_THAN_MAX";
-
     Supplier<DateType> clone;
+    LocalDateTime value;
 
-
-    /*public DateType(Configuration.CheckerConfigurationDescription params) {
-        this.pattern = params.getPattern();
-        this.formatter = Optional.ofNullable(pattern)
-                .filter(Strings::isNotEmpty)
-                .map(DateType::newDateTimeFormatter)
-                .orElseThrow(() -> new IllegalArgumentException("null pattern for date validator"));
-        this.minDate = Optional.ofNullable(params.getMin())
-                .map(this::toComparableDate)
-                .orElse(null);
-        this.maxDate = Optional.ofNullable(params.getMax())
-                .map(this::toComparableDate)
-                .orElse(null);
-        this.duration = params.getDuration();
-        this.clone = () -> new DateType(params);
-    }*/
-
-
-    public DateType(final String pattern, final DateTimeFormatter formatter, final String duration, final TemporalAccessor minDate, final TemporalAccessor maxDate) {
+    public DateType(final String pattern, final String duration, final TemporalAccessor minDate, final TemporalAccessor maxDate) {
         super();
-        this.pattern = pattern;
-        this.formatter = formatter;
+        this.pattern = Strings.isNullOrEmpty(pattern) ? "dd/MM/yyyy" : pattern;
+        this.formatter = new DateTimeFormatterBuilder().appendPattern(this.pattern).toFormatter();
         this.duration = duration;
         this.minDate = minDate;
         this.maxDate = maxDate;
     }
 
-    public DateType(final String pattern, final LocalDateTime value, final DateTimeFormatter dateTimeFormatter, final Supplier<DateType> clone) {
+    public DateType(final String pattern, final LocalDateTime value, final Supplier<DateType> clone) {
         super();
-        this.pattern = pattern;
+        this.pattern = Strings.isNullOrEmpty(pattern) ? "dd/MM/yyyy" : pattern;
         this.value = value;
-        formatter = dateTimeFormatter;
+        formatter = new DateTimeFormatterBuilder().appendPattern(this.pattern).toFormatter();
         this.clone = clone;
     }
 
@@ -87,9 +72,10 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
     private static DateTimeFormatter newDateTimeFormatter(final String pattern) {
         return DateTimeFormatter.ofPattern(pattern);
     }
-    public static String sorteableDateToFormattedDate(final String dateString){
+
+    public static String sorteableDateToFormattedDate(final String dateString) {
         final Matcher m = Pattern.compile(PATTERN_DATE_REGEXP_FIND_DATE).matcher(dateString);
-        if(m.matches()) {
+        if (m.matches()) {
             return DateTimeFormatter.ofPattern(m.group(2)).format(DateTimeFormatter.ISO_DATE_TIME.parse(m.group(1)));
         }
         return dateString;
@@ -97,133 +83,18 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
 
     public static DateType of(String date) {
         final Matcher matcher = Pattern.compile(PATTERN_DATE_REGEXP_FIND_DATE).matcher(date);
-        if(matcher.matches()){
-            final Supplier<DateType>  clone= ()-> of(date);
+        if (matcher.matches()) {
+            final Supplier<DateType> clone = () -> of(date);
             final String dateString = matcher.group(1);
             final String pattern = matcher.group(2);
             final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(pattern);
-            return new DateType(pattern, LocalDateTime.parse(dateString, dateFormatter), dateFormatter, clone);
+            return new DateType(pattern, LocalDateTime.parse(dateString, dateFormatter), clone);
         }
         return new DateType();
     }
 
-    @Override
-    public String toString() {
-        return Optional.ofNullable(value).map(this::toComparableDate).orElse(null);
-    }
-
-    public String toComparableDate(final LocalDateTime date) {
-        return Optional.ofNullable(date)
-                .map(localDateTime -> localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                .map(s -> String.format("date:%s:%s", s,pattern))
-                .orElse("");
-    }
-
-    public String toComparableDate(final String dateString) {
-        if(Pattern.compile(PATTERN_DATE_REGEXP_FIND_DATE).matcher(dateString).matches()){
-            return dateString;
-        }
-        final LocalDateTime date = valueToDate(formatter, dateString);
-        return String.format("date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), pattern);
-    }
-
     public static String sortableDateToFormattedDate(final String formattedDate) {
         return formattedDate.replaceAll(PATTERN_DATE_REGEXP, "");
-    }
-
-    LocalDateTime value;
-
-    @Override
-    public LocalDateTime getValue() {
-        return value;
-    }
-
-    @Override
-    public SqlPrimitiveType getSqlType() {
-        return SqlPrimitiveType.TEXT;
-    }
-
-    /*@Override
-    public ValidationCheckResult check(String value, LineCheckerWarper lineCheckerWarper) {
-        ValidationCheckResult validationCheckResult;
-        CheckerTarget target = lineCheckerWarper.getTarget();
-        Matcher matcher = Pattern.compile(PATTERN_DATE_REGEXP_FIND_DATE).matcher(value);
-        LocalDateTime valuetoDate= null;
-        if(matcher.matches()){
-            String group = matcher.group(1);
-            valuetoDate = LocalDateTime.parse(group, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        }
-        try {
-            this.value = valuetoDate!=null?valuetoDate:valueToDate(formatter, value);
-            this.sortableDate = toComparableDate(value);
-            if (minDate != null && value.compareTo(minDate) < 0) {
-                throw new IllegalArgumentException(LOWER_THAN_MIN);
-            }
-            if (maxDate != null && value.compareTo(maxDate) > 0) {
-                throw new IllegalArgumentException(HIGHER_THAN_MAX);
-            }
-            validationCheckResult = DateValidationCheckResult.success(target, List.of(this.value));
-        } catch (DateTimeParseException e) {
-            validationCheckResult = DateValidationCheckResult.error(
-                    target,
-                    target.getInternationalizedKey("invalidDate"), ImmutableMap.of(
-                            "target", target,
-                            "pattern", pattern,
-                            "value", value));
-        } catch (IllegalArgumentException e) {
-            validationCheckResult = DefaultValidationCheckResult.error(
-                    target.getInternationalizedKey("badIntervalDate"), ImmutableMap.of(
-                            "target", target,
-                            "value", value,
-                            "type", e.getMessage(),
-                            "bound", LOWER_THAN_MIN.equals(e.getMessage()) ? minDate : maxDate
-                    ), target
-            );
-        }
-        return validationCheckResult;
-    }
-*/
-    @Override
-    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
-        CheckerValidationCheckResult validationCheckResult;
-        final CheckerTarget target = lineChecker.target();
-        final Matcher matcher = Pattern.compile(PATTERN_DATE_REGEXP_FIND_DATE).matcher(value);
-        LocalDateTime valuetoDate= null;
-        if(matcher.matches()){
-            final String group = matcher.group(1);
-            valuetoDate = LocalDateTime.parse(group, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
-        }
-        try {
-            this.value = valuetoDate!=null?valuetoDate:valueToDate(formatter, value);
-            sortableDate = toComparableDate(value);
-            if (minDate != null && this.value.compareTo((ChronoLocalDateTime<?>) minDate) < 0) {
-                throw new IllegalArgumentException(LOWER_THAN_MIN);
-            }
-            if (maxDate != null && this.value.compareTo((ChronoLocalDateTime<?>) maxDate) > 0) {
-                throw new IllegalArgumentException(HIGHER_THAN_MAX);
-            }
-            validationCheckResult = DateValidationCheckResult.success(target, List.of(this.value), this);
-        } catch (final DateTimeParseException e) {
-            validationCheckResult = DateValidationCheckResult.error(
-                    target,
-                    target.getInternationalizedKey("invalidDate"),
-                    ImmutableMap.of(
-                            "target", target,
-                            "pattern", pattern,
-                            "value", value)
-            ,null);
-        } catch (final IllegalArgumentException e) {
-            validationCheckResult = DefaultCheckerValidationCheckResult.error(
-                    target.getInternationalizedKey("badIntervalDate"), ImmutableMap.of(
-                            "target", target,
-                            "value", value,
-                            "type", e.getMessage(),
-                            "bound", LOWER_THAN_MIN.equals(e.getMessage()) ? minDate : maxDate
-                    ),
-                    target
-            );
-        }
-        return validationCheckResult;
     }
 
     public static LocalDateTime valueToDate(final DateTimeFormatter formatter, String value) {
@@ -237,7 +108,80 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public String toString() {
+        return Optional.ofNullable(value).map(this::toComparableDate).orElse(null);
+    }
+
+    public String toComparableDate(final LocalDateTime date) {
+        return Optional.ofNullable(date)
+                .map(localDateTime -> localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
+                .map(s -> String.format("date:%s:%s", s, pattern))
+                .orElse("");
+    }
+
+    public String toComparableDate(final String dateString) {
+        if (Pattern.compile(PATTERN_DATE_REGEXP_FIND_DATE).matcher(dateString).matches()) {
+            return dateString;
+        }
+        final LocalDateTime date = valueToDate(formatter, dateString);
+        return String.format("date:%s:%s", date.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME), pattern);
+    }
+
+    @Override
+    public LocalDateTime getValue() {
+        return value;
+    }
+
+    @Override
+    public SqlPrimitiveType getSqlType() {
+        return SqlPrimitiveType.TEXT;
+    }
+
+    @Override
+    public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
+        CheckerValidationCheckResult validationCheckResult;
+        final DataColumn target = lineChecker.target();
+        final Matcher matcher = Pattern.compile(PATTERN_DATE_REGEXP_FIND_DATE).matcher(value);
+        LocalDateTime valuetoDate = null;
+        if (matcher.matches()) {
+            final String group = matcher.group(1);
+            valuetoDate = LocalDateTime.parse(group, DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+        }
+        try {
+            this.value = valuetoDate != null ? valuetoDate : valueToDate(formatter, value);
+            sortableDate = toComparableDate(value);
+            if (minDate != null && this.value.compareTo((ChronoLocalDateTime<?>) minDate) < 0) {
+                throw new IllegalArgumentException(LOWER_THAN_MIN);
+            }
+            if (maxDate != null && this.value.compareTo((ChronoLocalDateTime<?>) maxDate) > 0) {
+                throw new IllegalArgumentException(HIGHER_THAN_MAX);
+            }
+            validationCheckResult = DateValidationCheckResult.success(target, List.of(this.value), this);
+        } catch (final DateTimeParseException e) {
+            validationCheckResult = DateValidationCheckResult.error(
+                    target,
+                    target.getInternationalizedKey("invalidDate"),
+                    ImmutableMap.of(
+                            "component", target.column(),
+                            "pattern", pattern,
+                            "value", value)
+                    , null);
+        } catch (final IllegalArgumentException e) {
+            validationCheckResult = DefaultCheckerValidationCheckResult.error(
+                    target.getInternationalizedKey("badIntervalDate"), ImmutableMap.of(
+                            "component", target.column(),
+                            "value", value,
+                            "type", e.getMessage(),
+                            "bound", LOWER_THAN_MIN.equals(e.getMessage()) ? minDate : maxDate
+                    ),
+                    target
+            );
+        }
+        return validationCheckResult;
+    }
+
+    @Override
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 
@@ -245,7 +189,6 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
     public FieldType copy() {
         final DateType dateType = new DateType(
                 pattern,
-                formatter,
                 duration,
                 minDate,
                 maxDate
@@ -256,7 +199,7 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
 
     @Override
     public void serialize(final JsonGenerator gen) throws IOException {
-        if(value==null){
+        if (value == null) {
             gen.writeNull();
         }
         gen.writeString(toComparableDate(value));
@@ -267,15 +210,9 @@ public non-sealed class DateType implements FieldType<LocalDateTime> {
         gen.writeObjectField(key, toComparableDate(value));
     }
 
-   /* public DataColumnValue transform(LineCheckerWarper lineChecker, DataColumnValue referenceColumnRawValue, DataColumn referenceColumn, SetMultimap<DataColumn, String> rawValueReplacedByKeys, ImmutableSetMultimap.Builder<String, Set<UUID>> refsLinkedToBuilder) {
-        DateType copy = (DateType) copy();
-        return referenceColumnRawValue.transform(fieldType -> copy);
-    }*/
-
-
     @Override
     public void serialize(final ObjectNode node, final ObjectMapper mapper, final String key) {
-                node.put(key, toComparableDate(value));
+        node.put(key, toComparableDate(value));
     }
 
     @Override

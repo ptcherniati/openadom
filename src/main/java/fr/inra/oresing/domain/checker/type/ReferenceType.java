@@ -7,34 +7,52 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.CheckerTarget;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
-import fr.inra.oresing.persistence.SqlPrimitiveType;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
+import fr.inra.oresing.persistence.SqlPrimitiveType;
 import lombok.Getter;
 import org.apache.commons.collections4.MapUtils;
-
-import java.util.function.Supplier;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public non-sealed class ReferenceType extends AbstractType<Ltree> {
+public non-sealed class ReferenceType implements FieldType<Ltree> {
+
+    final Supplier<ReferenceType> clone;
+    @Getter
+    private final String refType;
+    public Set<UUID> uuid;
+    protected CheckerTarget target;
+    protected LineChecker.Transformer transformer;
+    @Getter
+    ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues;
+    Ltree value;
+    DataValue.LineIdentityColumnName lineIdentityColumnName;
+    private Set<String> knownSpecialCharacters = new HashSet<>();
+
+    public ReferenceType(final CheckerTarget target, final String refType, final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues, final LineChecker.Transformer transformer, DataValue.LineIdentityColumnName lineIdentityColumnName) {
+        super();
+        this.target = target;
+        this.refType = refType;
+        this.referenceValues = referenceValues;
+        this.transformer = transformer;
+        this.lineIdentityColumnName = lineIdentityColumnName;
+        clone = () -> new ReferenceType(target, refType, referenceValues, transformer, this.lineIdentityColumnName);
+    }
 
     @JsonIgnore
     public Set<UUID> getUuid() {
         return uuid;
     }
 
-    private Set<String> knownSpecialCharacters = new HashSet<>();
-    @Getter
-    private final String refType;
-    public final CheckerTarget target(){
+    public final CheckerTarget target() {
         return target;
     }
 
@@ -61,29 +79,10 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
                 .collect(Collectors.toSet());
     }
 
-    @Getter
-    ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues;
-    Ltree value;
-    DataValue.LineIdentityColumnName lineIdentityColumnName;
-
-    final Supplier<ReferenceType> clone;
-
-    public ReferenceType(final CheckerTarget target, final String refType, final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues, final LineChecker.Transformer transformer, DataValue.LineIdentityColumnName lineIdentityColumnName) {
-        super();
-        this.target = target;
-        this.refType = refType;
-        this.referenceValues = referenceValues;
-        this.transformer = transformer;
-        this.lineIdentityColumnName = lineIdentityColumnName;
-        clone = () -> new ReferenceType(target, refType, referenceValues, transformer, this.lineIdentityColumnName);
-    }
-
     @Override
     public Ltree getValue() {
         return value;
     }
-
-    public Set<UUID> uuid;
 
     @Override
     public SqlPrimitiveType getSqlType() {
@@ -111,7 +110,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
                     this);
         }
         return ReferenceValidationCheckResult.error(target, localRawValue, target.getInternationalizedKey("invalidReference"), ImmutableMap.of(
-                        "target", target.toHumanReadableString(),
+                        "component", ((DataColumn) target).column(),
                         "referenceValues", Optional.ofNullable(referenceValues)
                                 .filter(MapUtils::isNotEmpty)
                                 .map(Map::keySet)
@@ -126,7 +125,7 @@ public non-sealed class ReferenceType extends AbstractType<Ltree> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 

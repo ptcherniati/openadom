@@ -34,7 +34,7 @@ class PatternComponentAdjacentExampleBuilder {
             final TitleType exportHeader,
             final List<String> tags,
             final CheckerType checker) {
-        LinkedHashMap<String, ConfigurationSchemaNodeType> children = new LinkedHashMap<>();
+        LinkedHashMap<String, ConfigurationSchemaNodeType<?>> children = new LinkedHashMap<>();
         children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER_PATTERN, new StringType(importHeaderPattern));
         children.put(ConfigurationSchemaNode.OA_EXPORT_HEADER, exportHeader);
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required));
@@ -59,7 +59,7 @@ class PatternComponentAdjacentExampleBuilder {
             final CheckerType checker,
             CollectionType.ArrayType<StringType> langRestriction
     ) {
-        final Map<String, ConfigurationSchemaNodeType> children = new HashMap<>();
+        final Map<String, ConfigurationSchemaNodeType<?>> children = new HashMap<>();
         children.put(ConfigurationSchemaNode.OA_REQUIRED, new BooleanType(required, false));
         if (importHeader != null) children.put(ConfigurationSchemaNode.OA_IMPORT_HEADER, new StringType(importHeader));
         if (CollectionUtils.isNotEmpty(tags)) {

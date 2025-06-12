@@ -1,11 +1,16 @@
 package fr.inra.oresing.persistence.flyway;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import fr.inra.oresing.domain.repository.authorization.role.*;
+import fr.inra.oresing.domain.repository.authorization.role.OreSiApplicationCreatorRole;
+import fr.inra.oresing.domain.repository.authorization.role.OreSiRightOnApplicationRole;
+import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
+import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.index.AuthorizationIndex;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
@@ -87,7 +92,7 @@ public class MigrateService {
         }
     }
 
-    private String getCurrentDatabase()  {
+    private String getCurrentDatabase() {
         try (Connection conn = dataSource.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT current_database()")) {
@@ -202,7 +207,7 @@ public class MigrateService {
                             actionToDoAfterMigration.execute(connection);
                         } catch (final SQLException e) {
                             log.error(e.getMessage());
-                            throw new RuntimeException(e);
+                            throw new OreSiTechnicalException(ExceptionMessage.SQL_EXCEPTION.toMessage(), e);
                         }
                     });
         }

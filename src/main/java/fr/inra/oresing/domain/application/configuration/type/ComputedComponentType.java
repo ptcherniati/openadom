@@ -7,27 +7,27 @@ import java.util.List;
 import java.util.Map;
 
 public record ComputedComponentType(SectionBuilder sectionBuilder,
-                                    Map<String, ConfigurationSchemaNodeType> children,
+                                    Map<String, ConfigurationSchemaNodeType<?>> children,
                                     boolean required,
-                                    boolean nullable) implements ApplicationType.ComponentType {
+                                    boolean nullable) implements ApplicationType.ComponentType<Map<String, ConfigurationSchemaNodeType<?>>> {
 
-    public static ComputedComponentType  EMPTY_INSTANCE() {
-        return new ComputedComponentType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-
-    private ComputedComponentType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
+    private ComputedComponentType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
         this(SECTION_BUILDER(),
                 children,
                 false,
                 false);
     }
 
-    public ComputedComponentType(final Map<String, ConfigurationSchemaNodeType> children) {
+    public ComputedComponentType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),
                 children,
                 false,
                 false);
+    }
+
+    public static ComputedComponentType EMPTY_INSTANCE() {
+        return new ComputedComponentType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
 
     public static SectionBuilder SECTION_BUILDER() {

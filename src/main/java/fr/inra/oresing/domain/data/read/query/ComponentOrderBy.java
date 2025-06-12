@@ -27,12 +27,12 @@ public record ComponentOrderBy(String componentKey, DataRepository.Order order,
     public Stream<String> toValue(
             String language,
             DataRepositoryForBuffer dataRepository,
-            Map<String, FieldType> dataRowValues,
+            Map<String, FieldType<?>> dataRowValues,
             StandardDataDescription dataDescription
     ) {
         String componentKey = componentKey();
-        FieldType fieldType = dataRowValues.get(componentKey);
-        String valueString = valueToString(language, dataRepository, dataDescription,  fieldType);
+        FieldType<?> fieldType = dataRowValues.get(componentKey);
+        String valueString = valueToString(language, dataRepository, dataDescription, fieldType);
         return Stream.of(valueString);
     }
 }

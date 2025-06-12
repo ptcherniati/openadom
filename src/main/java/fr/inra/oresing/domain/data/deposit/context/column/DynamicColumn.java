@@ -4,7 +4,9 @@ import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.*;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public abstract class DynamicColumn extends Column {
 
@@ -19,7 +21,7 @@ public abstract class DynamicColumn extends Column {
     private final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd;
 
     public DynamicColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final Ltree expectedHierarchicalKey, final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd, final ComputedValueUsage computedValueUsage) {
-        super(referenceColumn, referenceColumn.column(), presenceConstraint, computedValueUsage);
+        super(referenceColumn, presenceConstraint, computedValueUsage);
         this.expectedHierarchicalKey = expectedHierarchicalKey;
         this.refsLinkedToEntryToAdd = refsLinkedToEntryToAdd;
     }
@@ -56,7 +58,7 @@ public abstract class DynamicColumn extends Column {
 
     @Override
     public boolean equals(final Object obj) {
-        if(obj instanceof final DynamicColumn dynamicColumn) {
+        if (obj instanceof final DynamicColumn dynamicColumn) {
             return getExpectedHeader().equals(dynamicColumn.getExpectedHeader());
         }
         return false;

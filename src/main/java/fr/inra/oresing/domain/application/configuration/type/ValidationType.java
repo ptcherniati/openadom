@@ -7,10 +7,25 @@ import java.util.List;
 import java.util.Map;
 
 public record ValidationType(SectionBuilder sectionBuilder,
-                             Map<String, ConfigurationSchemaNodeType> children,
+                             Map<String, ConfigurationSchemaNodeType<?>> children,
                              boolean required,
-                             boolean nullable) implements ApplicationType {
-    public static SectionBuilder SECTION_BUILDER(){
+                             boolean nullable) implements ApplicationType<Map<String, ConfigurationSchemaNodeType<?>>> {
+    public ValidationType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER()
+                        .test(children.keySet()),
+                children,
+                true,
+                false);
+    }
+
+    private ValidationType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
+        this(SECTION_BUILDER(),
+                children,
+                true,
+                false);
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withMandatorySections(
                         new LabelDescription(ConfigurationSchemaNode.OA_CHECKER, CheckerType.EMPTY_INSTANCE())
@@ -22,21 +37,7 @@ public record ValidationType(SectionBuilder sectionBuilder,
                 );
     }
 
-    public static ValidationType  EMPTY_INSTANCE(){
+    public static ValidationType EMPTY_INSTANCE() {
         return new ValidationType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-
-    public ValidationType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER()
-                        .test(children.keySet()),
-                children,
-                true,
-                false);
-    }
-    private ValidationType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
-                children,
-                true,
-                false);
     }
 }

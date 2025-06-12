@@ -1,6 +1,7 @@
 package fr.inra.oresing.domain.application.configuration.type;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public enum CheckerEnum implements Comparable<CheckerEnum> {

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 public class Duration {
     public static final Pattern PATTERN = Pattern.compile("([0-9]*) (NANOS|MICROS|MILLIS|SECONDS|MINUTES|HOURS|HALF_DAYS|DAYS|WEEKS|MONTHS|YEARS)", Pattern.CASE_INSENSITIVE);
-    long  amount = 1;
+    long amount = 1;
     TemporalUnit temporalUnit = ChronoUnit.DAYS;
 
     public Duration(final String duration) {
@@ -25,10 +25,11 @@ public class Duration {
         return PATTERN.matcher(duration).matches();
     }
 
-    LocalDateTimeRange getLocalDateTimeRange(final LocalDateTime date){
+    LocalDateTimeRange getLocalDateTimeRange(final LocalDateTime date) {
         return LocalDateTimeRange.between(date, date.plus(amount, temporalUnit));
     }
-    LocalDateTimeRange getLocalDateTimeRange(final LocalDate date){
-        return LocalDateTimeRange.between(date.atStartOfDay(), date.atStartOfDay().plus(amount,temporalUnit));
+
+    LocalDateTimeRange getLocalDateTimeRange(final LocalDate date) {
+        return LocalDateTimeRange.between(date.atStartOfDay(), date.atStartOfDay().plus(amount, temporalUnit));
     }
 }

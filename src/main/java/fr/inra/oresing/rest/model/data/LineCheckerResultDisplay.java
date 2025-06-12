@@ -6,9 +6,9 @@ import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataValue;
 
-public record LineCheckerResultDisplay<FT extends FieldType, U extends ListType<FT>>(
+public record LineCheckerResultDisplay<F extends FieldType<?>, U extends ListType<F>>(
         U value,
-        FT fieldTypeForOne,
+        F fieldTypeForOne,
         DataColumn target,
         String transformer,
         CheckerDescription checkerDescription,
@@ -17,7 +17,7 @@ public record LineCheckerResultDisplay<FT extends FieldType, U extends ListType<
     public LineCheckerResultDisplay(LineCheckerResult referenceLineChecker, DataValue dataValue) {
         this(
                 (U) referenceLineChecker.value(),
-                (FT) referenceLineChecker.fieldTypeForOne(),
+                (F) referenceLineChecker.fieldTypeForOne(),
                 referenceLineChecker.target(),
                 referenceLineChecker.transformer(),
                 referenceLineChecker.checkerDescription(),

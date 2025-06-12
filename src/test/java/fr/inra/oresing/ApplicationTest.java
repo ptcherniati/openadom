@@ -8,9 +8,9 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 @org.junit.jupiter.api.Tag("core.basic")
-public class ApplicationTest {
+class ApplicationTest {
     @Test
-    public void test() {
+    void test() {
         Application application = new Application();
         final UUID id = UUID.randomUUID();
         application.setId(id);

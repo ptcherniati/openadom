@@ -6,7 +6,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 @Getter
 @Setter
@@ -19,7 +22,7 @@ public class OreSiAuthorization extends OreSiEntity {
     private Map<String, AuthorizationForScope> authorizations = new HashMap<>();
 
     public String toIdForReference(SqlPolicy.Statement statement, String datatype) {
-        return  OreSiAuthorization.class.getSimpleName() +
+        return OreSiAuthorization.class.getSimpleName() +
                 "_" +
                 getId().toString().substring(0, 7) +
                 "_data_" +

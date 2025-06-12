@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode(callSuper = true)
 @Value
 public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheckResult> implements CheckerValidationCheckResult, ValidationCheckResult {
-    ListType value;
+    ListType<FieldType<?>> value;
     CheckerTarget target;
 
     public DefaultManyValidationCheckResult(final Collection<? extends ValidationCheckResult> validationsCheckresult, final CheckerTarget target) {
@@ -28,16 +28,16 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
         this.target = target;
     }
 
-    private static ListType buildValueFromFieldType(final Collection<? extends ValidationCheckResult> validationsCheckresult) {
+    private static ListType<FieldType<?>> buildValueFromFieldType(final Collection<? extends ValidationCheckResult> validationsCheckresult) {
         if (CollectionUtils.isEmpty(validationsCheckresult)) {
-            return new ListType<>(new NullType());
+            return new ListType<>(NullType.INSTANCE);
         }
         return validationsCheckresult.stream()
                 .findFirst()
                 .filter(CheckerValidationCheckResult.class::isInstance)
                 .map(CheckerValidationCheckResult.class::cast)
                 .map(CheckerValidationCheckResult::value)
-                .map(ListType::new)
+                .map((FieldType t) -> new ListType(t))
                 .map(lt -> {
                             lt.getValue().addAll(
                                     validationsCheckresult.stream()
@@ -49,16 +49,17 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
                             return lt;
                         }
                 )
-                .orElse(new ListType<>(new NullType()));
+                .orElse(new ListType(NullType.INSTANCE));
     }
 
     @Override
     public DataColumnValue transform(final LineChecker lineChecker, final DataColumnValue referenceColumnRawValue, final DataColumn dataColumn, final Map refsLinkedTo) {
         return switch (lineChecker.underlyingType()) {
             case ReferenceType ignored -> new DataColumnMultipleValue(
-                    ((List<FieldType>) value().getValue()).stream()
-                            .peek(referenceType -> {
+                    ((List<FieldType<?>>) value().getValue()).stream()
+                            .map(referenceType -> {
                                 referenceType.transform(lineChecker, referenceColumnRawValue, dataColumn, refsLinkedTo);
+                                return referenceType;
                             })
                             .map(FieldType::getValue)
                             .map(Object::toString)
@@ -107,7 +108,7 @@ public class DefaultManyValidationCheckResult extends LinkedList<ValidationCheck
     }
 
     @Override
-    public FieldType value() {
+    public FieldType<?> value() {
         return value;
     }
 }

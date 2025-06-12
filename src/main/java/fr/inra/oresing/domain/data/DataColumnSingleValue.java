@@ -12,13 +12,13 @@ import java.util.function.Function;
  * Permet de stocker la valeur pour une colonne d'un référentiel lorsque cette colonne a une seule valeur associée ({@link Multiplicity#ONE}).
  */
 @Value
-public class DataColumnSingleValue implements DataColumnValue<FieldType, FieldType> {
+public class DataColumnSingleValue implements DataColumnValue<FieldType<?>, FieldType<?>> {
 
     private static final DataColumnSingleValue EMPTY = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(""));
 
-    FieldType value;
+    FieldType<?> value;
 
-    public DataColumnSingleValue(final FieldType stringType) {
+    public DataColumnSingleValue(final FieldType<?> stringType) {
         super();
         value = stringType;
     }
@@ -31,18 +31,18 @@ public class DataColumnSingleValue implements DataColumnValue<FieldType, FieldTy
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return value;
     }
 
     @Override
-    public FieldType getValuesToCheck() {
+    public FieldType<?> getValuesToCheck() {
         return value;
     }
 
     @Override
-    public DataColumnSingleValue transform(final Function<FieldType, FieldType> transformation) {
-        final FieldType transformedValue = transformation.apply(value);
+    public DataColumnSingleValue transform(final Function<FieldType<?>, FieldType<?>> transformation) {
+        final FieldType<?> transformedValue = transformation.apply(value);
         return new DataColumnSingleValue(transformedValue);
     }
 
@@ -52,7 +52,7 @@ public class DataColumnSingleValue implements DataColumnValue<FieldType, FieldTy
     }
 
     @Override
-    public FieldType toJsonForFrontend() {
+    public FieldType<?> toJsonForFrontend() {
         return value.copy();
     }
 }

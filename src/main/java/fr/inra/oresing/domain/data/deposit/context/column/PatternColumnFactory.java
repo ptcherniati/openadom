@@ -7,16 +7,16 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
+import fr.inra.oresing.domain.application.configuration.PatternComponent;
 import fr.inra.oresing.domain.application.configuration.PatternComponentAdjacents;
 import fr.inra.oresing.domain.application.configuration.PatternComponentQualifiers;
-import fr.inra.oresing.domain.application.configuration.PatternComponent;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.data.deposit.DataImporter;
+import fr.inra.oresing.domain.data.deposit.csvreader.PatternValueForHeader;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
@@ -34,21 +34,10 @@ public class PatternColumnFactory {
 
     private final List<PatternDescription> patternComponentDescriptions;
     private final DataRepository dataRepository;
-
-    public OneValueStaticPatternColumn getExpectedPatternColumn(String headerInfile) {
-        return expectedPatternColumns.stream()
-                .filter(OneValueStaticPatternColumn.class::isInstance)
-                .map(OneValueStaticPatternColumn.class::cast)
-                .filter(column -> column.getHeaderInFile().equals(headerInfile))
-                .findFirst()
-                .orElse(null);
-    }
-
-    @Getter
-    private List<Column> expectedPatternColumns = ImmutableList.of();
     @Getter
     private final Map<String, PatternColumn> patternColumns = new HashMap<>();
-
+    @Getter
+    private List<Column> expectedPatternColumns = ImmutableList.of();
     public PatternColumnFactory(final DataRepository dataRepository, final List<PatternDescription> patternComponentDescriptions) {
         super();
         this.patternComponentDescriptions = patternComponentDescriptions;
@@ -63,7 +52,16 @@ public class PatternColumnFactory {
                 PatternDescription.of(patternComponentDescriptions));
     }
 
-    public DataDatum toQualifierDatum(final String patternComponentName, final DataImporter.PatternValueForHeader patternValueForHeader) {
+    public OneValueStaticPatternColumn getExpectedPatternColumn(String headerInfile) {
+        return expectedPatternColumns.stream()
+                .filter(OneValueStaticPatternColumn.class::isInstance)
+                .map(OneValueStaticPatternColumn.class::cast)
+                .filter(column -> column.getHeaderInFile().equals(headerInfile))
+                .findFirst()
+                .orElse(null);
+    }
+
+    public DataDatum toQualifierDatum(final String patternComponentName, final PatternValueForHeader patternValueForHeader) {
         PatternColumn patternColumn = patternColumns.get(patternComponentName).copy();
         DataDatum adjacentComponents = this.getExpectedPatternColumn(patternComponentName)
                 .buildAdjacentComponents(patternValueForHeader.adjacentCellContent());
@@ -77,7 +75,7 @@ public class PatternColumnFactory {
                         patternValueForHeader.refsLinkedTo());
     }
 
-    public DataDatum toAdjacentDatum(final DataImporter.PatternValueForHeader patternValueForHeader) {
+    public DataDatum toAdjacentDatum(final PatternValueForHeader patternValueForHeader) {
         final PatternColumn patternColumn = patternColumns.get(patternValueForHeader.header());
         final DataDatum adjacentComponents = patternColumn.adjacentComponents();
         patternColumn.column().pushValue(patternValueForHeader.cellContent(), adjacentComponents, patternValueForHeader.refsLinkedTo());
@@ -219,7 +217,6 @@ public class PatternColumnFactory {
                                     componentComponentKey,
                                     mandatoryForComponentComponent,
                                     multiplicityForComponentComponent,
-                                    dataRepository,
                                     defaultValue
                             );
                             qualifierColumns.add(patternQualifierColumn);
@@ -238,7 +235,7 @@ public class PatternColumnFactory {
 
                                 }
                                 default -> {
-                                    final DataColumnValue<FieldType, FieldType> dataColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(constantValue));
+                                    final DataColumnValue<FieldType<?>, FieldType<?>> dataColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(constantValue));
                                     qualifierComponents
                                             .put(dataColumn, dataColumnValue);
                                 }
@@ -277,7 +274,6 @@ public class PatternColumnFactory {
                                 nextColumnName,
                                 resolvedAdjacentDescription.mandatoryForComponentComponent(),
                                 resolvedAdjacentDescription.multiplicityForComponentComponent(),
-                                dataRepository,
                                 defaultValue
                         ));
                     } else {
@@ -290,7 +286,6 @@ public class PatternColumnFactory {
                         potentialPatternColumn.columnHeader(),
                         mandatory,
                         multiplicity,
-                        dataRepository,
                         qualifierColumns,
                         adjacentColumns,
                         defaultValue

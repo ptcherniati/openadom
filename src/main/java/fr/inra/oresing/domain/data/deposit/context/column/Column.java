@@ -3,11 +3,12 @@ package fr.inra.oresing.domain.data.deposit.context.column;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.*;
-import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import lombok.Getter;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public abstract class Column implements Comparable<Column> {
     public static final String COLUMN_IN_COLUMN_SEPARATOR = "::";
@@ -18,73 +19,25 @@ public abstract class Column implements Comparable<Column> {
 
     @Getter
     private final DataColumn referenceColumn;
-
-    public Column as(String columnHeader){
-        return columnHeader.equals(getReferenceColumn().column())?this:null;
-    }
-
     @Getter
     private final ComponentPresenceConstraint presenceConstraint;
-
     @Getter
     private final ComputedValueUsage computedValueUsage;
 
-    public Column(final DataColumn referenceColumn, final String headerForColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage) {
+    public Column(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage) {
         super();
         this.referenceColumn = referenceColumn;
         this.presenceConstraint = presenceConstraint;
         this.computedValueUsage = computedValueUsage;
     }
 
-    public static Column staticPatternQualifierComponentDescriptionToColumn(final DataColumn referenceColumn,
-                                                                            String headerForColumn,
-                                                                            String componentQualifierKey,
-                                                                            final ComponentPresenceConstraint presenceConstraint,
-                                                                            final Multiplicity multiplicity,
-                                                                            final DataRepository referenceValueRepository,
-                                                                            final TransformationConfiguration defaultValue) {
-        Column column = null;
-        if (multiplicity == Multiplicity.ONE) {
-            column = new OneValueStaticColumn(referenceColumn, headerForColumn, presenceConstraint, ComputedValueUsage.NOT_COMPUTED) {
-                @Override
-                public String getExpectedHeader() {
-                    return Optional.ofNullable(headerForColumn)
-                            .orElseGet(referenceColumn::column);
-                }
-
-                @Override
-                public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
-                    throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
-                }
-            };
-        } else if (multiplicity == Multiplicity.MANY) {
-            column = new ManyValuesStaticColumn(referenceColumn, headerForColumn, presenceConstraint, ComputedValueUsage.NOT_COMPUTED) {
-                @Override
-                public String getExpectedHeader() {
-                    return Optional.ofNullable(headerForColumn)
-                            .orElseGet(referenceColumn::column);
-                }
-
-                @Override
-                public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
-                    throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
-                }
-            };
-        } else {
-            //TODO throw Multiplicity.getError(multiplicity);
-        }
-        return column;
-    }
-
     public static Column staticColumnDescriptionToColumn(final DataColumn referenceColumn,
                                                          String headerForColumn,
                                                          final ComponentPresenceConstraint presenceConstraint,
                                                          final Multiplicity multiplicity,
-                                                         final DataRepository referenceValueRepository,
                                                          final TransformationConfiguration defaultValue) {
-        Column column = null;
-        if (multiplicity == Multiplicity.ONE) {
-            column = new OneValueStaticColumn(
+        return switch (multiplicity){
+            case ONE -> new OneValueStaticColumn(
                     referenceColumn,
                     headerForColumn,
                     presenceConstraint,
@@ -101,8 +54,7 @@ public abstract class Column implements Comparable<Column> {
                     throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
                 }
             };
-        } else if (multiplicity == Multiplicity.MANY) {
-            column = new ManyValuesStaticColumn(
+            case MANY -> new ManyValuesStaticColumn(
                     referenceColumn,
                     headerForColumn,
                     presenceConstraint,
@@ -119,10 +71,7 @@ public abstract class Column implements Comparable<Column> {
                     throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
                 }
             };
-        } else {
-            //TODO throw Multiplicity.getError(multiplicity);
-        }
-        return column;
+        };
     }
 
     public static Column staticPatternColumnDescriptionToColumn(final DataColumn referenceColumn,
@@ -130,7 +79,6 @@ public abstract class Column implements Comparable<Column> {
                                                                 String headerInFile,
                                                                 final ComponentPresenceConstraint presenceConstraint,
                                                                 final Multiplicity multiplicity,
-                                                                final DataRepository referenceValueRepository,
                                                                 final List<Column> qualifierColumns,
                                                                 final List<Column> adjacentColumns,
                                                                 final TransformationConfiguration defaultValue) {
@@ -158,6 +106,10 @@ public abstract class Column implements Comparable<Column> {
             }
         };
         return column;
+    }
+
+    public Column as(String columnHeader) {
+        return columnHeader.equals(getReferenceColumn().column()) ? this : null;
     }
 
     public boolean canHandle(final String header) {

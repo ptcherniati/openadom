@@ -14,6 +14,7 @@ import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -31,9 +32,9 @@ public record AuthorizationBuilder(RootBuilder rootBuilder) {
                         .filter(ReferenceChecker.class::isInstance)
                         .isPresent()
                 )
-                .map(entry->new AuthorizationScopeComponentData(entry.getKey(), ((ReferenceChecker)entry.getValue().checker()).refType()))
+                .map(entry -> new AuthorizationScopeComponentData(entry.getKey(), ((ReferenceChecker) entry.getValue().checker()).refType()))
                 .collect(Collectors.toCollection(ArrayList::new));
-        //referenceComponents.addAll(componentValidationsByType.getOrDefault(CheckerDescription.CheckerDescriptionType.ReferenceChecker, List.of()));
+
         List<String> dateComponents = componentDescriptions.entrySet()
                 .stream()
                 .filter(entry -> Optional.ofNullable(entry.getValue())
@@ -46,7 +47,7 @@ public record AuthorizationBuilder(RootBuilder rootBuilder) {
         dateComponents.addAll(componentValidationsByType.getOrDefault(CheckerDescription.CheckerDescriptionType.DateChecker, List.of()));
 
         Function<Iterator<JsonNode>, List<AuthorizationScopeComponentData>> resolveComponentsAsReferenceComponent = iterator -> resolveComponentsAsReference(iterator, dataKey, path, referenceComponents);
-        Function<String, String> resolveComponentsAsDateComponent = dateComponentName -> resolveComponentsAsDateComponent(dateComponentName, dataKey, path, dateComponents);
+        UnaryOperator<String> resolveComponentsAsDateComponent = dateComponentName -> resolveComponentsAsDateComponent(dateComponentName, dataKey, path, dateComponents);
         List<AuthorizationScopeComponentData> authorizationScope = Optional.of(authorizationNode)
                 .map(node -> node.findPath(ConfigurationSchemaNode.OA_AUTHORIZATION_SCOPES))
                 .map(JsonNode::elements)
@@ -93,7 +94,7 @@ public record AuthorizationBuilder(RootBuilder rootBuilder) {
                 .map(JsonNode::asText)
                 .collect(Collectors.partitioningBy(isComponentAReference));
         return authorizationScopeComponent.get(true).stream()
-                .map(component->new AuthorizationScopeComponentData(component, referenceComponents.stream().filter(authorizationScopeComponentData -> authorizationScopeComponentData.component().equals(component)).map(AuthorizationScopeComponentData::data).findFirst().orElse(null)))
+                .map(component -> new AuthorizationScopeComponentData(component, referenceComponents.stream().filter(authorizationScopeComponentData -> authorizationScopeComponentData.component().equals(component)).map(AuthorizationScopeComponentData::data).findFirst().orElse(null)))
                 .toList();
     }
 

@@ -16,6 +16,7 @@ public record StringChecker(CheckerDescriptionType type,
                 .map("%s String"::formatted)
                 .orElse("String");
     }
+
     @Override
     public String buildImportDataExempleForheader() {
         return Optional.ofNullable(pattern())

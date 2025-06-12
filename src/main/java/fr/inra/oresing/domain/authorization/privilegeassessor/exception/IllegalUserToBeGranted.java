@@ -9,6 +9,7 @@ public class IllegalUserToBeGranted extends OreSiTechnicalException {
     public static final String ILLEGAL_ROLE_TO_BE_GRANTED = "ILLEGAL_ROLE_TO_BE_GRANTED";
     final String login;
     final String applicationName;
+
     public IllegalUserToBeGranted(final OreSiUser user, String applicationName) {
         super(ILLEGAL_ROLE_TO_BE_GRANTED);
         this.login = user.getLogin();

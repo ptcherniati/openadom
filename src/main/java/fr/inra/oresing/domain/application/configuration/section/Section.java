@@ -3,9 +3,11 @@ package fr.inra.oresing.domain.application.configuration.section;
 import fr.inra.oresing.domain.application.configuration.type.ConfigurationSchemaNodeType;
 import fr.inra.oresing.domain.application.configuration.type.LabelDescription;
 
-public sealed interface Section permits Section.MandatorySection, Section.OptionalSection, Section.AnyOfMandatorySection {
+public sealed interface Section
+        permits Section.MandatorySection, Section.OptionalSection, Section.AnyOfMandatorySection {
     String label();
-    ConfigurationSchemaNodeType type();
+
+    <C extends ConfigurationSchemaNodeType<?>> C type();
 
     boolean required();
 
@@ -18,7 +20,7 @@ public sealed interface Section permits Section.MandatorySection, Section.Option
     record MandatorySection(String label,
                             SectionType sectionType,
                             boolean required,
-                            ConfigurationSchemaNodeType type
+                            ConfigurationSchemaNodeType<?> type
     ) implements Section {
 
         public static MandatorySection buildInstance(final LabelDescription labelDescription) {
@@ -29,7 +31,7 @@ public sealed interface Section permits Section.MandatorySection, Section.Option
     record AnyOfMandatorySection(String label,
                                  SectionType sectionType,
                                  boolean required,
-                                 ConfigurationSchemaNodeType type) implements Section {
+                                 ConfigurationSchemaNodeType<?> type) implements Section {
 
         public AnyOfMandatorySection(final LabelDescription labelDescription) {
             this(labelDescription.label(), labelDescription.sectionType(), labelDescription.required(), labelDescription.type());
@@ -44,7 +46,7 @@ public sealed interface Section permits Section.MandatorySection, Section.Option
             String label,
             SectionType sectionType,
             boolean required,
-            ConfigurationSchemaNodeType type
+            ConfigurationSchemaNodeType<?> type
     ) implements Section {
         public static OptionalSection buildInstance(final LabelDescription labelDescription) {
             return new OptionalSection(

@@ -20,6 +20,7 @@ public class DefaultValidationCheckResult implements ValidationCheckResult {
 
     @Getter
     Map<String, Object> messageParams;
+    CheckerTarget target;
 
     public DefaultValidationCheckResult(final ValidationCheckResult validationCheckResult) {
         this(
@@ -37,8 +38,6 @@ public class DefaultValidationCheckResult implements ValidationCheckResult {
         this.messageParams = messageParams;
         this.target = target;
     }
-
-    CheckerTarget target;
 
     @JsonIgnore
     public static ValidationCheckResult success(final CheckerTarget target) {

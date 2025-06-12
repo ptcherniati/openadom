@@ -4,9 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.FieldDescription;
+import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationRightrequest;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
-import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
 import java.util.Map;

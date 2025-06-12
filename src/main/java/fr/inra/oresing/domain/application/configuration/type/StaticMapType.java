@@ -38,13 +38,13 @@ public class StaticMapType {
                 )
         );
     }
+
     public static StaticMapType AUTHORIZATION_SCOPES() {
         return new StaticMapType(
                 new CollectionType.ArrayType<>(List.of(), false, false,
                         StringType.EMPTY_INSTANCE())
         );
     }
-
 
 
     public static StaticMapType FILE_MATCH_PATTERN_SCOPES() {
@@ -90,6 +90,7 @@ public class StaticMapType {
                 new CollectionType.MapType<>(Map.of(), false, false, AdditionalFileType.EMPTY_INSTANCE())
         );
     }
+
     public static StaticMapType BASIC_COMPONENTS() {
         return new StaticMapType(new CollectionType.MapType<>(Map.of(), false, false, BasicComponentType.EMPTY_INSTANCE())
         );

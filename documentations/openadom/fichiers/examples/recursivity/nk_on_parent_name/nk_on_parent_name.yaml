@@ -11,14 +11,14 @@ OA_application:
   OA_name: jerome_nk_on_parent_name
   OA_version: 1.0.3
 
-OA_tags:   #optional
-  data:   #optional
+OA_tags: #optional
+  data: #optional
     fr: "données"
     en: "data"
   metadata:
     fr: "Métadonnées"
     en: "Metadata"
-  description:   #optional
+  description: #optional
     fr: "description"
     en: "description"
   location:
@@ -40,52 +40,50 @@ OA_data:
       OA_description:
         fr: sites d'etudes
         en: study sites
-    OA_naturalKey: [sit_id]
+    OA_naturalKey: [ sit_id ]
     OA_basicComponents:
       sit_id:
         OA_tags: [ __ORDER_1__ ]
 
   ##### >>>>>>>>>>DATA<<<<<<<<<< #####
-  t_zone_etude_zet:   #mandatory
+  t_zone_etude_zet: #mandatory
     OA_dataHeaderLine: 1  #optional
     OA_dataFirstLine: 2  #optional
-    OA_naturalKey:   #mandatory
-       - zet_parent
-       - zet_id
-    OA_tags:   #optional
+    OA_naturalKey: #mandatory
+      - zet_parent
+      - zet_id
+    OA_tags: #optional
       - __DATA__
       - location
-    OA_i18n:   #mandatory
-      OA_title:   #optional
+    OA_i18n: #mandatory
+      OA_title: #optional
         fr: "Zone d'étude"
         en: "Study area"
-      OA_description:   #optional
+      OA_description: #optional
         fr: "Référentiel des zones d'études"
         en: "Study area repository"
-    OA_basicComponents:   #optional
-      sit_id:   #optional
+    OA_basicComponents: #optional
+      sit_id: #optional
         OA_tags: [ __ORDER_1__ ]
-        OA_checker:   #mandatory
+        OA_checker: #mandatory
           OA_name: OA_reference  #mandatory
-          OA_params:   #optional
-            OA_reference:   #mandatory
+          OA_params: #optional
+            OA_reference: #mandatory
               #OA_isParent: true  #optional
               OA_name: tr_sites_sit  #mandatory
             #OA_multiplicity: ONE  #optional
         OA_required: true  #optional
-      zet_id:   #optional
+      zet_id: #optional
         OA_tags: [ __ORDER_2__ ]
         OA_required: true  #optional
 
-      zet_parent:   #optional
+      zet_parent: #optional
         OA_tags: [ __ORDER_3__ ]
-        OA_checker:   #mandatory
+        OA_checker: #mandatory
           OA_name: OA_reference  #mandatory
-          OA_params:   #optional
-            OA_reference:   #mandatory
+          OA_params: #optional
+            OA_reference: #mandatory
               OA_isRecursive: true  #optional
               OA_name: t_zone_etude_zet  #mandatory
             #OA_multiplicity: ONE  #optional
         OA_required: false  #optional
-
-  

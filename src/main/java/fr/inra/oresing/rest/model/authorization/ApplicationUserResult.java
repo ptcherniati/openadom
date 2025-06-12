@@ -30,14 +30,14 @@ public record ApplicationUserResult(
         boolean isApplicationManager = administratorRoles.entrySet().stream()
                 .filter(entry -> entry.getKey().endsWith(OreSiRightOnApplicationRole.APPLICATION_MANAGER))
                 .anyMatch(entry -> entry.getValue().contains(oreSiUser.getId().toString()));
-        boolean isUserManager = isApplicationManager|| administratorRoles.entrySet().stream()
+        boolean isUserManager = isApplicationManager || administratorRoles.entrySet().stream()
                 .filter(entry -> entry.getKey().endsWith(OreSiRightOnApplicationRole.USER_MANAGER))
                 .anyMatch(entry -> entry.getValue().contains(oreSiUser.getId().toString()));
         Optional<Timestamp> charteTimeStampOpt = Optional.ofNullable(oreSiUser)
                 .filter(user -> user.getAccountstate().equals(OreSiUser.OreSiUserStates.active))
                 .map(OreSiUser::getChartes)
                 .map(chartes -> chartes.get(applicationId.toString()));
-        boolean isApplicationUser = isUserManager|| charteTimeStampOpt.isPresent();
+        boolean isApplicationUser = isUserManager || charteTimeStampOpt.isPresent();
         boolean isActiveApplicationUser = charteTimeStampOpt.stream().anyMatch(
                 timestamp -> charteTimestamp == null || timestamp.after(charteTimestamp));
         return new ApplicationUserResult(

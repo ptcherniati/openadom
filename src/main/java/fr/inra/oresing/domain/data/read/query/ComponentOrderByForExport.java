@@ -20,45 +20,6 @@ import java.util.stream.Stream;
 
 public sealed interface ComponentOrderByForExport
         permits ComponentOrderBy, ComponentPatternOrderBy, ComponentPatternValueOrderBy, DynamicComponentOrderBy {
-    Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType> dataRowValues, StandardDataDescription dataDescription);
-
-    String componentKey();
-
-    ComponentType sqlType();
-
-    default String valueToString(
-            String language,
-            DataRepositoryForBuffer dataRepository,
-            StandardDataDescription dataDescription,
-            FieldType fieldType) {
-        if (fieldType instanceof MapType mapType) {
-            return "pas trouvé";
-        }
-        return switch (sqlType()) {
-            case null -> "";
-            case ComponentDateType componentDateType -> {
-                Matcher matcher = Pattern.compile(DateType.PATTERN_DATE_REGEXP_FIND_DATE).matcher(fieldType.getValue().toString());
-                if (matcher.matches()) {
-                    yield DateTimeFormatter.ofPattern(componentDateType.format()).format(LocalDateTime.parse(matcher.group(1)));
-                }
-                yield "";
-            }
-            case ComponentReferenceType componentReferenceType -> Optional.ofNullable(dataDescription)
-                    .map(StandardDataDescription::componentDescriptions)
-                    .map(components -> components.get(componentKey()))
-                    .map(ComponentDescription::checker)
-                    .filter(ReferenceChecker.class::isInstance)
-                    .map(ReferenceChecker.class::cast)
-                    .map(ReferenceChecker::refType).flatMap(referencetype -> Optional.of(dataRepository)
-                            .map(repository -> repository.findDisplayByReferenceType(referencetype))
-                            .map(map -> map.get(fieldType.toString()))
-                            .map(map -> map.get(language)))
-                    .orElse(fieldType == null ? "" : fieldType.toString());
-            default -> fieldType == null ? "" : fieldType.toString();
-        };
-    }
-
-
     static Comparator<ComponentOrderByForExport> getComparator(StandardDataDescription dataDescription) {
         return (componentOrderBy1, componentOrderBy2) -> switch (componentOrderBy1) {
             case null -> 1;
@@ -88,5 +49,43 @@ public sealed interface ComponentOrderByForExport
                         .findFirst()
                         .orElse(9999))
                 .orElse(9999);
+    }
+
+    Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription);
+
+    String componentKey();
+
+    ComponentType sqlType();
+
+    default String valueToString(
+            String language,
+            DataRepositoryForBuffer dataRepository,
+            StandardDataDescription dataDescription,
+            FieldType<?> fieldType) {
+        if (fieldType instanceof MapType _) {
+            return "pas trouvé";
+        }
+        return switch (sqlType()) {
+            case null -> "";
+            case ComponentDateType componentDateType -> {
+                Matcher matcher = Pattern.compile(DateType.PATTERN_DATE_REGEXP_FIND_DATE).matcher(fieldType.getValue().toString());
+                if (matcher.matches()) {
+                    yield DateTimeFormatter.ofPattern(componentDateType.format()).format(LocalDateTime.parse(matcher.group(1)));
+                }
+                yield "";
+            }
+            case ComponentReferenceType componentReferenceType -> Optional.ofNullable(dataDescription)
+                    .map(StandardDataDescription::componentDescriptions)
+                    .map(components -> components.get(componentKey()))
+                    .map(ComponentDescription::checker)
+                    .filter(ReferenceChecker.class::isInstance)
+                    .map(ReferenceChecker.class::cast)
+                    .map(ReferenceChecker::refType).flatMap(referencetype -> Optional.of(dataRepository)
+                            .map(repository -> repository.findDisplayByReferenceType(referencetype))
+                            .map(map -> map.get(fieldType.toString()))
+                            .map(map -> map.get(language)))
+                    .orElse(fieldType == null ? "" : fieldType.toString());
+            default -> fieldType == null ? "" : fieldType.toString();
+        };
     }
 }

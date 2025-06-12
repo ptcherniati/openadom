@@ -6,10 +6,10 @@ public record LabelDescription(
         String label,
         SectionType sectionType,
         Boolean required,
-        ConfigurationSchemaNodeType type
+        ConfigurationSchemaNodeType<?> type
 ) {
 
-    public LabelDescription(String label, ConfigurationSchemaNodeType type) {
+    public LabelDescription(String label, ConfigurationSchemaNodeType<?> type) {
         this(label, SectionType.UNDEFINED, false, type);
     }
 }

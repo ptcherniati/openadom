@@ -4,7 +4,7 @@ import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import lombok.Getter;
 
 @Getter
-public class BadRoleException  extends OreSiTechnicalException {
+public class BadRoleException extends OreSiTechnicalException {
     final String role;
 
     public BadRoleException(final String message, final String role, final Throwable cause) {

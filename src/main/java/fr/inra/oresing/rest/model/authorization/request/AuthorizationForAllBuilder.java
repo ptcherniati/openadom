@@ -3,15 +3,13 @@ package fr.inra.oresing.rest.model.authorization.request;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
 public class AuthorizationForAllBuilder {
 
-    public static final String AUTHORIZATION_FOR_ALL = "authorizationForAll";
-    final AuthorizationRequestBuilder authorizationRequestBuilder;
-
-    public AuthorizationForAllBuilder(final AuthorizationRequestBuilder authorizationRequestBuilder) {
-        this.authorizationRequestBuilder = authorizationRequestBuilder;
+    public AuthorizationForAllBuilder() {
+        super();
     }
 
     public AuthorizationForAll build(Map<String, Set<OperationType>> authorizationForAll) {

@@ -6,28 +6,27 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Supplier;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.checker.CheckerReturnType;
 import fr.inra.oresing.domain.checker.LineChecker;
+import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.BooleanValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.groovy.GroovyExpression;
-import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.BooleanValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public non-sealed class BooleanType implements FieldType<Boolean> {
+    final Supplier<BooleanType> clone;
     private final GroovyExpression expression;
     private final ImmutableMap<String, Object> context;
     Boolean value;
-
-    final Supplier<BooleanType> clone;
 
 
     public BooleanType(final String expression, final Map<String, Object> context) {
         super();
         this.expression = GroovyExpression.forExpression(expression);
-        this.context = ImmutableMap.<String,Object>builder().putAll(context).build();
+        this.context = ImmutableMap.<String, Object>builder().putAll(context).build();
         clone = () -> new BooleanType(expression, context);
     }
 
@@ -44,26 +43,16 @@ public non-sealed class BooleanType implements FieldType<Boolean> {
 
     }
 
-    public static Optional<GroovyExpression.CompilationError> validateExpression(final String expression) {
-        return GroovyExpression.validateExpression(expression);
-    }
-
     public static BooleanType forExpression(final String expression, final ImmutableMap<String, Object> context) {
 
-        return  new BooleanType(
+        return new BooleanType(
                 expression,
                 context
         );
     }
 
-    public Boolean evaluate(final Map<String, Object> context) {
-        context.put("value", value);
-        final Object evaluation = expression.evaluate(context);
-        if (evaluation instanceof Boolean) {
-            return (Boolean) evaluation;
-        } else {
-            throw CheckerReturnType.getError(evaluation, expression, context, Set.of(CheckerReturnType.BOOLEAN));
-        }
+    public static BooleanType of(final boolean value) {
+        return new BooleanType(value);
     }
 
     @Override
@@ -79,7 +68,7 @@ public non-sealed class BooleanType implements FieldType<Boolean> {
     @Override
     public CheckerValidationCheckResult<BooleanType> check(final String value, final LineChecker lineCheckerWarper) {
         this.value = Boolean.parseBoolean(value);
-        return BooleanValidationCheckResult.success(lineCheckerWarper.target(),this);
+        return BooleanValidationCheckResult.success(lineCheckerWarper.target(), this);
     }
 
     @Override
@@ -96,7 +85,7 @@ public non-sealed class BooleanType implements FieldType<Boolean> {
 
     @Override
     public void serialize(final JsonGenerator gen) throws IOException {
-        if(value==null){
+        if (value == null) {
             gen.writeNull();
             return;
         }
@@ -120,12 +109,8 @@ public non-sealed class BooleanType implements FieldType<Boolean> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
-    }
-
-    public static BooleanType of(final boolean value) {
-        return new BooleanType(value);
     }
 
     @Override

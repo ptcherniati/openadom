@@ -8,7 +8,7 @@ import fr.inra.oresing.domain.data.DataColumn;
 public interface LineCheckerResult {
     ListType value();
 
-    FieldType fieldTypeForOne();
+    FieldType<?> fieldTypeForOne();
 
     DataColumn target();
 

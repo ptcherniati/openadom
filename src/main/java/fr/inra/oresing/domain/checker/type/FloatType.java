@@ -12,24 +12,28 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Flo
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-import static fr.inra.oresing.domain.checker.type.FloatType.IntervalFoatErrors.LOWER_THAN_MIN;
+import static fr.inra.oresing.domain.checker.type.FloatType.IntervalFloatErrors.LOWER_THAN_MIN;
 
 public non-sealed class FloatType implements FieldType<Float> {
-    enum IntervalFoatErrors{
-        LOWER_THAN_MIN("badMinIntervalFloat", FloatType::getMin),
-        HIGHER_THAN_MAX("badMaxIntervalFloat", FloatType::getMax);
+    final Supplier<FloatType> clone;
+    private final Float min;
+    private final Float max;
+    Float value;
+    public FloatType(final Float min, final Float max) {
+        super();
+        this.min = min;
+        this.max = max;
+        clone = () -> new FloatType(min, max);
+    }
 
-        private final String errorMessage;
-        private final Function<FloatType, Float> getBound;
-
-        IntervalFoatErrors(String errorMessage, Function<FloatType, Float> getBound) {
-            this.errorMessage = errorMessage;
-            this.getBound = getBound;
-        }
+    public static FloatType of(final Float value) {
+        final FloatType floatType = new FloatType(null, null);
+        floatType.value = value;
+        return floatType;
     }
 
     protected Float getMin() {
@@ -40,20 +44,6 @@ public non-sealed class FloatType implements FieldType<Float> {
         return max;
     }
 
-    private final Float min;
-    private final Float max;
-
-    final Supplier<FloatType> clone;
-
-    public FloatType(final Float min, final Float max) {
-        super();
-        this.min = min;
-        this.max = max;
-        clone = () -> new FloatType(min, max);
-    }
-
-    Float value;
-
     @Override
     public Float getValue() {
         return value;
@@ -63,17 +53,18 @@ public non-sealed class FloatType implements FieldType<Float> {
     public SqlPrimitiveType getSqlType() {
         return SqlPrimitiveType.NUMERIC;
     }
+
     @Override
     public CheckerValidationCheckResult check(final String value, final LineChecker lineChecker) {
         FloatValidationCheckResult validationCheckResult;
         final DataColumn target = lineChecker.target();
         try {
-            this.value = Float.parseFloat(value.replaceAll(",", "."));
+            this.value = Float.parseFloat(value.replace(",", "."));
             if (min != null && this.value.compareTo(min) < 0) {
                 throw new IllegalArgumentException(LOWER_THAN_MIN.name());
             }
             if (max != null && this.value.compareTo(max) > 0) {
-                throw new IllegalArgumentException(IntervalFoatErrors.HIGHER_THAN_MAX.name());
+                throw new IllegalArgumentException(IntervalFloatErrors.HIGHER_THAN_MAX.name());
             }
             validationCheckResult = FloatValidationCheckResult.success(lineChecker.target(), this);
         } catch (final NumberFormatException e) {
@@ -81,17 +72,18 @@ public non-sealed class FloatType implements FieldType<Float> {
                     target,
                     target.getInternationalizedKey("invalidFloat"),
                     ImmutableMap.of(
-                            "target", target,
+                            "component", target.column(),
                             "value", value));
         } catch (final IllegalArgumentException e) {
-            IntervalFoatErrors intervalFoatErrors = IntervalFoatErrors.valueOf(e.getMessage());
+            IntervalFloatErrors intervalFloatErrors = IntervalFloatErrors.valueOf(e.getMessage());
             validationCheckResult = FloatValidationCheckResult.error(
                     target,
-                    target.getInternationalizedKey(intervalFoatErrors.errorMessage),
+                    target.getInternationalizedKey(intervalFloatErrors.errorMessage),
                     ImmutableMap.of(
                             "component", target.column(),
                             "value", value,
-                            "bound", intervalFoatErrors.getBound.apply(this)
+                            "type", e.getMessage(),
+                            "bound", intervalFloatErrors.getBound.apply(this)
                     )
             );
         }
@@ -99,7 +91,7 @@ public non-sealed class FloatType implements FieldType<Float> {
     }
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 
@@ -117,7 +109,7 @@ public non-sealed class FloatType implements FieldType<Float> {
 
     @Override
     public void serialize(final JsonGenerator gen) throws IOException {
-        if(value==null){
+        if (value == null) {
             gen.writeNull();
             return;
         }
@@ -141,14 +133,25 @@ public non-sealed class FloatType implements FieldType<Float> {
 
     }
 
-    public static FloatType of(final Float value) {
-        final FloatType floatType = new FloatType(null, null);
-        floatType.value = value;
-        return floatType;
-    }
-
     @Override
     public Object toJsonForFrontend() {
         return value;
+    }
+
+    enum IntervalFloatErrors {
+        LOWER_THAN_MIN(Constants.BAD_INTERVAL_FLOAT, FloatType::getMin),
+        HIGHER_THAN_MAX(Constants.BAD_INTERVAL_FLOAT, FloatType::getMax);
+
+        private final String errorMessage;
+        private final Function<FloatType, Float> getBound;
+
+        IntervalFloatErrors(String errorMessage, Function<FloatType, Float> getBound) {
+            this.errorMessage = errorMessage;
+            this.getBound = getBound;
+        }
+
+        private static class Constants {
+            public static final String BAD_INTERVAL_FLOAT = "badIntervalFloat";
+        }
     }
 }

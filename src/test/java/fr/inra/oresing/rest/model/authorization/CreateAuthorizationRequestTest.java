@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest.model.authorization;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.OreSiAuthorization;
@@ -8,16 +7,20 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
-import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
 import org.json.JSONException;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
@@ -41,26 +44,6 @@ class CreateAuthorizationRequestTest {
     @Test
     @Tag("core.auth")
     void toAuthorizationRequest() throws IOException {
-        CreateAuthorizationRequest createAuthorizationRequest1 = new CreateAuthorizationRequest(
-                UUID.fromString("e7570009-35fb-489d-ad3b-5bb335e7c5d5"),
-                "une submissionScope sur le référentiel monsore",
-                "une description",
-                Set.of(UUID.fromString("f7570009-38fb-489d-ad3b-5bb335e7c5d5")),
-                Map.of(
-                        "type_de_sites", Set.of(OperationType.extraction),
-                        "sites", Set.of(OperationType.extraction)
-                ),
-                Map.of(
-                        "pem", new AuthorizationInput(
-                                Map.of("projet", List.of(Ltree.fromSql("projet_atlantique"), Ltree.fromSql("projet_manche"))),
-                                LocalDateTimeRange.between(
-                                        LocalDate.of(2024, 3, 29),
-                                        LocalDate.of(2024, 3, 29)
-                                ),
-                                Set.of(OperationType.depot)
-                        )
-                )
-        );
         final CreateAuthorizationRequest createAuthorizationRequest = new JsonRowMapper<CreateAuthorizationRequest>().readValue(CreateAuthorizationRequestTest.createAuthorization, CreateAuthorizationRequest.class);
         Assertions.assertEquals("e7570009-35fb-489d-ad3b-5bb335e7c5d5", createAuthorizationRequest.uuid().toString());
         Assertions.assertEquals("une submissionScope sur le référentiel monsore", createAuthorizationRequest.name());
@@ -121,7 +104,7 @@ class CreateAuthorizationRequestTest {
                 List.of(oreSiAuthorization),
                 errors
         );
-        AuthorizationRequest authorizationRequest = authorizationRequestBuilder.build(createAuthorizationRequest, dataRepositoryWithBuffer);
+        AuthorizationRequest authorizationRequest = authorizationRequestBuilder.build(createAuthorizationRequest);
         Assertions.assertEquals(0, errors.size());
         Assertions.assertEquals(applicationId, authorizationRequest.applicationId());
         Assertions.assertEquals(authorizationId, authorizationRequest.authorizationId());
@@ -156,7 +139,7 @@ class CreateAuthorizationRequestTest {
                 null,
                 errors
         )
-                .build(createAuthorizationRequest, dataRepositoryWithBuffer);
+                .build(createAuthorizationRequest);
         String expectedJson = """
                 {
                    "authorizationId" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",
@@ -195,7 +178,7 @@ class CreateAuthorizationRequestTest {
         try {
             JSONAssert.assertEquals(expectedJson, actualJson, JSONCompareMode.LENIENT);
         } catch (JSONException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.JSON_EXCEPTION.toMessage(), e);
         }
     }
 }

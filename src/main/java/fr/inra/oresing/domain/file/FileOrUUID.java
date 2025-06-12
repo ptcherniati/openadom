@@ -6,7 +6,7 @@ import fr.inra.oresing.persistence.BinaryFileInfos;
 
 import java.util.*;
 
-public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, Boolean topublish) {
+public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, boolean topublish) {
 
 
     public static FileOrUUID from(FileOrUUID params, UUID fileId) {
@@ -45,7 +45,7 @@ public record FileOrUUID(UUID fileid, BinaryFileDataset binaryfiledataset, Boole
                 final String ltree = requiredAuthorizationForFileEntry.getValue().getFirst().getSql();
                 if (requiredAuthorizationInDataBase.get(scope).stream()
                         .noneMatch(pathAuthorized -> ltree.equals(pathAuthorized) ||
-                                                     ltree.startsWith(pathAuthorized + Ltree.SEPARATOR))
+                                ltree.startsWith(pathAuthorized + Ltree.SEPARATOR))
                 ) {
                     return false;
                 }

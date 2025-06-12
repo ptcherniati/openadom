@@ -17,14 +17,6 @@ public record SqlPolicy(String id, SqlTable table,
         return WithSqlIdentifier.escapeSqlIdentifier(id);
     }
 
-    public enum PermissiveOrRestrictive {
-        PERMISSIVE, RESTRICTIVE
-    }
-
-    public enum Statement {
-        ALL, SELECT, INSERT, UPDATE, DELETE
-    }
-
     public String policyToCreateSql() {
         String using = "", withCheck = "";
         if (!Strings.isNullOrEmpty(usingExpression)) {
@@ -51,5 +43,13 @@ public record SqlPolicy(String id, SqlTable table,
                 getSqlIdentifier(),
                 table.getSqlIdentifier()
         );
+    }
+
+    public enum PermissiveOrRestrictive {
+        PERMISSIVE, RESTRICTIVE
+    }
+
+    public enum Statement {
+        ALL, SELECT, INSERT, UPDATE, DELETE
     }
 }

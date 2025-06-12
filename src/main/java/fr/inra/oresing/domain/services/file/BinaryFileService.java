@@ -8,7 +8,6 @@ import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +17,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
-public interface BinaryFileService extends ServiceContainerBean {
+public interface BinaryFileService {
     @Transactional()
     UUID storeFile(Application application, MultipartFile file, String comment, BinaryFileDataset binaryFileDataset) throws IOException;
 
@@ -40,9 +39,5 @@ public interface BinaryFileService extends ServiceContainerBean {
     );
 
     AdditionalBinaryFileResult getAdditionalBinaryFileResult(
-            AdditionalBinaryFile additionalBinaryFile,
-            Application application);
-
-    void setServiceContainer(ServiceContainer serviceContainer);
+            AdditionalBinaryFile additionalBinaryFile);
 }
-

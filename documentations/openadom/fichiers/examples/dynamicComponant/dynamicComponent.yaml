@@ -13,7 +13,7 @@ OA_application:
   OA_comment: Cas d'usage des composantes dynamiques (sites) # optional
 OA_data:
   tr_sites_properties_spt:
-    OA_naturalKey: [nom_propriete]
+    OA_naturalKey: [ nom_propriete ]
     OA_basicComponents:
       nom_propriete:
       type_donnee:
@@ -24,7 +24,7 @@ OA_data:
           OA_params:
             OA_multiplicity: MANY
   tr_sites_sit:
-    OA_naturalKey: [nom]
+    OA_naturalKey: [ nom ]
     OA_basicComponents:
       nom:
       niveau:

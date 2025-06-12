@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public record FileNameResolver(
         AuthorizationPublicationService builder) implements State {
-    public StoredFileBuilder resolveFileName(String fileName){
+    public StoredFileBuilder resolveFileName(String fileName, String format) {
         BinaryFileDataset binaryFileDataset = fileOrUuid() == null ? new BinaryFileDataset() : fileOrUuid().binaryfiledataset();
         BinaryFileDataset resolvedBinaryFileDataset = Optional.ofNullable(dataDescription())
                 .map(StandardDataDescription::submission)
@@ -18,9 +18,9 @@ public record FileNameResolver(
                         binaryFileDataset))
                 .orElse(binaryFileDataset);
         FileOrUUID params = builder.fileOrUUID;
-        if(params != null){
-            builder.fileOrUUID =  params.withParams(new BinaryFileInfos(resolvedBinaryFileDataset));
-        }else{
+        if (params != null) {
+            builder.fileOrUUID = params.withParams(new BinaryFileInfos(resolvedBinaryFileDataset));
+        } else {
             builder.fileOrUUID = new FileOrUUID(null, resolvedBinaryFileDataset, true);
         }
         return new StoredFileBuilder(builder());

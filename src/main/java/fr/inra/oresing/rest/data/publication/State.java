@@ -8,10 +8,11 @@ import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 
 import java.util.function.Predicate;
 
-sealed public interface State permits AuthorizationForUser, StoredFileBuilder, CheckAndStoreFile, FileNameResolver, JustStoredFile, StoreFile, UnPublishedVersions {
+sealed public interface State permits StoredFileBuilder, CheckAndStoreFile, FileNameResolver, JustStoredFile, StoreFile, UnPublishedVersions {
 
 
     Predicate<AuthorizationParsed> TRUE_PREDICATE = auth -> true;
+
     AuthorizationPublicationService builder();
 
     default BinaryFile binaryFile() {

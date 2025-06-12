@@ -5,17 +5,17 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
 import java.util.Map;
 
-public record SubmissionType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType> children,
+public record SubmissionType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                              boolean required,
                              boolean nullable) implements ApplicationType {
-    private SubmissionType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
+    private SubmissionType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
         this(SECTION_BUILDER(),
                 children,
                 false,
                 false);
     }
 
-    public SubmissionType(final Map<String, ConfigurationSchemaNodeType> children) {
+    public SubmissionType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),
                 children,

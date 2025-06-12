@@ -8,10 +8,10 @@ import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.application.configuration.type.*;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
+import jakarta.annotation.Nullable;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.logging.log4j.util.Strings;
 
-import javax.annotation.Nullable;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -30,7 +30,7 @@ public class NodeSchemaValidator {
         this.rootBuilder = rootBuilder;
     }
 
-    
+
     private static String joinPath(List<String> pathes) {
         return pathes.stream()
                 .filter(Strings::isNotEmpty)
@@ -46,15 +46,15 @@ public class NodeSchemaValidator {
 
     public static String joinI18nPath(String... pathes) {
         return String.join(I18N_PATH_SEPARATOR, pathes)
-                .replaceAll(PATH_SEPARATOR, I18N_PATH_SEPARATOR);
+                .replace(PATH_SEPARATOR, I18N_PATH_SEPARATOR);
     }
 
     public static String joinPath(String... pathes) {
         return String.join(PATH_SEPARATOR, pathes);
     }
 
-    AtomicBoolean testSchema(ConfigurationSchemaNodeType parentSchema, JsonNode node, String path) {
-        ConfigurationSchemaNodeType parentSchema1 = parentSchema;
+    AtomicBoolean testSchema(ConfigurationSchemaNodeType<?> parentSchema, JsonNode node, String path) {
+        ConfigurationSchemaNodeType<?> parentSchema1 = parentSchema;
         if (parentSchema1 instanceof FinalType finalType) {
             return new AtomicBoolean(testFinalNodeValuetype(finalType, node, path));
         }
@@ -150,7 +150,7 @@ public class NodeSchemaValidator {
         };
     }
 
-    private AtomicBoolean testChildrenNodeSchema(ConfigurationSchemaNodeType rootSchema, String path, JsonNode childNode, AtomicBoolean areChildrenValid) {
+    private AtomicBoolean testChildrenNodeSchema(ConfigurationSchemaNodeType<?> rootSchema, String path, JsonNode childNode, AtomicBoolean areChildrenValid) {
         Iterator<Map.Entry<String, JsonNode>> childrenIterator = childNode.fields();
         while (childrenIterator.hasNext()) {
             Map.Entry<String, JsonNode> entry = childrenIterator.next();
@@ -158,25 +158,25 @@ public class NodeSchemaValidator {
             JsonNode child = entry.getValue();
 
             Optional<ConfigurationSchemaNodeType> schema;
-            if(path.contains(ConfigurationSchemaNode.OA_FILE_NAME) && ConfigurationSchemaNode.OA_REFERENCE_SCOPES.equals(childLabel)){
+            if (path.contains(ConfigurationSchemaNode.OA_FILE_NAME) && ConfigurationSchemaNode.OA_REFERENCE_SCOPES.equals(childLabel)) {
                 schema = rootSchema.sectionBuilder().findSchema(REFERENCE_SCOPES_FOR_FILE);
 
-            }else{
+            } else {
                 schema = rootSchema.sectionBuilder().findSchema(childLabel);
             }
             schema
                     .map(childrenSchema -> switch (childrenSchema) {
                         case FinalType finalType -> finalType;
                         case CheckerFactory checkerFactory
-                                when Strings.isNotEmpty(childNode.findPath(ConfigurationSchemaNode.OA_NAME).asText())-> {
-                                String checkerName = childNode.findPath(ConfigurationSchemaNode.OA_NAME).asText();
-                                try {
-                                    yield CheckerFactory.getCheckerTypeForName(
+                                when Strings.isNotEmpty(childNode.findPath(ConfigurationSchemaNode.OA_NAME).asText()) -> {
+                            String checkerName = childNode.findPath(ConfigurationSchemaNode.OA_NAME).asText();
+                            try {
+                                yield CheckerFactory.getCheckerTypeForName(
                                         checkerName);
-                                } catch (final SiOreConfigurationFormatException siOreConfigurationFormatException) {
-                                    rootBuilder.buildError(siOreConfigurationFormatException.getException(), siOreConfigurationFormatException.getParams(), path);
-                                    yield null;
-                                }
+                            } catch (final SiOreConfigurationFormatException siOreConfigurationFormatException) {
+                                rootBuilder.buildError(siOreConfigurationFormatException.getException(), siOreConfigurationFormatException.getParams(), path);
+                                yield null;
+                            }
                         }
                         case CheckerFactory checkerFactory -> {
                             List<String> pathes = List.of(path, childLabel);
@@ -192,8 +192,8 @@ public class NodeSchemaValidator {
                         }
                         case CollectionType.ArrayType arrayType when arrayType.type() == null -> {
                             int index = 0;
-                            yield  switch (childNode.get(childLabel)){
-                                case final ArrayNode arrayNode ->{
+                            yield switch (childNode.get(childLabel)) {
+                                case final ArrayNode arrayNode -> {
                                     for (final JsonNode jsonElement : arrayNode) {
                                         areChildrenValid.compareAndSet(false,
                                                 testSchema(null,
@@ -204,10 +204,10 @@ public class NodeSchemaValidator {
                                 }
                                 case final NullNode nullNode -> addErrorForExpectingValue(path, arrayType, childLabel);
                                 case null -> addErrorForExpectingValue(path, arrayType, childLabel);
-                                default-> addErrorForBadArrayValue(path, childLabel);
+                                default -> addErrorForBadArrayValue(path, childLabel);
                             };
                         }
-                        case CollectionType.ArrayType arrayType -> switch (childNode.get(childLabel)){
+                        case CollectionType.ArrayType arrayType -> switch (childNode.get(childLabel)) {
                             case final ArrayNode arrayNode -> {
                                 AtomicInteger index = new AtomicInteger(0);
                                 for (final JsonNode jsonElement : childNode.get(childLabel)) {
@@ -236,13 +236,13 @@ public class NodeSchemaValidator {
                             }
                             case final NullNode nullNode -> addErrorForExpectingValue(path, arrayType, childLabel);
                             case null -> addErrorForExpectingValue(path, arrayType, childLabel);
-                            default-> addErrorForBadArrayValue(path, childLabel);
+                            default -> addErrorForBadArrayValue(path, childLabel);
                         };
                         case CollectionType.MapType mapType when mapType.type() == null -> mapType;
                         case CollectionType.MapType mapType -> {
                             List<String> identificateurs = new LinkedList<>();
                             childNode.get(childLabel).fieldNames().forEachRemaining(identificateurs::add);
-                            if(!ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS.equals(childLabel)) {
+                            if (!ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS.equals(childLabel)) {
                                 testIdentificateurs(identificateurs, path);
                             }
                             identificateurs.forEach(label -> areChildrenValid
@@ -270,7 +270,7 @@ public class NodeSchemaValidator {
     }
 
     @Nullable
-    private ConfigurationSchemaNodeType addErrorForBadArrayValue(final String path, final String childLabel) {
+    private ConfigurationSchemaNodeType<?> addErrorForBadArrayValue(final String path, final String childLabel) {
         rootBuilder.buildError(
                 ConfigurationException.EXPECTED_ARRAY,
                 Map.of(),
@@ -280,8 +280,8 @@ public class NodeSchemaValidator {
     }
 
     @Nullable
-    private ConfigurationSchemaNodeType addErrorForExpectingValue(final String path, final CollectionType.ArrayType arrayType, final String childLabel) {
-        if(arrayType.nullable() && !arrayType.required()){
+    private ConfigurationSchemaNodeType<?> addErrorForExpectingValue(final String path, final CollectionType.ArrayType arrayType, final String childLabel) {
+        if (arrayType.nullable() && !arrayType.required()) {
             return null;
         }
         rootBuilder.buildError(
@@ -308,7 +308,7 @@ public class NodeSchemaValidator {
         }
     }
 
-    private boolean testNodeLabels(ConfigurationSchemaNodeType rootSchema, String path, Set<String> labels) {
+    private boolean testNodeLabels(ConfigurationSchemaNodeType<?> rootSchema, String path, Set<String> labels) {
         List<SiOreConfigurationFormatException> configurationFormatExceptions = new LinkedList<>();
         Consumer<SiOreConfigurationFormatException> buildLabelsErrors = e ->
                 rootBuilder.buildError(e.getException(), e.getParams(), joinPath(path, labels));

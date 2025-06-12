@@ -26,12 +26,12 @@ public record CheckAndStoreFile(
                     true));
             Preconditions.checkArgument(binaryFile() != null || (fileOrUuid() != null && fileOrUuid().fileid() != null), "le fichier ou params.fileid est requis");
             try {
-                Preconditions.checkArgument(!(binaryFile().getFileData().available() == 0), "le CSV téléversé pour le référentiel " + dataName() + " est vide");
+                Preconditions.checkArgument((binaryFile().getFileData().available() != 0), "le CSV téléversé pour le référentiel " + dataName() + " est vide");
             } catch (IOException e) {
-                throw new  IllegalArgumentException("le CSV téléversé pour le référentiel " + dataName() + " est vide");
+                throw new IllegalArgumentException("le CSV téléversé pour le référentiel " + dataName() + " est vide");
             }
             UUID fileId = binaryFileRepository.store(binaryFile());
-            builder().binaryFile = binaryFileRepository.tryFindByIdWithData(fileId).orElse(null);// TODO throwException
+            builder().binaryFile = binaryFileRepository.tryFindByIdWithData(fileId).orElse(null);
             return FileOrUUID.from(fileOrUuid(), fileId);
         } else {
             return FileOrUUID.from(fileOrUuid(), null);

@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.data.deposit.validation.transformer;
 
 import com.google.common.collect.ImmutableList;
-import fr.inra.oresing.domain.data.Datum;
 import fr.inra.oresing.domain.data.DataDatum;
+import fr.inra.oresing.domain.data.Datum;
 
 import java.util.Deque;
 import java.util.LinkedList;
@@ -33,9 +33,9 @@ public class ChainTransformersLineTransformer implements LineTransformer {
     }
 
     @Override
-    public Datum transform(final Datum DatumBeforeTransformation) {
+    public Datum transform(final Datum datumBeforeTransformation) {
         final Deque<Datum> transformations = new LinkedList<>();
-        transformations.add(DatumBeforeTransformation);
+        transformations.add(datumBeforeTransformation);
         transformers.forEach(lineTransformer -> {
             final Datum datumAfterLastTransformation = transformations.getLast();
             final Datum datumAfterOneMoreTransformation = lineTransformer.transform(datumAfterLastTransformation);

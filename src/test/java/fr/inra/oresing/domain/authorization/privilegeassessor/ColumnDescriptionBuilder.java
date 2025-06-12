@@ -6,10 +6,6 @@ import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import java.util.Locale;
 
 public class ColumnDescriptionBuilder {
-    public static final ColumnDescriptionBuilder builder() {
-        return new ColumnDescriptionBuilder();
-    }
-
     private boolean isDisplay = false;
     private String title = "title";
     private boolean withPeriod = false;
@@ -17,6 +13,10 @@ public class ColumnDescriptionBuilder {
     private boolean forPublic = false;
     private boolean forRequest = false;
     private Internationalization internationalisationName = new Internationalization();
+
+    public static final ColumnDescriptionBuilder builder() {
+        return new ColumnDescriptionBuilder();
+    }
 
     public GetGrantableResult.ColumnDescription build() {
         return new GetGrantableResult.ColumnDescription(
@@ -62,11 +62,6 @@ public class ColumnDescriptionBuilder {
 
     public ColumnDescriptionBuilder withInternationalisationName(Internationalization internationalisationName) {
         this.internationalisationName = internationalisationName;
-        return this;
-    }
-
-    public ColumnDescriptionBuilder isDisplay(boolean isDisplay) {
-        this.isDisplay = isDisplay;
         return this;
     }
 

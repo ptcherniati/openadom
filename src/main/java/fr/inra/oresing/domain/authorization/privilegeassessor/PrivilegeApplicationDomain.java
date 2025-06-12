@@ -1,5 +1,7 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
+
 public record PrivilegeApplicationDomain(
-        fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain domain) implements PrivilegeAssessorStateApplicationDomain {
+        PrivilegeApplicationDomainEnum domain) implements PrivilegeAssessorStateApplicationDomain {
 }

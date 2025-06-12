@@ -2,7 +2,7 @@
 # ---- Stage 1: Build and Test the Maven project ----
 ######################################################
 
-FROM maven:3.9.4-amazoncorretto-21 AS build-test-stage
+FROM maven:3.9.9-amazoncorretto-23 AS build-test-stage
 
 # Set the working directory inside the container
 WORKDIR /app
@@ -20,7 +20,7 @@ RUN ls -la /app/target/
 ######################################################
 
 # FROM amazoncorretto:21 AS runtime-stage
-FROM openjdk:21-jdk AS runtime-stage
+FROM openjdk:23-jdk AS runtime-stage
 
 # Set the working directory
 WORKDIR /app

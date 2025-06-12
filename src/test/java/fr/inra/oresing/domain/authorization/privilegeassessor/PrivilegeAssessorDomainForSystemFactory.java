@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 
 import java.util.Set;
@@ -18,30 +19,13 @@ public class PrivilegeAssessorDomainForSystemFactory {
     public static final PrivilegeAssessorDomainForSystem APPLICATION_CREATOR = builder()
             .withIsApplicationCreator(Set.of(DEFAULT_DATA_NAME))
             .build();
-
-    private PrivilegeAssessorDomainForSystemFactory withIsApplicationCreator(Set<String> defaultDataNamePatterns) {
-        when(authorizations.applicationCreator()).thenReturn(defaultDataNamePatterns);
-        return this;
-    }
-
     public static final PrivilegeAssessorDomainForSystem NO_SYSTEM_RIGHTS = builder()
             .build();
 
-    // Initialisation des constantes nécessitant des mocks
-    static {
-
-    }
-
-    private PrivilegeAssessorDomainForSystemFactory withIsOpenAdomAdmin(boolean isOpenAdomAdmin) {
-        when(currentUserRoles.isOpenAdomAdmin()).thenReturn(isOpenAdomAdmin);
-        return this;
-    }
-
     // Attributs d'instance pour le builder
     private AuthorizationsForSystemUser authorizations = mock(AuthorizationsForSystemUser.class, "mock authorizations");
-    private PrivilegeAssessorDomain domain;
+    private PrivilegeSystemDomainEnum privilegeSystemDomainEnum;
     private CurrentUserRoles currentUserRoles = mock(CurrentUserRoles.class, "mock currentUserRoles");
-
 
     public static PrivilegeAssessorDomainForSystemFactory builder() {
         final PrivilegeAssessorDomainForSystemFactory privilegeAssessorDomainForSystemFactory = new PrivilegeAssessorDomainForSystemFactory();
@@ -49,9 +33,18 @@ public class PrivilegeAssessorDomainForSystemFactory {
         return privilegeAssessorDomainForSystemFactory;
     }
 
+    private PrivilegeAssessorDomainForSystemFactory withIsApplicationCreator(Set<String> defaultDataNamePatterns) {
+        when(authorizations.applicationCreator()).thenReturn(defaultDataNamePatterns);
+        return this;
+    }
+
+    private PrivilegeAssessorDomainForSystemFactory withIsOpenAdomAdmin(boolean isOpenAdomAdmin) {
+        when(currentUserRoles.isOpenAdomAdmin()).thenReturn(isOpenAdomAdmin);
+        return this;
+    }
+
     public PrivilegeAssessorDomainForSystem build() {
-        final PrivilegeAssessorDomainForSystem privilegeAssessorDomainForApplication = new PrivilegeAssessorDomainForSystem(authorizations, domain);
-        return privilegeAssessorDomainForApplication;
+        return new PrivilegeAssessorDomainForSystem(authorizations, privilegeSystemDomainEnum);
     }
 
     public PrivilegeAssessorDomainForSystemFactory withAuthorizations(AuthorizationsForSystemUser authorizations) {
@@ -59,8 +52,8 @@ public class PrivilegeAssessorDomainForSystemFactory {
         return this;
     }
 
-    public PrivilegeAssessorDomainForSystemFactory withDomain(PrivilegeAssessorDomain domain) {
-        this.domain = domain;
+    public PrivilegeAssessorDomainForSystemFactory withDomain(PrivilegeSystemDomainEnum privilegeSystemDomainEnum) {
+        this.privilegeSystemDomainEnum = privilegeSystemDomainEnum;
         return this;
     }
 

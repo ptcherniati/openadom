@@ -1,10 +1,10 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.AuthenticationService;
+import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdministratorForSystemException;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomain;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomain;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
 import fr.inra.oresing.domain.repository.user.file.UserRepository;
 import fr.inra.oresing.rest.model.authorization.GetGrantableResult;
 import org.apache.commons.collections4.CollectionUtils;
@@ -15,47 +15,47 @@ public sealed interface PrivilegeAssessorBuilder<PrivilegeAssessorState>
         permits PrivilegeAssessorDomain {
 
 
-    static PrivilegeAssessorDomainForSystem<PrivilegeAssessorStateDomain.PrivilegeAssessorStateSystemDomain> forSystem(
+    static PrivilegeAssessorDomainForSystem<PrivilegeSystemDomainEnum> forSystem(
             AuthorizationsForSystemUser authorizations,
-            PrivilegeSystemDomain privilegeDomain) {
+            PrivilegeSystemDomainEnum privilegeSystemDomainEnum) {
         boolean isOpenAdomAdmin = authorizations.currentUserRoles().isOpenAdomAdmin();
         Set<String> applicationCreatorRegexp = authorizations.applicationCreator();
         if (!isOpenAdomAdmin && CollectionUtils.isEmpty(applicationCreatorRegexp)) {
             throw new NotOpenAdomAdministratorForSystemException();
         }
-        return new PrivilegeAssessorDomainForSystem(
+        return new PrivilegeAssessorDomainForSystem<>(
                 authorizations,
-                privilegeDomain
+                privilegeSystemDomainEnum
         );
     }
 
-    static PrivilegeAssessorDomainForApplication<PrivilegeAssessorStateApplicationDomain> forApplication(
+    static PrivilegeAssessorDomainForApplication<PrivilegeApplicationDomainEnum> forApplication(
             AuthorizationsForApplicationUser authorizations,
-            PrivilegeApplicationDomain privilegeDomain,
+            PrivilegeApplicationDomainEnum privilegeApplicationDomainEnum,
             Application application,
             GetGrantableResult grantable) {
-        return new PrivilegeAssessorDomainForApplication(
+        return new PrivilegeAssessorDomainForApplication<>(
                 authorizations,
-                privilegeDomain,
+                privilegeApplicationDomainEnum,
                 application,
                 grantable);
     }
 
 
-    static PrivilegeAssessorDomainForSystem<PrivilegeAssessorStateDomain.PrivilegeAssessorStateSystemDomain> forUser(
+    static PrivilegeAssessorDomainForSystem<PrivilegeSystemDomainEnum> forUser(
             AuthorizationsForSystemUser authorizations,
-            PrivilegeSystemDomain privilegeDomain) {
-        return new PrivilegeAssessorDomainForSystem(
+            PrivilegeSystemDomainEnum privilegeSystemDomainEnum) {
+        return new PrivilegeAssessorDomainForSystem<>(
                 authorizations,
-                privilegeDomain
+                privilegeSystemDomainEnum
         );
     }
 
-    static PrivilegeAssessorDomainForNotConnectedUser forNotConnectedUser(AuthenticationService authenticationService, UserRepository userRepository, PrivilegeSystemDomain privilegeDomain) {
-        return new PrivilegeAssessorDomainForNotConnectedUser(
+    static PrivilegeAssessorDomainForNotConnectedUser<PrivilegeSystemDomainEnum> forNotConnectedUser(AuthenticationServiceImpl authenticationService, UserRepository userRepository, PrivilegeSystemDomainEnum privilegeSystemDomainEnum) {
+        return new PrivilegeAssessorDomainForNotConnectedUser<>(
                 authenticationService,
                 userRepository,
-                privilegeDomain
+                privilegeSystemDomainEnum
         );
     }
 }

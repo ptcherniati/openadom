@@ -6,10 +6,25 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 import java.util.Map;
 
 public record RightRequestType(SectionBuilder sectionBuilder,
-                               Map<String, ConfigurationSchemaNodeType> children,
+                               Map<String, ConfigurationSchemaNodeType<?>> children,
                                boolean required,
                                boolean nullable) implements ApplicationType {
-    public static SectionBuilder SECTION_BUILDER(){
+    private RightRequestType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
+        this(SECTION_BUILDER(),
+                children,
+                false,
+                false);
+    }
+
+    public RightRequestType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER()
+                        .test(children.keySet()),
+                children,
+                false,
+                false);
+    }
+
+    public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withMandatorySections(
                         new LabelDescription(ConfigurationSchemaNode.OA_FORM_FIELDS, FormatType.EMPTY_INSTANCE())
@@ -18,22 +33,9 @@ public record RightRequestType(SectionBuilder sectionBuilder,
                         new LabelDescription(ConfigurationSchemaNode.OA_I_18_N, TitleType.EMPTY_INSTANCE())
                 );
     }
-    public static RightRequestType  EMPTY_INSTANCE(){
-        return new RightRequestType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
 
-    private RightRequestType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
-                children,
-                false,
-                false);
-    }
-    public RightRequestType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER()
-                        .test(children.keySet()),
-                children,
-                false,
-                false);
+    public static RightRequestType EMPTY_INSTANCE() {
+        return new RightRequestType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
 
 }

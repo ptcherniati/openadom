@@ -61,11 +61,11 @@ services:
     networks:
       - default
     volumes:
-     - 'grafana_storage:/var/lib/grafana'
-     #- './grafana/grafana.ini:/etc/grafana/grafana.ini'
-     - './grafana/provisioning/si-ore-datasource.yml:/etc/grafana/provisioning/si-ore-datasource.yml'
-     - './grafana/grafana-image-renderer/custom.ini:/etc/grafana/grafana-image-renderer/custom.ini'
-     - './grafana/provisioning/dashboard/pem-dashboard.json:/etc/grafana/provisioning/dashboard/pem-dashboard.json'
+      - 'grafana_storage:/var/lib/grafana'
+      #- './grafana/grafana.ini:/etc/grafana/grafana.ini'
+      - './grafana/provisioning/si-ore-datasource.yml:/etc/grafana/provisioning/si-ore-datasource.yml'
+      - './grafana/grafana-image-renderer/custom.ini:/etc/grafana/grafana-image-renderer/custom.ini'
+      - './grafana/provisioning/dashboard/pem-dashboard.json:/etc/grafana/provisioning/dashboard/pem-dashboard.json'
 
   renderer:
     image: grafana/grafana-image-renderer:latest

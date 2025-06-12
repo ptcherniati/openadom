@@ -16,7 +16,7 @@ public class SubmissionScopeTypeExampleBuilder {
             CollectionType.ArrayType<ReferenceScopeType> referenceScopeType,
             SubmissionTimeScopeType timeScopeType
     ) {
-        Map<String, ConfigurationSchemaNodeType> map = new HashMap<>();
+        Map<String, ConfigurationSchemaNodeType<?>> map = new HashMap<>();
         map.put(ConfigurationSchemaNode.OA_REFERENCE_SCOPES, referenceScopeType);
         map.put(ConfigurationSchemaNode.OA_TIME_SCOPE, timeScopeType);
 

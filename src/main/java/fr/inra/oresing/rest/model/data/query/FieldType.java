@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.model.data.query;
 
+
 import java.util.Set;
 
 // TODO- rest ou persistance enum ?!! (=^_^=)

@@ -37,7 +37,9 @@ public class DataValue extends OreSiEntity {
     public record LineIdentityColumnName(
             Ltree naturalKey,
             Ltree hierarchicalKey
-    ){}
+    ) {
+    }
 
-    public record LineIdentityPatternColumnName(LineIdentityColumnName identity, String patternColumnName){}
+    public record LineIdentityPatternColumnName(LineIdentityColumnName identity, String patternColumnName) {
+    }
 }

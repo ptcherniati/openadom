@@ -6,17 +6,17 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 import java.util.Map;
 
 public record ReferenceScopeType(SectionBuilder sectionBuilder,
-                                 Map<String, ConfigurationSchemaNodeType> children,
+                                 Map<String, ConfigurationSchemaNodeType<?>> children,
                                  boolean required,
-                                 boolean nullable) implements ApplicationType {
-    private ReferenceScopeType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
+                                 boolean nullable) implements ApplicationType<Map<String, ConfigurationSchemaNodeType<?>>> {
+    private ReferenceScopeType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
         this(SECTION_BUILDER(),
                 children,
                 false,
                 false);
     }
 
-    public ReferenceScopeType(final Map<String, ConfigurationSchemaNodeType> children) {
+    public ReferenceScopeType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),
                 children,
@@ -32,7 +32,7 @@ public record ReferenceScopeType(SectionBuilder sectionBuilder,
                 )
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_I_18_N
-, TitleType.EMPTY_INSTANCE()),
+                                , TitleType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_EXPORT_HEADER, TitleType.EMPTY_INSTANCE())
                 );
     }

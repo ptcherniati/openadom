@@ -24,20 +24,24 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class RightsRequestService  implements ServiceContainerBean{
+public class RightsRequestService {
 
     @Setter
     private ServiceContainer serviceContainer;
 
-    @Autowired
-    private OreSiRepository repository;
-    @Autowired
-    private OreSiApiRequestContext request;
+    private final OreSiRepository repository;
+    private final OreSiApiRequestContext request;
+
+    public RightsRequestService(OreSiRepository repository, OreSiApiRequestContext request,
+                                ServiceContainer serviceContainer) {
+        this.repository = repository;
+        this.request = request;
+        this.serviceContainer = serviceContainer;
+    }
 
     void addRightsRequest(final Application app, final String refType, final MultipartFile file, final UUID fileId) {
         RightsRequestRepository rightsRequestRepository = repository.getRepository(app).rightsRequestRepository();
@@ -69,7 +73,7 @@ public class RightsRequestService  implements ServiceContainerBean{
                 .map(rightsRequest ->
                         getRightsRequestResult(rightsRequest, application)
                 )
-                .collect(Collectors.toList());
+                .toList();
         ImmutableSortedSet<GetGrantableResult.User> grantableUsers = serviceContainer.authorizationService().getGrantableUsers();
         return new GetRightsRequestResult(grantableUsers, rightsRequestResult, description);
     }

@@ -4,5 +4,6 @@ import java.util.Set;
 
 interface WithDepends {
     Set<String> depends();
+
     String nodeName();
 }

@@ -9,14 +9,14 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.util.Optional;
 import java.util.Set;
 
-public record PrivilegeAssessorDomainForSystem<PrivilegeSystemDomain>(
+public record PrivilegeAssessorDomainForSystem<P extends PrivilegeSystemDomainEnum>(
         AuthorizationsForSystemUser authorizations,
-        PrivilegeSystemDomain domain
+        P domain
 ) implements PrivilegeAssessorDomain {
     public OpenAdomAdmin forAdministrationManagement() {
         return Optional.of(authorizations())
                 .filter(authorizationsForSystemUser -> authorizationsForSystemUser.currentUserRoles().isOpenAdomAdmin())
-                .map(t->new OpenAdomAdmin())
+                .map(t -> new OpenAdomAdmin())
                 .orElseThrow(NotOpenAdomAdminException::new);
     }
 
@@ -37,8 +37,9 @@ public record PrivilegeAssessorDomainForSystem<PrivilegeSystemDomain>(
                 authorizations().applicationCreator()
         );
     }
-    public boolean is(String login){
-        if(!login.equals(connectedUser().getLogin())){
+
+    public boolean is(String login) {
+        if (!login.equals(connectedUser().getLogin())) {
             throw new BadLoginForAction(login);
         }
         return true;

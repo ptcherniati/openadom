@@ -5,19 +5,12 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 
 import java.util.Map;
 
-public record AuthorizationType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType> children,
+public record AuthorizationType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType<?>> children,
                                 boolean required,
-                                boolean nullable) implements ApplicationType {
-    public AuthorizationType(final Map<String, ConfigurationSchemaNodeType> children) {
+                                boolean nullable) implements ApplicationType<Map<String, ConfigurationSchemaNodeType<?>>> {
+    public AuthorizationType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
         this(SECTION_BUILDER()
                         .test(children.keySet()),
-                children,
-                true,
-                false);
-    }
-
-    private AuthorizationType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
                 children,
                 true,
                 false);
@@ -32,6 +25,6 @@ public record AuthorizationType(SectionBuilder sectionBuilder, Map<String, Confi
     }
 
     public static AuthorizationType EMPTY_INSTANCE() {
-        return new AuthorizationType(Map.of(), RootType.CHECKING.NO_CHECK);
+        return new AuthorizationType(Map.of());
     }
 }

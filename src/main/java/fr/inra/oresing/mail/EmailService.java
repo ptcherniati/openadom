@@ -7,7 +7,6 @@ import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import fr.inra.oresing.rest.services.ServiceContainerBean;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,21 +22,20 @@ import static fr.inra.oresing.mail.EmailService.UPLOAD_STATE.UNPUBLISHED;
 
 @Service
 @RequiredArgsConstructor
-public class EmailService implements Email, ServiceContainerBean {
-    @Value("${spring.mail.from}")
-    String mailFrom;
-    @Autowired
-    private final JavaMailSender mailSender;
+public class EmailService implements Email {
+    public static final String OPENADOM_INRAE_FR = "openadom@inrae.fr";
+    public static final String MSG_ERROR_SUBJECT_FR = "Une erreur c'est produite lors de  l'opération sur le type de   données % de l'application %s";
+    public static final String MSG_ERROR_SUBJECT_EN = "An error occurred while operating on data type % of application %s";
     private static final String NEW_ACCOUNT_SUBJECT = "Création de compte / Account creation";
     private static final String NEW_ACCOUNT_FR = "Vous venez de créer un compte sur l'application OPENAdom. %n" +
-                                                 "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
+            "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
     private static final String NEW_ACCOUNT_EN = "You have just created an account on the OPENAdomoresie application. %n" +
-                                                 "To validate your e-mail, enter the validation key when connecting.%n\n";
+            "To validate your e-mail, enter the validation key when connecting.%n\n";
     private static final String EMAIL_CHANGED_SUBJECT = "Validation email / Email validation";
-    private static final String EMAIL_CHANGED_FR = "Vous venez de modifier votre email. %n" +
-                                                   "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
-    private static final String EMAIL_CHANGED_EN = "You have just changed your email. %n" +
-                                                   "To validate your e-maioresil, enter the validation key when connecting.%n\n";
+    private static final String EMAIL_CHANGED_FR = "Vous venez de modifier votre email. \n" +
+            "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.";
+    private static final String EMAIL_CHANGED_EN = "You have just changed your email. \n" +
+            "To validate your e-mail, enter the validation key when connecting.";
     private static final String VALIDATION_KEY_SUBJECT = "Clef de validation / Validation key";
     private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_SUBJECTS = Map.of(
             UNPUBLISHED, Map.of(
@@ -97,13 +95,20 @@ public class EmailService implements Email, ServiceContainerBean {
             """;
     private static final String MAIL_MESSAGE_TEMPLATE =
             "Bonjour %1$s%n%n" +
-            "%2$s%n" +
-            "L'équipe d'OpenAdom";
-    public static final String MSG_ERROR_SUBJECT_FR = "Une erreur c'est produite lors de  l'opération sur le type de   données % de l'application %s";
-    public static final String MSG_ERROR_SUBJECT_EN = "An error occurred while operating on data type % of application %s";
+                    "%2$s%n" +
+                    "L'équipe d'OpenAdom";
+    private final JavaMailSender mailSender;
+    private final ServiceContainer serviceContainer;
+    @Value("${spring.mail.from}")
+    String mailFrom;
+    private LocaleResolver localeResolver;
 
     @Autowired
-    private LocaleResolver localeResolver;
+    public EmailService(JavaMailSender mailSender, LocaleResolver localeResolver, ServiceContainer serviceContainer) {
+        this.mailSender = mailSender;
+        this.localeResolver = localeResolver;
+        this.serviceContainer = serviceContainer;
+    }
 
     @Override
     public void sendEmail(final String login, final String to, final String subject, final String message) {
@@ -122,35 +127,6 @@ public class EmailService implements Email, ServiceContainerBean {
     }
 
     @Override
-    public void setServiceContainer(ServiceContainer serviceContainer) {
-
-    }
-
-    public enum UPLOAD_STATE {
-        UPLOADED,
-        PUBLISHED,
-        UNPUBLISHED,
-        DELETED
-    }
-
-    public enum MESSAGES {
-
-        NEW_ACCOUNT(NEW_ACCOUNT_SUBJECT, NEW_ACCOUNT_FR, NEW_ACCOUNT_EN),
-        NEW_EMAIL(EMAIL_CHANGED_SUBJECT, EMAIL_CHANGED_FR, EMAIL_CHANGED_EN),
-        VALIDATION_KEY(VALIDATION_KEY_SUBJECT, "", "");
-
-        MESSAGES(final String subject, final String title_fr, final String title_en) {
-            this.subject = subject;
-            this.title_fr = title_fr;
-            this.title_en = title_en;
-        }
-
-        final String subject;
-        final String title_fr;
-        final String title_en;
-        }
-
-    @Override
     public void sendUploadZipEmail(
             final String to,
             final String subject,
@@ -160,7 +136,7 @@ public class EmailService implements Email, ServiceContainerBean {
             String internationnalizedDataName) {
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(to);
-        mailMessage.setFrom("openadom@inrae.fr");
+        mailMessage.setFrom(OPENADOM_INRAE_FR);
         mailMessage.setSubject(subject);
         mailMessage.setText(
                 String.format(
@@ -193,7 +169,7 @@ public class EmailService implements Email, ServiceContainerBean {
                 );
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
-        mailMessage.setFrom("openadom@inrae.fr");
+        mailMessage.setFrom(OPENADOM_INRAE_FR);
         mailMessage.setSubject(subject);
         mailMessage.setText(text);
 
@@ -202,13 +178,36 @@ public class EmailService implements Email, ServiceContainerBean {
 
     @Override
     public void sendUpoadErrorsMail(Locale application, String dataName, String locale, OreSiUser currentUser, String body) {
-        final SimpleMailMessage  mailMessage = new SimpleMailMessage();
+        final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
-        mailMessage.setFrom("openadom@inrae.fr");
-        mailMessage.setSubject(Locale.ENGLISH.getLanguage().equals(locale)?MSG_ERROR_SUBJECT_EN:MSG_ERROR_SUBJECT_FR);
+        mailMessage.setFrom(OPENADOM_INRAE_FR);
+        mailMessage.setSubject(Locale.ENGLISH.getLanguage().equals(locale) ? MSG_ERROR_SUBJECT_EN : MSG_ERROR_SUBJECT_FR);
         mailMessage.setText(body);
 
         mailSender.send(mailMessage);
+    }
+
+    public enum UPLOAD_STATE {
+        UPLOADED,
+        PUBLISHED,
+        UNPUBLISHED,
+        DELETED
+    }
+
+    public enum MESSAGES {
+
+        NEW_ACCOUNT(NEW_ACCOUNT_SUBJECT, NEW_ACCOUNT_FR, NEW_ACCOUNT_EN),
+        NEW_EMAIL(EMAIL_CHANGED_SUBJECT, EMAIL_CHANGED_FR, EMAIL_CHANGED_EN),
+        VALIDATION_KEY(VALIDATION_KEY_SUBJECT, "", "");
+
+        final String subject;
+        final String title_fr;
+        final String title_en;
+        MESSAGES(final String subject, final String title_fr, final String title_en) {
+            this.subject = subject;
+            this.title_fr = title_fr;
+            this.title_en = title_en;
+        }
     }
 
 }

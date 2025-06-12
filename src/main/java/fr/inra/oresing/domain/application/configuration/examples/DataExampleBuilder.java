@@ -24,8 +24,8 @@ class DataExampleBuilder {
         return new DataType(createDataSchemasMap(headerLine, firstRowLine, naturalKey, title, tags, displayPattern, basicComponents, computedComponents, dynamicComponents, patternComponents, constantComponents, validations, submission, authorization));
     }
 
-    private static Map<String, ConfigurationSchemaNodeType> createDataSchemasMap(int headerLine, int firstRowLine, List<String> naturalKey, TitleType title, List<String> tags, TitleType displayPattern, CollectionType.MapType<BasicComponentType> basicComponents, CollectionType.MapType<ComputedComponentType> computedComponents, CollectionType.MapType<DynamicComponentType> dynamicComponents, CollectionType.MapType<PatternComponentType> patternComponents, CollectionType.MapType<ConstantComponentType> constantComponents, CollectionType.MapType<ValidationType> validations, SubmissionType submission, AuthorizationType authorization) {
-        Map<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+    private static Map<String, ConfigurationSchemaNodeType<?>> createDataSchemasMap(int headerLine, int firstRowLine, List<String> naturalKey, TitleType title, List<String> tags, TitleType displayPattern, CollectionType.MapType<BasicComponentType> basicComponents, CollectionType.MapType<ComputedComponentType> computedComponents, CollectionType.MapType<DynamicComponentType> dynamicComponents, CollectionType.MapType<PatternComponentType> patternComponents, CollectionType.MapType<ConstantComponentType> constantComponents, CollectionType.MapType<ValidationType> validations, SubmissionType submission, AuthorizationType authorization) {
+        Map<String, ConfigurationSchemaNodeType<?>> map = new LinkedHashMap<>();
         map.put(ConfigurationSchemaNode.OA_HEADER_LINE, new IntegerType(headerLine));
         map.put(ConfigurationSchemaNode.OA_FIRST_ROW_LINE, new IntegerType(firstRowLine));
         map.put(ConfigurationSchemaNode.OA_NATURAL_KEY, new CollectionType.ArrayType<>(naturalKey.stream().map(StringType::new).toList(), true, false, StringType.EMPTY_INSTANCE()));

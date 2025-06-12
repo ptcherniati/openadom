@@ -29,11 +29,7 @@ public record ComputationBuilder(RootBuilder rootBuilder) {
         Parsing<Set<String>> exceptionMessagesParsing = rootBuilder().checkerDescriptionBuilder.buildMessagesExceptions(
                 i18n,
                 pathNodes.get(1),
-                pathNodes.get(pathNodes.size()-2),
-                NodeSchemaValidator.joinPath(
-                        computationPath,
-                        ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS
-                ),
+                pathNodes.get(pathNodes.size() - 2),
                 computationNode.findPath(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS)
         );
 

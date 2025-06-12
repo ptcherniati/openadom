@@ -2,6 +2,8 @@ package fr.inra.oresing.domain.application;
 
 import fr.inra.oresing.domain.OreSiEntity;
 import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationComponent;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
@@ -19,10 +21,6 @@ import java.util.stream.Collectors;
 @Setter
 @ToString(callSuper = true)
 public class Application extends OreSiEntity {
-    public Timestamp getLastChartes() {
-        return lastChartes==null?(new Timestamp(Long.MIN_VALUE)):lastChartes;
-    }
-
     private Timestamp lastChartes;
     private String name;
     private String version;
@@ -31,10 +29,13 @@ public class Application extends OreSiEntity {
     private Configuration configuration;
     private UUID configFile; // lien vers un BinaryFile
 
+    public Timestamp getLastChartes() {
+        return lastChartes == null ? (new Timestamp(Long.MIN_VALUE)) : lastChartes;
+    }
 
     public Application applicationAccordingToRights() {
-        Configuration configuration = this.configuration;
-        final Configuration configurationforNotAuthorized = configuration.configurationAccordingToRights();
+        Configuration configurationToSet = this.configuration;
+        final Configuration configurationforNotAuthorized = configurationToSet.configurationAccordingToRights();
         setConfiguration((configurationforNotAuthorized));
         return this;
     }
@@ -54,7 +55,7 @@ public class Application extends OreSiEntity {
             List<String> references = getData()
                     .stream()
                     .filter(dataName -> !configuration.dataDescription().get(dataName).tags().contains(new Tag.HiddenTag()))
-                    .collect(Collectors.toList());
+                    .toList();
             returnApp.setData(references);
         }
         if (filters.contains(ApplicationInformation.ALL) || filters.contains(ApplicationInformation.ADDITIONALFILE)) {
@@ -64,7 +65,7 @@ public class Application extends OreSiEntity {
     }
 
     public Optional<StandardDataDescription> findData(String dataName) {
-        Function<Map<String, StandardDataDescription>, StandardDataDescription> getDataDescription = data -> data.get(dataName);
+        Function<Map<String, StandardDataDescription>, StandardDataDescription> getDataDescription = localData -> localData.get(dataName);
         return Optional.of(findData())
                 .map(getDataDescription);
     }
@@ -109,7 +110,7 @@ public class Application extends OreSiEntity {
     public String internationalizeHeader(String dataName, String componentName, String language) {
         return Optional.ofNullable(getConfiguration().i18n())
                 .map(Internationalizations::getData)
-                .map(data -> data.get(dataName))
+                .map(localData -> localData.get(dataName))
                 .map(InternationalizationData::getComponents)
                 .map(component -> component.get(componentName))
                 .map(InternationalizationComponent::getExportHeader)
@@ -207,22 +208,41 @@ public class Application extends OreSiEntity {
 
     public String getLocalizedLocalName(Locale locale) {
         assert getConfiguration() != null;
-        String localizedApplicationName = Optional.ofNullable(getConfiguration())
+        return Optional.ofNullable(getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
                 .map(InternationalizationTitle::getTitle)
-                .map(title->title.get(locale) )
+                .map(title -> title.get(locale))
                 .orElse(getConfiguration().applicationDescription().name());
-        return localizedApplicationName;
     }
 
     public String getLocalizedDataName(Locale locale, String dataName) {
         return Optional.ofNullable(getConfiguration().i18n())
                 .map(Internationalizations::getData)
-                .map(data->data.get(dataName))
+                .map(dataMap -> dataMap.get(dataName))
                 .map(InternationalizationData::getI18n)
                 .map(InternationalizationTitle::getTitle)
-                .map(title->title.get(locale))
+                .map(title -> title.get(locale))
                 .orElse(null);
+    }
+
+    public DatePattern findSubmissionDatePattern(String dataName) {
+        String timescope = findData(dataName)
+                .map(StandardDataDescription::submission)
+                .map(Submission::submissionScope)
+                .map(Submission.SubmissionScope::timescope)
+                .map(Submission.SubmissionScope.TimeScope::component)
+                .orElse("");
+        return findData(dataName)
+                .map(StandardDataDescription::componentDescriptions)
+                .map(Map::values)
+                .stream().flatMap(Collection::stream)
+                .filter(component -> timescope.equals(component.componentKey()))
+                .map(ComponentDescription::checker)
+                .filter(DateChecker.class::isInstance)
+                .map(DateChecker.class::cast)
+                .map(DateChecker::pattern)
+                .map(DatePattern::of)
+                .findFirst().orElse(DatePattern.DEFAULT);
     }
 }

@@ -1,14 +1,19 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import lombok.Value;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.CharUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -31,10 +36,6 @@ public class Ltree implements Comparable<Ltree> {
     private static final Pattern LABEL_INVALID_CHARACTERS_REGEX = Pattern.compile("[^a-zA-Z0-9_]");
     private static final Pattern VALID_LABEL_REGEX = Pattern.compile("[a-zA-Z0-9_]+");
     private static final Ltree EMPTY_LTREE_SINGLETON = new Ltree("");
-    /*public static Set<String> KNOWN_SYMBOL_CODES = IntStream.range(Character.MIN_CODE_POINT, Character.MAX_CODE_POINT)
-            .filter(Character::isValidCodePoint)
-            .filter(Character::isDefined)
-            .mapToObj(i -> Character.getName(i).replaceAll("[ -]", "")).collect(Collectors.toCollection(HashSet::new));*/
     public static Set<String> KNOWN_SYMBOL_CODES = IntStream.range(0, 0x3FF)
             .filter(Character::isValidCodePoint)
             .filter(Character::isDefined)
@@ -48,10 +49,6 @@ public class Ltree implements Comparable<Ltree> {
 
     public static Ltree fromSqlWithoutCheck(String text) {
         return new Ltree(text);
-    }
-
-    public Ltree last() {
-        return Ltree.fromSql(getSql().replaceAll(".*\\.", ""));
     }
 
     /**
@@ -75,12 +72,12 @@ public class Ltree implements Comparable<Ltree> {
     }
 
     public static String escapeToLabel(String key, Set<String> knownSpecialCharacters) {
-        if (VALID_LABEL_REGEX.asMatchPredicate().test(key) && isEncodedString(key, knownSpecialCharacters)) {
+        final Set<String> validPatterns = CollectionUtils.isNotEmpty(knownSpecialCharacters) ? knownSpecialCharacters : KNOWN_SYMBOL_CODES;
+        if (VALID_LABEL_REGEX.asMatchPredicate().test(key) && isEncodedString(key, validPatterns)) {
             return key;
         }
         return extracttolabelFromStringWithSpecialCharacters(key);
     }
-
 
     private static String extracttolabelFromStringWithSpecialCharacters(String key) {
         final String lowerCased = key.replace(Ltree.NULL_KEY, "____").toLowerCase();
@@ -93,7 +90,7 @@ public class Ltree implements Comparable<Ltree> {
                 .collect(Collectors.joining());
         checkLabelSyntax(escaped);
         return escaped
-                .replaceAll("________", "__NULL_KEY__")
+                .replace("________", "__NULL_KEY__")
                 .replaceAll("^______", "NULL_KEY__")
                 .replaceAll("______$", "__NULL_KEY");
     }
@@ -161,6 +158,19 @@ public class Ltree implements Comparable<Ltree> {
         return EMPTY_LTREE_SINGLETON;
     }
 
+    /**
+     * @param value
+     * @return
+     **/
+    @JsonCreator
+    public static Ltree fromJson(String value) {
+        return Ltree.fromSql(value);
+    }
+
+    public Ltree last() {
+        return Ltree.fromSql(getSql().replaceAll(".*\\.", ""));
+    }
+
     @Override
     public String toString() {
         return sql;
@@ -187,8 +197,17 @@ public class Ltree implements Comparable<Ltree> {
         return others.stream().anyMatch(this::isAncestorOf);
     }
 
+    /**
+     *  Ajouter l’annotation @JsonCreator pour indiquer à Jackson 
+     *  comment construire un Ltree à partir d’un String.
+     */
+
     @Override
     public int compareTo(Ltree o) {
         return getSql().compareTo(o.getSql());
+    }
+
+    public String toJson() {
+        return sql;
     }
 }

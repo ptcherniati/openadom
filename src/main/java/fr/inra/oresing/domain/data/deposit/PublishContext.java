@@ -37,16 +37,16 @@ public record PublishContext(
 
     public static class PublishContextBuilder {
         final FileOrUUID fileOrUUID;
-        private final Function<String, List<DataValue>> getDatavaluesByReference;
         @Getter
         final Application application;
         @Getter
         final String dataName;
+        final Map<String, List<DataValue>> dataValuesByReference = new HashMap<>();
+        private final Function<String, List<DataValue>> getDatavaluesByReference;
         List<List<String>> preHeaderRow;
         List<List<String>> postHeaderRow;
         List<String> headerRow;
         RowInfos rowInfos;
-        final Map<String, List<DataValue>> dataValuesByReference = new HashMap<>();
 
         public PublishContextBuilder(Application application, String dataName, final FileOrUUID fileOrUUID, Function<String, List<DataValue>> getDatavaluesByReference) {
             super();
@@ -81,10 +81,10 @@ public record PublishContext(
         }
 
         public PublishContext build() {
-            final HeaderInfos header = new HeaderInfos(preHeaderRow, postHeaderRow, headerRow);
+            final HeaderInfos headerInfos = new HeaderInfos(preHeaderRow, postHeaderRow, headerRow);
             return new PublishContext(
                     fileOrUUID,
-                    header,
+                    headerInfos,
                     rowInfos
             );
         }
@@ -100,15 +100,15 @@ public record PublishContext(
                 groovyReferences
                         .stream().filter(Objects::nonNull)
                         .forEach(reference -> {
-                    final List<DataValue> allByReferenceType =
-                            dataValuesByReference.computeIfAbsent(reference, getDatavaluesByReference);
-                    allByReferenceType.stream()
-                            .map(LineChecker.LineTransformer.ReferenceValueDecorator::new)
-                            .forEach(referenceValue -> references.computeIfAbsent(reference, k -> new LinkedList<>()).add(referenceValue));
-                    allByReferenceType.stream()
-                            .map(DataValue::getRefValues)
-                            .forEach(values -> referencesValues.computeIfAbsent(reference, k -> new LinkedList<>()).add(values.toObjectsExposedInGroovyContext()));
-                });
+                            final List<DataValue> allByReferenceType =
+                                    dataValuesByReference.computeIfAbsent(reference, getDatavaluesByReference);
+                            allByReferenceType.stream()
+                                    .map(LineChecker.LineTransformer.ReferenceValueDecorator::new)
+                                    .forEach(referenceValue -> references.computeIfAbsent(reference, k -> new LinkedList<>()).add(referenceValue));
+                            allByReferenceType.stream()
+                                    .map(DataValue::getRefValues)
+                                    .forEach(values -> referencesValues.computeIfAbsent(reference, k -> new LinkedList<>()).add(values.toObjectsExposedInGroovyContext()));
+                        });
                 builder
                         .put("references", references)
                         .put("referencesValues", referencesValues);
@@ -126,11 +126,11 @@ public record PublishContext(
                     .ifPresent(dataDescription -> builder.put("dataDescription", dataDescription));
             Optional.of(this).map(PublishContext.PublishContextBuilder::getDataName)
                     .flatMap(
-                            dataName->Optional.of(application)
+                            dataName -> Optional.of(application)
                                     .map(Application::getConfiguration)
                                     .map(Configuration::i18n)
                                     .map(Internationalizations::getData)
-                                    .map(m->m.get(dataName)))
+                                    .map(m -> m.get(dataName)))
                     .ifPresent(dataI18n -> builder.put("dataI18n", dataI18n));
             builder.put("application", application);
             return builder.build();

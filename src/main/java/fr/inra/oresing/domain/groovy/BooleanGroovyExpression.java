@@ -5,16 +5,13 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.checker.CheckerReturnType;
 import fr.inra.oresing.domain.groovy.exception.GroovyException;
 
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
 
 public final class BooleanGroovyExpression implements Expression<Boolean> {
 
     private final GroovyExpression expression;
     private final Set<String> exceptionMessages;
-
-    private BooleanGroovyExpression(final GroovyExpression expression) {
-        this(expression, new HashSet<>());
-    }
 
     private BooleanGroovyExpression(final GroovyExpression expression, Set<String> exceptionMessages) {
         super();
@@ -39,13 +36,13 @@ public final class BooleanGroovyExpression implements Expression<Boolean> {
                 }
                 case null, default ->
                     // TODO @Lucile le résultat de l'expression n'est pas un boolean. Fait attention bon dieu!
-                        throw CheckerReturnType.getError(evaluation, expression, context, Set.of(CheckerReturnType.BOOLEAN));
+                    throw CheckerReturnType.getError(evaluation, expression, context, Set.of(CheckerReturnType.BOOLEAN));
             };
         } catch (GroovyException groovyException) {
             if (exceptionMessages.contains(groovyException.getMessage())) {
                 throw new GroovyException(
                         groovyException.getMessage()
-                        );
+                );
             }
             ImmutableMap<String, Object> params = ImmutableMap.<String, Object>builder()
                     .putAll(groovyException.getParams())

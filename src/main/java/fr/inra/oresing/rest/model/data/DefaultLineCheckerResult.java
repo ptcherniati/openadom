@@ -8,9 +8,9 @@ import fr.inra.oresing.domain.data.DataColumn;
 
 import java.util.Optional;
 
-public record DefaultLineCheckerResult<FT extends FieldType, U extends ListType<FT>>(
+public record DefaultLineCheckerResult<F extends FieldType<?>, U extends ListType<F>>(
         U value,
-        FT fieldTypeForOne,
+        F fieldTypeForOne,
         DataColumn target,
         String transformer,
         CheckerDescription checkerDescription

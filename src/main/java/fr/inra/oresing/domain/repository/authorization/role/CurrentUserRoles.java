@@ -15,8 +15,18 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
 
     public static final CurrentUserRoles EMPTY = new CurrentUserRoles(null, false, null);
 
-    public CurrentUserRoles(final String currentUser, final List<String> memberOf) {
-        this(memberOf, false, null);
+
+    public CurrentUserRoles(
+            final List<String> memberOf,
+            final boolean isDataBaseSuper,
+            final OreSiUser user) {
+        this.memberOf = memberOf == null ? List.of() : List.copyOf(memberOf);
+        this.isDataBaseSuper = isDataBaseSuper;
+        this.user = user;
+    }
+
+    public static CurrentUserRoles empty() {
+        return EMPTY;
     }
 
     public String userLogin() {
@@ -31,10 +41,6 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
         return memberOf().contains(OreSiRole.openAdomAdmin().getAsSqlRole());
     }
 
-    public static CurrentUserRoles empty() {
-        return EMPTY;
-    }
-
     public boolean isApplicationCreator() {
         return Optional.ofNullable(memberOf())
                 .map(roles -> roles.stream()
@@ -46,21 +52,11 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
                 .orElse(false);
     }
 
-
-    public CurrentUserRoles(
-            final List<String> memberOf,
-            final boolean isDataBaseSuper,
-            final OreSiUser user) {
-        this.memberOf = memberOf == null ? List.of() : List.copyOf(memberOf);
-        this.isDataBaseSuper = isDataBaseSuper;
-        this.user = user;
-    }
-
     public CurrentUserRoles withUSer(OreSiUser user) {
         return new CurrentUserRoles(memberOf(), isDataBaseSuper(), user);
     }
 
-    public Boolean applicationManagerOf(Application application) {
+    public boolean applicationManagerOf(Application application) {
         return memberOf().contains(OreSiRole.applicationManagerOf(application).getAsSqlRole());
     }
 
@@ -68,7 +64,7 @@ public record CurrentUserRoles(List<String> memberOf, boolean isDataBaseSuper, O
         return memberOf().contains(OreSiRole.userManagerOf(application).getAsSqlRole());
     }
 
-    public  Map<String, List<String>> applicationRoles() {
+    public Map<String, List<String>> applicationRoles() {
         return memberOf().stream()
                 .map(Pattern.compile("(.*)_(applicationManager|userManager|reader|writer)")::matcher)
                 .filter(Matcher::matches)

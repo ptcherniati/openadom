@@ -2,16 +2,12 @@ package fr.inra.oresing.rest;
 
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -38,7 +34,7 @@ public class HomeResourcesTest {
      * sans authentification
      */
     @Test
-    public void testHomeRedirectsToSwaggerUI() throws Exception {
+    void testHomeRedirectsToSwaggerUI() throws Exception {
         mockMvc.perform(get("/"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("/swagger-ui/index.html"));
@@ -49,7 +45,7 @@ public class HomeResourcesTest {
      * (utile pour les vérifications CORS préliminaires)
      */
     @Test
-    public void testOptionRequestToHomeIsAllowed() throws Exception {
+    void testOptionRequestToHomeIsAllowed() throws Exception {
         mockMvc.perform(options("/"))
                 .andExpect(status().isOk());
     }

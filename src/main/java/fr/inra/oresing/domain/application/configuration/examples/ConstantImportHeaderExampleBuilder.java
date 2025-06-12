@@ -21,8 +21,8 @@ class ConstantImportHeaderExampleBuilder {
         return new ConstantImportHeaderType(createConstanteMap(rowNumber, columnNumber, columnName, langRestriction));
     }
 
-    private static Map<String, ConfigurationSchemaNodeType> createConstanteMap(int rowNumber, int columnNumber, String columnName, CollectionType.ArrayType<StringType> langRestriction) {
-        Map<String, ConfigurationSchemaNodeType> map = new LinkedHashMap<>();
+    private static Map<String, ConfigurationSchemaNodeType<?>> createConstanteMap(int rowNumber, int columnNumber, String columnName, CollectionType.ArrayType<StringType> langRestriction) {
+        Map<String, ConfigurationSchemaNodeType<?>> map = new LinkedHashMap<>();
         map.put(ConfigurationSchemaNode.OA_CONSTANT_IMPORT_HEADER_ROW_NUMBER, new IntegerType(rowNumber));
 
         if (columnName == null) {

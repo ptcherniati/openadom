@@ -19,7 +19,7 @@ public record DownloadDatasetQueryByNaturalKey(
         boolean horizontalDisplay) implements DownloadDatasetQuery {
     public DownloadDatasetQueryByNaturalKey {
         Objects.requireNonNull(application, "You must provide a valide application");
-        if(!Strings.isNotEmpty(dataName)){
+        if (!Strings.isNotEmpty(dataName)) {
             throw new IllegalArgumentException("You must provide a valide datatype");
         }
         assert application.existsData(dataName) : "Datatype must be declared in configuration";

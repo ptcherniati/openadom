@@ -41,7 +41,7 @@ public record SubmissionFileNameBuilder(RootBuilder rootBuilder) {
                         "OA_submission > OA_fileName > OA_referenceScopes > %1$s".formatted(key));
             }
         }
-        referenceScope = referenceScope.stream().filter(element->!element.startsWith("__")).toList();
+        referenceScope = referenceScope.stream().filter(element -> !element.startsWith("__")).toList();
         return new Parsing<>(i18n, new Submission.SubmissionFileNameParsing(pattern, referenceScope, startDate, endDate));
     }
 }

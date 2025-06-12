@@ -230,7 +230,7 @@ Command newUploadDataCommand(String dataName, File dataFile) {
                         })
                         .collect(Collectors.toList())
             } catch (IOException e) {
-                throw new RuntimeException(e)
+                throw new OreSiTechnicalException(e.getMessage(), e)
             }
         }
 
@@ -270,7 +270,7 @@ SortedSet<Path> findCsvFilePathsInDirectory(Path directory) {
                 .collect(Collectors.toCollection(TreeSet::new))
         return Collections.unmodifiableSortedSet(csvFilePathsInDirectory)
     } catch (IOException e) {
-        throw new RuntimeException(e)
+        throw new OreSiTechnicalException(e.getMessage(), e)
     }
 }
 
@@ -291,7 +291,7 @@ static void log(String message) {
     try (InputStream inputStream = response.getEntity().getContent()) {
         return new ObjectMapper().readValue(inputStream, valueTypeRef)
     } catch (IOException e) {
-        throw new RuntimeException(e)
+        throw new OreSiTechnicalException(e.getMessage(), e)
     }
 }
 
@@ -331,7 +331,7 @@ record UriFactory(URI instanceUrl, String applicationName) {
         try {
             return new URI("%s/api/v1/%s".formatted(instanceUrl, endpoint))
         } catch (URISyntaxException e) {
-            throw new RuntimeException("ne devrait pas arriver", e)
+            throw new OreSiTechnicalException("ne devrait pas arriver", e)
         }
     }
 

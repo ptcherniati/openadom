@@ -17,6 +17,6 @@ public record IntegerValidationCheckResult(ValidationLevel level, String message
     }
 
     public static IntegerValidationCheckResult error(final CheckerTarget target, final String message, final ImmutableMap<String, Object> messageParams) {
-        return new IntegerValidationCheckResult(ValidationLevel.ERROR, message, messageParams, target,  null);
+        return new IntegerValidationCheckResult(ValidationLevel.ERROR, message, messageParams, target, null);
     }
 }

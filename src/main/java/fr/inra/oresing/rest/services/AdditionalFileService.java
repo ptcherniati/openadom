@@ -3,14 +3,16 @@ package fr.inra.oresing.rest.services;
 import com.google.common.collect.ImmutableSortedSet;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.OreSiUser;
-import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.AdditionalFileDescription;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AdditionalFileRepository;
 import fr.inra.oresing.persistence.AdditionalFileSearchHelper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exception.AdditionalFileParamsParsingResult;
@@ -36,7 +38,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipOutputStream;
 
@@ -44,21 +45,28 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class AdditionalFileService implements ServiceContainerBean {
+public class AdditionalFileService {
     public static final String CHARTE = "__charte__";
     @Value("classpath:charte/default_charte.pdf")
     Resource defaultCharte;
-
     @Setter
     private ServiceContainer serviceContainer;
 
-    @Autowired
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
-    @Autowired
-    private OreSiRepository repository;
-    @Autowired
-    private RepositoryEntityLinks repositoryEntityLinks;
+    private final OreSiRepository repository;
+    private final RepositoryEntityLinks repositoryEntityLinks;
+
+    public AdditionalFileService(
+            UserRepository userRepository,
+            ServiceContainer serviceContainer,
+            OreSiRepository repository,
+            RepositoryEntityLinks repositoryEntityLinks) {
+        this.userRepository = userRepository;
+        this.repository = repository;
+        this.repositoryEntityLinks = repositoryEntityLinks;
+        this.serviceContainer = serviceContainer;
+    }
 
     @Transactional
     void addAdditionalfile(final Application application, final String refType, final MultipartFile file, final UUID fileId) {
@@ -127,7 +135,7 @@ public class AdditionalFileService implements ServiceContainerBean {
             try {
                 additionalBinaryFile.setData(file.getBytes());
             } catch (final IOException e) {
-                throw new RuntimeException(e);
+                throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
             }
         }
         OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
@@ -200,7 +208,7 @@ public class AdditionalFileService implements ServiceContainerBean {
                         }
                         additionalFileSearchHelper.addAdditionalFilesToZip(additionalBinaryFile, zipOutputStream, "");
                     } catch (final IOException e) {
-                        throw new RuntimeException(e);
+                        throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                     }
                 });
 
@@ -246,9 +254,9 @@ public class AdditionalFileService implements ServiceContainerBean {
 
     public GetAdditionalFilesResult findAdditionalFile(final String nameOrId, final AdditionalFilesInfos additionalFilesInfos) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        final AdditionalFileDescription description = Optional.ofNullable(application.getConfiguration().additionalFiles()).map(map -> map.get(additionalFilesInfos.getFiletype())).orElseGet(AdditionalFileDescription::EMPTY_INSTANCE);
+        final AdditionalFileDescription description = Optional.ofNullable(application.getConfiguration().additionalFiles()).map(map -> map.get(additionalFilesInfos.getFiletype())).orElseGet(AdditionalFileDescription::emptyInstance);
         List<AdditionalBinaryFile> additionalFiles = serviceContainer.additionalFileService().findAdditionalFile(application, additionalFilesInfos);
-        List<AdditionalBinaryFileResult> additionalBinaryFileResults = additionalFiles.stream().map(af -> serviceContainer.binaryFileService().getAdditionalBinaryFileResult(af, application)).collect(Collectors.toList());
+        List<AdditionalBinaryFileResult> additionalBinaryFileResults = additionalFiles.stream().map(af -> serviceContainer.binaryFileService().getAdditionalBinaryFileResult(af)).toList();
         ImmutableSortedSet<GetGrantableResult.User> grantableUsers = serviceContainer.authorizationService().getGrantableUsers();
         List<String> fileNamesForFiletype = repository.getRepository(application).additionalBinaryFile().getFileNamesForFiletype(additionalFilesInfos.getFiletype());
         return new GetAdditionalFilesResult(grantableUsers, additionalFilesInfos.getFiletype(), additionalBinaryFileResults, description, fileNamesForFiletype);

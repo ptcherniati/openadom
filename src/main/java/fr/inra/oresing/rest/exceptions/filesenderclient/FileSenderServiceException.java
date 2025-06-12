@@ -10,11 +10,11 @@ package fr.inra.oresing.rest.exceptions.filesenderclient;
  */
 public class FileSenderServiceException extends Exception {
 
-  /**
-   *
-   */
-  public FileSenderServiceException(String message){
-  super(message);
-}
+    /**
+     *
+     */
+    public FileSenderServiceException(String message) {
+        super(message);
+    }
 
 }

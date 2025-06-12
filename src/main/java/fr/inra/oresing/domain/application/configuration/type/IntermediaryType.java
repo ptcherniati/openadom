@@ -10,10 +10,10 @@ public sealed interface IntermediaryType<T>
 
     default String buildExample(final int level) {
         final StringBuilder builder = getBuilder();
-        for (final Map.Entry<String, ConfigurationSchemaNodeType> entry : ((Map<String, ConfigurationSchemaNodeType>) children()).entrySet()) {
+        for (final Map.Entry<String, ConfigurationSchemaNodeType<?>> entry : ((Map<String, ConfigurationSchemaNodeType<?>>) children()).entrySet()) {
             final String label = entry.getKey();
-            final ConfigurationSchemaNodeType value = entry.getValue();
-            if (value==null){
+            final ConfigurationSchemaNodeType<?> value = entry.getValue();
+            if (value == null) {
                 continue;
             }
             builder.append(" \n%1$s%2$s: %3$s\n".formatted(Strings.repeat("  ", level), label, value.buildExample(level + 1)));
@@ -21,7 +21,8 @@ public sealed interface IntermediaryType<T>
         return builder.toString()
                 .replaceAll("^\\s#.*\\n", "");
     }
-    sealed interface CheckerParamType extends IntermediaryType<Map<String,ConfigurationSchemaNodeType>> permits BooleanCheckerParamsType, DateCheckerParamsType, DefaultValueType, FloatCheckerParamsType, GroovyCheckerParamsType, GroovyExpressionType, IntegerCheckerParamsType, ReferenceCheckerParamsType, StringCheckerParamsType {
+
+    sealed interface CheckerParamType extends IntermediaryType<Map<String, ConfigurationSchemaNodeType<?>>> permits BooleanCheckerParamsType, DateCheckerParamsType, DefaultValueType, FloatCheckerParamsType, GroovyCheckerParamsType, GroovyExpressionType, IntegerCheckerParamsType, ReferenceCheckerParamsType, StringCheckerParamsType {
 
     }
 }

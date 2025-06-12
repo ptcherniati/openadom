@@ -1,0 +1,2007 @@
+[ {
+  "rowid" : [ "60b5ef6e-daa0-4b83-bcc5-124a2675efb1" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__01_01_1984__lpf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__01_01_1984__lpf",
+  "values" : {
+    "date" : "date:1984-01-01T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-01T00:00:00:dd/MM/yyyy__lpf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "54"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "a07f19de-7dbc-43b9-ad55-24158a29e18a" ],
+        "hierarchicalkey" : "especesKlpf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "42f3243a-26b6-4088-acb0-c0fcd10109cd" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__01_01_1984__ang",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__01_01_1984__ang",
+  "values" : {
+    "date" : "date:1984-01-01T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-01T00:00:00:dd/MM/yyyy__ang",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "ang",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "38"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "747901a4-aca9-4835-91de-eda10e263d50" ],
+        "hierarchicalkey" : "especesKang"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "bc062dee-a85a-491c-8b0f-edd3e82490b8" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__01_01_1984__lpm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__01_01_1984__lpm",
+  "values" : {
+    "date" : "date:1984-01-01T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-01T00:00:00:dd/MM/yyyy__lpm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "27"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "9dd2b972-a31f-467c-883e-ed74172faf82" ],
+        "hierarchicalkey" : "especesKlpm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "31913b9e-ef84-4efb-b9ce-ed8f63adafbd" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__01_01_1984__alo",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__01_01_1984__alo",
+  "values" : {
+    "date" : "date:1984-01-01T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-01T00:00:00:dd/MM/yyyy__alo",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "alo",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "15"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "032c0be9-dc95-4790-a9fb-8c7d896b1ce9" ],
+        "hierarchicalkey" : "especesKalo"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "0091db28-cb56-4781-bc71-30099b5dc008" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__01_01_1984__trm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__01_01_1984__trm",
+  "values" : {
+    "date" : "date:1984-01-01T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-01T00:00:00:dd/MM/yyyy__trm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "25"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "83f82061-d086-4738-b614-9b53f393d33c" ],
+        "hierarchicalkey" : "especesKtrm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "97a826ae-bc7f-4567-9b60-463d4c9ee75c" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__01_01_1984__trf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__01_01_1984__trf",
+  "values" : {
+    "date" : "date:1984-01-01T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-01T00:00:00:dd/MM/yyyy__trf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "18"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "46196b57-e006-40e9-bee6-6ed9823e72f0" ],
+        "hierarchicalkey" : "especesKtrf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "9be6807c-2d04-47a2-8925-35754f7f44b2" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__01_01_1984__sat",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__01_01_1984__sat",
+  "values" : {
+    "date" : "date:1984-01-01T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-01T00:00:00:dd/MM/yyyy__sat",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "sat",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "39"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "17256bf8-1fca-4ebe-885d-159eccdf3f2c" ],
+        "hierarchicalkey" : "especesKsat"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "c275c997-db2c-4225-8c20-c40fbcb9b57b" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__02_01_1984__lpf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__02_01_1984__lpf",
+  "values" : {
+    "date" : "date:1984-01-02T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-02T00:00:00:dd/MM/yyyy__lpf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : ""
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "a07f19de-7dbc-43b9-ad55-24158a29e18a" ],
+        "hierarchicalkey" : "especesKlpf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "68f7a7b5-56b1-41c4-9671-e4e9877088dd" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__02_01_1984__ang",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__02_01_1984__ang",
+  "values" : {
+    "date" : "date:1984-01-02T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-02T00:00:00:dd/MM/yyyy__ang",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "ang",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "25"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "747901a4-aca9-4835-91de-eda10e263d50" ],
+        "hierarchicalkey" : "especesKang"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "a46963a0-069b-46eb-b4c0-1855175f09e1" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__02_01_1984__lpm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__02_01_1984__lpm",
+  "values" : {
+    "date" : "date:1984-01-02T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-02T00:00:00:dd/MM/yyyy__lpm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "32"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "9dd2b972-a31f-467c-883e-ed74172faf82" ],
+        "hierarchicalkey" : "especesKlpm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "4825f437-738e-47cf-9a66-cd8564d162f4" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__02_01_1984__alo",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__02_01_1984__alo",
+  "values" : {
+    "date" : "date:1984-01-02T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-02T00:00:00:dd/MM/yyyy__alo",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "alo",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "18"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "032c0be9-dc95-4790-a9fb-8c7d896b1ce9" ],
+        "hierarchicalkey" : "especesKalo"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "deb9c30f-1e34-479e-9b6f-de60e5788f03" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__02_01_1984__trm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__02_01_1984__trm",
+  "values" : {
+    "date" : "date:1984-01-02T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-02T00:00:00:dd/MM/yyyy__trm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "25"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "83f82061-d086-4738-b614-9b53f393d33c" ],
+        "hierarchicalkey" : "especesKtrm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "610b9089-e3c7-4e1b-bc1d-b6a0d2141643" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__02_01_1984__trf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__02_01_1984__trf",
+  "values" : {
+    "date" : "date:1984-01-02T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-02T00:00:00:dd/MM/yyyy__trf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "14"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "46196b57-e006-40e9-bee6-6ed9823e72f0" ],
+        "hierarchicalkey" : "especesKtrf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "d4e42a45-b7e2-4c61-9675-d66e6ae2a98a" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__02_01_1984__sat",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__02_01_1984__sat",
+  "values" : {
+    "date" : "date:1984-01-02T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-02T00:00:00:dd/MM/yyyy__sat",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "sat",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "15"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "17256bf8-1fca-4ebe-885d-159eccdf3f2c" ],
+        "hierarchicalkey" : "especesKsat"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "818d4287-9744-4282-8fba-19b29bfa7f8d" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__03_01_1984__lpf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__03_01_1984__lpf",
+  "values" : {
+    "date" : "date:1984-01-03T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-03T00:00:00:dd/MM/yyyy__lpf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "45"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "a07f19de-7dbc-43b9-ad55-24158a29e18a" ],
+        "hierarchicalkey" : "especesKlpf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "0e595956-6def-4ed6-9174-dfabe534ad69" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__03_01_1984__ang",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__03_01_1984__ang",
+  "values" : {
+    "date" : "date:1984-01-03T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-03T00:00:00:dd/MM/yyyy__ang",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "ang",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : ""
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "747901a4-aca9-4835-91de-eda10e263d50" ],
+        "hierarchicalkey" : "especesKang"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "506575ac-9990-4496-93e2-c917b8974d7c" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__03_01_1984__lpm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__03_01_1984__lpm",
+  "values" : {
+    "date" : "date:1984-01-03T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-03T00:00:00:dd/MM/yyyy__lpm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "41"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "9dd2b972-a31f-467c-883e-ed74172faf82" ],
+        "hierarchicalkey" : "especesKlpm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "fced77e2-727d-42ad-83ec-4e4d8e378c07" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__03_01_1984__alo",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__03_01_1984__alo",
+  "values" : {
+    "date" : "date:1984-01-03T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-03T00:00:00:dd/MM/yyyy__alo",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "alo",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "16"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "032c0be9-dc95-4790-a9fb-8c7d896b1ce9" ],
+        "hierarchicalkey" : "especesKalo"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "80f637bf-6777-4ea8-b975-b17f876c633d" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__03_01_1984__trm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__03_01_1984__trm",
+  "values" : {
+    "date" : "date:1984-01-03T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-03T00:00:00:dd/MM/yyyy__trm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "27"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "83f82061-d086-4738-b614-9b53f393d33c" ],
+        "hierarchicalkey" : "especesKtrm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "1eae6e73-cfec-4b16-b139-bbd38ace38ba" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__03_01_1984__trf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__03_01_1984__trf",
+  "values" : {
+    "date" : "date:1984-01-03T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-03T00:00:00:dd/MM/yyyy__trf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : ""
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "46196b57-e006-40e9-bee6-6ed9823e72f0" ],
+        "hierarchicalkey" : "especesKtrf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "5865b5a4-56cb-4e52-b87e-f7cfd8a83a89" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__04_01_1984__lpf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__04_01_1984__lpf",
+  "values" : {
+    "date" : "date:1984-01-04T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-04T00:00:00:dd/MM/yyyy__lpf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "51"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "a07f19de-7dbc-43b9-ad55-24158a29e18a" ],
+        "hierarchicalkey" : "especesKlpf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "5798a026-f618-4cc9-a5de-7cc9a23f8c01" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__04_01_1984__ang",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__04_01_1984__ang",
+  "values" : {
+    "date" : "date:1984-01-04T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-04T00:00:00:dd/MM/yyyy__ang",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "ang",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "22"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "747901a4-aca9-4835-91de-eda10e263d50" ],
+        "hierarchicalkey" : "especesKang"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "4b593687-460d-4592-b9b8-3f8285a4f868" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__04_01_1984__lpm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__04_01_1984__lpm",
+  "values" : {
+    "date" : "date:1984-01-04T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-04T00:00:00:dd/MM/yyyy__lpm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "43"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "9dd2b972-a31f-467c-883e-ed74172faf82" ],
+        "hierarchicalkey" : "especesKlpm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "2c3be7f1-0d80-4adc-ba78-c634b203e63e" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__04_01_1984__alo",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__04_01_1984__alo",
+  "values" : {
+    "date" : "date:1984-01-04T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-04T00:00:00:dd/MM/yyyy__alo",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "alo",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "15"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "032c0be9-dc95-4790-a9fb-8c7d896b1ce9" ],
+        "hierarchicalkey" : "especesKalo"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "dd8184f8-fa4c-4f24-b855-1b75b9709934" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__04_01_1984__trm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__04_01_1984__trm",
+  "values" : {
+    "date" : "date:1984-01-04T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-04T00:00:00:dd/MM/yyyy__trm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "27"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "83f82061-d086-4738-b614-9b53f393d33c" ],
+        "hierarchicalkey" : "especesKtrm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "496d225d-5646-4bfc-8290-f19789f73cda" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__04_01_1984__trf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__04_01_1984__trf",
+  "values" : {
+    "date" : "date:1984-01-04T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-04T00:00:00:dd/MM/yyyy__trf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : ""
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "46196b57-e006-40e9-bee6-6ed9823e72f0" ],
+        "hierarchicalkey" : "especesKtrf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "e0acc67d-9dfa-4310-91bc-27c5b11bb454" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__04_01_1984__sat",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__04_01_1984__sat",
+  "values" : {
+    "date" : "date:1984-01-04T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-04T00:00:00:dd/MM/yyyy__sat",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "sat",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "24"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "17256bf8-1fca-4ebe-885d-159eccdf3f2c" ],
+        "hierarchicalkey" : "especesKsat"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "8830fa4e-9e7b-4d1d-99eb-042d887b9301" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__05_01_1984__lpf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__05_01_1984__lpf",
+  "values" : {
+    "date" : "date:1984-01-05T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-05T00:00:00:dd/MM/yyyy__lpf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "59"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "a07f19de-7dbc-43b9-ad55-24158a29e18a" ],
+        "hierarchicalkey" : "especesKlpf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "9ac7c111-cf7e-441b-aa6e-8179a8b96cfc" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__05_01_1984__ang",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__05_01_1984__ang",
+  "values" : {
+    "date" : "date:1984-01-05T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-05T00:00:00:dd/MM/yyyy__ang",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "ang",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "27"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "747901a4-aca9-4835-91de-eda10e263d50" ],
+        "hierarchicalkey" : "especesKang"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "96225bcd-20c3-432e-8656-d83e432fcf83" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__05_01_1984__lpm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__05_01_1984__lpm",
+  "values" : {
+    "date" : "date:1984-01-05T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-05T00:00:00:dd/MM/yyyy__lpm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "lpm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "49"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "9dd2b972-a31f-467c-883e-ed74172faf82" ],
+        "hierarchicalkey" : "especesKlpm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "66ce8fb5-82a2-4096-96f3-36929bddd6b2" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__05_01_1984__alo",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__05_01_1984__alo",
+  "values" : {
+    "date" : "date:1984-01-05T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-05T00:00:00:dd/MM/yyyy__alo",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "alo",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "17"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "032c0be9-dc95-4790-a9fb-8c7d896b1ce9" ],
+        "hierarchicalkey" : "especesKalo"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "bef62d88-3ccd-4a58-9ab7-a9c2996ffac8" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__05_01_1984__trm",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__05_01_1984__trm",
+  "values" : {
+    "date" : "date:1984-01-05T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-05T00:00:00:dd/MM/yyyy__trm",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trm",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__rouge",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "25"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "83f82061-d086-4738-b614-9b53f393d33c" ],
+        "hierarchicalkey" : "especesKtrm"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "feeee18a-066f-4f88-a45c-269f9b1bddc1" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__rouge"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "577c28d8-ac78-42be-b4a1-455522fbb71a" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__05_01_1984__trf",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__05_01_1984__trf",
+  "values" : {
+    "date" : "date:1984-01-05T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-05T00:00:00:dd/MM/yyyy__trf",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "trf",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__bleu",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "21"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "46196b57-e006-40e9-bee6-6ed9823e72f0" ],
+        "hierarchicalkey" : "especesKtrf"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "0925b67d-14ab-4f96-8596-4049ecc20ab8" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__bleu"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+}, {
+  "rowid" : [ "1d79c7f4-c4b3-40cb-8790-86d834523acd" ],
+  "patterncolumnname" : [ "" ],
+  "naturalkey" : "projet_manche__NULL_KEY__nivelle__p1__05_01_1984__sat",
+  "hierarchicalkey" : "pemKprojet_manche__NULL_KEY__nivelle__p1__05_01_1984__sat",
+  "values" : {
+    "date" : "date:1984-01-05T00:00:00:dd/MM/yyyy",
+    "site" : "NULL_KEY__nivelle",
+    "__display_default" : "projet_manche__NULL_KEY__nivelle__p1__date:1984-01-05T00:00:00:dd/MM/yyyy__sat",
+    "individusNumber_unit" : "sans_unite",
+    "projet" : "projet_manche",
+    "espece" : "sat",
+    "chemin" : "NULL_KEY__nivelle__p1",
+    "plateforme" : "p1",
+    "color_value" : "couleur_des_individus__vert",
+    "color_unit" : "sans_unite",
+    "individusNumbervalue" : "24"
+  },
+  "refslinkedto" : {
+    "especes" : {
+      "espece" : {
+        "uuids" : [ "17256bf8-1fca-4ebe-885d-159eccdf3f2c" ],
+        "hierarchicalkey" : "especesKsat"
+      }
+    },
+    "unites" : {
+      "individusNumber_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      },
+      "color_unit" : {
+        "uuids" : [ "1ddd3278-7a2f-4b28-8aaf-226288890a39" ],
+        "hierarchicalkey" : "unitesKsans_unite"
+      }
+    },
+    "projet" : {
+      "projet" : {
+        "uuids" : [ "c38c08bf-cb3b-4c24-9f94-1c91b12ec145" ],
+        "hierarchicalkey" : "projetKprojet_manche"
+      }
+    },
+    "valeurs_qualitatives" : {
+      "color_value" : {
+        "uuids" : [ "ceaac0ae-90f7-49d7-b885-c06ca6893262" ],
+        "hierarchicalkey" : "valeurs_qualitativesKcouleur_des_individus__vert"
+      }
+    },
+    "sites" : {
+      "site" : {
+        "uuids" : [ "5257a701-c14b-4340-81b7-f04adc66a6c3" ],
+        "hierarchicalkey" : "type_de_sitesKbassin_versant.sitesKNULL_KEY__nivelle"
+      },
+      "chemin" : {
+        "uuids" : [ "0aa83016-6d85-44a1-93eb-4cfb2b35b741" ],
+        "hierarchicalkey" : "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1"
+      }
+    }
+  },
+  "allpatterncolumnnames" : [ "" ]
+} ]

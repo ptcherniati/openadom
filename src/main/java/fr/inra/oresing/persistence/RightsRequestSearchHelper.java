@@ -20,18 +20,18 @@ public class RightsRequestSearchHelper {
     @Getter
     private final MapSqlParameterSource paramSource;
 
-    private String addArgumentAndReturnSubstitution(final Object value) {
-        final int i = this.i.incrementAndGet();
-        final String paramName = String.format("arg%d", i);
-        paramSource.addValue(paramName, value);
-        return String.format(":%s", paramName);
-    }
-
     public RightsRequestSearchHelper(final Application application, final RightsRequestInfos rightsRequestInfos) {
         super();
         this.application = application;
         this.rightsRequestInfos = rightsRequestInfos;
         paramSource = new MapSqlParameterSource("applicationId", application.getId());
+    }
+
+    private String addArgumentAndReturnSubstitution(final Object value) {
+        final int i = this.i.incrementAndGet();
+        final String paramName = String.format("arg%d", i);
+        paramSource.addValue(paramName, value);
+        return String.format(":%s", paramName);
     }
 
     String filterBy() {
@@ -54,7 +54,7 @@ public class RightsRequestSearchHelper {
                 .ifPresent(rightsRequestInfos -> where.add(whereForRightsRequest(rightsRequestInfos)));
 
         return CollectionUtils.isEmpty(where) ? "" : where.stream()
-                .filter(w->w!=null && !Strings.isNullOrEmpty(w))
+                .filter(w -> w != null && !Strings.isNullOrEmpty(w))
                 .collect(Collectors.joining(" or ", "(", ")"));
     }
 
@@ -75,14 +75,13 @@ public class RightsRequestSearchHelper {
     }
 
 
-
     private String whereForField(final RightsRequestInfos.FieldFilters filter) {
         final boolean isRegExp = filter.isRegExp != null && filter.isRegExp;
         final List<String> filters = new LinkedList<>();
         if (!Strings.isNullOrEmpty(filter.filter)) {
             filters.add(String.format(
                             "rightsrequestform #> '{\"%s\"}'  @@ ('$ like_regex \"'||%s||'\"')::jsonpath",
-                    JsonTableInApplicationSchemaRepositoryTemplate.escapeSql(filter.getField()),
+                            JsonTableInApplicationSchemaRepositoryTemplate.escapeSql(filter.getField()),
                             /*String.format(isRegExp ? "~ %s" : "ilike '%%'||%s||'%%'", */
                             addArgumentAndReturnSubstitution(filter.getFilter())//)
                     )
@@ -147,6 +146,6 @@ public class RightsRequestSearchHelper {
     }
 
     public String buildWhereRequest() {
-        return rightsRequestInfos==null?null:filterBy();
+        return rightsRequestInfos == null ? null : filterBy();
     }
 }

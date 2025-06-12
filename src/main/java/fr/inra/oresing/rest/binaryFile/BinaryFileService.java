@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -14,7 +13,10 @@ import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
-import fr.inra.oresing.persistence.*;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.BinaryFileInfos;
+import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
@@ -22,7 +24,6 @@ import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,7 +31,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -38,18 +38,21 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 
 public class BinaryFileService implements fr.inra.oresing.domain.services.file.BinaryFileService {
-    @Autowired
-    private OreSiRepository repository;
+    private final OreSiRepository repository;
 
     @Setter
-    private ServiceContainer serviceContainer;
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private OreSiApiRequestContext request;
-    @Autowired
-    private JsonRowMapper jsonRowMapper;
+    private final ServiceContainer serviceContainer;
+    private final AuthenticationService authenticationService;
+    private final OreSiApiRequestContext request;
+    private final JsonRowMapper<?> jsonRowMapper;
 
+    public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, OreSiApiRequestContext request, JsonRowMapper jsonRowMapper) {
+        this.repository = repository;
+        this.serviceContainer = serviceContainer;
+        this.authenticationService = authenticationService;
+        this.request = request;
+        this.jsonRowMapper = jsonRowMapper;
+    }
 
 
     public static BinaryFileDataset deserialiseBinaryFileDatasetQuery(final String dataName, final String params) {
@@ -104,11 +107,10 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     @Transactional
     @Override
     public Optional<UUID> removeFile(Application application, UUID id) {
-        Function<BinaryFile, UUID> deleteBinaryFile = binaryFile -> getBinaryFileRepository(application).delete(binaryFile.getId()) ? binaryFile.getId() : null;
         return getFile(application.getName(), id)
                 .map(BinaryFile::getId)
                 .map(getBinaryFileRepository(application)::delete)
-                .orElse(false)?Optional.of(id):Optional.empty();
+                .orElse(false) ? Optional.of(id) : Optional.empty();
     }
 
     @Override
@@ -151,23 +153,18 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     @Override
     public List<BinaryFile> getFilesOnRepository(final String nameOrId, final String datatype, final BinaryFileDataset binaryFileDataset, final boolean overlap) {
         authenticationService.setRoleForClient();
-        Application application= serviceContainer.applicationService().getApplication(nameOrId);
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
         DataRepositoryForBuffer dataRepositoryForBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
-        Submission.SubmissionScope submissionScope = application.findSubmission(datatype)
-                .map(Submission::submissionScope)
-                .orElse(null);
         return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepositoryForBuffer), overlap);
     }
 
     @Override
-    public AdditionalBinaryFileResult getAdditionalBinaryFileResult(
-            final AdditionalBinaryFile additionalBinaryFile,
-            final Application application) {
+    public AdditionalBinaryFileResult getAdditionalBinaryFileResult(AdditionalBinaryFile additionalBinaryFile) {
+
         Map<String, List<AuthorizationParsed>> authorizationsParsed = new HashMap<>();
         AuthorizationService.authorizationsToParsedAuthorizations(
                 additionalBinaryFile.getAssociates(),
                 authorizationsParsed);
         return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsParsed);
     }
-
 }

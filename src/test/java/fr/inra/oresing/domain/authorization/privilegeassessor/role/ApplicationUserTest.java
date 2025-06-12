@@ -59,7 +59,7 @@ class ApplicationUserTest {
         return Stream.of(
                 Arguments.of(
                         "ApplicationDataReader",
-                        new ApplicationDataReader(staticMockApp)
+                        new ApplicationDataReaderUser(staticMockApp)
                 ),
                 Arguments.of(
                         "ApplicationDataWriter via AdminUser",
@@ -90,7 +90,7 @@ class ApplicationUserTest {
         return Stream.of(
                 Arguments.of(
                         "ApplicationDataReader implémente ApplicationUser",
-                        new ApplicationDataReader(mockApp),
+                        new ApplicationDataReaderUser(mockApp),
                         new Class<?>[]{ApplicationUser.class, ApplicationPersona.class}
                 ),
                 Arguments.of(
@@ -126,7 +126,7 @@ class ApplicationUserTest {
                 ),
                 Arguments.of(
                         "ApplicationDataReader",
-                        new ApplicationDataReader(mockApp),
+                        new ApplicationDataReaderUser(mockApp),
                         List.of(ApplicationUser.class, ApplicationPersona.class)
                 ),
                 Arguments.of(
@@ -150,7 +150,7 @@ class ApplicationUserTest {
                 Arguments.of(
                         "ApplicationUser",
                         ApplicationUser.class,
-                        new Class[]{ApplicationDataReader.class, ApplicationDataWriter.class},
+                        new Class[]{ApplicationDataReaderUser.class, ApplicationDataWriter.class},
                         2
                 ),
                 Arguments.of(
@@ -265,8 +265,7 @@ class ApplicationUserTest {
         // Vérifier que toutes les implémentations de ApplicationUser sont aussi des ApplicationPersona
         for (Arguments args : provideUserImplementations().toList()) {
             Object impl = args.get()[1];
-            assertTrue(impl instanceof ApplicationPersona,
-                    impl.getClass().getSimpleName() + " devrait implémenter ApplicationPersona");
+            assertInstanceOf(ApplicationPersona.class, impl, impl.getClass().getSimpleName() + " devrait implémenter ApplicationPersona");
         }
     }
 
@@ -318,8 +317,7 @@ class ApplicationUserTest {
                 "La conversion ascendante devrait préserver l'accès à l'application");
 
         // Vérifier les conversions descendantes (downcasting) sécurisées
-        if (user instanceof ApplicationDataWriter) {
-            ApplicationDataWriter writer = (ApplicationDataWriter) user;
+        if (user instanceof ApplicationDataWriter writer) {
             assertSame(user.application(), writer.application(),
                     "La conversion descendante vers ApplicationDataWriter devrait préserver l'identité");
 

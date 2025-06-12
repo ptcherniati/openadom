@@ -6,9 +6,27 @@ import fr.inra.oresing.domain.application.configuration.section.SectionBuilder;
 import java.util.List;
 import java.util.Map;
 
-public record DataType(SectionBuilder sectionBuilder, Map<String, ConfigurationSchemaNodeType> children,
-                       boolean required,
-                       boolean nullable) implements ApplicationType {
+public record DataType(
+        SectionBuilder sectionBuilder,
+        Map<String, ConfigurationSchemaNodeType<?>> children,
+        boolean required,
+        boolean nullable
+) implements ApplicationType<Map<String, ConfigurationSchemaNodeType<?>>> {
+    public DataType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER()
+                        .test(children.keySet()),
+                children,
+                true,
+                false);
+    }
+
+    private DataType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
+        this(SECTION_BUILDER(),
+                children,
+                true,
+                false);
+    }
+
     public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withMandatorySections(
@@ -33,23 +51,8 @@ public record DataType(SectionBuilder sectionBuilder, Map<String, ConfigurationS
                         new LabelDescription(ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS, ConstantComponentType.EMPTY_INSTANCE())
                 );
     }
-    public static DataType  EMPTY_INSTANCE() {
+
+    public static DataType EMPTY_INSTANCE() {
         return new DataType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-
-
-    public DataType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER()
-                        .test(children.keySet()),
-                children,
-                true,
-                false);
-    }
-
-    private DataType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
-                children,
-                true,
-                false);
     }
 }

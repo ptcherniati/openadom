@@ -21,7 +21,7 @@ public record ApplicationManagerUser(
 
     @Override
     public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
-        return false;
+        return true;
     }
 
     @Override

@@ -1,5 +1,5 @@
 maven:
-  image: maven:3.9.4-amazoncorretto-21
+  image: maven:3.9.9-amazoncorretto-23
   stage: package
   script: mvn --batch-mode clean package -Dmaven.test.skip=true
   tags:
@@ -12,7 +12,7 @@ maven:
     - if: $CI_JOB_MANUAL!= "true"
 
 maven_registry:
-  image: maven:3.9.4-amazoncorretto-21
+  image: maven:3.9.9-amazoncorretto-23
   stage: package
   script:
     - MVN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout) && echo $MVN_VERSION;
@@ -21,8 +21,8 @@ maven_registry:
       MVN_BRANCH=$CI_COMMIT_BRANCH && echo 'normal commit';
       else
       echo commit on ${CI_COMMIT_REF_NAME};
-      echo "https://forgemia.inra.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}"
-      MVN_BRANCH=$(curl GET "https://forgemia.inra.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}" | docker run --rm -i imega/jq -c ".[0].target_branch");
+      echo "https://forge.inra.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}"
+      MVN_BRANCH=$(curl GET "https://forge.inra.fr/api/v4/projects/${CI_PROJECT_ID}/merge_requests?source_branch=${CI_COMMIT_REF_NAME}" | docker run --rm -i imega/jq -c ".[0].target_branch");
       fi;
       echo $MVN_BRANCH.$MVN_VERSION;
     - mvn versions:set -DnewVersion=$MVN_BRANCH.$MVN_VERSION
@@ -34,7 +34,7 @@ maven_registry:
 npm:
   image: node:12-alpine
   stage: package
-  needs: ["maven_test_rest_1","maven_test_rest_others"]
+  needs: [ "maven_test_rest_1","maven_test_rest_others" ]
   script:
     - cd ui
     - npm ci

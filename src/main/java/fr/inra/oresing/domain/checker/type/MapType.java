@@ -11,22 +11,23 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import java.util.function.Supplier;
 
 import java.io.IOException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Supplier;
 
 public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
-     Map<K,V> value;
-     final Supplier<MapType> clone;
+    final Supplier<MapType> clone;
+    Map<K, V> value;
 
-    public MapType(final Map<K,V> map) {
-        clone = ()-> new MapType(map);
+    public MapType(final Map<K, V> map) {
+        clone = () -> new MapType(map);
         value = map;
     }
 
     @Override
-    public Map<K,V> getValue() {
+    public Map<K, V> getValue() {
         return value;
     }
 
@@ -51,7 +52,7 @@ public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
     }*/
 
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 
@@ -69,15 +70,15 @@ public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
 
     @Override
     public Object toJsonForFrontend() {
-        final Map<K,Object> returnMap = new HashMap<>();
+        final Map<K, Object> returnMap = new HashMap<>();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
             final V value1 = kvEntry.getValue();
             final K key = kvEntry.getKey();
-            if(value1 instanceof SomethingToBeSentToFrontend){
-                final Object jsonForFrontend = ((SomethingToBeSentToFrontend) value1).toJsonForFrontend();
+            if (value1 instanceof SomethingToBeSentToFrontend) {
+                final Object jsonForFrontend = ((SomethingToBeSentToFrontend<?>) value1).toJsonForFrontend();
                 returnMap.put(key, jsonForFrontend);
-            }else{
-                returnMap.put(key,value1);
+            } else {
+                returnMap.put(key, value1);
             }
         }
 
@@ -89,7 +90,7 @@ public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
         final ObjectMapper mapper = new ObjectMapper();
         final ObjectNode mapNode = mapper.createObjectNode();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
-            switch (kvEntry.getValue()){
+            switch (kvEntry.getValue()) {
                 case null -> mapNode.set((String) kvEntry.getKey(), NullNode.getInstance());
                 case Integer integer -> mapNode.put((String) kvEntry.getKey(), integer);
                 case IntegerType integerType -> mapNode.put((String) kvEntry.getKey(), integerType.getValue());
@@ -98,7 +99,7 @@ public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
                 case Boolean bool -> mapNode.put((String) kvEntry.getKey(), bool);
                 case BooleanType booleanType -> mapNode.put((String) kvEntry.getKey(), booleanType.getValue());
                 case NullType ignored -> mapNode.set((String) kvEntry.getKey(), NullNode.getInstance());
-                case FieldType fieldType-> mapNode.put((String) kvEntry.getKey(), fieldType.toString());
+                case FieldType<?> fieldType -> mapNode.put((String) kvEntry.getKey(), fieldType.toString());
                 default -> mapNode.put((String) kvEntry.getKey(), kvEntry.getValue().toString());
             }
         }
@@ -110,7 +111,7 @@ public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
     public void serialize(final ObjectNode node, final ObjectMapper mapper, final String key) {
         final ObjectNode mapNode = mapper.createObjectNode();
         for (final Map.Entry<K, V> kvEntry : value.entrySet()) {
-            mapNode.set((String) kvEntry.getKey(), kvEntry.getValue() instanceof JsonNode? (JsonNode) kvEntry.getValue() : new TextNode(kvEntry.getValue().toString()));
+            mapNode.set((String) kvEntry.getKey(), kvEntry.getValue() instanceof JsonNode ? (JsonNode) kvEntry.getValue() : new TextNode(kvEntry.getValue().toString()));
         }
         node.set(key, mapNode);
 

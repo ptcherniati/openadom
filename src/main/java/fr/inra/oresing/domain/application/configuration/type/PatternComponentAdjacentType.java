@@ -7,14 +7,30 @@ import java.util.List;
 import java.util.Map;
 
 public record PatternComponentAdjacentType(SectionBuilder sectionBuilder,
-                                           Map<String, ConfigurationSchemaNodeType> children,
+                                           Map<String, ConfigurationSchemaNodeType<?>> children,
                                            boolean required,
-                                           boolean nullable) implements ApplicationType.ComponentType {
+                                           boolean nullable) implements ApplicationType.ComponentType<Map<String, ConfigurationSchemaNodeType<?>>> {
 
-    public static PatternComponentAdjacentType EMPTY_INSTANCE(){
+    private PatternComponentAdjacentType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
+        this(SECTION_BUILDER(),
+                children,
+                false,
+                false);
+    }
+
+    public PatternComponentAdjacentType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER()
+                        .test(children.keySet()),
+                children,
+                false,
+                false);
+    }
+
+    public static PatternComponentAdjacentType EMPTY_INSTANCE() {
         return new PatternComponentAdjacentType(Map.of(), RootType.CHECKING.NO_CHECK);
     }
-    public static SectionBuilder SECTION_BUILDER(){
+
+    public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withOptionalSections(
                         new LabelDescription(ConfigurationSchemaNode.OA_IMPORT_HEADER_PATTERN, StringType.EMPTY_INSTANCE()),
@@ -26,20 +42,5 @@ public record PatternComponentAdjacentType(SectionBuilder sectionBuilder,
                         new LabelDescription(ConfigurationSchemaNode.OA_DEFAULT_VALUE, DefaultValueType.EMPTY_INSTANCE()),
                         new LabelDescription(ConfigurationSchemaNode.OA_LANG_RESTRICTIONS, new CollectionType.ArrayType<>(List.of(), false, true, StringType.EMPTY_INSTANCE()))
                 );
-    }
-
-    private PatternComponentAdjacentType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
-                children,
-                false,
-                false);
-    }
-
-    public PatternComponentAdjacentType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER()
-                        .test(children.keySet()),
-                children,
-                false,
-                false);
     }
 }

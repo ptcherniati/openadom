@@ -3,7 +3,9 @@ package fr.inra.oresing.rest.model.configuration.builder;
 import fr.inra.oresing.domain.application.configuration.BuilderNode;
 import org.apache.commons.collections4.CollectionUtils;
 
-import java.util.*;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
 
 record ParentChildRelation(BuilderNode parent, BuilderNode child,
                            Integer order) {

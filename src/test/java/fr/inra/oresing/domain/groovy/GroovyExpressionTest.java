@@ -1,44 +1,25 @@
 package fr.inra.oresing.domain.groovy;
 
-import static org.junit.jupiter.api.Assertions.*;
-
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.groovy.exception.GroovyException;
 import fr.inra.oresing.domain.groovy.predefined.script.ScriptConstantProvider;
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 
 import javax.script.ScriptException;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+
 @Tag("domain.model")
 class GroovyExpressionTest {
 
     private Map<String, Object> context;
-
-    public record ReferenceBuilder(String naturalKey, Map<String, Object> refValues) implements GroovyDecorator{
-
-        @Override
-        public String getHierarchicalKey() {
-            return "";
-        }
-
-        @Override
-        public String getNaturalKey() {
-            return naturalKey();
-        }
-
-        @Override
-        public Map<String, Object> getRefValues() {
-            return refValues();
-        }
-    }
 
     @BeforeEach
     void setUp() {
@@ -150,7 +131,6 @@ class GroovyExpressionTest {
         assertTrue(toString.contains("x + y"));
     }
 
-
     @Test
     void testNaturalKeyBuilder() {
         String expression = """
@@ -167,7 +147,6 @@ class GroovyExpressionTest {
         assertEquals("agroecosysteme_1__site_experimental_1__parcelle_2", result);
     }
 
-
     @Test
     void testEscapeLabel() {
         String expression = "OA_escapeLabel('Test Label')";
@@ -177,14 +156,13 @@ class GroovyExpressionTest {
         assertEquals("test_label", result);
     }
 
-
     @Test
     void testBuildCompositeKey() {
         context = Map.of("datum",
                 Map.of(
-                      "agroecosystem" ,  "Agroécosysteme 1",
-                      "site" ,  "Site expérimental 1",
-                      "plot" ,  "parcelle 2"
+                        "agroecosystem", "Agroécosysteme 1",
+                        "site", "Site expérimental 1",
+                        "plot", "parcelle 2"
                 )
         );
         String expression = "OA_buildCompositeKey(['agroecosystem', 'site', 'plot'])";
@@ -194,14 +172,13 @@ class GroovyExpressionTest {
         assertEquals("agroecosysteme_1__site_experimental_1__parcelle_2", result);
     }
 
-
     @Test
     void testBuildCompositeKeyWithNullValue() {
         context = Map.of("datum",
                 Map.of(
-                      "agroecosystem" ,  "Agroécosysteme 1",
-                      "site" ,  "",
-                      "plot" ,  "parcelle 2"
+                        "agroecosystem", "Agroécosysteme 1",
+                        "site", "",
+                        "plot", "parcelle 2"
                 )
         );
         String expression = "OA_buildCompositeKey(['agroecosystem', 'site', 'plot'])";
@@ -211,14 +188,13 @@ class GroovyExpressionTest {
         assertEquals("agroecosysteme_1__NULL_KEY__parcelle_2", result);
     }
 
-
     @Test
     void testBuildCompositeKeyWithAllValueNull() {
         context = Map.of("datum",
                 Map.of(
-                      "agroecosystem" ,  "",
-                      "site" ,  "",
-                      "plot" ,  ""
+                        "agroecosystem", "",
+                        "site", "",
+                        "plot", ""
                 )
         );
         String expression = "OA_buildCompositeKey(['agroecosystem', 'site', 'plot'])";
@@ -228,14 +204,13 @@ class GroovyExpressionTest {
         assertEquals("", result);
     }
 
-
     @Test
     void testBuildManyCompositeKey() {
         context = Map.of("datum",
                 Map.of(
-                      "agroecosystem" ,  "Agroécosysteme 1, Agroécosysteme 2",
-                      "site" ,  "Site expérimental 1, Site expérimental 1",
-                      "plot" ,  "parcelle 1, parcelle 2"
+                        "agroecosystem", "Agroécosysteme 1, Agroécosysteme 2",
+                        "site", "Site expérimental 1, Site expérimental 1",
+                        "plot", "parcelle 1, parcelle 2"
                 )
         );
         String expression = "OA_buildManyCompositeKey(['agroecosystem', 'site', 'plot'])";
@@ -245,14 +220,13 @@ class GroovyExpressionTest {
         assertEquals("agroecosysteme_1__site_experimental_1__parcelle_1,agroecosysteme_2__site_experimental_1__parcelle_2", result);
     }
 
-
     @Test
     void testBuildManyCompositeKeyWithNullValue() {
         context = Map.of("datum",
                 Map.of(
-                      "agroecosystem" ,  "Agroécosysteme 1,",
-                      "site" ,  "Site expérimental 1, Site expérimental 1",
-                      "plot" ,  ",parcelle 1"
+                        "agroecosystem", "Agroécosysteme 1,",
+                        "site", "Site expérimental 1, Site expérimental 1",
+                        "plot", ",parcelle 1"
                 )
         );
         String expression = "OA_buildManyCompositeKey(['agroecosystem', 'site', 'plot'])";
@@ -262,14 +236,13 @@ class GroovyExpressionTest {
         assertEquals("agroecosysteme_1__site_experimental_1__NULL_KEY,NULL_KEY__site_experimental_1__parcelle_1", result);
     }
 
-
     @Test
     void testBuildManyCompositeKeyWithAllNullValue() {
         context = Map.of("datum",
                 Map.of(
-                      "agroecosystem" ,  ",",
-                      "site" ,  "",
-                      "plot" ,  ""
+                        "agroecosystem", ",",
+                        "site", "",
+                        "plot", ""
                 )
         );
         String expression = "OA_buildManyCompositeKey(['agroecosystem', 'site', 'plot'])";
@@ -331,6 +304,24 @@ class GroovyExpressionTest {
             assertEquals("agroecosystem", params.get("value"));
             Assertions.assertThatCollection((List) params.get("knownValues"))
                     .hasSameElementsAs(List.of("agroecosysteme_1", "agroecosysteme_2"));
+        }
+    }
+
+    public record ReferenceBuilder(String naturalKey, Map<String, Object> refValues) implements GroovyDecorator {
+
+        @Override
+        public String getHierarchicalKey() {
+            return "";
+        }
+
+        @Override
+        public String getNaturalKey() {
+            return naturalKey();
+        }
+
+        @Override
+        public Map<String, Object> getRefValues() {
+            return refValues();
         }
     }
 

@@ -5,7 +5,6 @@ import fr.inra.oresing.domain.chart.OreSiSynthesis;
 import lombok.Value;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Value
 public class SynthesisResult {
@@ -27,7 +26,7 @@ public class SynthesisResult {
                 .map(OreSiSynthesis::getRanges)
                 .map(ranges -> ranges.stream()
                         .map(LocalDateTimeRangeResult::new)
-                        .collect(Collectors.toList())
+                        .toList()
                 )
                 .orElseGet(LinkedList::new);
     }

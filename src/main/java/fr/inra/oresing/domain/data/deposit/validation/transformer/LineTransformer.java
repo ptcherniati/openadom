@@ -1,8 +1,8 @@
 package fr.inra.oresing.domain.data.deposit.validation.transformer;
 
 import fr.inra.oresing.domain.checker.LineChecker;
-import fr.inra.oresing.domain.data.Datum;
 import fr.inra.oresing.domain.data.DataDatum;
+import fr.inra.oresing.domain.data.Datum;
 
 import java.util.Map;
 

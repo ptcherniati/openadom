@@ -15,6 +15,11 @@ public class NotApplicationDataReaderException extends OreSiTechnicalException {
         this.dataName = dataName;
     }
 
+    public NotApplicationDataReaderException(final String applicationName) {
+        super(NO_RIGHT_FOR_USER_DATA_READER);
+        this.applicationName = applicationName;
+    }
+
     public NotApplicationDataReaderException() {
         super(NO_RIGHT_FOR_USER_DATA_READER);
     }

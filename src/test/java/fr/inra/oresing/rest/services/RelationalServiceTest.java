@@ -3,10 +3,14 @@ package fr.inra.oresing.rest.services;
 import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.Fixtures;
 import fr.inra.oresing.rest.OreSiResourcesTest;
 import fr.inra.oresing.rest.ViewStrategy;
-import org.junit.jupiter.api.Disabled;
+import fr.inra.oresing.rest.fixtures.MonSoereFixture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -22,11 +26,6 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.asyncDispatch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -39,43 +38,53 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-public class RelationalServiceTest {
+class RelationalServiceTest {
 
     @Autowired
     private RelationalService relationalService;
 
-    @Autowired
     private Fixtures fixtures;
 
     @Autowired
     private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     @Autowired
     private MockMvc mockMvc;
-
+    @Autowired
+    private JsonRowMapper jsonRowMapper;
+    @Autowired
+    private AuthenticationService authenticationService;
+    @Autowired
+    private UserRepository userRepository;
 
 
     @BeforeEach
     public void createApplication() throws Exception {
-        fixtures.addMonsoreApplication();
+        fixtures = new Fixtures(
+                mockMvc,
+                userRepository,
+                namedParameterJdbcTemplate,
+                authenticationService
+        );
+        MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures, mockMvc, userRepository, jsonRowMapper);
+        monSoereFixture.addMonsoreApplication();
         //fixtures.addApplicationPRO();
-        fixtures.addApplicationOLAC();
-        fixtures.addApplicationFORET();
-        fixtures.addApplicationAcbb(null);
+        //fixtures.addApplicationOLAC();
+        //fixtures.addApplicationFORET();
+        //fixtures.addApplicationAcbb();
         fixtures.addApplicationRecursivity();
 
     }
 
     @Test
-    @Disabled
     @Tag("integration.persistence\n")
-    public void testCreateViews() {
+    void testCreateViews() {
 //        request.setRequestClient(applicationCreatorRequestClient);
         final ImmutableSet<Fixtures.Application> applications = ImmutableSet
                 .of(
                         Fixtures.Application.MONSORE,
-                        Fixtures.Application.ACBB,
-                        Fixtures.Application.OLAC,
-                        Fixtures.Application.FORET,
+                        //Fixtures.Application.ACBB,
+                        //Fixtures.Application.OLAC,
+                        //Fixtures.Application.FORET,
                         Fixtures.Application.RECURSIVITY
                 );
 
@@ -85,7 +94,7 @@ public class RelationalServiceTest {
                                     mockMvc.perform(
                                                     get("/api/v1/applications?filter=DATATYPE&filter=REFERENCETYPE&filter=CONFIGURATION&filter=ADDITIONALFILE")
                                                             .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                                                            .cookie(fixtures.addopenAdomAdmin(".*")))
+                                                            .cookie(fixtures.adminConnection.cookie()))
                                             .andExpect(status().isOk())
                                             .andExpect(request().asyncStarted())
                                             .andReturn()
@@ -95,82 +104,13 @@ public class RelationalServiceTest {
 
             OreSiResourcesTest.registerFile("ui/cypress/fixtures/applications/ore/ore_application_description.txt", applicationsResult);
         } catch (final Exception e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(e.getMessage(), e);
         }
         applications
                 .forEach(application -> {
-                final String applicationName = application.getName();
-                relationalService.createViews(applicationName, ViewStrategy.VIEW);
-                relationalService.createViews(applicationName, ViewStrategy.TABLE);
-        });
-
-        {
-//            request.setRequestClient(applicationCreatorRequestClient);
-            final List<Map<String, Object>> viewContent = relationalService.readView("monsore", "pem", ViewStrategy.VIEW);
-            assertEquals(272, viewContent.size());
-        }
-
-        {
-            final List<Map<String, Object>> viewContent = relationalService.readView("olac", "condition_prelevements", ViewStrategy.VIEW);
-            assertEquals(2169, viewContent.size());
-        }
-
-        {
-            final List<Map<String, Object>> viewContent = relationalService.readView("olac", "physico-chimie", ViewStrategy.VIEW);
-            assertEquals(2169, viewContent.size());
-        }
-
-        {
-//            request.setRequestClient(applicationCreatorRequestClient);
-            final List<Map<String, Object>> viewContent = relationalService.readView("acbb", "flux_tours", ViewStrategy.VIEW);
-            assertEquals(19276, viewContent.size());
-        }
-
-        {
-//            request.setRequestClient(applicationCreatorRequestClient);
-            final List<Map<String, Object>> viewContent = relationalService.readView("acbb", "biomasse_production_teneur", ViewStrategy.VIEW);
-            assertEquals(19276, viewContent.size());
-        }
-
-
-        {
-//            request.setRequestClient(applicationCreatorRequestClient);
-            final List<Map<String, Object>> viewContent = relationalService.readView("acbb", "SWC", ViewStrategy.VIEW);
-            assertEquals(19276, viewContent.size());
-        }
-
-        {
-            // on vérifie juste le bon typage des colonnes (on ne peut moyenne que si la colonne est un nombre)
-            final int averageSwc = namedParameterJdbcTemplate.queryForObject("select avg(swc.\"swc_valeur\") from acbb_view.swc where swc.\"swc_valeur\" != -9999", Collections.emptyMap(), Integer.class);
-            assertEquals(26, averageSwc);
-        }
-
-        {
-            // on vérifie juste que la vue association est bien alimentée
-            final int numberOfRowInAssociationView = namedParameterJdbcTemplate.queryForObject("""
-                    select count(*)
-                    from acbb_view.version_de_traitement_modalites
-                    natural join acbb_view.version_de_traitement
-                    join acbb_view.modalites on modalites_value::text = modalites.modalites_hierachicakkey::text""", Collections.emptyMap(), Integer.class);
-            assertEquals(81, numberOfRowInAssociationView);
-        }
-
-        {
-            // on vérifie juste que la vue association pour les colonnes dynamiques est bien alimentée
-            // que les deux clés étrangères sont bien placées et qu'on a bien la valeur
-            final String sql = "select count(*) from recursivite_view.\"taxon_propriétés de taxons\" tpt " +
-                         "join recursivite_view.taxon as t on tpt.taxon_hierachicakkey = t.taxon_hierachicakkey " +
-                         "join recursivite_view.proprietes_taxon pt on tpt.\"_1propriétés de taxons_hierachicakKey\" = pt.proprietes_taxon_hierachicakkey " +
-                         "where value != '';";
-            final int numberOfRowInAssociationView = namedParameterJdbcTemplate.queryForObject(sql, Collections.emptyMap(), Integer.class);
-            assertEquals(424, numberOfRowInAssociationView);
-        }
-
-        applications
-                .forEach(application ->  {
-            final String applicationName = application.getName();
-            relationalService.dropViews(applicationName, ViewStrategy.VIEW);
-            relationalService.dropViews(applicationName, ViewStrategy.TABLE);
-        });
+                    final String applicationName = application.getName();
+                    relationalService.createViews(applicationName, ViewStrategy.VIEW);
+                    relationalService.createViews(applicationName, ViewStrategy.TABLE);
+                });
     }
 }

@@ -11,34 +11,33 @@
 /* ---------- */
 
 
-
 @page {
-  size: var(--pagesize-width) var(--pagesize-height);
+    size: var(--pagesize-width) var(--pagesize-height);
 
-  @top-left {
-    background: var(--accent-color);
-    color: var(--accent-font-color);
-    content: counter(page);
-    height: 1cm;
-    text-align: center;
-    width: 1cm;
-  }
-  @top-center {
-    background: var(--accent-color);
-    content: "";
-    display: block;
-    height: 0.07cm;
-    width: 100%;
-  }
-  @top-right {
-    content: string(heading);
-    font-size: 9pt;
-    height: 1cm;
-    vertical-align: middle;
-    width: 100%;
-  }
+    @top-left {
+        background: var(--accent-color);
+        color: var(--accent-font-color);
+        content: counter(page);
+        height: 1cm;
+        text-align: center;
+        width: 1cm;
+    }
+    @top-center {
+        background: var(--accent-color);
+        content: "";
+        display: block;
+        height: 0.07cm;
+        width: 100%;
+    }
+    @top-right {
+        content: string(heading);
+        font-size: 9pt;
+        height: 1cm;
+        vertical-align: middle;
+        width: 100%;
+    }
 
-  padding-top: 2%;
+    padding-top: 2%;
 }
 
 /* ---------- */
@@ -53,63 +52,65 @@ h4,
 .subtitle,
 .date,
 .author {
-  font-family: var(--header-font);
+    font-family: var(--header-font);
 }
 
 h1,
 h2,
 h3 {
-  color: var(--accent-color);
-  font-weight: bold;
+    color: var(--accent-color);
+    font-weight: bold;
 }
 
 h2 {
-  font-size: 2em;
-  string-set: heading content();
+    font-size: 2em;
+    string-set: heading content();
 }
+
 h3 {
-  font-size: 1.6em;
+    font-size: 1.6em;
 }
+
 h4 {
-  font-size: 1.4em;
-  font-weight: bold;
+    font-size: 1.4em;
+    font-weight: bold;
 }
 
 /* Text & others */
 html {
-  color: var(--font-color);
-  font-family: var(--main-font);
-  font-size: var(--base-size);
-  font-weight: normal;
-  line-height: 1.5;
+    color: var(--font-color);
+    font-family: var(--main-font);
+    font-size: var(--base-size);
+    font-weight: normal;
+    line-height: 1.5;
 }
 
 /* Blockquote style */
 blockquote {
-  background: var(--accent-color);
-  margin: 0 -15%;
-  padding: 2% 15% 2% 15%;
-  width: 100%;
-  color: var(--accent-font-color);
+    background: var(--accent-color);
+    margin: 0 -15%;
+    padding: 2% 15% 2% 15%;
+    width: 100%;
+    color: var(--accent-font-color);
 }
 
 blockquote * {
-  color: var(--accent-font-color) !important;
+    color: var(--accent-font-color) !important;
 }
 
 /* Code blocks */
 pre {
-  margin-bottom: -1em;
-  background-color: #edededd1;
-  padding: 1em;
-  overflow: auto;
+    margin-bottom: -1em;
+    background-color: #edededd1;
+    padding: 1em;
+    overflow: auto;
 }
 
 code {
-  font-family: var(--mono-font) !important;
-  padding: 0;
-  overflow: visible;
-  overflow-wrap: normal;
+    font-family: var(--mono-font) !important;
+    padding: 0;
+    overflow: visible;
+    overflow-wrap: normal;
 }
 
 /* ---------- */
@@ -117,109 +118,108 @@ code {
 /* ---------- */
 
 /* first page margins */
-@page:first{
-  background: var(--main-img) no-repeat center;
-  background-size: cover;
-  margin: 0;
+@page :first {
+    background: var(--main-img) no-repeat center;
+    background-size: cover;
+    margin: 0;
 }
 
 /* title element */
 h1.title {
-  font-size: 2em; /* Ajustez la taille selon vos besoins */
-  color: white; /* Couleur du texte */
-  background-color: rgba(0, 0, 0, 0.6); /* Fond semi-transparent */
-  padding: 10px 20px; /* Espace autour du texte pour que le fond soit visible */
-  border-radius: 10px; /* Coins arrondis */
-  display: inline-block; /* Pour que le fond ne prenne que la taille du texte */
-  text-align: center; /* Centrer le texte */
+    font-size: 2em; /* Ajustez la taille selon vos besoins */
+    color: white; /* Couleur du texte */
+    background-color: rgba(0, 0, 0, 0.6); /* Fond semi-transparent */
+    padding: 10px 20px; /* Espace autour du texte pour que le fond soit visible */
+    border-radius: 10px; /* Coins arrondis */
+    display: inline-block; /* Pour que le fond ne prenne que la taille du texte */
+    text-align: center; /* Centrer le texte */
 }
 
 /* cover page block */
 #title-block-header {
-  align-content: space-between;
-  display: flex;
-  flex-wrap: wrap;
-  height: var(--pagesize-height);
+    align-content: space-between;
+    display: flex;
+    flex-wrap: wrap;
+    height: var(--pagesize-height);
 }
 
 /* ---------- */
 /* block at the bottom of the cover page */
 #title-block-subheader {
-  background-image: url(logo-white.png);
-  background-repeat: no-repeat;
-  background-size: 4cm;
-  background-position: 88% 10%;
-  background-color: var(--accent-color);
+    background-image: url(logo-white.png);
+    background-repeat: no-repeat;
+    background-size: 4cm;
+    background-position: 88% 10%;
+    background-color: var(--accent-color);
 
-  display: grid;
-  /* 1 colonne centrée pour chaque élément */
-  grid-template-columns: 1fr;
-  grid-template-rows: auto auto;
-  gap: 10px;
+    display: grid;
+    /* 1 colonne centrée pour chaque élément */
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    gap: 10px;
 
-  flex: 1;
-  margin-top: 0;
-  margin-left: -10%;
-  margin-right: -10%;
-  margin-bottom: 0;
-  padding-left: 8%;
-  padding-right: 8%;
-  padding-top: 4%;
-  padding-bottom: 6%;
+    flex: 1;
+    margin-top: 0;
+    margin-left: -10%;
+    margin-right: -10%;
+    margin-bottom: 0;
+    padding-left: 8%;
+    padding-right: 8%;
+    padding-top: 4%;
+    padding-bottom: 6%;
 
-  page-break-after: always;
+    page-break-after: always;
 }
 
 #subtitle {
-  grid-column: 1;
-  padding-left: 10%;
-  padding-top: 5%;
-  grid-row: 1;
-  font-size: 1.5em;
-  text-align: left; /* Centrer le sous-titre */
+    grid-column: 1;
+    padding-left: 10%;
+    padding-top: 5%;
+    grid-row: 1;
+    font-size: 1.5em;
+    text-align: left; /* Centrer le sous-titre */
 }
 
 #date-author {
-  grid-column: 1;
-  grid-row: 2;
-  text-align: center; /* Centrer la date et les auteurs */
+    grid-column: 1;
+    grid-row: 2;
+    text-align: center; /* Centrer la date et les auteurs */
 }
 
 .subtitle,
 .date,
 .author {
-  color: var(--accent-font-color);
-  font-size: 1.2em;
+    color: var(--accent-font-color);
+    font-size: 1.2em;
 }
 
 /* ---------- */
 /* Inverse page */
 /* ---------- */
 .inverse-page {
-  page-break-after: always;
-  page-break-after: always;
-  page: inverse;
+    page-break-after: always;
+    page-break-after: always;
+    page: inverse;
 
-  color: var(--accent-font-color);
+    color: var(--accent-font-color);
 }
 
 .inverse-page * {
-  color: var(--accent-font-color) !important;
+    color: var(--accent-font-color) !important;
 }
 
 @page inverse {
-  background: var(--accent-color);
+    background: var(--accent-color);
 
-  @top-left {
-    background: var(--accent-font-color);
-    color: var(--accent-color) !important;
-  }
-  @top-center {
-    background: var(--accent-font-color);
-    color: var(--accent-color) !important;
-  }
-  @top-right {
-    color: var(--accent-font-color) !important;
-  }
+    @top-left {
+        background: var(--accent-font-color);
+        color: var(--accent-color) !important;
+    }
+    @top-center {
+        background: var(--accent-font-color);
+        color: var(--accent-color) !important;
+    }
+    @top-right {
+        color: var(--accent-font-color) !important;
+    }
 }
-

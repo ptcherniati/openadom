@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 
 public class NotOpenAdomAdminException extends OreSiTechnicalException {
     public static final String OPEN_ADOM_ADMIN_REQUIRED_FOR_OPERATION = "OPEN_ADOM_ADMIN_REQUIRED_FOR_OPERATION";
+
     public NotOpenAdomAdminException() {
         super(OPEN_ADOM_ADMIN_REQUIRED_FOR_OPERATION);
     }

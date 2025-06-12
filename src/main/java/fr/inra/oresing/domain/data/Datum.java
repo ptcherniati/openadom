@@ -10,13 +10,13 @@ import java.util.Map;
 
 public class Datum implements SomethingThatCanProvideEvaluationContext {
 
-    private final Map<String, FieldType> values;
+    private final Map<String, FieldType<?>> values;
 
     public Datum() {
         this(new LinkedHashMap<>());
     }
 
-    public Datum(final Map<String, FieldType> values) {
+    public Datum(final Map<String, FieldType<?>> values) {
         super();
         this.values = values;
     }
@@ -25,11 +25,11 @@ public class Datum implements SomethingThatCanProvideEvaluationContext {
         return new Datum(new LinkedHashMap<>(datum.asMap()));
     }
 
-    public static Datum fromMapMapOfFieldType(final Map<String, Map<String, FieldType>> line) {
-        final Map<String, FieldType> valuesPerReference = new LinkedHashMap<>();
-        for (final Map.Entry<String, Map<String, FieldType>> variableEntry : line.entrySet()) {
+    public static Datum fromMapMapOfFieldType(final Map<String, Map<String, FieldType<?>>> line) {
+        final Map<String, FieldType<?>> valuesPerReference = new LinkedHashMap<>();
+        for (final Map.Entry<String, Map<String, FieldType<?>>> variableEntry : line.entrySet()) {
             final String variable = variableEntry.getKey();
-            for (final Map.Entry<String, FieldType> componentEntry : variableEntry.getValue().entrySet()) {
+            for (final Map.Entry<String, FieldType<?>> componentEntry : variableEntry.getValue().entrySet()) {
                 final String component = componentEntry.getKey();
                 valuesPerReference.put(component, componentEntry.getValue());
             }
@@ -37,20 +37,20 @@ public class Datum implements SomethingThatCanProvideEvaluationContext {
         return new Datum(ImmutableMap.copyOf(valuesPerReference));
     }
 
-    public FieldType get(final String componentKey) {
+    public FieldType<?> get(final String componentKey) {
         return values.get(componentKey);
     }
 
-    public Map<String, FieldType> asMap() {
+    public Map<String, FieldType<?>> asMap() {
         return values;
     }
 
     public Datum filterOnVariable(final Predicate<String> includeInDataGroupPredicate) {
-        final Map<String, FieldType> filteredValues = Maps.filterKeys(values, includeInDataGroupPredicate);
+        final Map<String, FieldType<?>> filteredValues = Maps.filterKeys(values, includeInDataGroupPredicate);
         return new Datum(filteredValues);
     }
 
-    public void put(final String componentKey, final FieldType value) {
+    public void put(final String componentKey, final FieldType<?> value) {
         values.put(componentKey, value);
     }
 

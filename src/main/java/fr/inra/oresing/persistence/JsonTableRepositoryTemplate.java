@@ -64,17 +64,17 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
             });
             //jsonRowMapper.getJsonMapper().setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CASE);
             final String json = jsonRowMapper.toJson(entities);
-            try{
+            try {
                 uuids.addAll(namedParameterJdbcTemplate.queryForList(
                         query, new MapSqlParameterSource("json", json), UUID.class));
             } catch (final Exception e) {
                 Pattern pattern = Pattern.compile(".*new row violates row-level security policy for.*\"(.*)\".*", Pattern.DOTALL);
                 Matcher matcher = pattern.matcher(Objects.requireNonNull(e.getMessage()));
                 Matcher matcher2 = pattern.matcher(Objects.requireNonNull(e.getCause().getMessage()));
-                if(matcher.matches() ){
+                if (matcher.matches()) {
                     String table = matcher.group(1);
                     throw SiOreIllegalArgumentException.noRightOnTable(table);
-                }else if(matcher2.matches()){
+                } else if (matcher2.matches()) {
                     String table = matcher2.group(1);
                     throw SiOreIllegalArgumentException.noRightOnTable(table);
                 }
@@ -139,6 +139,7 @@ abstract class JsonTableRepositoryTemplate<T extends OreSiEntity> implements Ini
     public List<T> findAll() {
         return find(null, EmptySqlParameterSource.INSTANCE);
     }
+
     public Stream<T> findAllStream() {
         return findStream(null, EmptySqlParameterSource.INSTANCE);
     }

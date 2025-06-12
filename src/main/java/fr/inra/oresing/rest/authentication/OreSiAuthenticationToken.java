@@ -17,7 +17,7 @@ import org.springframework.security.core.GrantedAuthority;
 import java.util.Collection;
 import java.util.Optional;
 
-public class OreSiAuthenticationToken  extends AbstractAuthenticationToken implements Authentication {
+public class OreSiAuthenticationToken extends AbstractAuthenticationToken implements Authentication {
 
     private final Object principal;
     private final Object credentials;
@@ -48,22 +48,46 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
         super.setAuthenticated(true);
     }
 
-    public boolean isLogin(){
-        return getPath()
-                .stream().anyMatch(s->s.endsWith("/login"));
+    public static OreSiUserRequestClient getRequestClient(OreSiAuthenticationToken token) {
+        return switch (token.getPrincipal()) {
+            case NotConnectedUnauthentifiedUserForCreate notConnected -> null;
+            case NotConnectedAuthentifiedIdleUser notConnectedUser -> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.user())
+            );
+            case NotConnectedAuthentifiedPendingUser notConnectedUser -> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.user())
+            );
+            case NotConnectedAuthentifiedActiveUser notConnectedUser -> new OreSiUserRequestClient(
+                    notConnectedUser.user().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.user())
+            );
+            case NotConnectedAuthentifiedMissingPasswordUser notConnectedUser -> new OreSiUserRequestClient(
+                    notConnectedUser.oreSiUser().getId(),
+                    OreSiUserRole.forUser(notConnectedUser.oreSiUser())
+            );
+            case OreSiUserRequestClient requestClient1 -> requestClient1;
+            default -> null;
+        };
     }
 
-    public boolean isUpdate(){
+    public boolean isLogin() {
+        return getPath()
+                .stream().anyMatch(s -> s.endsWith("/login"));
+    }
+
+    public boolean isUpdate() {
         return getPath()
                 .stream()
-                .anyMatch(s->s.endsWith("/users")) &&
+                .anyMatch(s -> s.endsWith("/users")) &&
                 getAuthorities().contains(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER);
     }
 
-    public boolean isCreate(){
+    public boolean isCreate() {
         return getPath()
                 .stream()
-                .anyMatch(s->s.endsWith("/users"))&&
+                .anyMatch(s -> s.endsWith("/users")) &&
                 getAuthorities().contains(AuthorizationFilter.ROLE_UNAUTHENTIFIED_CREATE_USER);
     }
 
@@ -77,44 +101,20 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
     public Object getPrincipal() {
         return principal;
     }
-    public static OreSiUserRequestClient getRequestClient(OreSiAuthenticationToken token) {
-        return switch (token.getPrincipal()){
-            case NotConnectedUnauthentifiedUserForCreate notConnected ->null;
-            case NotConnectedAuthentifiedIdleUser notConnectedUser-> new OreSiUserRequestClient(
-                    notConnectedUser.user().getId(),
-                    OreSiUserRole.forUser(notConnectedUser.user())
-            );
-            case NotConnectedAuthentifiedPendingUser notConnectedUser-> new OreSiUserRequestClient(
-                    notConnectedUser.user().getId(),
-                    OreSiUserRole.forUser(notConnectedUser.user())
-            );
-            case NotConnectedAuthentifiedActiveUser notConnectedUser-> new OreSiUserRequestClient(
-                    notConnectedUser.user().getId(),
-                    OreSiUserRole.forUser(notConnectedUser.user())
-            );
-            case NotConnectedAuthentifiedMissingPasswordUser notConnectedUser-> new OreSiUserRequestClient(
-                    notConnectedUser.oreSiUser().getId(),
-                    OreSiUserRole.forUser(notConnectedUser.oreSiUser())
-            );
-            case OreSiUserRequestClient requestClient1-> requestClient1;
-            default -> null;
-        };
-    }
-
 
     @Override
     public Object getCredentials() {
         return credentials;
     }
 
-    public LoginAdminResult getLoginAdminResult(){
+    public LoginAdminResult getLoginAdminResult() {
         return Optional.ofNullable(getPrincipal())
                 .filter(LoginAdminResult.class::isInstance)
                 .map(LoginAdminResult.class::cast)
                 .orElse(null);
     }
 
-    public NotConnectedUser getNotConnectedUser(){
+    public NotConnectedUser getNotConnectedUser() {
         return Optional.ofNullable(getPrincipal())
                 .filter(NotConnectedUser.class::isInstance)
                 .map(NotConnectedUser.class::cast)
@@ -127,11 +127,11 @@ public class OreSiAuthenticationToken  extends AbstractAuthenticationToken imple
     }
 
     public void setApplicationPersonna(ApplicationPersona applicationUser) {
-        this.applicationPersona =applicationUser;
+        this.applicationPersona = applicationUser;
     }
 
     public StoreFile setStoreFile(StoreFile storeFile) {
-        this.storeFile=storeFile;
+        this.storeFile = storeFile;
         return storeFile;
     }
 }

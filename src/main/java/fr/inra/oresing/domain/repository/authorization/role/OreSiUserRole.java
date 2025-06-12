@@ -10,13 +10,13 @@ import lombok.ToString;
 @ToString
 public class OreSiUserRole implements OreSiRoleToAccessDatabase, OreSiRoleManagedByApplication, OreSiRoleWeCanGrantOtherRolesTo {
 
+    private String asSqlRole;
+
     public static OreSiUserRole forUser(final OreSiUser user) {
         final String userAsSqlRole = user.getId().toString();
         final OreSiUserRole oreSiUserRole = new OreSiUserRole();
         oreSiUserRole.setAsSqlRole(userAsSqlRole);
         return oreSiUserRole;
     }
-
-    private String asSqlRole;
 
 }

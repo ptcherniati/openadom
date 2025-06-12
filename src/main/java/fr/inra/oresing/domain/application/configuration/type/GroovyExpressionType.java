@@ -10,8 +10,23 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public record GroovyExpressionType(SectionBuilder sectionBuilder,
-                                   Map<String, ConfigurationSchemaNodeType> children, boolean required,
+                                   Map<String, ConfigurationSchemaNodeType<?>> children, boolean required,
                                    boolean nullable) implements IntermediaryType.CheckerParamType {
+    public GroovyExpressionType(final Map<String, ConfigurationSchemaNodeType<?>> children) {
+        this(SECTION_BUILDER()
+                        .test(children.keySet()),
+                children,
+                true,
+                false);
+    }
+
+    private GroovyExpressionType(final Map<String, ConfigurationSchemaNodeType<?>> children, final RootType.CHECKING checking) {
+        this(SECTION_BUILDER(),
+                children,
+                true,
+                false);
+    }
+
     public static SectionBuilder SECTION_BUILDER() {
         return SectionBuilder.getInstance()
                 .withMandatorySections(
@@ -25,22 +40,6 @@ public record GroovyExpressionType(SectionBuilder sectionBuilder,
 
     public static GroovyExpressionType EMPTY_INSTANCE() {
         return new GroovyExpressionType(Map.of(), RootType.CHECKING.NO_CHECK);
-    }
-
-
-    public GroovyExpressionType(final Map<String, ConfigurationSchemaNodeType> children) {
-        this(SECTION_BUILDER()
-                        .test(children.keySet()),
-                children,
-                true,
-                false);
-    }
-
-    private GroovyExpressionType(final Map<String, ConfigurationSchemaNodeType> children, final RootType.CHECKING checking) {
-        this(SECTION_BUILDER(),
-                children,
-                true,
-                false);
     }
 
     @Override
@@ -60,7 +59,7 @@ public record GroovyExpressionType(SectionBuilder sectionBuilder,
                 )
                 .append(expression);
         ConfigurationSchemaNodeType exceptions = this.children.get(ConfigurationSchemaNode.OA_GROOVY_EXCEPTIONS);
-        if(exceptions==null){
+        if (exceptions == null) {
             return expressionExample.toString();
         }
         return expressionExample

@@ -10,7 +10,7 @@ import java.util.List;
 
 public class ReportErrors extends LinkedList<CsvRowValidationCheckResult> {
 
-    private static final int MAX_ERRORS_SIZE = 15 ;
+    private static final int MAX_ERRORS_SIZE = 15;
     private static final long MAX_ERRORS_BYTE = 1000000;
     final Mapper jsonRowMapper;
     private long length;

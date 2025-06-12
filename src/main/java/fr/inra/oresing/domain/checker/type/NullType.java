@@ -9,24 +9,24 @@ import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.DefaultCheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
-import java.util.function.Supplier;
 
 import java.io.IOException;
+import java.util.function.Supplier;
 
-public non-sealed class NullType implements FieldType<NullType.Null> {
+public non-sealed class NullType implements FieldType<Void> {
     public static final NullType INSTANCE = new NullType();
     final Supplier<NullType> clone;
 
-    final Null value = Null.NULL;
+    final Void value = null;
 
-    public NullType() {
+    private NullType() {
         super();
         clone = () -> INSTANCE;
     }
 
     @Override
-    public Null getValue() {
-        return value;
+    public Void getValue() {
+        return null;
     }
 
     @Override
@@ -40,14 +40,8 @@ public non-sealed class NullType implements FieldType<NullType.Null> {
         return DefaultCheckerValidationCheckResult.success(target, this);
     }
 
-/*    @Override
-    public ValidationCheckResult check(String value, LineCheckerWarper lineCheckerWarper) {
-        CheckerTarget target = lineCheckerWarper.getTarget();
-        return DefaultValidationCheckResult.success(target);
-    }*/
-
     @Override
-    public FieldType toJsonForDatabase() {
+    public FieldType<?> toJsonForDatabase() {
         return this;
     }
 
@@ -86,9 +80,5 @@ public non-sealed class NullType implements FieldType<NullType.Null> {
     @Override
     public Object toJsonForFrontend() {
         return value;
-    }
-
-    public enum Null {
-        NULL
     }
 }

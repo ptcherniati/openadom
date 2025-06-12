@@ -6,18 +6,20 @@ import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
-import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.domain.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
+import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
+import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.extern.slf4j.Slf4j;
 import org.postgresql.util.PSQLException;
-import org.springframework.http.*;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.ObjectError;
@@ -32,6 +34,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import static fr.inra.oresing.rest.security.AuthorizationFilter.BAD_REQUEST;
 
 @RestControllerAdvice
 @Slf4j
@@ -55,7 +59,7 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @ExceptionHandler(DisconnectedException.class)
-    public ResponseEntity<?> handle(final DisconnectedException disconnectedException) {
+    public ResponseEntity handle(final DisconnectedException disconnectedException) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(disconnectedException);
     }
 
@@ -69,8 +73,9 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).body(eee);
     }
 
+
     @ExceptionHandler(AuthenticationFailure.class)
-    public ResponseEntity<AuthenticationFailure> handle(final AuthenticationFailure eee) {
+    public ResponseEntity<String> handle(final AuthenticationFailure eee) {
         return switch (eee.getMessage()) {
             case "INACTIVE_ACCOUNT" -> {
                 final HttpHeaders responseHeaders = new HttpHeaders();
@@ -80,15 +85,15 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
                 responseHeaders.set("Result__State", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("state"))).orElse(""));
                 yield ResponseEntity.status(HttpStatus.PAYMENT_REQUIRED)
                         .headers(responseHeaders)
-                        .body(eee);
+                        .body(eee.getMessage());
             }
-            case "EXISTING_LOGIN" -> ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(eee);
-            case "BAD_LOGIN_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
-            case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
-            case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee);
-            default -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee);
+            case "EXISTING_LOGIN" -> ResponseEntity.status(HttpStatus.PRECONDITION_FAILED).body(eee.getMessage());
+            case "BAD_LOGIN_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            case BAD_REQUEST -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            default -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
         };
-        //return ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
     }
 
     @ExceptionHandler

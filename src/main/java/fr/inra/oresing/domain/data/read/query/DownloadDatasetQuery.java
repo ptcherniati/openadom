@@ -12,7 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public sealed interface DownloadDatasetQuery extends MessageInformations
-        permits DownloadDatasetQueryAdvancedSearch, DownloadDatasetQueryByNaturalKey, DownloadDatasetQueryByRowId, DownloadDatasetQueryNoFilter/*, DownloadDatasetQuerySimpleSearch*/ {
+        permits DownloadDatasetQueryAdvancedSearch, DownloadDatasetQueryByNaturalKey, DownloadDatasetQueryByRowId, DownloadDatasetQueryNoFilter {
 
     Set<ComponentOrderBy> componentOrderBy();
 
@@ -23,9 +23,10 @@ public sealed interface DownloadDatasetQuery extends MessageInformations
     String dataName();
 
     OutPut outPut();
+
     boolean horizontalDisplay();
 
-    default long patternDefinitionCount(){
+    default long patternDefinitionCount() {
         return Optional.ofNullable(application())
                 .map(Application::getConfiguration)
                 .flatMap(configuration -> configuration.findData(dataName()))

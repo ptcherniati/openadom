@@ -65,7 +65,7 @@ public record HierarchicalDependancesBuilder(
                         if (dataName.equals(refType)) {
                             Objects.requireNonNull(nodes.put(refType, nodes.containsKey(refType) ?
                                     nodes.get(refType).withComponentKeyAndRecursive(componentKey) :
-                                    new BuilderNode(0,refType, componentKey, componentKey, null, new TreeSet<>(), new TreeSet<>(), orderTags.get(refType), isRecursive)
+                                    new BuilderNode(0, refType, componentKey, componentKey, null, new TreeSet<>(), new TreeSet<>(), orderTags.get(refType), isRecursive)
                             )).withComponentKeyAndRecursive(componentKey);
                         } else {
                             ParentChildRelation relation = new ParentChildRelation(

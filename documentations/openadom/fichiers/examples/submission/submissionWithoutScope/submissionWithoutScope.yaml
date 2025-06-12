@@ -11,29 +11,29 @@ OA_application:
 
 OA_data:
   t_zone_etude_zet:
-    OA_naturalKey:   #mandatory
+    OA_naturalKey: #mandatory
       - zet_id  #optional
-    OA_tags:   #optional
+    OA_tags: #optional
       - __DATA__
-    OA_i18n:   #mandatory
-      OA_title:   #optional
+    OA_i18n: #mandatory
+      OA_title: #optional
         fr: "Zone d'étude"
         en: "Study area"
-      OA_description:   #optional
+      OA_description: #optional
         fr: "Référentiel des zones d'études"
         en: "Study area repository"
 
-    OA_basicComponents:   #optional
+    OA_basicComponents: #optional
       zet_sit_id:
         OA_importHeader: "site"
-        OA_tags: [__ORDER_1__]
-      zet_id:   #optional
+        OA_tags: [ __ORDER_1__ ]
+      zet_id: #optional
         OA_tags: [ __ORDER_2__ ]
-        OA_langRestrictions:   #optional
+        OA_langRestrictions: #optional
           - fr  #optional
           - en  #optional
         OA_required: true  #optional
         OA_importHeader: "ID zone étude"  #optional
-    OA_submission:   #optional
+    OA_submission: #optional
       OA_strategy: OA_VERSIONING
       OA_submissionScope:

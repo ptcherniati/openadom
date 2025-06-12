@@ -9,13 +9,13 @@ import org.apache.commons.collections4.CollectionUtils;
 import java.util.*;
 
 public class AuthorizationForScopeBuilder {
-    public static final AuthorizationForScopeBuilder builder() {
-        return new AuthorizationForScopeBuilder();
-    }
-
     Set<OperationType> operationTypes = new HashSet<>();
     Map<String, List<Ltree>> authorizationScopes = Map.of();
     LocalDateTimeRange timeScope = LocalDateTimeRange.always();
+
+    public static final AuthorizationForScopeBuilder builder() {
+        return new AuthorizationForScopeBuilder();
+    }
 
     // AuthorizationNoRestriction,
     // AuthorizationForReferenceScope,

@@ -1,0 +1,18 @@
+{
+  "offset" : 0,
+  "limit" : 5000,
+  "componentSelects" : [ ],
+  "componentFilters" : [ {
+    "componentKey" : "date",
+    "intervalsValues" : [ {
+      "from" : "02/01/1984",
+      "to" : "03/01/1984",
+      "format": "dd/MM/yyyy"
+    } ]
+  } ],
+  "componentOrderBy" : [ ],
+  "authorizationDescriptions" : [ ],
+  "outPut" : {
+    "locale" : "fr"
+  }
+}

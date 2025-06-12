@@ -15,7 +15,7 @@ class ConfigurationSchemaNodeTest {
     void buildExample() throws IOException {
         final URL url = Resources.getResource("data/configuration/schemaExample.yaml");
         final String expectedSchema = Resources.toString(url, StandardCharsets.UTF_8)
-                .replace("   \" \"   "," + \" \" + ");
+                .replace("   \" \"   ", " + \" \" + ");
         final String exampleOfFile = RootExampleBuilder.buildRootSchema().buildExample(0);
         Assertions.assertEquals(expectedSchema, exampleOfFile);
     }

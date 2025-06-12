@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -22,47 +23,6 @@ public class LocalDateTimeRange {
     public static final Set<String> ACCEPTED_END_OF_BOUNDS = Set.of("]", ")");
     public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-
-    public static SiOreIllegalArgumentException getError(final String boundValue, final String lowerBound, final String upperBound, final Set<String> acceptedValues) {
-        return new SiOreIllegalArgumentException(
-                "badBoundsForInterval",
-                Map.of(
-                        "boundValue", boundValue,
-                        "lowerBound", lowerBound,
-                        "upperBound", upperBound,
-                        "acceptedValues", acceptedValues
-                )
-        );
-    }
-
-    public static LocalDateTimeRange getTimeScope(final LocalDate fromDay, final LocalDate toDay) {
-        final LocalDateTimeRange timeScope;
-        if (fromDay == null) {
-            if (toDay == null) {
-                timeScope = always();
-            } else {
-                timeScope = until(toDay);
-            }
-        } else {
-            if (toDay == null) {
-                timeScope = since(fromDay);
-            } else {
-                timeScope = between(fromDay, toDay);
-            }
-        }
-        return timeScope;
-    }
-
-    public static SiOreIllegalArgumentException getErrorBoundType(final BoundType boundType) {
-        return new SiOreIllegalArgumentException(
-                "badBoundTypeForInterval",
-                Map.of(
-                        "boundType", boundType,
-                        "knownBoundType", Arrays.stream(BoundType.values()).map(BoundType::toString).collect(Collectors.toSet())
-                )
-        );
-    }
-
     private static final DateTimeFormatter SQL_TIMESTAMP_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final ImmutableSet<StringToLocalDateTimeRangeConverter> ALL_CONVERTERS = ImmutableSet.of(
@@ -176,6 +136,28 @@ public class LocalDateTimeRange {
     public LocalDateTimeRange(final Range<LocalDateTime> range) {
         super();
         this.range = range;
+    }
+
+    public static SiOreIllegalArgumentException getError(final String boundValue, final String lowerBound, final String upperBound, final Set<String> acceptedValues) {
+        return new SiOreIllegalArgumentException(
+                "badBoundsForInterval",
+                Map.of(
+                        "boundValue", boundValue,
+                        "lowerBound", lowerBound,
+                        "upperBound", upperBound,
+                        "acceptedValues", acceptedValues
+                )
+        );
+    }
+
+    public static SiOreIllegalArgumentException getErrorBoundType(final BoundType boundType) {
+        return new SiOreIllegalArgumentException(
+                "badBoundTypeForInterval",
+                Map.of(
+                        "boundType", boundType,
+                        "knownBoundType", Arrays.stream(BoundType.values()).map(BoundType::toString).collect(Collectors.toSet())
+                )
+        );
     }
 
     public static LocalDateTimeRange always() {
@@ -306,6 +288,44 @@ public class LocalDateTimeRange {
         return "\"" + SQL_TIMESTAMP_DATE_TIME_FORMATTER.format(bound) + "\"";
     }
 
+    public static LocalDateTimeRange of(DatePattern datePattern, TemporalAccessor from, TemporalAccessor to) {
+        return switch (datePattern.typeOfDate()) {
+            case DATE -> LocalDateTimeRange.between(((LocalDate) from).atStartOfDay(), ((LocalDate) to).atStartOfDay());
+            case DATETIME -> LocalDateTimeRange.between(((LocalDateTime) from), ((LocalDateTime) to));
+            case TIME ->
+                    LocalDateTimeRange.between(((LocalTime) from).atDate(LocalDate.EPOCH), ((LocalTime) to).atDate(LocalDate.EPOCH));
+        };
+    }
+
+    public static LocalDateTimeRange of(DatePattern datePattern, String from, String to) {
+        TemporalAccessor fromTemporal = null;
+        TemporalAccessor totemporal = null;
+        if (from == null || to == null) {
+            return LocalDateTimeRange.always();
+        }
+        if (from != null) {
+            fromTemporal = datePattern.format(from);
+        }
+        if (to != null) {
+            totemporal = datePattern.format(to,true);
+        }
+        if (fromTemporal == null) {
+            return switch (datePattern.typeOfDate()) {
+                case DATETIME -> LocalDateTimeRange.until((LocalDateTime) totemporal);
+                case DATE -> LocalDateTimeRange.until((LocalDate) totemporal);
+                case TIME -> LocalDateTimeRange.until(((LocalTime) totemporal).atDate(LocalDate.EPOCH));
+            };
+        }
+        if (totemporal == null) {
+            return switch (datePattern.typeOfDate()) {
+                case DATETIME -> LocalDateTimeRange.since((LocalDateTime) fromTemporal);
+                case DATE -> LocalDateTimeRange.since((LocalDate) fromTemporal);
+                case TIME -> LocalDateTimeRange.since(((LocalTime) fromTemporal).atDate(LocalDate.EPOCH));
+            };
+        }
+        return of(datePattern, fromTemporal, totemporal);
+    }
+
     public String toSqlExpression() {
         final Range<LocalDateTime> range = this.range;
         final String lowerBoundString;
@@ -351,7 +371,14 @@ public class LocalDateTimeRange {
         }
 
         LocalDateTimeRange toLocalDateTimeRange(String str, DateTimeFormatter dateTimeFormatter, DateType dateType);
+
         LocalDateTimeRange toLocalDateTimeRange(LocalDateTime str, DateTimeFormatter dateTimeFormatter, DateType dateType);
+    }
+    public LocalDateTime getLowerPointOrMin(){
+        return getRange().hasLowerBound()?getRange().lowerEndpoint():LocalDateTime.MIN;
+    }
+    public LocalDateTime getUpperEndpointOrMax(){
+        return getRange().hasUpperBound()?getRange().upperEndpoint():LocalDateTime.MAX;
     }
 
 }

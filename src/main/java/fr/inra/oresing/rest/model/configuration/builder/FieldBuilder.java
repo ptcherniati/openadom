@@ -2,7 +2,10 @@ package fr.inra.oresing.rest.model.configuration.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.AdditionalFileField;
+import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
+import fr.inra.oresing.domain.application.configuration.FieldDescription;
+import fr.inra.oresing.domain.application.configuration.RightsRequestField;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
@@ -14,14 +17,14 @@ import java.util.Optional;
 
 public record FieldBuilder(RootBuilder rootBuilder) {
 
-    <FD extends FieldDescription> Parsing<ImmutableMap<String, FD>> build(
+    <F extends FieldDescription> Parsing<ImmutableMap<String, F>> build(
             final String fieldpath,
             final FieldDescription.FieldDescriptionType type,
             I18n i18n,
             final Iterator<Map.Entry<String, JsonNode>> iterator,
             final String path,
             final String i18nPath) {
-        final ImmutableMap.Builder<String, FD> fields = new ImmutableMap.Builder<>();
+        final ImmutableMap.Builder<String, F> fields = new ImmutableMap.Builder<>();
         int index = 0;
         while (iterator.hasNext()) {
             final Map.Entry<String, JsonNode> entry = iterator.next();
@@ -47,11 +50,11 @@ public record FieldBuilder(RootBuilder rootBuilder) {
                     fieldNode.get(ConfigurationSchemaNode.OA_CHECKER),
                     null);
             i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
-            FD fieldDescription = switch (type) {
+            F fieldDescription = switch (type) {
                 case RightsRequestField ->
-                        (FD) new RightsRequestField(index++, type, required, checkerDescriptionParsing.result());
+                        (F) new RightsRequestField(index++, type, required, checkerDescriptionParsing.result());
                 case AdditionalFileField ->
-                        (FD) new AdditionalFileField(index++, type, required, checkerDescriptionParsing.result());
+                        (F) new AdditionalFileField(index++, type, required, checkerDescriptionParsing.result());
             };
             fields.put(fieldKey, fieldDescription);
         }

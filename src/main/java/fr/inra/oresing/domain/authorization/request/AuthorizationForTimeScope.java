@@ -5,5 +5,6 @@ import fr.inra.oresing.domain.repository.authorization.OperationType;
 
 import java.util.Set;
 
-public record AuthorizationForTimeScope(Set<OperationType> operationTypes, LocalDateTimeRange timeScope) implements AuthorizationForScope {
+public record AuthorizationForTimeScope(Set<OperationType> operationTypes,
+                                        LocalDateTimeRange timeScope) implements AuthorizationForScope {
 }

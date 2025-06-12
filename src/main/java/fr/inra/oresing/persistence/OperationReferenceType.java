@@ -9,8 +9,8 @@ import java.util.Map;
 
 @Getter
 public enum OperationReferenceType {
-    admin("admin", true,Map.of("fr","Délégation", "en","Delegation")),
-    manage("extraction", true,Map.of("fr","Gestion", "en","Management"));
+    admin("admin", true, Map.of("fr", "Délégation", "en", "Delegation")),
+    manage("extraction", true, Map.of("fr", "Gestion", "en", "Management"));
 
     private final AuthorizationColumnsDescription authorizationColumnsDescription;
 

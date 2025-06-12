@@ -89,7 +89,7 @@ public record BuilderNode(
         );
     }
 
-    public BuilderNode withComponentKeyAndNotRecursive(final String componentKey, Boolean isParent) {
+    public BuilderNode withComponentKeyAndNotRecursive(final String componentKey, boolean isParent) {
         return new BuilderNode(
                 level(),
                 nodeName(),

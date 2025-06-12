@@ -19,7 +19,7 @@ public class Data extends OreSiEntity {
     private String rowId;
     private Authorization authorization;
     private Map<String, Map<String, Set<UUID>>> refsLinkedTo;
-    private Map<String, Map<String, FieldType>> dataValues;
+    private Map<String, Map<String, FieldType<?>>> dataValues;
     private UUID binaryFile;
     private List<String> uniqueness;
 

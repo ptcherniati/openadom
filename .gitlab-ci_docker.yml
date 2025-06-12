@@ -1,4 +1,3 @@
-
 variables:
   OPENADOM_DOCK_REG: $CI_REGISTRY/anaee-dev/openadom/backend
   ## Project to trigger
@@ -27,7 +26,7 @@ development:
     - echo "Building Docker image     = $IMAGE_NAME"
     - docker build -f docker/Dockerfile -t $IMAGE_NAME .
     - echo  "Pushing Docker image to registry = $IMAGE_NAME"
-    - docker push $IMAGE_NAME 
+    - docker push $IMAGE_NAME
     - docker tag  $IMAGE_NAME $IMAGE_NAME_WITH_COMMIT_ID
     - echo  "Pushing tagged Docker image to registry = $IMAGE_NAME_WITH_COMMIT_ID"
     - docker push $IMAGE_NAME_WITH_COMMIT_ID
@@ -57,7 +56,7 @@ preprod:
     - echo "Building Docker image     = $IMAGE_NAME"
     - docker build -f docker/Dockerfile -t $IMAGE_NAME .
     - echo  "Pushing Docker image to registry = $IMAGE_NAME"
-    - docker push $IMAGE_NAME 
+    - docker push $IMAGE_NAME
     - docker tag  $IMAGE_NAME $IMAGE_NAME_WITH_COMMIT_ID
     - echo  "Pushing tagged Docker image to registry = $IMAGE_NAME_WITH_COMMIT_ID"
     - docker push $IMAGE_NAME_WITH_COMMIT_ID
@@ -65,7 +64,7 @@ preprod:
     # Automatically trigger for 'main' branch
     - if: '$CI_COMMIT_REF_SLUG == "main"'
       when: on_success
-    - when: never 
+    - when: never
 
 # Production-specific build job that validates 
 # semantic version tags and builds Docker images
@@ -130,7 +129,7 @@ deployment:
         ENV: 'preprod'
         OA_BACKEND_VERSION: '$CI_COMMIT_REF_SLUG' # main branch
         INIT_DB_USER: true
-        REMOVE_DB_AND_VOLUMES: true 
+        REMOVE_DB_AND_VOLUMES: true
       when: on_success
     - if: '$CI_COMMIT_TAG'  # Production Env
       variables:

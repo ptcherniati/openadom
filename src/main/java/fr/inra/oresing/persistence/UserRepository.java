@@ -6,9 +6,11 @@ import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.common.collect.MoreCollectors;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -60,11 +62,11 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     public Optional<OreSiUser> findByLoginOrId(final String loginOrId) {
         try {
             Optional<OreSiUser> byLogin = findByLogin(loginOrId);
-            if(byLogin.isPresent()){
+            if (byLogin.isPresent()) {
                 return byLogin;
             }
             return tryFindById(UUID.fromString(loginOrId));
-        }catch (Exception e){
+        } catch (Exception e) {
             return Optional.empty();
         }
     }
@@ -140,7 +142,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         RowMapper<CurrentUserRoles> rowMapper = (rs, rowNum) -> {
             final String currentUser = rs.getString("currentUser");
             final List<String> memberOf = Arrays.stream((String[]) rs.getArray("memberOf").getArray())
-                    .collect(Collectors.toList());
+                    .toList();
             final boolean isSuper = rs.getBoolean("isSuper");
             return new CurrentUserRoles(memberOf, isSuper, findByLogin(currentUser).orElse(null));
         };
@@ -173,7 +175,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         assert currentUserRoles != null;
         Optional<OreSiUser> oreSiUser = Optional.ofNullable(role)
                 .map(this::findByLoginOrId).orElse(null);
-        if(Objects.requireNonNull(oreSiUser).isPresent()) {
+        if (Objects.requireNonNull(oreSiUser).isPresent()) {
             currentUserRoles = currentUserRoles.withUSer(oreSiUser.get());
         }
         return currentUserRoles;
@@ -236,7 +238,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
         try {
             charte = ow.writeValueAsString(oreSiUser.getChartes());
         } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+            throw new OreSiTechnicalException(ExceptionMessage.JSON_PROCESSING.toMessage(), e);
         }
         getNamedParameterJdbcTemplate().update(
                 query,

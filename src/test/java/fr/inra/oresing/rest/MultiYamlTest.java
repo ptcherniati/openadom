@@ -1,8 +1,6 @@
 package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import static org.junit.jupiter.api.Assertions.*;
-
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
@@ -12,10 +10,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 @org.junit.jupiter.api.Tag("core.basic")
 public class MultiYamlTest {
     @Test
-    public void testYaml() throws IOException {
+    void testYaml() throws IOException {
         try (InputStream fileInputStream = getClass().getResourceAsStream("/data/monsore/multiyaml.zip")) {
             final MultipartFile multipartFile = new MockMultipartFile("monzip", fileInputStream);
             byte[] bytes = MultiYaml.parseConfigurationBytes(multipartFile).readAllBytes();

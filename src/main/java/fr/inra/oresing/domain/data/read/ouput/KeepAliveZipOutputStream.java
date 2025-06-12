@@ -11,9 +11,9 @@ import java.util.zip.ZipOutputStream;
 
 @Log
 public class KeepAliveZipOutputStream extends ZipOutputStream {
+    private static final long INACTIVITY_DELAY = 50000; // 50 secondes en millisecondes
     private final Timer timer;
     private TimerTask currentTask;
-    private static final long INACTIVITY_DELAY = 50000; // 50 secondes en millisecondes
 
     public KeepAliveZipOutputStream(OutputStream out) {
         super(out, StandardCharsets.UTF_8);

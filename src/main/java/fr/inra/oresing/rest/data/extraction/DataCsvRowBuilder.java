@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.data.extraction;
 
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.data.read.query.*;
+import fr.inra.oresing.domain.data.read.query.ComponentOrderByForExport;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 
 import java.util.List;
@@ -15,8 +15,8 @@ public record DataCsvRowBuilder(
         DataRepositoryForBuffer dataRepositoryWithBuffer,
         StandardDataDescription dataDescription,
         boolean horizontalDisplay) {
-    public List<String> getCsvRow(Map<String, FieldType> dataRowValues,
-                                         List<ComponentOrderByForExport> columns) {
+    public List<String> getCsvRow(Map<String, FieldType<?>> dataRowValues,
+                                  List<ComponentOrderByForExport> columns) {
         Function<ComponentOrderByForExport, Stream<String>> toValue = componentOrderBy -> componentOrderBy.toValue(language(), dataRepositoryWithBuffer(), dataRowValues, dataDescription());
         return columns
                 .stream()

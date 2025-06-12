@@ -3,7 +3,12 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.file.FileOrUUID;
@@ -15,7 +20,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 public sealed interface ApplicationDataWriter extends ApplicationUser
         permits ApplicationAdminUser, ApplicationDataDelete, ApplicationDeleteUser, ApplicationDepositWriterUser, ApplicationManagerUser, ApplicationPublishWriterUser {
@@ -62,26 +66,26 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
         }
         return submissionScopes.stream()
                 .allMatch(sc -> authorizationScopes.contains(sc.getSql()));
-    }default boolean isDateInRangeAuthorized(
+    }
+
+
+    default boolean isDateInRangeAuthorized(
             BinaryFileDataset binaryfiledataset,
             List<AuthorizationParsed> authorizationParseds
     ) {
-        // Extraction des dates de soumission
-        LocalDateTime from = Optional.ofNullable(binaryfiledataset)
-                .map(BinaryFileDataset::getFrom)
-                .filter(Predicate.not(Strings::isNullOrEmpty))
-                .map(date -> LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                .orElse(LocalDateTime.MIN);
+        String timescope  = application().findData(dataName())
+                .map(StandardDataDescription::submission)
+                .map(Submission::submissionScope)
+                .map(Submission.SubmissionScope::timescope)
+                .map(Submission.SubmissionScope.TimeScope::component)
+                .orElse("");
+        final DatePattern datePattern = application().findSubmissionDatePattern(dataName());
+        final LocalDateTimeRange submissionIntervalScope = LocalDateTimeRange.of(
+                datePattern,
+                binaryfiledataset.getFrom(),
+                binaryfiledataset.getTo()
+        );
 
-        LocalDateTime to = Optional.ofNullable(binaryfiledataset)
-                .map(BinaryFileDataset::getTo)
-                .filter(Predicate.not(Strings::isNullOrEmpty))
-                .map(date -> LocalDateTime.parse(date, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")))
-                .orElse(LocalDateTime.MAX);
-
-        LocalDateTimeRange submissionIntervalScope = LocalDateTimeRange.between(from, to);
-
-        // Liste des intervalles d'intersection
         List<LocalDateTimeRange> authorizationMatchingIntervals = new ArrayList<>();
 
         for (AuthorizationParsed authorizationParsed : authorizationParseds) {
@@ -96,53 +100,45 @@ public sealed interface ApplicationDataWriter extends ApplicationUser
                             .orElse(LocalDateTime.MAX)
             );
 
-            // Vérification du chevauchement
-            if (!submissionIntervalScope.getRange().lowerEndpoint().isAfter(authorizationIntervalScope.getRange().upperEndpoint()) &&
-                !submissionIntervalScope.getRange().upperEndpoint().isBefore(authorizationIntervalScope.getRange().lowerEndpoint())) {
+            if (!submissionIntervalScope.getLowerPointOrMin().isAfter(authorizationIntervalScope.getUpperEndpointOrMax()) &&
+                !submissionIntervalScope.getUpperEndpointOrMax().isBefore(authorizationIntervalScope.getLowerPointOrMin())) {
 
-                // Calcul de l'intervalle d'intersection
                 LocalDateTimeRange intersectionInterval = LocalDateTimeRange.between(
-                        !submissionIntervalScope.getRange().lowerEndpoint().isAfter(authorizationIntervalScope.getRange().lowerEndpoint()) ?
-                                authorizationIntervalScope.getRange().lowerEndpoint() :
-                                submissionIntervalScope.getRange().lowerEndpoint(),
-                        !submissionIntervalScope.getRange().upperEndpoint().isBefore(authorizationIntervalScope.getRange().upperEndpoint()) ?
-                                authorizationIntervalScope.getRange().upperEndpoint() :
-                                submissionIntervalScope.getRange().upperEndpoint()
+                        !submissionIntervalScope.getLowerPointOrMin().isAfter(authorizationIntervalScope.getLowerPointOrMin()) ?
+                                authorizationIntervalScope.getLowerPointOrMin() :
+                                submissionIntervalScope.getLowerPointOrMin(),
+                        !submissionIntervalScope.getUpperEndpointOrMax().isBefore(authorizationIntervalScope.getUpperEndpointOrMax()) ?
+                                authorizationIntervalScope.getUpperEndpointOrMax() :
+                                submissionIntervalScope.getUpperEndpointOrMax()
                 );
 
                 authorizationMatchingIntervals.add(intersectionInterval);
             }
         }
-
-        // Vérification de la couverture totale
-        return !verifyCoverageCompleteness(submissionIntervalScope, authorizationMatchingIntervals);
+        return verifyCoverageCompleteness(submissionIntervalScope, authorizationMatchingIntervals);
     }
 
     private boolean verifyCoverageCompleteness(
             LocalDateTimeRange submissionIntervalScope,
             List<LocalDateTimeRange> authorizationMatchingIntervals
     ) {
-        // Trier les intervalles par date de début
         List<LocalDateTimeRange> sortedIntervals = authorizationMatchingIntervals.stream()
-                .sorted(Comparator.comparing(interval -> interval.getRange().lowerEndpoint()))
+                .sorted(Comparator.comparing(interval -> interval.getLowerPointOrMin()))
                 .toList();
 
-        LocalDateTime currentCoverageEnd = submissionIntervalScope.getRange().lowerEndpoint();
+        LocalDateTime currentCoverageEnd = submissionIntervalScope.getLowerPointOrMin();
 
         for (LocalDateTimeRange interval : sortedIntervals) {
-            // Vérifier si l'intervalle couvre le trou précédent
-            if (interval.getRange().lowerEndpoint().isAfter(currentCoverageEnd)) {
-                return false;  // Trou dans la couverture
+            if (interval.getLowerPointOrMin().isAfter(currentCoverageEnd)) {
+                return false;
             }
 
-            // Mettre à jour la fin de couverture
-            currentCoverageEnd = interval.getRange().upperEndpoint().isAfter(currentCoverageEnd)
-                    ? interval.getRange().upperEndpoint()
+            currentCoverageEnd = interval.getUpperEndpointOrMax().isAfter(currentCoverageEnd)
+                    ? interval.getUpperEndpointOrMax()
                     : currentCoverageEnd;
         }
 
-        // Vérifier si la couverture atteint la fin de l'intervalle de soumission
-        boolean isFullyCovered = !currentCoverageEnd.isBefore(submissionIntervalScope.getRange().upperEndpoint());
+        boolean isFullyCovered = !currentCoverageEnd.isBefore(submissionIntervalScope.getUpperEndpointOrMax());
 
         if (!isFullyCovered) {
             throw getException();

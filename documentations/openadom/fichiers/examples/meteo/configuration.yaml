@@ -11,13 +11,13 @@ OA_application:
   OA_version: 1.0.7
   OA_defaultLanguage: fr  # optional par défaut fr
   OA_comment: Données météorologiques
-OA_data: 
-  tr_regions_reg: 
+OA_data:
+  tr_regions_reg:
     OA_tags: [ __ORDER_1__ ]
     OA_dataHeaderLine: 1
     OA_dataFirstLine: 2
-    OA_naturalKey: 
-      - reg_code    
+    OA_naturalKey:
+      - reg_code
     OA_i18nDisplayPattern:
       OA_title:
         fr: '{reg_nom}'
@@ -25,12 +25,12 @@ OA_data:
       OA_description:
         fr: '{reg_nom} ({reg_code})'
         en: '{reg_nom} ({reg_code})'
-    OA_i18n: 
+    OA_i18n:
       OA_title:
         fr: Régions
         en: Region
-    OA_basicComponents: 
-      reg_code: 
+    OA_basicComponents:
+      reg_code:
         OA_required: true
         OA_importHeader: code
         OA_tags: [ __ORDER_1__ ]
@@ -45,7 +45,7 @@ OA_data:
           OA_description:
             fr: Code de la région
             en: Region code
-      reg_nom: 
+      reg_nom:
         OA_required: false
         OA_importHeader: nom
         OA_tags: [ __ORDER_2__ ]
@@ -56,10 +56,10 @@ OA_data:
           OA_description:
             fr: Nom de la région
             en: Region name
-  tr_sites_sit: 
+  tr_sites_sit:
     OA_dataHeaderLine: 1
     OA_dataFirstLine: 2
-    OA_naturalKey: 
+    OA_naturalKey:
       - reg_code
       - sit_nom
     OA_i18nDisplayPattern:
@@ -69,12 +69,12 @@ OA_data:
       OA_description:
         fr: 'Nom du site: {sit_nom}; Nom de la région: ({reg_code})'
         en: 'Site name: {sit_nom}; région name ({reg_code})'
-    OA_i18n: 
+    OA_i18n:
       OA_title:
         fr: Sites
         en: Sites
-    OA_basicComponents: 
-      sit_nom: 
+    OA_basicComponents:
+      sit_nom:
         OA_required: true
         OA_importHeader: nom
         OA_tags: [ __ORDER_3__ ]
@@ -85,7 +85,7 @@ OA_data:
           OA_description:
             fr: Nom du site
             en: Site name
-      sit_date : 
+      sit_date:
         OA_required: true
         OA_importHeader: "Date de création"
         OA_tags: [ __ORDER_1__ ]
@@ -100,7 +100,7 @@ OA_data:
           OA_description:
             fr: Date de création du site
             en: Site creation date
-      reg_code: 
+      reg_code:
         OA_required: true
         OA_importHeader: region
         OA_tags: [ __ORDER_2__ ]
@@ -121,9 +121,9 @@ OA_data:
     OA_dataHeaderLine: 1
     OA_dataFirstLine: 2
     OA_tags: [ __ORDER_1__ ]
-    OA_naturalKey: 
+    OA_naturalKey:
       - uni_nom
-    OA_i18n: 
+    OA_i18n:
       OA_title:
         fr: Unités
         en: Units
@@ -134,7 +134,7 @@ OA_data:
       OA_description:
         fr: '{uni_nom_fr} ({uni_code})'
         en: '{uni_nom_en} ({uni_code})'
-    OA_basicComponents: 
+    OA_basicComponents:
       uni_nom:
         OA_required: true
         OA_importHeader: nom
@@ -149,7 +149,7 @@ OA_data:
             fr: Nom de l'unité
         OA_tags: [ __ORDER_2__ ]
         OA_langRestrictions:
-          - fr  
+          - fr
       uni_nom_en:
         OA_required: false
         OA_importHeader: nom_en
@@ -160,28 +160,28 @@ OA_data:
             en: Unit name
         OA_tags: [ __ORDER_2__ ]
         OA_langRestrictions:
-          - en  
+          - en
       uni_code:
         OA_required: true
         OA_importHeader: code
         OA_tags: [ __ORDER_1__ ]
   t_data_dat:
-    OA_tags: [ __ORDER_1__ , __DATA__]
+    OA_tags: [ __ORDER_1__ , __DATA__ ]
     OA_dataHeaderLine: 3
     OA_dataFirstLine: 4
-    OA_naturalKey: 
+    OA_naturalKey:
       - sit_site
-      - dat_date   
-    OA_i18n: 
+      - dat_date
+    OA_i18n:
       OA_title:
         fr: Données de météorologie
         en: Meteorologic data
       OA_description:
         fr: Données de précipitation et de température
         en: Precipitation and temperature data
-    OA_basicComponents: 
+    OA_basicComponents:
       dat_date:
-        OA_tags: [__ORDER_2__]
+        OA_tags: [ __ORDER_2__ ]
         OA_importHeader: Date de mesure
         OA_exportHeader:
           OA_title:
@@ -190,22 +190,22 @@ OA_data:
           OA_description:
             fr: Date de la mesure
             en: Measurement date
-      sit_nom: 
+      sit_nom:
         OA_required: true
         OA_importHeader: Site
         OA_tags: [ __HIDDEN__ ]
       dat_precipitation:
-        OA_tags: [__ORDER_3__]
+        OA_tags: [ __ORDER_3__ ]
         OA_importHeader: "Précipitation"
         OA_exportHeader:
           OA_title:
             fr: Précipitations
-            en: Precipitations    
+            en: Precipitations
     OA_constantComponents:
       reg_region:
         OA_tags: [ __HIDDEN__ ]
         OA_required: true
-        OA_importHeaderTarget:   
+        OA_importHeaderTarget:
           OA_rowNumber: 1
           OA_columnNumber: 2
         OA_checker:
@@ -216,7 +216,7 @@ OA_data:
       dat_periode:
         OA_tags: [ __HIDDEN__ ]
         OA_required: true
-        OA_importHeaderTarget:   
+        OA_importHeaderTarget:
           OA_rowNumber: 2
           OA_columnNumber: 2
         OA_checker:
@@ -226,7 +226,7 @@ OA_data:
             OA_duration: 1 month
     OA_computedComponents:
       sit_site: # la clef de site étant comosée on la calcule en utilisant OA_withNaturalKeyComponents
-        OA_tags: [__ORDER_1__]
+        OA_tags: [ __ORDER_1__ ]
         OA_checker:
           OA_name: OA_reference
           OA_params:
@@ -234,9 +234,9 @@ OA_data:
               OA_name: tr_sites_sit
         OA_withNaturalKeyComponents:
           - reg_region
-          - sit_nom      
+          - sit_nom
       dat_precipitation_unit:
-        OA_tags: [__ORDER_4__]
+        OA_tags: [ __ORDER_4__ ]
         OA_computation:
           OA_expression: >
             return "precipitation";
@@ -248,10 +248,10 @@ OA_data:
           OA_name: OA_reference
           OA_params:
             OA_reference:
-              OA_name: tr_unites_uni    
+              OA_name: tr_unites_uni
     OA_patternComponents:
       dat_temperature_moyenne:
-        OA_tags: [__ORDER_5__]
+        OA_tags: [ __ORDER_5__ ]
         OA_patternForComponents: "(Température) moyenne"
         OA_required: false
         OA_exportHeader:
@@ -268,7 +268,7 @@ OA_data:
             OA_max: 45.0
         OA_componentQualifiers:
           - dat_unit: #$1
-              OA_tags: [__ORDER_1__]
+              OA_tags: [ __ORDER_1__ ]
               OA_exportHeader:
                 OA_title:
                   fr: "unité"
@@ -279,32 +279,31 @@ OA_data:
                   OA_reference:
                     OA_name: "tr_unites_uni"
         OA_componentAdjacents:
-            - dat_temperature_minimale:   
-                OA_tags: [__ORDER_2__]
-                OA_importHeaderPattern: "{$1} minimale"  
-                OA_exportHeader:   
-                  OA_title:   
-                    fr: Température minimale
-                    en: Minimal temperature 
-                OA_required: false  
-                OA_mandatory: false  
-                OA_checker:
-                  OA_name: OA_float
-                  OA_params:
-                    OA_min: -15.0
-                    OA_max: 45.0
-            - dat_temperature_maximale:    
-                OA_tags: [__ORDER_2__] 
-                OA_importHeaderPattern: "{$1} maximale"  
-                OA_exportHeader:   
-                  OA_title:   
-                    fr: Température maximale
-                    en: Maximal temperature 
-                OA_required: false  
-                OA_mandatory: false  
-                OA_checker:
-                  OA_name: OA_float
-                  OA_params:
-                    OA_min: -15.0
-                    OA_max: 45.0
-
+          - dat_temperature_minimale:
+              OA_tags: [ __ORDER_2__ ]
+              OA_importHeaderPattern: "{$1} minimale"
+              OA_exportHeader:
+                OA_title:
+                  fr: Température minimale
+                  en: Minimal temperature
+              OA_required: false
+              OA_mandatory: false
+              OA_checker:
+                OA_name: OA_float
+                OA_params:
+                  OA_min: -15.0
+                  OA_max: 45.0
+          - dat_temperature_maximale:
+              OA_tags: [ __ORDER_2__ ]
+              OA_importHeaderPattern: "{$1} maximale"
+              OA_exportHeader:
+                OA_title:
+                  fr: Température maximale
+                  en: Maximal temperature
+              OA_required: false
+              OA_mandatory: false
+              OA_checker:
+                OA_name: OA_float
+                OA_params:
+                  OA_min: -15.0
+                  OA_max: 45.0
