@@ -13,7 +13,7 @@ public record Version(String version) implements Comparable<Version> {
 
     public Version(final String version) {
         this.version = version.trim();
-        getRunTimeVersion();
+        toRunTimeVersion();
     }
 
     @Override
@@ -24,10 +24,10 @@ public record Version(String version) implements Comparable<Version> {
         } catch (final IllegalArgumentException e) {
             return 1;
         }
-        return getRunTimeVersion().compareTo(otherRuntimeVersion);
+        return toRunTimeVersion().compareTo(otherRuntimeVersion);
     }
 
-    public Runtime.Version getRunTimeVersion() {
+    public Runtime.Version toRunTimeVersion() {
         try {
             return Runtime.Version.parse(version());
         } catch (final IllegalArgumentException e) {

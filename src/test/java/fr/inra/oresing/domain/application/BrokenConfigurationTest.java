@@ -18,7 +18,7 @@ class ConfigurationTest {
         assertEquals(Configuration.OPEN_ADOM_VERSION_PATTERN, Configuration.OPEN_ADOM_VERSION.version());
         final String versionString = "2.3.4.42-SNAPSHOT+12-2024-01-11";
         final Version applicationVersion = new Version(versionString);
-        final Runtime.Version version = applicationVersion.getRunTimeVersion();
+        final Runtime.Version version = applicationVersion.toRunTimeVersion();
         assertEquals("2.3.4.42-SNAPSHOT+12-2024-01-11", version.toString());
         assertEquals(2, version.feature());
         assertEquals(3, version.interim());
