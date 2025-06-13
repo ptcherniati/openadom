@@ -1,12 +1,13 @@
 package fr.inra.oresing.rest.model.authorization;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
@@ -28,7 +29,6 @@ import org.skyscreamer.jsonassert.JSONCompareMode;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -174,7 +174,10 @@ class CreateAuthorizationRequestTest {
                    }
                  }""";
 
-        String actualJson = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
+        String actualJson = new ObjectMapper()
+                .registerModule(new JavaTimeModule())
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
         try {
             JSONAssert.assertEquals(expectedJson, actualJson, JSONCompareMode.LENIENT);
         } catch (JSONException e) {

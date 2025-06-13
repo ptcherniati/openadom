@@ -51,7 +51,7 @@ public record DatePattern<T extends TemporalAccessor>(
                     );
                 }
                 try {
-                    final LocalDateTime localDateTime = LocalDate.parse(NOW, dateTimeFormatter).atStartOfDay();
+                    final LocalDateTime localDateTime = LocalDateTime.parse(NOW, dateTimeFormatter);
                     type = (Class<T>) localDateTime.getClass();
                     typeOfDate = TypeOfDate.DATETIME;
                 } catch (final DateTimeParseException | IllegalArgumentException dte) {
