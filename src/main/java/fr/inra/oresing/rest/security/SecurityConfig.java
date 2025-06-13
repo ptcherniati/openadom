@@ -68,6 +68,7 @@ public class SecurityConfig {
         return new ApplicationPermissionEvaluator(authorizationService);
     }
 
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthorizationFilter authorizationFilter) throws Exception {
         http
