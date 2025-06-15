@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 
 @Component
 @Primary
@@ -215,6 +216,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 .addSerializer(FieldType.class, getFieldTypeJsonSerializer())
                 .addSerializer(StringGroovyExpression.class, getStringGroovyExpressionJsonSerializer());
         jsonMapper.registerModule(module);
+        jsonMapper.registerModule(new AfterburnerModule());
         jsonMapper.addHandler(new DeserializationProblemHandler() {
             @Override
             public Object handleUnexpectedToken(DeserializationContext ctxt,
