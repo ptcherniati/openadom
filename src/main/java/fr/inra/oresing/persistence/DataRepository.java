@@ -189,7 +189,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
      */
     public List<UUID> deleteReferenceType(final String refType, final MultiValueMap<String, String> params) {
         String sql = "delete from %1$s%n" +
-                "WHERE application=:applicationId::uuid AND ReferenceType=:refType%n";
+                     "WHERE application=:applicationId::uuid AND ReferenceType=:refType%n";
         final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
                 .addValue(REF_TYPE, refType);
 
@@ -541,6 +541,40 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         final SqlRequest sqlRequest = DataRequestBuilder.buildSelectRequest(downloadDatasetQuery);
         result = getNamedParameterJdbcTemplate().queryForStream(sqlRequest.sql(), sqlRequest.parameterSource(), new JsonRowMapper<DataRows>());
         return Flux.<DataRows>fromStream(result);
+    }
+
+    public Flux<FilterList> getFilterList(final String dataName) {
+        final Stream result;
+        final String query = """
+               with json as ( SELECT
+                    referenceby.referencetype as "listName",
+                    jsonb_agg(
+                        DISTINCT jsonb_build_object(
+                            'referenceType', referenceby.referencetype,
+                            'hierarchicalKey', referenceby.hierarchicalkey,
+                            'naturalKey', referenceby.naturalkey,
+                            '__display_default', referenceby.refvalues->'__display_default',
+                            '__display_fr', referenceby.refvalues->'__display_fr',
+                            '__display_en', referenceby.refvalues->'__display_en',
+                            'id', referenceby.id
+                        )
+                    ) AS "refsLinkeds"
+                FROM %1$s.referencevalue rs
+                JOIN %1$s.reference_reference rr ON rr.referenceid = rs.id
+                JOIN %1$s.referencevalue referenceby ON referenceby.id = rr.referencesby
+                WHERE rs.referencetype = :referenceType
+                GROUP BY referenceby.referencetype)
+                select 
+                          'fr.inra.oresing.persistence.FilterList' AS "@class",
+                          to_json(json) as "json"
+                          from json;
+                          
+                """.formatted(getSchema().getSqlIdentifier());
+        result = getNamedParameterJdbcTemplate().queryForStream(
+                query,
+                Map.of("referenceType", dataName)
+                , new JsonRowMapper<FilterList>());
+        return Flux.<FilterList>fromStream(result);
     }
 
     @Override

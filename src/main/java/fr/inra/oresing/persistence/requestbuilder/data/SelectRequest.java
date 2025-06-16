@@ -57,16 +57,35 @@ record SelectRequest(
                           jsonb_build_object(
                               --'rowNumber', row_number() over (),
                               --'totalRows', count(*) over (),
-                              'rowId', array_agg(id),
-                              'naturalKey', naturalkey,
-                              'hierarchicalKey', hierarchicalkey,
-                              'patternColumnName', array_agg(patterncolumnname),
-                              'values', array_agg(refvalues) ,
-                              'refsLinkedTo', array_agg(refsLinkedTo),
-                               'allPatternColumnNames',array_agg(DISTINCT patterncolumnname)
+                              'refsLinked' , ref_aggregate.refs_linked,
+                              'referenceType', referenceby.referencetype,
+                              'rowId', array_agg(rv.id),
+                              'naturalKey', rv.naturalkey,
+                              'hierarchicalKey', rv.hierarchicalkey,
+                              'patternColumnName', array_agg(rv.patterncolumnname),
+                              'values', array_agg(rv.refvalues) ,
+                              'refsLinkedTo', array_agg(rv.refsLinkedTo),
+                              'allPatternColumnNames',array_agg(DISTINCT rv.patterncolumnname)
                           ) AS   "json"
                     FROM rs
                     JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
+                    CROSS JOIN LATERAL (
+                        SELECT jsonb_agg(
+                            jsonb_build_object(
+                                'referenceType', referenceby.referencetype,
+                                'hierarchicalKey', referenceby.hierarchicalkey,
+                                'naturalKey', referenceby.naturalkey,
+                                '__display_default', referenceby.refvalues->'__display_default',
+                                '__display_fr', referenceby.refvalues->'__display_fr',
+                                '__display_en', referenceby.refvalues->'__display_en',
+                                'id', referenceby.id
+                            )
+                        ) AS refs_linked
+                        FROM %3$s.reference_reference rr
+                        JOIN %3$s.referencevalue referenceby 
+                            ON referenceby.id = rr.referencesby
+                        WHERE rr.referenceid = rv.id
+                    ) ref_aggregate
                     GROUP BY naturalkey, hierarchicalkey
                     %%1$s --order by
                 """;
@@ -77,15 +96,33 @@ record SelectRequest(
                                jsonb_build_object(
                                  --'rowNumber', row_number() over (),
                                  --'totalRows', count(*) over (),
-                                 'rowId', ARRAY[id],
-                                 'naturalKey', naturalkey,
-                                 'hierarchicalKey', hierarchicalkey,
-                                 'patternColumnName', ARRAY[patterncolumnname],
-                                 'values', ARRAY[refvalues] ,
-                                 'refsLinkedTo', ARRAY[refsLinkedTo],
-                                  'allPatternColumnNames',ARRAY[patterncolumnname]
+                                 'refsLinked' , ref_aggregate.refs_linked,
+                                 'rowId', ARRAY[rs.id],
+                                 'naturalKey', rs.naturalkey,
+                                 'hierarchicalKey', rs.hierarchicalkey,
+                                 'patternColumnName', ARRAY[rs.patterncolumnname],
+                                 'values', ARRAY[rs.refvalues] ,
+                                 'refsLinkedTo', ARRAY[rs.refsLinkedTo],
+                                  'allPatternColumnNames',ARRAY[rs.patterncolumnname]
                                ) AS   "json"
                                FROM %3$s.referencevalue rs
+                                CROSS JOIN LATERAL (
+                                    SELECT jsonb_agg(
+                                        jsonb_build_object(
+                                            'referenceType', referenceby.referencetype,
+                                            'hierarchicalKey', referenceby.hierarchicalkey,
+                                            'naturalKey', referenceby.naturalkey,
+                                            '__display_default', referenceby.refvalues->'__display_default',
+                                            '__display_fr', referenceby.refvalues->'__display_fr',
+                                            '__display_en', referenceby.refvalues->'__display_en',
+                                            'id', referenceby.id
+                                        )
+                                    ) AS refs_linked
+                                    FROM %3$s.reference_reference rr
+                                    JOIN %3$s.referencevalue referenceby 
+                                        ON referenceby.id = rr.referencesby
+                                    WHERE rr.referenceid = rs.id
+                                ) ref_aggregate
                                WHERE
                                        rs.referencetype = '%4$s'%5$s
                 

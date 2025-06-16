@@ -9,10 +9,7 @@ import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRow;
 import org.apache.commons.collections.keyvalue.DefaultMapEntry;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 
@@ -21,7 +18,7 @@ public record DataRowResult(
         String naturalKey,
         String hierarchicalKey,
         Map<String, Object> values,
-        Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
+        List<fr.inra.oresing.persistence.RefsLinked> refsLinkeds, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
         //Long totalRows,
         //Long rowNumber,
         Map<Object, Object> displaysForRow,
@@ -32,8 +29,7 @@ public record DataRowResult(
 
     public static DataRowResult of(DataRow dataRow,
                                    ImmutableSet<String> variables,
-                                   String locale,
-                                   DataRepositoryForBuffer dataRepositoryWithBuffer) {
+                                   String locale) {
         final Map<String, Object> rows = new HashMap<>();
         for (final Map.Entry<String, FieldType<?>> componentEntry : dataRow.values().entrySet()) {
             final String component = componentEntry.getKey();
@@ -53,9 +49,19 @@ public record DataRowResult(
                             .map(RefsLinkedToValue::hierarchicalKey)
                             .map(hierarchicalKey -> hierarchicalKey.getSql().replaceAll(".*[a-z]K", ""))
                             .map(naturalKey -> {
-                                String fr = dataRepositoryWithBuffer.findDisplayByReferenceTypeAndNaturalKeyAndLocale(referenceName, naturalKey, locale);
-                                fr = fr != null ? fr : dataRepositoryWithBuffer.findDisplayByReferenceTypeAndNaturalKeyAndLocale(referenceName, naturalKey, DEFAULT);
-                                fr = fr != null ? fr : naturalKey;
+                                String fr =dataRow
+                                        .refsLinked()
+                                        .stream().filter(
+                                                refsLinked -> refsLinked.referenceType().equals(referenceName)
+                                        )
+                                        .filter(refsLinked -> refsLinked.naturalKey().getSql().equals(naturalKey))
+                                        .findFirst()
+                                        .map(refsLinked -> {
+                                            String display = locale.equals(Locale.FRENCH.getLanguage()) ? refsLinked.__display_fr() : refsLinked.__display_en();
+                                            display = display==null?refsLinked.__display_default():display;
+                                            return display;
+                                        })
+                                        .orElse(naturalKey);
                                 return new DefaultMapEntry(naturalKey, fr);
                             })
                             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> existing));
@@ -66,6 +72,7 @@ public record DataRowResult(
                 dataRow.naturalKey().getSql(),
                 dataRow.hierarchicalKey().getSql(),
                 rows,
+                dataRow.refsLinked(),
                 dataRow.refsLinkedTo(),
                 //dataRow.getTotalRows(),
                 //dataRow.getRowNumber(),

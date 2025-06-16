@@ -19,4 +19,5 @@ public class DataRows {
     Long totalRows = -1L;
     Long rowNumber = -1L;
     List<String> allPatternColumnNames;
+    List<RefsLinked> refsLinked;
 }

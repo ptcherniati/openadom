@@ -22,7 +22,8 @@ public record DataRow(
         Ltree hierarchicalKey,
         Map<String, FieldType<?>> values,
         Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo,
-        List<String> allPatternColumnNames
+        List<String> allPatternColumnNames,
+        List<RefsLinked> refsLinked
 ) {
     public static DataRow of(StandardDataDescription application, DataRows dataRows) {
         List<String> patternComponentKeys = Optional.of(application)
@@ -74,7 +75,8 @@ public record DataRow(
                 refsLinkedTo,
                 //dataRows.getTotalRows(),
                 //dataRows.getRowNumber(),
-                dataRows.getAllPatternColumnNames()
+                dataRows.getAllPatternColumnNames(),
+                dataRows.getRefsLinked()
         );
     }
 }

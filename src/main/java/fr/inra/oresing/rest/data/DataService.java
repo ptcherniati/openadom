@@ -1077,6 +1077,10 @@ public class DataService {
         return list;
     }
 
+    public Flux<FilterList> filterList(final Application application, final String refType) {
+        return repository.getRepository(application).data().getFilterList(refType);
+    }
+
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
     }
 }
