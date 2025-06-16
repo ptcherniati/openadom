@@ -2,6 +2,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE EXTENSION IF NOT EXISTS "ltree";
 CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE EXTENSION IF NOT EXISTS btree_gist;
+-- CREATE EXTENSION IF NOT EXISTS "jsonb";
 
 CREATE TYPE nodecontext AS
     (
@@ -37,7 +38,7 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE OR REPLACE FUNCTION public.jsonb_count_items(IN json jsonb)
+CREATE OR REPLACE FUNCTION public.jsonb_count_items(p_json jsonb)
     RETURNS bigint
     LANGUAGE 'sql'
     VOLATILE
@@ -45,7 +46,7 @@ CREATE OR REPLACE FUNCTION public.jsonb_count_items(IN json jsonb)
     COST 100
 AS
 $BODY$
-with elements as (select json -> jsonb_object_keys(json) element)
+with elements as (select p_json -> jsonb_object_keys(p_json) element) -- <<-- CORRECTION ICI : 'json' remplacé par 'p_json'
 select sum(jsonb_array_length(element))
 from elements
 $BODY$;

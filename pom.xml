@@ -278,6 +278,12 @@
             <version>${vue.version}</version>
         </dependency>
 
+        <!-- Optimisation des performances de (dé)sérialisation JSON via bytecode  -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-afterburner</artifactId>
+        </dependency>
+
     </dependencies>
 
     <build>
