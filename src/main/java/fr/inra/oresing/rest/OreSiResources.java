@@ -552,9 +552,9 @@ public class OreSiResources {
             @RequestParam(value = "file", required = false) final MultipartFile file,
             @RequestParam(value = "params", required = false) final String params) throws IOException {
         Locale locale = localeResolver.resolveLocale(request);
-        DataVersioningResult dataVersioningResult;
+        DataVersioningResult dataVersioningResult = null;
         try {
-            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, params, false);
+            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, false);
         } catch (InvalidDatasetContentException invalidDatasetContentException) {
             List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                     .stream()

@@ -21,10 +21,11 @@ import java.util.stream.Collectors;
 public class LocalDateTimeRange {
     public static final Set<String> ACCEPTED_START_OF_BOUNDS = Set.of("[", "(");
     public static final Set<String> ACCEPTED_END_OF_BOUNDS = Set.of("]", ")");
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
+    public static final String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(YYYY_MM_DD_HH_MM_SS).withZone(ZoneOffset.UTC);
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter SQL_TIMESTAMP_DATE_TIME_FORMATTER =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+            DateTimeFormatter.ofPattern(YYYY_MM_DD_HH_MM_SS);
     private static final ImmutableSet<StringToLocalDateTimeRangeConverter> ALL_CONVERTERS = ImmutableSet.of(
             new StringToLocalDateTimeRangeConverter() {
                 @Override

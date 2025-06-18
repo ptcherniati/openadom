@@ -1,16 +1,22 @@
 package fr.inra.oresing.persistence;
 
 import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.*;
 import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Range;
+import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.Mapper;
+import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.*;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
@@ -19,8 +25,11 @@ import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
+import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
+import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Getter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
@@ -32,6 +41,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
 import java.util.Map;
@@ -43,15 +53,16 @@ import java.util.stream.Collectors;
 @Primary
 public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
 
+    @Autowired
+    private OreSiApiRequestContext request;
+    @Autowired
+    private ServiceContainer serviceContainer;
     /**
      * Mapper json pour la persistence (dialogue avec la base de données)
      */
     @Getter
     private ObjectMapper jsonMapper;
 
-    public JsonRowMapper(PropertyNamingStrategy strategies) {
-        buildMapper();
-    }
 
     public JsonRowMapper() {
         buildMapper();
@@ -207,12 +218,14 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 .addDeserializer(TemporalAccessor.class, getTemporalAccessorJsonDeserializer())
                 .addDeserializer(DataDatum.class, getDataDatumJsonDeserializer())
                 .addDeserializer(FieldType.class, getFieldTypeJsonDeserializer())
+                .addDeserializer(BinaryFileDataset.class, getBinaryFileDatasetJsonDeserializer())
                 .addSerializer(LocalDateTimeRange.class, getLocalDateTimeRangeJsonSerializer())
                 .addSerializer(ValidationError.class, getValidationErrorJsonSerializer())
                 .addSerializer(InvalidDatasetContentException.class, getInvalidDatasetContentExceptionJsonSerializer())
                 .addSerializer(Ltree.class, getLtreeJsonSerializer())
                 .addSerializer(DataDatum.class, getDataDatumJsonSerializer())
                 .addSerializer(FieldType.class, getFieldTypeJsonSerializer())
+                .addSerializer(BinaryFileDataset.class, getBinaryFileDatasetJsonSerializer())
                 .addSerializer(StringGroovyExpression.class, getStringGroovyExpressionJsonSerializer());
         jsonMapper.registerModule(module);
         jsonMapper.addHandler(new DeserializationProblemHandler() {
@@ -228,6 +241,91 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 return super.handleUnexpectedToken(ctxt, targetType, t, p, failureMsg);
             }
         });
+    }
+
+    private JsonSerializer<BinaryFileDataset> getBinaryFileDatasetJsonSerializer() {
+        return new JsonSerializer<>() {
+            @Override
+            public void serialize(BinaryFileDataset value, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {
+                final String applicationName = request.getAuthenticationToken().getApplicationName();
+                final String dataName = request.getAuthenticationToken().getDataName();
+                final Application application = request.getAuthenticationToken().getApplicationPersona().application();
+                final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
+                final LocalDateTimeRange localDateTimeRange = LocalDateTimeRange.of(
+                        submissionDatePattern,
+                        value.getFrom(),
+                        value.getTo());
+                String from = Optional.ofNullable(localDateTimeRange)
+                        .map(LocalDateTimeRange::getRange)
+                        .filter(Range::hasLowerBound)
+                        .map(Range::lowerEndpoint)
+                        .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
+                        .orElse(value.getFrom());
+                value.setFrom(from);
+                String to = Optional.ofNullable(localDateTimeRange)
+                        .map(LocalDateTimeRange::getRange)
+                        .filter(Range::hasUpperBound)
+                        .map(Range::upperEndpoint)
+                        .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
+                        .orElse(value.getTo());
+                value.setTo(to);
+                gen.writeStartObject();
+                gen.writeStringField("from", value.getFrom());
+                gen.writeStringField("to", value.getTo());
+                gen.writeStringField("datatype", value.getDatatype());
+                gen.writeStringField("comment", value.getComment());
+                gen.writeObjectField("requiredauthorizations", value.getRequiredAuthorizations());
+                gen.writeEndObject();
+            }
+        };
+    }
+
+    private JsonDeserializer<? extends BinaryFileDataset> getBinaryFileDatasetJsonDeserializer() {
+        return new JsonDeserializer<>() {
+            @Override
+            public BinaryFileDataset deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+                ObjectNode node = p.readValueAsTree();
+                final String applicationName = request.getAuthenticationToken().getApplicationName();
+                final String dataName = request.getAuthenticationToken().getDataName();
+                final Application application = serviceContainer.applicationService().getApplication(applicationName);
+                final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
+                String fromDate = node.findPath("from").asText(), to_date = node.findPath("to").asText();
+                try {
+                    fromDate = submissionDatePattern.formatter()
+                            .format(
+                                    LocalDateTime.parse(
+                                            fromDate,
+                                            LocalDateTimeRange.DATE_TIME_FORMATTER)
+                            );
+                    to_date = submissionDatePattern.formatter()
+                            .format(
+                                    LocalDateTime.parse(
+                                            to_date,
+                                            LocalDateTimeRange.DATE_TIME_FORMATTER)
+                            );
+                } catch (DateTimeParseException e) {
+                    //already in the format
+                }
+                String datatype = node.findPath("datatype").asText();
+                String comment = node.findPath("comment").asText();
+                final BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
+                binaryFileDataset.setFrom(fromDate);
+                binaryFileDataset.setTo(to_date);
+                binaryFileDataset.setDatatype(datatype);
+                binaryFileDataset.setComment(comment);
+                final Map<String, List<Ltree>> requiredAuthorizations = getJsonMapper()
+                        .convertValue(
+                                Optional.of(node)
+                                        .map(n->n.findValue("requiredauthorizations"))
+                                        .or(()->Optional.of(node) .map(n->n.findValue("requiredAuthorizations")))
+                                        .orElse(null),
+                                new TypeReference<Map<String, List<Ltree>>>() {
+                                }
+                        );
+                binaryFileDataset.setRequiredAuthorizations(requiredAuthorizations);
+                return binaryFileDataset;
+            }
+        };
     }
 
     private JsonDeserializer<TemporalAccessor> getTemporalAccessorJsonDeserializer() {
