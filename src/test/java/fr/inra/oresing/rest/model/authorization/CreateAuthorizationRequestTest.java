@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.model.authorization;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
 import fr.inra.oresing.domain.OreSiAuthorization;
@@ -24,6 +25,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.net.URL;
@@ -32,8 +35,11 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SpringBootTest
 class CreateAuthorizationRequestTest {
     static String createAuthorization;
+    @Autowired
+    JsonRowMapper mapper;
 
     @BeforeAll
     static void init() throws IOException {
@@ -142,40 +148,33 @@ class CreateAuthorizationRequestTest {
                 .build(createAuthorizationRequest);
         String expectedJson = """
                 {
-                   "authorizationId" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",
-                   "name" : "une submissionScope sur le référentiel monsore",
-                   "description" : null,
-                   "applicationId" : "41e8f1dd-4b3c-4bc7-9013-1309b4714d9d",
-                   "userId" : [ "f7570009-38fb-489d-ad3b-5bb335e7c5d5" ],
-                   "authorizationForAll" : {
-                     "authorizationForAll" : {
-                       "type_de_sites" : [ "extraction" ],
-                       "sites" : [ "extraction" ]
-                     }
-                   },
-                   "authorizationWithRestriction" : {
-                     "authorizationForScope" : {
-                       "pem" : {
-                         "operationTypes" : [ "depot", "extraction" ],
-                         "authorizationScope" : {
-                           "projet" : [ {
-                             "sql" : "projet_atlantique"
-                           }, {
-                             "sql" : "projet_manche"
-                           } ]
-                         },
-                         "timeScope" : {
-                           "range" : {
-                             "empty" : true
-                           }
-                         }
-                       }
-                     }
-                   }
-                 }""";
+                  "authorizationid" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",
+                  "name" : "une submissionScope sur le référentiel monsore",
+                  "description" : null,
+                  "applicationid" : "41e8f1dd-4b3c-4bc7-9013-1309b4714d9d",
+                  "userid" : [ "f7570009-38fb-489d-ad3b-5bb335e7c5d5" ],
+                  "authorizationforall" : {
+                    "authorizationforall" : {
+                      "type_de_sites" : [ "extraction" ],
+                      "sites" : [ "extraction" ]
+                    }
+                  },
+                  "authorizationwithrestriction" : {
+                    "authorizationforscope" : {
+                      "pem" : {
+                        "operationtypes" : [ "depot", "extraction" ],
+                        "authorizationscope" : {
+                          "projet" : [ "projet_atlantique", "projet_manche" ]
+                        },
+                        "timescope" : "[\\"2024-03-29 00:00:00\\",\\"2024-03-29 00:00:00\\")"
+                      }
+                    }
+                  }
+                }""";
 
-        String actualJson = new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
+        String actualJson = mapper.getJsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
         try {
+            mapper.getJsonMapper().readTree(actualJson);
             JSONAssert.assertEquals(expectedJson, actualJson, JSONCompareMode.LENIENT);
         } catch (JSONException e) {
             throw new OreSiTechnicalException(ExceptionMessage.JSON_EXCEPTION.toMessage(), e);

@@ -2,6 +2,7 @@ package fr.inra.oresing.domain.application.configuration.date;
 
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.checker.type.TypeOfDate;
+import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 
@@ -12,7 +13,9 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjusters;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.Map;
+import java.util.Optional;
 
 public record DatePattern<T extends TemporalAccessor>(
         String pattern,
@@ -125,5 +128,46 @@ public record DatePattern<T extends TemporalAccessor>(
             return TypeOfDate.DATE;
         }
         return TypeOfDate.DATETIME;
+    }
+
+    public String dateFromStandardFormat(String dateString) throws SiOreIllegalArgumentException {
+        if(dateString==null || "null".equals(dateString)){
+            return null;
+        }
+        try {
+            return formatter()
+                    .format(
+                            LocalDateTime.parse(
+                                    dateString,
+                                    LocalDateTimeRange.DATE_TIME_FORMATTER
+                            )
+                    );
+        } catch (DateTimeParseException | UnsupportedTemporalTypeException ex) {
+            return dateString;
+        }
+    }
+
+    public String dateToStandardFormat(String dateString) throws SiOreIllegalArgumentException {
+        if(dateString==null || "null".equals(dateString)){
+            return null;
+        }
+        try {
+            return Optional.ofNullable(dateString)
+                    .map(date -> switch (typeOfDate()) {
+                        case DATE -> LocalDate.parse(dateString, formatter()).atStartOfDay();
+                        case TIME -> LocalTime.parse(dateString, formatter()).atDate(LocalDate.EPOCH);
+                        case DATETIME -> LocalDateTime.parse(dateString, formatter());
+                    })
+                    .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
+                    .orElse(dateString);
+        } catch (DateTimeParseException dpe) {
+            if(LocalDateTimeRange.testIsStandardDate(dateString)) {
+                return dateString;
+            }
+            throw new SiOreIllegalArgumentException("BAD_DATE_FORMAT", Map.of(
+                    "date", dateString,
+                    "format", pattern()
+            ));
+        }
     }
 }

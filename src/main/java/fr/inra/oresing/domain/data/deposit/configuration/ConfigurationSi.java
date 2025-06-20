@@ -80,22 +80,24 @@ public class ConfigurationSi {
 
         LocalDateTimeRange dateTimeRange;
         DatePattern datePattern = dataImporterContext.getDatepattern();
-        if (binaryFileDataset.getFrom() == null && binaryFileDataset.getTo() == null) {
+        final String fromDate = datePattern.dateFromStandardFormat(binaryFileDataset.getFrom());
+        final String toDate = datePattern.dateFromStandardFormat(binaryFileDataset.getTo());
+        if (fromDate == null && toDate == null) {
             return;
         }
-        final TemporalAccessor from = binaryFileDataset.getFrom() == null ?
+        final TemporalAccessor from = fromDate == null ?
                 null :
-                datePattern.format(binaryFileDataset.getFrom());
+                datePattern.format(fromDate);
         ImmutableMap.Builder<String, Object> builder = new ImmutableMap.Builder<>();
-        builder.put("from", binaryFileDataset.getFrom());
+        builder.put("from", from);
         LocalDateTime lowerBound = timeScope.getRange().hasLowerBound() ? timeScope.getRange().lowerEndpoint() : LocalDateTime.MIN;
         builder.put("value", datePattern.formatter().format(lowerBound));
-        TemporalAccessor to = binaryFileDataset.getTo() == null ?
+        TemporalAccessor to = toDate == null ?
                 null :
-                datePattern.format(binaryFileDataset.getTo(), true);
+                datePattern.format(toDate, true);
         dateTimeRange = LocalDateTimeRange.of(datePattern, from, to);
         assert to != null;
-        builder.put("to", binaryFileDataset.getTo());
+        builder.put("to", to);
         if (!dateTimeRange.getRange().encloses(timeScope.getRange())) {
             errors.add(new CsvRowValidationCheckResult(DefaultValidationCheckResult.error("timeRangeOutOfInterval", builder.build(), null), rowNumber));
         }

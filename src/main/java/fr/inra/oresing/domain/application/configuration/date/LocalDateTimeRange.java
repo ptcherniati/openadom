@@ -8,6 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
+import java.time.format.ResolverStyle;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,6 +27,15 @@ public class LocalDateTimeRange {
     public static final DateTimeFormatter DATE_FORMATTER_DDMMYYYY = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final DateTimeFormatter SQL_TIMESTAMP_DATE_TIME_FORMATTER =
             DateTimeFormatter.ofPattern(YYYY_MM_DD_HH_MM_SS);
+
+    public static boolean testIsStandardDate(String dateString) {
+        try {
+            return LocalDateTimeRange.DATE_TIME_FORMATTER.format(LocalDateTimeRange.DATE_TIME_FORMATTER.parse(dateString)).equals(dateString);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private static final ImmutableSet<StringToLocalDateTimeRangeConverter> ALL_CONVERTERS = ImmutableSet.of(
             new StringToLocalDateTimeRangeConverter() {
                 @Override
@@ -305,10 +315,12 @@ public class LocalDateTimeRange {
             return LocalDateTimeRange.always();
         }
         if (from != null) {
+            from= datePattern.dateFromStandardFormat(from);
             fromTemporal = datePattern.format(from);
         }
         if (to != null) {
-            totemporal = datePattern.format(to,true);
+            to= datePattern.dateFromStandardFormat(to);
+            totemporal = datePattern.format(to, true);
         }
         if (fromTemporal == null) {
             return switch (datePattern.typeOfDate()) {
@@ -375,11 +387,13 @@ public class LocalDateTimeRange {
 
         LocalDateTimeRange toLocalDateTimeRange(LocalDateTime str, DateTimeFormatter dateTimeFormatter, DateType dateType);
     }
-    public LocalDateTime getLowerPointOrMin(){
-        return getRange().hasLowerBound()?getRange().lowerEndpoint():LocalDateTime.MIN;
+
+    public LocalDateTime getLowerPointOrMin() {
+        return getRange().hasLowerBound() ? getRange().lowerEndpoint() : LocalDateTime.MIN;
     }
-    public LocalDateTime getUpperEndpointOrMax(){
-        return getRange().hasUpperBound()?getRange().upperEndpoint():LocalDateTime.MAX;
+
+    public LocalDateTime getUpperEndpointOrMax() {
+        return getRange().hasUpperBound() ? getRange().upperEndpoint() : LocalDateTime.MAX;
     }
 
 }

@@ -236,7 +236,7 @@ public class AuthorizationFilter extends GenericFilterBean {
                     .filter(Predicate.not(JS_UNDEFINED::equals))
                     .map(json -> {
                         try {
-                            return mapper.getJsonMapper().readValue(params, FileOrUUID.class);
+                            return mapper.getJsonMapper().readValue(json, FileOrUUID.class);
                         } catch (JsonProcessingException e) {
                             throw new BadFileOrUUIDQuery(e.getMessage());
                         }

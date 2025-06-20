@@ -10,7 +10,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Range;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.application.Application;
@@ -43,6 +42,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAccessor;
+import java.time.temporal.UnsupportedTemporalTypeException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -247,37 +247,27 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
         return new JsonSerializer<>() {
             @Override
             public void serialize(BinaryFileDataset value, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {
+                BinaryFileDataset binaryFileDataset = value.copy();
                 final String applicationName = request.getAuthenticationToken().getApplicationName();
                 final String dataName = request.getAuthenticationToken().getDataName();
                 final Application application = request.getAuthenticationToken().getApplicationPersona().application();
                 final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
-                final LocalDateTimeRange localDateTimeRange = LocalDateTimeRange.of(
-                        submissionDatePattern,
-                        value.getFrom(),
-                        value.getTo());
-                String from = Optional.ofNullable(localDateTimeRange)
-                        .map(LocalDateTimeRange::getRange)
-                        .filter(Range::hasLowerBound)
-                        .map(Range::lowerEndpoint)
-                        .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
-                        .orElse(value.getFrom());
-                value.setFrom(from);
-                String to = Optional.ofNullable(localDateTimeRange)
-                        .map(LocalDateTimeRange::getRange)
-                        .filter(Range::hasUpperBound)
-                        .map(Range::upperEndpoint)
-                        .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
-                        .orElse(value.getTo());
-                value.setTo(to);
+                String from = submissionDatePattern.dateToStandardFormat(value.getFrom());
+                binaryFileDataset.setFrom(from);
+                String to = submissionDatePattern.dateToStandardFormat(value.getTo());
+                binaryFileDataset.setTo(to);
+
                 gen.writeStartObject();
-                gen.writeStringField("from", value.getFrom());
-                gen.writeStringField("to", value.getTo());
-                gen.writeStringField("datatype", value.getDatatype());
-                gen.writeStringField("comment", value.getComment());
-                gen.writeObjectField("requiredauthorizations", value.getRequiredAuthorizations());
+                gen.writeStringField("from", binaryFileDataset.getFrom());
+                gen.writeStringField("to", binaryFileDataset.getTo());
+                gen.writeStringField("datatype", binaryFileDataset.getDatatype());
+                gen.writeStringField("comment", binaryFileDataset.getComment());
+                gen.writeObjectField("requiredauthorizations", binaryFileDataset.getRequiredAuthorizations());
                 gen.writeEndObject();
             }
-        };
+        }
+
+                ;
     }
 
     private JsonDeserializer<? extends BinaryFileDataset> getBinaryFileDatasetJsonDeserializer() {
@@ -291,19 +281,9 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
                 String fromDate = node.findPath("from").asText(), to_date = node.findPath("to").asText();
                 try {
-                    fromDate = submissionDatePattern.formatter()
-                            .format(
-                                    LocalDateTime.parse(
-                                            fromDate,
-                                            LocalDateTimeRange.DATE_TIME_FORMATTER)
-                            );
-                    to_date = submissionDatePattern.formatter()
-                            .format(
-                                    LocalDateTime.parse(
-                                            to_date,
-                                            LocalDateTimeRange.DATE_TIME_FORMATTER)
-                            );
-                } catch (DateTimeParseException e) {
+                    fromDate = submissionDatePattern.dateToStandardFormat(fromDate);
+                    to_date = submissionDatePattern.dateToStandardFormat(to_date);
+                } catch (DateTimeParseException | UnsupportedTemporalTypeException ex) {
                     //already in the format
                 }
                 String datatype = node.findPath("datatype").asText();
@@ -316,8 +296,8 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
                 final Map<String, List<Ltree>> requiredAuthorizations = getJsonMapper()
                         .convertValue(
                                 Optional.of(node)
-                                        .map(n->n.findValue("requiredauthorizations"))
-                                        .or(()->Optional.of(node) .map(n->n.findValue("requiredAuthorizations")))
+                                        .map(n -> n.findValue("requiredauthorizations"))
+                                        .or(() -> Optional.of(node).map(n -> n.findValue("requiredAuthorizations")))
                                         .orElse(null),
                                 new TypeReference<Map<String, List<Ltree>>>() {
                                 }
