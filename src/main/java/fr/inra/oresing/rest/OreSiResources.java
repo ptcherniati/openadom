@@ -965,9 +965,9 @@ public class OreSiResources {
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
         final List<DataRow> data = serviceContainer.dataService().findData(downloadDatasetQuery);
-        final List<FilterList> filterLists = application.isData(downloadDatasetQuery.dataName()) ? serviceContainer.dataService()
+        final List<FilterList> filterLists = serviceContainer.dataService()
                 .filterList(downloadDatasetQuery.application(), downloadDatasetQuery.dataName())
-                .collect(Collectors.toList()).block() : List.of();
+                .collect(Collectors.toList()).block() ;
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
