@@ -34,16 +34,21 @@ public record PatternComponentsBuilder(RootBuilder rootBuilder) {
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
                     .map(CheckerDescription::multiplicity)
                     .orElse(Multiplicity.ONE);
-            final Parsing<ComputationChecker> defaultValueParsing = rootBuilder.getComputationBuilder().build(
-                    i18n,
-                    required, multiplicity,
-                    NodeSchemaValidator.joinPath(
-                            componentPath,
-                            ConfigurationSchemaNode.OA_PATTERN_COMPONENTS,
-                            componentKey,
-                            ConfigurationSchemaNode.OA_DEFAULT_VALUE),
-                    defaultValueNode);
-            i18n = defaultValueParsing.i18n();
+            Parsing<ComputationChecker> defaultValueParsing;
+            if (defaultValueNode != null && !defaultValueNode.isMissingNode()) {
+                defaultValueParsing = rootBuilder.getComputationBuilder().build(
+                        i18n,
+                        required, multiplicity,
+                        NodeSchemaValidator.joinPath(
+                                componentPath,
+                                ConfigurationSchemaNode.OA_PATTERN_COMPONENTS,
+                                componentKey,
+                                ConfigurationSchemaNode.OA_DEFAULT_VALUE),
+                        defaultValueNode);
+                i18n = defaultValueParsing.i18n();
+            } else {
+                defaultValueParsing = new Parsing<>(i18n, null);
+            }
             final Parsing<String> exportHeaderParsing = rootBuilder.addExportHeaders(dataKey, i18n, patternComponentEntry, ConfigurationSchemaNode.OA_PATTERN_COMPONENTS);
             String exportHeaderName = null;
             if (exportHeaderParsing != null) {

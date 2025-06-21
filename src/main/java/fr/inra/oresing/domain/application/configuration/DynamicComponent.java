@@ -21,7 +21,8 @@ public record DynamicComponent(ComponentDescriptionType type,
                                String referenceColumnToLookForHeader,
                                String submissionAuthorizationScope) implements ComponentDescription {
     public ComponentDescription withSubmission(final String submission) {
-        return new DynamicComponent(type(),
+        return new DynamicComponent(
+                type(),
                 componentKey(),
                 defaultValue(),
                 exportHeaderName(),
