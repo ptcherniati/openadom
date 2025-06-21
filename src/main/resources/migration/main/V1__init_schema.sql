@@ -37,18 +37,27 @@ BEGIN
 END;
 $$ language 'plpgsql';
 
-CREATE OR REPLACE FUNCTION public.jsonb_count_items(IN json jsonb)
-    RETURNS bigint
-    LANGUAGE 'sql'
-    VOLATILE
-    PARALLEL UNSAFE
-    COST 100
+CREATE OR REPLACE FUNCTION public.jsonb_count_items(IN json_data jsonb)
+RETURNS bigint
+LANGUAGE 'sql'
+VOLATILE
+PARALLEL UNSAFE
+COST 100
 AS
 $BODY$
-with elements as (select json -> jsonb_object_keys(json) element)
-select sum(jsonb_array_length(element))
-from elements
-$BODY$;
+SELECT SUM(
+               CASE
+                   WHEN jsonb_typeof(element) = 'array'
+                       THEN jsonb_array_length(element)
+                   ELSE 0
+                   END
+       )
+FROM (
+         SELECT json_data -> key AS element
+         FROM jsonb_object_keys(json_data) AS key
+     ) AS elements
+    $BODY$;
+
 
 /*-- check les foreign key pour le colonne reference de la table data
 CREATE OR REPLACE FUNCTION refs_check(aSchema text, application UUID, refValues UUID[])
