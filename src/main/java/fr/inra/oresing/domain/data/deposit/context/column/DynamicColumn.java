@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.data.deposit.context.column;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,8 +21,8 @@ public abstract class DynamicColumn extends Column {
      */
     private final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd;
 
-    public DynamicColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final Ltree expectedHierarchicalKey, final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd, final ComputedValueUsage computedValueUsage) {
-        super(referenceColumn, presenceConstraint, computedValueUsage);
+    public DynamicColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final Ltree expectedHierarchicalKey, final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
+        super(referenceColumn, presenceConstraint, computedValueUsage, defaultValue);
         this.expectedHierarchicalKey = expectedHierarchicalKey;
         this.refsLinkedToEntryToAdd = refsLinkedToEntryToAdd;
     }

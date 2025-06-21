@@ -32,7 +32,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
             final ComputedValueUsage computedValueUsage,
             List<Column> qualifierColumns,
             List<Column> adjacentColumns) {
-        super(referenceColumn, presenceConstraint, computedValueUsage);
+        super(referenceColumn, presenceConstraint, computedValueUsage, defaultValue);
         this.defaultValue = defaultValue;
         this.multiplicity = multiplicity;
         this.headerInFile = headerInField;
