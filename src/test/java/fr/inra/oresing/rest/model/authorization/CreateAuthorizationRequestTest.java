@@ -3,6 +3,8 @@ package fr.inra.oresing.rest.model.authorization;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.Resources;
+import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
@@ -17,6 +19,7 @@ import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -26,7 +29,13 @@ import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.net.URL;
@@ -35,7 +44,14 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@SpringBootTest
+@ActiveProfiles("testmail")
+@SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
+
+@TestPropertySource(locations = "classpath:/application-tests.properties")
+@AutoConfigureWebMvc
+@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Slf4j
 class CreateAuthorizationRequestTest {
     static String createAuthorization;
     @Autowired
