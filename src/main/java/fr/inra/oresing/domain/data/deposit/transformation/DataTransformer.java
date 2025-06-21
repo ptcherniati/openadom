@@ -38,7 +38,6 @@ public class DataTransformer {
     }
 
     public RowWithReferenceDatum computeComputedColumns(final RowWithReferenceDatum rowWithReferenceDatum) {
-        final DataDatum rowWithDefaults = new DataDatum();
         final DataDatum rowWithValues = DataDatum.copyOf(rowWithReferenceDatum.referenceDatum());
         dataImporterContext.getColumns().stream()
                 .filter(column -> column.getComputedValueUsage() != ComputedValueUsage.NOT_COMPUTED)
@@ -49,14 +48,13 @@ public class DataTransformer {
                         if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_VALUE) {
                             rowWithValues.put(referenceColumn, presentEvaluate);
                         } else if (column.getComputedValueUsage() == ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE) {
-                            rowWithDefaults.put(referenceColumn, presentEvaluate);
+                            rowWithValues.put(referenceColumn, presentEvaluate);
                         } else {
                             throw ComputedValueUsage.getError(column.getComputedValueUsage());
                         }
                     });
                 });
-        rowWithDefaults.putAll(rowWithValues);
-        return new RowWithReferenceDatum(rowWithReferenceDatum.lineNumber(), rowWithReferenceDatum.patternColumnName(), rowWithDefaults, rowWithReferenceDatum.refsLinkedTo());
+        return new RowWithReferenceDatum(rowWithReferenceDatum.lineNumber(), rowWithReferenceDatum.patternColumnName(), rowWithValues, rowWithReferenceDatum.refsLinkedTo());
     }
 
     /**

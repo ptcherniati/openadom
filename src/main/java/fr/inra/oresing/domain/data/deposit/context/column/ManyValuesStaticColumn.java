@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.data.deposit.context.column;
 import com.google.common.base.Splitter;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 
 import java.util.List;
 import java.util.Map;
@@ -11,8 +12,8 @@ public abstract class ManyValuesStaticColumn extends Column {
 
     public static final String CSV_CELL_SEPARATOR = ",";
 
-    public ManyValuesStaticColumn(final DataColumn referenceColumn, final String headerForColumnn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage) {
-        super(referenceColumn, presenceConstraint, computedValueUsage);
+    public ManyValuesStaticColumn(final DataColumn referenceColumn, final String headerForColumnn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
+        super(referenceColumn, presenceConstraint, computedValueUsage, defaultValue);
     }
 
     @Override

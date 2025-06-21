@@ -721,8 +721,8 @@ public class OreSiResourcesTest {
             }
             //on regarde les versions déposées
             response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
-                    .param("repositoryId", getPemRepositoryId(plateforme, projet, site))
-                    .cookie(fixtures.getWithRightsUserConnection().cookie()))
+                            .param("repositoryId", getPemRepositoryId(plateforme, projet, site))
+                            .cookie(fixtures.getWithRightsUserConnection().cookie()))
                     .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(0))).andReturn().getResponse().getContentAsString();
 
             //récupération de l'identifiant de la dernière version déposée
@@ -1030,11 +1030,8 @@ public class OreSiResourcesTest {
 
     private String publishOrDepublish(final Cookie cookie, final String projet, final String plateforme, final String site, final int expected, final boolean toPublish, final int numberOfVersions, final boolean published) throws Exception {
         final URL resource;
-        String response;
         resource = getClass().getResource(getPemRepositoryDataResourceName(projet, site));
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
-
-            //dépôt et publication d'un fichier projet site__p1
             final MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
             refFile.transferTo(Path.of("/tmp/pem.csv"));
             MvcResult mockResponse = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").file(refFile).with(csrf().asHeader()).param("params", getPemRepositoryParams(projet, plateforme, site, toPublish)).cookie(cookie)).andReturn();
@@ -1463,58 +1460,60 @@ public class OreSiResourcesTest {
     @Tag("app.acbb")
     Stream<DynamicNode> addApplicationAcbb() {
         AcbbFixture acbbFixture = new AcbbFixture(fixtures, mockMvc);
-        return Stream.of(dynamicTest("init users and rights", () -> fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "acbb")), dynamicTest("load acbb", () -> {
-            final URL resource = getClass().getResource(AcbbFixture.getAcbbApplicationConfigurationResourceName());
-            assert resource != null;
-            try (final InputStream in = resource.openStream()) {
-                final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
-                final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "acbb_openadom_v2", ""));
-            } catch (final Throwable e) {
-                throw new OreSiTechnicalException(e.getMessage(), e);
-            }
-        }), dynamicContainer("load acbb References", acbbFixture.loadAcbbReferences()), dynamicContainer("add data SWC", Stream.of(dynamicTest("load swc", () -> {
-            try (final InputStream in = getClass().getResourceAsStream(AcbbFixture.getFluxToursDataResourceName())) {
-                final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
-
-                final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx").file(file).with(csrf().asHeader()).param("params", """
-                        {
-                            "fileid":null,
-                            "binaryfiledataset":{
-                                "datatype":"t_flux_tours_flx",
-                                "requiredAuthorizations":{
-                                   "tr_sites_sit":["laqueuille"]
-                                },
-                                "from":"2003-12-31 23:00:00",
-                                "to":"2004-12-31 23:00:00",
-                                "comment":null
-                            },
-                            "topublish":true}"""
-
-                ).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                    final int status = result.getResponse().getStatus();
-                    if (status > 300) {
-                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+        return Stream.of(
+                dynamicTest("init users and rights", () -> fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "acbb")), dynamicTest("load acbb", () -> {
+                    final URL resource = getClass().getResource(AcbbFixture.getAcbbApplicationConfigurationResourceName());
+                    assert resource != null;
+                    try (final InputStream in = resource.openStream()) {
+                        final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
+                        final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "acbb_openadom_v2", ""));
+                    } catch (final Throwable e) {
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
-                }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+                }),
+                dynamicContainer("load acbb References", acbbFixture.loadAcbbReferences()), dynamicContainer("add data SWC", Stream.of(dynamicTest("load swc", () -> {
+                    try (final InputStream in = getClass().getResourceAsStream(AcbbFixture.getFluxToursDataResourceName())) {
+                        final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
+
+                        final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx").file(file).with(csrf().asHeader()).param("params", """
+                                {
+                                    "fileid":null,
+                                    "binaryfiledataset":{
+                                        "datatype":"t_flux_tours_flx",
+                                        "requiredAuthorizations":{
+                                           "tr_sites_sit":["laqueuille"]
+                                        },
+                                        "from":"2003-12-31 23:00:00",
+                                        "to":"2004-12-31 23:00:00",
+                                        "comment":null
+                                    },
+                                    "topublish":true}"""
+
+                        ).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
+                            final int status = result.getResponse().getStatus();
+                            if (status > 300) {
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                            }
+                        }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
 
-            }
-        }), dynamicTest("read SWC to json", () -> {
+                    }
+                }), dynamicTest("read SWC to json", () -> {
 //            String expectedJson = Resources.toString(getClass().getResource("/data/acbb_openadom_v2/compare/export.json"), StandardCharsets.UTF_8);
-            mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_JSON)).andDo(result -> {
-                        final int status = result.getResponse().getStatus();
-                        if (status > 300) {
-                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                        }
-                    }).andExpect(status().isOk()).andExpect(jsonPath("$.rows[*].[? (@.values.flx_day =~ /^.*date:2004.*$/)]", hasSize(17568))).andExpect(jsonPath("$.rows[*]", hasSize(17568)))
+                    mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_JSON)).andDo(result -> {
+                                final int status = result.getResponse().getStatus();
+                                if (status > 300) {
+                                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                                }
+                            }).andExpect(status().isOk()).andExpect(jsonPath("$.rows[*].[? (@.values.flx_day =~ /^.*date:2004.*$/)]", hasSize(17568))).andExpect(jsonPath("$.rows[*]", hasSize(17568)))
 //                    .andExpect(content().json(expectedJson))
-                    .andReturn().getResponse().getContentAsString();
-        }), dynamicTest("read SWC to csv", () -> {
-            final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/zip").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)).andExpect(request().asyncStarted()).andExpect(status().isOk()).andReturn();
-            Objects.requireNonNull(mvcResult.getRequest().getAsyncContext()).setTimeout(120000);
+                            .andReturn().getResponse().getContentAsString();
+                }), dynamicTest("read SWC to csv", () -> {
+                    final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/zip").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)).andExpect(request().asyncStarted()).andExpect(status().isOk()).andReturn();
+                    Objects.requireNonNull(mvcResult.getRequest().getAsyncContext()).setTimeout(120000);
 
-            mockMvc.perform(asyncDispatch(mvcResult)).andExpect(testZip(List.of("t_flux_tours_flx.csv")));
-        }))));
+                    mockMvc.perform(asyncDispatch(mvcResult)).andExpect(testZip(List.of("t_flux_tours_flx.csv")));
+                }))));
     }
 
     @Test

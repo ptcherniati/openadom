@@ -1,11 +1,17 @@
 package fr.inra.oresing.domain.data.deposit.context.column;
 
+import com.google.common.base.Strings;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.checker.Multiplicity;
+import fr.inra.oresing.domain.checker.type.FieldType;
+import fr.inra.oresing.domain.checker.type.ListType;
+import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import lombok.Getter;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -23,12 +29,14 @@ public abstract class Column implements Comparable<Column> {
     private final ComponentPresenceConstraint presenceConstraint;
     @Getter
     private final ComputedValueUsage computedValueUsage;
+    private final TransformationConfiguration defaultValue;
 
-    public Column(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage) {
+    public Column(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
         super();
         this.referenceColumn = referenceColumn;
         this.presenceConstraint = presenceConstraint;
         this.computedValueUsage = computedValueUsage;
+        this.defaultValue = defaultValue;
     }
 
     public static Column staticColumnDescriptionToColumn(final DataColumn referenceColumn,
@@ -36,12 +44,13 @@ public abstract class Column implements Comparable<Column> {
                                                          final ComponentPresenceConstraint presenceConstraint,
                                                          final Multiplicity multiplicity,
                                                          final TransformationConfiguration defaultValue) {
-        return switch (multiplicity){
+        return switch (multiplicity) {
             case ONE -> new OneValueStaticColumn(
                     referenceColumn,
                     headerForColumn,
                     presenceConstraint,
-                    ComputedValueUsage.NOT_COMPUTED
+                    defaultValue != null ? ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE : ComputedValueUsage.NOT_COMPUTED,
+                    defaultValue
             ) {
                 @Override
                 public String getExpectedHeader() {
@@ -51,14 +60,30 @@ public abstract class Column implements Comparable<Column> {
 
                 @Override
                 public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
-                    throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
+                    if (defaultValue == null) {
+                        throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
+                    }
+                    final Optional<DataColumnValue> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
+                    if (dataColumnValue
+                            .map(DataColumnValue::getValuesToCheck)
+                            .map(FieldType::getValue)
+                            .map(Object::toString)
+                            .filter(Strings::isNullOrEmpty).isPresent()) {
+                        return Optional.ofNullable(defaultValue)
+                                .map(dv -> StringGroovyExpression.forExpression(dv.expression(), dv.exceptionMessages()))
+                                .map(expression -> expression.evaluate(Map.of()))
+                                .map(StringType::getStringTypeFromStringValue)
+                                .map(DataColumnSingleValue::new);
+                    }
+                    return dataColumnValue;
                 }
             };
             case MANY -> new ManyValuesStaticColumn(
                     referenceColumn,
                     headerForColumn,
                     presenceConstraint,
-                    ComputedValueUsage.NOT_COMPUTED
+                    defaultValue != null ? ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE : ComputedValueUsage.NOT_COMPUTED,
+                    defaultValue
             ) {
                 @Override
                 public String getExpectedHeader() {
@@ -68,7 +93,27 @@ public abstract class Column implements Comparable<Column> {
 
                 @Override
                 public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
-                    throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
+                    if (defaultValue == null) {
+                        throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
+                    }
+                    final Optional<DataColumnValue> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
+                    if (dataColumnValue
+                            .map(DataColumnValue::getValuesToCheck)
+                            .map(FieldType::getValue)
+                            .map(Object::toString)
+                            .filter(Strings::isNullOrEmpty).isPresent()) {
+                        return Optional.ofNullable(defaultValue)
+                                .map(dv -> StringGroovyExpression.forExpression(dv.expression(), dv.exceptionMessages()))
+                                .map(expression -> expression.evaluate(Map.of()))
+                                .map(","::split)
+                                .map(array -> Arrays.stream(array)
+                                        .map(StringType::getStringTypeFromStringValue)
+                                        .toList()
+                                )
+                                .map(ListType::getListTypeFromListValue)
+                                .map(DataColumnMultipleValue::new);
+                    }
+                    return dataColumnValue;
                 }
             };
         };

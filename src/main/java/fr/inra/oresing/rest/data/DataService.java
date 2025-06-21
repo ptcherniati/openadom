@@ -51,7 +51,6 @@ import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
@@ -101,7 +100,7 @@ public class DataService {
         this.serviceContainer = serviceContainer;
     }
 
-    private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription) {
+    private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription, TransformationConfiguration defaultValue) {
         final String reference = referenceDynamicColumnDescription.reference();
         final DataColumn referenceColumnToLookForHeader = new DataColumn(referenceDynamicColumnDescription.referenceColumnToLookForHeader());
         final List<DataValue> allByReferenceType = referenceValueRepository.findAllByReferenceTypeStream(reference)
@@ -123,8 +122,8 @@ public class DataService {
                                             naturalKey
                                     )
                             ),
-                            ComputedValueUsage.NOT_COMPUTED
-                    ) {
+                            defaultValue==null?ComputedValueUsage.NOT_COMPUTED:ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE,
+                            defaultValue) {
                         @Override
                         public String getExpectedHeader() {
                             return fullHeader;
@@ -373,7 +372,7 @@ public class DataService {
                                     dynamicComponent.reference(),
                                     dynamicComponent.referenceColumnToLookForHeader()
                             );
-                    final ImmutableSet<Column> valuedDynamicColumns = dynamicColumnDescriptionToColumns(referenceValueRepository, referenceColumn, referenceDynamicColumnDescription);
+                    final ImmutableSet<Column> valuedDynamicColumns = dynamicColumnDescriptionToColumns(referenceValueRepository, referenceColumn, referenceDynamicColumnDescription, dynamicComponent.defaultValue());
                     return valuedDynamicColumns.stream();
                 }).collect(ImmutableSet.toImmutableSet());
 
@@ -413,7 +412,7 @@ public class DataService {
         final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
         final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         final Expression<Set<String>> computationExpression = StringSetGroovyExpression.forExpression(computation.expression());
-        return new ManyValuesStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE) {
+        return new ManyValuesStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
             @Override
             public String getExpectedHeader() {
                 throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié car elle ne doit pas être dans le CSV");
@@ -438,7 +437,7 @@ public class DataService {
         final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
         final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         final Expression<String> computationExpression = StringGroovyExpression.forExpression(computation.expression(), computation.exceptionMessages());
-        return new OneValueStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE) {
+        return new OneValueStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
             @Override
             public String getExpectedHeader() {
                 throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié");

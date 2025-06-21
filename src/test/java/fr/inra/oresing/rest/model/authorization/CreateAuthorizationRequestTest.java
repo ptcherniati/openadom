@@ -1,13 +1,15 @@
 package fr.inra.oresing.rest.model.authorization;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.Resources;
+import fr.inra.oresing.OreSiNg;
+import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.authorization.request.AuthorizationWithRestriction;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
@@ -17,6 +19,7 @@ import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
+import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
@@ -25,15 +28,34 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@ActiveProfiles("testmail")
+@SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
+
+@TestPropertySource(locations = "classpath:/application-tests.properties")
+@AutoConfigureWebMvc
+@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+@Slf4j
 class CreateAuthorizationRequestTest {
     static String createAuthorization;
+    @Autowired
+    JsonRowMapper mapper;
 
     @BeforeAll
     static void init() throws IOException {
@@ -142,43 +164,33 @@ class CreateAuthorizationRequestTest {
                 .build(createAuthorizationRequest);
         String expectedJson = """
                 {
-                   "authorizationId" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",
-                   "name" : "une submissionScope sur le référentiel monsore",
-                   "description" : null,
-                   "applicationId" : "41e8f1dd-4b3c-4bc7-9013-1309b4714d9d",
-                   "userId" : [ "f7570009-38fb-489d-ad3b-5bb335e7c5d5" ],
-                   "authorizationForAll" : {
-                     "authorizationForAll" : {
-                       "type_de_sites" : [ "extraction" ],
-                       "sites" : [ "extraction" ]
-                     }
-                   },
-                   "authorizationWithRestriction" : {
-                     "authorizationForScope" : {
-                       "pem" : {
-                         "operationTypes" : [ "depot", "extraction" ],
-                         "authorizationScope" : {
-                           "projet" : [ {
-                             "sql" : "projet_atlantique"
-                           }, {
-                             "sql" : "projet_manche"
-                           } ]
-                         },
-                         "timeScope" : {
-                           "range" : {
-                             "empty" : true
-                           }
-                         }
-                       }
-                     }
-                   }
-                 }""";
+                  "authorizationid" : "e7570009-35fb-489d-ad3b-5bb335e7c5d5",
+                  "name" : "une submissionScope sur le référentiel monsore",
+                  "description" : null,
+                  "applicationid" : "41e8f1dd-4b3c-4bc7-9013-1309b4714d9d",
+                  "userid" : [ "f7570009-38fb-489d-ad3b-5bb335e7c5d5" ],
+                  "authorizationforall" : {
+                    "authorizationforall" : {
+                      "type_de_sites" : [ "extraction" ],
+                      "sites" : [ "extraction" ]
+                    }
+                  },
+                  "authorizationwithrestriction" : {
+                    "authorizationforscope" : {
+                      "pem" : {
+                        "operationtypes" : [ "depot", "extraction" ],
+                        "authorizationscope" : {
+                          "projet" : [ "projet_atlantique", "projet_manche" ]
+                        },
+                        "timescope" : "[\\"2024-03-29 00:00:00\\",\\"2024-03-29 00:00:00\\")"
+                      }
+                    }
+                  }
+                }""";
 
-        String actualJson = new ObjectMapper()
-                .registerModule(new JavaTimeModule())
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                .writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
+        String actualJson = mapper.getJsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
         try {
+            mapper.getJsonMapper().readTree(actualJson);
             JSONAssert.assertEquals(expectedJson, actualJson, JSONCompareMode.LENIENT);
         } catch (JSONException e) {
             throw new OreSiTechnicalException(ExceptionMessage.JSON_EXCEPTION.toMessage(), e);

@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 import at.favre.lib.crypto.bcrypt.BCrypt;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
+import fr.inra.oresing.domain.OreSiEntity;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.authorization.AuthenticationServiceImpl;
@@ -442,10 +443,11 @@ public class AuthenticationService implements AuthenticationServiceImpl {
     public CurrentUserRoles getCurrentUserRoles(String userIdOrRoleName) {
         Optional<OreSiUser> oreSiUser = Optional.ofNullable(userIdOrRoleName)
                 .flatMap(userRepository::findByLoginOrId);
-        CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser(userIdOrRoleName);
-        if (oreSiUser.isPresent()) {
-            rolesForCurrentUser = rolesForCurrentUser.withUSer(oreSiUser.get());
-        }
+        CurrentUserRoles rolesForCurrentUser = oreSiUser
+                .map(OreSiEntity::getId)
+                .map(UUID::toString)
+                .map(id->userRepository.getRolesForCurrentUser(id))
+                .orElse(userRepository.getRolesForCurrentUser(userIdOrRoleName));
         return rolesForCurrentUser;
     }
 

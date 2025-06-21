@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain;
 
-import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import lombok.Getter;
@@ -32,8 +32,9 @@ public class BinaryFileDataset {
                 .map(ra -> String.format("%s : %s", ra.getKey(), ra.getValue().getFirst().getSql()))
                 .collect(Collectors.joining(",", "[", "]"));
         return String.format("%s -> [%s, %s]",
-                authorizationsString, Strings.isNullOrEmpty(from) ? "" : LocalDateTimeRange.DATE_FORMATTER_DDMMYYYY.format(LocalDateTimeRange.DATE_TIME_FORMATTER.parse(from)),
-                Strings.isNullOrEmpty(to) ? "" : LocalDateTimeRange.DATE_FORMATTER_DDMMYYYY.format(LocalDateTimeRange.DATE_TIME_FORMATTER.parse(to))
+                authorizationsString,
+                from,
+                to
         );
     }
 
@@ -59,5 +60,25 @@ public class BinaryFileDataset {
         binaryFileDataset.setComment(comment);
         binaryFileDataset.setDatatype(datatype);
         return binaryFileDataset;
+    }
+
+    public BinaryFileDataset withPattern(DatePattern datePattern) {
+        final LocalDateTimeRange localDateTimeRange = LocalDateTimeRange.of(DatePattern.of(LocalDateTimeRange.YYYY_MM_DD_HH_MM_SS), getFrom(), getTo());
+        try {
+            BinaryFileDataset localBinaryFileDataset = copy();
+            localBinaryFileDataset.setFrom(datePattern.formatter().format(localDateTimeRange.getLowerPointOrMin()));
+            localBinaryFileDataset.setTo(datePattern.formatter().format(localDateTimeRange.getUpperEndpointOrMax()));
+            return localBinaryFileDataset;
+        } catch (Exception e) {
+            return this;
+        }
+    }
+
+    public void setTo(String to) {
+        this.to = "null".equals(to) ? null : to;
+    }
+
+    public void setFrom(String from) {
+        this.from = "null".equals(from) ? null : from;
     }
 }

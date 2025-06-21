@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Range;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.OreSiUser;
@@ -14,6 +15,8 @@ import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
+import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
@@ -292,6 +295,27 @@ public class OreSiResources {
                 .stream()
                 .map(UserDescriptionResult::of)
                 .collect(Collectors.toMap(UserDescriptionResult::id, Function.identity()));
+        final Application application = request.getAuthenticationToken().getApplicationPersona().application();
+        final String dataName = request.getAuthenticationToken().getDataName();
+        final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
+        final LocalDateTimeRange localDateTimeRange = LocalDateTimeRange.of(
+                submissionDatePattern,
+                binaryFileDataset.getFrom(),
+                binaryFileDataset.getTo());
+        String from = Optional.ofNullable(localDateTimeRange)
+                .map(LocalDateTimeRange::getRange)
+                .filter(Range::hasLowerBound)
+                .map(Range::lowerEndpoint)
+                .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
+                .orElse(binaryFileDataset.getFrom());
+        binaryFileDataset.setFrom(from);
+        String to = Optional.ofNullable(localDateTimeRange)
+                .map(LocalDateTimeRange::getRange)
+                .filter(Range::hasUpperBound)
+                .map(Range::upperEndpoint)
+                .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
+                .orElse(binaryFileDataset.getTo());
+        binaryFileDataset.setTo(to);
         final List<BinaryFileResult> files =
                 serviceContainer.binaryFileService()
                         .getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false).stream()
@@ -551,9 +575,9 @@ public class OreSiResources {
             @RequestParam(value = "file", required = false) final MultipartFile file,
             @RequestParam(value = "params", required = false) final String params) throws IOException {
         Locale locale = localeResolver.resolveLocale(request);
-        DataVersioningResult dataVersioningResult;
+        DataVersioningResult dataVersioningResult = null;
         try {
-            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, params, false);
+            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, false);
         } catch (InvalidDatasetContentException invalidDatasetContentException) {
             List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                     .stream()

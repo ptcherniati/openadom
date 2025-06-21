@@ -67,35 +67,40 @@ public record ConstantComponentsBuilder(RootBuilder rootBuilder) {
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
                     .map(CheckerDescription::multiplicity)
                     .orElse(Multiplicity.ONE);
-            final Parsing<ComputationChecker> defaultValueParsing = rootBuilder
-                    .getComputationBuilder()
-                    .build(
-                            i18n,
-                            required, multiplicity,
-                            NodeSchemaValidator.joinPath(
-                                    componentPath,
-                                    ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
-                                    constantComponentKey,
-                                    ConfigurationSchemaNode.OA_DEFAULT_VALUE
-                            ),
-                            defaultValueNode);
-            i18n = defaultValueParsing.i18n();
-            if (defaultValueParsing.result().getReferences() != null) {
-                for (final String reference : defaultValueParsing.result().getReferences()) {
-                    if (!rootBuilder.getListDataKeys().contains(reference)) {
-                        rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
-                                        "referenceName", reference,
-                                        "allDataNames", rootBuilder.getListDataKeys()),
+            Parsing<ComputationChecker> defaultValueParsing;
+            if (defaultValueNode != null && !defaultValueNode.isMissingNode()) {
+                defaultValueParsing = rootBuilder
+                        .getComputationBuilder()
+                        .build(
+                                i18n,
+                                required, multiplicity,
                                 NodeSchemaValidator.joinPath(
                                         componentPath,
                                         ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
                                         constantComponentKey,
-                                        ConfigurationSchemaNode.OA_DEFAULT_VALUE,
-                                        ConfigurationSchemaNode.OA_REFERENCES
-                                )
-                        );
+                                        ConfigurationSchemaNode.OA_DEFAULT_VALUE
+                                ),
+                                defaultValueNode);
+                i18n = defaultValueParsing.i18n();
+                if (defaultValueParsing.result().getReferences() != null) {
+                    for (final String reference : defaultValueParsing.result().getReferences()) {
+                        if (!rootBuilder.getListDataKeys().contains(reference)) {
+                            rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
+                                            "referenceName", reference,
+                                            "allDataNames", rootBuilder.getListDataKeys()),
+                                    NodeSchemaValidator.joinPath(
+                                            componentPath,
+                                            ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
+                                            constantComponentKey,
+                                            ConfigurationSchemaNode.OA_DEFAULT_VALUE,
+                                            ConfigurationSchemaNode.OA_REFERENCES
+                                    )
+                            );
+                        }
                     }
                 }
+            } else {
+                defaultValueParsing = new Parsing<>(i18n, null);
             }
             final Set<Tag> oaTags = TagsBuilder.validateDomainTagNames(
                     componentNodeValue,

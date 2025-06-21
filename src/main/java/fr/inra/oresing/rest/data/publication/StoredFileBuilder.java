@@ -15,7 +15,8 @@ public record StoredFileBuilder(
                 .map(AuthorizationPublicationService::getFileOrUUID)
                 .map(FileOrUUID::binaryfiledataset)
                 .map(binaryFileDataset -> binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepositoryWithBuffer))
-                .map(BinaryFileDataset::getRequiredAuthorizations).ifPresent(requiredAuthorization -> builder().fileOrUUID.binaryfiledataset().setRequiredAuthorizations(requiredAuthorization));
+                .map(BinaryFileDataset::getRequiredAuthorizations)
+                .ifPresent(requiredAuthorization -> builder().fileOrUUID.binaryfiledataset().setRequiredAuthorizations(requiredAuthorization));
         return new StoreFile(builder()).testRights();
     }
 }

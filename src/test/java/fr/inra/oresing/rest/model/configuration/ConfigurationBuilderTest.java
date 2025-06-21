@@ -121,13 +121,13 @@ class ConfigurationBuilderTest {
 
     private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
 
-        String DATA_EXAMPLE_RESULT_EXPECTED = new ObjectMapper().registerModule(new JavaTimeModule())
+        String expectedResult = new ObjectMapper().registerModule(new JavaTimeModule())
                 .writer()
                 .withDefaultPrettyPrinter()
                 .writeValueAsString(dataDescriptionMap);
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
         JsonNode expectedNode = objectMapper.readTree(DATA_EXAMPLE_RESULT);
-        JsonNode actualNode = objectMapper.readTree(DATA_EXAMPLE_RESULT_EXPECTED);
+        JsonNode actualNode = objectMapper.readTree(expectedResult);
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
     }
 
