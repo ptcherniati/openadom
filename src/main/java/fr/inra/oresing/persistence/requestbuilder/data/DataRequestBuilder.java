@@ -169,7 +169,7 @@ public class DataRequestBuilder {
                             """.formatted(
                             sanitize(componentKey),
                             filters.stream()
-                                    .map(filter -> "@ == \"%1$s\"  || @ starts with \"%2$s\""
+                                        .map(filter -> "@ == \"%1$s\"  || @ starts with \"%2$s\""
                                             .formatted(
                                                     filter,
                                                     filter + ".")
