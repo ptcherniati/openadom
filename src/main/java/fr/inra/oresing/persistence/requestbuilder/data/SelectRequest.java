@@ -27,7 +27,6 @@ record SelectRequest(
                         Optional.ofNullable(orderBy()).map(SelectRequestOrderBy::build).orElse(""), //$1%s
                         Optional.ofNullable(offset()).map(SelectRequestOffset::build).orElse(""),//$2%s
                         Optional.ofNullable(limit()).map(SelectRequestLimit::build).orElse("")//%3$s
-
                 );
         return new SqlRequest(
                 select,
@@ -135,7 +134,7 @@ record SelectRequest(
             final String param5 = Optional.ofNullable(requestWhereInSelect())
                     .map(SelectRequestWhere::build)
                     .orElse("");
-            return (patternDefinitionCount() == 1 && horizontalDisplay) ? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION
+            return ((patternDefinitionCount() == 1 && horizontalDisplay) ? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
                     .formatted(
                             param1, //select
                             param1,
