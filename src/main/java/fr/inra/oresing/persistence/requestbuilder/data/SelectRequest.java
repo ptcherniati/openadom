@@ -43,68 +43,60 @@ record SelectRequest(
             SelectRequestWhereInSelect requestWhereInSelect
     ) {
         static final String TEMPLATE_WITH_PATTERNS_DEFINITION = """
-                WITH filtered_keys AS (
-                     SELECT naturalkey, referencetype
-                     FROM %3$s.referencevalue
-                     WHERE referencetype =  '%4$s'%5$s
-                     GROUP BY referencetype, naturalkey
-                    %%2$s --offset
-                    %%3$s --limit
+                 with  rs as (
+                    SELECT DISTINCT ON (referencetype, naturalkey)
+                     referencetype, naturalkey
+                     FROM pattern.referencevalue rs
+                     WHERE
+                             rs.referencetype = '%4$s'%5$s
+                     %%1$s --order by
+                     %%2$s --offset
                  ),
-                 joined_data AS (
-                     SELECT
-                         rs.referencetype,
-                         rs.naturalkey,
-                         rs.hierarchicalkey,
-                         rs.id,
-                         rs.patterncolumnname,
-                         rs.refvalues,
-                         rs.refslinkedto,
-                         rl.refs_linked
-                     FROM %3$s.referencevalue rs
-                     JOIN filtered_keys fk
-                         ON rs.referencetype = fk.referencetype
-                         AND rs.naturalkey = fk.naturalkey
-                     LEFT JOIN (
-                         SELECT
-                             rv.referencetype,
-                             rv.naturalkey,
-                             jsonb_agg(
-                                 jsonb_build_object(
-                                     'referenceType', rb.referencetype,
-                                     'hierarchicalKey', rb.hierarchicalkey,
-                                     'naturalKey', rb.naturalkey,
-                                     '__display_default', rb.refvalues->'__display_default',
-                                     '__display_fr', rb.refvalues->'__display_fr',
-                                     '__display_en', rb.refvalues->'__display_en',
-                                     'id', rb.id
-                                 )
-                             ) AS refs_linked
-                         FROM %3$s.referencevalue rv
-                         JOIN %3$s.reference_reference rr
-                             ON rr.referenceid = rv.id
-                         JOIN %3$s.referencevalue rb
-                             ON rb.id = rr.referencesby
-                         WHERE rv.referencetype = 'taxon'
-                         GROUP BY rv.referencetype, rv.naturalkey
-                     ) rl ON rs.referencetype = rl.referencetype
-                         AND rs.naturalkey = rl.naturalkey
+                 refs_linked as (
+                  select
+                    r.referencetype,
+                    r.naturalkey,
+                    refs.referencetype refs_referencetype,
+                    refs.hierarchicalkey refs_hierarchicalkey,
+                    refs.naturalkey refs_naturalkey,
+                    refs.refvalues->'__display_default' AS refs_display_default,
+                    refs.refvalues->'__display_fr' AS refs_display_fr,
+                    refs.refvalues->'__display_en' AS refs_display_en ,
+                    refs.id refs_id
+                  from rs
+                  join %3$s.referencevalue r using(referencetype, naturalkey)
+                  join %3$s.reference_reference rr on rr.referenceid = r.id
+                  join %3$s.referencevalue refs ON rr.referenceid = r.id AND rr.referencesby = refs.id
                  )
                  SELECT
-                     'fr.inra.oresing.persistence.DataRows' AS "@class",
-                     jsonb_build_object(
-                         'refsLinked', jd.refs_linked,
-                         'rowId', array_agg(jd.id),
-                         'refsLinkedTo', jsonb_agg(jsonb_build_object(jd.referencetype, jd.refslinkedto)),
-                         'naturalKey', MAX(jd.naturalkey::text)::ltree,
-                         'hierarchicalKey', MAX(jd.hierarchicalkey::text)::ltree,
-                         'patternColumnName', array_agg(jd.patterncolumnname),
-                         'values', jsonb_agg(jsonb_build_object(jd.patterncolumnname, jd.refvalues)),
-                         'allPatternColumnNames', array_agg(DISTINCT jd.patterncolumnname)
-                     ) AS "json"
-                 FROM joined_data jd
-                 GROUP BY jd.referencetype, jd.naturalkey, jd.refs_linked
-                %1$s --order by;
+                           'fr.inra.oresing.persistence.DataRows' AS "@class",
+                           jsonb_build_object(
+                               --'rowNumber', row_number() over (),
+                               --'totalRows', count(*) over (),
+                               'rowId', array_agg(id),
+                              'refslinked', array_agg(
+                                  jsonb_build_object(
+                                      'referenceType', refs_referencetype,
+                                      'hierarchicalKey', refs_hierarchicalkey,
+                                      'naturalKey', refs_naturalkey,
+                                      '__display_default', refs_display_default,
+                                      '__display_fr', refs_display_fr,
+                                      '__display_en', refs_display_en,
+                                      'id', refs_id
+                                  )
+                              ),
+                               'naturalKey', naturalkey,
+                               'hierarchicalKey', hierarchicalkey,
+                               'patternColumnName', array_agg(patterncolumnname),
+                               'values', array_agg(refvalues) ,
+                               'refsLinkedTo', array_agg(refsLinkedTo),
+                               'allPatternColumnNames',array_agg(DISTINCT patterncolumnname)
+                           ) AS   "json"
+                     FROM rs
+                     JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
+                    left join refs_linked  USING (referencetype, naturalkey)
+                     GROUP BY naturalkey, hierarchicalkey
+                      %1$s --order by;
                 """;
 
         static final String TEMPLATE_WITH_NO_PATTERNS_DEFINITION = """

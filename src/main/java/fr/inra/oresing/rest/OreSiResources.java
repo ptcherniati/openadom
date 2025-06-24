@@ -14,7 +14,6 @@ import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.Submission;
-import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
@@ -26,7 +25,6 @@ import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataValue;
-import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.data.menu.MenuType;
@@ -39,7 +37,6 @@ import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuer
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.binaryFile.BinaryFileService;
@@ -74,7 +71,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -108,7 +104,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -991,14 +986,7 @@ public class OreSiResources {
                             .equals(a) ? -1 : 1;
                 })
                 .collect(ImmutableSet.toImmutableSet());
-        //final Long totalRows = data.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
         final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = serviceContainer.dataService().getCheckedFormatComponents(nameOrId, dataName);
-        Set<String> listOfDataIds = data.stream()
-                .map(DataRow::rowId)
-                .flatMap(List::stream)
-                .collect(Collectors.toSet());
-        //final Map<Ltree, List<DataValue>> requiredreferencesValues = serviceContainer.dataService().getReferenceDisplaysById(serviceContainer.applicationService().getApplication(nameOrId), listOfDataIds);
-        Map<String, LineCheckerResult> lineCheckers = checkedFormatcomponents.get(ReferenceType.class.getSimpleName());
         final List<DataRowResult> dataRowResults = data.stream()
                 .map(dataRow -> DataRowResult.of(
                         dataRow,
@@ -1006,22 +994,6 @@ public class OreSiResources {
                         locale.getLanguage()
                 ))
                 .toList();
-        final Map<String, String> referenceTypeForReferencingColumns =
-                Optional.ofNullable(checkedFormatcomponents.get(ReferenceType.class.getSimpleName()))
-                        .map(checkedFormatColumn -> checkedFormatColumn.entrySet()
-                                .stream()
-                                .collect(Collectors.toMap(
-                                                Map.Entry::getKey,
-                                                e -> Optional.of(e)
-                                                        .map(Map.Entry::getValue)
-                                                        .map(LineCheckerResult::fieldTypeForOne)
-                                                        .map(c -> (ReferenceType) c)
-                                                        .map(ReferenceType::getRefType)
-                                                        .orElse("erreur")
-                                        )
-                                )
-                        )
-                        .orElseGet(LinkedHashMap::new);
         Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = serviceContainer.authorizationService().getAuthorizationScopes(application, MenuType.submission);
 
         return ResponseEntity.ok(new GetDataResult(
@@ -1029,9 +1001,7 @@ public class OreSiResources {
                 variables,
                 dataRowResults,
                 filterLists,
-                //totalRows,
                 checkedFormatcomponents,
-                referenceTypeForReferencingColumns,
                 referenceScopes));
     }
 
