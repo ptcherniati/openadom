@@ -135,7 +135,7 @@ record SelectRequest(
             final String param5 = Optional.ofNullable(requestWhereInSelect())
                     .map(SelectRequestWhere::build)
                     .orElse("");
-            return ((patternDefinitionCount() > 1 || (patternDefinitionCount() == 1 && horizontalDisplay)) ? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
+            return (patternDefinitionCount() == 1 && horizontalDisplay) ? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION
                     .formatted(
                             param1, //select
                             param1,
