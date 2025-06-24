@@ -43,101 +43,87 @@ record SelectRequest(
             SelectRequestWhereInSelect requestWhereInSelect
     ) {
         static final String TEMPLATE_WITH_PATTERNS_DEFINITION = """
-                 with  rs as (
+                WITH rs AS (
                     SELECT DISTINCT ON (referencetype, naturalkey)
-                     referencetype, naturalkey
-                     FROM pattern.referencevalue rs
-                     WHERE
-                             rs.referencetype = '%4$s'%5$s
-                     %%1$s --order by
-                     %%2$s --offset
-                 ),
-                 refs_linked as (
-                  select
-                    r.referencetype,
-                    r.naturalkey,
-                    refs.referencetype refs_referencetype,
-                    refs.hierarchicalkey refs_hierarchicalkey,
-                    refs.naturalkey refs_naturalkey,
-                    refs.refvalues->'__display_default' AS refs_display_default,
-                    refs.refvalues->'__display_fr' AS refs_display_fr,
-                    refs.refvalues->'__display_en' AS refs_display_en ,
-                    refs.id refs_id
-                  from rs
-                  join %3$s.referencevalue r using(referencetype, naturalkey)
-                  join %3$s.reference_reference rr on rr.referenceid = r.id
-                  join %3$s.referencevalue refs ON rr.referenceid = r.id AND rr.referencesby = refs.id
-                 )
-                 SELECT
-                           'fr.inra.oresing.persistence.DataRows' AS "@class",
-                           jsonb_build_object(
-                               --'rowNumber', row_number() over (),
-                               --'totalRows', count(*) over (),
-                               'rowId', array_agg(id),
-                              'refslinked', array_agg(
-                                  jsonb_build_object(
-                                      'referenceType', refs_referencetype,
-                                      'hierarchicalKey', refs_hierarchicalkey,
-                                      'naturalKey', refs_naturalkey,
-                                      '__display_default', refs_display_default,
-                                      '__display_fr', refs_display_fr,
-                                      '__display_en', refs_display_en,
-                                      'id', refs_id
-                                  )
-                              ),
-                               'naturalKey', naturalkey,
-                               'hierarchicalKey', hierarchicalkey,
-                               'patternColumnName', array_agg(patterncolumnname),
-                               'values', array_agg(refvalues) ,
-                               'refsLinkedTo', array_agg(refsLinkedTo),
-                               'allPatternColumnNames',array_agg(DISTINCT patterncolumnname)
-                           ) AS   "json"
-                     FROM rs
-                     JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
-                    left join refs_linked  USING (referencetype, naturalkey)
-                     GROUP BY naturalkey, hierarchicalkey
-                      %1$s --order by;
+                        referencetype, naturalkey
+                    FROM %3$s.referencevalue
+                    WHERE referencetype = '%4$s'%5$s
+                    %%2$s --offset
+                    %%3$s --limit
+                )
+                SELECT
+                    'fr.inra.oresing.persistence.DataRows' AS "@class",
+                    jsonb_build_object(
+                        'rowId', array_agg(rv.id),
+                        'refslinked', COALESCE(refs_agg.linked_data, '[]'::jsonb),
+                        'naturalKey', rv.naturalkey,
+                        'hierarchicalKey', rv.hierarchicalkey,
+                        'patternColumnName', array_agg(rv.patterncolumnname),
+                        'values', array_agg(rv.refvalues),
+                        'refsLinkedTo', array_agg(rv.refsLinkedTo),
+                        'allPatternColumnNames', array_agg(DISTINCT rv.patterncolumnname)
+                    ) AS "json"
+                FROM rs
+                JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
+                LEFT JOIN LATERAL (
+                    SELECT jsonb_agg(
+                        jsonb_build_object(
+                            'referenceType', refs.referencetype,
+                            'hierarchicalKey', refs.hierarchicalkey,
+                            'naturalKey', refs.naturalkey,
+                            '__display_default', refs.refvalues->'__display_default',
+                            '__display_fr', refs.refvalues->'__display_fr',
+                            '__display_en', refs.refvalues->'__display_en',
+                            'id', refs.id
+                        )
+                    ) AS linked_data
+                    FROM %3$s.reference_reference rr
+                    JOIN %3$s.referencevalue refs ON rr.referencesby = refs.id
+                    WHERE rr.referenceid = rv.id
+                ) AS refs_agg ON true
+                GROUP BY rv.naturalkey, rv.hierarchicalkey, refs_agg.linked_data
+                 %1$s --order by;
                 """;
 
         static final String TEMPLATE_WITH_NO_PATTERNS_DEFINITION = """
-                           SELECT
-                               'fr.inra.oresing.persistence.DataRows' AS "@class",
-                               jsonb_build_object(
-                                 --'rowNumber', row_number() over (),
-                                 --'totalRows', count(*) over (),
-                                 'refsLinked' , ref_aggregate.refs_linked,
-                                 'rowId', ARRAY[rs.id],
-                                 'naturalKey', rs.naturalkey,
-                                 'hierarchicalKey', rs.hierarchicalkey,
-                                 'patternColumnName', ARRAY[rs.patterncolumnname],
-                                 'values', ARRAY[rs.refvalues] ,
-                                 'refsLinkedTo', ARRAY[rs.refsLinkedTo],
-                                  'allPatternColumnNames',ARRAY[rs.patterncolumnname]
-                               ) AS   "json"
-                               FROM %3$s.referencevalue rs
-                                CROSS JOIN LATERAL (
-                                    SELECT jsonb_agg(
-                                        jsonb_build_object(
-                                            'referenceType', referenceby.referencetype,
-                                            'hierarchicalKey', referenceby.hierarchicalkey,
-                                            'naturalKey', referenceby.naturalkey,
-                                            '__display_default', referenceby.refvalues->'__display_default',
-                                            '__display_fr', referenceby.refvalues->'__display_fr',
-                                            '__display_en', referenceby.refvalues->'__display_en',
-                                            'id', referenceby.id
-                                        )
-                                    ) AS refs_linked
-                                    FROM %3$s.reference_reference rr
-                                    JOIN %3$s.referencevalue referenceby 
-                                        ON referenceby.id = rr.referencesby
-                                    WHERE rr.referenceid = rs.id
-                                ) ref_aggregate
-                               WHERE
-                                       rs.referencetype = '%4$s'%5$s
+                SELECT
+                    'fr.inra.oresing.persistence.DataRows' AS "@class",
+                    jsonb_build_object(
+                      --'rowNumber', row_number() over (),
+                      --'totalRows', count(*) over (),
+                      'refsLinked' , ref_aggregate.refs_linked,
+                      'rowId', ARRAY[rs.id],
+                      'naturalKey', rs.naturalkey,
+                      'hierarchicalKey', rs.hierarchicalkey,
+                      'patternColumnName', ARRAY[rs.patterncolumnname],
+                      'values', ARRAY[rs.refvalues] ,
+                      'refsLinkedTo', ARRAY[rs.refsLinkedTo],
+                       'allPatternColumnNames',ARRAY[rs.patterncolumnname]
+                    ) AS   "json"
+                    FROM %3$s.referencevalue rs
+                     CROSS JOIN LATERAL (
+                         SELECT jsonb_agg(
+                             jsonb_build_object(
+                                 'referenceType', referenceby.referencetype,
+                                 'hierarchicalKey', referenceby.hierarchicalkey,
+                                 'naturalKey', referenceby.naturalkey,
+                                 '__display_default', referenceby.refvalues->'__display_default',
+                                 '__display_fr', referenceby.refvalues->'__display_fr',
+                                 '__display_en', referenceby.refvalues->'__display_en',
+                                 'id', referenceby.id
+                             )
+                         ) AS refs_linked
+                         FROM %3$s.reference_reference rr
+                         JOIN %3$s.referencevalue referenceby 
+                             ON referenceby.id = rr.referencesby
+                         WHERE rr.referenceid = rs.id
+                     ) ref_aggregate
+                    WHERE
+                            rs.referencetype = '%4$s'%5$s
                 
-                           %%1$s --order by
-                           %%2$s --offset
-                           %%3$s --limit
+                %%1$s --order by
+                %%2$s --offset
+                %%3$s --limit
                 """;
 
         public String build(boolean horizontalDisplay) {
