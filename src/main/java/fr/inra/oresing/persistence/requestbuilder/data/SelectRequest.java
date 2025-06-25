@@ -143,7 +143,7 @@ record SelectRequest(
             final String param5 = Optional.ofNullable(requestWhereInSelect())
                     .map(SelectRequestWhere::build)
                     .orElse("");
-            String sql = (patternDefinitionCount() > 1 && horizontalDisplay) ?
+            String sql = (patternDefinitionCount() >= 1 && horizontalDisplay) ?
                     TEMPLATE_WITH_PATTERNS_DEFINITION :
                     TEMPLATE_WITH_NO_PATTERNS_DEFINITION;
             return sql.formatted(
