@@ -35,10 +35,8 @@ import fr.inra.oresing.domain.groovy.Expression;
 import fr.inra.oresing.domain.groovy.GroovyContextHelper;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.groovy.StringSetGroovyExpression;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import fr.inra.oresing.persistence.*;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
@@ -200,7 +198,7 @@ public class DataService {
         return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
     }
 
-    public DataImporterContext getDataImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
+    public DataImporterContext  getDataImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
         final Configuration configuration = application.getConfiguration();
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
@@ -557,7 +555,7 @@ public class DataService {
                 .withDownloadDatasetQuery(downloadDatasetQuery)
                 .withReferenceService(this)
                 .withOutputStream(outputStream)
-                .onRepositories(getDataRepositoryWithBuffer(application), null)
+                .onRepositories(getDataRepository(application), null)
                 .addDatas(datas)
                 .buildDataCsv(downloadDatasetQuery.getLanguage(), dataDescription, downloadDatasetQuery.horizontalDisplay());
     }
@@ -587,9 +585,8 @@ public class DataService {
                 .block();
     }
 
-    public DataRepositoryForBuffer getDataRepositoryWithBuffer(Application application) {
-        final DataRepository dataRepository = repository.getRepository(application).data();
-        return new DataRepositoryWithBuffer(application, dataRepository);
+    public DataRepository getDataRepository(Application application) {
+        return repository.getRepository(application).data();
     }
 
     public Mono<List<DownloadDatasetQueryByRowId>> getDownloadDatasetQueriesAsync(
@@ -622,11 +619,11 @@ public class DataService {
             DownloadDatasetQuery downloadDatasetQuery) {
         Application application = downloadDatasetQuery.application();
         DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
-        DataRepositoryForBuffer dataRepositoryWithBuffer = getDataRepositoryWithBuffer(application);
+        //DataRepositoryForBuffer dataRepositoryWithBuffer = getDataRepositoryWithBuffer(application);
 
         serviceContainer.authenticationService().setRoleForClient();
 
-        UUIDsfromData uuiDsfromData = addDatacsv(zipOutputStream, dataRepositoryWithBuffer, downloadDatasetQuery, "%s.csv");
+        UUIDsfromData uuiDsfromData = addDatacsv(zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
 
 
         getDownloadDatasetQueriesAsync(
@@ -640,7 +637,7 @@ public class DataService {
                 .subscribe(downloadDatasetQueries -> {
                     for (DownloadDatasetQueryByRowId downloadDatasetQueryByRowId : downloadDatasetQueries) {
                         try {
-                            addDatacsv(zipOutputStream, dataRepositoryWithBuffer, downloadDatasetQueryByRowId, "references/%s.csv");
+                            addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
                         } catch (Exception e) {
                             throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
                         }
@@ -700,18 +697,17 @@ public class DataService {
 
     public UUIDsfromData addDatacsv(
             final ZipOutputStream zipOutputStream,
-            DataRepositoryForBuffer dataRepositoryWithBuffer,
+            DataRepository dataRepository,
             final DownloadDatasetQuery downloadDatasetQuery,
             String fileNamePattern) {
         final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
         try {
-            DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
             AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
             return DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> serviceContainer.dataService().getDataImporterContext(downloadDatasetQuery.application(), referenceType, null))
                     .withDownloadDatasetQuery(downloadDatasetQuery)
                     .withReferenceService(serviceContainer.dataService())
                     .withOutputStream(zipOutputStream)
-                    .onRepositories(dataRepositoryWithBuffer, additionalFileRepository)
+                    .onRepositories(dataRepository, additionalFileRepository)
                     .addDatas(datas)
                     .build(fileNamePattern);
         } catch (IOException e) {

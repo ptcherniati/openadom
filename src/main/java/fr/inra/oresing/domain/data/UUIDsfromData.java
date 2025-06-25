@@ -1,5 +1,7 @@
 package fr.inra.oresing.domain.data;
 
+import fr.inra.oresing.persistence.RefsLinked;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -12,12 +14,8 @@ public record UUIDsfromData(Set<UUID> uuidsfromData) {
         this(new HashSet<>());
     }
 
-    public void addRefsLinkedTo(Map.Entry<String, Map<String, RefsLinkedToValue>> refsLinkedToEntry) {
-        Set<UUID> uuids = refsLinkedToEntry.getValue().values().stream()
-                .map(RefsLinkedToValue::uuids)
-                .flatMap(Set::stream)
-                .collect(Collectors.toSet());
+    public void addRefsLinkedTo(RefsLinked refsLinked) {
         uuidsfromData()
-                .addAll(uuids);
+                .add(refsLinked.id());
     }
 }

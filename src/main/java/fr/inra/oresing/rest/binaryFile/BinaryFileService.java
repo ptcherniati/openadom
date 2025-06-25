@@ -11,6 +11,7 @@ import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResu
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.persistence.AuthenticationService;
@@ -154,8 +155,8 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     public List<BinaryFile> getFilesOnRepository(final String nameOrId, final String datatype, final BinaryFileDataset binaryFileDataset, final boolean overlap) {
         authenticationService.setRoleForClient();
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        DataRepositoryForBuffer dataRepositoryForBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
-        return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepositoryForBuffer), overlap);
+        DataRepository dataRepository = serviceContainer.dataService().getDataRepository(application);
+        return getBinaryFileRepository(nameOrId).findByBinaryFileDataset(datatype, binaryFileDataset.testrequiredAuthorizationsAndReturnHierarchicalKeys(dataRepository), overlap);
     }
 
     @Override

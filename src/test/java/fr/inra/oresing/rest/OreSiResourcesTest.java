@@ -1367,7 +1367,16 @@ public class OreSiResourcesTest {
             }
         }
         {
-            mockMvc.perform(get("/api/v1/applications/pattern/data/{refType}/json", "taxon").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$..values.tel_S2_value[*].__VALUE__", containsInAnyOrder("7.2", "3.4", "2.1", "2.6", "2.5", "5.2", "3.9", "3.2", "1.2"))).andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_resolution", containsInAnyOrder(3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2))).andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_qualifier", containsInAnyOrder(3, 3, 3, 3, 3, 3, 3, 3, 3))).andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_variable", containsInAnyOrder("annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy"))).andExpect(jsonPath("$..values.tel_S2_value[*].swc_qc", containsInAnyOrder(1, 1, 0, 2, 1, 0, 0, 1, 1))).andExpect(jsonPath("$..values.tel_S2_value[*].swc_sd", containsInAnyOrder(3.9, 2.5, 7.2, 3.2, 2.1, 3.4, 1.2, 5.2, 3.9))).andExpect(jsonPath("$.rows[*].refsLinkedTo.site['tel_S2_value::tel_S2_variable::annecy_S2_3_3.2'].hierarchicalKey.sql", containsInAnyOrder("siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy"))).andExpect(jsonPath("$.referenceTypeForReferencingColumns['tel_S2_value::tel_S2_variable']", Is.is("site"))).andReturn().getResponse().getContentAsString();
+            mockMvc.perform(get("/api/v1/applications/pattern/data/{refType}/json", "taxon").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].__VALUE__", containsInAnyOrder("7.2", "3.4", "2.1", "2.6", "2.5", "5.2", "3.9", "3.2", "1.2")))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_resolution", containsInAnyOrder(3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2)))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_qualifier", containsInAnyOrder(3, 3, 3, 3, 3, 3, 3, 3, 3)))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_variable", containsInAnyOrder("annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy")))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].swc_qc", containsInAnyOrder(1, 1, 0, 2, 1, 0, 0, 1, 1)))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].swc_sd", containsInAnyOrder(3.9, 2.5, 7.2, 3.2, 2.1, 3.4, 1.2, 5.2, 3.9)))
+                    .andExpect(jsonPath("$.rows[*].refsLinkeds[?(     @.referenceType == 'proprietes_taxon'      && @.naturalKey.sql == 'niveau_incertitude_de_determination' )][? (@.naturalKey.sql=='niveau_incertitude_de_determination')].length()", containsInAnyOrder(7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7)))
+                    .andExpect(jsonPath("$.rows[*].refsLinkeds[?(@.referenceType == 'site')].naturalKey.sql", containsInAnyOrder( "aiguebelette","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy")))
+                    .andReturn().getResponse().getContentAsString();
 
         }
         {

@@ -7,19 +7,32 @@ import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker
 import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.MapType;
+import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
+import fr.inra.oresing.persistence.RefsLinked;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public sealed interface ComponentOrderByForExport
         permits ComponentOrderBy, ComponentPatternOrderBy, ComponentPatternValueOrderBy, DynamicComponentOrderBy {
+    static BiFunction<RefsLinked, String, String> toLocale = (refLinked, locale) -> {
+        String localized = null;
+        if("fr".equals(locale)){
+            localized = refLinked.__display_fr();
+        }else  if("en".equals(locale)){
+            localized = refLinked.__display_en();
+        }
+        return localized==null? refLinked.__display_default():localized;
+    };
     static Comparator<ComponentOrderByForExport> getComparator(StandardDataDescription dataDescription) {
         return (componentOrderBy1, componentOrderBy2) -> switch (componentOrderBy1) {
             case null -> 1;
@@ -51,15 +64,15 @@ public sealed interface ComponentOrderByForExport
                 .orElse(9999);
     }
 
-    Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription);
+    Stream<String> toValue(List<RefsLinked> refsLinkeds, String language, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription);
 
     String componentKey();
 
     ComponentType sqlType();
 
     default String valueToString(
+            List<RefsLinked> refsLinkeds,
             String language,
-            DataRepositoryForBuffer dataRepository,
             StandardDataDescription dataDescription,
             FieldType<?> fieldType) {
         if (fieldType instanceof MapType _) {
@@ -80,10 +93,13 @@ public sealed interface ComponentOrderByForExport
                     .map(ComponentDescription::checker)
                     .filter(ReferenceChecker.class::isInstance)
                     .map(ReferenceChecker.class::cast)
-                    .map(ReferenceChecker::refType).flatMap(referencetype -> Optional.of(dataRepository)
-                            .map(repository -> repository.findDisplayByReferenceType(referencetype))
-                            .map(map -> map.get(fieldType.toString()))
-                            .map(map -> map.get(language)))
+                    .map(ReferenceChecker::refType)
+                    .flatMap(referencetype -> refsLinkeds
+                            .stream()
+                            .filter(refsLinked -> refsLinked.referenceType().equals(referencetype))
+                            .filter(refsLinked -> refsLinked.naturalKey().getSql().equals(fieldType.toString()))
+                            .map(refsLinked ->toLocale.apply(refsLinked, language))
+                            .findFirst())
                     .orElse(fieldType == null ? "" : fieldType.toString());
             default -> fieldType == null ? "" : fieldType.toString();
         };

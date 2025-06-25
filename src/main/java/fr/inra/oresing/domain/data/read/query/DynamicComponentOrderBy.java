@@ -4,14 +4,16 @@ import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
+import fr.inra.oresing.persistence.RefsLinked;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 public record DynamicComponentOrderBy(String componentKey,
                                       Map<String, ComponentOrderBy> dynamicColumns) implements ComponentOrderByForExport {
     @Override
-    public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription) {
+    public Stream<String> toValue(List<RefsLinked> refsLinkeds, String language, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription) {
         String componentKey = componentKey();
         Map<String, StringType> values = (Map<String, StringType>) dataRowValues.get(componentKey).getValue();
         return dynamicColumns().keySet().stream()

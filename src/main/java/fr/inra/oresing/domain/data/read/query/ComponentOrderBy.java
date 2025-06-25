@@ -5,7 +5,9 @@ import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.RefsLinked;
 
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -25,14 +27,14 @@ public record ComponentOrderBy(String componentKey, DataRepository.Order order,
 
 
     public Stream<String> toValue(
+            List<RefsLinked> refsLinkeds,
             String language,
-            DataRepositoryForBuffer dataRepository,
             Map<String, FieldType<?>> dataRowValues,
             StandardDataDescription dataDescription
     ) {
         String componentKey = componentKey();
         FieldType<?> fieldType = dataRowValues.get(componentKey);
-        String valueString = valueToString(language, dataRepository, dataDescription, fieldType);
+        String valueString = valueToString(refsLinkeds, language, dataDescription, fieldType);
         return Stream.of(valueString);
     }
 }

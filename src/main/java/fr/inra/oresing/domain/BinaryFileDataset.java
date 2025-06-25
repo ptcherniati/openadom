@@ -3,14 +3,12 @@ package fr.inra.oresing.domain;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Getter
@@ -39,14 +37,22 @@ public class BinaryFileDataset {
     }
 
 
-    public BinaryFileDataset testrequiredAuthorizationsAndReturnHierarchicalKeys(DataRepositoryForBuffer dataRepositoryForBuffer) {
+    public BinaryFileDataset testrequiredAuthorizationsAndReturnHierarchicalKeys(DataRepository dataRepository) {
         BinaryFileDataset binaryFileDataset = this.copy();
         Map<String, List<Ltree>> requiredAuthorizationsTested = Optional.ofNullable(binaryFileDataset)
                 .map(BinaryFileDataset::getRequiredAuthorizations).
                 orElseGet(HashMap::new);
         for (Map.Entry<String, List<Ltree>> requiredAuthorizationByReference : requiredAuthorizationsTested.entrySet()) {
-            List<Ltree> hierarchicalKeyForEntry = dataRepositoryForBuffer.getHierarchicalKeyForEntry(requiredAuthorizationByReference);
-            requiredAuthorizationsTested.put(requiredAuthorizationByReference.getKey(), hierarchicalKeyForEntry);
+
+        String referenceType = requiredAuthorizationByReference.getKey();
+            final Map<String, String> hierarchicalKeysByKeyForReferenceTypes = dataRepository.findHierarchicalKeysByKeyForReferenceTypes(List.of(referenceType));
+            final List<Ltree> hierarchicalKeys = requiredAuthorizationByReference.getValue()
+                    .stream()
+                    .map(Ltree::getSql)
+                    .map(hierarchicalKeysByKeyForReferenceTypes::get)
+                    .map(Ltree::fromSql)
+                    .toList();
+            requiredAuthorizationsTested.put(requiredAuthorizationByReference.getKey(), hierarchicalKeys );
         }
         return binaryFileDataset;
 

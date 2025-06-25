@@ -117,7 +117,7 @@ public class VersioningService {
             FileOrUUID fileOrUUID,
             String fileName,
             ApplicationDataWriter applicationDataWriter) {
-        DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
+        DataRepository dataRepository = serviceContainer.dataService().getDataRepository(application);
         ReportErrors errors = new ReportErrors(jsonRowMapper);
         Function<UUID, Optional<BinaryFile>> resolveFileById = uuid -> binaryFileRepository(application).tryFindById(uuid);
         return AuthorizationPublicationServiceBuilder.builder(
@@ -128,7 +128,7 @@ public class VersioningService {
                         applicationDataWriter,
                         resolveFileById
                 )
-                .testAndBuild(dataRepositoryWithBuffer);
+                .testAndBuild(dataRepository);
     }
 
     @Transactional

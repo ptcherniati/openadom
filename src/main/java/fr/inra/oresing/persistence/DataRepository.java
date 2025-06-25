@@ -268,6 +268,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         return getNamedParameterJdbcTemplate().queryForStream(query + cond, paramSource, getJsonRowMapper());
     }
 
+
     public Map<String, Map<String, String>> findDisplayByNaturalKey(final String refType) {
         final String query = String.format("""
                         SELECT 'java.util.Map' AS "@class",

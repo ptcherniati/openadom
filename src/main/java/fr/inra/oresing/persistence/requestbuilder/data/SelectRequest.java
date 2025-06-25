@@ -53,8 +53,18 @@ record SelectRequest(
                 SELECT
                     'fr.inra.oresing.persistence.DataRows' AS "@class",
                     jsonb_build_object(
-                        'rowId', array_agg(rv.id),
-                        'refslinked', COALESCE(refs_agg.linked_data, '[]'::jsonb),
+                      'rowId', array_agg(rv.id),
+                      'refslinked', array_agg(
+                        jsonb_build_object(
+                                    'referenceType', refs_agg.refs_referencetype,
+                                    'hierarchicalKey', refs_agg.refs_hierarchicalkey,
+                                    'naturalKey', refs_agg.refs_naturalkey,
+                                    '__display_default', refs_display_default,
+                                    '__display_fr', refs_display_fr,
+                                    '__display_en', refs_display_en,
+                                    'id', refs_id
+                                )
+                        ),
                         'naturalKey', rv.naturalkey,
                         'hierarchicalKey', rv.hierarchicalkey,
                         'patternColumnName', array_agg(rv.patterncolumnname),
@@ -65,22 +75,21 @@ record SelectRequest(
                 FROM rs
                 JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
                 LEFT JOIN LATERAL (
-                    SELECT jsonb_agg(
-                        jsonb_build_object(
-                            'referenceType', refs.referencetype,
-                            'hierarchicalKey', refs.hierarchicalkey,
-                            'naturalKey', refs.naturalkey,
-                            '__display_default', refs.refvalues->'__display_default',
-                            '__display_fr', refs.refvalues->'__display_fr',
-                            '__display_en', refs.refvalues->'__display_en',
-                            'id', refs.id
-                        )
-                    ) AS linked_data
+                    SELECT
+                        rv.naturalkey,
+                        rv.referencetype,
+                        refs.referencetype refs_referencetype,
+                        refs.hierarchicalkey refs_hierarchicalkey,
+                        refs.naturalkey refs_naturalkey,
+                        refs.refvalues->'__display_default' refs_display_default,
+                        refs.refvalues->'__display_fr' refs_display_fr,
+                        refs.refvalues->'__display_en' refs_display_en,
+                        refs.id refs_id
                     FROM %3$s.reference_reference rr
                     JOIN %3$s.referencevalue refs ON rr.referencesby = refs.id
                     WHERE rr.referenceid = rv.id
-                ) AS refs_agg ON true
-                GROUP BY rv.naturalkey, rv.hierarchicalkey, refs_agg.linked_data
+                ) AS refs_agg USING (referencetype, naturalkey)
+                GROUP BY rv.naturalkey, rv.hierarchicalkey
                  %1$s --order by;
                 """;
 
@@ -134,14 +143,16 @@ record SelectRequest(
             final String param5 = Optional.ofNullable(requestWhereInSelect())
                     .map(SelectRequestWhere::build)
                     .orElse("");
-            return ((patternDefinitionCount() == 1 && horizontalDisplay) ? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
-                    .formatted(
-                            param1, //select
-                            param1,
-                            from,
-                            dataName(),
-                            param5 //where
-                    );
+            String sql = (patternDefinitionCount() > 1 && horizontalDisplay) ?
+                    TEMPLATE_WITH_PATTERNS_DEFINITION :
+                    TEMPLATE_WITH_NO_PATTERNS_DEFINITION;
+            return sql.formatted(
+                    param1, //select
+                    param1,
+                    from,
+                    dataName(),
+                    param5 //where
+            );
         }
     }
 
