@@ -28,7 +28,7 @@ public abstract class DynamicColumn extends Column {
     }
 
     @Override
-    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         final DataColumnIndexedValue existingReferenceColumnIndexedValue;
         Map<Ltree, String> values;
         if (referenceDatum.contains(getReferenceColumn())) {
@@ -43,7 +43,8 @@ public abstract class DynamicColumn extends Column {
         referenceDatum.put(getReferenceColumn(), newReferenceColumnIndexedValue);
         refsLinkedTo
                 .computeIfAbsent(refsLinkedToEntryToAdd.getKey(), k -> new HashMap<>())
-                .put(Column.COLUMN_IN_COLUMN_PATTERN.formatted(getReferenceColumn().column(), refsLinkedToEntryToAdd.getValue().hierarchicalKey()), refsLinkedToEntryToAdd.getValue());
+                .computeIfAbsent(Column.COLUMN_IN_COLUMN_PATTERN.formatted(getReferenceColumn().column(), refsLinkedToEntryToAdd.getValue().hierarchicalKey()), k->new HashMap<>())
+                .computeIfAbsent(refsLinkedToEntryToAdd.getValue().hierarchicalKey().getSql(), k-> new LinkedLines(refsLinkedToEntryToAdd.getValue().uuids()));
     }
 
     @Override

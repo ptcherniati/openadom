@@ -17,7 +17,7 @@ public abstract class ManyValuesStaticColumn extends Column {
     }
 
     @Override
-    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         final List<String> values = Splitter.on(CSV_CELL_SEPARATOR)
                 .splitToStream(cellContent)
                 .toList();

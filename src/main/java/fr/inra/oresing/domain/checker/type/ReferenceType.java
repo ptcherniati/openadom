@@ -162,17 +162,14 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
     public DataColumnValue transform(final LineChecker lineChecker,
                                      final DataColumnValue referenceColumnRawValue,
                                      final DataColumn referenceColumn,
-                                     final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+                                     final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         return Optional.ofNullable(value)
                 .map(ltree -> {
                     refsLinkedTo
                             .computeIfAbsent(
                                     refType, k -> new HashMap<>())
-                            .put(referenceColumn.column(),
-                                    new RefsLinkedToValue(
-                                            getUuid(),
-                                            lineIdentityColumnName.hierarchicalKey()
-                                    ));
+                            .computeIfAbsent(referenceColumn.column(),k -> new HashMap<>())
+                            .computeIfAbsent( lineIdentityColumnName.hierarchicalKey().getSql(),k->new LinkedLines(getUuid()));
                     return switch (referenceColumnRawValue) {
                         case DataColumnSingleValue ignored -> new DataColumnSingleValue(this);
                         case DataColumnMultipleValue dataColumnMultipleValue -> dataColumnMultipleValue;

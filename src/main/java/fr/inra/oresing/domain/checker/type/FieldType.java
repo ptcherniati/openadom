@@ -73,7 +73,7 @@ public sealed interface FieldType<T> extends SomethingToBeStoredAsJsonInDatabase
     default DataColumnValue transform(final LineChecker lineChecker,
                                       final DataColumnValue referenceColumnRawValue,
                                       final DataColumn referenceColumn,
-                                      final Map<String, Map<String, RefsLinkedToValue>> refsLinkedToBuilder) {
+                                      final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedToBuilder) {
         return referenceColumnRawValue;
     }
 

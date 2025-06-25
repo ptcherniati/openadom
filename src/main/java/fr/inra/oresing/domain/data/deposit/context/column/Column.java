@@ -161,7 +161,7 @@ public abstract class Column implements Comparable<Column> {
         return isExpected() && getExpectedHeader().equals(header);
     }
 
-    public abstract void pushValue(String cellContent, DataDatum referenceDatum, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo);
+    public abstract void pushValue(String cellContent, DataDatum referenceDatum, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo);
 
     public abstract String getCsvCellContent(DataDatum referenceDatum);
 

@@ -399,7 +399,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                         INSERT INTO %1$s.Reference_Reference(referenceId, referencesBy)
                         SELECT
                             id AS referenceId,
-                            (jsonb_array_elements_text(jsonb_path_query(jsonb_path_query(refslinkedto, '$.*'), '$.*')#> '{uuids}'))::uuid AS referencesBy
+                            jsonb_array_elements_text(jsonb_path_query_array(refslinkedto, '$.**.uuids[*]'))::uuid AS referencesBy
                         FROM %2$s
                         WHERE id IN (:ids)
                         ON CONFLICT ON CONSTRAINT "Reference_Reference_PK" DO NOTHING

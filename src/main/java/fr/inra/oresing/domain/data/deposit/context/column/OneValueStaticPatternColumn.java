@@ -78,7 +78,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
     }
 
     @Override
-    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, Map<String,LinkedLines>>> refsLinkedTo) {
         Map<DataColumn, DataColumnValue> columnValues = new HashMap<>();
         columnValues.put(new DataColumn(Column.__VALUE__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent)));
         columnValues.putAll(referenceDatum.values());
@@ -92,7 +92,7 @@ public abstract class OneValueStaticPatternColumn extends Column {
             final String cellContent,
             final DataDatum qualifierComponents,
             DataDatum adjacentComponents,
-            final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+            final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         Map<DataColumn, DataColumnValue> columnValues = new HashMap<>();
         columnValues.put(new DataColumn(Column.__VALUE__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent)));
         columnValues.put(new DataColumn(Column.__COLUMN_NAME__), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(headerName)));

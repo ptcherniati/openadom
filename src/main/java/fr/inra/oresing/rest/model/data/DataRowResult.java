@@ -5,7 +5,6 @@ import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.NullType;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRow;
 import org.apache.commons.collections.keyvalue.DefaultMapEntry;
 

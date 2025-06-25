@@ -27,7 +27,7 @@ import java.util.stream.Stream;
 
 public class DataValidator {
 
-    private static List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo, DataDatum referenceDatum, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
+    private static List<ReferenceDatumAfterChecking> checkLineForChecker(RecursionStrategy recursionStrategy, RowWithReferenceDatum rowWithReferenceDatum, PublishContext.PublishContextBuilder publishContextBuilder, LineChecker lineChecker, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum, ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder) {
         if (matchingTarget(rowWithReferenceDatum, lineChecker)) {
             return null;
         }
@@ -45,7 +45,7 @@ public class DataValidator {
         return null;
     }
 
-    static void registerCheckedValues(LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo, DataDatum referenceDatum) {
+    static void registerCheckedValues(LineChecker lineChecker, CheckerValidationCheckResult validationCheckResults, DataDatum referenceDatumBeforeChecking, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo, DataDatum referenceDatum) {
         Optional.ofNullable(validationCheckResults)
                 .filter(ValidationCheckResult::isSuccess)
                 .ifPresent(validationCheckResult -> {
@@ -194,7 +194,7 @@ public class DataValidator {
                     }
                     return Stream.of(entry.getKey());
                 }).noneMatch(column -> column.equals(lineChecker.target()) ||
-                        column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
+                                       column.column().equals(lineChecker.target().column().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[0]));
     }
 
     /**
@@ -214,7 +214,7 @@ public class DataValidator {
             final ImmutableSet<LineChecker<F>> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder) {
         final DataDatum referenceDatumBeforeChecking = rowWithReferenceDatum.referenceDatum();
-        final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<>();
+        final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo = new HashMap<>();
         final ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder = ImmutableList.builder();
         final DataDatum referenceDatum = DataDatum.copyOf(referenceDatumBeforeChecking);
         for (final LineChecker lineChecker : transformedLineCheckers) {
