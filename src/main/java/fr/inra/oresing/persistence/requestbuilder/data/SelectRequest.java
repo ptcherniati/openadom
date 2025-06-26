@@ -67,15 +67,14 @@ record SelectRequest(
                         ),
                         'naturalKey', rv.naturalkey,
                         'hierarchicalKey', rv.hierarchicalkey,
-                        'patternColumnName', array_agg(rv.patterncolumnname),
-                        'values', array_agg(rv.refvalues),
-                        'refsLinkedTo', array_agg(rv.refsLinkedTo),
+                        'patternColumnName', array_agg(DISTINCT rv.patterncolumnname),
+                        'values', array_agg (DISTINCT rv.refvalues),
                         'allPatternColumnNames', array_agg(DISTINCT rv.patterncolumnname)
                     ) AS "json"
                 FROM rs
                 JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
                 LEFT JOIN LATERAL (
-                    SELECT
+                    SELECT DISTINCT ON (rv.naturalkey,rv.referencetype,refs.naturalkey,refs.referencetype, rv.patterncolumnname)
                         rv.naturalkey,
                         rv.referencetype,
                         refs.referencetype refs_referencetype,
