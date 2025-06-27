@@ -10,6 +10,9 @@ OreSiRole extends WithSqlIdentifier {
     static OreSiAnonymousRole anonymous() {
         return OreSiAnonymousRole.ANONYMOUS;
     }
+    static OreSiPublicRole publicRole() {
+        return OreSiPublicRole.PUBLIC;
+    }
 
     static OreSiopenAdomAdminRole openAdomAdmin() {
         return OreSiopenAdomAdminRole.openAdomAdmin;

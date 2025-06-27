@@ -111,12 +111,12 @@ public class AuthorizationFilter extends GenericFilterBean {
         }
         if (
                 path.equals("/") ||
-                        path.startsWith(SecurityConfig.ACTUATOR) ||
-                        path.startsWith(SecurityConfig.SWAGGER_UI) ||
-                        path.startsWith(SecurityConfig.API_DOCS) ||
-                        path.startsWith(SecurityConfig.API_PUBLIC) ||
-                        path.startsWith(SecurityConfig.API_DOCS_YAML) ||
-                        path.equals(SecurityConfig.ERROR)) {
+                path.startsWith(SecurityConfig.ACTUATOR) ||
+                path.startsWith(SecurityConfig.SWAGGER_UI) ||
+                path.startsWith(SecurityConfig.API_DOCS) ||
+                path.startsWith(SecurityConfig.API_PUBLIC) ||
+                path.startsWith(SecurityConfig.API_DOCS_YAML) ||
+                path.equals(SecurityConfig.ERROR)) {
             chain.doFilter(request, response); // Skip le filtre
             return;
         }
@@ -263,19 +263,15 @@ public class AuthorizationFilter extends GenericFilterBean {
         String passwordValue = request.getParameter(PASSWORD_PARAMETER);
 
         if (Strings.isNotEmpty(loginValue) && Strings.isNotEmpty(passwordValue)) {
-            try {
-                LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
-                        .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
-                        .forLoginPassword(loginValue, passwordValue);
-                jWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
-                return new OreSiAuthenticationToken(
-                        loginAdminResult,
-                        request.getRequestURI(),
-                        List.of(ROLE_AUTHENTIFIED_USER)
-                );
-            } catch (AuthenticationFailure e) {
-                throw new AuthenticationFailure(BAD_LOGIN_PASSWORD, (OreSiUser) null);
-            }
+            LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
+                    .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
+                    .forLoginPassword(loginValue, passwordValue);
+            jWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
+            return new OreSiAuthenticationToken(
+                    loginAdminResult,
+                    request.getRequestURI(),
+                    List.of(ROLE_AUTHENTIFIED_USER)
+            );
         }
         throw new AuthenticationFailure(BAD_LOGIN_PASSWORD, (OreSiUser) null);
     }

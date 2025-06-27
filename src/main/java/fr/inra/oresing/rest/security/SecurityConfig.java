@@ -138,36 +138,4 @@ public class SecurityConfig {
 
         return source;
     }
-/*
-    @Configuration
-    public class CorsConfig implements WebMvcConfigurer {
-
-        private static final long MAX_AGE = 3600;
-
-        @Override
-        public void addCorsMappings(CorsRegistry registry) {
-            // Configuration CORS pour les endpoints API
-            registry.addMapping("/api/**")
-                    .allowedOrigins(swaggerUrl, frontendOrigin)
-                    .allowedMethods(
-                            HttpMethod.POST.name(),
-                            HttpMethod.PUT.name(),
-                            HttpMethod.DELETE.name(),
-                            HttpMethod.GET.name(),
-                            HttpMethod.OPTIONS.name()
-                    )
-                    .allowedHeaders("X-CSRF-TOKEN", "X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language")
-                    .allowCredentials(true)
-                    .maxAge(MAX_AGE);
-
-            // Configuration CORS spécifique pour la racine
-            registry.addMapping(BASE)
-                    .allowedOrigins(swaggerUrl, frontendOrigin)
-                    .allowedMethods(HttpMethod.GET.name(),
-                            HttpMethod.OPTIONS.name())
-                    .allowedHeaders("*")
-                    .allowCredentials(true)
-                    .maxAge(MAX_AGE);
-        }
-    }*/
 }
