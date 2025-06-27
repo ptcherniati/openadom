@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.security;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.BinaryFile;
@@ -65,7 +64,7 @@ public class AuthorizationFilter extends GenericFilterBean {
     public static final String PASSWORD_PARAMETER = "password";
     public static final String ECHEC_TECHNIQUE = "Échec technique";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
-    public static final String BAD_REQUEST = "BAD_REQUEST";
+    public static final String BAD_LOGIN_PASSWORD = "BAD_LOGIN_PASSWORD";
     private final OreSiApiRequestContext requestContext;
     private static JsonRowMapper<OreSiUserRequestClient> mapper;
     private final OreExceptionHandler exceptionHandler;
@@ -275,10 +274,10 @@ public class AuthorizationFilter extends GenericFilterBean {
                         List.of(ROLE_AUTHENTIFIED_USER)
                 );
             } catch (AuthenticationFailure e) {
-                throw new AuthenticationFailure(BAD_REQUEST, (OreSiUser) null);
+                throw new AuthenticationFailure(BAD_LOGIN_PASSWORD, (OreSiUser) null);
             }
         }
-        throw new AuthenticationFailure(BAD_REQUEST, (OreSiUser) null);
+        throw new AuthenticationFailure(BAD_LOGIN_PASSWORD, (OreSiUser) null);
     }
 
 

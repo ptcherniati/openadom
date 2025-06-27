@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static fr.inra.oresing.rest.security.AuthorizationFilter.BAD_REQUEST;
+import static fr.inra.oresing.rest.security.AuthorizationFilter.BAD_LOGIN_PASSWORD;
 
 @RestControllerAdvice
 @Slf4j
@@ -91,7 +91,7 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
             case "BAD_LOGIN_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
-            case BAD_REQUEST -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            case "BAD_REQUEST" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             default -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
         };
     }
