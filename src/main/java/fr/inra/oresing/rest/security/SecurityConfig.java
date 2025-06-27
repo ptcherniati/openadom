@@ -22,11 +22,15 @@ import org.springframework.security.web.authentication.www.BasicAuthenticationFi
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.io.IOException;
+import java.util.List;
 
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -72,6 +76,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthorizationFilter authorizationFilter) throws Exception {
         http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(csrf -> csrf
@@ -116,7 +121,24 @@ public class SecurityConfig {
         }
     }
 
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
 
+        // Configuration pour toutes les origines
+        configuration.setAllowedOrigins(List.of(swaggerUrl, frontendOrigin));
+        configuration.setAllowedMethods(List.of("POST", "PUT", "DELETE", "GET", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("X-CSRF-TOKEN", "X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language"));
+        configuration.setAllowCredentials(true);
+        configuration.setMaxAge(MAX_AGE);
+
+        // Appliquer à toutes les routes
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+/*
     @Configuration
     public class CorsConfig implements WebMvcConfigurer {
 
@@ -147,5 +169,5 @@ public class SecurityConfig {
                     .allowCredentials(true)
                     .maxAge(MAX_AGE);
         }
-    }
+    }*/
 }
