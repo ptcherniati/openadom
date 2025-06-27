@@ -84,11 +84,6 @@ public class DataCsvBuilder {
                 .findData(downloadDatasetQuery.dataName());
         final StandardDataDescription dataDescription = data
                 .orElseThrow(() -> new IllegalStateException("can't find application %s".formatted(downloadDatasetQuery.dataName())));
-        final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.EXCEL)
-                .setDelimiter(dataDescription.separator())
-                .setSkipHeaderRecord(true)
-                .get();
-
         ZipEntry zipEntry = new ZipEntry(String.format(fileNamePattern, downloadDatasetQuery.dataName()));
         if (outputStream instanceof ZipOutputStream zipOutputStream) {
             zipOutputStream.putNextEntry(zipEntry);

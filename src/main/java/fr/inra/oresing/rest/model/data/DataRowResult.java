@@ -73,8 +73,6 @@ public record DataRowResult(
                 rows,
                 dataRow.refsLinked(),
                 dataRow.refsLinkedTo(),
-                //dataRow.getTotalRows(),
-                //dataRow.getRowNumber(),
                 displaysForRow,
                 dataRow.allPatternColumnNames());
     }

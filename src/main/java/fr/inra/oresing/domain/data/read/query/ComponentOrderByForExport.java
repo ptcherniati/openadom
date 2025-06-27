@@ -94,7 +94,7 @@ public sealed interface ComponentOrderByForExport
                     .filter(ReferenceChecker.class::isInstance)
                     .map(ReferenceChecker.class::cast)
                     .map(ReferenceChecker::refType)
-                    .flatMap(referencetype -> refsLinkeds
+                    .flatMap(referencetype -> Optional.ofNullable(refsLinkeds).orElseGet(List::of)
                             .stream()
                             .filter(refsLinked -> refsLinked.referenceType().equals(referencetype))
                             .filter(refsLinked -> refsLinked.naturalKey().getSql().equals(fieldType.toString()))
