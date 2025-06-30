@@ -11,6 +11,9 @@ import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResul
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.authorization.privilegeassessor.*;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
@@ -233,7 +236,19 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         final OreSiAuthorization entity = previous == null ?
                 new OreSiAuthorization()
                 : previous;
-        final Map<String, AuthorizationForScope> authorizationsByDataType = authorizationRequest.buildAuthorizationsByDataname();
+        final List<String> noDataOrInsertionStrategyList = authorizationRequest.authorizationForAll().authorizationForAll().entrySet().stream()
+                .filter(
+                        entry ->
+                                !application.isData(entry.getKey()) ||
+                                Optional.of(application)
+                                        .flatMap(appli -> appli.findData(entry.getKey()))
+                                        .map(StandardDataDescription::submission)
+                                        .map(Submission::strategy)
+                                        .stream()
+                                        .anyMatch(SubmissionType.OA_INSERTION::equals))
+                .map(Map.Entry::getKey)
+                .toList();
+        final Map<String, AuthorizationForScope> authorizationsByDataType = authorizationRequest.buildAuthorizationsByDataname(noDataOrInsertionStrategyList);
 
         Preconditions.checkArgument(
                 authorizationsByDataType.keySet().stream()

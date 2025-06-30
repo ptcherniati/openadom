@@ -4,6 +4,9 @@ import com.google.common.collect.ImmutableSortedSet;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -18,7 +21,6 @@ import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestResult;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -118,7 +120,19 @@ public class RightsRequestService {
                     OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
                     oreSiAuthorization.setId(rightsRequest.getId());
                     oreSiAuthorization.setApplication(application.getId());
-                    oreSiAuthorization.setAuthorizations(authorizationRequestToAuthorizationRequest.buildAuthorizationsByDataname());
+                    final List<String> noDataOrInsertionStrategyList = authorizationRequestToAuthorizationRequest.authorizationForAll().authorizationForAll().entrySet().stream()
+                            .filter(
+                                    entry ->
+                                            !application.isData(entry.getKey()) ||
+                                            Optional.of(application)
+                                                    .flatMap(appli -> appli.findData(entry.getKey()))
+                                                    .map(StandardDataDescription::submission)
+                                                    .map(Submission::strategy)
+                                                    .stream()
+                                                    .anyMatch(SubmissionType.OA_INSERTION::equals))
+                            .map(Map.Entry::getKey)
+                            .toList();
+                    oreSiAuthorization.setAuthorizations(authorizationRequestToAuthorizationRequest.buildAuthorizationsByDataname(noDataOrInsertionStrategyList));
                     return oreSiAuthorization;
                 })
                 .orElse(null);
