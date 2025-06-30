@@ -121,23 +121,7 @@ public class RightsRequestService {
                     OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
                     oreSiAuthorization.setId(rightsRequest.getId());
                     oreSiAuthorization.setApplication(application.getId());
-                    final List<String> noDataOrInsertionStrategyList = Optional.of(authorizationRequestToAuthorizationRequest)
-                            .map(AuthorizationRequest::authorizationForAll)
-                            .map(AuthorizationForAll::authorizationForAll)
-                            .orElseGet(Map::of)
-                            .entrySet().stream()
-                            .filter(
-                                    entry ->
-                                            !application.isData(entry.getKey()) ||
-                                            Optional.of(application)
-                                                    .flatMap(appli -> appli.findData(entry.getKey()))
-                                                    .map(StandardDataDescription::submission)
-                                                    .map(Submission::strategy)
-                                                    .stream()
-                                                    .anyMatch(SubmissionType.OA_INSERTION::equals))
-                            .map(Map.Entry::getKey)
-                            .toList();
-                    oreSiAuthorization.setAuthorizations(authorizationRequestToAuthorizationRequest.buildAuthorizationsByDataname(noDataOrInsertionStrategyList));
+                    oreSiAuthorization.setAuthorizations(authorizationRequestToAuthorizationRequest.buildAuthorizationsByDataname());
                     return oreSiAuthorization;
                 })
                 .orElse(null);

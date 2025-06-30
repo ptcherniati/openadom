@@ -14,6 +14,9 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 
 @Getter
@@ -91,5 +94,29 @@ public class AuthorizationInput {
                     return null;
                 })
                 .orElse(null);
+    }
+
+    public AuthorizationInput withRestrictionWithDependants(String dataName, Function<String, Boolean> isVersionningStrategy) {
+        return new AuthorizationInput(
+                getRequiredAuthorizations(),
+                getTimeScope(),
+                getOperationTypes().stream()
+                        .flatMap(operationType -> {
+                            final Boolean isVersionning = isVersionningStrategy.apply(dataName);
+                            if(operationType==null){
+                                return Stream.of();
+                            }
+                            if(OperationType.extraction.equals(operationType)) {
+                                return Stream.of(operationType);
+                            }
+                            if(Set.of(OperationType.depot, OperationType.publication).contains(operationType)){
+                                return isVersionning?
+                                        Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction):
+                                        Stream.of(OperationType.depot, OperationType.publication, OperationType.extraction);
+                            }
+                            return Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction);
+                        })
+                        .collect(Collectors.toSet())
+        );
     }
 }

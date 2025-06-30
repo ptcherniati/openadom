@@ -32,15 +32,15 @@ public class UpdateRolesOnManagement {
 
     public void init(final Set<UUID> previousUsers, final OreSiAuthorization modifiedAuthorization) {
         this.previousUsers = previousUsers;
-        Set<UUID> newUsers = modifiedAuthorization.getOreSiUsers();
+        //Set<UUID> newUsers = modifiedAuthorization.getOreSiUsers();
         this.modifiedAuthorization = modifiedAuthorization;
-        application = repository.application().findApplication(modifiedAuthorization.getApplication());
+        /*application = repository.application().findApplication(modifiedAuthorization.getApplication());
         boolean hasRepository = modifiedAuthorization.getAuthorizations().keySet()
                 .stream().anyMatch(dataName -> application.findSubmission(dataName)
                         .map(Submission::strategy)
                         .map(SubmissionType.OA_VERSIONING::equals)
                         .isPresent());
-        authorizationRepository = repository.getRepository(application).authorization();
+        authorizationRepository = repository.getRepository(application).authorization();*/
 
     }
 

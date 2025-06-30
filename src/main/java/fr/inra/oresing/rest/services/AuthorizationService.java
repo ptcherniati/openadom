@@ -46,6 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -237,24 +238,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         final OreSiAuthorization entity = previous == null ?
                 new OreSiAuthorization()
                 : previous;
-        final List<String> noDataOrInsertionStrategyList =
-                Optional.of(authorizationRequest)
-                        .map(AuthorizationRequest::authorizationForAll)
-                        .map(AuthorizationForAll::authorizationForAll)
-                        .orElseGet(Map::of)
-                        .entrySet().stream()
-                .filter(
-                        entry ->
-                                !application.isData(entry.getKey()) ||
-                                Optional.of(application)
-                                        .flatMap(appli -> appli.findData(entry.getKey()))
-                                        .map(StandardDataDescription::submission)
-                                        .map(Submission::strategy)
-                                        .stream()
-                                        .anyMatch(SubmissionType.OA_INSERTION::equals))
-                .map(Map.Entry::getKey)
-                .toList();
-        final Map<String, AuthorizationForScope> authorizationsByDataType = authorizationRequest.buildAuthorizationsByDataname(noDataOrInsertionStrategyList);
+        final Map<String, AuthorizationForScope> authorizationsByDataType = authorizationRequest.buildAuthorizationsByDataname();
 
         Preconditions.checkArgument(
                 authorizationsByDataType.keySet().stream()
@@ -783,7 +767,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .map(Map::keySet)
                 .map(application::findDependentNodes)
                 .ifPresent(dependantsNodes::addAll);
-        return Objects.requireNonNull(createAuthorizationRequest).addDependantAuthorizations(dependantsNodes);
+        Function<String, Boolean> isVersionningStrategy = application::strategyIsVersionning;
+        return Objects.requireNonNull(createAuthorizationRequest)
+                .addRequiredOperationTypes(isVersionningStrategy)
+                .addDependantAuthorizations(dependantsNodes);
 
     }
 

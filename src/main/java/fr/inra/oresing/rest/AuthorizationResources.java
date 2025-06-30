@@ -42,6 +42,7 @@ import org.springframework.web.util.UriUtils;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
+import java.util.function.Function;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -294,13 +295,14 @@ public class AuthorizationResources {
                         .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
         final List<OreSiAuthorization> authorizationsForCurrentUser = serviceContainer.authorizationService().findUserAuthorizationsForApplication(application);
-        AuthorizationRequest authorizationRequest = serviceContainer.authorizationService().createAuthorizationRequestToAuthorizationRequest(
-                createAuthorizationRequestWithDependantAuthorization,
-                application,
-                userIds,
-                authorizationsForCurrentUser,
-                errors
-        );
+        AuthorizationRequest authorizationRequest = serviceContainer.authorizationService()
+                .createAuthorizationRequestToAuthorizationRequest(
+                        createAuthorizationRequestWithDependantAuthorization,
+                        application,
+                        userIds,
+                        authorizationsForCurrentUser,
+                        errors
+                );
         if (!errors.isEmpty()) {
             final String uri = UriUtils.encodePath("/applications/authorization/null", Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, "null"));
@@ -426,7 +428,7 @@ public class AuthorizationResources {
                             @ExampleObject(name = "applicationPattern", value = "\"SI_*\"", description = "Pattern for SI applications")
                     }
             ) @RequestParam(name = "applicationPattern", required = false) final List<String> applicationPattern
-    ) throws JsonProcessingException{
+    ) throws JsonProcessingException {
         return addAuthorization(role, userIdOrLogin, applicationNameOrId, applicationPattern);
     }
 
