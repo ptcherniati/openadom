@@ -20,6 +20,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenA
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
+import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.data.menu.MenuType;
@@ -236,7 +237,12 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         final OreSiAuthorization entity = previous == null ?
                 new OreSiAuthorization()
                 : previous;
-        final List<String> noDataOrInsertionStrategyList = authorizationRequest.authorizationForAll().authorizationForAll().entrySet().stream()
+        final List<String> noDataOrInsertionStrategyList =
+                Optional.of(authorizationRequest)
+                        .map(AuthorizationRequest::authorizationForAll)
+                        .map(AuthorizationForAll::authorizationForAll)
+                        .orElseGet(Map::of)
+                        .entrySet().stream()
                 .filter(
                         entry ->
                                 !application.isData(entry.getKey()) ||

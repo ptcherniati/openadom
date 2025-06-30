@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.application.configuration.RightRequestDescription;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
+import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.rightsrequest.RightsRequest;
 import fr.inra.oresing.persistence.OreSiRepository;
@@ -120,7 +121,11 @@ public class RightsRequestService {
                     OreSiAuthorization oreSiAuthorization = new OreSiAuthorization();
                     oreSiAuthorization.setId(rightsRequest.getId());
                     oreSiAuthorization.setApplication(application.getId());
-                    final List<String> noDataOrInsertionStrategyList = authorizationRequestToAuthorizationRequest.authorizationForAll().authorizationForAll().entrySet().stream()
+                    final List<String> noDataOrInsertionStrategyList = Optional.of(authorizationRequestToAuthorizationRequest)
+                            .map(AuthorizationRequest::authorizationForAll)
+                            .map(AuthorizationForAll::authorizationForAll)
+                            .orElseGet(Map::of)
+                            .entrySet().stream()
                             .filter(
                                     entry ->
                                             !application.isData(entry.getKey()) ||
