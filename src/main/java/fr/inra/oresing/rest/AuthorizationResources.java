@@ -317,7 +317,8 @@ public class AuthorizationResources {
         if (createAuthorizationRequest.uuid() == null) {
             serviceContainer.authorizationService().createRoleForAuthorization(authorizationRequest, oreSiAuthorization);
         }
-        serviceContainer.authorizationService().updateRoleForManagement(oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
+        serviceContainer.authorizationService()
+                .updateRoleForManagement(application, oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, authId.toString()));
     }

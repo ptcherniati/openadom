@@ -87,6 +87,9 @@ public record CreateAuthorizationRequest(
     }
 
     private Map<String, AuthorizationInput> authorizationsWithRestrictionWithDependants(Function<String, Boolean> isVersionningStrategy) {
+        if(authorizationsWithRestriction()==null){
+            return Map.of();
+        }
         return authorizationsWithRestriction().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,
@@ -96,6 +99,9 @@ public record CreateAuthorizationRequest(
     }
 
     private Map<String, Set<OperationType>> authorizationForAllWithDependants(Function<String, Boolean> isVersionningStrategy) {
+        if(authorizationForAll() == null){
+            return Map.of();
+        }
         return authorizationForAll().entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,

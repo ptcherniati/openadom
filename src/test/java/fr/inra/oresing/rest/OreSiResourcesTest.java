@@ -525,9 +525,15 @@ public class OreSiResourcesTest {
         // recherche d'une ligne
         mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1))).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(jsonPath("$.rows[0].rowId[0]", equalTo(ids.get(1))));
 
+
+       // Nous sommes dans une strategie OA_INSERTING->  delete non compris
         mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").param("downloadDatasetQuery", SELECT_ROW_BY_NATURAL_KEY.formatted(hierarchicalKeys.get(1))).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(jsonPath("$.rows[0].hierarchicalKey", equalTo(hierarchicalKeys.get(1))));
-        String deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{data}", "type_de_sites").with(csrf().asHeader()).param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1))).cookie(fixtures.getWithRightsUserConnection().cookie())).andReturn().getResponse().getContentAsString();
-        Assertions.assertTrue(deletedIds.contains(ids.get(1)));
+        String deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{data}", "type_de_sites")
+                .with(csrf().asHeader())
+                .param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1)))
+                .cookie(fixtures.getWithRightsUserConnection().cookie())).andReturn().getResponse().getContentAsString();
+        Assertions.assertFalse(deletedIds.contains(ids.get(1)));
+
 
         //suppression par id
         mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites").with(csrf().asHeader()).param("_row_id_", ids.get(1)).cookie(fixtures.getWithRightsUserConnection().cookie())).andReturn().getResponse().getContentAsString();
@@ -734,22 +740,30 @@ public class OreSiResourcesTest {
                 if (status > 300) {
                     System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                 }
-            }).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(0))).andReturn().getResponse().getContentAsString();
+            })
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.rows", hasSize(0)))
+                    .andReturn().getResponse().getContentAsString();
 
             // on publie le dernier fichier déposé sans les droits
 
-            Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").with(csrf().asHeader()).param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException();
+            /*Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+                    .with(csrf().asHeader())
+                    .param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
+                    .cookie(fixtures.getWithRightsUserConnection().cookie()))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException();
 
             Assertions.assertInstanceOf(NotApplicationDataWriterException.class, exception);
             Assertions.assertEquals(NotApplicationDataWriterException.NO_RIGHT_FOR_USER_DATA_WRITER, exception.getMessage());
             Assertions.assertEquals("pem", ((NotApplicationDataWriterException) exception).dataName);
-            Assertions.assertEquals("monsore", ((NotApplicationDataWriterException) exception).applicationName);
+            Assertions.assertEquals("monsore", ((NotApplicationDataWriterException) exception).applicationName);*/
 
 
-            // on donne les droits publication
+            // on donne les droits publication (obtenus avec depot
 
 
-            getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
+            //getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
 
 
             // on publie le dernier fichier déposé
@@ -829,23 +843,23 @@ public class OreSiResourcesTest {
 
         response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0))).andExpect(jsonPath("$.rows.length()").value(136)).andExpect(jsonPath("$.rows[*]", hasSize(136))).andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'NULL_KEY__oir__p1')][? (@.projet.value == 'projet_manche')]", hasSize(0))).andReturn().getResponse().getContentAsString();
 
-        // on supprime le fichier on peut dépublier mais pas supprimer le fichier
-        NotApplicationCanDeleteRightsException resolvedException = (NotApplicationCanDeleteRightsException) mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException();
+        // on supprime le fichier on peut le supprimer (oa_versionning = delete with depot)
+       /* NotApplicationCanDeleteRightsException resolvedException = (NotApplicationCanDeleteRightsException) mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException();
         assert resolvedException != null;
         Assertions.assertEquals("NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION", resolvedException.getMessage());
         Assertions.assertEquals("pem", resolvedException.getDataType());
         Assertions.assertEquals("monsore", resolvedException.getApplicationName());
-        /*Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
+        *//*Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
                         .cookie(fixtures.adminConnection.cookie()))
                 .andExpect(status().is4xxClientError())
                 .andReturn()
                 .getResolvedException();
-        Assertions.assertInstanceOf(NotApplicationCanDeleteRightsException.class, resolvedException1);*/
+        Assertions.assertInstanceOf(NotApplicationCanDeleteRightsException.class, resolvedException1);*//*
 
         //on donne les droits de suppression
 
         getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.delete.name(), OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
-
+*/
         // on supprime le fichier a les droits car à les droits de publication
         mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andDo(result -> {
             if (result.getResponse().getStatus() != 200) {

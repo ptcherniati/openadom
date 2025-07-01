@@ -158,9 +158,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
 
     @Transactional
     public void updateRoleForManagement(
+            Application application,
             final Set<UUID> previousUsers,
             final OreSiAuthorization modifiedAuthorization) {
-        UpdateRolesOnManagement updateRolesOnManagement = new UpdateRolesOnManagement(repository, db, serviceContainer.authenticationService());
+        UpdateRolesOnManagement updateRolesOnManagement = new UpdateRolesOnManagement(application, repository, db, serviceContainer.authenticationService());
         updateRolesOnManagement.init(previousUsers, modifiedAuthorization);
         updateRolesOnManagement.updateRoleForManagement();
     }
@@ -283,7 +284,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
             return null;
         }
 
-        return new UpdateRolesOnManagement(repository, db, serviceContainer.authenticationService()).revoke(revokeAuthorizationRequest);
+        return new UpdateRolesOnManagement(application, repository, db, serviceContainer.authenticationService()).revoke(revokeAuthorizationRequest);
     }
 
     public ImmutableSet<GetAuthorizationResult> getAuthorizations(
