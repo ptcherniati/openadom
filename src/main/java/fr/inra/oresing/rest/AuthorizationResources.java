@@ -42,7 +42,6 @@ import org.springframework.web.util.UriUtils;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
-import java.util.function.Function;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -392,7 +391,7 @@ public class AuthorizationResources {
     @PreAuthorize("""
                 hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE')
             """)
-    @PutMapping(value = "applications/{nameOrId}/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "applications/{nameOrId}/applicationrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an authorization for a user",
             description = "This service allows adding a specific authorization for a given user.")
     @ApiResponses(value = {
@@ -571,6 +570,50 @@ public class AuthorizationResources {
             );
         }
         return ResponseEntity.ok(user);
+    }
+
+    @DeleteMapping(value = "applications/{nameOrId}/applicationrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Remove an authorization for a user",
+            description = "This service allows removing a specific authorization for a given user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authorization successfully removed"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "User or role not found")
+    })
+    @PreAuthorize("""
+                hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_DELETE')
+            """)
+
+    public ResponseEntity<OreSiUser> deleteAuthorizationForApplication(
+            @Parameter(description = "The role to remove", required = true,
+                    examples = {
+                            @ExampleObject(name = "applicationManager", value = "\"applicationManager\"", description = "Remove application manager role"),
+                            @ExampleObject(name = "userManager", value = " \"userManager\"", description = "Remove user manager role")
+                    }
+            ) @PathVariable(name = "role") final String role,
+
+            @Parameter(description = "The user's ID or login", required = true,
+                    examples = {
+                            @ExampleObject(name = "userId", value = "\"user123\"", description = "User ID"),
+                            @ExampleObject(name = "userLogin", value = "\"john.doe\"", description = "User login")
+                    }
+            ) @RequestParam(name = "userIdOrLogin") final String userIdOrLogin,
+
+            @Parameter(description = "The application name or ID (if applicable) for revoke of applicationManager et userManager of the application",
+                    examples = {
+                            @ExampleObject(name = "applicationName", value = "\"SI_123\"", description = "Application name"),
+                            @ExampleObject(name = "applicationId", value = "\"app-456\"", description = "Application ID")
+                    }
+            ) @PathVariable(name = "nameOrId", required = false) final String applicationNameOrId
+
+    ) throws JsonProcessingException {
+        return deleteAuthorization(
+                role,
+                userIdOrLogin,
+                applicationNameOrId,
+                null
+        );
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
