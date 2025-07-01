@@ -436,7 +436,7 @@ public class AuthorizationResources {
     @PreAuthorize("""
                 hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE')
             """)
-    @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/systemrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an authorization for a user",
             description = "This service allows adding a specific authorization for a given user.")
     public ResponseEntity<OreSiUser> addAuthorization(
@@ -494,7 +494,7 @@ public class AuthorizationResources {
         return ResponseEntity.ok(user);
     }
 
-    @DeleteMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/systemrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Remove an authorization for a user",
             description = "This service allows removing a specific authorization for a given user.")
     @ApiResponses(value = {
