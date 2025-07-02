@@ -1,16 +1,12 @@
 package fr.inra.oresing.rest.data.extraction;
 
 import com.opencsv.CSVWriter;
-import fr.inra.oresing.domain.application.configuration.Configuration;
-import fr.inra.oresing.domain.application.configuration.DynamicComponent;
-import fr.inra.oresing.domain.application.configuration.PatternComponent;
-import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
@@ -74,9 +70,10 @@ public record DataCsvHeaderWriter(
 
     private Stream<String> componentOrderByGetHeader(ComponentOrderByForExport componentOrderBy) {
         Configuration.InternationalizedSortedColumn internationalizedSortedColumn = internationalizedSortedColumns.get(componentOrderBy.componentKey());
-        String exportHeader = Optional.ofNullable(internationalizedSortedColumn)
-                .map(Configuration.InternationalizedSortedColumn::header)
-                .map(getInternationalizedHeader())
+        String exportHeader =  Optional.ofNullable(internationalizedSortedColumn)
+                .map(Configuration.InternationalizedSortedColumn::componentDescription)
+                .map(ComponentDescription::exportHeaderName)
+                .map(getInternationalizedHeader)
                 .orElse(null);
         return exportHeader == null ? Stream.of(Objects.requireNonNull(internationalizedSortedColumn).header()) : Stream.of(exportHeader);
 
@@ -106,12 +103,13 @@ public record DataCsvHeaderWriter(
 
     private LinkedList<ComponentOrderByForExport> buildInternationalizedColumns(DataRow dataRow) {
         return internationalizedSortedColumns().values().stream()
-                .flatMap(internationalizedSortedColumn -> switch (internationalizedSortedColumn.componentDescription()) {
-                    case DynamicComponent dynamicComponent -> columnsForDynamicComponent(dynamicComponent);
-                    case PatternComponent patternComponent ->
-                            columnsForPatternComponent(internationalizedSortedColumn, patternComponent, dataRow);
-                    default -> columnsForDefaultComponent(internationalizedSortedColumn);
-                })
+                .flatMap(internationalizedSortedColumn ->
+                        switch (internationalizedSortedColumn.componentDescription()) {
+                            case DynamicComponent dynamicComponent -> columnsForDynamicComponent(dynamicComponent);
+                            case PatternComponent patternComponent ->
+                                    columnsForPatternComponent(internationalizedSortedColumn, patternComponent, dataRow);
+                            default -> columnsForDefaultComponent(internationalizedSortedColumn);
+                        })
                 .sorted(comparator())
                 .collect(Collectors.toCollection(LinkedList::new));
     }

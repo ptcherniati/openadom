@@ -43,7 +43,7 @@ public sealed interface DownloadDatasetQuery extends MessageInformations
     }
 
     default Locale getLocale() {
-        return Optional.ofNullable(outPut())
+        final Locale locale = Optional.ofNullable(outPut())
                 .map(OutPut::locale)
                 .orElse(
                         Optional.ofNullable(application())
@@ -52,5 +52,6 @@ public sealed interface DownloadDatasetQuery extends MessageInformations
                                 .map(ApplicationDescription::defaultLanguage)
                                 .orElseGet(OreSiResources::getDefaultLocale)
                 );
+        return Locale.of(Locale.forLanguageTag(locale.getLanguage()).getLanguage());
     }
 }

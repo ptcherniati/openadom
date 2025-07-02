@@ -145,7 +145,7 @@ public class DataCsvBuilder {
                     .map(components -> components.get(componentName))
                     .map(InternationalizationComponent::getExportHeader)
                     .map(InternationalizationTitle::getTitle)
-                    .map(title -> title.get(Locale.of(downloadDatasetQuery.getLanguage()))
+                    .map(title -> title.get(downloadDatasetQuery.getLocale())
                     ).orElse(componentName);
             Comparator<ComponentOrderByForExport> comparator = ComponentOrderByForExport.getComparator(dataDescription);
             DataCsvHeaderWriter dataCsvHeaderWriter = new DataCsvHeaderWriter(
