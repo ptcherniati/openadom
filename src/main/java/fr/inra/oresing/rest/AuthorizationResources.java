@@ -14,10 +14,12 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationPe
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.services.AuthorizationService;
@@ -29,6 +31,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
@@ -279,10 +282,16 @@ public class AuthorizationResources {
     })
     @Parameter(name = "nameOrId", description = "Nom ou ID de l'application", required = true)
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
-    @PostMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> addAuthorization(
+    @RequestMapping(
+            method = {RequestMethod.POST, RequestMethod.PUT},
+            value = "/applications/{nameOrId}/authorization",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, String>> addOrUpdateAuthorization(
             @PathVariable(name = "nameOrId") final String nameOrId,
-            @RequestBody final CreateAuthorizationRequest createAuthorizationRequest) {
+            @RequestBody final CreateAuthorizationRequest createAuthorizationRequest,
+            HttpServletRequest request
+            ) {
+        verifyMethod( request.getMethod(), createAuthorizationRequest.uuid());
         Application application = OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getApplicationPersona)
                 .map(ApplicationPersona::application)
@@ -293,7 +302,8 @@ public class AuthorizationResources {
                 serviceContainer.authorizationService()
                         .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
-        final List<OreSiAuthorization> authorizationsForCurrentUser = serviceContainer.authorizationService().findUserAuthorizationsForApplication(application);
+        final List<OreSiAuthorization> authorizationsForCurrentUser = serviceContainer.authorizationService()
+                .findUserAuthorizationsForApplication(application);
         AuthorizationRequest authorizationRequest = serviceContainer.authorizationService()
                 .createAuthorizationRequestToAuthorizationRequest(
                         createAuthorizationRequestWithDependantAuthorization,
@@ -307,7 +317,8 @@ public class AuthorizationResources {
             return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, "null"));
 
         }
-        final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService().addAuthorization(
+        final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService()
+                .addAuthorization(
                 application,
                 authorizationRequest
         );
@@ -320,6 +331,19 @@ public class AuthorizationResources {
                 .updateRoleForManagement(application, oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, authId.toString()));
+    }
+
+    private void verifyMethod(String method, UUID uuid) {
+        if(RequestMethod.POST.equals(method) && uuid!=null) {
+             throw new OreSiTechnicalException(
+                     ExceptionMessage.BAD_METHOD.toMessage()
+             );
+        }
+        if(RequestMethod.PUT.equals(method) && uuid==null) {
+             throw new OreSiTechnicalException(
+                     ExceptionMessage.BAD_METHOD.toMessage()
+             );
+        }
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")

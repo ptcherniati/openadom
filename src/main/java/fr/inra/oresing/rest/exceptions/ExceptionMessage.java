@@ -15,7 +15,8 @@ public enum ExceptionMessage {
     JSON_PROCESSING,
     JSON_EXCEPTION,
     SQL_EXCEPTION,
-    SYSTEM_USER_NOT_CONNECTED;
+    SYSTEM_USER_NOT_CONNECTED,
+    BAD_METHOD;
 
     public String toMessage() {
         final String message = Arrays.stream(name().split("_"))
