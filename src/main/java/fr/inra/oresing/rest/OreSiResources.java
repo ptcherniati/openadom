@@ -1140,7 +1140,7 @@ public class OreSiResources {
         try {
             final DownloadDatasetQuery downloadDatasetQuery = params != null ? new JsonRowMapper<DownloadDatasetQuery>().toObject(params, DownloadDatasetQuery.class) : new DownloadDatasetQuery();
             if (loadExample) {
-                downloadDatasetQuery.setLimit(5000L);
+                downloadDatasetQuery.setLimit(500L);
             }
             final Application application = serviceContainer.applicationService().getApplication(applicationNameOrID);
             downloadDatasetQuery.setApplication(application);
