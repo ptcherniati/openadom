@@ -175,7 +175,8 @@ public class AuthorizationFilter extends GenericFilterBean {
                 .map(list -> list.get(6))
                 .or(() -> getWithFileId(oreSiAuthenticationToken, path))
                 .ifPresent(dataName -> {
-                    addFilleOrUUID(request, oreSiAuthenticationToken, dataName, path);
+                    oreSiAuthenticationToken.setDataName(dataName);
+                    addFileOrUUID(request, oreSiAuthenticationToken, dataName, path);
                     oreSiAuthenticationToken.setDataName(dataName);
                 });
 
@@ -228,7 +229,7 @@ public class AuthorizationFilter extends GenericFilterBean {
                 .orElse(null);
     }
 
-    private void addFilleOrUUID(HttpServletRequest request, OreSiAuthenticationToken oreSiAuthenticationToken, String dataName, String path) {
+    private void addFileOrUUID(HttpServletRequest request, OreSiAuthenticationToken oreSiAuthenticationToken, String dataName, String path) {
         if (HttpMethod.POST.name().equals(request.getMethod()) && "/api/v1/applications/%1$s/data/%2$s".formatted(oreSiAuthenticationToken.getApplicationName(), dataName).equals(path)) {
             String params = request.getParameter(PARAMS);
             Optional.ofNullable(params)
