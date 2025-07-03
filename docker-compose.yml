@@ -13,8 +13,8 @@ services:
       - default
   postgresql_graphana:
     image: postgres:16.9
-    ports:
-      - "5433:5432"
+    ##ports:
+      ##- "5433:5432"
     environment:
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=xxxxxxxx
@@ -40,8 +40,8 @@ services:
 
   grafana:
     image: grafana/grafana:10.4.4-ubuntu
-    ports:
-      - "3000:3000"
+    ##ports:
+      ##- "3000:3000"
     environment:
       GF_LOG_LEVEL: debug
       GF_AUTH_POSTGRES_ENABLED: "true"
@@ -69,8 +69,8 @@ services:
 
   renderer:
     image: grafana/grafana-image-renderer:latest
-    ports:
-      - "8081"
+    ##ports:
+      ##- "8081"
     networks:
       - default
 volumes:
