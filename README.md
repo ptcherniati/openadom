@@ -18,10 +18,11 @@ Le projet est constitué de 2 sous projet :
 
 ### Prérequis
 
-  - JDK ≥ 21
+  - JDK ≥ 23
   - maven 3
   - Docker
   - nodejs 18
+  - postgresql 17.5
 
 Pour constuire le projet avec maven, l'utilisateur doit avoir le droit de démarrer de conteneurs docker.
 
@@ -103,4 +104,3 @@ GRANT "5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9" TO "openAdomTechUser" WITH INHERIT 
 
 ```
 [Comptes utilisateurs d'openadom](src/main/resources/migration/first_roles.sql)
-
