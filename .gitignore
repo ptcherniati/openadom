@@ -2,7 +2,7 @@
 *.iml
 .idea
 **/first_roles.sql
-src/main/resources/migration/first_roles.sql
+src/main/resources/migration/.first_roles.sql
 
 
 # Target
