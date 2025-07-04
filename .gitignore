@@ -27,3 +27,4 @@ mermaid-filter.err
 /documentations/openadom/_site/
 /documentations/openadom/_freeze/
 /htmlReport/
+/src/main/resources/.firstroles.sql
