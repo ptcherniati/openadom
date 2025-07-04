@@ -677,7 +677,7 @@ public class Fixtures {
     }
 
     public void addUserRightCreateApplication(final UUID userId, final String pattern) throws Exception {
-        mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+        mockMvc.perform(put("/api/v1/systemrole/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", pattern)
                         .with(csrf().asHeader())
@@ -810,7 +810,7 @@ public class Fixtures {
         final CreateUser createUser = new CreateUser(applicationPattern, aPassword, applicationPattern + "@inrae.fr");
         final UserConnection createUserConnection = createUserForUserDefinition(createUser, true, true);
         final UUID userId = createUserConnection.userResult().userId();
-        mockMvc.perform(put("/api/v1/authorization/applicationCreator")
+        mockMvc.perform(put("/api/v1/systemrole/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", applicationPattern)
                         .with(csrf())

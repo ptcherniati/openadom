@@ -14,10 +14,12 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationPe
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ConnectedUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
+import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.services.AuthorizationService;
@@ -29,6 +31,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.springframework.boot.actuate.health.HealthComponent;
 import org.springframework.boot.actuate.health.HealthEndpoint;
@@ -279,10 +282,16 @@ public class AuthorizationResources {
     })
     @Parameter(name = "nameOrId", description = "Nom ou ID de l'application", required = true)
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
-    @PostMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, String>> addAuthorization(
+    @RequestMapping(
+            method = {RequestMethod.POST, RequestMethod.PUT},
+            value = "/applications/{nameOrId}/authorization",
+            produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Map<String, String>> addOrUpdateAuthorization(
             @PathVariable(name = "nameOrId") final String nameOrId,
-            @RequestBody final CreateAuthorizationRequest createAuthorizationRequest) {
+            @RequestBody final CreateAuthorizationRequest createAuthorizationRequest,
+            HttpServletRequest request
+            ) {
+        verifyMethod( request.getMethod(), createAuthorizationRequest.uuid());
         Application application = OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getApplicationPersona)
                 .map(ApplicationPersona::application)
@@ -293,20 +302,23 @@ public class AuthorizationResources {
                 serviceContainer.authorizationService()
                         .createAuthorizationRequestWithDependantAuthorization(application, createAuthorizationRequest);
         List<UUID> userIds = userRepository.findAll().stream().map(OreSiUser::getId).toList();
-        final List<OreSiAuthorization> authorizationsForCurrentUser = serviceContainer.authorizationService().findUserAuthorizationsForApplication(application);
-        AuthorizationRequest authorizationRequest = serviceContainer.authorizationService().createAuthorizationRequestToAuthorizationRequest(
-                createAuthorizationRequestWithDependantAuthorization,
-                application,
-                userIds,
-                authorizationsForCurrentUser,
-                errors
-        );
+        final List<OreSiAuthorization> authorizationsForCurrentUser = serviceContainer.authorizationService()
+                .findUserAuthorizationsForApplication(application);
+        AuthorizationRequest authorizationRequest = serviceContainer.authorizationService()
+                .createAuthorizationRequestToAuthorizationRequest(
+                        createAuthorizationRequestWithDependantAuthorization,
+                        application,
+                        userIds,
+                        authorizationsForCurrentUser,
+                        errors
+                );
         if (!errors.isEmpty()) {
             final String uri = UriUtils.encodePath("/applications/authorization/null", Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, "null"));
 
         }
-        final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService().addAuthorization(
+        final AuthorizationService.Authorizations oreSiAuthorizations = serviceContainer.authorizationService()
+                .addAuthorization(
                 application,
                 authorizationRequest
         );
@@ -315,9 +327,23 @@ public class AuthorizationResources {
         if (createAuthorizationRequest.uuid() == null) {
             serviceContainer.authorizationService().createRoleForAuthorization(authorizationRequest, oreSiAuthorization);
         }
-        serviceContainer.authorizationService().updateRoleForManagement(oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
+        serviceContainer.authorizationService()
+                .updateRoleForManagement(application, oreSiAuthorizations.getPreviousUsers(), oreSiAuthorization);
         final String uri = UriUtils.encodePath("/applications/authorization/" + authId.toString(), Charset.defaultCharset());
         return ResponseEntity.created(URI.create(uri)).body(Map.of(AUTHORIZATION_ID, authId.toString()));
+    }
+
+    private void verifyMethod(String method, UUID uuid) {
+        if(RequestMethod.POST.equals(method) && uuid!=null) {
+             throw new OreSiTechnicalException(
+                     ExceptionMessage.BAD_METHOD.toMessage()
+             );
+        }
+        if(RequestMethod.PUT.equals(method) && uuid==null) {
+             throw new OreSiTechnicalException(
+                     ExceptionMessage.BAD_METHOD.toMessage()
+             );
+        }
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
@@ -389,7 +415,7 @@ public class AuthorizationResources {
     @PreAuthorize("""
                 hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE')
             """)
-    @PutMapping(value = "applications/{nameOrId}/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "applications/{nameOrId}/applicationrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an authorization for a user",
             description = "This service allows adding a specific authorization for a given user.")
     @ApiResponses(value = {
@@ -426,7 +452,7 @@ public class AuthorizationResources {
                             @ExampleObject(name = "applicationPattern", value = "\"SI_*\"", description = "Pattern for SI applications")
                     }
             ) @RequestParam(name = "applicationPattern", required = false) final List<String> applicationPattern
-    ) throws JsonProcessingException{
+    ) throws JsonProcessingException {
         return addAuthorization(role, userIdOrLogin, applicationNameOrId, applicationPattern);
     }
 
@@ -434,7 +460,7 @@ public class AuthorizationResources {
     @PreAuthorize("""
                 hasPermission('SYSTEM', 'SYSTEM_MANAGE_ROLE_FOR_UPDATE')
             """)
-    @PutMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/systemrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Add an authorization for a user",
             description = "This service allows adding a specific authorization for a given user.")
     public ResponseEntity<OreSiUser> addAuthorization(
@@ -492,7 +518,7 @@ public class AuthorizationResources {
         return ResponseEntity.ok(user);
     }
 
-    @DeleteMapping(value = "/authorization/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @DeleteMapping(value = "/systemrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Remove an authorization for a user",
             description = "This service allows removing a specific authorization for a given user.")
     @ApiResponses(value = {
@@ -568,6 +594,50 @@ public class AuthorizationResources {
             );
         }
         return ResponseEntity.ok(user);
+    }
+
+    @DeleteMapping(value = "applications/{nameOrId}/applicationrole/{role}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @Operation(summary = "Remove an authorization for a user",
+            description = "This service allows removing a specific authorization for a given user.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Authorization successfully removed"),
+            @ApiResponse(responseCode = "400", description = "Invalid request"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "User or role not found")
+    })
+    @PreAuthorize("""
+                hasPermission('APPLICATION', 'APPLICATION_ROLE_MANAGEMENT_FOR_DELETE')
+            """)
+
+    public ResponseEntity<OreSiUser> deleteAuthorizationForApplication(
+            @Parameter(description = "The role to remove", required = true,
+                    examples = {
+                            @ExampleObject(name = "applicationManager", value = "\"applicationManager\"", description = "Remove application manager role"),
+                            @ExampleObject(name = "userManager", value = " \"userManager\"", description = "Remove user manager role")
+                    }
+            ) @PathVariable(name = "role") final String role,
+
+            @Parameter(description = "The user's ID or login", required = true,
+                    examples = {
+                            @ExampleObject(name = "userId", value = "\"user123\"", description = "User ID"),
+                            @ExampleObject(name = "userLogin", value = "\"john.doe\"", description = "User login")
+                    }
+            ) @RequestParam(name = "userIdOrLogin") final String userIdOrLogin,
+
+            @Parameter(description = "The application name or ID (if applicable) for revoke of applicationManager et userManager of the application",
+                    examples = {
+                            @ExampleObject(name = "applicationName", value = "\"SI_123\"", description = "Application name"),
+                            @ExampleObject(name = "applicationId", value = "\"app-456\"", description = "Application ID")
+                    }
+            ) @PathVariable(name = "nameOrId", required = false) final String applicationNameOrId
+
+    ) throws JsonProcessingException {
+        return deleteAuthorization(
+                role,
+                userIdOrLogin,
+                applicationNameOrId,
+                null
+        );
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")

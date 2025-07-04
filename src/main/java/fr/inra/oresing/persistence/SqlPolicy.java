@@ -9,8 +9,14 @@ import java.util.stream.Collectors;
 
 public record SqlPolicy(String id, SqlTable table,
                         fr.inra.oresing.persistence.SqlPolicy.PermissiveOrRestrictive permissiveOrRestrictive,
-                        List<Statement> statements, OreSiRole role, String usingExpression,
-                        String withCheckExpression) implements WithSqlIdentifier {
+                        List<Statement> statements,
+                        OreSiRole role,
+                        String usingExpression,
+                        String withCheckExpression,
+                        String comment) implements WithSqlIdentifier {
+    public SqlPolicy(String id, SqlTable table, PermissiveOrRestrictive permissiveOrRestrictive, List<Statement> statements, OreSiRole role, String usingExpression, String withCheckExpression) {
+        this(id, table, permissiveOrRestrictive, statements, role, usingExpression, withCheckExpression, "no comment");
+    }
 
     @Override
     public String getSqlIdentifier() {
@@ -26,14 +32,17 @@ public record SqlPolicy(String id, SqlTable table,
             withCheck = String.format(" WITH CHECK (%s)", withCheckExpression);
         }
         return String.format(
-                "CREATE POLICY %s ON %s AS %s FOR %s TO %s %s %s",
+                """
+                CREATE POLICY %1$s ON %2$s AS %3$s FOR %4$s TO %5$s %6$s %7$s;
+                COMMENT ON POLICY %1$s ON %2$s IS '%8$s';""",
                 getSqlIdentifier(),
                 table.getSqlIdentifier(),
                 permissiveOrRestrictive.name(),
                 statements.stream().map(SqlPolicy.Statement::name).collect(Collectors.joining(",")),
                 role == null ? "public" : role.getSqlIdentifier(),
                 using,
-                withCheck
+                withCheck,
+                comment()
         );
     }
 

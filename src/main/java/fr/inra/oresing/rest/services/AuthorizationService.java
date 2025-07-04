@@ -11,12 +11,16 @@ import fr.inra.oresing.domain.additionalfiles.AuthorizationsAdditionalFilesResul
 import fr.inra.oresing.domain.additionalfiles.OreSiAdditionalFileAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
+import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.authorization.privilegeassessor.*;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationUserManagerRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotOpenAdomAdminException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationAdminUser;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeApplicationDomainEnum;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.PrivilegeSystemDomainEnum;
+import fr.inra.oresing.domain.authorization.request.AuthorizationForAll;
 import fr.inra.oresing.domain.authorization.request.AuthorizationForScope;
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.data.menu.MenuType;
@@ -42,6 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -153,9 +158,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
 
     @Transactional
     public void updateRoleForManagement(
+            Application application,
             final Set<UUID> previousUsers,
             final OreSiAuthorization modifiedAuthorization) {
-        UpdateRolesOnManagement updateRolesOnManagement = new UpdateRolesOnManagement(repository, db, serviceContainer.authenticationService());
+        UpdateRolesOnManagement updateRolesOnManagement = new UpdateRolesOnManagement(application, repository, db, serviceContainer.authenticationService());
         updateRolesOnManagement.init(previousUsers, modifiedAuthorization);
         updateRolesOnManagement.updateRoleForManagement();
     }
@@ -278,7 +284,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
             return null;
         }
 
-        return new UpdateRolesOnManagement(repository, db, serviceContainer.authenticationService()).revoke(revokeAuthorizationRequest);
+        return new UpdateRolesOnManagement(application, repository, db, serviceContainer.authenticationService()).revoke(revokeAuthorizationRequest);
     }
 
     public ImmutableSet<GetAuthorizationResult> getAuthorizations(
@@ -762,7 +768,10 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
                 .map(Map::keySet)
                 .map(application::findDependentNodes)
                 .ifPresent(dependantsNodes::addAll);
-        return Objects.requireNonNull(createAuthorizationRequest).addDependantAuthorizations(dependantsNodes);
+        Function<String, Boolean> isVersionningStrategy = application::strategyIsVersionning;
+        return Objects.requireNonNull(createAuthorizationRequest)
+                .addRequiredOperationTypes(isVersionningStrategy)
+                .addDependantAuthorizations(dependantsNodes);
 
     }
 

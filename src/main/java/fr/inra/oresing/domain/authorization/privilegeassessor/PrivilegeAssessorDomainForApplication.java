@@ -136,7 +136,7 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
             return new ApplicationPublishWriterUser(
                     application(),
                     dataName,
-                    authorizationsForApplicationUser.getAuthorizations(dataName, Set.of(OperationType.publication))
+                    authorizationsForApplicationUser.getAuthorizations(dataName, application().isData(dataName)?Set.of(OperationType.publication):Set.of(OperationType.publication, OperationType.depot))
             );
         }
         return new ApplicationDepositWriterUser(

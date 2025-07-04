@@ -4,17 +4,18 @@ import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 
 import java.util.Map;
 
 public abstract class OneValueStaticColumn extends Column {
 
-    public OneValueStaticColumn(final DataColumn referenceColumn, final String headerForColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage) {
-        super(referenceColumn, presenceConstraint, computedValueUsage);
+    public OneValueStaticColumn(final DataColumn referenceColumn, final String headerForColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
+        super(referenceColumn, presenceConstraint, computedValueUsage, defaultValue);
     }
 
     @Override
-    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         final DataColumnValue<FieldType<?>, FieldType<?>> referenceColumnValue = new DataColumnSingleValue(StringType.getStringTypeFromStringValue(cellContent));
         referenceDatum.put(getReferenceColumn(), referenceColumnValue);
     }

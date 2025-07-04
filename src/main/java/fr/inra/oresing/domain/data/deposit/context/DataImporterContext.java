@@ -260,7 +260,7 @@ public class DataImporterContext {
                 ));
     }
 
-    public boolean pushValue(final DataDatum referenceDatum, final String header, final String cellContent, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+    public boolean pushValue(final DataDatum referenceDatum, final String header, final String cellContent, final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         final Column column = getExpectedColumnsPerHeaders().get(header);
         if (column == null) {
             return true;

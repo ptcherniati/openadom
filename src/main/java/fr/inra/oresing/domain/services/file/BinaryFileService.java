@@ -40,4 +40,5 @@ public interface BinaryFileService {
 
     AdditionalBinaryFileResult getAdditionalBinaryFileResult(
             AdditionalBinaryFile additionalBinaryFile);
+
 }

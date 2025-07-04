@@ -67,7 +67,7 @@ public record PatternComponentQualifiersBuilder(RootBuilder rootBuilder) {
                 i18n = Objects.requireNonNull(checkerDescriptionParsing).i18n();
                 final JsonNode defaultValueNode = componentNodeValue.get(ConfigurationSchemaNode.OA_DEFAULT_VALUE);
                 final Parsing<ComputationChecker> defaultValueParsing;
-                if (defaultValueNode != null) {
+                if (defaultValueNode != null && !defaultValueNode.isMissingNode()) {
                     defaultValueParsing = rootBuilder.getComputationBuilder().build(
                             i18n,
                             required, Multiplicity.ONE,

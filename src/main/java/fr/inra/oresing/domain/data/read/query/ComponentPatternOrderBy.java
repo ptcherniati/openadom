@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.persistence.RefsLinked;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +19,7 @@ public record ComponentPatternOrderBy(String componentKey, String qualifierKey, 
                                       ComponentType sqlType,
                                       List<ComponentOrderBy> qualifiersColumns) implements ComponentOrderByForExport {
     @Override
-    public Stream<String> toValue(String language, DataRepositoryForBuffer dataRepository, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription) {
+    public Stream<String> toValue(List<RefsLinked> refsLinkeds, String language, Map<String, FieldType<?>> dataRowValues, StandardDataDescription dataDescription) {
         String componentKey = componentKey();
         FieldType<?> fieldType = dataRowValues.get(componentKey);
         Optional<MapType> valueOpt = ((ListType) fieldType).getValue().stream().filter(mapType -> qualifierKey().equals(((MapType) mapType).getValue().get(Column.__ORIGINAL_COLUMN_NAME__).toString())).findFirst();
@@ -26,9 +27,9 @@ public record ComponentPatternOrderBy(String componentKey, String qualifierKey, 
             return Stream.empty();
         }
         List<String> values = new ArrayList<>();
-        values.add(valueToString(language, dataRepository, dataDescription, (FieldType<?>) valueOpt.get().getValue().get(Column.__VALUE__)));
+        values.add(valueToString(refsLinkeds,language, dataDescription, (FieldType<?>) valueOpt.get().getValue().get(Column.__VALUE__)));
         qualifiersColumns().stream()
-                .map(qualifier -> qualifier.valueToString(language, dataRepository, dataDescription, (FieldType<?>) valueOpt.get().getValue()
+                .map(qualifier -> qualifier.valueToString(refsLinkeds, language, dataDescription, (FieldType<?>) valueOpt.get().getValue()
                         .get(qualifier.componentKey().split(Column.COLUMN_IN_COLUMN_SEPARATOR)[1])))
                 .forEach(values::add);
         return values.stream();

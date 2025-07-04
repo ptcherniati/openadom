@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.security;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.OreSiRequestClient;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.BinaryFile;
@@ -65,7 +64,7 @@ public class AuthorizationFilter extends GenericFilterBean {
     public static final String PASSWORD_PARAMETER = "password";
     public static final String ECHEC_TECHNIQUE = "Échec technique";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
-    public static final String BAD_REQUEST = "BAD_REQUEST";
+    public static final String BAD_LOGIN_PASSWORD = "BAD_LOGIN_PASSWORD";
     private final OreSiApiRequestContext requestContext;
     private static JsonRowMapper<OreSiUserRequestClient> mapper;
     private final OreExceptionHandler exceptionHandler;
@@ -112,12 +111,12 @@ public class AuthorizationFilter extends GenericFilterBean {
         }
         if (
                 path.equals("/") ||
-                        path.startsWith(SecurityConfig.ACTUATOR) ||
-                        path.startsWith(SecurityConfig.SWAGGER_UI) ||
-                        path.startsWith(SecurityConfig.API_DOCS) ||
-                        path.startsWith(SecurityConfig.API_PUBLIC) ||
-                        path.startsWith(SecurityConfig.API_DOCS_YAML) ||
-                        path.equals(SecurityConfig.ERROR)) {
+                path.startsWith(SecurityConfig.ACTUATOR) ||
+                path.startsWith(SecurityConfig.SWAGGER_UI) ||
+                path.startsWith(SecurityConfig.API_DOCS) ||
+                path.startsWith(SecurityConfig.API_PUBLIC) ||
+                path.startsWith(SecurityConfig.API_DOCS_YAML) ||
+                path.equals(SecurityConfig.ERROR)) {
             chain.doFilter(request, response); // Skip le filtre
             return;
         }
@@ -176,7 +175,8 @@ public class AuthorizationFilter extends GenericFilterBean {
                 .map(list -> list.get(6))
                 .or(() -> getWithFileId(oreSiAuthenticationToken, path))
                 .ifPresent(dataName -> {
-                    addFilleOrUUID(request, oreSiAuthenticationToken, dataName, path);
+                    oreSiAuthenticationToken.setDataName(dataName);
+                    addFileOrUUID(request, oreSiAuthenticationToken, dataName, path);
                     oreSiAuthenticationToken.setDataName(dataName);
                 });
 
@@ -229,14 +229,14 @@ public class AuthorizationFilter extends GenericFilterBean {
                 .orElse(null);
     }
 
-    private void addFilleOrUUID(HttpServletRequest request, OreSiAuthenticationToken oreSiAuthenticationToken, String dataName, String path) {
+    private void addFileOrUUID(HttpServletRequest request, OreSiAuthenticationToken oreSiAuthenticationToken, String dataName, String path) {
         if (HttpMethod.POST.name().equals(request.getMethod()) && "/api/v1/applications/%1$s/data/%2$s".formatted(oreSiAuthenticationToken.getApplicationName(), dataName).equals(path)) {
             String params = request.getParameter(PARAMS);
             Optional.ofNullable(params)
                     .filter(Predicate.not(JS_UNDEFINED::equals))
                     .map(json -> {
                         try {
-                            return new ObjectMapper().readValue(params, FileOrUUID.class);
+                            return mapper.getJsonMapper().readValue(json, FileOrUUID.class);
                         } catch (JsonProcessingException e) {
                             throw new BadFileOrUUIDQuery(e.getMessage());
                         }
@@ -264,21 +264,17 @@ public class AuthorizationFilter extends GenericFilterBean {
         String passwordValue = request.getParameter(PASSWORD_PARAMETER);
 
         if (Strings.isNotEmpty(loginValue) && Strings.isNotEmpty(passwordValue)) {
-            try {
-                LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
-                        .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
-                        .forLoginPassword(loginValue, passwordValue);
-                jWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
-                return new OreSiAuthenticationToken(
-                        loginAdminResult,
-                        request.getRequestURI(),
-                        List.of(ROLE_AUTHENTIFIED_USER)
-                );
-            } catch (AuthenticationFailure e) {
-                throw new AuthenticationFailure(BAD_REQUEST, (OreSiUser) null);
-            }
+            LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
+                    .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
+                    .forLoginPassword(loginValue, passwordValue);
+            jWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
+            return new OreSiAuthenticationToken(
+                    loginAdminResult,
+                    request.getRequestURI(),
+                    List.of(ROLE_AUTHENTIFIED_USER)
+            );
         }
-        throw new AuthenticationFailure(BAD_REQUEST, (OreSiUser) null);
+        throw new AuthenticationFailure(BAD_LOGIN_PASSWORD, (OreSiUser) null);
     }
 
 

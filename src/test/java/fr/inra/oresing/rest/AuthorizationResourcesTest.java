@@ -473,7 +473,7 @@ public class AuthorizationResourcesTest {
             {
                 // on donne les droits pour un pattern acbb
 
-                mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(put("/api/v1/systemrole/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "acbb")
                                 .cookie(fixtures.adminConnection.cookie()))
@@ -502,7 +502,7 @@ public class AuthorizationResourcesTest {
             }
             {
                 //on donne des droits pour le pattern monsore
-                mockMvc.perform(put("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(put("/api/v1/systemrole/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "monsore")
                                 .cookie(fixtures.adminConnection.cookie()))
@@ -519,7 +519,7 @@ public class AuthorizationResourcesTest {
             }
             {
                 //on supprime des droits pour le pattern monsore
-                mockMvc.perform(delete("/api/v1/authorization/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(delete("/api/v1/systemrole/applicationCreator").with(csrf().asHeader())
                                 .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "monsore")
                                 .cookie(fixtures.adminConnection.cookie()))

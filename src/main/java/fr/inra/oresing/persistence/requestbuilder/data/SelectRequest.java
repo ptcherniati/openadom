@@ -26,8 +26,7 @@ record SelectRequest(
                 .formatted(
                         Optional.ofNullable(orderBy()).map(SelectRequestOrderBy::build).orElse(""), //$1%s
                         Optional.ofNullable(offset()).map(SelectRequestOffset::build).orElse(""),//$2%s
-                        Optional.ofNullable(limit()).map(SelectRequestLimit::build).orElse("")//$3%s
-
+                        Optional.ofNullable(limit()).map(SelectRequestLimit::build).orElse("")//%3$s
                 );
         return new SqlRequest(
                 select,
@@ -43,76 +42,116 @@ record SelectRequest(
             SelectRequestWhereInSelect requestWhereInSelect
     ) {
         static final String TEMPLATE_WITH_PATTERNS_DEFINITION = """
-                 with  rs as (
-                 	SELECT DISTINCT ON (referencetype, naturalkey)
-                	 referencetype, naturalkey
-                	 FROM %3$s.referencevalue rs
-                    WHERE
-                            rs.referencetype = '%4$s'%5$s
-                %%2$s --offset
-                %%3$s --limit
+                WITH rs AS (
+                    SELECT DISTINCT ON (referencetype, naturalkey)
+                        referencetype, naturalkey
+                    FROM %3$s.referencevalue
+                    WHERE referencetype = '%4$s'%5$s
+                    %%2$s --offset
+                    %%3$s --limit
                 )
                 SELECT
-                          'fr.inra.oresing.persistence.DataRows' AS "@class",
-                          jsonb_build_object(
-                              --'rowNumber', row_number() over (),
-                              --'totalRows', count(*) over (),
-                              'rowId', array_agg(id),
-                              'naturalKey', naturalkey,
-                              'hierarchicalKey', hierarchicalkey,
-                              'patternColumnName', array_agg(patterncolumnname),
-                              'values', array_agg(refvalues) ,
-                              'refsLinkedTo', array_agg(refsLinkedTo),
-                               'allPatternColumnNames',array_agg(DISTINCT patterncolumnname)
-                          ) AS   "json"
-                    FROM rs
-                    JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
-                    GROUP BY naturalkey, hierarchicalkey
-                    %%1$s --order by
+                    'fr.inra.oresing.persistence.DataRows' AS "@class",
+                    jsonb_build_object(
+                      'rowId', array_agg(rv.id),
+                      'refslinked', array_agg(
+                        jsonb_build_object(
+                                    'referenceType', refs_agg.refs_referencetype,
+                                    'hierarchicalKey', refs_agg.refs_hierarchicalkey,
+                                    'naturalKey', refs_agg.refs_naturalkey,
+                                    '__display_default', refs_display_default,
+                                    '__display_fr', refs_display_fr,
+                                    '__display_en', refs_display_en,
+                                    'id', refs_id
+                                )
+                        ),
+                        'naturalKey', rv.naturalkey,
+                        'hierarchicalKey', rv.hierarchicalkey,
+                        'patternColumnName', array_agg(DISTINCT rv.patterncolumnname),
+                        'values', array_agg (DISTINCT rv.refvalues),
+                        'allPatternColumnNames', array_agg(DISTINCT rv.patterncolumnname)
+                    ) AS "json"
+                FROM rs
+                JOIN %3$s.referencevalue rv USING (referencetype, naturalkey)
+                LEFT JOIN LATERAL (
+                    SELECT DISTINCT ON (rv.naturalkey,rv.referencetype,refs.naturalkey,refs.referencetype, rv.patterncolumnname)
+                        rv.naturalkey,
+                        rv.referencetype,
+                        refs.referencetype refs_referencetype,
+                        refs.hierarchicalkey refs_hierarchicalkey,
+                        refs.naturalkey refs_naturalkey,
+                        refs.refvalues->'__display_default' refs_display_default,
+                        refs.refvalues->'__display_fr' refs_display_fr,
+                        refs.refvalues->'__display_en' refs_display_en,
+                        refs.id refs_id
+                    FROM %3$s.reference_reference rr
+                    JOIN %3$s.referencevalue refs ON rr.referencesby = refs.id
+                    WHERE rr.referenceid = rv.id
+                ) AS refs_agg USING (referencetype, naturalkey)
+                GROUP BY rv.naturalkey, rv.hierarchicalkey
+                 %1$s --order by;
                 """;
 
         static final String TEMPLATE_WITH_NO_PATTERNS_DEFINITION = """
-                           SELECT
-                               'fr.inra.oresing.persistence.DataRows' AS "@class",
-                               jsonb_build_object(
-                                 --'rowNumber', row_number() over (),
-                                 --'totalRows', count(*) over (),
-                                 'rowId', ARRAY[id],
-                                 'naturalKey', naturalkey,
-                                 'hierarchicalKey', hierarchicalkey,
-                                 'patternColumnName', ARRAY[patterncolumnname],
-                                 'values', ARRAY[refvalues] ,
-                                 'refsLinkedTo', ARRAY[refsLinkedTo],
-                                  'allPatternColumnNames',ARRAY[patterncolumnname]
-                               ) AS   "json"
-                               FROM %3$s.referencevalue rs
-                               WHERE
-                                       rs.referencetype = '%4$s'%5$s
+                SELECT
+                    'fr.inra.oresing.persistence.DataRows' AS "@class",
+                    jsonb_build_object(
+                      --'rowNumber', row_number() over (),
+                      --'totalRows', count(*) over (),
+                      'refsLinked' , ref_aggregate.refs_linked,
+                      'rowId', ARRAY[rs.id],
+                      'naturalKey', rs.naturalkey,
+                      'hierarchicalKey', rs.hierarchicalkey,
+                      'patternColumnName', ARRAY[rs.patterncolumnname],
+                      'values', ARRAY[rs.refvalues] ,
+                      'refsLinkedTo', ARRAY[rs.refsLinkedTo],
+                       'allPatternColumnNames',ARRAY[rs.patterncolumnname]
+                    ) AS   "json"
+                    FROM %3$s.referencevalue rs
+                     CROSS JOIN LATERAL (
+                         SELECT jsonb_agg(
+                             jsonb_build_object(
+                                 'referenceType', referenceby.referencetype,
+                                 'hierarchicalKey', referenceby.hierarchicalkey,
+                                 'naturalKey', referenceby.naturalkey,
+                                 '__display_default', referenceby.refvalues->'__display_default',
+                                 '__display_fr', referenceby.refvalues->'__display_fr',
+                                 '__display_en', referenceby.refvalues->'__display_en',
+                                 'id', referenceby.id
+                             )
+                         ) AS refs_linked
+                         FROM %3$s.reference_reference rr
+                         JOIN %3$s.referencevalue referenceby 
+                             ON referenceby.id = rr.referencesby
+                         WHERE rr.referenceid = rs.id
+                     ) ref_aggregate
+                    WHERE
+                            rs.referencetype = '%4$s'%5$s
                 
-                           %%1$s --order by
-                           %%2$s --offset
-                           %%3$s --limit
+                %%1$s --order by
+                %%2$s --offset
+                %%3$s --limit
                 """;
 
         public String build(boolean horizontalDisplay) {
-            return ((patternDefinitionCount() > 1 || (patternDefinitionCount() == 1 && horizontalDisplay)) ? TEMPLATE_WITH_PATTERNS_DEFINITION : TEMPLATE_WITH_NO_PATTERNS_DEFINITION)
-                    .formatted(
-                            buildRemoveSqlSelectNotInValues.stream()
-                                    .map(BuildRemoveSqlSelectNotInValues::valuePathToHide)
-                                    .distinct()
-                                    .filter(Objects::nonNull)
-                                    .collect(Collectors.joining("")),
-                            buildRemoveSqlSelectNotInValues.stream()
-                                    .map(BuildRemoveSqlSelectNotInValues::refsLinkedToPathToHide)
-                                    .distinct()
-                                    .filter(Objects::nonNull)
-                                    .collect(Collectors.joining("")),
-                            from,
-                            dataName(),
-                            Optional.ofNullable(requestWhereInSelect())
-                                    .map(SelectRequestWhere::build)
-                                    .orElse("")
-                    );
+            final String param1 = buildRemoveSqlSelectNotInValues.stream()
+                    .map(BuildRemoveSqlSelectNotInValues::valuePathToHide)
+                    .distinct()
+                    .filter(Objects::nonNull)
+                    .collect(Collectors.joining(""));
+            final String param5 = Optional.ofNullable(requestWhereInSelect())
+                    .map(SelectRequestWhere::build)
+                    .orElse("");
+            String sql = (patternDefinitionCount() >= 1 && horizontalDisplay) ?
+                    TEMPLATE_WITH_PATTERNS_DEFINITION :
+                    TEMPLATE_WITH_NO_PATTERNS_DEFINITION;
+            return sql.formatted(
+                    param1, //select
+                    param1,
+                    from,
+                    dataName(),
+                    param5 //where
+            );
         }
     }
 

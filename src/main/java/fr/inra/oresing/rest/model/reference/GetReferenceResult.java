@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonRawValue;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.inra.oresing.domain.checker.type.FieldType;
+import fr.inra.oresing.domain.data.LinkedLines;
 import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import lombok.Value;
 
@@ -20,7 +21,7 @@ public record GetReferenceResult(Set<ReferenceValue> referenceValues,
         String hierarchicalKey;
         String naturalKey;
         Map<String, FieldType<?>> values;
-        Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo;
+        Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo;
         Map referencingReference;
 
         public String commparingValue() {

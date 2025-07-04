@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Range;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.OreSiUser;
@@ -13,6 +14,8 @@ import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.Submission;
+import fr.inra.oresing.domain.application.configuration.date.DatePattern;
+import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForPublishException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataDelete;
@@ -22,7 +25,6 @@ import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
 import fr.inra.oresing.domain.data.DataValue;
-import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.data.menu.MenuType;
@@ -35,11 +37,7 @@ import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuer
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
-import fr.inra.oresing.persistence.BinaryFileInfos;
-import fr.inra.oresing.persistence.DataRow;
-import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.persistence.UserRepository;
+import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.binaryFile.BinaryFileService;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
@@ -73,7 +71,6 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -293,6 +290,27 @@ public class OreSiResources {
                 .stream()
                 .map(UserDescriptionResult::of)
                 .collect(Collectors.toMap(UserDescriptionResult::id, Function.identity()));
+        final Application application = request.getAuthenticationToken().getApplicationPersona().application();
+        final String dataName = request.getAuthenticationToken().getDataName();
+        final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
+        final LocalDateTimeRange localDateTimeRange = LocalDateTimeRange.of(
+                submissionDatePattern,
+                binaryFileDataset.getFrom(),
+                binaryFileDataset.getTo());
+        String from = Optional.ofNullable(localDateTimeRange)
+                .map(LocalDateTimeRange::getRange)
+                .filter(Range::hasLowerBound)
+                .map(Range::lowerEndpoint)
+                .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
+                .orElse(binaryFileDataset.getFrom());
+        binaryFileDataset.setFrom(from);
+        String to = Optional.ofNullable(localDateTimeRange)
+                .map(LocalDateTimeRange::getRange)
+                .filter(Range::hasUpperBound)
+                .map(Range::upperEndpoint)
+                .map(LocalDateTimeRange.DATE_TIME_FORMATTER::format)
+                .orElse(binaryFileDataset.getTo());
+        binaryFileDataset.setTo(to);
         final List<BinaryFileResult> files =
                 serviceContainer.binaryFileService()
                         .getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false).stream()
@@ -552,9 +570,9 @@ public class OreSiResources {
             @RequestParam(value = "file", required = false) final MultipartFile file,
             @RequestParam(value = "params", required = false) final String params) throws IOException {
         Locale locale = localeResolver.resolveLocale(request);
-        DataVersioningResult dataVersioningResult;
+        DataVersioningResult dataVersioningResult = null;
         try {
-            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, params, false);
+            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, false);
         } catch (InvalidDatasetContentException invalidDatasetContentException) {
             List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                     .stream()
@@ -941,8 +959,10 @@ public class OreSiResources {
                 .map(Locale::of)
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
-
         final List<DataRow> data = serviceContainer.dataService().findData(downloadDatasetQuery);
+        final List<FilterList> filterLists = serviceContainer.dataService()
+                .filterList(downloadDatasetQuery.application(), downloadDatasetQuery.dataName())
+                .collect(Collectors.toList()).block() ;
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
@@ -966,85 +986,22 @@ public class OreSiResources {
                             .equals(a) ? -1 : 1;
                 })
                 .collect(ImmutableSet.toImmutableSet());
-        //final Long totalRows = data.stream().limit(1).map(dataRow -> dataRow.getTotalRows()).findFirst().orElse(-1L);
         final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = serviceContainer.dataService().getCheckedFormatComponents(nameOrId, dataName);
-        Set<String> listOfDataIds = data.stream()
-                .map(DataRow::rowId)
-                .flatMap(List::stream)
-                .collect(Collectors.toSet());
-        final Map<Ltree, List<DataValue>> requiredreferencesValues = serviceContainer.dataService().getReferenceDisplaysById(serviceContainer.applicationService().getApplication(nameOrId), listOfDataIds);
-        Map<String, LineCheckerResult> lineCheckers = checkedFormatcomponents.get(ReferenceType.class.getSimpleName());
-        if (MapUtils.isNotEmpty(lineCheckers)) {
-            for (final Map.Entry<String, LineCheckerResult> lineCheckerEntry : lineCheckers.entrySet()) {
-                final String componentKey = lineCheckerEntry.getKey();
-                final LineCheckerResult referenceLineChecker = lineCheckerEntry.getValue();
-
-                ((ReferenceType) referenceLineChecker.fieldTypeForOne()).getReferenceValues().entrySet().stream()
-                        .filter(e -> requiredreferencesValues.containsKey(e.getKey().naturalKey()))
-                        .forEach(e ->
-                                data.stream()
-                                        .limit(1)
-                                        .forEach(dataRow -> {
-                                            final Map<String, RefsLinkedToValue> refsLinkedToValues = dataRow.refsLinkedTo().get(((ReferenceType) referenceLineChecker.fieldTypeForOne()).getRefType());
-                                            if (refsLinkedToValues != null && refsLinkedToValues.containsKey(lineCheckerEntry.getKey())) {
-                                                final Set<UUID> refIds = refsLinkedToValues
-                                                        .get(lineCheckerEntry.getKey()).uuids();
-                                                requiredreferencesValues.values().stream()
-                                                        .filter(k -> refIds != null)
-                                                        .map(l ->
-                                                                l.stream()
-                                                                        .filter(referenceValue -> refIds.contains(referenceValue.getId()))
-                                                                        .findFirst())
-                                                        .filter(Optional::isPresent)
-                                                        .map(Optional::get)
-                                                        .findFirst()
-                                                        .ifPresent(referenceValue -> lineCheckers.put(
-                                                                componentKey,
-                                                                new LineCheckerResultDisplay<>(
-                                                                        referenceLineChecker,
-                                                                        referenceValue
-                                                                )));
-                                            }
-                                        })
-                        );
-            }
-        } else {
-            //TODO on est dans le cas ou aucun computationChecker reference n'est décrit : authorizationscope  n'est pas un referentiel
-        }
-        DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
-
         final List<DataRowResult> dataRowResults = data.stream()
                 .map(dataRow -> DataRowResult.of(
                         dataRow,
                         variables,
-                        locale.getLanguage(),
-                        dataRepositoryWithBuffer))
+                        locale.getLanguage()
+                ))
                 .toList();
-        final Map<String, String> referenceTypeForReferencingColumns =
-                Optional.ofNullable(checkedFormatcomponents.get(ReferenceType.class.getSimpleName()))
-                        .map(checkedFormatColumn -> checkedFormatColumn.entrySet()
-                                .stream()
-                                .collect(Collectors.toMap(
-                                                Map.Entry::getKey,
-                                                e -> Optional.of(e)
-                                                        .map(Map.Entry::getValue)
-                                                        .map(LineCheckerResult::fieldTypeForOne)
-                                                        .map(c -> (ReferenceType) c)
-                                                        .map(ReferenceType::getRefType)
-                                                        .orElse("erreur")
-                                        )
-                                )
-                        )
-                        .orElseGet(LinkedHashMap::new);
         Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = serviceContainer.authorizationService().getAuthorizationScopes(application, MenuType.submission);
 
         return ResponseEntity.ok(new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
-                //totalRows,
+                filterLists,
                 checkedFormatcomponents,
-                referenceTypeForReferencingColumns,
                 referenceScopes));
     }
 
@@ -1183,7 +1140,7 @@ public class OreSiResources {
         try {
             final DownloadDatasetQuery downloadDatasetQuery = params != null ? new JsonRowMapper<DownloadDatasetQuery>().toObject(params, DownloadDatasetQuery.class) : new DownloadDatasetQuery();
             if (loadExample) {
-                downloadDatasetQuery.setLimit(5000L);
+                downloadDatasetQuery.setLimit(500L);
             }
             final Application application = serviceContainer.applicationService().getApplication(applicationNameOrID);
             downloadDatasetQuery.setApplication(application);

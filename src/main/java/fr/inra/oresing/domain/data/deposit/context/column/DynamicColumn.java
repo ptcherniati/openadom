@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.data.deposit.context.column;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.*;
+import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -20,14 +21,14 @@ public abstract class DynamicColumn extends Column {
      */
     private final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd;
 
-    public DynamicColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final Ltree expectedHierarchicalKey, final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd, final ComputedValueUsage computedValueUsage) {
-        super(referenceColumn, presenceConstraint, computedValueUsage);
+    public DynamicColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final Ltree expectedHierarchicalKey, final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
+        super(referenceColumn, presenceConstraint, computedValueUsage, defaultValue);
         this.expectedHierarchicalKey = expectedHierarchicalKey;
         this.refsLinkedToEntryToAdd = refsLinkedToEntryToAdd;
     }
 
     @Override
-    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+    public void pushValue(final String cellContent, final DataDatum referenceDatum, final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         final DataColumnIndexedValue existingReferenceColumnIndexedValue;
         Map<Ltree, String> values;
         if (referenceDatum.contains(getReferenceColumn())) {
@@ -42,7 +43,8 @@ public abstract class DynamicColumn extends Column {
         referenceDatum.put(getReferenceColumn(), newReferenceColumnIndexedValue);
         refsLinkedTo
                 .computeIfAbsent(refsLinkedToEntryToAdd.getKey(), k -> new HashMap<>())
-                .put(Column.COLUMN_IN_COLUMN_PATTERN.formatted(getReferenceColumn().column(), refsLinkedToEntryToAdd.getValue().hierarchicalKey()), refsLinkedToEntryToAdd.getValue());
+                .computeIfAbsent(Column.COLUMN_IN_COLUMN_PATTERN.formatted(getReferenceColumn().column(), refsLinkedToEntryToAdd.getValue().hierarchicalKey()), k->new HashMap<>())
+                .computeIfAbsent(refsLinkedToEntryToAdd.getValue().hierarchicalKey().getSql(), k-> new LinkedLines(refsLinkedToEntryToAdd.getValue().uuids()));
     }
 
     @Override

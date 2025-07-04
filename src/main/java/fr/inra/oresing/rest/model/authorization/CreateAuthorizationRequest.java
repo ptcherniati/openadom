@@ -7,7 +7,9 @@ import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequest
 import fr.inra.oresing.domain.repository.authorization.OperationType;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public record CreateAuthorizationRequest(
         UUID uuid,
@@ -71,5 +73,55 @@ public record CreateAuthorizationRequest(
                 localAuthorizationForAll,
                 authorizationsWithRestriction()
         );
+    }
+
+    public CreateAuthorizationRequest addRequiredOperationTypes(Function<String, Boolean> isVersionningStrategy) {
+        return new CreateAuthorizationRequest(
+                uuid(),
+                name(),
+                description(),
+                usersId(),
+                authorizationForAllWithDependants(isVersionningStrategy),
+                authorizationsWithRestrictionWithDependants(isVersionningStrategy)
+        );
+    }
+
+    private Map<String, AuthorizationInput> authorizationsWithRestrictionWithDependants(Function<String, Boolean> isVersionningStrategy) {
+        if(authorizationsWithRestriction()==null){
+            return Map.of();
+        }
+        return authorizationsWithRestriction().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().withRestrictionWithDependants(entry.getKey(), isVersionningStrategy)
+                        )
+                );
+    }
+
+    private Map<String, Set<OperationType>> authorizationForAllWithDependants(Function<String, Boolean> isVersionningStrategy) {
+        if(authorizationForAll() == null){
+            return Map.of();
+        }
+        return authorizationForAll().entrySet().stream()
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> entry.getValue().stream()
+                                .flatMap(operationType -> {
+                                    final Boolean isVersionning = isVersionningStrategy.apply(entry.getKey());
+                                    if(operationType==null){
+                                        return Stream.of();
+                                    }
+                                    if(OperationType.extraction.equals(operationType)) {
+                                        return Stream.of(operationType);
+                                    }
+                                    if(Set.of(OperationType.depot, OperationType.publication).contains(operationType)){
+                                        return isVersionning?
+                                                Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction):
+                                                Stream.of(OperationType.depot, OperationType.publication, OperationType.extraction);
+                                    }
+                                    return Stream.of(OperationType.depot, OperationType.publication, OperationType.delete, OperationType.extraction);
+                                })
+                                .collect(Collectors.toSet())
+                ));
     }
 }

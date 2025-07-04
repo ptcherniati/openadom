@@ -525,9 +525,15 @@ public class OreSiResourcesTest {
         // recherche d'une ligne
         mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1))).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(jsonPath("$.rows[0].rowId[0]", equalTo(ids.get(1))));
 
+
+       // Nous sommes dans une strategie OA_INSERTING->  delete non compris
         mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").param("downloadDatasetQuery", SELECT_ROW_BY_NATURAL_KEY.formatted(hierarchicalKeys.get(1))).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(jsonPath("$.rows[0].hierarchicalKey", equalTo(hierarchicalKeys.get(1))));
-        String deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{data}", "type_de_sites").with(csrf().asHeader()).param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1))).cookie(fixtures.getWithRightsUserConnection().cookie())).andReturn().getResponse().getContentAsString();
-        Assertions.assertTrue(deletedIds.contains(ids.get(1)));
+        String deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{data}", "type_de_sites")
+                .with(csrf().asHeader())
+                .param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1)))
+                .cookie(fixtures.getWithRightsUserConnection().cookie())).andReturn().getResponse().getContentAsString();
+        Assertions.assertFalse(deletedIds.contains(ids.get(1)));
+
 
         //suppression par id
         mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites").with(csrf().asHeader()).param("_row_id_", ids.get(1)).cookie(fixtures.getWithRightsUserConnection().cookie())).andReturn().getResponse().getContentAsString();
@@ -721,8 +727,8 @@ public class OreSiResourcesTest {
             }
             //on regarde les versions déposées
             response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
-                    .param("repositoryId", getPemRepositoryId(plateforme, projet, site))
-                    .cookie(fixtures.getWithRightsUserConnection().cookie()))
+                            .param("repositoryId", getPemRepositoryId(plateforme, projet, site))
+                            .cookie(fixtures.getWithRightsUserConnection().cookie()))
                     .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(0))).andReturn().getResponse().getContentAsString();
 
             //récupération de l'identifiant de la dernière version déposée
@@ -734,22 +740,30 @@ public class OreSiResourcesTest {
                 if (status > 300) {
                     System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                 }
-            }).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(0))).andReturn().getResponse().getContentAsString();
+            })
+                    .andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$.rows", hasSize(0)))
+                    .andReturn().getResponse().getContentAsString();
 
             // on publie le dernier fichier déposé sans les droits
 
-            Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").with(csrf().asHeader()).param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException();
+            /*Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
+                    .with(csrf().asHeader())
+                    .param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
+                    .cookie(fixtures.getWithRightsUserConnection().cookie()))
+                    .andExpect(status().is4xxClientError())
+                    .andReturn().getResolvedException();
 
             Assertions.assertInstanceOf(NotApplicationDataWriterException.class, exception);
             Assertions.assertEquals(NotApplicationDataWriterException.NO_RIGHT_FOR_USER_DATA_WRITER, exception.getMessage());
             Assertions.assertEquals("pem", ((NotApplicationDataWriterException) exception).dataName);
-            Assertions.assertEquals("monsore", ((NotApplicationDataWriterException) exception).applicationName);
+            Assertions.assertEquals("monsore", ((NotApplicationDataWriterException) exception).applicationName);*/
 
 
-            // on donne les droits publication
+            // on donne les droits publication (obtenus avec depot
 
 
-            getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
+            //getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
 
 
             // on publie le dernier fichier déposé
@@ -829,23 +843,23 @@ public class OreSiResourcesTest {
 
         response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0))).andExpect(jsonPath("$.rows.length()").value(136)).andExpect(jsonPath("$.rows[*]", hasSize(136))).andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'NULL_KEY__oir__p1')][? (@.projet.value == 'projet_manche')]", hasSize(0))).andReturn().getResponse().getContentAsString();
 
-        // on supprime le fichier on peut dépublier mais pas supprimer le fichier
-        NotApplicationCanDeleteRightsException resolvedException = (NotApplicationCanDeleteRightsException) mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException();
+        // on supprime le fichier on peut le supprimer (oa_versionning = delete with depot)
+       /* NotApplicationCanDeleteRightsException resolvedException = (NotApplicationCanDeleteRightsException) mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException();
         assert resolvedException != null;
         Assertions.assertEquals("NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION", resolvedException.getMessage());
         Assertions.assertEquals("pem", resolvedException.getDataType());
         Assertions.assertEquals("monsore", resolvedException.getApplicationName());
-        /*Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
+        *//*Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
                         .cookie(fixtures.adminConnection.cookie()))
                 .andExpect(status().is4xxClientError())
                 .andReturn()
                 .getResolvedException();
-        Assertions.assertInstanceOf(NotApplicationCanDeleteRightsException.class, resolvedException1);*/
+        Assertions.assertInstanceOf(NotApplicationCanDeleteRightsException.class, resolvedException1);*//*
 
         //on donne les droits de suppression
 
         getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.delete.name(), OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
-
+*/
         // on supprime le fichier a les droits car à les droits de publication
         mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andDo(result -> {
             if (result.getResponse().getStatus() != 200) {
@@ -1030,11 +1044,8 @@ public class OreSiResourcesTest {
 
     private String publishOrDepublish(final Cookie cookie, final String projet, final String plateforme, final String site, final int expected, final boolean toPublish, final int numberOfVersions, final boolean published) throws Exception {
         final URL resource;
-        String response;
         resource = getClass().getResource(getPemRepositoryDataResourceName(projet, site));
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
-
-            //dépôt et publication d'un fichier projet site__p1
             final MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
             refFile.transferTo(Path.of("/tmp/pem.csv"));
             MvcResult mockResponse = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").file(refFile).with(csrf().asHeader()).param("params", getPemRepositoryParams(projet, plateforme, site, toPublish)).cookie(cookie)).andReturn();
@@ -1370,7 +1381,16 @@ public class OreSiResourcesTest {
             }
         }
         {
-            mockMvc.perform(get("/api/v1/applications/pattern/data/{refType}/json", "taxon").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$..values.tel_S2_value[*].__VALUE__", containsInAnyOrder("7.2", "3.4", "2.1", "2.6", "2.5", "5.2", "3.9", "3.2", "1.2"))).andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_resolution", containsInAnyOrder(3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2))).andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_qualifier", containsInAnyOrder(3, 3, 3, 3, 3, 3, 3, 3, 3))).andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_variable", containsInAnyOrder("annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy"))).andExpect(jsonPath("$..values.tel_S2_value[*].swc_qc", containsInAnyOrder(1, 1, 0, 2, 1, 0, 0, 1, 1))).andExpect(jsonPath("$..values.tel_S2_value[*].swc_sd", containsInAnyOrder(3.9, 2.5, 7.2, 3.2, 2.1, 3.4, 1.2, 5.2, 3.9))).andExpect(jsonPath("$.rows[*].refsLinkedTo.site['tel_S2_value::tel_S2_variable::annecy_S2_3_3.2'].hierarchicalKey.sql", containsInAnyOrder("siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy", "siteKannecy"))).andExpect(jsonPath("$.referenceTypeForReferencingColumns['tel_S2_value::tel_S2_variable']", Is.is("site"))).andReturn().getResponse().getContentAsString();
+            mockMvc.perform(get("/api/v1/applications/pattern/data/{refType}/json", "taxon").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful())
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].__VALUE__", containsInAnyOrder("7.2", "3.4", "2.1", "2.6", "2.5", "5.2", "3.9", "3.2", "1.2")))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_resolution", containsInAnyOrder(3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2)))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_qualifier", containsInAnyOrder(3, 3, 3, 3, 3, 3, 3, 3, 3)))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_variable", containsInAnyOrder("annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy")))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].swc_qc", containsInAnyOrder(1, 1, 0, 2, 1, 0, 0, 1, 1)))
+                    .andExpect(jsonPath("$..values.tel_S2_value[*].swc_sd", containsInAnyOrder(3.9, 2.5, 7.2, 3.2, 2.1, 3.4, 1.2, 5.2, 3.9)))
+                    .andExpect(jsonPath("$.rows[*].refsLinkeds[?(     @.referenceType == 'proprietes_taxon'      && @.naturalKey.sql == 'niveau_incertitude_de_determination' )][? (@.naturalKey.sql=='niveau_incertitude_de_determination')].length()", containsInAnyOrder(7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7)))
+                    .andExpect(jsonPath("$.rows[*].refsLinkeds[?(@.referenceType == 'site')].naturalKey.sql", containsInAnyOrder( "aiguebelette","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy")))
+                    .andReturn().getResponse().getContentAsString();
 
         }
         {
@@ -1463,58 +1483,60 @@ public class OreSiResourcesTest {
     @Tag("app.acbb")
     Stream<DynamicNode> addApplicationAcbb() {
         AcbbFixture acbbFixture = new AcbbFixture(fixtures, mockMvc);
-        return Stream.of(dynamicTest("init users and rights", () -> fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "acbb")), dynamicTest("load acbb", () -> {
-            final URL resource = getClass().getResource(AcbbFixture.getAcbbApplicationConfigurationResourceName());
-            assert resource != null;
-            try (final InputStream in = resource.openStream()) {
-                final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
-                final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "acbb_openadom_v2", ""));
-            } catch (final Throwable e) {
-                throw new OreSiTechnicalException(e.getMessage(), e);
-            }
-        }), dynamicContainer("load acbb References", acbbFixture.loadAcbbReferences()), dynamicContainer("add data SWC", Stream.of(dynamicTest("load swc", () -> {
-            try (final InputStream in = getClass().getResourceAsStream(AcbbFixture.getFluxToursDataResourceName())) {
-                final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
-
-                final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx").file(file).with(csrf().asHeader()).param("params", """
-                        {
-                            "fileid":null,
-                            "binaryfiledataset":{
-                                "datatype":"t_flux_tours_flx",
-                                "requiredAuthorizations":{
-                                   "tr_sites_sit":["laqueuille"]
-                                },
-                                "from":"2003-12-31 23:00:00",
-                                "to":"2004-12-31 23:00:00",
-                                "comment":null
-                            },
-                            "topublish":true}"""
-
-                ).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                    final int status = result.getResponse().getStatus();
-                    if (status > 300) {
-                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+        return Stream.of(
+                dynamicTest("init users and rights", () -> fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "acbb")), dynamicTest("load acbb", () -> {
+                    final URL resource = getClass().getResource(AcbbFixture.getAcbbApplicationConfigurationResourceName());
+                    assert resource != null;
+                    try (final InputStream in = resource.openStream()) {
+                        final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
+                        final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "acbb_openadom_v2", ""));
+                    } catch (final Throwable e) {
+                        throw new OreSiTechnicalException(e.getMessage(), e);
                     }
-                }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+                }),
+                dynamicContainer("load acbb References", acbbFixture.loadAcbbReferences()), dynamicContainer("add data SWC", Stream.of(dynamicTest("load swc", () -> {
+                    try (final InputStream in = getClass().getResourceAsStream(AcbbFixture.getFluxToursDataResourceName())) {
+                        final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
+
+                        final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx").file(file).with(csrf().asHeader()).param("params", """
+                                {
+                                    "fileid":null,
+                                    "binaryfiledataset":{
+                                        "datatype":"t_flux_tours_flx",
+                                        "requiredAuthorizations":{
+                                           "tr_sites_sit":["laqueuille"]
+                                        },
+                                        "from":"2003-12-31 23:00:00",
+                                        "to":"2004-12-31 23:00:00",
+                                        "comment":null
+                                    },
+                                    "topublish":true}"""
+
+                        ).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
+                            final int status = result.getResponse().getStatus();
+                            if (status > 300) {
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                            }
+                        }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
 
-            }
-        }), dynamicTest("read SWC to json", () -> {
+                    }
+                }), dynamicTest("read SWC to json", () -> {
 //            String expectedJson = Resources.toString(getClass().getResource("/data/acbb_openadom_v2/compare/export.json"), StandardCharsets.UTF_8);
-            mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_JSON)).andDo(result -> {
-                        final int status = result.getResponse().getStatus();
-                        if (status > 300) {
-                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                        }
-                    }).andExpect(status().isOk()).andExpect(jsonPath("$.rows[*].[? (@.values.flx_day =~ /^.*date:2004.*$/)]", hasSize(17568))).andExpect(jsonPath("$.rows[*]", hasSize(17568)))
+                    mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_JSON)).andDo(result -> {
+                                final int status = result.getResponse().getStatus();
+                                if (status > 300) {
+                                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                                }
+                            }).andExpect(status().isOk()).andExpect(jsonPath("$.rows[*].[? (@.values.flx_day =~ /^.*date:2004.*$/)]", hasSize(17568))).andExpect(jsonPath("$.rows[*]", hasSize(17568)))
 //                    .andExpect(content().json(expectedJson))
-                    .andReturn().getResponse().getContentAsString();
-        }), dynamicTest("read SWC to csv", () -> {
-            final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/zip").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)).andExpect(request().asyncStarted()).andExpect(status().isOk()).andReturn();
-            Objects.requireNonNull(mvcResult.getRequest().getAsyncContext()).setTimeout(120000);
+                            .andReturn().getResponse().getContentAsString();
+                }), dynamicTest("read SWC to csv", () -> {
+                    final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/zip").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)).andExpect(request().asyncStarted()).andExpect(status().isOk()).andReturn();
+                    Objects.requireNonNull(mvcResult.getRequest().getAsyncContext()).setTimeout(120000);
 
-            mockMvc.perform(asyncDispatch(mvcResult)).andExpect(testZip(List.of("t_flux_tours_flx.csv")));
-        }))));
+                    mockMvc.perform(asyncDispatch(mvcResult)).andExpect(testZip(List.of("t_flux_tours_flx.csv")));
+                }))));
     }
 
     @Test

@@ -70,6 +70,15 @@ public class Application extends OreSiEntity {
                 .map(getDataDescription);
     }
 
+    public boolean strategyIsVersionning(String dataName) {
+        return isData(dataName) &&
+        findData(dataName)
+                .map(StandardDataDescription::submission)
+                .map(Submission::strategy)
+                .map(SubmissionType.OA_VERSIONING::equals)
+                .orElse(false);
+    }
+
     public Optional<ComponentDescription> findComponentOfData(String dataName, String componentName) {
         Function<Map<String, ComponentDescription>, ComponentDescription> getComponentDescription = components -> components.get(componentName);
         return findData(dataName)

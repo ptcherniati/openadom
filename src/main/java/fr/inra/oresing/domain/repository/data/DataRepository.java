@@ -43,4 +43,5 @@ public interface DataRepository {
     void flush();
 
     Map<String, Map<String, String>> findDisplayByNaturalKey(String replace);
+
 }

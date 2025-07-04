@@ -20,7 +20,7 @@ public class DataValue extends OreSiEntity {
     private Ltree hierarchicalKey;
     private Ltree naturalKey;
     private DataDatum refValues;
-    private Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo;
+    private Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo;
     private UUID binaryFile;
     private Map referencingreferences;
     private LineIdentityPatternColumnName lineHierarchicalKeyPatternColumnName;

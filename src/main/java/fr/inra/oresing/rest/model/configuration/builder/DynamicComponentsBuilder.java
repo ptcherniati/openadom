@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.model.configuration.builder;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
@@ -47,35 +48,40 @@ public record DynamicComponentsBuilder(RootBuilder rootBuilder) {
             Multiplicity multiplicity = Optional.ofNullable(checkerDescriptionParsing.result())
                     .map(CheckerDescription::multiplicity)
                     .orElse(Multiplicity.ONE);
-            final Parsing<ComputationChecker> defaultValueParsing = rootBuilder
-                    .getComputationBuilder()
-                    .build(
-                            i18n,
-                            required, multiplicity,
-                            NodeSchemaValidator.joinPath(
-                                    componentPath,
-                                    ConfigurationSchemaNode.OA_DYNAMIC_COMPONENTS,
-                                    componentKey,
-                                    ConfigurationSchemaNode.OA_DEFAULT_VALUE
-                            ),
-                            defaultValueNode
-                    );
-            i18n = defaultValueParsing.i18n();
-            if (defaultValueParsing.result().getReferences() != null) {
-                for (final String reference : defaultValueParsing.result().getReferences()) {
-                    if (!rootBuilder.getListDataKeys().contains(reference)) {
-                        rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
-                                        "referenceName", reference,
-                                        "allDataNames", rootBuilder.getListDataKeys()),
+            Parsing<ComputationChecker> defaultValueParsing;
+            if (defaultValueNode != null && !defaultValueNode.isMissingNode()) {
+                defaultValueParsing= rootBuilder
+                        .getComputationBuilder()
+                        .build(
+                                i18n,
+                                required, multiplicity,
                                 NodeSchemaValidator.joinPath(
                                         componentPath,
-                                        ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
+                                        ConfigurationSchemaNode.OA_DYNAMIC_COMPONENTS,
                                         componentKey,
-                                        ConfigurationSchemaNode.OA_COMPUTATION
-                                )
+                                        ConfigurationSchemaNode.OA_DEFAULT_VALUE
+                                ),
+                                defaultValueNode
                         );
+                i18n = defaultValueParsing.i18n();
+                if (defaultValueParsing.result().getReferences() != null) {
+                    for (final String reference : defaultValueParsing.result().getReferences()) {
+                        if (!rootBuilder.getListDataKeys().contains(reference)) {
+                            rootBuilder.buildError(ConfigurationException.UNKNOWN_REFERENCE_NAME, Map.of(
+                                            "referenceName", reference,
+                                            "allDataNames", rootBuilder.getListDataKeys()),
+                                    NodeSchemaValidator.joinPath(
+                                            componentPath,
+                                            ConfigurationSchemaNode.OA_CONSTANT_COMPONENTS,
+                                            componentKey,
+                                            ConfigurationSchemaNode.OA_COMPUTATION
+                                    )
+                            );
+                        }
                     }
                 }
+            } else {
+                defaultValueParsing = new Parsing<>(i18n, null);
             }
             final Parsing<String> exportHeaderParsing = rootBuilder
                     .addExportHeaders(

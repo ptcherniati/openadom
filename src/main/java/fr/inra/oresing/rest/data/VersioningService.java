@@ -49,7 +49,7 @@ public class VersioningService {
     }
 
     @Transactional
-    public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, MultipartFile file, String params, boolean beforeDelete) throws IOException {
+    public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, MultipartFile file, boolean beforeDelete) throws IOException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         String fileName = file == null ? null : file.getOriginalFilename();
         Optional<FileOrUUID> fileOrUUIDOpt = OreSiApiRequestContext.getAuthentication()
@@ -101,7 +101,9 @@ public class VersioningService {
             dataId = state.binaryFile().getId();
         }
         if (dataId != null && state.isRepository()) {
-            BinaryFile binaryFile = state.binaryFile();
+            BinaryFile binaryFile = serviceContainer.binaryFileService()
+                    .getFile(application.getName(), state.binaryFile().getId())
+                    .orElse(state.binaryFile());
             binaryFile.markAsPublished(fileOrUUID.topublish());
             dataId = binaryFileRepository(application).store(binaryFile);
         }
@@ -115,7 +117,7 @@ public class VersioningService {
             FileOrUUID fileOrUUID,
             String fileName,
             ApplicationDataWriter applicationDataWriter) {
-        DataRepositoryForBuffer dataRepositoryWithBuffer = serviceContainer.dataService().getDataRepositoryWithBuffer(application);
+        DataRepository dataRepository = serviceContainer.dataService().getDataRepository(application);
         ReportErrors errors = new ReportErrors(jsonRowMapper);
         Function<UUID, Optional<BinaryFile>> resolveFileById = uuid -> binaryFileRepository(application).tryFindById(uuid);
         return AuthorizationPublicationServiceBuilder.builder(
@@ -126,7 +128,7 @@ public class VersioningService {
                         applicationDataWriter,
                         resolveFileById
                 )
-                .testAndBuild(dataRepositoryWithBuffer);
+                .testAndBuild(dataRepository);
     }
 
     @Transactional
@@ -144,11 +146,6 @@ public class VersioningService {
                             applicationName,
                             dataName.get(),
                             null,
-                            """
-                                    {
-                                       "fileid":"%1$s",
-                                       "topublish":false
-                                    }""".formatted(id),
                             true
                     );
                 } catch (IOException e) {

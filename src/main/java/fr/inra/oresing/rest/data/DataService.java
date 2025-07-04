@@ -35,10 +35,8 @@ import fr.inra.oresing.domain.groovy.Expression;
 import fr.inra.oresing.domain.groovy.GroovyContextHelper;
 import fr.inra.oresing.domain.groovy.StringGroovyExpression;
 import fr.inra.oresing.domain.groovy.StringSetGroovyExpression;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import fr.inra.oresing.persistence.*;
-import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
 import fr.inra.oresing.rest.data.extraction.DataCsvBuilder;
@@ -51,7 +49,6 @@ import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
@@ -101,7 +98,7 @@ public class DataService {
         this.serviceContainer = serviceContainer;
     }
 
-    private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription) {
+    private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription, TransformationConfiguration defaultValue) {
         final String reference = referenceDynamicColumnDescription.reference();
         final DataColumn referenceColumnToLookForHeader = new DataColumn(referenceDynamicColumnDescription.referenceColumnToLookForHeader());
         final List<DataValue> allByReferenceType = referenceValueRepository.findAllByReferenceTypeStream(reference)
@@ -123,8 +120,8 @@ public class DataService {
                                             naturalKey
                                     )
                             ),
-                            ComputedValueUsage.NOT_COMPUTED
-                    ) {
+                            defaultValue==null?ComputedValueUsage.NOT_COMPUTED:ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE,
+                            defaultValue) {
                         @Override
                         public String getExpectedHeader() {
                             return fullHeader;
@@ -201,7 +198,7 @@ public class DataService {
         return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
     }
 
-    public DataImporterContext getDataImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
+    public DataImporterContext  getDataImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
         final Configuration configuration = application.getConfiguration();
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
@@ -373,7 +370,7 @@ public class DataService {
                                     dynamicComponent.reference(),
                                     dynamicComponent.referenceColumnToLookForHeader()
                             );
-                    final ImmutableSet<Column> valuedDynamicColumns = dynamicColumnDescriptionToColumns(referenceValueRepository, referenceColumn, referenceDynamicColumnDescription);
+                    final ImmutableSet<Column> valuedDynamicColumns = dynamicColumnDescriptionToColumns(referenceValueRepository, referenceColumn, referenceDynamicColumnDescription, dynamicComponent.defaultValue());
                     return valuedDynamicColumns.stream();
                 }).collect(ImmutableSet.toImmutableSet());
 
@@ -413,7 +410,7 @@ public class DataService {
         final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
         final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         final Expression<Set<String>> computationExpression = StringSetGroovyExpression.forExpression(computation.expression());
-        return new ManyValuesStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE) {
+        return new ManyValuesStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
             @Override
             public String getExpectedHeader() {
                 throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié car elle ne doit pas être dans le CSV");
@@ -438,7 +435,7 @@ public class DataService {
         final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
         final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
         final Expression<String> computationExpression = StringGroovyExpression.forExpression(computation.expression(), computation.exceptionMessages());
-        return new OneValueStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE) {
+        return new OneValueStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
             @Override
             public String getExpectedHeader() {
                 throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié");
@@ -558,7 +555,7 @@ public class DataService {
                 .withDownloadDatasetQuery(downloadDatasetQuery)
                 .withReferenceService(this)
                 .withOutputStream(outputStream)
-                .onRepositories(getDataRepositoryWithBuffer(application), null)
+                .onRepositories(getDataRepository(application), null)
                 .addDatas(datas)
                 .buildDataCsv(downloadDatasetQuery.getLanguage(), dataDescription, downloadDatasetQuery.horizontalDisplay());
     }
@@ -588,9 +585,8 @@ public class DataService {
                 .block();
     }
 
-    public DataRepositoryForBuffer getDataRepositoryWithBuffer(Application application) {
-        final DataRepository dataRepository = repository.getRepository(application).data();
-        return new DataRepositoryWithBuffer(application, dataRepository);
+    public DataRepository getDataRepository(Application application) {
+        return repository.getRepository(application).data();
     }
 
     public Mono<List<DownloadDatasetQueryByRowId>> getDownloadDatasetQueriesAsync(
@@ -623,11 +619,11 @@ public class DataService {
             DownloadDatasetQuery downloadDatasetQuery) {
         Application application = downloadDatasetQuery.application();
         DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
-        DataRepositoryForBuffer dataRepositoryWithBuffer = getDataRepositoryWithBuffer(application);
+        //DataRepositoryForBuffer dataRepositoryWithBuffer = getDataRepositoryWithBuffer(application);
 
         serviceContainer.authenticationService().setRoleForClient();
 
-        UUIDsfromData uuiDsfromData = addDatacsv(zipOutputStream, dataRepositoryWithBuffer, downloadDatasetQuery, "%s.csv");
+        UUIDsfromData uuiDsfromData = addDatacsv(zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
 
 
         getDownloadDatasetQueriesAsync(
@@ -641,7 +637,7 @@ public class DataService {
                 .subscribe(downloadDatasetQueries -> {
                     for (DownloadDatasetQueryByRowId downloadDatasetQueryByRowId : downloadDatasetQueries) {
                         try {
-                            addDatacsv(zipOutputStream, dataRepositoryWithBuffer, downloadDatasetQueryByRowId, "references/%s.csv");
+                            addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
                         } catch (Exception e) {
                             throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
                         }
@@ -701,18 +697,17 @@ public class DataService {
 
     public UUIDsfromData addDatacsv(
             final ZipOutputStream zipOutputStream,
-            DataRepositoryForBuffer dataRepositoryWithBuffer,
+            DataRepository dataRepository,
             final DownloadDatasetQuery downloadDatasetQuery,
             String fileNamePattern) {
         final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
         try {
-            DataRepository dataRepository = repository.getRepository(downloadDatasetQuery.application()).data();
             AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
             return DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> serviceContainer.dataService().getDataImporterContext(downloadDatasetQuery.application(), referenceType, null))
                     .withDownloadDatasetQuery(downloadDatasetQuery)
                     .withReferenceService(serviceContainer.dataService())
                     .withOutputStream(zipOutputStream)
-                    .onRepositories(dataRepositoryWithBuffer, additionalFileRepository)
+                    .onRepositories(dataRepository, additionalFileRepository)
                     .addDatas(datas)
                     .build(fileNamePattern);
         } catch (IOException e) {
@@ -1075,6 +1070,10 @@ public class DataService {
             list = repository.getRepository(application).data().findDataColumn(refType, column);
         }
         return list;
+    }
+
+    public Flux<FilterList> filterList(final Application application, final String refType) {
+        return repository.getRepository(application).data().getFilterList(refType);
     }
 
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {

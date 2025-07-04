@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import static fr.inra.oresing.rest.security.AuthorizationFilter.BAD_REQUEST;
+import static fr.inra.oresing.rest.security.AuthorizationFilter.BAD_LOGIN_PASSWORD;
 
 @RestControllerAdvice
 @Slf4j
@@ -79,7 +79,10 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
         return switch (eee.getMessage()) {
             case "INACTIVE_ACCOUNT" -> {
                 final HttpHeaders responseHeaders = new HttpHeaders();
-                responseHeaders.set("Id", Optional.ofNullable(eee.getParams()).map(m -> (UUID) m.get("id")).map(UUID::toString).orElse(""));
+                responseHeaders.set("Id", Optional.ofNullable(eee.getParams())
+                        .map(m -> m.get("id"))
+                        .map(Object::toString)
+                        .orElse(""));
                 responseHeaders.set("Login", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("login"))).orElse(""));
                 responseHeaders.set("Email", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("email"))).orElse(""));
                 responseHeaders.set("Result__State", Optional.ofNullable(eee.getParams()).map(m -> (String) m.get(("state"))).orElse(""));
@@ -91,7 +94,7 @@ public class OreExceptionHandler extends ResponseEntityExceptionHandler {
             case "BAD_LOGIN_PASSWORD" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             case "BAD_PASSWORDS" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             case "BAD_VALIDATION_KEY" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
-            case BAD_REQUEST -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
+            case "BAD_REQUEST" -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(eee.getMessage());
             default -> ResponseEntity.status(HttpStatus.FORBIDDEN).body(eee.getMessage());
         };
     }

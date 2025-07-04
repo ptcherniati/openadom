@@ -12,8 +12,7 @@ public record GetDataResult(
         Set<String> variables,
         List<DataRowResult> rows,
         //Long totalRows,
-        Map<String, Map<String, fr.inra.oresing.rest.model.data.LineCheckerResult>> checkedFormatComponents,
-        Map<String, String> referenceTypeForReferencingColumns,
+        List<fr.inra.oresing.persistence.FilterList> filterLists, Map<String, Map<String, fr.inra.oresing.rest.model.data.LineCheckerResult>> checkedFormatComponents,
         Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes
 ) {
 }

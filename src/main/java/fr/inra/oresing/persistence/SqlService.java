@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -158,9 +159,13 @@ public class SqlService {
     }
 
     public void setRole(final OreSiRoleToAccessDatabase roleToAccessDatabase) {
-        final String sql = "SET LOCAL ROLE %s"
-                .formatted(roleToAccessDatabase.getSqlIdentifier());
-        execute(sql);
+        Optional.ofNullable(roleToAccessDatabase)
+                .or(()->Optional.of(OreSiRole.publicRole()))
+                .ifPresent(oreSiRoleToAccessDatabase -> {
+                    final String sql = "SET LOCAL ROLE %s"
+                            .formatted(oreSiRoleToAccessDatabase.getSqlIdentifier());
+                    execute(sql);
+                });
     }
 
     public boolean hasRole(final OreSiRole role) {

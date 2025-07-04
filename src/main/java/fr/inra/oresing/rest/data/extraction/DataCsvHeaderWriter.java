@@ -1,15 +1,11 @@
 package fr.inra.oresing.rest.data.extraction;
 
 import com.opencsv.CSVWriter;
-import fr.inra.oresing.domain.application.configuration.Configuration;
-import fr.inra.oresing.domain.application.configuration.DynamicComponent;
-import fr.inra.oresing.domain.application.configuration.PatternComponent;
-import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 import fr.inra.oresing.domain.data.read.query.*;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.persistence.DataRow;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -22,7 +18,7 @@ public record DataCsvHeaderWriter(
         CSVWriter writer,
         Comparator<ComponentOrderByForExport> comparator,
         Function<String, String> getInternationalizedHeader,
-        DataRepositoryForBuffer dataRepositoryWithBuffer,
+        DataRepository dataRepository,
         List<ComponentOrderByForExport> orderedColumns,
         StandardDataDescription dataDescription,
         Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns,
@@ -31,14 +27,14 @@ public record DataCsvHeaderWriter(
             CSVWriter writer,
             Comparator<ComponentOrderByForExport> comparator,
             Function<String, String> getInternationalizedHeader,
-            DataRepositoryForBuffer dataRepositoryWithBuffer,
+            DataRepository dataRepository,
             StandardDataDescription dataDescription,
             Map<String, Configuration.InternationalizedSortedColumn> internationalizedSortedColumns,
             boolean horizontalDisplay) {
         this(writer,
                 comparator,
                 getInternationalizedHeader,
-                dataRepositoryWithBuffer,
+                dataRepository,
                 new ArrayList<>(),
                 dataDescription,
                 internationalizedSortedColumns,
@@ -74,9 +70,10 @@ public record DataCsvHeaderWriter(
 
     private Stream<String> componentOrderByGetHeader(ComponentOrderByForExport componentOrderBy) {
         Configuration.InternationalizedSortedColumn internationalizedSortedColumn = internationalizedSortedColumns.get(componentOrderBy.componentKey());
-        String exportHeader = Optional.ofNullable(internationalizedSortedColumn)
-                .map(Configuration.InternationalizedSortedColumn::header)
-                .map(getInternationalizedHeader())
+        String exportHeader =  Optional.ofNullable(internationalizedSortedColumn)
+                .map(Configuration.InternationalizedSortedColumn::componentDescription)
+                .map(ComponentDescription::exportHeaderName)
+                .map(getInternationalizedHeader)
                 .orElse(null);
         return exportHeader == null ? Stream.of(Objects.requireNonNull(internationalizedSortedColumn).header()) : Stream.of(exportHeader);
 
@@ -106,12 +103,13 @@ public record DataCsvHeaderWriter(
 
     private LinkedList<ComponentOrderByForExport> buildInternationalizedColumns(DataRow dataRow) {
         return internationalizedSortedColumns().values().stream()
-                .flatMap(internationalizedSortedColumn -> switch (internationalizedSortedColumn.componentDescription()) {
-                    case DynamicComponent dynamicComponent -> columnsForDynamicComponent(dynamicComponent);
-                    case PatternComponent patternComponent ->
-                            columnsForPatternComponent(internationalizedSortedColumn, patternComponent, dataRow);
-                    default -> columnsForDefaultComponent(internationalizedSortedColumn);
-                })
+                .flatMap(internationalizedSortedColumn ->
+                        switch (internationalizedSortedColumn.componentDescription()) {
+                            case DynamicComponent dynamicComponent -> columnsForDynamicComponent(dynamicComponent);
+                            case PatternComponent patternComponent ->
+                                    columnsForPatternComponent(internationalizedSortedColumn, patternComponent, dataRow);
+                            default -> columnsForDefaultComponent(internationalizedSortedColumn);
+                        })
                 .sorted(comparator())
                 .collect(Collectors.toCollection(LinkedList::new));
     }
@@ -119,7 +117,7 @@ public record DataCsvHeaderWriter(
     private Stream<ComponentOrderBy> columnsForDefaultComponent(Configuration.InternationalizedSortedColumn internationalizedSortedColumn) {
         return Stream.of(new ComponentOrderBy(
                         internationalizedSortedColumn.componentDescription().componentKey(),
-                        DataRepository.Order.ASC,
+                        fr.inra.oresing.persistence.DataRepository.Order.ASC,
                         dataDescription().getTypeForComponentKey(internationalizedSortedColumn.componentDescription().componentKey())
                 )
         );
@@ -137,14 +135,14 @@ public record DataCsvHeaderWriter(
                         patternComponent.patternComponentAdjacents().forEach((key, value) -> qualifierColumns.add(
                                 new ComponentOrderBy(
                                         value.exportHeaderName(),
-                                        DataRepository.Order.ASC,
+                                        fr.inra.oresing.persistence.DataRepository.Order.ASC,
                                         dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
                                 )
                         ));
                         return new ComponentPatternOrderBy(
                                 patternComponent.componentKey(),
                                 columnName,
-                                DataRepository.Order.ASC,
+                                fr.inra.oresing.persistence.DataRepository.Order.ASC,
                                 dataDescription().getTypeForComponentKey(internationalizedSortedColumn.componentDescription().componentKey()),
                                 qualifierColumns.stream().sorted(comparator()).toList()
                         );
@@ -156,7 +154,7 @@ public record DataCsvHeaderWriter(
                     .forEach((key, value) -> qualifierColumns.add(
                             new ComponentOrderBy(
                                     value.exportHeaderName(),
-                                    DataRepository.Order.ASC,
+                                    fr.inra.oresing.persistence.DataRepository.Order.ASC,
                                     dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
                             )
                     ));
@@ -164,7 +162,7 @@ public record DataCsvHeaderWriter(
                     .forEach((key, value) -> adjacentColumns.add(
                             new ComponentOrderBy(
                                     value.exportHeaderName(),
-                                    DataRepository.Order.ASC,
+                                    fr.inra.oresing.persistence.DataRepository.Order.ASC,
                                     dataDescription().getTypeForPatternComponentKeyAndComponentKey(patternComponent.componentKey(), value.componentKey())
                             )
                     ));
@@ -177,7 +175,7 @@ public record DataCsvHeaderWriter(
                         return new ComponentPatternValueOrderBy(
                                 patternComponent.componentKey(),
                                 Column.__VALUE__,
-                                DataRepository.Order.ASC,
+                                fr.inra.oresing.persistence.DataRepository.Order.ASC,
                                 dataDescription().getTypeForComponentKey(componentKey),
                                 qualifierColumns,
                                 adjacentColumns
@@ -191,7 +189,7 @@ public record DataCsvHeaderWriter(
         String referenceName = dynamicComponent.reference();
         String referenceColumnToLookForHeader = dynamicComponent.referenceColumnToLookForHeader();
         ComponentType typeForComponentKey = dataDescription().getTypeForComponentKey(componentKey);
-        Map<String, ComponentOrderBy> dynamicColumns = dataRepositoryWithBuffer()
+        Map<String, ComponentOrderBy> dynamicColumns = dataRepository()
                 .findAllByReferenceTypeStream(referenceName)
                 .sorted(Comparator.comparing(dataValue -> dataValue.getNaturalKey().getSql()))
                 .collect(Collectors.toMap(
@@ -201,7 +199,7 @@ public record DataCsvHeaderWriter(
                                         .getRefValues()
                                         .get(new DataColumn(referenceColumnToLookForHeader))
                                         .getValuesToCheck().toString(),
-                                DataRepository.Order.ASC,
+                                fr.inra.oresing.persistence.DataRepository.Order.ASC,
                                 typeForComponentKey
                         ),
                         (v1, v2) -> v1,

@@ -117,7 +117,7 @@ public class CsvReader {
             final CSVRecord csvRecord) {
         final Iterator<String> currentHeader = columns.iterator();
         final DataDatum referenceDatum = new DataDatum();
-        final Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo = new HashMap<>();
+        final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo = new HashMap<>();
         final List<PatternValueForHeader> patternValueForHeaders = new LinkedList<>();
         final int lineNumber = Ints.checkedCast(csvRecord.getRecordNumber());
         int i = 0;
@@ -144,7 +144,7 @@ public class CsvReader {
         return buildRowsWithPattern(patternValueForHeaders, referenceDatum, lineNumber, refsLinkedTo);
     }
 
-    public Stream<RowWithReferenceDatum> buildRowsWithPattern(List<PatternValueForHeader> patternValueForHeaders, DataDatum referenceDatum, int lineNumber, Map<String, Map<String, RefsLinkedToValue>> refsLinkedTo) {
+    public Stream<RowWithReferenceDatum> buildRowsWithPattern(List<PatternValueForHeader> patternValueForHeaders, DataDatum referenceDatum, int lineNumber, Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo) {
         List<RowWithReferenceDatum> rowWithReferenceData = new LinkedList<>();
         for (PatternValueForHeader patternValueForHeader : patternValueForHeaders) {
             DataDatum patternComponentDatum = dataImporterContext.getPatternColumnFactory().toQualifierDatum(patternValueForHeader.header(), patternValueForHeader);

@@ -13,7 +13,7 @@ import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
 import fr.inra.oresing.domain.data.read.query.ComponentOrderByForExport;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.persistence.AdditionalFileRepository;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.rest.data.DataService;
@@ -39,7 +39,7 @@ public class DataCsvBuilder {
     private static final Logger log = LoggerFactory.getLogger(DataCsvBuilder.class);
     private DownloadDatasetQuery downloadDatasetQuery;
 
-    private DataRepositoryForBuffer dataRepositoryForBuffer;
+    private DataRepository dataRepository;
 
     private Flux<DataRow> datas;
     private OutputStream outputStream;
@@ -53,7 +53,9 @@ public class DataCsvBuilder {
     }
 
     private static DataRow addRefsLinkedTo(DataRow dataRow, UUIDsfromData uuidsfromData) {
-        dataRow.refsLinkedTo().entrySet().forEach(uuidsfromData::addRefsLinkedTo);
+        Optional.ofNullable(dataRow)
+                .map(DataRow::refsLinked)
+                .ifPresent(refsLinkeds -> refsLinkeds.forEach(uuidsfromData::addRefsLinkedTo));
         return dataRow;
     }
 
@@ -62,8 +64,8 @@ public class DataCsvBuilder {
         return this;
     }
 
-    public DataCsvBuilder onRepositories(DataRepositoryForBuffer DataRepositoryWithBuffer, AdditionalFileRepository additionalFileRepository) {
-        this.dataRepositoryForBuffer = DataRepositoryWithBuffer;
+    public DataCsvBuilder onRepositories(DataRepository dataRepository, AdditionalFileRepository additionalFileRepository) {
+        this.dataRepository = dataRepository;
         return this;
     }
 
@@ -82,11 +84,6 @@ public class DataCsvBuilder {
                 .findData(downloadDatasetQuery.dataName());
         final StandardDataDescription dataDescription = data
                 .orElseThrow(() -> new IllegalStateException("can't find application %s".formatted(downloadDatasetQuery.dataName())));
-        final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.EXCEL)
-                .setDelimiter(dataDescription.separator())
-                .setSkipHeaderRecord(true)
-                .get();
-
         ZipEntry zipEntry = new ZipEntry(String.format(fileNamePattern, downloadDatasetQuery.dataName()));
         if (outputStream instanceof ZipOutputStream zipOutputStream) {
             zipOutputStream.putNextEntry(zipEntry);
@@ -148,23 +145,23 @@ public class DataCsvBuilder {
                     .map(components -> components.get(componentName))
                     .map(InternationalizationComponent::getExportHeader)
                     .map(InternationalizationTitle::getTitle)
-                    .map(title -> title.get(Locale.of(downloadDatasetQuery.getLanguage()))
+                    .map(title -> title.get(downloadDatasetQuery.getLocale())
                     ).orElse(componentName);
             Comparator<ComponentOrderByForExport> comparator = ComponentOrderByForExport.getComparator(dataDescription);
             DataCsvHeaderWriter dataCsvHeaderWriter = new DataCsvHeaderWriter(
                     writer,
                     comparator,
                     getInternationalizedHeader,
-                    dataRepositoryForBuffer,
+                    dataRepository,
                     dataDescription,
                     internationalizedSortedColumns,
                     horizontalDisplay
             );
-            DataCsvRowBuilder dataCsvRowBuilder = new DataCsvRowBuilder(language, dataRepositoryForBuffer, dataDescription, horizontalDisplay);
+            DataCsvRowBuilder dataCsvRowBuilder = new DataCsvRowBuilder(language, dataRepository, dataDescription, horizontalDisplay);
             datas
                     .map(dataCsvHeaderWriter::writeHeader)
                     .map(dataRow -> addRefsLinkedTo(dataRow, uuiDsfromData))
-                    .map(dataRow -> dataCsvRowBuilder.getCsvRow(dataRow.values(), dataCsvHeaderWriter.orderedColumns()))
+                    .map(dataRow -> dataCsvRowBuilder.getCsvRow(dataRow.refsLinked(), dataRow.values(), dataCsvHeaderWriter.orderedColumns()))
                     .doOnNext(csvRow -> {
                         try {
                             writer.writeNext(csvRow.toArray(new String[0]));
