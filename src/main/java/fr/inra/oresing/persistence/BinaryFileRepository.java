@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 import com.google.common.base.Preconditions;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
+import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
@@ -21,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.ResultSet;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Component
 @Scope(scopeName = ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -43,6 +45,45 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
     public Optional<BinaryFile> tryFindById(final UUID id) {
         final SqlParameterSource parameters = new MapSqlParameterSource("id", id);
         return find("id = :id", parameters).stream().findFirst();
+    }
+
+    @Override
+    public List<ReferencedBinaryFiles> getReferencedBinaryFiles(String dataType, Set<UUID> binaryfileIds) {
+        String query = """
+                select
+                  'fr.inra.oresing.domain.ReferencedBinaryFiles' as "@class",
+                  jsonb_build_object(
+                    'binaryFileId', referencevalue.binaryfile,
+                    'dataType', referencevalue.referencetype,
+                    'referencedBinaryFileIdsByReferencetype',jsonb_build_object(
+                        referencevalue2.referencetype,
+                        array_agg(distinct referencevalue2.binaryfile::text)
+                    )
+                  ) AS json
+                
+                from %1$s.referencevalue referencevalue
+                join %1$s.reference_reference ON reference_reference.referencesby = referencevalue.id
+                join %1$s.referencevalue referencevalue2 ON referencevalue2.id = reference_reference.referenceid
+                where referencevalue.referencetype = :datatype
+                AND referencevalue.binaryfile in (:binaryfileIds)                
+                AND referencevalue2.binaryfile != referencevalue.binaryfile
+                group by 
+                    referencevalue.binaryfile,
+                    referencevalue.referencetype,
+                    referencevalue2.binaryfile, 
+                    referencevalue2.referencetype, 
+                    referencevalue2.referencetype"""
+                .formatted(
+                        getSchema().getSqlIdentifier()
+                );
+
+        return getNamedParameterJdbcTemplate().query(
+                query,
+                new MapSqlParameterSource()
+                        .addValue("datatype",dataType)
+                        .addValue("binaryfileIds", binaryfileIds),
+                new JsonRowMapper<ReferencedBinaryFiles>()
+        );
     }
 
     @Override

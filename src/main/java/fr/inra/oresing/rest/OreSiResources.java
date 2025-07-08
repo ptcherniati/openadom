@@ -8,6 +8,7 @@ import com.google.common.collect.Range;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.additionalfiles.AdditionalFilesInfos;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
@@ -104,6 +105,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -325,10 +327,27 @@ public class OreSiResources {
                                         .map(BinaryFile::getParams)
                                         .map(BinaryFileInfos::publisheduser)
                                         .map(users::get)
-                                        .orElse(null)
+                                        .orElse(null),
+                                getReferencedFiles(binaryFile)
                         ))
                         .toList();
         return ResponseEntity.ok(files);
+    }
+
+    private List<ReferencedBinaryFiles> getReferencedFiles(BinaryFile binaryFile) {
+        if(Optional.ofNullable(binaryFile)
+                .map(BinaryFile::getParams)
+                .stream().noneMatch(BinaryFileInfos::published)){
+            return  null;
+        }
+        return Optional.ofNullable(binaryFile)
+                .map(bf-> serviceContainer.binaryFileService()
+                        .getReferencedBinaryFiles(
+                                bf.getApplication(),
+                                bf.getParams().binaryFiledataset().getDatatype(),
+                                Set.of(bf.getId()))
+                )
+                .orElseGet(List::of);
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")

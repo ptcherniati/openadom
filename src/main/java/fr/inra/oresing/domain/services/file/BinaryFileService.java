@@ -2,6 +2,7 @@ package fr.inra.oresing.domain.services.file;
 
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
+import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 public interface BinaryFileService {
     @Transactional()
@@ -41,4 +43,5 @@ public interface BinaryFileService {
     AdditionalBinaryFileResult getAdditionalBinaryFileResult(
             AdditionalBinaryFile additionalBinaryFile);
 
+    List<ReferencedBinaryFiles> getReferencedBinaryFiles(UUID applicationId, String datatype, Set<UUID> id);
 }

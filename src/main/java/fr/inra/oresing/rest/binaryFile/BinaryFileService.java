@@ -5,6 +5,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
+import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
@@ -13,7 +14,6 @@ import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.BinaryFileInfos;
@@ -35,6 +35,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -173,5 +174,11 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
                 additionalBinaryFile.getAssociates(),
                 authorizationsParsed);
         return new AdditionalBinaryFileResult(additionalBinaryFile, authorizationsParsed);
+    }
+
+    @Override
+    public List<ReferencedBinaryFiles> getReferencedBinaryFiles(UUID applicationId, String datatype, Set<UUID> binaryFileIds) {
+        return getBinaryFileRepository(applicationId.toString())
+                .getReferencedBinaryFiles(datatype, binaryFileIds);
     }
 }
