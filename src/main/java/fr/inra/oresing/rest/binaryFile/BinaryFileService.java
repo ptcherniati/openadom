@@ -1,6 +1,7 @@
 package fr.inra.oresing.rest.binaryFile;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
@@ -32,6 +33,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -71,9 +73,13 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
 
     @Override
     @Transactional()
-    public UUID storeFile(final Application application, final MultipartFile file, final String comment, final BinaryFileDataset binaryFileDataset) throws IOException {
+    public UUID storeFile(final Application application, final MultipartFile file, String comment, final BinaryFileDataset binaryFileDataset) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
+        comment = Optional.ofNullable(binaryFileDataset)
+                .map(BinaryFileDataset::getComment)
+                .filter(Predicate.not(Strings::isNullOrEmpty))
+                .orElse(comment);
         final BinaryFile binaryFile = new BinaryFile();
         binaryFile.setApplication(application.getId());
         binaryFile.setComment(comment);

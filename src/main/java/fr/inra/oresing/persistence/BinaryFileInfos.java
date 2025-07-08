@@ -3,6 +3,7 @@ package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
 
+import java.util.Optional;
 import java.util.UUID;
 
 public record BinaryFileInfos(
@@ -24,7 +25,7 @@ public record BinaryFileInfos(
                 publisheddate,
                 null,
                 null,
-                null,
+                Optional.ofNullable(binaryFileDataset).map(BinaryFileDataset::getComment).orElse(""),
                 binaryFileDataset
         );
     }
