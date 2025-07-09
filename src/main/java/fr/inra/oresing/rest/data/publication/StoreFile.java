@@ -53,6 +53,12 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
             if (builder().fileMustBeJustStored()) {
                 return new JustStoredFile(builder());
             }
+            if(fileOrUuid()!=null) {
+                Optional.ofNullable(binaryFile())
+                        .map(BinaryFile::getParams)
+                        .map(fileOrUuid()::withParams)
+                        .ifPresent(fileOrUUID -> builder().fileOrUUID = fileOrUUID);
+            }
             return new UnPublishedVersions(builder());
         } catch (IOException e) {
             throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
@@ -62,7 +68,7 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
     public StoreFile testRights() {
         boolean isNewFileOrUUID = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::fileid).isEmpty();
         boolean publishing = Optional.ofNullable(fileOrUuid()).map(FileOrUUID::topublish).orElse(false) ||
-                isNewFileOrUUID && !builder().isRepository();
+                             isNewFileOrUUID && !builder().isRepository();
         publishing = !application().isData(dataName()) || publishing;
         if (isNewFileOrUUID && !builder().applicationDataWriter().hasRightForDeposit(fileOrUuid())) {
             throw new NotApplicationDataWriterForDepositException(application().getName(), dataName());

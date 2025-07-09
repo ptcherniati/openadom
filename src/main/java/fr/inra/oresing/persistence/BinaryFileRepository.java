@@ -96,8 +96,11 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                             SELECT id, application, name, comment, size, params
                             FROM %2$s
                             WHERE application = :application::uuid
+                              AND params #>>'{binaryfiledataset, datatype}' = :datatype
                               AND (params->>'published')::bool
                               AND params->'binaryfiledataset'->'requiredauthorizations' = :requiredAuthorizations::jsonb
+                              AND params->'binaryfiledataset'->>'from' = :from
+                              AND params->'binaryfiledataset'->>'to' = :to
                         ) t
                         """,
                 getEntityClass().getName(),
@@ -108,6 +111,9 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
                 query,
                 new MapSqlParameterSource()
                         .addValue("application", getApplication().getId())
+                        .addValue("datatype", binaryFileDataset.getDatatype())
+                        .addValue("from", binaryFileDataset.getFrom())
+                        .addValue("to", binaryFileDataset.getTo())
                         .addValue("requiredAuthorizations", getJsonRowMapper().toJson(binaryFileDataset.getRequiredAuthorizations())),
                 getJsonRowMapper()
         ).stream().findFirst();
