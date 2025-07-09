@@ -1,38 +1,27 @@
 ### connexion
-POST http://localhost:8081/api/v1/login?login=poussin&password=xxxx
+POST http://localhost:8081/api/v1/login?login=philippe&password=pfsp
 Content-Type: application/json
 
-{
-  "login": "poussin",
-  "password": "xxxx"
-}
-
-###
-GET http://localhost:8081/api/v1/applications
+> {%
+    client.global.set("xsrfToken", response.headers.valuesOf("X-XSRF-TOKEN"));
+%}
 
 ### post chart
-POST http://localhost:8081/api/v1/applications/monsores/additionalFiles/__charte__
+POST http://localhost:8081/api/v1/applications/jerome_acbb_openadom_swc/additionalFiles/__charte__
 Content-Type: multipart/form-data; boundary=WebAppBoundary
-
-
+X-XSRF-TOKEN: {{xsrfToken}}
 
 --WebAppBoundary
 Content-Disposition: form-data; name="params"
 
 {
-"id":"ab66022e-db46-4fcd-8115-e62d14c54167",
-"fileType":"__charte__
+  "id":"0565b1a3-421f-4e02-a44e-2ea0020cef0d",
+  "fileType":"__charte__",
+  "comment": "un commentaire"
 }
 
 --WebAppBoundary
 Content-Disposition: form-data; name="file"; filename="data.json"
 Content-Type: application/octet-stream
 
-< ./fichier.txt
-
-
-### get charte
-
-GET http://localhost:8081/api/v1/applications/monsores/additionalFiles?params=%7B%22uuids%22%3A%5B%22ab66022e-db46-4fcd-8115-e62d14c54167%22%5D%2C%22filetype%22%3A%22__charte__%22%7D
-Accept: application/octet-stream
-
+< ./cherte2.pdf

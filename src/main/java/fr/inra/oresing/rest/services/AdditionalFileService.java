@@ -230,7 +230,7 @@ public class AdditionalFileService {
     }
 
     public AdditionalFileParamsParsingResult getAdditionalFileSearchHelper(final String nameOrId, final AdditionalFilesInfos additionalFilesInfos) {
-        final Application application = "__charte__".equals(additionalFilesInfos.getFiletype()) ? serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId) : serviceContainer.applicationService().getApplication(nameOrId);
+        final Application application = AdditionalFileService.CHARTE.equals(additionalFilesInfos.getFiletype()) ? serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId) : serviceContainer.applicationService().getApplication(nameOrId);
         final AdditionalFileParamsParsingResult.Builder builder = AdditionalFileParamsParsingResult.builder();
         for (final Map.Entry<String, AdditionalFilesInfos.AdditionalFileInfos> entry : additionalFilesInfos.getAdditionalFilesInfos().entrySet()) {
             final String additionalFileName = entry.getKey();
