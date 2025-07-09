@@ -61,6 +61,7 @@ import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
+import fr.inra.oresing.rest.services.AdditionalFileService;
 import fr.inra.oresing.rest.services.RelationalService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import io.swagger.v3.oas.annotations.Operation;
@@ -639,7 +640,7 @@ public class OreSiResources {
         final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || JS_UNDEFINED.equals(params) ? null : deserialiseAdditionalFilesInfos(params);
 
         final StreamingResponseBody streamResponseBody;
-        if ("__charte__".equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
+        if (AdditionalFileService.CHARTE.equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
             response.setHeader("Content-Security-Policy", "frame-ancestors %s".formatted(frontendOrigin));
             streamResponseBody = out -> serviceContainer.additionalFileService().getCharte(out, response, nameOrId, additionalFilesInfos);
