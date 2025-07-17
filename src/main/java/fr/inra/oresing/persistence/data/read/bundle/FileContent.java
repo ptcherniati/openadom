@@ -63,6 +63,9 @@ public record FileContent(String fileName, String fileContent) {
                     return "((bf.\"authorization\").requiredauthorizations).%s[1]".formatted(reference);
                 })
                 .collect(Collectors.joining(",\n\t"));
+    if(groups.isEmpty()) {
+        return GENERIC_FILE_NAME;
+    }
         return """
                 format('%s',
                     %s

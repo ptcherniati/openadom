@@ -1,5 +1,6 @@
 package fr.inra.oresing.rest.data;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.common.io.Resources;
@@ -58,9 +59,12 @@ import reactor.core.publisher.Mono;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -74,10 +78,15 @@ import java.util.zip.ZipOutputStream;
 @Component
 public class DataService {
     public static final String OPEN_ADOM_CLIENT_GROOVY = "OpenAdomClient.groovy";
+    public static final String OPEN_ADOM_CLIENT_JS = "bundle.js";
+    public static final String OPEN_ADOM_CLIENT_HTML = "index.html";
     public static final String OPEN_ADOM_CLIENT_CONFIGURATION_JSON = "openAdom-client-configuration.json";
-    public static final String README_FILE_NAME = "LISEZ-MOI.txt";
+    public static final String README_FILE_NAME = "README";
     public static final String SCRIPTS = "Scripts";
     public static final String SETUP_SCRIPT_NAME = "setup.sh";
+    public static final String MANIFEST_JSON = "manifest.json";
+    public static final String CONFIGURATION = "Configuration";
+    public static final String COMPOSE = "compose/";
     @Setter
     ServiceContainer serviceContainer;
     private final OreSiRepository repo;
@@ -120,7 +129,7 @@ public class DataService {
                                             naturalKey
                                     )
                             ),
-                            defaultValue==null?ComputedValueUsage.NOT_COMPUTED:ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE,
+                            defaultValue == null ? ComputedValueUsage.NOT_COMPUTED : ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE,
                             defaultValue) {
                         @Override
                         public String getExpectedHeader() {
@@ -198,7 +207,7 @@ public class DataService {
         return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
     }
 
-    public DataImporterContext  getDataImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
+    public DataImporterContext getDataImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
         final Configuration configuration = application.getConfiguration();
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
@@ -564,13 +573,14 @@ public class DataService {
         return getReferenceValueRepository(application).buildReferenceSynthesis();
     }
 
-    public Boolean getDataFromStoredCsvStream(ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
+    public Boolean getDataFromStoredCsvStream(Map<String, List<String>> manifest, ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
         DataRepository dataRepository = repo.getRepository(application).data();
         Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
         return storedData
                 .flatMap(fileContent -> Mono.fromCallable(() -> {
                     String entryName = String.format("%s/%s", reference, fileContent.fileName());
+                    manifest.computeIfAbsent(reference, k -> new ArrayList<>()).add(fileContent.fileName());
                     ZipEntry zipEntry = new ZipEntry(entryName);
                     zipOutputStream.putNextEntry(zipEntry);
                     zipOutputStream.write(fileContent.fileContent().getBytes(StandardCharsets.UTF_8));
@@ -824,10 +834,13 @@ public class DataService {
                 .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
 
         try (zipOutputStream) {
-            writeGroovyClient(zipOutputStream, fichiersGeneres);
+            writeJsClient(zipOutputStream, fichiersGeneres);
+            writeHtml(zipOutputStream, fichiersGeneres);
             writeConfiguration(zipOutputStream, fichiersGeneres, instanceUrl, nameOrId);
             writeReadMe(zipOutputStream, fichiersGeneres);
-            writeScriptSH(zipOutputStream, fichiersGeneres);
+            writeDirectoryToZip(zipOutputStream,fichiersGeneres);
+            Map<String, List<String>> manifest = new LinkedHashMap<>();
+
             // Traiter chaque référentiel
             for (String reference : application.getConfiguration().dataDescription().keySet()) {
                 String fileName = application.getConfiguration().findData(reference)
@@ -838,7 +851,16 @@ public class DataService {
                 String dataCsvFilePath = "%1$s/%2$s".formatted(reference, fileName);
 
                 try {
-                    if (withData && serviceContainer.dataService().getDataFromStoredCsvStream(zipOutputStream, application.getName(), reference, application, locale)) {
+
+                    final Boolean dataFromStoredCsvStream = serviceContainer.dataService()
+                            .getDataFromStoredCsvStream(
+                                    manifest,
+                                    zipOutputStream,
+                                    application.getName(),
+                                    reference,
+                                    application,
+                                    locale);
+                    if (withData && dataFromStoredCsvStream) {
                         referentielsAvecDonnees.add(reference);
                         fichiersGeneres.computeIfAbsent(reference, k -> new LinkedHashSet<>()).add(dataCsvFilePath);
                     } else {
@@ -854,6 +876,7 @@ public class DataService {
                     referentielsEnErreur.add(reference);
                 }
             }
+            addManifest(zipOutputStream, manifest);
         } catch (Exception e) {
             log.error("Erreur générale lors de la création du bundle", e);
             referentielsEnErreur.add("ERREUR_GENERALE");
@@ -862,10 +885,30 @@ public class DataService {
         return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
     }
 
+    private static void addManifest(ZipOutputStream zipOutputStream, Map<String, List<String>> manifest) throws IOException {
+        String manifestJson = new ObjectMapper().writeValueAsString(manifest);
+        zipOutputStream.putNextEntry(new ZipEntry(MANIFEST_JSON));
+        zipOutputStream.write(manifestJson.getBytes(StandardCharsets.UTF_8));
+        zipOutputStream.flush();
+        zipOutputStream.closeEntry();
+    }
+
     private void writeGroovyClient(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
         writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_GROOVY, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_GROOVY));
         fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
                 .add(OPEN_ADOM_CLIENT_GROOVY);
+    }
+
+    private void writeJsClient(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
+        writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_JS, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_JS));
+        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
+                .add(OPEN_ADOM_CLIENT_JS);
+    }
+
+    private void writeHtml(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
+        writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_HTML, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_HTML));
+        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
+                .add(OPEN_ADOM_CLIENT_HTML);
     }
 
     private void writeConfiguration(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres, String instanceUrl, String dataName) throws IOException {
@@ -876,129 +919,36 @@ public class DataService {
                 }
                 """.formatted(instanceUrl, dataName);
         writeStringToZip(zipOutputStream, OPEN_ADOM_CLIENT_CONFIGURATION_JSON, configurationJson);
-        fichiersGeneres.put("Configuration", Set.of(OPEN_ADOM_CLIENT_CONFIGURATION_JSON));
+        fichiersGeneres.put(CONFIGURATION, Set.of(OPEN_ADOM_CLIENT_CONFIGURATION_JSON));
     }
 
     private void writeReadMe(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
-        String readmeContent = """
-                Instructions d'utilisation :
-                
-                Trois méthodes d'exécution possibles :
-                
-                   A. Utilisation directe avec Groovy :
-                        Prérequis :
-                           - Groovy 4+ : https://groovy.apache.org/download.html#osinstall
-                           - Java 21+ : https://adoptium.net/temurin/releases/
-                              - Vérifier l'installation : groovy --version
-                        Lancer le script : groovy %1$s
-                
-                   B. Utilisation du script shell automatisé :
-                        Prérequis :
-                           - Docker (optionnel) : https://docs.docker.com/get-docker/
-                      - Rendre le script exécutable : chmod +x setup.sh
-                      - Lancer le script : ./setup.sh
-                
-                   C. Construction manuelle avec Docker :
-                        Prérequis :
-                           - Docker (optionnel) : https://docs.docker.com/get-docker/
-                      - Construire le Dockerfile :
-                            FROM groovy:4.0-jdk21
-                
-                            USER root
-                            RUN apt-get update && apt-get install -y openssl
-                
-                            RUN openssl s_client -connect preprod.openadom.fr:443 -showcerts </dev/null 2>/dev/null | \\
-                                openssl x509 -outform PEM > /tmp/cert.pem && \\
-                                keytool -import -noprompt -trustcacerts \\
-                                -alias openadom \\
-                                -file /tmp/cert.pem \\
-                                -keystore $JAVA_HOME/lib/security/cacerts \\
-                                -storepass changeit
-                
-                      - Construire l'image : docker build -t openadomgroovy .
-                      - Lancer le conteneur :
-                        docker run --rm -it --net host -v "$PWD":/home/groovy/scripts -w /home/groovy/scripts openadomgroovy groovy %1$s
-                
-                Notes importantes :
-                - La méthode B nécessite Docker et automatise tout le processus
-                - La méthode C est recommandée si vous souhaitez plus de contrôle sur l'environnement d'exécution
-                """
-                .formatted(OPEN_ADOM_CLIENT_GROOVY);
-        writeStringToZip(zipOutputStream, README_FILE_NAME, readmeContent);
-        fichiersGeneres.put("Documentation", Set.of(README_FILE_NAME));
+        writeFileToZip(zipOutputStream, README_FILE_NAME, Resources.getResource(Client.class, README_FILE_NAME));
+        fichiersGeneres.getOrDefault(README_FILE_NAME, new LinkedHashSet<>())
+                .add(README_FILE_NAME);
+
     }
 
-    private void writeScriptSH(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
-        writeStringToZip(zipOutputStream, SETUP_SCRIPT_NAME, buildScriptSh());
-        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
-                .add(SETUP_SCRIPT_NAME);
+    private void writeDirectoryToZip(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException, URISyntaxException {
+        List<String> allFiles = listAllFilesFromResources(COMPOSE); // à implémenter selon ton contexte
+
+        for (String resourcePath : allFiles) {
+             String zipEntryName = COMPOSE + resourcePath; // ajoute dans le zip sous compose/
+            writeFileToZip(zipOutputStream, resourcePath, Resources.getResource(Client.class, zipEntryName));
+            fichiersGeneres.computeIfAbsent(COMPOSE, k -> new LinkedHashSet<>()).add(zipEntryName);
+        }
     }
 
-    private String buildScriptSh() {
-        return """
-                #!/bin/bash
-                
-                # Vérification de la présence de Docker
-                check_docker() {
-                    if ! docker --version > /dev/null 2>&1; then
-                        echo "Docker n'est pas installé sur votre système."
-                        echo "Veuillez installer Docker en visitant : https://docs.docker.com/get-docker/"
-                        exit 1
-                    fi
-                
-                    if ! docker info > /dev/null 2>&1; then
-                        echo "Le daemon Docker n'est pas en cours d'exécution."
-                        echo "Veuillez démarrer Docker et réessayer."
-                        exit 1
-                    fi
-                }
-                
-                # Lecture de la configuration
-                INSTANCE_URL=$(cat %1$s | sed -n 's/.*"instanceUrl" *: *"\\([^"]*\\)".*/\\1/p')
-                PROTOCOL=$(echo $INSTANCE_URL | cut -d: -f1)
-                DOMAIN=$(echo $INSTANCE_URL | cut -d/ -f3 | cut -d: -f1)
-                PORT=$(echo $INSTANCE_URL | grep -o ':[0-9][0-9]*' || echo "")
-                
-                if [ -z "$PORT" ]; then
-                    if [ "$PROTOCOL" = "https" ]; then
-                        PORT=":443"
-                    else
-                        PORT=":80"
-                    fi
-                fi
-                
-                # Création du Dockerfile
-                cat > Dockerfile << EOF
-                FROM groovy:4.0-jdk21
-                USER root
-                RUN apt-get update && apt-get install -y openssl
-                RUN if [ "${PROTOCOL}" = "https" ]; then \\
-                        openssl s_client -connect ${DOMAIN}${PORT} -showcerts </dev/null 2>/dev/null | \\
-                        openssl x509 -outform PEM > /tmp/cert.pem && \\
-                        keytool -import -noprompt -trustcacerts \\
-                        -alias openadom \\
-                        -file /tmp/cert.pem \\
-                        -keystore \\$JAVA_HOME/lib/security/cacerts \\
-                        -storepass changeit; \\
-                    else \\
-                        echo "Connexion HTTP : pas de certificat à installer"; \\
-                    fi
-                EOF
-                
-                
-                # Construction de l'image Docker
-                echo "Construction de l'image Docker..."
-                docker build -t openadomgroovy .
-                
-                # Lancement du conteneur
-                echo "Lancement du conteneur..."
-                docker run --rm -it --net host \\
-                    -v "$PWD":/home/groovy/scripts \\
-                    -w /home/groovy/scripts \\
-                    openadomgroovy \\
-                    groovy OpenAdomClient.groovy
-                """.formatted(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
+    private List<String> listAllFilesFromResources(String baseDirPath) throws IOException, URISyntaxException {
+        List<String> fileList = new ArrayList<>();
+        URL resourceUrl = Resources.getResource(Client.class, baseDirPath);  // baseDirPath = "compose"
+        Path baseDir = Paths.get(resourceUrl.toURI());
+        Files.walk(baseDir)
+                .filter(Files::isRegularFile)
+                .forEach(path -> fileList.add(baseDir.relativize(path).toString().replace("\\", "/")));
+        return fileList;
     }
+
 
     private void writeFileToZip(ZipOutputStream zipOutputStream, String fileName, URL resourceUrl) throws IOException {
         zipOutputStream.putNextEntry(new ZipEntry(fileName));

@@ -1,0 +1,22 @@
+services:
+  prepare-config:
+    build: ./prepare-config
+    volumes:
+        - ./:/data
+        - ./build:/build
+    working_dir: /data
+    command: ["/entrypoint.sh"]
+
+  frontend:
+    image: nginx
+    environment:
+      - BACKEND_HOST=host.docker.internal # ou 172.17.0.1 pour Linux
+    depends_on:
+      prepare-config:
+        condition: service_completed_successfully
+    volumes:
+      - ./:/usr/share/nginx/html:ro
+      - ./build/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:80"
+    working_dir: /usr/share/nginx/html

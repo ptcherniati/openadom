@@ -123,13 +123,15 @@ public record Submission(
         public LinkedList<String> orderedGroups() {
             Map<Integer, String> orderedGroups = new HashMap<>();
             int scopeIndex = 0;
-            for (int i = 1; i < groupCount() + 1; i++) {
+            for (int i = 1; i < groupCount() + 1 && scopeIndex+1 < authorizationScopes().size(); i++) {
                 if (i == startDate()) {
                     orderedGroups.put(i, ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN);
                 } else if (i == endDate()) {
                     orderedGroups.put(i, ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN);
-                } else {
+                } else if(authorizationScopes.size()<scopeIndex+1) {
                     orderedGroups.put(i, authorizationScopes().get(scopeIndex++));
+                } else {
+                    orderedGroups.put(i,"");
                 }
             }
             return new LinkedList<>(orderedGroups.values());
