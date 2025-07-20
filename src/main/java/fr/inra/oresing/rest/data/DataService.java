@@ -56,9 +56,7 @@ import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -72,6 +70,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import java.util.zip.ZipOutputStream;
 
 @Slf4j
@@ -573,14 +572,16 @@ public class DataService {
         return getReferenceValueRepository(application).buildReferenceSynthesis();
     }
 
-    public Boolean getDataFromStoredCsvStream(Map<String, List<String>> manifest, ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
+    public Boolean getDataFromStoredCsvStream(Map<Long, Map<String, List<String>>> manifest, ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
         DataRepository dataRepository = repo.getRepository(application).data();
         Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
         return storedData
                 .flatMap(fileContent -> Mono.fromCallable(() -> {
                     String entryName = String.format("%s/%s", reference, fileContent.fileName());
-                    manifest.computeIfAbsent(reference, k -> new ArrayList<>()).add(fileContent.fileName());
+                    manifest
+                            .computeIfAbsent(fileContent.firstDate(), k->new HashMap<>())
+                            .computeIfAbsent(reference, k -> new ArrayList<>()).add(fileContent.fileName());
                     ZipEntry zipEntry = new ZipEntry(entryName);
                     zipOutputStream.putNextEntry(zipEntry);
                     zipOutputStream.write(fileContent.fileContent().getBytes(StandardCharsets.UTF_8));
@@ -839,7 +840,7 @@ public class DataService {
             writeConfiguration(zipOutputStream, fichiersGeneres, instanceUrl, nameOrId);
             writeReadMe(zipOutputStream, fichiersGeneres);
             writeDirectoryToZip(zipOutputStream,fichiersGeneres);
-            Map<String, List<String>> manifest = new LinkedHashMap<>();
+            Map<Long, Map<String, List<String>>> manifest = new LinkedHashMap<>();
 
             // Traiter chaque référentiel
             for (String reference : application.getConfiguration().dataDescription().keySet()) {
@@ -885,8 +886,19 @@ public class DataService {
         return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
     }
 
-    private static void addManifest(ZipOutputStream zipOutputStream, Map<String, List<String>> manifest) throws IOException {
-        String manifestJson = new ObjectMapper().writeValueAsString(manifest);
+    private static void addManifest(ZipOutputStream zipOutputStream, Map<Long, Map<String, List<String>>> manifest) throws IOException {
+        Map<String, List<String>> orderedManifest = new LinkedHashMap<>();
+
+        manifest.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey()) // ordre croissant des Long
+                .forEach(entry -> {
+                    Map<String, List<String>> innerMap = entry.getValue();
+                    innerMap.forEach((key, fileList) -> {
+                        orderedManifest.computeIfAbsent(key, k -> new ArrayList<>()).addAll(fileList);
+                    });
+                });
+
+        String manifestJson = new ObjectMapper().writeValueAsString(orderedManifest);
         zipOutputStream.putNextEntry(new ZipEntry(MANIFEST_JSON));
         zipOutputStream.write(manifestJson.getBytes(StandardCharsets.UTF_8));
         zipOutputStream.flush();
@@ -1028,4 +1040,12 @@ public class DataService {
 
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
     }
+
+    public InputStream readEntry(File zipBundleFile, String entryName) throws IOException {
+        ZipFile zipFile = new ZipFile(zipBundleFile);
+        ZipEntry entry = zipFile.getEntry(entryName);
+        if (entry == null) throw new FileNotFoundException("Entrée absente: " + entryName);
+        return zipFile.getInputStream(entry);
+    }
+
 }

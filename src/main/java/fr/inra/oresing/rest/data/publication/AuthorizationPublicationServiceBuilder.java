@@ -6,7 +6,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.DataWriter;
 import fr.inra.oresing.domain.file.FileOrUUID;
 
 import java.util.List;
@@ -24,7 +24,7 @@ public class AuthorizationPublicationServiceBuilder {
                                             final String dataName,
                                             String fileName,
                                             FileOrUUID fileOrUUID,
-                                            ApplicationDataWriter applicationDataWriter,
+                                            DataWriter applicationDataWriter,
                                             Function<UUID, Optional<BinaryFile>> resolveFileById) {
         AuthorizationPublicationService builder = new AuthorizationPublicationService(
                 application,

@@ -52,6 +52,7 @@ class FileContentTest {
                 	TO_CHAR(lower((bf."authorization").timescope),'yyyy-MM-dd'),
                 	TO_CHAR(upper((bf."authorization").timescope),'yyyy-MM-dd')
                 ) as "fileName",
+                    EXTRACT(epoch FROM MIN(bf.updateDate) OVER(PARTITION BY rv.referencetype))::bigint AS "updateDate",
                     convert_from(bf.filedata, 'UTF8') AS "fileContent"
                 FROM null.referencevalue rv
                 JOIN null.binaryfile bf ON bf.id = rv.binaryfile

@@ -1,18 +1,27 @@
 package fr.inra.oresing.persistence.data.read.bundle;
 
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
-import fr.inra.oresing.domain.application.configuration.Submission;
-import fr.inra.oresing.domain.application.configuration.SubmissionType;
+import fr.inra.oresing.domain.application.configuration.*;
+import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public record FileContent(String fileName, String fileContent) {
+public record FileContent(Long firstDate, String fileName, String fileContent) {
+    private static final Pattern FORBIDDEN_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"<>| ]");
+
+    public static String sanitizePatternForFilename(String pattern) {
+        return FORBIDDEN_FILENAME_CHARS.matcher(pattern).replaceAll("-");
+    }
+
     public static final String EXPORT_REGISTER_DATA_CSV_SQL = """
             SELECT DISTINCT ON (rv.binaryfile)
-                %3$s as "fileName",
+                %3$s as "fileName",            
+                EXTRACT(epoch FROM MIN(bf.updateDate) OVER(PARTITION BY rv.referencetype))::bigint AS "updateDate",
                 convert_from(bf.filedata, 'UTF8') AS "fileContent"
             FROM %1$s.referencevalue rv
             JOIN %1$s.binaryfile bf ON bf.id = rv.binaryfile
@@ -23,12 +32,14 @@ public record FileContent(String fileName, String fileContent) {
 
     public static String buildFileNameRequest(Application application, String dataName) {
         String patternForFileNameRequest = application.findSubmission(dataName)
-                .map(FileContent::toRequest)
+                .filter(submission ->SubmissionType.OA_VERSIONING.equals(submission.strategy()))
+                .map(submission -> FileContent.toRequest(submission, application.findData(dataName).map(StandardDataDescription::componentDescriptions).orElseGet(Map::of)))
                 .orElse(GENERIC_FILE_NAME);
         return EXPORT_REGISTER_DATA_CSV_SQL.formatted(application.getName(), dataName, patternForFileNameRequest);
     }
 
-    private static String toRequest(Submission submission) {
+    private static String toRequest(Submission submission, Map<String, ComponentDescription> conponentDescriptions){
+        final String timescopePattern = submission.getTimeScopePattern(conponentDescriptions);
         Optional<String> patternOpt = Optional.ofNullable(submission)
                 .filter(submission1 -> SubmissionType.OA_VERSIONING.equals(submission1.strategy()))
                 .map(Submission::fileNameParsing)
@@ -36,21 +47,36 @@ public record FileContent(String fileName, String fileContent) {
         if (patternOpt.isEmpty()) {
             return GENERIC_FILE_NAME;
         }
-        String pattern = patternOpt.get();
+        String fileNamePattern = patternOpt.get();
         String patternToBeReplacedByGroupCapture = Optional.of(submission)
                 .map(Submission::fileNameParsing)
                 .map(Submission.SubmissionFileNameParsing::patternToBeReplacedByGroupCapture)
-                .orElse(pattern);
+                .orElse(fileNamePattern);
         String groups = Optional.ofNullable(submission)
                 .map(Submission::fileNameParsing)
                 .map(Submission.SubmissionFileNameParsing::orderedGroups)
                 .stream().flatMap(List::stream)
                 .map(group -> {
                     if (ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN.equals(group)) {
-                        return "TO_CHAR(lower((bf.\"authorization\").timescope),'yyyy-MM-dd')";
+                        return """
+                                TO_CHAR(
+                                    CASE
+                                        WHEN lower((bf."authorization").timescope) = '-infinity'::timestamp
+                                          THEN '0001-01-01'::timestamp
+                                        ELSE lower((bf."authorization").timescope)
+                                    END
+                                ,'%s')"""
+                                .formatted(timescopePattern);
                     }
                     if (ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN.equals(group)) {
-                        return "TO_CHAR(upper((bf.\"authorization\").timescope),'yyyy-MM-dd')";
+                        return """
+                                TO_CHAR(
+                                    CASE
+                                        WHEN upper((bf."authorization").timescope) = 'infinity'::timestamp
+                                          THEN '9999-12-31'::timestamp
+                                        ELSE upper((bf."authorization").timescope)
+                                  	END
+                                ,'%s')""".formatted(timescopePattern);
                     }
                     String reference = Optional.ofNullable(submission)
                             .map(Submission::submissionScope)

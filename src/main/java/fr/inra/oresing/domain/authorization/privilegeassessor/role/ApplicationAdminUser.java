@@ -16,7 +16,7 @@ import java.util.Optional;
 public record ApplicationAdminUser(
         Application application,
         String dataName
-) implements ApplicationManager, ApplicationDataWriter, ApplicationDataDelete {
+) implements ApplicationManager, ApplicationDataWriter, ApplicationDataDelete, DataWriter {
     public ApplicationAdminUser(Application application) {
         this(application, ApplicationManager.ALL_DATANAMES);
     }

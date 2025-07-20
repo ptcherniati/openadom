@@ -1,5 +1,7 @@
 package fr.inra.oresing.rest;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -25,6 +27,7 @@ import fr.inra.oresing.domain.chart.OreSiSynthesis;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
 import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.type.ReferenceType;
+import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
@@ -44,6 +47,8 @@ import fr.inra.oresing.rest.binaryFile.BinaryFileService;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.data.publication.State;
 import fr.inra.oresing.rest.data.publication.StoreFile;
+import fr.inra.oresing.rest.exceptions.ExceptionMessage;
+import fr.inra.oresing.rest.exceptions.OreSiIOException;
 import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.model.additionalfiles.CreateAdditionalFileRequest;
 import fr.inra.oresing.rest.model.additionalfiles.exceptions.BadAdditionalFileParamsSearchException;
@@ -106,7 +111,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -119,7 +123,7 @@ public class OreSiResources {
     public static final String NOT_FOUND_DATA_NAME = "notFoundDataName";
     public static final String FILE_ID = "fileId";
     public static final String HEADER_CONTENT_DISPOSITION = "Content-Disposition";
-    public static final String HEADER_ATTACHMENT_FILENAME = "attachment;filename=";
+    public static final String HEADER_ATTACHMENT_FILENAME = "attachment;filename=%1$s";
     public static final String ERROR_EMPTY_FILE = "EmptyFile";
     public static final String HEADER_ATTACHMENT_FILENAME_S_CSV = "attachment; filename=%s.csv";
     public static final String HEADER_PRAGMA = "Pragma";
@@ -151,6 +155,7 @@ public class OreSiResources {
     public static final String BAD_BUNDLE = "Erreur lors de la création du bundle de téléchargement";
     public static final String BUNDLE_NAME = "%s-upload-bundle.zip";
     public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
+    public static final String MANIFEST_JSON = "manifest.json";
     final
     OreSiApiRequestContext request;
     final UserRepository userRepository;
@@ -232,7 +237,7 @@ public class OreSiResources {
     public ResponseEntity<String> removeFile(
             HttpServletRequest request,
             @PathVariable("name") final String applicationName,
-            @PathVariable("id") final UUID id) {
+            @PathVariable("id") final UUID id) throws IOException {
 
         Locale locale = localeResolver.resolveLocale(request);
 
@@ -336,13 +341,13 @@ public class OreSiResources {
     }
 
     private List<ReferencedBinaryFiles> getReferencedFiles(BinaryFile binaryFile) {
-        if(Optional.ofNullable(binaryFile)
+        if (Optional.ofNullable(binaryFile)
                 .map(BinaryFile::getParams)
-                .stream().noneMatch(BinaryFileInfos::published)){
-            return  null;
+                .stream().noneMatch(BinaryFileInfos::published)) {
+            return null;
         }
         return Optional.ofNullable(binaryFile)
-                .map(bf-> serviceContainer.binaryFileService()
+                .map(bf -> serviceContainer.binaryFileService()
                         .getReferencedBinaryFiles(
                                 bf.getApplication(),
                                 bf.getParams().binaryFiledataset().getDatatype(),
@@ -364,7 +369,7 @@ public class OreSiResources {
 
             StreamingResponseBody body = outputStream -> FileCopyUtils.copy(inputStream, outputStream);
 
-            return ResponseEntity.ok()
+                return ResponseEntity.ok()
                     .contentLength(binaryFile.getSize())
                     .header(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME.formatted(filename))
                     .body(body);
@@ -387,10 +392,18 @@ public class OreSiResources {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) {
+    public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) throws IOException {
+        DataFile dataFile = null;
+        try {
+            final File physicalFileOrCopy = getPhysicalFileOrCopy(file);
+            dataFile = file == null ? null : new DataFile(physicalFileOrCopy, (long) file.getInputStream().available(), file.getOriginalFilename());
+        } catch (IOException e) {
+            throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
+        }
+        DataFile finalDataFile = dataFile;
         return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-            final Application application = serviceContainer.applicationService().validateConfiguration(progression, file);
+            final Application application = serviceContainer.applicationService().validateConfiguration(progression, finalDataFile);
             fluxSink.next(new ReactiveTypeResult(application));
             progression.complete();
         });
@@ -405,15 +418,22 @@ public class OreSiResources {
     public Flux<ReactiveResult> createApplication(@PathVariable("name") final String name,
                                                   @RequestParam(name = "comment", defaultValue = "") final String comment,
                                                   @RequestParam("file") final MultipartFile file) throws BadApplicationConfigurationException {
-
+        DataFile dataFile = null;
+        try {
+            final File physicalFileOrCopy = getPhysicalFileOrCopy(file);
+            dataFile = file == null ? null : new DataFile(physicalFileOrCopy, (long) file.getInputStream().available(), file.getOriginalFilename());
+        } catch (IOException e) {
+            throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
+        }
         if (!RelationalService.IdentifierTest.identifierForApplicationName(name)) {
             //TODO test à faire
             throw new BadLabelNameException(BadLabelNameException.LabelType.APPLICATION, name);
         }
+        DataFile finalDataFile = dataFile;
         return buildFluxRequestNDJson(fluxSink -> {
             final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
             try {
-                serviceContainer.applicationService().createApplication(progression, name, file, comment);
+                serviceContainer.applicationService().createApplication(progression, name, finalDataFile, comment);
             } catch (Exception technicalException) {
                 fluxSink.error(technicalException);
             }
@@ -445,8 +465,16 @@ public class OreSiResources {
             if (file.isEmpty()) {
                 fluxSink.error(new IllegalArgumentException(ERROR_EMPTY_FILE));
             }
+            DataFile dataFile = null;
+            try {
+                final File physicalFileOrCopy = getPhysicalFileOrCopy(file);
+                dataFile = file == null ? null : new DataFile(physicalFileOrCopy, (long) file.getInputStream().available(), file.getOriginalFilename());
+            } catch (IOException e) {
+                throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
+            }
+
             final ReactiveProgression.ChangeApplicationProgression progression = new ReactiveProgression.ChangeApplicationProgression(0D, fluxSink);
-            final UUID uuid = serviceContainer.applicationService().changeApplicationConfiguration(progression, nameOrId, file, comment);
+            final UUID uuid = serviceContainer.applicationService().changeApplicationConfiguration(progression, nameOrId, dataFile, comment);
             progression.fluxSink().next(new ReactiveTypeResult(uuid));
             progression.complete();
         });
@@ -588,11 +616,18 @@ public class OreSiResources {
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataName") final String dataName,
             @RequestParam(value = "file", required = false) final MultipartFile file,
-            @RequestParam(value = "params", required = false) final String params) throws IOException {
+            @RequestParam(value = "params", required = false) final String params) throws JsonProcessingException {
         Locale locale = localeResolver.resolveLocale(request);
+        DataFile dataFile = null;
+        try {
+            final File physicalFileOrCopy = getPhysicalFileOrCopy(file);
+            dataFile = file == null ? null : new DataFile(physicalFileOrCopy, (long) file.getInputStream().available(), file.getOriginalFilename());
+        } catch (IOException e) {
+            throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
+        }
         DataVersioningResult dataVersioningResult = null;
         try {
-            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, file, false);
+            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, dataFile, false);
         } catch (InvalidDatasetContentException invalidDatasetContentException) {
             List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                     .stream()
@@ -614,6 +649,8 @@ public class OreSiResources {
                     errorsToJson
             );
             throw invalidDatasetContentException;
+        } catch (IOException e) {
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
         }
         return ResponseEntity.created(URI.create(dataVersioningResult.uri())).body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
     }
@@ -982,7 +1019,7 @@ public class OreSiResources {
         final List<DataRow> data = serviceContainer.dataService().findData(downloadDatasetQuery);
         final List<FilterList> filterLists = serviceContainer.dataService()
                 .filterList(downloadDatasetQuery.application(), downloadDatasetQuery.dataName())
-                .collect(Collectors.toList()).block() ;
+                .collect(Collectors.toList()).block();
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
@@ -1321,6 +1358,81 @@ public class OreSiResources {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(responseBody);
+    }
+
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_DOWNLOAD_BUNDLE')")
+    @PostMapping("/applications/{nameOrId}/download-bundle")
+    public ResponseEntity<?> uploadBundle(
+            HttpServletRequest request,
+            @PathVariable String nameOrId,
+            @RequestParam("file") MultipartFile zipBundle
+    ) throws IOException {
+        final File zipFile = getPhysicalFileOrCopy(zipBundle);
+        final Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        Locale locale = localeResolver.resolveLocale(request);
+        try (InputStream manifestStream = serviceContainer.dataService().readEntry(zipFile, MANIFEST_JSON)) {
+            ObjectMapper mapper = new ObjectMapper();
+            mapper.readValue
+                    (manifestStream,
+                            new TypeReference<Map<String, List<String>>>() {
+                            }
+                    ).forEach((dataName, fileList)->{
+                        fileList.forEach(fileName->{
+                            try (InputStream fileToUpload = serviceContainer.dataService().readEntry(zipFile,  "%s/%s".formatted(dataName, fileName ))) {
+                                final String[] split = fileName.split("\\.");
+                                File tempFile = File.createTempFile(split[0], split[1]);
+                                tempFile.deleteOnExit();
+                                try (OutputStream out = new FileOutputStream(tempFile)) {
+                                    byte[] buffer = new byte[8192];
+                                    int bytesRead;
+                                    while ((bytesRead = fileToUpload.read(buffer)) != -1) {
+                                        out.write(buffer, 0, bytesRead);
+                                    }
+                                }
+                                final DataVersioningResult data = serviceContainer.versioningService().createData(
+                                        locale,
+                                        application.getName(),
+                                        dataName,
+                                        fileToUpload == null ? null : new DataFile(
+                                                tempFile,
+                                                (long) tempFile.length(),
+                                                fileName
+                                        ),
+                                        false
+                                );
+                                log.info("%s loaded".formatted(dataName));
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            } catch (InvalidDatasetContentException e) {
+                                log.error("%s not loaded".formatted(dataName));
+                            }
+                        });
+            });
+        }
+        return ResponseEntity.ok("Import en tâche de fond lancé");
+    }
+
+
+    public static File getPhysicalFileOrCopy(MultipartFile multipartFile) throws IOException {
+        if(multipartFile==null || multipartFile.isEmpty()){
+            return null;
+        }
+        try {
+            return multipartFile.getResource().getFile();
+        } catch (IOException e) {
+            // Cas où le MultipartFile est en mémoire ou inaccessible en tant que fichier
+            File tempFile = File.createTempFile("upload-", ".zip");
+            tempFile.deleteOnExit(); // Optionnel selon ta politique de nettoyage
+            try (InputStream in = multipartFile.getInputStream();
+                 OutputStream out = new FileOutputStream(tempFile)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) != -1) {
+                    out.write(buffer, 0, read);
+                }
+            }
+            return tempFile;
+        }
     }
 
 }

@@ -11,6 +11,7 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManager;
+import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.application.NoSuchApplicationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
@@ -98,8 +99,8 @@ public class ApplicationService{
     public void createApplication(
             ReactiveProgression.CreateApplicationProgression progression,
             final String name,
-            final MultipartFile configurationFile,
-            final String comment) {
+            final DataFile dataFile,
+            final String comment) throws IOException {
         Objects.requireNonNull(OreSiApiRequestContext.getAuthentication()
                         .map(OreSiAuthenticationToken::getSystemPersona)
                         .filter(ApplicationCreator.class::isInstance)
@@ -115,7 +116,7 @@ public class ApplicationService{
                     comment,
                     progression,
                     application,
-                    configurationFile,
+                    dataFile,
                     this::initApplication);
         } catch (final OreSiTechnicalException | IOException e) {
             if ("fr.inra.oresing.domain.authorization.privilegeassessor.exception"
@@ -231,7 +232,7 @@ public class ApplicationService{
     public UUID changeApplicationConfiguration(
             ReactiveProgression.ChangeApplicationProgression progression,
             final String nameOrId,
-            final MultipartFile configurationFile,
+            final DataFile dataFile,
             final String comment) {
         final Application application = getApplication(nameOrId);
         Objects.requireNonNull(OreSiApiRequestContext.getAuthentication()
@@ -250,7 +251,7 @@ public class ApplicationService{
             progression1 = (ReactiveProgression.ChangeApplicationProgression) changeApplicationConfiguration(comment,
                     progression1,
                     application,
-                    configurationFile,
+                    dataFile,
                     this::modifySchemaApplication
             ).up().withSubLabel("migrate");
         } catch (final IOException e) {
@@ -282,7 +283,7 @@ public class ApplicationService{
             String comment,
             final ReactiveProgression.ChangeOrCreateApplicationProgression progression,
             Application application,
-            final MultipartFile configurationFile,
+            final DataFile configurationFile,
             final UnaryOperator<Application> createOrModifySchema) throws IOException {
         String applicationName = application.getName();
         OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
@@ -291,13 +292,13 @@ public class ApplicationService{
         progressionForConfiguration.pushMessage("rights.checking", Map.of(APPLICATION_NAME, applicationName));
         progressionForConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForConfiguration.incrementAndPush(i -> i + .02);
         final ReactiveProgression.ChangeOrCreateApplicationProgression progressionForParsingConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForConfiguration.withSubLabel("parsingConfiguration");
-        if (Objects.requireNonNull(configurationFile.getOriginalFilename()).matches(".*\\.zip")) {
+        if (Objects.requireNonNull(configurationFile.fileName()).matches(".*\\.zip")) {
             InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile);
             progressionForParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
             application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(multiYAmlInput));
         } else {
             progressionForParsingConfiguration.pushMessage("forSingle", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(configurationFile.getInputStream()));
+            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(configurationFile.inputStream()));
         }
         if (application == null) {
             return progression;
@@ -365,13 +366,13 @@ public class ApplicationService{
         progression.complete();
     }
 
-    public Application validateConfiguration(final ReactiveProgression.CreateApplicationProgression fluxSink, final MultipartFile file) {
+    public Application validateConfiguration(final ReactiveProgression.CreateApplicationProgression fluxSink, final DataFile file) {
         try {
             final Application application;
-            if (Objects.requireNonNull(file.getOriginalFilename()).matches(".*\\.zip")) {
+            if (Objects.requireNonNull(file.fileName()).matches(".*\\.zip")) {
                 application = ApplicationConfigurationService.unzipConfiguration(file, fluxSink);
             } else {
-                application = ApplicationConfigurationService.parseConfigurationBytes("","", fluxSink, FileBomResolver.of(file.getInputStream()));
+                application = ApplicationConfigurationService.parseConfigurationBytes("","", fluxSink, FileBomResolver.of(file.inputStream()));
             }
             return application;
         } catch (final IOException e) {

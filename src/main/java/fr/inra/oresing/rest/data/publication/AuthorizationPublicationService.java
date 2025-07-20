@@ -7,6 +7,7 @@ import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.DataWriter;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
@@ -23,7 +24,7 @@ public class AuthorizationPublicationService {
     protected final Application application;
     @Getter
     protected final String dataName;
-    protected final ApplicationDataWriter applicationDataWriter;
+    protected final DataWriter applicationDataWriter;
     protected BinaryFile binaryFile;
     @Getter
     protected FileOrUUID fileOrUUID;
@@ -32,7 +33,7 @@ public class AuthorizationPublicationService {
             final Application application,
             final String dataName,
             FileOrUUID fileOrUUID,
-            ApplicationDataWriter applicationDataWriter) {
+            DataWriter applicationDataWriter) {
         this.application = application;
         this.dataName = dataName != null ? dataName : Optional.ofNullable(fileOrUUID).map(FileOrUUID::binaryfiledataset).map(BinaryFileDataset::getDatatype).orElse(null);
         this.fileOrUUID = setFileOrUUID(fileOrUUID);
@@ -40,7 +41,7 @@ public class AuthorizationPublicationService {
         this.applicationDataWriter = applicationDataWriter;
     }
 
-    public ApplicationDataWriter applicationDataWriter() {
+    public DataWriter applicationDataWriter() {
         return this.applicationDataWriter;
     }
 

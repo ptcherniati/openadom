@@ -3,13 +3,11 @@ package fr.inra.oresing.rest.data;
 import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
-import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
+import fr.inra.oresing.domain.authorization.privilegeassessor.role.DataWriter;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.mail.EmailService;
 import fr.inra.oresing.persistence.BinaryFileInfos;
@@ -19,13 +17,11 @@ import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.data.publication.*;
-import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.*;
@@ -49,16 +45,16 @@ public class VersioningService {
     }
 
     @Transactional
-    public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, MultipartFile file, boolean beforeDelete) throws IOException {
+    public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, fr.inra.oresing.domain.data.DataFile file, boolean beforeDelete) throws IOException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        String fileName = file == null ? null : file.getOriginalFilename();
+        String fileName = file == null ? null : file.fileName();
         Optional<FileOrUUID> fileOrUUIDOpt = OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getFileOrUUID);
         Set<BinaryFile> filesToStore = new HashSet<>();
-        ApplicationDataWriter applicationDataWriter = OreSiApiRequestContext.getAuthentication()
+        DataWriter applicationDataWriter = OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getApplicationPersona)
-                .filter(ApplicationDataWriter.class::isInstance)
-                .map(ApplicationDataWriter.class::cast)
+                .filter(DataWriter.class::isInstance)
+                .map(DataWriter.class::cast)
                 .orElse(null);
 
         State state = getStoreFile(application, dataName, fileOrUUIDOpt.orElse(null), fileName, applicationDataWriter)
@@ -116,7 +112,7 @@ public class VersioningService {
             String dataName,
             FileOrUUID fileOrUUID,
             String fileName,
-            ApplicationDataWriter applicationDataWriter) {
+            DataWriter applicationDataWriter) {
         DataRepository dataRepository = serviceContainer.dataService().getDataRepository(application);
         ReportErrors errors = new ReportErrors(jsonRowMapper);
         Function<UUID, Optional<BinaryFile>> resolveFileById = uuid -> binaryFileRepository(application).tryFindById(uuid);
@@ -132,7 +128,7 @@ public class VersioningService {
     }
 
     @Transactional
-    public DataVersioningResult unPublishVersionBeforeDelete(Locale locale, String applicationName, UUID id) {
+    public DataVersioningResult unPublishVersionBeforeDelete(Locale locale, String applicationName, UUID id) throws IOException {
         Optional<BinaryFile> storedFile = serviceContainer.binaryFileService().getFile(applicationName, id);
         if (storedFile.isPresent()) {
             Optional<String> dataName = storedFile
@@ -140,17 +136,13 @@ public class VersioningService {
                     .map(BinaryFileInfos::binaryFiledataset)
                     .map(BinaryFileDataset::getDatatype);
             if (dataName.isPresent()) {
-                try {
-                    return createData(
-                            locale,
-                            applicationName,
-                            dataName.get(),
-                            null,
-                            true
-                    );
-                } catch (IOException e) {
-                    throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
-                }
+                return createData(
+                        locale,
+                        applicationName,
+                        dataName.get(),
+                        null,
+                        true
+                );
             }
 
         }

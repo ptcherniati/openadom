@@ -8,6 +8,7 @@ import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
@@ -74,7 +75,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
 
     @Override
     @Transactional()
-    public UUID storeFile(final Application application, final MultipartFile file, String comment, final BinaryFileDataset binaryFileDataset) throws IOException {
+    public UUID storeFile(final Application application, final DataFile file, String comment, final BinaryFileDataset binaryFileDataset) throws IOException {
         authenticationService.setRoleForClient();
         // creation du fichier
         comment = Optional.ofNullable(binaryFileDataset)
@@ -84,9 +85,9 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         final BinaryFile binaryFile = new BinaryFile();
         binaryFile.setApplication(application.getId());
         binaryFile.setComment(comment);
-        binaryFile.setName(file.getOriginalFilename() != null ? file.getOriginalFilename() : "charte.pdf");
-        binaryFile.setSize(file.getSize());
-        binaryFile.setFileData(file.getInputStream());
+        binaryFile.setName(file.fileName() != null ? file.fileName() : "charte.pdf");
+        binaryFile.setSize(file.fileSize());
+        binaryFile.setFileData(file.inputStream());
         final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, request.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
         binaryFile.setParams(binaryFileInfos);
         return getBinaryFileRepository(application).store(binaryFile);

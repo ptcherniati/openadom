@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.ReferencedBinaryFiles;
 import fr.inra.oresing.domain.additionalfiles.AdditionalBinaryFile;
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
@@ -21,7 +22,7 @@ import java.util.stream.Stream;
 
 public interface BinaryFileService {
     @Transactional()
-    UUID storeFile(Application application, MultipartFile file, String comment, BinaryFileDataset binaryFileDataset) throws IOException;
+    UUID storeFile(Application application, DataFile file, String comment, BinaryFileDataset binaryFileDataset) throws IOException;
 
 
     Optional<BinaryFile> getFile(String applicationNameOrID, UUID id);
