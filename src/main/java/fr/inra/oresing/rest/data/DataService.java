@@ -5,6 +5,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.common.io.Resources;
 import fr.inra.oresing.client.Client;
+import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.GroovyDataInjectionConfiguration;
 import fr.inra.oresing.domain.OreSiUser;
@@ -85,6 +86,7 @@ public class DataService {
     public static final String SETUP_SCRIPT_NAME = "setup.sh";
     public static final String MANIFEST_JSON = "manifest.json";
     public static final String CONFIGURATION = "Configuration";
+    public static final String CONFIGURATION_FILE = "configuration.yaml";
     public static final String COMPOSE = "compose/";
     @Setter
     ServiceContainer serviceContainer;
@@ -580,7 +582,7 @@ public class DataService {
                 .flatMap(fileContent -> Mono.fromCallable(() -> {
                     String entryName = String.format("%s/%s", reference, fileContent.fileName());
                     manifest
-                            .computeIfAbsent(fileContent.firstDate(), k->new HashMap<>())
+                            .computeIfAbsent(fileContent.firstDate(), k -> new HashMap<>())
                             .computeIfAbsent(reference, k -> new ArrayList<>()).add(fileContent.fileName());
                     ZipEntry zipEntry = new ZipEntry(entryName);
                     zipOutputStream.putNextEntry(zipEntry);
@@ -830,7 +832,6 @@ public class DataService {
         Map<String, Set<String>> fichiersGeneres = new HashMap<>();
         List<String> referentielsAvecDonneesExemple = new ArrayList<>();
         List<String> referentielsEnErreur = new ArrayList<>();
-
         Optional.of(locale)
                 .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
 
@@ -838,8 +839,9 @@ public class DataService {
             writeJsClient(zipOutputStream, fichiersGeneres);
             writeHtml(zipOutputStream, fichiersGeneres);
             writeConfiguration(zipOutputStream, fichiersGeneres, instanceUrl, nameOrId);
+            writeConfigurationFile(zipOutputStream, fichiersGeneres, application);
             writeReadMe(zipOutputStream, fichiersGeneres);
-            writeDirectoryToZip(zipOutputStream,fichiersGeneres);
+            writeDirectoryToZip(zipOutputStream, fichiersGeneres);
             Map<Long, Map<String, List<String>>> manifest = new LinkedHashMap<>();
 
             // Traiter chaque référentiel
@@ -931,7 +933,8 @@ public class DataService {
                 }
                 """.formatted(instanceUrl, dataName);
         writeStringToZip(zipOutputStream, OPEN_ADOM_CLIENT_CONFIGURATION_JSON, configurationJson);
-        fichiersGeneres.put(CONFIGURATION, Set.of(OPEN_ADOM_CLIENT_CONFIGURATION_JSON));
+        fichiersGeneres.computeIfAbsent(CONFIGURATION, k->new LinkedHashSet<>())
+                .add(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
     }
 
     private void writeReadMe(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
@@ -941,11 +944,28 @@ public class DataService {
 
     }
 
+
+    private void writeConfigurationFile(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres, Application application) throws IOException {
+        final String configurationString = serviceContainer.binaryFileService().getFileWithData(application.getName(), application.getConfigFile())
+                .map(BinaryFile::getFileData)
+                .map(inputStream -> {
+                    try {
+                        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .orElse(null);
+        writeStringToZip(zipOutputStream, CONFIGURATION_FILE, configurationString );
+        fichiersGeneres.computeIfAbsent(CONFIGURATION, k->new LinkedHashSet<>())
+                .add(CONFIGURATION_FILE);
+    }
+
     private void writeDirectoryToZip(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException, URISyntaxException {
         List<String> allFiles = listAllFilesFromResources(COMPOSE); // à implémenter selon ton contexte
 
         for (String resourcePath : allFiles) {
-             String zipEntryName = COMPOSE + resourcePath; // ajoute dans le zip sous compose/
+            String zipEntryName = COMPOSE + resourcePath; // ajoute dans le zip sous compose/
             writeFileToZip(zipOutputStream, resourcePath, Resources.getResource(Client.class, zipEntryName));
             fichiersGeneres.computeIfAbsent(COMPOSE, k -> new LinkedHashSet<>()).add(zipEntryName);
         }

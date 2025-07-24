@@ -1,7 +1,9 @@
 package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
@@ -44,6 +46,7 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.binaryFile.BinaryFileService;
+import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.data.publication.State;
 import fr.inra.oresing.rest.data.publication.StoreFile;
@@ -62,9 +65,7 @@ import fr.inra.oresing.rest.model.rightsrequest.GetAdditionalFilesResult;
 import fr.inra.oresing.rest.model.rightsrequest.GetRightsRequestResult;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.synthesis.SynthesisResult;
-import fr.inra.oresing.rest.reactive.ReactiveProgression;
-import fr.inra.oresing.rest.reactive.ReactiveResult;
-import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
+import fr.inra.oresing.rest.reactive.*;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
 import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
 import fr.inra.oresing.rest.services.AdditionalFileService;
@@ -85,6 +86,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.util.MimeType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -106,6 +108,7 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -162,12 +165,14 @@ public class OreSiResources {
     final ServiceContainer serviceContainer;
     final LocaleResolver localeResolver;
     final String frontendOrigin;
+    private final JsonRowMapper mapper;
 
     public OreSiResources(
             OreSiApiRequestContext request,
             UserRepository userRepository,
             ServiceContainer serviceContainer,
             LocaleResolver localeResolver,
+            JsonRowMapper mapper,
             @Value("${allowed.origin}") String frontendOrigin
     ) {
         this.request = request;
@@ -175,6 +180,7 @@ public class OreSiResources {
         this.serviceContainer = serviceContainer;
         this.localeResolver = localeResolver;
         this.frontendOrigin = frontendOrigin;
+        this.mapper = mapper;
     }
 
 
@@ -369,7 +375,7 @@ public class OreSiResources {
 
             StreamingResponseBody body = outputStream -> FileCopyUtils.copy(inputStream, outputStream);
 
-                return ResponseEntity.ok()
+            return ResponseEntity.ok()
                     .contentLength(binaryFile.getSize())
                     .header(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME.formatted(filename))
                     .body(body);
@@ -1361,60 +1367,172 @@ public class OreSiResources {
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_DOWNLOAD_BUNDLE')")
-    @PostMapping("/applications/{nameOrId}/download-bundle")
-    public ResponseEntity<?> uploadBundle(
+    @PostMapping(value = "/applications/{nameOrId}/download-bundle", produces = MediaType.APPLICATION_NDJSON_VALUE)
+    public StreamingResponseBody uploadBundle(
             HttpServletRequest request,
             @PathVariable String nameOrId,
-            @RequestParam("file") MultipartFile zipBundle
-    ) throws IOException {
-        final File zipFile = getPhysicalFileOrCopy(zipBundle);
-        final Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        Locale locale = localeResolver.resolveLocale(request);
-        try (InputStream manifestStream = serviceContainer.dataService().readEntry(zipFile, MANIFEST_JSON)) {
-            ObjectMapper mapper = new ObjectMapper();
-            mapper.readValue
-                    (manifestStream,
-                            new TypeReference<Map<String, List<String>>>() {
-                            }
-                    ).forEach((dataName, fileList)->{
-                        fileList.forEach(fileName->{
-                            try (InputStream fileToUpload = serviceContainer.dataService().readEntry(zipFile,  "%s/%s".formatted(dataName, fileName ))) {
-                                final String[] split = fileName.split("\\.");
-                                File tempFile = File.createTempFile(split[0], split[1]);
-                                tempFile.deleteOnExit();
-                                try (OutputStream out = new FileOutputStream(tempFile)) {
-                                    byte[] buffer = new byte[8192];
-                                    int bytesRead;
-                                    while ((bytesRead = fileToUpload.read(buffer)) != -1) {
-                                        out.write(buffer, 0, bytesRead);
-                                    }
-                                }
-                                final DataVersioningResult data = serviceContainer.versioningService().createData(
-                                        locale,
-                                        application.getName(),
-                                        dataName,
-                                        fileToUpload == null ? null : new DataFile(
-                                                tempFile,
-                                                (long) tempFile.length(),
-                                                fileName
-                                        ),
-                                        false
+            @RequestParam("file") MultipartFile zipBundle) {
+
+        return getStreamingResponseBody(
+                buildFluxRequestNDJson(fluxSink -> {
+                    File zipFile = null;
+                    try {
+                        zipFile = getPhysicalFileOrCopy(zipBundle);
+                    } catch (IOException e) {
+                        fluxSink.error(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e));
+                    }
+                    Locale locale = localeResolver.resolveLocale(request);
+                    fluxSink.next(new ReactiveTypeProgress(0L));
+                    fluxSink.next(new ReactiveTypeInfo("MANIFEST"));
+                    final Application application = getOrLoadApplication(nameOrId, zipFile);
+
+                    try (InputStream manifestStream = serviceContainer.dataService().readEntry(zipFile, MANIFEST_JSON)) {
+                        ObjectMapper mapper = new ObjectMapper();
+                        File finalZipFile = zipFile;
+                        final Map<String, List<String>> manifest = mapper.readValue
+                                (manifestStream,
+                                        new TypeReference<Map<String, List<String>>>() {
+                                        }
                                 );
-                                log.info("%s loaded".formatted(dataName));
-                            } catch (IOException e) {
-                                throw new RuntimeException(e);
-                            } catch (InvalidDatasetContentException e) {
-                                log.error("%s not loaded".formatted(dataName));
-                            }
-                        });
-            });
-        }
-        return ResponseEntity.ok("Import en tâche de fond lancé");
+                        fluxSink.next(new ReactiveTypeInfo("MANIFEST", Map.of("manifest", manifest)));
+
+                        AtomicInteger done = new AtomicInteger(0);
+                        int countFiles = manifest.values().stream()
+                                .mapToInt(List::size)
+                                .sum();
+                        manifest
+                                .forEach((dataName, fileList) -> {
+                                    fileList.forEach(fileName -> {
+                                        fluxSink.next(new ReactiveTypeProgress(0.1 + (0.9 / countFiles * done.get())));
+                                        try (InputStream fileToUpload = serviceContainer.dataService().readEntry(finalZipFile, "%s/%s".formatted(dataName, fileName))) {
+                                            final String[] split = fileName.split("\\.");
+                                            File tempFile = File.createTempFile(split[0], split[1]);
+                                            tempFile.deleteOnExit();
+                                            try (OutputStream out = new FileOutputStream(tempFile)) {
+                                                byte[] buffer = new byte[8192];
+                                                int bytesRead;
+                                                while ((bytesRead = fileToUpload.read(buffer)) != -1) {
+                                                    out.write(buffer, 0, bytesRead);
+                                                }
+                                            }
+                                            final DataVersioningResult data = serviceContainer.versioningService().createData(
+                                                    locale,
+                                                    application.getName(),
+                                                    dataName,
+                                                    fileToUpload == null ? null : new DataFile(
+                                                            tempFile,
+                                                            (long) tempFile.length(),
+                                                            fileName
+                                                    ),
+                                                    false
+                                            );
+                                            fluxSink.next(new ReactiveTypeInfo("LOADED_DATA", Map.of("dataName", dataName, "fileName", fileName)));
+                                        } catch (IOException e) {
+                                            fluxSink.next(new ReactiveTypeError(Map.of("dataName", dataName, "fileName", fileName, "errorType", "ERROR_LOADING_DATA")));
+                                            throw new RuntimeException(e);
+                                        } catch (InvalidDatasetContentException e) {
+                                            fluxSink.next(new ReactiveTypeError(Map.of(
+                                                    "dataName", dataName,
+                                                    "fileName", fileName,
+                                                    "errorType", "ERROR_LOADING_DATA",
+                                                    "INVALID_DATASET_EXCEPTION", e
+                                            )));
+                                        }
+                                        done.addAndGet(1);
+                                    });
+                                    fluxSink.next(new ReactiveTypeProgress(1));
+                                });
+                    } catch (StreamReadException e) {
+                        throw new RuntimeException(e);
+                    } catch (DatabindException e) {
+                        throw new RuntimeException(e);
+                    } catch (IOException e) {
+                        fluxSink.next(new ReactiveTypeError(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e)));
+                    } catch (Exception e) {
+                        fluxSink.next(new ReactiveTypeError(e));
+                    } finally {
+                        fluxSink.complete();
+                    }
+                }));
     }
 
+    private Application getOrLoadApplication(String nameOrId, File zipFile) {
+        Application application;
+        try {
+            application = serviceContainer.applicationService().getApplication(nameOrId);
+        } catch (Exception e) {
+            try (InputStream configurationFile = serviceContainer.dataService().readEntry(zipFile, MANIFEST_JSON)) {
+                MultipartFile tmpConfigurationFile = new MultipartFile() {
+                    @Override
+                    public String getName() {
+                        return DataService.CONFIGURATION_FILE;
+                    }
+
+                    @Override
+                    public String getOriginalFilename() {
+                        return DataService.CONFIGURATION_FILE;
+                    }
+
+                    @Override
+                    public String getContentType() {
+                        return "application/x-yaml";
+                    }
+
+                    @Override
+                    public boolean isEmpty() {
+                        return false;
+                    }
+
+                    @Override
+                    public long getSize() {
+                        try {
+                            return configurationFile.available();
+                        } catch (IOException ex) {
+                            return 0L;
+                        }
+                    }
+
+                    @Override
+                    public byte[] getBytes() throws IOException {
+                        return configurationFile.readAllBytes();
+                    }
+
+                    @Override
+                    public InputStream getInputStream() throws IOException {
+                        return configurationFile;
+                    }
+
+                    @Override
+                    public void transferTo(File dest) throws IOException, IllegalStateException {
+
+                    }
+                };
+                createApplication(nameOrId, "uploadBundle", tmpConfigurationFile);
+                application = serviceContainer.applicationService().getApplication(nameOrId);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+        }
+        return application;
+    }
+
+    private StreamingResponseBody getStreamingResponseBody(Flux<ReactiveResult> reactiveResultFlux) {
+        return outputStream -> {
+            reactiveResultFlux
+                    .subscribe(result -> {
+                        try {
+                            outputStream.write(mapper.toJson(result).getBytes());
+                            outputStream.write('\n');
+                            outputStream.flush();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        };
+    }
 
     public static File getPhysicalFileOrCopy(MultipartFile multipartFile) throws IOException {
-        if(multipartFile==null || multipartFile.isEmpty()){
+        if (multipartFile == null || multipartFile.isEmpty()) {
             return null;
         }
         try {
