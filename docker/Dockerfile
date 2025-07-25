@@ -19,8 +19,8 @@ RUN ls -la /app/target/
 # ---- Stage 2: Create a minimal runtime image ---- ##
 ######################################################
 
-# FROM amazoncorretto:21 AS runtime-stage
-FROM openjdk:23-jdk AS runtime-stage
+# FROM openjdk:23-jdk AS runtime-stage # DEPRECATED
+FROM amazoncorretto:23 AS runtime-stage
 
 # Set the working directory
 WORKDIR /app
