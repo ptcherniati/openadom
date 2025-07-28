@@ -5,6 +5,7 @@ import com.fasterxml.jackson.core.exc.StreamReadException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
@@ -643,7 +644,9 @@ public class OreSiResources {
                     })
                     .toList();
             Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
-            String errorsToJson = new ObjectMapper().writeValueAsString(validations);
+            String errorsToJson = new ObjectMapper()
+                    .registerModule(new JavaTimeModule())
+                    .writeValueAsString(validations);
             String localizedApplicationName = application.getLocalizedLocalName(locale);
             String localizedDataName = application.getLocalizedDataName(locale, dataName);
             OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
