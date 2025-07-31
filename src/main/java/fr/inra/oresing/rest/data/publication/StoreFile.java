@@ -36,7 +36,13 @@ public record StoreFile(AuthorizationPublicationService builder) implements Stat
                                         application(),
                                         file,
                                         "",
-                                        Optional.ofNullable(fileOrUuid()).map(FileOrUUID::binaryfiledataset).orElse(null));
+                                        Optional.ofNullable(fileOrUuid())
+                                                .map(FileOrUUID::binaryfiledataset)
+                                                .map(binaryFileDataset -> {
+                                                    binaryFileDataset.setDatatype(dataName());
+                                                    return binaryFileDataset;
+                                                })
+                                                .orElse(null));
                     } catch (IOException e) {
                         throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
                     }
