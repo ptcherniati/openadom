@@ -652,13 +652,13 @@ public class DataService {
                         try {
                             addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
                         } catch (Exception e) {
-                            throw new SiOreIllegalArgumentException("IOException", Map.of("message", e.getLocalizedMessage()));
+                            throw new SiOreIllegalArgumentException("IOException", Map.of("message", Optional.ofNullable(e).map(Exception::getLocalizedMessage).orElse(OreSiTechnicalException.NO_MESSAGE)));
                         }
                     }
                     try {
                         zipOutputStream.close();
                     } catch (IOException e) {
-                        throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+                        throw new OreSiTechnicalException(Optional.ofNullable(ExceptionMessage.IO_EXCEPTION).map(ExceptionMessage::toMessage).orElse(OreSiTechnicalException.NO_MESSAGE), e);
                     }
                 });
         //TODO add additionalFiles
