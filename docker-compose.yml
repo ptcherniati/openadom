@@ -22,7 +22,7 @@ services:
     networks:
       - default
   pgadmin:
-    image: dpage/pgadmin4:9.4
+    image: dpage/pgadmin4:9.6
     ports:
       - "8083:80"
     volumes:
