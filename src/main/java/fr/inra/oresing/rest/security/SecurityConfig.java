@@ -131,6 +131,7 @@ public class SecurityConfig {
         configuration.setAllowedHeaders(List.of("X-CSRF-TOKEN", "X-XSRF-TOKEN", "Content-Type", "Authorization", "Accept-Language"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(MAX_AGE);
+        configuration.setExposedHeaders(List.of("Authorization", "X-XSRF-TOKEN"));
 
         // Appliquer à toutes les routes
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

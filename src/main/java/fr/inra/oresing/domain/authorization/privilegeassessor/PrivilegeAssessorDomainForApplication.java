@@ -167,4 +167,11 @@ public record PrivilegeAssessorDomainForApplication<P extends PrivilegeApplicati
         );
     }
 
+    public ApplicationPersona forDownloadBundle() {
+        if (!authorizations.isApplicationManager()) {
+            throw new NotApplicationManagerRightsException(application.getName());
+        }
+        return new ApplicationAdminUser(application());
+    }
+
 }

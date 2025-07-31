@@ -49,9 +49,22 @@ class FileContentTest {
                     format('%1$s_%2$s_%3$s_%4$s.csv',
                     ((bf."authorization").requiredauthorizations).projet[1],
                 	((bf."authorization").requiredauthorizations).sites[1],
-                	TO_CHAR(lower((bf."authorization").timescope),'yyyy-MM-dd'),
-                	TO_CHAR(upper((bf."authorization").timescope),'yyyy-MM-dd')
+                	TO_CHAR(
+                    CASE
+                        WHEN lower((bf."authorization").timescope) = '-infinity'::timestamp
+                          THEN '0001-01-01'::timestamp
+                        ELSE lower((bf."authorization").timescope)
+                    END
+                ,'dd-MM-yyyy'),
+                	TO_CHAR(
+                    CASE
+                        WHEN upper((bf."authorization").timescope) = 'infinity'::timestamp
+                          THEN '9999-12-31'::timestamp
+                        ELSE upper((bf."authorization").timescope)
+                  	END
+                ,'dd-MM-yyyy')
                 ) as "fileName",
+                    EXTRACT(epoch FROM MIN(bf.updateDate) OVER(PARTITION BY rv.referencetype))::bigint AS "updateDate",
                     convert_from(bf.filedata, 'UTF8') AS "fileContent"
                 FROM null.referencevalue rv
                 JOIN null.binaryfile bf ON bf.id = rv.binaryfile

@@ -1,0 +1,88 @@
+# Guide d’utilisation de l’archive de sauvegarde OpenAdom
+
+Bienvenue !
+Cette archive vous permet de **restaurer ou migrer facilement vos données et l’interface associée** vers un autre serveur, ou tout simplement de rejouer un dépôt de données tel qu’il était sur votre application OpenAdom à la date de la sauvegarde.
+Aucune connaissance technique avancée n’est requise : suivez simplement les étapes ci-dessous.
+
+---
+
+## Ce que vous pouvez faire avec cette archive
+
+- Visualiser et vérifier les données enregistrées lors de la sauvegarde.
+- Rejouer l’import des fichiers dans une nouvelle instance OpenAdom.
+- Tester une migration vers un autre serveur (utile pour valider un transfert avant production).
+- Restaurer l’environnement applicatif dans l’état correspondant à votre sauvegarde.
+
+---
+
+## 1) Prérequis : installer Docker
+
+Vous devez disposer de **Docker** et **Docker Compose** sur votre ordinateur.
+Si ce n’est pas déjà le cas, suivez ce lien officiel pour installer Docker Desktop (Windows/Mac) ou Docker Engine (Linux) :
+
+https://docs.docker.com/get-docker/
+
+---
+
+## 2) Préparer le dossier de travail
+
+- **Dézippez** l’archive sur votre ordinateur à l’endroit de votre choix (par exemple sur le Bureau).
+- **Ouvrez un terminal** (invite de commandes/explorateur de fichiers/bureau/Terminal Mac ou Linux).
+- **Placez-vous dans le dossier où vous avez dézippé** l’archive.
+  Par exemple :
+    - Sur Windows : tapez `cd C:\Utilisateurs\votre_nom\Bureau\mon_sauvegarde_openadom`
+    - Sur Mac/Linux : tapez `cd ~/Bureau/mon_sauvegarde_openadom`
+
+> Astuce : Vérifiez que vous voyez bien les fichiers `index.html`, `openAdom-client-configuration.json`, le dossier `compose`, etc.
+
+---
+
+## 3) Lancer la restauration
+
+Dans votre terminal, tapez la commande suivante pour démarrer les services nécessaires (frontend et backend) :
+<pre> ``` docker compose -f docker-compose.yml up``` </pre>
+
+*Laissez cette fenêtre ouverte : elle affichera l’avancement du processus.*
+
+---
+
+## 4) Savoir que le build est terminé
+
+- L'installation initialise d'abord la configuration, puis lance les serveurs.
+- Le processus est terminé **quand vous voyez des messages indiquant** :
+    - "nginx entered RUNNING state"
+    - "openadom-backend ... RUNNING"
+- Vous saurez que tout est prêt lorsque la console n'affiche plus d'erreur et que les messages se stabilisent avec des logs "listening on port 80" ou "Started Application in ... seconds".
+
+---
+
+## 5) Accéder à l’interface web
+
+- **Ouvrez votre navigateur**, puis tapez l’adresse suivante :
+
+  <pre> ```http://localhost:8080``` </pre>
+
+- Vous arrivez sur la page d’accueil.
+  Connectez-vous ou suivez les instructions à l’écran pour restaurer ou importer vos données.
+
+---
+
+## 6) Astuces et dépannage
+
+- Pour arrêter proprement les services :
+  Dans le même terminal, tapez `Ctrl + C`.
+- Pour tout nettoyer (le cas échéant) :
+<pre> ```docker compose -f docker-compose.yml down -v``` </pre>
+- Si vous souhaitez répéter l’opération, vous pouvez adapter le fichier `openAdom-client-configuration.json` (changer la cible) avant de relancer la commande.
+
+---
+
+## En cas de problème
+
+- Consultez la fenêtre du terminal : les messages d’erreur y sont détaillés.
+- Si Docker n’est pas détecté, vérifiez qu’il soit bien installé et lancé.
+- Pour toute question technique complexe, contactez votre administrateur ou le support OpenAdom.
+
+---
+
+Merci d’utiliser OpenAdom !

@@ -21,7 +21,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Predicate;
 
-public sealed interface ApplicationDataWriter extends ApplicationUser
+public sealed interface ApplicationDataWriter extends ApplicationUser, DataWriter
         permits ApplicationAdminUser, ApplicationDataDelete, ApplicationDeleteUser, ApplicationDepositWriterUser, ApplicationManagerUser, ApplicationPublishWriterUser {
     boolean canDelete(FileOrUUID fileOrUUID);
 

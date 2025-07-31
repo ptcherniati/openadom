@@ -2,6 +2,7 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
+import fr.inra.oresing.domain.data.DataFile;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -13,13 +14,13 @@ import java.util.zip.ZipInputStream;
 
 public class MultiYaml {
 
-    public static InputStream parseConfigurationBytes(final MultipartFile file) throws IOException {
+    public static InputStream parseConfigurationBytes(final DataFile file) throws IOException {
         final YAMLMapper mapper = new YAMLMapper();
         mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
         Map<String, Object> configuration = new HashMap<>();
 
-        try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(file.getInputStream()))) {
+        try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(file.inputStream()))) {
             ZipEntry zipEntry;
             while ((zipEntry = zis.getNextEntry()) != null) {
                 if (!zipEntry.isDirectory()) {

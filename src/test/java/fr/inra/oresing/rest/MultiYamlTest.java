@@ -2,12 +2,12 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
+import fr.inra.oresing.domain.data.DataFile;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,7 +18,18 @@ public class MultiYamlTest {
     @Test
     void testYaml() throws IOException {
         try (InputStream fileInputStream = getClass().getResourceAsStream("/data/monsore/multiyaml.zip")) {
-            final MultipartFile multipartFile = new MockMultipartFile("monzip", fileInputStream);
+            // Création du fichier temporaire
+            File tempFile = File.createTempFile("multiyaml-", ".zip");
+            tempFile.deleteOnExit(); // Nettoyage automatique à la fin du process
+
+            try (OutputStream out = new FileOutputStream(tempFile)) {
+                byte[] buffer = new byte[8192];
+                int bytesRead;
+                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                    out.write(buffer, 0, bytesRead);
+                }
+            }
+            final DataFile multipartFile = new DataFile(tempFile, 0L, "monzip");
             byte[] bytes = MultiYaml.parseConfigurationBytes(multipartFile).readAllBytes();
             Object configuration = new YAMLMapper().readValue(bytes, Object.class);
             assertNotNull(configuration);

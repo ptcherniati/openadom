@@ -40,6 +40,7 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
     public static final String APPLICATION_DATA_WRITE = "APPLICATION_DATA_WRITE";
     public static final String APPLICATION_WRITE_FILE = "APPLICATION_WRITE_FILE";
     public static final String APPLICATION_DELETE_FILE = "APPLICATION_DELETE_FILE";
+    public static final String APPLICATION_DATA_DOWNLOAD_BUNDLE = "APPLICATION_DATA_DOWNLOAD_BUNDLE";
     private final AuthorizationService authorizationService;
     public Supplier<PrivilegeAssessorDomainForSystem<PrivilegeSystemDomainEnum>> SYSTEM_USER_CONNECTED;
     public Supplier<PrivilegeAssessorDomainForSystem<PrivilegeSystemDomainEnum>> SYSTEM_ADMINISTRATION;
@@ -176,6 +177,9 @@ public class ApplicationPermissionEvaluator implements PermissionEvaluator {
                     case String deleteFile when APPLICATION_DELETE_FILE.equals(deleteFile) -> dataNameOpt
                             .map(dataName -> DATA_READ.apply(applicationName)
                                     .forDataDelete(dataName));
+                    case String downloadBundle when APPLICATION_DATA_DOWNLOAD_BUNDLE.equals(downloadBundle) ->
+                            Optional.of(APPLICATION_MANAGER.apply(applicationName)
+                                    .forDownloadBundle());
                     default -> Optional.empty();
                 })
                 .map(applicationPersona -> {

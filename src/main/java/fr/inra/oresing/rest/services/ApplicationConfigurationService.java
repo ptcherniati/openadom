@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.type.CheckerEnum;
+import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.domain.file.FileBomResolver;
@@ -35,7 +36,7 @@ public class ApplicationConfigurationService {
     private ApplicationConfigurationService() {
     }
 
-    public static Application unzipConfiguration(final MultipartFile file, ReactiveProgression.CreateApplicationProgression fluxSink) throws IOException {
+    public static Application unzipConfiguration(final DataFile file, ReactiveProgression.CreateApplicationProgression fluxSink) throws IOException {
         InputStream inputStream = MultiYaml.parseConfigurationBytes(file);
         return ApplicationConfigurationService.parseConfigurationBytes(
                 "", "",

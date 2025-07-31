@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -64,13 +65,13 @@ class SubmissionTest {
 
     @Test
     void parseFileName() {
-        submission.parseFileName("leProjet_leSite_01-01-1984_05-01-1984.csv", binaryFileDataset);
+        submission.parseFileName(Map.of(), "leProjet_leSite_01-01-1984_05-01-1984.csv", binaryFileDataset);
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
         assertEquals("1984-01-01 00:00:00", binaryFileDataset.getFrom());
         assertEquals("1984-01-05 00:00:00", binaryFileDataset.getTo());
         //do nothing if already done
-        submission.parseFileName("leProjet2_leSite2_01-01-1985_05-01-1985.csv", binaryFileDataset);
+        submission.parseFileName(Map.of(),"leProjet2_leSite2_01-01-1985_05-01-1985.csv", binaryFileDataset);
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
         assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
         assertEquals("1984-01-01 00:00:00", binaryFileDataset.getFrom());
@@ -81,7 +82,7 @@ class SubmissionTest {
     @Test
     void parseFileNameWithInvalidStartDate() {
         try {
-            submission.parseFileName("leProjet_leSite_01-01x1984_05-01-1984.csv", binaryFileDataset);
+            submission.parseFileName(Map.of(),"leProjet_leSite_01-01x1984_05-01-1984.csv", binaryFileDataset);
         } catch (SiOreAuthorizationRequestException e) {
             assertEquals(AuthorizationRequestException.BAD_FILE_NAME_START_DATE, e.getException());
             assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv", e.getParams().get("fileNameFormat"));
@@ -94,7 +95,7 @@ class SubmissionTest {
     @Test
     void parseFileNameWithInvalidEndDate() {
         try {
-            submission.parseFileName("leProjet_leSite_01-01-1984_05-01/1984.csv", binaryFileDataset);
+            submission.parseFileName(Map.of(), "leProjet_leSite_01-01-1984_05-01/1984.csv", binaryFileDataset);
         } catch (SiOreAuthorizationRequestException e) {
             assertEquals(AuthorizationRequestException.BAD_FILE_NAME_END_DATE, e.getException());
             assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv", e.getParams().get("fileNameFormat"));

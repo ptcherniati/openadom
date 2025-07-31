@@ -2,10 +2,14 @@ package fr.inra.oresing.rest.data.publication;
 
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
+import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.BinaryFileInfos;
 
+import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 public record FileNameResolver(
         AuthorizationPublicationService builder) implements State {
@@ -14,6 +18,9 @@ public record FileNameResolver(
         BinaryFileDataset resolvedBinaryFileDataset = Optional.ofNullable(dataDescription())
                 .map(StandardDataDescription::submission)
                 .map(submission -> submission.parseFileName(
+                        application().findData(dataName())
+                                .map(StandardDataDescription::componentDescriptions)
+                                .orElseGet(Map::of),
                         fileName,
                         binaryFileDataset))
                 .orElse(binaryFileDataset);

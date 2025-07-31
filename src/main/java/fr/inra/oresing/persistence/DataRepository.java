@@ -603,7 +603,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 getNamedParameterJdbcTemplate().queryForStream(
                         sql,
                         params,
-                        (rs, rowNum) -> new FileContent(rs.getString("fileName"), rs.getString("fileContent"))
+                        (rs, rowNum) -> new FileContent(rs.getLong("updateDate"), rs.getString("fileName"), rs.getString("fileContent"))
                 )
         );
     }
