@@ -557,7 +557,35 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                             '__display_default', referenceby.refvalues->'__display_default',
                             '__display_fr', referenceby.refvalues->'__display_fr',
                             '__display_en', referenceby.refvalues->'__display_en',
-                            'id', referenceby.id
+                            'id', referenceby.id,
+                            'parents',
+                                  COALESCE((
+                                      SELECT jsonb_agg(DISTINCT jsonb_build_object(
+                                          'referenceType', parent.referencetype,
+                                          'hierarchicalKey', parent.hierarchicalkey,
+                                          'naturalKey', parent.naturalkey,
+                                          '__display_default', parent.refvalues->'__display_default',
+                                          '__display_fr', parent.refvalues->'__display_fr',
+                                          '__display_en', parent.refvalues->'__display_en',
+                                          'id', parent.id
+                                      ))
+                                      FROM (
+                                          SELECT\
+                                              (regexp_match(s, '([0-9a-z_]*)K(.*)'))[1] AS parent_type,
+                                              (regexp_match(s, '([0-9a-z_]*)K(.*)'))[2] AS parent_naturalkey
+                                          FROM unnest(
+                                              string_to_array(
+                                                  regexp_replace(referenceby.hierarchicalkey::text, '\\.[^\\.]+$',''),
+                                                  '.'
+                                              )
+                                          ) AS s
+                                      ) parentspec
+                                      LEFT JOIN %1$s.referencevalue parent
+                                        ON parent.referencetype = parentspec.parent_type
+                                       AND parent.naturalkey    = parentspec.parent_naturalkey::ltree
+                                      WHERE parent.id IS NOT NULL
+                                        AND parent.hierarchicalkey <> referenceby.hierarchicalkey
+                                  ), '[]'::jsonb)
                         )
                     ) AS "refsLinkeds"
                 FROM %1$s.referencevalue rs
