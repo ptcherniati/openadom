@@ -234,14 +234,14 @@ public class BinaryFileRepository extends JsonTableInApplicationSchemaRepository
             where.add("params @@ ('$.published==true')");
             final String t = """
                     (tsrange(
-                    \tcoalesce((params #>> '{"binaryfiledataset", "from"}'), '-infinity')::timestamp,
-                    \tcoalesce((params #>> '{"binaryfiledataset", "to"}'), 'infinity')::timestamp
-                    \t) && tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))
-                    \tand
+                        coalesce((params #>> '{"binaryfiledataset", "from"}'), '-infinity')::timestamp,
+                        coalesce((params #>> '{"binaryfiledataset", "to"}'), 'infinity')::timestamp
+                        ) && tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))
+                        and
                     (tsrange(
-                    \tcoalesce((params #>> '{"binaryfiledataset", "from"}'), '-infinity')::timestamp,
-                    \tcoalesce((params #>> '{"binaryfiledataset", "to"}'), 'infinity')::timestamp
-                    \t) != tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))
+                        coalesce((params #>> '{"binaryfiledataset", "from"}'), '-infinity')::timestamp,
+                        coalesce((params #>> '{"binaryfiledataset", "to"}'), 'infinity')::timestamp
+                        ) != tsrange(coalesce(:from::timestamp, '-infinity')::timestamp, coalesce(:to::timestamp, 'infinity')::timestamp))
                     """;
             where.add(t);
             assert binaryFileDataset != null;
