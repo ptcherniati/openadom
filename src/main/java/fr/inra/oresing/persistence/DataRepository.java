@@ -582,6 +582,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                              SELECT
                                referenceby.referencetype AS "listName",
                                jsonb_agg(DISTINCT jsonb_build_object(
+                                'isHierarchique', jsonb_path_exists(
+                                                    application."configuration",
+                                                    ('$.datadescription.'||referenceby.referencetype||'.componentdescriptions.*.checker ? (@.isparent == true)')::jsonpath
+                                                    ),                 
                                  'referenceType', referenceby.referencetype,
                                  'hierarchicalKey', referenceby.hierarchicalkey,
                                  'naturalKey', referenceby.naturalkey,
@@ -607,6 +611,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                              JOIN %1$s.reference_reference rr ON rr.referenceid = rs.id
                              JOIN %1$s.referencevalue referenceby ON referenceby.id = rr.referencesby
                              LEFT JOIN parents_grouped pg ON pg.child_hkey = referenceby.hierarchicalkey
+                             JOIN application on application.id = referenceby.application
                              WHERE rs.referencetype = :referenceType
                              GROUP BY referenceby.referencetype
                            )

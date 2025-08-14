@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public record RefsLinked(
         UUID id,
+        Boolean isHierarchique,
         String referenceType,
         Ltree naturalKey,
         Ltree hierarchicalKey,
