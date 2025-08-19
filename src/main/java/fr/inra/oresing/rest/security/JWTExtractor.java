@@ -48,20 +48,6 @@ public class JWTExtractor {
         response.setHeader(AUTHORIZATION, BEARER_ + jwt);
     }
 
-    public static void addCookie(String jwt, HttpServletResponse response, boolean secureEnvironment) {
-        Cookie cookie = getCookie(jwt);
-        cookie.setSecure(secureEnvironment);
-        response.addCookie(cookie);
-    }
-
-    public static Cookie getCookie(String jwt) {
-        final Cookie cookie = new Cookie(JWT_COOKIE_NAME, jwt);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(jwtExpiration);
-        return cookie;
-    }
-
     public static String buildToken(String json) {
         Date issuedAt = new Date();
         return Jwts.builder()
@@ -89,6 +75,9 @@ public class JWTExtractor {
 
     public OreSiUserRequestClient getRequestClientFromJwt(String token) throws IOException {
         String json;
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7); // on enlève 'Bearer '
+        }
         try {
             json = Jwts.parser()
                     .verifyWith(key)
@@ -115,7 +104,6 @@ public class JWTExtractor {
         String json = mapper.toJson(new OpenAdomJwtValue(requestClient));
         String jwt = buildToken(json);
         try {
-            addCookie(jwt, response, isSecureEnvironnement);
             addJwtHeader(response, jwt);
         } catch (Exception e) {
             log.trace("pas grave");

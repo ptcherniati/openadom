@@ -79,12 +79,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
                 .httpBasic(AbstractHttpConfigurer::disable)
-                .csrf(csrf -> csrf
-                        .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler())
-                        .ignoringRequestMatchers(BASE, ALL.formatted(SWAGGER_UI), ALL.formatted(API_DOCS), ALL.formatted(API_PUBLIC))
-                        .ignoringRequestMatchers(API_V_1_LOGIN, API_V_1_USERS, API_V_1_LOGOUT)
-                )
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth ->
                         auth
                                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
@@ -102,23 +97,10 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.PUT, API_V_1_USERS).hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
                                 .anyRequest().authenticated())
                 .addFilterAfter(authorizationFilter, BasicAuthenticationFilter.class)
-                .addFilterAfter(new CsrfCookieFilter(), AuthorizationFilter.class)
                 .securityContext(security -> security
                         .securityContextRepository(new RequestAttributeSecurityContextRepository())
                 );
         return http.build();
-    }
-
-    private static final class CsrfCookieFilter extends OncePerRequestFilter {
-        @Override
-        protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
-                                        FilterChain filterChain) throws IOException, ServletException {
-            CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
-            if (csrfToken != null) {
-                response.setHeader(csrfToken.getHeaderName(), csrfToken.getToken());
-            }
-            filterChain.doFilter(request, response);
-        }
     }
 
     @Bean

@@ -2,7 +2,6 @@ package fr.inra.oresing.rest.fixtures;
 
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.Fixtures;
-import jakarta.servlet.http.Cookie;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -17,14 +16,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public record HauteFrequenceFixture(Fixtures fixtures, MockMvc mockMvc) {
 
 
-
     public Fixtures.UserConnection addApplicationHauteFrequence() throws Exception {
 
         Fixtures.UserConnection authConnection = fixtures().addApplicationCreatorUser("hautefrequence");
-        final Cookie authCookie = authConnection.cookie();
+        final String authJwt = authConnection.jwt();
         try (final InputStream configurationFile = getClass().getResourceAsStream(getHauteFrequenceApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
-            fixtures().getIdFromApplicationResult(fixtures().loadApplication(configuration, authCookie, "hautefrequence", "hautefrequence"));
+            fixtures().getIdFromApplicationResult(fixtures().loadApplication(configuration, authJwt, "hautefrequence", "hautefrequence"));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -35,8 +33,9 @@ public record HauteFrequenceFixture(Fixtures fixtures, MockMvc mockMvc) {
                 final MockMultipartFile file = new MockMultipartFile("file", e.getValue(), "text/plain", in);
                 mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey())
                                 .file(file)
-                                .with(csrf().asHeader())
-                                .cookie(authCookie))
+                                
+                                .header("Authorization", "Bearer " + authJwt))
+
                         .andExpect(status().is2xxSuccessful());
             }
         }
@@ -45,8 +44,8 @@ public record HauteFrequenceFixture(Fixtures fixtures, MockMvc mockMvc) {
         try (final InputStream refStream = getClass().getResourceAsStream(getHauteFrequenceDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/hautefrequence")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(refFile)
+                            .header("Authorization", "Bearer " + authJwt))
                     .andExpect(status().is2xxSuccessful());
         }
         return authConnection;

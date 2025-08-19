@@ -74,8 +74,8 @@ public class AuthenticationResources {
 
     @Operation(
             summary = "Connexion utilisateur",
-            description = "Authentifie un utilisateur et retourne un token JWT dans le cookie. " +
-                    "Ce cookie est à passer dans tout appel au serveur",
+            description = "Authentifie un utilisateur et retourne un BEARER. " +
+                    "Ce BEARER est à passer dans tout appel au serveur",
             tags = {"authentication-resources"},
             parameters = {
                     @Parameter(
@@ -111,7 +111,7 @@ public class AuthenticationResources {
             summary = "Déconnecter l'utilisateur courant",
             description = """
                     Invalide la session utilisateur et supprime les privilèges d'accès.
-                    Efface les cookies d'authentification le cas échéant.
+                    Efface les en-tête d'authentification le cas échéant.
                     """,
             tags = {"Authentification"})
     @DeleteMapping("/logout")

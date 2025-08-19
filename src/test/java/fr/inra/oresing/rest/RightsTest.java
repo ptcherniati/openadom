@@ -18,7 +18,6 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -91,100 +90,67 @@ public class RightsTest {
     }
 
     @Test
-    void timeOutCookie() throws Exception {
+    void timeOutBearer() throws Exception {
         OreSiUser oreSiUser = new OreSiUser();
         final UUID authUserId = fixtures.adminConnection.userResult().userId();
         oreSiUser.setId(authUserId);
         OreSiUserRequestClient oreSiUserRequestClient = new OreSiUserRequestClient(authUserId, OreSiUserRole.forUser(oreSiUser));
-        Cookie cookie = newCookie(oreSiUserRequestClient);
+        String token = newJwt(oreSiUserRequestClient); // nouvelle méthode : retourne juste la chaîne JWT
+
         try {
             mockMvc.perform(get("/api/v1/applications")
-                    .cookie(cookie));
+                    .header("Authorization", "Bearer " + token));
             Assertions.fail();
         } catch (AuthenticationCredentialsNotFoundException e) {
             Assertions.assertTrue(e.getCause() instanceof ExpiredJwtException);
         }
     }
 
-    private Cookie newCookie(final OreSiUserRequestClient requestClient) {
-        final String json;
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            final OpenAdomJwtValue jwtCookieValue = new OpenAdomJwtValue(requestClient);
-            json = objectMapper.writeValueAsString(jwtCookieValue);
-        } catch (final JsonProcessingException e) {
-            throw new SiOreIllegalArgumentException(
-                    "requestMapperSerializationError",
-                    Map.of(
-                            "requestClient", requestClient,
-                            "objectMapper", objectMapper,
-                            "message", e.getLocalizedMessage()
-                    )
-            );
-            //throw new OreSiTechnicalException("impossible de sérialiser " + requestClient + " avec " + objectMapper, e);
-        }
-        final Date issuedAt = new Date();
 
-        final String token = Jwts.builder()
+    private String newJwt(final OreSiUserRequestClient requestClient) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        String json;
+        try {
+            OpenAdomJwtValue jwtValue = new OpenAdomJwtValue(requestClient);
+            json = objectMapper.writeValueAsString(jwtValue);
+        } catch (JsonProcessingException e) {
+            throw new SiOreIllegalArgumentException("requestMapperSerializationError",
+                    Map.of("requestClient", requestClient, "objectMapper", objectMapper, "message", e.getLocalizedMessage()));
+        }
+        Date issuedAt = new Date();
+        Date expiry = new Date(issuedAt.getTime() - 1000); // On force l'expiration, pour tester le timeout (sinon mets une date passée)
+        return Jwts.builder()
                 .subject(json)
                 .issuedAt(issuedAt)
-                .expiration(DateUtils.addSeconds(issuedAt, 0))
+                .expiration(expiry)
                 .signWith(key)
                 .compact();
-
-        final Cookie cookie = new Cookie(JWTExtractor.JWT_COOKIE_NAME, token);
-        cookie.setPath("/");
-        cookie.setHttpOnly(true);
-        cookie.setSecure(false);
-        return cookie;
     }
+
+
 
     //@Test
     void logoutShouldInvalidateSession() throws Exception {
         // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
         mockMvc.perform(get("/api/v1/applications")
-                        .cookie(fixtures.adminConnection.cookie()))
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                 .andExpect(status().isOk()); // Devrait renvoyer 200 OK car l'utilisateur est connecté
 
         // Étape 2: Déconnexion de l'utilisateur
-        mockMvc.perform(delete("/api/v1/logout").with(csrf().asHeader())
-                        .cookie(fixtures.adminConnection.cookie()))
+        mockMvc.perform(delete("/api/v1/logout")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                 .andExpect(status().isOk()); // La déconnexion devrait réussir
 
         // Récupérer le cookie de déconnexion (qui devrait être expiré)
-        Cookie deconnectedCookie = mockMvc.perform(delete("/api/v1/logout").with(csrf().asHeader())
-                        .cookie(fixtures.adminConnection.cookie()))
-                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+        String deconnectedCookie = mockMvc.perform(delete("/api/v1/logout")
+
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+
+
+                .andReturn().getResponse().getHeader("Authorization");
+        ;
 
         Assertions.assertNull(deconnectedCookie, "Le cookie de déconnexion dpit être null");
-    }
-
-    @Test
-    void cookieMaxAgeIsResetOnEachCall() throws Exception {
-        // Étape 1: Vérifier que l'utilisateur est bien connecté en accédant à /applications
-        MvcResult result = mockMvc.perform(get("/api/v1/applications")
-                        .cookie(fixtures.adminConnection.cookie()))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Récupérer le cookie après le premier appel
-        Cookie firstCallCookie = result.getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-        Assertions.assertNotNull(firstCallCookie, "Le cookie ne devrait pas être null");
-        Assertions.assertTrue(firstCallCookie.getMaxAge() > 0, "Le cookie devrait avoir une durée de vie positive");
-
-        // Étape 2: Répéter l'appel pour vérifier que le maxAge est réinitialisé
-        result = mockMvc.perform(get("/api/v1/applications")
-                        .cookie(firstCallCookie))
-                .andExpect(status().isOk())
-                .andReturn();
-
-        // Récupérer le cookie après le deuxième appel
-        Cookie secondCallCookie = result.getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
-        Assertions.assertNotNull(secondCallCookie, "Le cookie ne devrait pas être null");
-        Assertions.assertTrue(secondCallCookie.getMaxAge() > 0, "Le cookie devrait avoir une durée de vie positive");
-
-        // Vérifier que le maxAge a été réinitialisé
-        Assertions.assertTrue(secondCallCookie.getMaxAge() >= fixtures.adminConnection.cookie().getMaxAge(), "Le maxAge devrait être réinitialisé");
     }
 
 }

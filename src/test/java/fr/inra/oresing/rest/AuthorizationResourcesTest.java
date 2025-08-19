@@ -12,10 +12,8 @@ import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.fixtures.AcbbFixture;
 import fr.inra.oresing.rest.fixtures.HauteFrequenceFixture;
 import fr.inra.oresing.rest.fixtures.MonSoereFixture;
-import fr.inra.oresing.rest.security.JWTExtractor;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
-import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,16 +102,16 @@ public class AuthorizationResourcesTest {
         final Fixtures.UserConnection witUnReaderRightDefinition = fixtures.createUserForUserDefinition(withUnReaderRigths, true, false);
 
 
-        final Cookie authCookie = acbbFixture.addApplicationAcbb().cookie();
+        final String authJwt = acbbFixture.addApplicationAcbb().jwt();
         String token = Jwts.parser()
                 .verifyWith(Keys.hmacShaKeyFor("1234567890AZERTYUIOP000000000000".getBytes()))
                 .build()
-                .parseSignedClaims(authCookie.getValue())
+                .parseSignedClaims(authJwt)
                 .getPayload()
                 .getSubject();
         String authId = JsonPath.parse(token).read("$.requestclient.id");
         {
-            assertEquals(1, Arrays.stream(getApplicationsFlux(authCookie, "ALL")
+            assertEquals(1, Arrays.stream(getApplicationsFlux(authJwt, "ALL")
                     )
 
                     .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class)))
@@ -123,14 +121,14 @@ public class AuthorizationResourcesTest {
 
         {
             mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur/json")
-                            .cookie(witUnReaderRightDefinition.cookie())
+                            .header("Authorization", "Bearer " + witUnReaderRightDefinition.jwt())
                             .accept(MediaType.TEXT_PLAIN))
                     .andExpect(status().is4xxClientError());
         }
 
         {
             final String response = mockMvc.perform(get("/api/v1/applications/acbb/grantable")
-                    .cookie(authCookie)
+                    .header("Authorization", "Bearer " + authJwt)
             ).andReturn().getResponse().getContentAsString();
             assertTrue(response.contains("lusignan"));
             assertTrue(response.contains("laqueuille.laqueuille__1"));
@@ -156,9 +154,9 @@ public class AuthorizationResourcesTest {
                           " }\n" +
                           "}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(authCookie)
+                    .header("Authorization", "Bearer " + authJwt)
                     .content(json);
             mockMvc.perform(create)
                     .andExpect(status().isCreated())
@@ -184,9 +182,9 @@ public class AuthorizationResourcesTest {
                    " }\n" +
                    "}";
 
-            create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
+            create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(authCookie)
+                    .header("Authorization", "Bearer " + authJwt)
                     .content(json);
             mockMvc.perform(create)
                     .andExpect(status().isCreated())
@@ -231,9 +229,9 @@ public class AuthorizationResourcesTest {
                           " }\n" +
                           "}";
 
-            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
+            MockHttpServletRequestBuilder create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(authCookie)
+                    .header("Authorization", "Bearer " + authJwt)
                     .content(json);
             mockMvc.perform(create)
                     .andExpect(status().isCreated())
@@ -273,25 +271,25 @@ public class AuthorizationResourcesTest {
                    "  }\n" +
                    " }\n" +
                    "}";
-            create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
+            create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(authCookie)
+                    .header("Authorization", "Bearer " + authJwt)
                     .content(json);
             mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             // on peut aussi rajouter une submissionScope avec withAdminRigthsUserId
-            create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
+            create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(withAdminRightDefinition.cookie())
+                    .header("Authorization", "Bearer " + withAdminRightDefinition.jwt())
                     .content(json);
             mockMvc.perform(create)
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             // on ne peut aussi rajouter une submissionScope avec withBadAdminRigthsUserId theix vs laqueuille
-            create = post("/api/v1/applications/acbb/authorization").with(csrf().asHeader())
+            create = post("/api/v1/applications/acbb/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(withAdminRightDefinition.cookie())
+                    .header("Authorization", "Bearer " + withAdminRightDefinition.jwt())
                     .content(json);
             mockMvc.perform(create)
                     .andExpect(status().is4xxClientError())
@@ -301,7 +299,7 @@ public class AuthorizationResourcesTest {
         {
             MockHttpServletRequestBuilder authorizations = get("/api/v1/applications/acbb/authorization/user/" + authId)
                     .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(authCookie);
+                    .header("Authorization", "Bearer " + authJwt);
             mockMvc.perform(authorizations)
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.applicationName", equalTo("acbb")))
@@ -311,7 +309,7 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            assertEquals(1, Arrays.stream(getApplicationsFlux(authCookie, "ALL")
+            assertEquals(1, Arrays.stream(getApplicationsFlux(authJwt, "ALL")
                     )
 
                     .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class)))
@@ -321,7 +319,7 @@ public class AuthorizationResourcesTest {
 
         {
             mockMvc.perform(get("/api/v1/applications/acbb/data/biomasse_production_teneur/json")
-                            .cookie(witUnReaderRightDefinition.cookie())
+                            .header("Authorization", "Bearer " + witUnReaderRightDefinition.jwt())
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.rows[*].values.parcelle.chemin").value(hasItemInArray(equalTo("theix.theix__22")), String[].class))
@@ -336,15 +334,17 @@ public class AuthorizationResourcesTest {
     // @Test
     public void testAddAuthorizationOnTwoScopes() throws Exception {
         HauteFrequenceFixture hauteFrequenceFixture = new HauteFrequenceFixture(fixtures, mockMvc);
-        final Cookie authCookie = hauteFrequenceFixture.addApplicationHauteFrequence().cookie();
+        final String authJwt = hauteFrequenceFixture.addApplicationHauteFrequence().jwt();
 
         final CreateUserResult createUserResult = authenticationService.createUser("UnReader", "xxxxxxxx", "UnReader@inrae.fr");
         fixtures.setToActive(createUserResult.userId());
         final String readerUserId = createUserResult.userId().toString();
-        final Cookie authReaderCookie = mockMvc.perform(post("/api/v1/login")
+        final String authReaderJwt = mockMvc.perform(post("/api/v1/login")
                         .param("login", "UnReader")
                         .param("password", "xxxxxxxx"))
-                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+
+                .andReturn().getResponse().getHeader("Authorization");
+        ;
 
         final String authorizationId;
 
@@ -384,9 +384,9 @@ public class AuthorizationResourcesTest {
                                 " }\n" +
                                 "}";
 
-            final MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization").with(csrf().asHeader())
+            final MockHttpServletRequestBuilder create = post("/api/v1/applications/hautefrequence/authorization")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .cookie(authCookie)
+                    .header("Authorization", "Bearer " + authJwt)
                     .content(json);
             final String response = mockMvc.perform(create)
                     .andExpect(status().isCreated())
@@ -397,7 +397,7 @@ public class AuthorizationResourcesTest {
 
         {
             final String json = mockMvc.perform(get("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
-                            .cookie(authCookie))
+                            .header("Authorization", "Bearer " + authJwt))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
 
@@ -406,7 +406,7 @@ public class AuthorizationResourcesTest {
 
         {
             mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence/json")
-                            .cookie(authReaderCookie)
+                            .header("Authorization", "Bearer " + authReaderJwt)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.rows[*].values.localization.plateforme").value(hasItemInArray(equalTo("bimont.bim13")), String[].class))
@@ -422,8 +422,8 @@ public class AuthorizationResourcesTest {
         }
 
         {
-            mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId).with(csrf().asHeader())
-                            .cookie(authCookie)
+            mockMvc.perform(delete("/api/v1/applications/hautefrequence/authorization/" + authorizationId)
+                            .header("Authorization", "Bearer " + authJwt)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -432,7 +432,7 @@ public class AuthorizationResourcesTest {
 
         {
             Objects.requireNonNull(mockMvc.perform(get("/api/v1/applications/hautefrequence/data/hautefrequence/json")
-                            .cookie(authReaderCookie)
+                            .header("Authorization", "Bearer " + authReaderJwt)
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is4xxClientError())
                     .andExpect(content().string("application inconnue 'hautefrequence'"))
@@ -461,10 +461,10 @@ public class AuthorizationResourcesTest {
 
             try {
                 //l'administrateur ne peut créer des applications.
-                String monsoreResult = monSoereFixture.createApplicationMonSore(fixtures.adminConnection.cookie(), "monsore");
+                String monsoreResult = monSoereFixture.createApplicationMonSore(fixtures.adminConnection.jwt(), "monsore");
                 assertFalse(Strings.isNullOrEmpty(monsoreResult));
                 fail();
-                monsoreResult = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.cookie(), "monsore");
+                monsoreResult = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.jwt(), "monsore");
                 assertFalse(Strings.isNullOrEmpty(monsoreResult));
                 fail();
             } catch (OreSiTechnicalException e) {
@@ -473,10 +473,10 @@ public class AuthorizationResourcesTest {
             {
                 // on donne les droits pour un pattern acbb
 
-                mockMvc.perform(put("/api/v1/systemrole/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(put("/api/v1/systemrole/applicationCreator")
                                 .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "acbb")
-                                .cookie(fixtures.adminConnection.cookie()))
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                         .andExpect(status().is2xxSuccessful())
                         .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())))
                         .andExpect(jsonPath("$.roles.user.login", IsEqual.equalTo(applicationCreatorLogin.toLowerCase())))
@@ -486,12 +486,12 @@ public class AuthorizationResourcesTest {
                         .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())));
 
                 //on peut déposer acbb
-                String acbbID = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.cookie(), "acbb");
+                String acbbID = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.jwt(), "acbb");
                 assertFalse(Strings.isNullOrEmpty(acbbID));
 
                 try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-                    Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
+                    Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.jwt(), "monsore", ""));
                     fail();
                 } catch (NotApplicationCreatorRightsException notApplicationCreatorRightsException) {
                     assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
@@ -502,10 +502,10 @@ public class AuthorizationResourcesTest {
             }
             {
                 //on donne des droits pour le pattern monsore
-                mockMvc.perform(put("/api/v1/systemrole/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(put("/api/v1/systemrole/applicationCreator")
                                 .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "monsore")
-                                .cookie(fixtures.adminConnection.cookie()))
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                         .andExpect(status().is2xxSuccessful())
                         .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())))
                         .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
@@ -513,16 +513,16 @@ public class AuthorizationResourcesTest {
                         .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())));
 
                 //on peut déposer monsore
-                String acbbId = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.cookie(), "acbb");
+                String acbbId = monSoereFixture.createApplicationMonSore(applicationCreatorConnection.jwt(), "acbb");
                 assertFalse(Strings.isNullOrEmpty(acbbId));
 
             }
             {
                 //on supprime des droits pour le pattern monsore
-                mockMvc.perform(delete("/api/v1/systemrole/applicationCreator").with(csrf().asHeader())
+                mockMvc.perform(delete("/api/v1/systemrole/applicationCreator")
                                 .param("userIdOrLogin", applicationCreatorConnection.userResult().userId().toString())
                                 .param("applicationPattern", "monsore")
-                                .cookie(fixtures.adminConnection.cookie()))
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                         .andExpect(status().is2xxSuccessful())
                         .andExpect(jsonPath("$.id", IsEqual.equalTo(applicationCreatorConnection.userResult().userId().toString())))
                         .andExpect(jsonPath("$.authorizations", not(hasItem("monsore"))))
@@ -531,7 +531,7 @@ public class AuthorizationResourcesTest {
                 //on ne peut déposer monsore
                 try (final InputStream configurationFile = getClass().getResourceAsStream(getMonsoreApplicationConfigurationResourceName())) {
                     final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", configurationFile);
-                    Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.cookie(), "monsore", ""));
+                    Fixtures.getErrors(fixtures.loadApplication(configuration, applicationCreatorConnection.jwt(), "monsore", ""));
                     fail();
                 } catch (final NotApplicationCreatorRightsException notApplicationCreatorRightsException) {
                     assertEquals("NO_RIGHT_FOR_APPLICATION_CREATION", notApplicationCreatorRightsException.getMessage());
@@ -545,10 +545,10 @@ public class AuthorizationResourcesTest {
     }
 
 
-    private String[] getApplicationsFlux(final Cookie cookie, final String... filter) throws Exception {
+    private String[] getApplicationsFlux(final String jwt, final String... filter) throws Exception {
         return mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications")
                                 .accept(MediaType.APPLICATION_NDJSON_VALUE)
-                                .cookie(cookie)
+                                .header("Authorization", "Bearer " + jwt)
                                 .param("filter", filter))
                         .andExpect(status().is2xxSuccessful())
                         .andExpect(request().asyncStarted())

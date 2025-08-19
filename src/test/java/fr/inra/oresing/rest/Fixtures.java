@@ -9,8 +9,6 @@ import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.*;
-import fr.inra.oresing.rest.security.JWTExtractor;
-import jakarta.servlet.http.Cookie;
 import lombok.Getter;
 import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.Assertions;
@@ -69,6 +67,7 @@ public class Fixtures {
     private final AuthenticationService authenticationService;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final UserRepository userRepository;
+
     public Fixtures(MockMvc mockMvc, UserRepository userRepository, NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuthenticationService authenticationService) throws Exception {
         this.mockMvc = mockMvc;
         this.userRepository = userRepository;
@@ -637,7 +636,7 @@ public class Fixtures {
 
     public UserConnection createUserForUserDefinition(CreateUser createUser, boolean isActive, boolean isAdmin) throws Exception {
         CreateUserResult userResult;
-        Cookie cookie;
+        String jwt;
         OreSiUser user;
         try {
             user = authenticationService.getByIdOrLogin(createUser.login());
@@ -654,12 +653,14 @@ public class Fixtures {
         if (isAdmin) {
             addRoleAdmin(userResult);
         }
-        cookie = mockMvc.perform(post("/api/v1/login")
+        jwt = mockMvc.perform(post("/api/v1/login")
                         .param("login", createUser.login())
                         .param("password", createUser.password()))
-                .andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+
+                .andReturn().getResponse().getHeader("Authorization");
+        ;
         user = authenticationService.getByIdOrLogin(createUser.login());
-        return new UserConnection(CreateUserResult.of(user), cookie);
+        return new UserConnection(CreateUserResult.of(user), jwt);
     }
 
     public CreateUserResult createUserIfNotExists(CreateUser createUser) throws Exception {
@@ -680,8 +681,8 @@ public class Fixtures {
         mockMvc.perform(put("/api/v1/systemrole/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", pattern)
-                        .with(csrf().asHeader())
-                        .cookie(adminConnection.cookie()))
+                        
+                        .header("Authorization", "Bearer " + adminConnection.jwt()))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
                 .andExpect(jsonPath("$.authorizations", hasItem(pattern)))
@@ -694,12 +695,12 @@ public class Fixtures {
     }
 
     public Exception loadApplicationWithError(final MockMultipartFile file,
-                                              final Cookie cookie,
+                                              final String jwt,
                                               final String applicationName) throws Exception {
         return mockMvc
                 .perform(multipart("/api/v1/applications/{applicationName}", applicationName)
-                        .file(file).with(csrf().asHeader())
-                        .cookie(cookie)
+                        .file(file)
+                        .header("Authorization", "Bearer " + jwt)
                 )
                 .andExpect(status().is(401))
                 .andReturn()
@@ -707,12 +708,12 @@ public class Fixtures {
     }
 
     MvcResult validateApplication(final MockMultipartFile file,
-                                  final Cookie cookie) throws Exception {
+                                  final String jwt) throws Exception {
         final ResultActions result = mockMvc.perform(
                 multipart("/api/v1/validate-configuration")
-                        .file(file).with(csrf().asHeader())
+                        .file(file)
                         .accept(MediaType.APPLICATION_NDJSON)
-                        .cookie(cookie)
+                        .header("Authorization", "Bearer " + jwt)
         );
         return mockMvc.perform(asyncDispatch(
                         result
@@ -728,17 +729,17 @@ public class Fixtures {
     }
 
     public MvcResult loadApplication(final MockMultipartFile file,
-                                     final Cookie cookie,
+                                     final String jwt,
                                      final String applicationName,
                                      final String comment) throws Throwable {
         try {
             final ResultActions result = mockMvc.perform(
                     multipart("/api/v1/applications/{applicationName}", applicationName)
-                            .file(file).with(csrf().asHeader())
+                            .file(file)
                             .param("comment", comment != null ? comment : "")
                             .accept(MediaType.APPLICATION_NDJSON)
-                            .cookie(cookie)
-            );
+                            .header("Authorization", "Bearer " + jwt
+                            ));
             return mockMvc.perform(asyncDispatch(
                             result
                                     //.andExpect(request().asyncStarted())
@@ -751,15 +752,15 @@ public class Fixtures {
     }
 
     MvcResult changeConfiguration(final MockMultipartFile file,
-                                  final Cookie cookie,
+                                  final String jwt,
                                   final String applicationName,
                                   final String comment) throws Exception {
         final ResultActions result = mockMvc.perform(
                 multipart("/api/v1/applications/{applicationName}/configuration", applicationName)
-                        .file(file).with(csrf().asHeader())
+                        .file(file)
                         .param("comment", comment != null ? comment : "")
                         .accept(MediaType.APPLICATION_NDJSON)
-                        .cookie(cookie)
+                        .header("Authorization", "Bearer " + jwt)
         );
         return mockMvc.perform(asyncDispatch(
                         result
@@ -769,13 +770,13 @@ public class Fixtures {
                 .andReturn();
     }
 
-    public Cookie addopenAdomAdmin(final String applicationPattern) throws Exception {
+    public String addopenAdomAdmin(final String applicationPattern) throws Exception {
         final String aPassword = "xxxxxxxx";
         final String aLogin = "openAdomAdmin";
         CreateUser openAdomAdmin = new CreateUser(aLogin, aPassword, aLogin + "@inrae.fr");
         final UserConnection openAdomConnection = createUserForUserDefinition(openAdomAdmin, true, true);
         authenticationService.addUserRightCreateApplication(openAdomConnection.userResult().userId(), applicationPattern);
-        return openAdomConnection.cookie();
+        return openAdomConnection.jwt();
     }
 
     @Transactional
@@ -813,9 +814,8 @@ public class Fixtures {
         mockMvc.perform(put("/api/v1/systemrole/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", applicationPattern)
-                        .with(csrf())
-                        .cookie(createUserConnection.cookie()))
-
+                        .header("Authorization", "Bearer " + createUserConnection.jwt())
+                )
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.roles.user.id", IsEqual.equalTo(userId.toString())))
                 .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
@@ -830,7 +830,7 @@ public class Fixtures {
         final UserConnection authConnection = addApplicationCreatorUser("fakeapp");
         try (final InputStream configurationFile = getClass().getResourceAsStream(getMigrationApplicationConfigurationResourceName(1))) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
-            getIdFromApplicationResult(loadApplication(configuration, authConnection.cookie(), "fakeapp", "fakeapp"));
+            getIdFromApplicationResult(loadApplication(configuration, authConnection.jwt(), "fakeapp", "fakeapp"));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -839,8 +839,9 @@ public class Fixtures {
         try (final InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationReferenceResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "reference.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/couleurs")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authConnection.cookie()))
+                            .file(refFile)
+                            .header("Authorization", "Bearer " + authConnection.jwt())
+                    )
                     .andExpect(status().isCreated());
         }
 
@@ -848,8 +849,8 @@ public class Fixtures {
         try (final InputStream refStream = getClass().getResourceAsStream(getMigrationApplicationDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data.csv", "text/plain", refStream);
             mockMvc.perform(multipart("/api/v1/applications/fakeapp/data/jeu1")
-                            .file(refFile).with(csrf().asHeader())
-                            .cookie(authConnection.cookie()))
+                            .file(refFile)
+                            .header("Authorization", "Bearer " + authConnection.jwt()))
                     .andExpect(status().is2xxSuccessful());
         }
 
@@ -858,11 +859,11 @@ public class Fixtures {
 
     public UserConnection addApplicationOLAC() throws Exception {
         final UserConnection authConnection = addApplicationCreatorUser("olac");
-        final Cookie authCookie = authConnection.cookie();
+        final String jwt = authConnection.jwt();
         try (final InputStream configurationFile = getClass().getResourceAsStream(getOlaApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
 
-            loadApplication(configuration, authCookie, "olac", "olac");
+            loadApplication(configuration, jwt, "olac", "olac");
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -873,8 +874,8 @@ public class Fixtures {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey())
                                 .file(refFile)
-                                .with(csrf().asHeader())
-                                .cookie(authCookie))
+                                
+                                .header("Authorization", "Bearer " + jwt))
                         .andExpect(status().isCreated());
             }
         }
@@ -883,8 +884,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getConditionPrelevementDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/condition_prelevements")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(file)
+                            .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -892,8 +893,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getPhysicoChimieDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/physico-chimie")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                    .file(file)
+                    .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -901,8 +902,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getSondeDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/sonde_truncated")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(file)
+                    .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -910,8 +911,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getPhytoAggregatedDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(file)
+                    .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -919,8 +920,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getPhytoplanctonDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(file)
+                            .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -928,8 +929,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getZooplanctonDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton__truncated")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(file)
+                            .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -937,8 +938,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getZooplactonBiovolumDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(file)
+                            .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -947,10 +948,10 @@ public class Fixtures {
 
     public UserConnection addApplicationFORET() throws Exception {
         final UserConnection authConnection = addApplicationCreatorUser("foret");
-        final Cookie authCookie = authConnection.cookie();
+        final String jwt = authConnection.jwt();
         try (final InputStream configurationFile = getClass().getResourceAsStream(getForetApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
-            loadApplication(configuration, authCookie, "foret", "foret");
+            loadApplication(configuration, jwt, "foret", "foret");
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -960,8 +961,8 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
+                                .file(refFile)
+                                .header("Authorization", "Bearer " + jwt))
                         .andExpect(status().isCreated());
             }
         }
@@ -970,8 +971,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getFluxMeteoForetDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/foret/data/flux_meteo_dataResult")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(file)
+                            .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -980,10 +981,10 @@ public class Fixtures {
 
     public UserConnection addApplicationRecursivity() throws Exception {
         final UserConnection authConnection = addApplicationCreatorUser("recursivite");
-        final Cookie authCookie = authConnection.cookie();
+        final String jwt = authConnection.jwt();
         try (final InputStream in = getClass().getResourceAsStream(getRecursivityApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
-            loadApplication(configuration, authCookie, "recursivite", "recursivite");
+            loadApplication(configuration, jwt, "recursivite", "recursivite");
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -992,8 +993,8 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
+                                .file(refFile)
+                                .header("Authorization", "Bearer " + jwt))
                         .andExpect(status().isCreated());
             }
         }
@@ -1001,8 +1002,8 @@ public class Fixtures {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
+                                .file(refFile)
+                                .header("Authorization", "Bearer " + jwt))
                         .andExpect(status().isCreated());
             }
         }
@@ -1033,6 +1034,6 @@ public class Fixtures {
     public record CreateUser(String login, String password, String email) {
     }
 
-    public record UserConnection(CreateUserResult userResult, Cookie cookie) {
+    public record UserConnection(CreateUserResult userResult, String jwt) {
     }
 }

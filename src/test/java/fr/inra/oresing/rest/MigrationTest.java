@@ -4,12 +4,9 @@ import fr.inra.oresing.OreSiNg;
 import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
-import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Tag;
-import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
@@ -50,7 +47,7 @@ public class MigrationTest {
 
     private Fixtures fixtures;
 
-    private Cookie authCookie;
+    private String authJwt;
 
     @BeforeEach
     public void createApplication() throws Exception {
@@ -60,19 +57,19 @@ public class MigrationTest {
                 namedParameterJdbcTemplate,
                 authenticationService
         );
-        authCookie = fixtures.addMigrationApplication().cookie();
+        authJwt = fixtures.addMigrationApplication().jwt();
     }
 
     //@Test
     public void testMigrate() throws Exception {
         try (final InputStream configurationFile = getClass().getResourceAsStream(Fixtures.getMigrationApplicationConfigurationResourceName(2))) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "fake-app.yaml", "text/plain", configurationFile);
-            fixtures.changeConfiguration(configuration, authCookie, "fakeapp", "fakeapp");
+            fixtures.changeConfiguration(configuration, authJwt, "fakeapp", "fakeapp");
         }
 
         {
             final String actualCsv = mockMvc.perform(get("/api/v1/applications/fakeapp/data/jeu1/zip")
-                            .cookie(authCookie)
+                            .header("Authorization", "Bearer " + authJwt)
                             .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();

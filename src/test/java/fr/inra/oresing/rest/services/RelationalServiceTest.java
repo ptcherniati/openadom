@@ -94,7 +94,8 @@ class RelationalServiceTest {
                                     mockMvc.perform(
                                                     get("/api/v1/applications?filter=DATATYPE&filter=REFERENCETYPE&filter=CONFIGURATION&filter=ADDITIONALFILE")
                                                             .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                                                            .cookie(fixtures.adminConnection.cookie()))
+                                                            .header("Authorization", "Bearer " + (fixtures.adminConnection.jwt()))
+                                            )
                                             .andExpect(status().isOk())
                                             .andExpect(request().asyncStarted())
                                             .andReturn()

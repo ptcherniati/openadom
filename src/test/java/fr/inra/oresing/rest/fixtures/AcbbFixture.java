@@ -8,7 +8,8 @@ import jakarta.servlet.http.Cookie;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.hamcrest.core.IsNull;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.DynamicTest;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
@@ -30,7 +31,6 @@ import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
 public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
@@ -80,10 +80,10 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
 
     public Fixtures.UserConnection addApplicationAcbb() throws Exception {
         Fixtures.UserConnection authConnection = fixtures().addApplicationCreatorUser("acbb");
-        final Cookie authCookie = authConnection.cookie();
+        final String authJwt = authConnection.jwt();
         try (final InputStream configurationFile = getClass().getResourceAsStream(AcbbFixture.getAcbbApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", configurationFile);
-            fixtures().getIdFromApplicationResult(fixtures().loadApplication(configuration, authCookie, "acbb", "acbb"));
+            fixtures().getIdFromApplicationResult(fixtures().loadApplication(configuration, authJwt, "acbb", "acbb"));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -93,27 +93,28 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/acbb/data/{refType}", e.getKey())
-                                .file(refFile).with(csrf().asHeader())
-                                .cookie(authCookie))
+                                .file(refFile)
+                                .header("Authorization", "Bearer " + authJwt))
+
                         .andExpect(status().isCreated());
             }
         }
 
         // ajout de data
-       //addFluxTours(authCookie);
+        //addFluxTours(authCookie);
 
-       // addBiomasse(authCookie);
+        // addBiomasse(authCookie);
 
-        addSWC(authCookie);
+        addSWC(authJwt);
         return authConnection;
     }
 
-    private void addSWC(final Cookie authCookie) throws Exception {
+    private void addSWC(final String jwt) throws Exception {
         try (final InputStream in = openSwcDataResourceName(true)) {
             final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/acbb/data/t_swc_swc")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(authCookie))
+                            .file(file)
+                            .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().is2xxSuccessful());
         }
     }
@@ -122,7 +123,7 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         try (final InputStream in = getClass().getResourceAsStream(getBiomasseProductionTeneurDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/acbb/data/t_swc_swc")
-                            .file(file).with(csrf().asHeader())
+                            .file(file)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -132,7 +133,7 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         try (final InputStream in = getClass().getResourceAsStream(AcbbFixture.getFluxToursDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/acbb/data/t_flux_tours_flx")
-                            .file(file).with(csrf().asHeader())
+                            .file(file)
                             .cookie(authCookie))
                     .andExpect(status().is2xxSuccessful());
         }
@@ -148,8 +149,8 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
                                         final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
                                         final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/{refType}", e.getKey())
-                                                        .file(refFile).with(csrf().asHeader())
-                                                        .cookie(fixtures().adminConnection.cookie()))
+                                                        .file(refFile)
+                                                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                                                 .andDo(result -> {
                                                     final int status = result.getResponse().getStatus();
                                                     if (status > 300) {
@@ -178,8 +179,8 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
             final MockMultipartFile file = new MockMultipartFile("file", "SWC.csv", "text/plain", in);
 
             mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/SWC")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(fixtures().adminConnection.cookie()))
+                            .file(file)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -188,7 +189,7 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
 
         {
             final String actualJson = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/SWC/json")
-                            .cookie(fixtures().adminConnection.cookie())
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().isOk())
                     .andReturn().getResponse().getContentAsString();
@@ -197,7 +198,7 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
 
         {
             final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/SWC/zip")
-                            .cookie(fixtures().adminConnection.cookie())
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
                             .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                     .andExpect(status().isOk())
                     .andExpect(request().asyncStarted())
@@ -215,8 +216,10 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
             final MockMultipartFile file = new MockMultipartFile("file", "biomasse_production_teneur.csv", "text/plain", in);
 
             mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/biomasse_production_teneur")
-                            .file(file).with(csrf().asHeader())
-                            .cookie(fixtures().adminConnection.cookie()))
+                            .file(file)
+
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
 
@@ -225,7 +228,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
 
         {
             final String actualJson = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/biomasse_production_teneur/json")
-                            .cookie(fixtures().adminConnection.cookie())
+                            
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                        
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -234,7 +239,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
 
         {
             mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/biomasse_production_teneur/zip")
-                                    .cookie(fixtures().adminConnection.cookie())
+                                    
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                        
                                     .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                             .andExpect(request().asyncStarted())
                             .andExpect(status().is2xxSuccessful())
@@ -249,7 +256,7 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
             final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
 
             mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx")
-                            .file(file).with(csrf().asHeader())
+                            .file(file)
                             .param("params", """
                                     {
                                         "fileid":null,
@@ -265,7 +272,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
                                         "topublish":true}"""
 
                             )
-                            .cookie(fixtures().adminConnection.cookie()))
+
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
                         if (status > 300) {
@@ -282,7 +291,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         {
 //            String expectedJson = Resources.toString(getClass().getResource("/data/acbb_openadom_v2/compare/export.json"), StandardCharsets.UTF_8);
             mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json")
-                            .cookie(fixtures().adminConnection.cookie())
+                            
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                        
                             .accept(MediaType.APPLICATION_JSON))
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
@@ -300,7 +311,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         // restitution de data csv
         {
             final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/zip")
-                            .cookie(fixtures().adminConnection.cookie())
+                            
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                        
                             .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                     .andExpect(request().asyncStarted())
                     .andExpect(status().isOk())

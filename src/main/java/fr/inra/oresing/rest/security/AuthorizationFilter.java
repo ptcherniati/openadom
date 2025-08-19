@@ -301,12 +301,13 @@ public class AuthorizationFilter extends GenericFilterBean {
     }
 
     private OreSiAuthenticationToken handleJwtAuthentication(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) throws IOException {
-        String jwtCookie = jWTExtractor.extractJwtCookie(request);
-        if (jwtCookie == null) {
+
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
         }
-        OreSiRequestClient requestClient = jWTExtractor.getRequestClientFromJwt(jwtCookie);
-        jWTExtractor.refreshJwtInResponse(response, requestClient.id(), isSecureEnvironnement);
+        String jwtToken = authHeader.substring(7);
+        OreSiRequestClient requestClient = jWTExtractor.getRequestClientFromJwt(jwtToken);
         return new OreSiAuthenticationToken(
                 requestClient,
                 request.getRequestURI(),
