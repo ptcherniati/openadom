@@ -6,7 +6,6 @@ import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.ValidationLevel;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCanDeleteRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationDataWriterForDepositException;
 import fr.inra.oresing.domain.checker.InvalidDatasetContentException;
@@ -25,10 +24,8 @@ import fr.inra.oresing.rest.fixtures.AcbbFixture;
 import fr.inra.oresing.rest.fixtures.HauteFrequenceFixture;
 import fr.inra.oresing.rest.fixtures.MonSoereFixture;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
-import fr.inra.oresing.rest.security.JWTExtractor;
 import fr.inra.oresing.rest.services.RelationalService;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.io.FileUtils;
@@ -182,7 +179,8 @@ public class OreSiResourcesTest {
                 dynamicContainer("initialisation des utilisateurs", Stream.of(dynamicTest("initialisation de l'utilisateur monsoresimple",
                                 () -> {
                                     fixtures.monsoresimpleConnection = fixtures.createUserForUserDefinition(monsoresimple, true, false);
-                                    assertThat(fixtures.getMonsoresimpleConnection()).extracting("userResult.login", "userResult.email", "userResult.accountState", "cookie").satisfies(tuple -> {
+                                    assertThat(fixtures.getMonsoresimpleConnection()).extracting("userResult.login", "userResult.email", "userResult.accountState", "jwt")
+                                            .satisfies(tuple -> {
                                         assertThat(tuple.get(0)).isEqualTo(monsoresimple.login());
                                         assertThat(tuple.get(1)).isEqualTo(monsoresimple.email());
                                         assertThat(tuple.get(2)).isEqualTo(OreSiUser.OreSiUserStates.active);
@@ -191,7 +189,7 @@ public class OreSiResourcesTest {
                                 }),
                         dynamicTest("initialisation de l'utilisateur withRightsUser", () -> {
                             fixtures.withRightsUserConnection = fixtures.createUserForUserDefinition(withRightsUser, true, false);
-                            assertThat(fixtures.getWithRightsUserConnection()).extracting("userResult.login", "userResult.email", "userResult.accountState", "cookie").satisfies(tuple -> {
+                            assertThat(fixtures.getWithRightsUserConnection()).extracting("userResult.login", "userResult.email", "userResult.accountState", "jwt").satisfies(tuple -> {
                                 assertThat(tuple.get(0)).isEqualTo(withRightsUser.login());
                                 assertThat(tuple.get(1)).isEqualTo(withRightsUser.email());
                                 assertThat(tuple.get(2)).isEqualTo(OreSiUser.OreSiUserStates.active);
@@ -229,9 +227,9 @@ public class OreSiResourcesTest {
                                 }
                             """;
                     final String filter = filterPattern.formatted(null, "{\"from\":\"15\",\"to\":\"15\"}");
-                    mockMvc.perform(delete("/api/v1/applications/monsoresimple/data/pem").with(csrf().asHeader())
+                    mockMvc.perform(delete("/api/v1/applications/monsoresimple/data/pem")
                                     .param("downloadDatasetQuery", filter)
-                                    .cookie(monsoresimpleConnection.cookie()))
+                                    .cookie(monsoresimpleConnection.jwt()))
                             .andExpect(status().is2xxSuccessful())
                             .andDo(result -> {
                                 String[] uuids = result.getResponse().getContentAsString().split(",");
@@ -242,14 +240,18 @@ public class OreSiResourcesTest {
                 }),
                 dynamicTest("authorizations", () ->
                         mockMvc.perform(get("/api/v1/applications/monsoresimple/authorization")
-                                        .cookie(fixtures.getWithRightsUserConnection().cookie())
+                                        
+                                .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection()))
+                        
                                         .accept(MediaType.APPLICATION_JSON))
                                 .andExpect(status().is2xxSuccessful())
                                 .andReturn().getResponse().getContentAsString()
                 ),
                 dynamicTest("grantables", () ->
                         mockMvc.perform(get("/api/v1/applications/monsoresimple/grantable")
-                                        .cookie(fixtures.getWithRightsUserConnection().cookie())
+                                        
+                                .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection()))
+                        
                                         .accept(MediaType.APPLICATION_JSON))
                                 .andExpect(status().is2xxSuccessful())
                                 .andReturn().getResponse().getContentAsString()
@@ -273,9 +275,11 @@ public class OreSiResourcesTest {
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "multiplicity");
 
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "multiplicity", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "multiplicity", ""));
 
-            mockMvc.perform(get("/api/v1/applications/multiplicity", "ALL,ReferenceType").cookie(fixtures.adminConnection.cookie()).param("filter", "ALL")).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(get("/api/v1/applications/multiplicity", "ALL,ReferenceType")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -284,23 +288,31 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                final String response = mockMvc.perform(multipart("/api/v1/applications/multiplicity/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                    final int status = result.getResponse().getStatus();
-                    if (status > 300) {
-                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                    }
-                }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                final String response = mockMvc.perform(multipart("/api/v1/applications/multiplicity/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andDo(result -> {
+                            final int status = result.getResponse().getStatus();
+                            if (status > 300) {
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                            }
+                        }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
         }
 
-        mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference1/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[0].values.projets", hasItems(4, 5, 9))).andExpect(jsonPath("$.rows[0].values.names", hasItems("toto1.1", "toto1.2", "toto1.3"))).andExpect(jsonPath("$.rows[*].values[?(@.names==['toto1.1','toto1.2','toto1.3'])]", hasSize(1))).andExpect(jsonPath("$.rows[0].values.durations", hasItems(-4.5, 5.6, 3.2))).andExpect(jsonPath("$.rows[0].values.dates", hasItems("date:2014-01-20T00:00:00:dd/MM/yyyy", "date:2014-06-23T00:00:00:dd/MM/yyyy")));
-        mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference2/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values.reference1[*]", hasItems("toto__toto1", "toto__toto2", "tutu__tutu1", "tutu__tutu2")));
+        mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference1/json")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[0].values.projets", hasItems(4, 5, 9))).andExpect(jsonPath("$.rows[0].values.names", hasItems("toto1.1", "toto1.2", "toto1.3"))).andExpect(jsonPath("$.rows[*].values[?(@.names==['toto1.1','toto1.2','toto1.3'])]", hasSize(1))).andExpect(jsonPath("$.rows[0].values.durations", hasItems(-4.5, 5.6, 3.2))).andExpect(jsonPath("$.rows[0].values.dates", hasItems("date:2014-01-20T00:00:00:dd/MM/yyyy", "date:2014-06-23T00:00:00:dd/MM/yyyy")));
+        mockMvc.perform(get("/api/v1/applications/multiplicity/data/reference2/json")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values.reference1[*]", hasItems("toto__toto1", "toto__toto2", "tutu__tutu1", "tutu__tutu2")));
         try (final InputStream refStream = getClass().getResourceAsStream(Fixtures.getMultiplicityManyData())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "bugs.csv", "text/plain", refStream);
 
-            mockMvc.perform(get("/api/v1/applications/multiplicity/data/bugs/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful())
+            mockMvc.perform(get("/api/v1/applications/multiplicity/data/bugs/json")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful())
                     //.andExpect(jsonPath("$.referenceTypeForReferencingColumns.reference", is("reference1"))) // TODO
                     //.andExpect(jsonPath("$.referenceTypeForReferencingColumns.references", is("reference1"))) // TODO
                     .andExpect(jsonPath("$.rows[0].values.dates", hasItems("date:2002-01-23T00:00:00:dd/MM/yyyy", "date:2002-01-24T00:00:00:dd/MM/yyyy"))).andExpect(jsonPath("$.rows[0].values.projets", hasItems(1, 2))).andExpect(jsonPath("$.rows[0].values.fichiers", hasItems("file1", "file2"))).andExpect(jsonPath("$.rows[0].values.durations", hasItems(3.2, 5.4))).andExpect(jsonPath("$.rows[0].values.references", hasItems("toto__toto1", "tutu__tutu1"))).andReturn().getResponse().getContentAsString();
@@ -318,7 +330,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "minautor");
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "minautor", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "minautor", ""));
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -328,7 +340,9 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                mockMvc.perform(multipart("/api/v1/applications/minautor/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated());
+                mockMvc.perform(multipart("/api/v1/applications/minautor/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().isCreated());
             }
         }
         // Ajout de data
@@ -336,21 +350,25 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                mockMvc.perform(multipart("/api/v1/applications/minautor/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated());
+                mockMvc.perform(multipart("/api/v1/applications/minautor/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().isCreated());
             }
         }
-        mockMvc.perform(get("/api/v1/applications/minautor/data/dataset/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values.informations.site", hasSize(7))).andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.site", hasSize(7))).andExpect(jsonPath("$.rows[*].values.informations.parcelle", hasSize(7))).andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.parcelle", hasSize(7))).andExpect(jsonPath("$.rows[*].values.informations.bloc", hasSize(7))).andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.bloc", hasSize(7)));
+        mockMvc.perform(get("/api/v1/applications/minautor/data/dataset/json")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values.informations.site", hasSize(7))).andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.site", hasSize(7))).andExpect(jsonPath("$.rows[*].values.informations.parcelle", hasSize(7))).andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.parcelle", hasSize(7))).andExpect(jsonPath("$.rows[*].values.informations.bloc", hasSize(7))).andExpect(jsonPath("$.rows[*].refsLinkedTo.informations.bloc", hasSize(7)));
     }
 
     private String loadApplicationMonsoere(InputStream in) throws Throwable {
         final MockMultipartFile configuration = new MockMultipartFile("file", "monsore.yaml", "text/plain", in);
         //définition de l'application
         fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "monsore");
-        final MvcResult resultForValidateMonsore = fixtures.validateApplication(configuration, fixtures.adminConnection.cookie());
+        final MvcResult resultForValidateMonsore = fixtures.validateApplication(configuration, fixtures.adminConnection.jwt());
         List<ReactiveTypeResult> results = Fixtures.getResults(resultForValidateMonsore);
         Assertions.assertTrue(results.stream().noneMatch(obj -> false));
         final String responseForTestingmonsoere = resultForValidateMonsore.getResponse().getContentAsString();
-        final MvcResult resultForCreateMonsore = fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "monsore", "");
+        final MvcResult resultForCreateMonsore = fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "monsore", "");
         registerFile("ui/cypress/fixtures/applications/ore/monsore/validateMonsore.txt", responseForTestingmonsoere);
 
         return resultForCreateMonsore.getResponse().getContentAsString();
@@ -368,14 +386,16 @@ public class OreSiResourcesTest {
             final String responseForCreatemonsoere = loadApplicationMonsoere(in);
 
             final MockMultipartFile configurationV2 = new MockMultipartFile("file", "monsore.yaml", "text/plain", inV2);
-            final MvcResult resultForChangeMonsore = fixtures.changeConfiguration(configurationV2, fixtures.adminConnection.cookie(), "monsore", "monsorev2");
+            final MvcResult resultForChangeMonsore = fixtures.changeConfiguration(configurationV2, fixtures.adminConnection.jwt(), "monsore", "monsorev2");
             final String responseForChangemonsoere = resultForChangeMonsore.getResponse().getContentAsString();
             final String id = fixtures.getIdFromApplicationResult(resultForChangeMonsore);
 
             registerFile("ui/cypress/fixtures/applications/ore/monsore/createMonsore.txt", responseForCreatemonsoere);
             registerFile("ui/cypress/fixtures/applications/ore/monsore/changeMonsore.txt", responseForChangemonsoere);
-            Assertions.assertEquals(1, Arrays.stream(getApplicationsFlux(fixtures.adminConnection.cookie(), "ALL")).filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class))).filter(s -> JsonPath.parse(s).read("$.result.application.data", List.class).contains("sites")).filter(s -> !JsonPath.parse(s).read("$.result.application.data", List.class).contains("type de fichiers")).count());
-            mockMvc.perform(get("/api/v1/applications/monsore").cookie(fixtures.adminConnection.cookie()).param("filter", "ALL")).andExpect(status().is2xxSuccessful());
+            Assertions.assertEquals(1, Arrays.stream(getApplicationsFlux(fixtures.adminConnection.jwt(), "ALL")).filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class))).filter(s -> JsonPath.parse(s).read("$.result.application.data", List.class).contains("sites")).filter(s -> !JsonPath.parse(s).read("$.result.application.data", List.class).contains("type de fichiers")).count());
+            mockMvc.perform(get("/api/v1/applications/monsore")
+                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                    .param("filter", "ALL")).andExpect(status().is2xxSuccessful());
             ///vérification de la sauvegarde des tags.andExpect(jsonPath("$.data.type_de_sites.tags[*].tagName", contains("context"))).andExpect(jsonPath("$.data.sites.tags[*].tagName", contains("context"))).andExpect(jsonPath("$.data.projet.tags[*].tagName", hasItems("context", "data", "test"))).andExpect(jsonPath("$.data.site_theme_datatype.tags[*].tagName", contains("context"))).andExpect(jsonPath("$.data.especes.tags[*].tagName", contains("data"))).andExpect(jsonPath("$.data.especes.componentDescriptions.esp_nom.tags[*].tagName", contains("test"))).andExpect(jsonPath("$.data.type_de_fichiers.tags[*].tagDefinition", contains("HIDDEN_TAG"))).andExpect(jsonPath("$.data.variables.tags[*].tagName", contains("data"))).andExpect(jsonPath("$.data.unites.tags[*].tagName", contains("data"))).andExpect(jsonPath("$.data.valeurs_qualitatives.tags[*].tagName", contains("data"))).andExpect(jsonPath("$.data.variables_et_unites_par_types_de_donnees.tags[*].tagName", contains("data"))).andExpect(jsonPath("$.internationalization.tags.context.fr", Is.is("Contexte"))).andExpect(jsonPath("$.rightsRequest.description.formFields.endDate", not(empty()))).andExpect(jsonPath("$.configuration.rightsRequest.formFields.organization", not(empty()))).andExpect(jsonPath("$.data.pem.tags[*].tagName", hasItem("data"))).andExpect(jsonPath("$.data.pem.componentDescriptions.projet.tags[*].tagName", hasItem("test"))).andExpect(jsonPath("$.data.pem.componentDescriptions.projet.tags[*].tagOrder", hasItem(2))).andExpect(jsonPath("$.data.pem.componentDescriptions.espece.tags[*].tagDefinition", hasItem("NO_TAG")));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -430,9 +450,13 @@ public class OreSiResourcesTest {
                     }
                     """;
 
-            String response = mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest").with(csrf().asHeader()).contentType(MediaType.APPLICATION_JSON).content(rightsRequest).cookie(fixtures.adminConnection.cookie()))).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+            String response = mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest").contentType(MediaType.APPLICATION_JSON).content(rightsRequest)
+                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+            ).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
-            mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest").with(csrf().asHeader()).contentType(MediaType.APPLICATION_JSON).content(rightsRequest).cookie(fixtures.lambdaConnection.cookie()))).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+            mockMvc.perform((multipart("/api/v1/applications/monsore/rightsRequest").contentType(MediaType.APPLICATION_JSON).content(rightsRequest)
+                            .header("Authorization", "Bearer " + fixtures.lambdaConnection.jwt())))
+                    .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
             final String json = """
                     {
@@ -453,35 +477,45 @@ public class OreSiResourcesTest {
                       ]
                     }""";
 
-            mockMvc.perform((get("/api/v1/applications/monsore/rightsRequest").contentType(MediaType.APPLICATION_JSON).param("params", json).cookie(fixtures.lambdaConnection.cookie()))).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+            mockMvc.perform((get("/api/v1/applications/monsore/rightsRequest").contentType(MediaType.APPLICATION_JSON).param("params", json)
+                    .header("Authorization", "Bearer " + fixtures.lambdaConnection.jwt()))
+            ).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
         }
 
         String response;
         try (final InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
 
-            Assertions.assertInstanceOf(NotApplicationDataWriterException.class, mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites").file(refFile).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException());
+            Assertions.assertInstanceOf(NotApplicationDataWriterException.class, mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                    .andExpect(status().is4xxClientError()).andReturn().getResolvedException());
         }
         try (final InputStream refStream = getClass().getResourceAsStream(sites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", sites, "text/plain", refStream);
 
-            Assertions.assertInstanceOf(NotApplicationDataWriterException.class, mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites").file(refFile).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException());
+            Assertions.assertInstanceOf(NotApplicationDataWriterException.class, mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "sites").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                    .andExpect(status().is4xxClientError()).andReturn().getResolvedException());
         }
 
         String referencesRight = getJsonRightForAll(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(List.of("sites", "publication"), List.of("type_de_sites", "publication")));
         referencesRight = JsonPath.parse(referencesRight).read("authorizationId");
 
-        mockMvc.perform(get("/api/v1/applications/monsore/authorization/user/{userId}", fixtures.getWithRightsUserConnection().userResult().userId().toString()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.userAuthorization.type_de_sites[0].operationTypes", hasItems("publication", "depot", "extraction"))).andExpect(jsonPath("$.userAuthorization.sites[0].operationTypes", hasItems("publication", "depot", "extraction"))).andExpect(jsonPath("$.userAuthorization.type_de_sites[0].requiredAuthorizations").isEmpty()).andExpect(jsonPath("$.userAuthorization.sites[0].requiredAuthorizations").isEmpty()).andExpect(jsonPath("$.applicationName").value("monsore")).andExpect(jsonPath("$.applicationCreator").value(false)).andExpect(jsonPath("$.applicationManager").value(false)).andExpect(jsonPath("$.userManager").value(false)).andExpect(jsonPath("$.applicationUser").value(false)).andExpect(jsonPath("$.activeApplicationUser").value(false)).andExpect(jsonPath("$.publicAuthorization").isEmpty()).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/monsore/authorization/user/{userId}", fixtures.getWithRightsUserConnection().userResult().userId().toString())
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.userAuthorization.type_de_sites[0].operationTypes", hasItems("publication", "depot", "extraction"))).andExpect(jsonPath("$.userAuthorization.sites[0].operationTypes", hasItems("publication", "depot", "extraction"))).andExpect(jsonPath("$.userAuthorization.type_de_sites[0].requiredAuthorizations").isEmpty()).andExpect(jsonPath("$.userAuthorization.sites[0].requiredAuthorizations").isEmpty()).andExpect(jsonPath("$.applicationName").value("monsore")).andExpect(jsonPath("$.applicationCreator").value(false)).andExpect(jsonPath("$.applicationManager").value(false)).andExpect(jsonPath("$.userManager").value(false)).andExpect(jsonPath("$.applicationUser").value(false)).andExpect(jsonPath("$.activeApplicationUser").value(false)).andExpect(jsonPath("$.publicAuthorization").isEmpty()).andReturn().getResponse().getContentAsString();
 
         try (final InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
 
-            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites").file(refFile).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andDo(result -> {
-                final int status = result.getResponse().getStatus();
-                if (status > 300) {
-                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                }
-            }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                    .andDo(result -> {
+                        final int status = result.getResponse().getStatus();
+                        if (status > 300) {
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                        }
+                    }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
             JsonPath.parse(response).read("$.id");
         }
@@ -489,54 +523,68 @@ public class OreSiResourcesTest {
         try (final InputStream refStream = getClass().getResourceAsStream(typeDeSites)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", typeDeSites, "text/plain", refStream);
 
-            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites").file(refFile).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", "type_de_sites").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                    .andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
             JsonPath.parse(response).read("$.id");
         }
         //rechercher les lignes
         List<String> naturalKeys = new LinkedList<>(), hierarchicalKeys = new LinkedList<>(), ids = new LinkedList<>();
-        mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").cookie(fixtures.getWithRightsUserConnection().cookie())).andDo(result -> {
-            String contentAsString = result.getResponse().getContentAsString();
-            String[] read1 = JsonPath.parse(contentAsString).read("$.rows[*].naturalKey", String[].class);
-            naturalKeys.addAll(Arrays.asList(read1));
-            CollectionUtils.isEqualCollection(naturalKeys, List.of("bassin_versant", "plateforme"));
+        mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites")
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andDo(result -> {
+                    String contentAsString = result.getResponse().getContentAsString();
+                    String[] read1 = JsonPath.parse(contentAsString).read("$.rows[*].naturalKey", String[].class);
+                    naturalKeys.addAll(Arrays.asList(read1));
+                    CollectionUtils.isEqualCollection(naturalKeys, List.of("bassin_versant", "plateforme"));
 
-            read1 = JsonPath.parse(contentAsString).read("$.rows[*].hierarchicalKey", String[].class);
-            hierarchicalKeys.addAll(Arrays.asList(read1));
-            CollectionUtils.isEqualCollection(hierarchicalKeys, List.of("type_de_sitesKbassin_versant", "type_de_sitesKplateforme"));
+                    read1 = JsonPath.parse(contentAsString).read("$.rows[*].hierarchicalKey", String[].class);
+                    hierarchicalKeys.addAll(Arrays.asList(read1));
+                    CollectionUtils.isEqualCollection(hierarchicalKeys, List.of("type_de_sitesKbassin_versant", "type_de_sitesKplateforme"));
 
-            read1 = JsonPath.parse(contentAsString).read("$.rows[*].rowId[*]", String[].class);
-            ids.addAll(Arrays.asList(read1));
-            Assertions.assertEquals(2, read1.length);
-        });
+                    read1 = JsonPath.parse(contentAsString).read("$.rows[*].rowId[*]", String[].class);
+                    ids.addAll(Arrays.asList(read1));
+                    Assertions.assertEquals(2, read1.length);
+                });
         // recherche sur un critère
         response = mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").locale(Locale.FRENCH).param("tze_nom_en", "Platform").param("downloadDatasetQuery", """
-                {
-                       "componentFilters": [
-                                 {
-                                   "componentKey": "tze_nom_en",
-                                   "filters": ["Platform", "titi"]
-                                 }
-                      ]
-                    }""").cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(jsonPath("$.rows.length()", equalTo(1))).andExpect(jsonPath("$.rows[0].values.tze_nom_fr", equalTo("Plateforme"))).andReturn().getResponse().getContentAsString();
+                                {
+                                       "componentFilters": [
+                                                 {
+                                                   "componentKey": "tze_nom_en",
+                                                   "filters": ["Platform", "titi"]
+                                                 }
+                                      ]
+                                    }""")
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andExpect(jsonPath("$.rows.length()", equalTo(1))).andExpect(jsonPath("$.rows[0].values.tze_nom_fr", equalTo("Plateforme"))).andReturn().getResponse().getContentAsString();
         Assertions.assertFalse(response.contains("tze_nom_en"));
 
 
         // recherche d'une ligne
-        mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1))).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(jsonPath("$.rows[0].rowId[0]", equalTo(ids.get(1))));
+        mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1)))
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andExpect(jsonPath("$.rows[0].rowId[0]", equalTo(ids.get(1))));
 
 
-       // Nous sommes dans une strategie OA_INSERTING->  delete non compris
-        mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").param("downloadDatasetQuery", SELECT_ROW_BY_NATURAL_KEY.formatted(hierarchicalKeys.get(1))).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(jsonPath("$.rows[0].hierarchicalKey", equalTo(hierarchicalKeys.get(1))));
+        // Nous sommes dans une strategie OA_INSERTING->  delete non compris
+        mockMvc.perform(get("/api/v1/applications/monsore/data/{dataName}/json", "type_de_sites").param("downloadDatasetQuery", SELECT_ROW_BY_NATURAL_KEY.formatted(hierarchicalKeys.get(1)))
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andExpect(jsonPath("$.rows[0].hierarchicalKey", equalTo(hierarchicalKeys.get(1))));
         String deletedIds = mockMvc.perform(delete("/api/v1/applications/monsore/data/{data}", "type_de_sites")
-                .with(csrf().asHeader())
-                .param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1)))
-                .cookie(fixtures.getWithRightsUserConnection().cookie())).andReturn().getResponse().getContentAsString();
+                        
+                        .param("downloadDatasetQuery", SELECT_ROW_BY_ID.formatted(ids.get(1)))
+
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andReturn().getResponse().getContentAsString();
         Assertions.assertFalse(deletedIds.contains(ids.get(1)));
 
 
         //suppression par id
-        mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites").with(csrf().asHeader()).param("_row_id_", ids.get(1)).cookie(fixtures.getWithRightsUserConnection().cookie())).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(delete("/api/v1/applications/monsore/data/{refType}", "type_de_sites").param("_row_id_", ids.get(1))
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andReturn().getResponse().getContentAsString();
         Assertions.assertTrue(true);
 
         // Ajout de referentiel
@@ -547,12 +595,14 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                    final int status = result.getResponse().getStatus();
-                    if (status > 300) {
-                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                    }
-                }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andDo(result -> {
+                            final int status = result.getResponse().getStatus();
+                            if (status > 300) {
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                            }
+                        }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
@@ -601,26 +651,38 @@ public class OreSiResourcesTest {
                                 }
                       }
                     }""";
-            mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers").file(addFile).with(csrf().asHeader()).param("params", json).cookie(fixtures.adminConnection.cookie()))).andDo(result -> {
+            mockMvc.perform((multipart("/api/v1/applications/monsore/additionalFiles/fichiers").file(addFile).param("params", json)
+                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+            ).andDo(result -> {
                 final int status = result.getResponse().getStatus();
                 if (status > 300) {
                     System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
                 }
             }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
-            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers").cookie(fixtures.adminConnection.cookie())).andExpect(jsonPath("$.users[*].label", contains("_public_", "lambda", "poussin", "withrigths"))).andExpect(jsonPath("$.additionalFileName", is("fichiers"))).andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", is("10")));
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(jsonPath("$.users[*].label", contains("_public_", "lambda", "poussin", "withrigths"))).andExpect(jsonPath("$.additionalFileName", is("fichiers"))).andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", is("10")));
 
-            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers").cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.users[*].label", contains("_public_", "lambda", "poussin", "withrigths"))).andExpect(jsonPath("$.additionalFileName", is("fichiers"))).andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", is("10")));
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.users[*].label", contains("_public_", "lambda", "poussin", "withrigths"))).andExpect(jsonPath("$.additionalFileName", is("fichiers"))).andExpect(jsonPath("$.additionalBinaryFiles[0].additionalBinaryFileForm.age", is("10")));
 
-            final String error = Objects.requireNonNull(mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers").cookie(fixtures.lambdaConnection.cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException()).getMessage();
+            final String error = Objects.requireNonNull(mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles/fichiers")
+                            .header("Authorization", "Bearer " + fixtures.lambdaConnection.jwt()))
+                    .andExpect(status().is4xxClientError()).andReturn().getResolvedException()).getMessage();
             Assertions.assertEquals("application inconnue 'monsore'", error);
             //pas de droits
-            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles").param("nameOrId", "monsore").param("params", additionalJsonRequest).cookie(fixtures.lambdaConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(result -> Assertions.assertTrue(result.getResponse().getContentAsByteArray().length < 40, "empty data expected"));
+            mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles").param("nameOrId", "monsore").param("params", additionalJsonRequest)
+                            .header("Authorization", "Bearer " + fixtures.lambdaConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(result -> Assertions.assertTrue(result.getResponse().getContentAsByteArray().length < 40, "empty data expected"));
 
 
             Assertions.assertEquals("application inconnue 'monsore'", error);
             //avec droits
-            mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles").param("nameOrId", "monsore").param("params", additionalJsonRequest).accept(MediaType.APPLICATION_OCTET_STREAM).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andExpect(result -> {
+            mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles").param("nameOrId", "monsore").param("params", additionalJsonRequest).accept(MediaType.APPLICATION_OCTET_STREAM)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andExpect(result -> {
                 final List<ZipEntry> entries = new ArrayList<>();
                 try (ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
 
@@ -634,15 +696,18 @@ public class OreSiResourcesTest {
                 Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere.yaml"), String.format("Le zip doit contenir %s", "monsoere.yaml"));
             });
             mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles").param("nameOrId", "monsore").param("params", """
-                    {
-                      "uuids": null,
-                      "fileNames": null,
-                      "additionalFilesInfos": {
-                        "fichiers": {
-                          "fieldFilters": []
-                        }
-                      }
-                    }""").cookie(fixtures.getWithRightsUserConnection().cookie()).accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)).andExpect(request().asyncStarted()).andReturn())).andExpect(status().is2xxSuccessful()).andExpect(result -> {
+                                    {
+                                      "uuids": null,
+                                      "fileNames": null,
+                                      "additionalFilesInfos": {
+                                        "fichiers": {
+                                          "fieldFilters": []
+                                        }
+                                      }
+                                    }""")
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt())
+                            .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                    .andExpect(request().asyncStarted()).andReturn())).andExpect(status().is2xxSuccessful()).andExpect(result -> {
                 final List<ZipEntry> entries = new ArrayList<>();
                 try (ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
 
@@ -658,33 +723,41 @@ public class OreSiResourcesTest {
                 Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere.yaml"), String.format("Le zip doit contenir %s", "monsoere.yaml"));
             });
             mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/additionalFiles").param("nameOrId", "monsore").param("params", """
-                    {
-                      "uuids": null,
-                      "fileNames": null,
-                      "additionalFilesInfos": {
-                        "fichiers": {
-                          "fieldFilters": []
-                        }
-                      }
-                    }""").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)).andExpect(request().asyncStarted()).andExpect(request().asyncStarted()).andReturn())).andExpect(status().is2xxSuccessful()).andExpect(result -> {
-                final List<ZipEntry> entries = new ArrayList<>();
-                try (ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
+                                            {
+                                              "uuids": null,
+                                              "fileNames": null,
+                                              "additionalFilesInfos": {
+                                                "fichiers": {
+                                                  "fieldFilters": []
+                                                }
+                                              }
+                                            }""")
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
+                            .andExpect(request().asyncStarted()).andExpect(request().asyncStarted()).andReturn())).
+                    andExpect(status().is2xxSuccessful()).andExpect(result -> {
+                        final List<ZipEntry> entries = new ArrayList<>();
+                        try (ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {
 
-                    ZipEntry zipEntry;
-                    while ((zipEntry = zi.getNextEntry()) != null) {
-                        entries.add(zipEntry);
-                    }
-                }
-                List<String> entryNames = entries.stream().map(ZipEntry::getName).toList();
-                Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere_infos.txt"), String.format("Le zip doit contenir %s", "monsoere_infos.txt"));
-                Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere.yaml"), String.format("Le zip doit contenir %s", "monsoere.yaml"));
-            });
+                            ZipEntry zipEntry;
+                            while ((zipEntry = zi.getNextEntry()) != null) {
+                                entries.add(zipEntry);
+                            }
+                        }
+                        List<String> entryNames = entries.stream().map(ZipEntry::getName).toList();
+                        Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere_infos.txt"), String.format("Le zip doit contenir %s", "monsoere_infos.txt"));
+                        Assertions.assertTrue(() -> entryNames.contains("fichiers/monsoere/monsoere.yaml"), String.format("Le zip doit contenir %s", "monsoere.yaml"));
+                    });
 
         }
 
-        ResultActions typeDeFichiers = mockMvc.perform(get("/api/v1/applications/monsore/data/{refType}/json", "type_de_fichiers").cookie(fixtures.adminConnection.cookie())).andExpect(jsonPath("$.rows", hasSize(0)));
+        ResultActions typeDeFichiers = mockMvc.perform(get("/api/v1/applications/monsore/data/{refType}/json", "type_de_fichiers")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(jsonPath("$.rows", hasSize(0)));
 
-        Exception dataTest = mockMvc.perform(get("/api/v1/applications/monsore/data/{dataType}/json", "test").cookie(fixtures.adminConnection.cookie())).andExpect(status().is4xxClientError()).andExpect(jsonPath("$.message", equalTo("missingData"))).andExpect(jsonPath("$.params.dataName", equalTo("test"))).andExpect(jsonPath("$.params.application", equalTo("monsore"))).andReturn().getResolvedException();
+        Exception dataTest = mockMvc.perform(get("/api/v1/applications/monsore/data/{dataType}/json", "test")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is4xxClientError()).andExpect(jsonPath("$.message", equalTo("missingData"))).andExpect(jsonPath("$.params.dataName", equalTo("test"))).andExpect(jsonPath("$.params.application", equalTo("monsore"))).andReturn().getResolvedException();
         Assertions.assertInstanceOf(SiOreIllegalArgumentException.class, dataTest);
         // ajout de data
         final String projet = "manche";
@@ -703,12 +776,14 @@ public class OreSiResourcesTest {
             try {
                 // sans droit dépôt impossible de déposer
                 // en fait on n'a pas les droits de lecture sur projet
-                response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").file(refFile).with(csrf().asHeader()).param("params", getPemRepositoryParams(projet, plateforme, site, false)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andDo(result -> {
-                    final int status = result.getResponse().getStatus();
-                    if (status > 300) {
-                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                    }
-                }).andExpect(jsonPath("$.message", Is.is(NotApplicationDataWriterException.NO_RIGHT_FOR_USER_DATA_WRITER))).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").file(refFile).param("params", getPemRepositoryParams(projet, plateforme, site, false))
+                                .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                        .andExpect(status().is4xxClientError()).andDo(result -> {
+                            final int status = result.getResponse().getStatus();
+                            if (status > 300) {
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                            }
+                        }).andExpect(jsonPath("$.message", Is.is(NotApplicationDataWriterException.NO_RIGHT_FOR_USER_DATA_WRITER))).andReturn().getResponse().getContentAsString();
             } catch (ServletException servletException) {
                 SiOreAuthorizationRequestException cause = (SiOreAuthorizationRequestException) servletException.getCause();
                 AuthorizationRequestException requestException = cause.getException();
@@ -716,31 +791,37 @@ public class OreSiResourcesTest {
                 Assertions.assertEquals("projet_manche", ((Map<String, List<Ltree>>) cause.getParams().get("missingRequiredAuthorizations")).get("projet").getFirst().getSql());
             }
 
-            String createRights = getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.depot.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
+            String createRights = getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.depot.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.jwt());
 
             //fileOrUUID.binaryFileDataset/applications/{name}/file/{id}
             for (int i = 0; i < 3; i++) {
                 response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
-                        .file(refFile)
-                        .with(csrf().asHeader())
-                        .param("params", getPemRepositoryParams(projet, plateforme, site, false)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+                                .file(refFile)
+                                
+                                .param("params", getPemRepositoryParams(projet, plateforme, site, false))
+                                .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                        .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
             }
             //on regarde les versions déposées
             response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem")
                             .param("repositoryId", getPemRepositoryId(plateforme, projet, site))
-                            .cookie(fixtures.getWithRightsUserConnection().cookie()))
+
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+
                     .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(0))).andReturn().getResponse().getContentAsString();
 
             //récupération de l'identifiant de la dernière version déposée
             oirFilesUUID = JsonPath.parse(response).read("$[2].id");
 
             // on vérifie l'absence de data
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json").cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                final int status = result.getResponse().getStatus();
-                if (status > 300) {
-                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                }
-            })
+            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andDo(result -> {
+                        final int status = result.getResponse().getStatus();
+                        if (status > 300) {
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                        }
+                    })
                     .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$.rows", hasSize(0)))
                     .andReturn().getResponse().getContentAsString();
@@ -748,9 +829,11 @@ public class OreSiResourcesTest {
             // on publie le dernier fichier déposé sans les droits
 
             /*Exception exception = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem")
-                    .with(csrf().asHeader())
+                    
                     .param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
-                    .cookie(fixtures.getWithRightsUserConnection().cookie()))
+                    
+                                .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection()))
+                        
                     .andExpect(status().is4xxClientError())
                     .andReturn().getResolvedException();
 
@@ -763,27 +846,35 @@ public class OreSiResourcesTest {
             // on donne les droits publication (obtenus avec depot
 
 
-            //getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
+            //getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__oir.sitesKNULL_KEY__oir__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.jwt());
 
 
             // on publie le dernier fichier déposé
 
-            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").with(csrf().asHeader()).param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+            response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, true))
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                    .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
 
             // on récupère la liste des versions déposées
 
-            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem").param("repositoryId", getPemRepositoryId(plateforme, projet, site)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(2))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(1))).andExpect(jsonPath("$[*][?(@.params.published == true )].id").value(oirFilesUUID)).andReturn().getResponse().getContentAsString();
+            response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem").param("repositoryId", getPemRepositoryId(plateforme, projet, site))
+                            .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(2))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(1))).andExpect(jsonPath("$[*][?(@.params.published == true )].id").value(oirFilesUUID)).andReturn().getResponse().getContentAsString();
 
 
             // on récupère le data en base
 
-            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(34)))
+            response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(34)))
                     //.andExpect(jsonPath("$.rows[*]", hasSize(34)))
                     .andExpect(jsonPath("$.rows[*].values[? (@.chemin == 'NULL_KEY__oir__p1' && @.projet == 'projet_manche')]", hasSize(34))).andReturn().getResponse().getContentAsString();
 
 
-            final byte[] responseToByteArray = mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/data/pem/zip").accept(MediaType.APPLICATION_OCTET_STREAM_VALUE).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andDo(result -> {
+            final byte[] responseToByteArray = mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/data/pem/zip").accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andDo(result -> {
                 if (result.getResponse().getStatus() != 200) {
                     log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
                 }
@@ -793,64 +884,80 @@ public class OreSiResourcesTest {
         }
         //on publie 4 fichiers
 
-        publishOrDepublish(fixtures.adminConnection.cookie(), "manche", "plateforme", "NULL_KEY__scarff", 68, true, 1, true);
-        publishOrDepublish(fixtures.adminConnection.cookie(), "atlantique", "plateforme", "NULL_KEY__scarff", 34, true, 1, true);
-        publishOrDepublish(fixtures.adminConnection.cookie(), "atlantique", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
-        publishOrDepublish(fixtures.adminConnection.cookie(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
+        publishOrDepublish(fixtures.adminConnection.jwt(), "manche", "plateforme", "NULL_KEY__scarff", 68, true, 1, true);
+        publishOrDepublish(fixtures.adminConnection.jwt(), "atlantique", "plateforme", "NULL_KEY__scarff", 34, true, 1, true);
+        publishOrDepublish(fixtures.adminConnection.jwt(), "atlantique", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
+        publishOrDepublish(fixtures.adminConnection.jwt(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
         //on publie une autre version
-        final String fileUUID = publishOrDepublish(fixtures.adminConnection.cookie(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true);
+        final String fileUUID = publishOrDepublish(fixtures.adminConnection.jwt(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true);
         // on supprime l'application publiée
-        response = mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-            if (result.getResponse().getStatus() != 200) {
-                log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
-            }
-        }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+        response = mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID)
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andDo(result -> {
+                    if (result.getResponse().getStatus() != 200) {
+                        log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                    }
+                }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
         Assertions.assertEquals(response, fileUUID);
 
         try {
-            publishOrDepublish(fixtures.getWithRightsUserConnection().cookie(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
+            publishOrDepublish(fixtures.getWithRightsUserConnection().jwt(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
 
         } catch (final NotApplicationDataWriterForDepositException e) {
             Assertions.assertEquals(NotApplicationDataWriterForDepositException.NO_RIGHT_FOR_USER_DATA_WRITER_FOR_DEPOSIT, e.getMessage());
             Assertions.assertEquals("pem", e.dataName);
         }
-        getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
+        getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.jwt());
 
         //les droit s de publication permettent aussi le dépôt
-        String fileUUID2 = publishOrDepublish(fixtures.getWithRightsUserConnection().cookie(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true);
+        String fileUUID2 = publishOrDepublish(fixtures.getWithRightsUserConnection().jwt(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 2, true);
 
         testFilesAndDataOnServer(plateforme, "manche", "NULL_KEY__nivelle", 0, 2, fileUUID2, true);
 
 
         // on depublie le fichier oir déposé (les droits publication valent dépublication
 
-        response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").with(csrf().asHeader()).param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, false)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+        response = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").param("params", Fixtures.getPemRepositoryParamsWithId(projet, plateforme, site, oirFilesUUID, false))
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
 
         // on récupère la liste des versions déposées
 
-        response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem").param("repositoryId", getPemRepositoryId(plateforme, projet, site)).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(0))).andReturn().getResponse().getContentAsString();
+        response = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem").param("repositoryId", getPemRepositoryId(plateforme, projet, site))
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == false )]", hasSize(3))).andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(0))).andReturn().getResponse().getContentAsString();
 
 
         // on récupère le data en base si j'ai les droits de publication je peux aussi lire les données avec ces droits (seuelement ^pour nivelle
 
-        mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json").cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
+        mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34)))
 
                 .andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(34))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0))).andExpect(jsonPath("$.rows.length()").value(136)).andExpect(jsonPath("$.rows[*]", hasSize(136))).andReturn().getResponse().getContentAsString();
 
         //pour le createur auth on a les fichiers de scarff
-        mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(34))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0))).andExpect(jsonPath("$.rows.length()").value(136)).andExpect(jsonPath("$.rows[*]", hasSize(136))).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1' && @.projet == 'projet_manche')].chemin", hasSize(34))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1' && @.projet == 'projet_manche')].chemin", hasSize(34))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0))).andExpect(jsonPath("$.rows.length()").value(136)).andExpect(jsonPath("$.rows[*]", hasSize(136))).andReturn().getResponse().getContentAsString();
 
-        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0))).andExpect(jsonPath("$.rows.length()").value(136)).andExpect(jsonPath("$.rows[*]", hasSize(136))).andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'NULL_KEY__oir__p1')][? (@.projet.value == 'projet_manche')]", hasSize(0))).andReturn().getResponse().getContentAsString();
+        response = mockMvc.perform(get("/api/v1/applications/monsore/data/pem/json")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__scarff__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__nivelle__p1')].chemin", hasSize(68))).andExpect(jsonPath("$.rows[*].values[?(@.chemin=='NULL_KEY__oir__p1')].chemin", hasSize(0))).andExpect(jsonPath("$.rows.length()").value(136)).andExpect(jsonPath("$.rows[*]", hasSize(136))).andExpect(jsonPath("$.rows[*].values[? (@.site.chemin == 'NULL_KEY__oir__p1')][? (@.projet.value == 'projet_manche')]", hasSize(0))).andReturn().getResponse().getContentAsString();
 
         // on supprime le fichier on peut le supprimer (oa_versionning = delete with depot)
-       /* NotApplicationCanDeleteRightsException resolvedException = (NotApplicationCanDeleteRightsException) mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andExpect(status().is4xxClientError()).andReturn().getResolvedException();
+       /* NotApplicationCanDeleteRightsException resolvedException = (NotApplicationCanDeleteRightsException) mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)
+                                .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection()))
+                        .andExpect(status().is4xxClientError()).andReturn().getResolvedException();
         assert resolvedException != null;
         Assertions.assertEquals("NO_RIGHT_FOR_DELETE_RIGHTS_APPLICATION", resolvedException.getMessage());
         Assertions.assertEquals("pem", resolvedException.getDataType());
         Assertions.assertEquals("monsore", resolvedException.getApplicationName());
         *//*Exception resolvedException1 = mockMvc.perform(delete("/api/v1/applications/monsore/data/pem")
-                        .cookie(fixtures.adminConnection.cookie()))
+                        
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        
                 .andExpect(status().is4xxClientError())
                 .andReturn()
                 .getResolvedException();
@@ -858,14 +965,16 @@ public class OreSiResourcesTest {
 
         //on donne les droits de suppression
 
-        getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.delete.name(), OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.cookie());
+        getJsonRightsforRestrictions(fixtures.getWithRightsUserConnection().userResult().userId().toString(), List.of(OperationType.delete.name(), OperationType.publication.name()), "monsore", "pem", "type_de_sitesKplateforme.sitesKNULL_KEY__nivelle.sitesKNULL_KEY__nivelle__p1", "01/01/1984", "06/01/1984", fixtures.adminConnection.jwt());
 */
         // on supprime le fichier a les droits car à les droits de publication
-        mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2).with(csrf().asHeader()).cookie(fixtures.getWithRightsUserConnection().cookie())).andDo(result -> {
-            if (result.getResponse().getStatus() != 200) {
-                log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
-            }
-        }).andExpect(status().is2xxSuccessful());
+        mockMvc.perform(delete("/api/v1/applications/monsore/file/" + fileUUID2)
+                        .header("Authorization", "Bearer " + fixtures.getWithRightsUserConnection().jwt()))
+                .andDo(result -> {
+                    if (result.getResponse().getStatus() != 200) {
+                        log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                    }
+                }).andExpect(status().is2xxSuccessful());
     }
 
     @Test
@@ -877,7 +986,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "teledec.yaml", "text/plain", in);
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "teledec");
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "teledec", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "teledec", ""));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -886,7 +995,9 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(refPath)) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", refName1, "text/plain", refStream);
 
-                mockMvc.perform(multipart("/api/v1/applications/teledec/data/{refType}", refName1).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                mockMvc.perform(multipart("/api/v1/applications/teledec/data/{refType}", refName1).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
             } catch (final Exception e) {
                 throw new OreSiTechnicalException(e.getMessage(), e);
             }
@@ -922,17 +1033,23 @@ public class OreSiResourcesTest {
 
             }
         };
-        mockMvc.perform(get("/api/v1/applications/teledec/data/{refType}", "tr_variable_local_vloc").cookie(fixtures.adminConnection.cookie())).andExpect(status().isOk()).andExpect(jsonPath("$.referenceValues[*].values.vloc_metadata").value(m));
+        mockMvc.perform(get("/api/v1/applications/teledec/data/{refType}", "tr_variable_local_vloc")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.referenceValues[*].values.vloc_metadata").value(m));
 
         Fixtures.getTeledetectionDataFiles().forEach((dataName, dataPath) -> {
             try (final InputStream dataStream = getClass().getResourceAsStream(dataPath)) {
                 final MockMultipartFile dataFile = new MockMultipartFile("file", dataName, "text/plain", dataStream);
 
-                mockMvc.perform(multipart("/api/v1/applications/teledec/data/{data}", dataName).file(dataFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                    if (result.getResponse().getStatus() != 201) {
-                        log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                    }
-                }).andExpect(status().isCreated()).andExpect(jsonPath("$.fileId", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                mockMvc.perform(multipart("/api/v1/applications/teledec/data/{data}", dataName).file(dataFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andDo(result -> {
+                            if (result.getResponse().getStatus() != 201) {
+                                log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                            }
+                        }).andExpect(status().isCreated()).andExpect(jsonPath("$.fileId", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
             } catch (final Exception e) {
                 throw new OreSiTechnicalException(e.getMessage(), e);
             }
@@ -942,12 +1059,14 @@ public class OreSiResourcesTest {
     }
 
 
-    private String[] getApplicationsFlux(final Cookie cookie, final String... filter) throws Exception {
-        return mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications").accept(MediaType.APPLICATION_NDJSON_VALUE).cookie(cookie).param("filter", filter)).andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andReturn().getResponse().getContentAsString().split("\n");
+    private String[] getApplicationsFlux(final String jwt, final String... filter) throws Exception {
+        return mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications").accept(MediaType.APPLICATION_NDJSON_VALUE)
+                .header("Authorization", "Bearer " + jwt)
+                .param("filter", filter)).andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andReturn().getResponse().getContentAsString().split("\n");
     }
 
-    private String getJsonRightsforRestrictions(final String withRigthsUserId, final List<String> roles, final String applicationName, final String datatype, final String localization, final String from, final String to, Cookie authenticateCookie) throws Exception {
-        Cookie authenticateCookie1 = authenticateCookie == null ? fixtures.adminConnection.cookie() : authenticateCookie;
+    private String getJsonRightsforRestrictions(final String withRigthsUserId, final List<String> roles, final String applicationName, final String datatype, final String localization, final String from, final String to, String jwt) throws Exception {
+        jwt = jwt == null ? fixtures.adminConnection.jwt() : jwt;
         String json = String.format("""
                 {
                    "usersId":["%6$s"],
@@ -969,7 +1088,9 @@ public class OreSiResourcesTest {
                            }
                       }
                 }""", datatype, localization, from, to, String.join("\",\"", roles), withRigthsUserId, System.currentTimeMillis());
-        MockHttpServletRequestBuilder createRight = post("/api/v1/applications/%s/authorization".formatted(applicationName)).with(csrf().asHeader()).contentType(MediaType.APPLICATION_JSON).cookie(authenticateCookie1).content(json);
+        MockHttpServletRequestBuilder createRight = post("/api/v1/applications/%s/authorization".formatted(applicationName)).contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + jwt)
+                .content(json);
         return mockMvc.perform(createRight).andDo(result -> {
             final int status = result.getResponse().getStatus();
             if (status > 300) {
@@ -999,7 +1120,9 @@ public class OreSiResourcesTest {
                     %2$s
                   }
                 }""", withRigthsUserId, authorizationForAll);
-        MockHttpServletRequestBuilder createRight = multipart("/api/v1/applications/monsore/authorization").with(csrf().asHeader()).contentType(MediaType.APPLICATION_JSON).cookie(fixtures.adminConnection.cookie()).content(json);
+        MockHttpServletRequestBuilder createRight = multipart("/api/v1/applications/monsore/authorization").contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                .content(json);
         return mockMvc.perform(createRight).andDo(result -> {
             final int status = result.getResponse().getStatus();
             if (status > 300) {
@@ -1008,7 +1131,7 @@ public class OreSiResourcesTest {
         }).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
     }
 
-    private String setJsonRightsForMonsoere(final Cookie cookie, final String withRigthsUserId, final String role, final String datatype) throws Exception {
+    private String setJsonRightsForMonsoere(final String jwt, final String withRigthsUserId, final String role, final String datatype) throws Exception {
         String json = String.format("""
                 {
                    "usersId":["%3$s"],
@@ -1038,17 +1161,21 @@ public class OreSiResourcesTest {
                       }
                    }
                 }""", role, datatype, withRigthsUserId);
-        MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/authorization").with(csrf().asHeader()).contentType(MediaType.APPLICATION_JSON).cookie(cookie).content(json);
+        MockHttpServletRequestBuilder createRight = post("/api/v1/applications/monsore/authorization").contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + jwt)
+                        .content(json);
         return mockMvc.perform(createRight).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
     }
 
-    private String publishOrDepublish(final Cookie cookie, final String projet, final String plateforme, final String site, final int expected, final boolean toPublish, final int numberOfVersions, final boolean published) throws Exception {
+    private String publishOrDepublish(final String jwt, final String projet, final String plateforme, final String site, final int expected, final boolean toPublish, final int numberOfVersions, final boolean published) throws Exception {
         final URL resource;
         resource = getClass().getResource(getPemRepositoryDataResourceName(projet, site));
         try (final InputStream refStream = Objects.requireNonNull(resource).openStream()) {
             final MockMultipartFile refFile = new MockMultipartFile("file", String.format("%s-%s-p1-pem.csv", projet, site), "text/plain", refStream);
             refFile.transferTo(Path.of("/tmp/pem.csv"));
-            MvcResult mockResponse = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").file(refFile).with(csrf().asHeader()).param("params", getPemRepositoryParams(projet, plateforme, site, toPublish)).cookie(cookie)).andReturn();
+            MvcResult mockResponse = mockMvc.perform(multipart("/api/v1/applications/monsore/data/pem").file(refFile).param("params", getPemRepositoryParams(projet, plateforme, site, toPublish))
+                            .header("Authorization", "Bearer " + jwt))
+                    .andReturn();
             if (mockResponse.getResponse().getStatus() >= 200 && mockResponse.getResponse().getStatus() < 300) {
                 final String fileUUID = JsonPath.parse(mockResponse.getResponse().getContentAsString()).read("$.id");
                 testFilesAndDataOnServer(plateforme, projet, site, expected, numberOfVersions, fileUUID, published);
@@ -1072,7 +1199,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "progressive");
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "progressive", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "progressive", ""));
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -1080,18 +1207,22 @@ public class OreSiResourcesTest {
         progressiveYamlAddData();
 
         final String lambdaUserId = fixtures.lambdaConnection.userResult().userId().toString();
-        final Cookie readerCookies = mockMvc.perform(post("/api/v1/login").param("login", "lambda").param("password", "xxxxxxxx")).andReturn().getResponse().getCookie(JWTExtractor.JWT_COOKIE_NAME);
+        final String jwt = mockMvc.perform(post("/api/v1/login").param("login", "lambda").param("password", "xxxxxxxx"))
+                .andReturn().getResponse().getHeader("Authorization");
+        ;
 
 
         {
 
-            Assertions.assertEquals(1, Arrays.stream(getApplicationsFlux(readerCookies, "ALL"))
+            Assertions.assertEquals(1, Arrays.stream(getApplicationsFlux(jwt, "ALL"))
 
                     .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class))).filter(s -> "progressive".equals(JsonPath.parse(s).read("$.result.name", String.class))).count());
         }
 
         {
-            mockMvc.perform(get("/api/v1/applications/progressive/data/date_de_visite/json").cookie(readerCookies).accept(MediaType.TEXT_PLAIN)).andExpect(status().is4xxClientError());
+            mockMvc.perform(get("/api/v1/applications/progressive/data/date_de_visite/json")
+                    .header("Authorization", "Bearer " + jwt)
+                    .accept(MediaType.TEXT_PLAIN)).andExpect(status().is4xxClientError());
         }
 
         {
@@ -1119,7 +1250,9 @@ public class OreSiResourcesTest {
                     }""", lambdaUserId, "date_de_visite");
 
 
-            final MockHttpServletRequestBuilder create = post("/api/v1/applications/progressive/authorization").with(csrf().asHeader()).contentType(MediaType.APPLICATION_JSON).cookie(fixtures.adminConnection.cookie()).content(json);
+            final MockHttpServletRequestBuilder create = post("/api/v1/applications/progressive/authorization").contentType(MediaType.APPLICATION_JSON)
+                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                    .content(json);
             final String response = mockMvc.perform(create).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
             authorizationId = JsonPath.parse(response).read("$.authorizationId", String.class);
 
@@ -1127,15 +1260,18 @@ public class OreSiResourcesTest {
 
         {
             // Une fois l'accès donné, on doit pouvoir avec l'application dans la liste"
-            Assertions.assertEquals(1, Arrays.stream(getApplicationsFlux(readerCookies, "ALL"))
+            Assertions.assertEquals(1, Arrays.stream(getApplicationsFlux(jwt, "ALL"))
 
                     .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class))).filter(s -> "progressive".equals(JsonPath.parse(s).read("$.result.name", String.class))).count());
         }
 
         {
-            final String json = mockMvc.perform(get("/api/v1/applications/progressive/data/date_de_visite/json").cookie(readerCookies).accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.rows[*].values.relevant.numero").value(hasItemInArray(equalTo("125")), String[].class)).andReturn().getResponse().getContentAsString();
+            final String json = mockMvc.perform(get("/api/v1/applications/progressive/data/date_de_visite/json")
+                    .header("Authorization", "Bearer " + jwt)
+                    .accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk()).andExpect(jsonPath("$.rows[*].values.relevant.numero").value(hasItemInArray(equalTo("125")), String[].class)).andReturn().getResponse().getContentAsString();
         }
-        final MockHttpServletRequestBuilder delete = delete(String.format("/api/v1/applications/progressive/authorization/%s", authorizationId)).with(csrf().asHeader()).contentType(MediaType.APPLICATION_JSON).cookie(fixtures.adminConnection.cookie());
+        final MockHttpServletRequestBuilder delete = delete(String.format("/api/v1/applications/progressive/authorization/%s", authorizationId)).contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt());
         mockMvc.perform(delete).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
         // L'utilisateur sans droit ne peut voir les applications
 
@@ -1154,7 +1290,7 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "progressive.yaml", "text/plain", in);
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "progressive");
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "progressive", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "progressive", ""));
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -1178,7 +1314,7 @@ public class OreSiResourcesTest {
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "progressive");
 
-            final BadApplicationConfigurationException exception = (BadApplicationConfigurationException) fixtures.loadApplicationWithError(configuration, fixtures.adminConnection.cookie(), "progressive");
+            final BadApplicationConfigurationException exception = (BadApplicationConfigurationException) fixtures.loadApplicationWithError(configuration, fixtures.adminConnection.jwt(), "progressive");
             assert exception != null;
             Assertions.fail("refaire le test san configuration parding result");
             //ValidationCheckResult validationCheckResult = exception.getConfigurationParsingResult().validationCheckResults()
@@ -1203,7 +1339,7 @@ public class OreSiResourcesTest {
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "progressive");
 
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "progressive", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "progressive", ""));
 
             //pas de référentiel
             progressiveYamlAddData();
@@ -1223,7 +1359,7 @@ public class OreSiResourcesTest {
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "progressive");
 
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "progressive", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "progressive", ""));
 
 
             progressiveYamlAddReferences();
@@ -1247,7 +1383,7 @@ public class OreSiResourcesTest {
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "progressive");
 
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "progressive", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "progressive", ""));
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -1263,7 +1399,9 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/progressive/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/progressive/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
@@ -1276,7 +1414,9 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                mockMvc.perform(multipart("/api/v1/applications/progressive/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.fileId", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                mockMvc.perform(multipart("/api/v1/applications/progressive/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().isCreated()).andExpect(jsonPath("$.fileId", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
             }
         }
     }
@@ -1291,8 +1431,10 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "recursivity.yaml", "text/plain", in);
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "recursivite");
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "recursivite", ""));
-            final String response = mockMvc.perform(get("/api/v1/applications/recursivite").param("filter", "ALL").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.type", IsEqual.equalTo("DynamicComponent"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.internationalization.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties"))).andReturn().getResponse().getContentAsString();
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "recursivite", ""));
+            final String response = mockMvc.perform(get("/api/v1/applications/recursivite").param("filter", "ALL")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.type", IsEqual.equalTo("DynamicComponent"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.internationalization.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties"))).andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -1304,13 +1446,17 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
         }
         {
-            mockMvc.perform(get("/api/v1/applications/recursivite/data/{refType}/json", "taxon").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(get("/api/v1/applications/recursivite/data/{refType}/json", "taxon")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
 /*                    .andExpect(jsonPath("$..values.tel_S2_value", contains("7.2", "3.4", "2.1", "2.6", "2.5", "5.2", "3.9", "3.2", "1.2")))
                     .andExpect(jsonPath("$..values.tel_S2_resolution", contains(3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2)))
                     .andExpect(jsonPath("$..values.tel_S2_qualifier", contains(3, 3, 3, 3, 3, 3, 3, 3, 3)))
@@ -1325,7 +1471,9 @@ public class OreSiResourcesTest {
                 try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                     final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                    response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                    response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey()).file(refFile)
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                            .andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                     JsonPath.parse(response).read("$.id");
                 }
@@ -1335,7 +1483,9 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/recursivite/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
@@ -1352,13 +1502,15 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "pattern.yaml", "text/plain", in);
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "pattern");
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "pattern", ""));
-            final String response = mockMvc.perform(get("/api/v1/applications/pattern").param("filter", "ALL").cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                final int status = result.getResponse().getStatus();
-                if (status > 300) {
-                    System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                }
-            }).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.type", IsEqual.equalTo("DynamicComponent"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.internationalization.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Properties of Taxa"))).andReturn().getResponse().getContentAsString();
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "pattern", ""));
+            final String response = mockMvc.perform(get("/api/v1/applications/pattern").param("filter", "ALL")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andDo(result -> {
+                        final int status = result.getResponse().getStatus();
+                        if (status > 300) {
+                            System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                        }
+                    }).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.type", IsEqual.equalTo("DynamicComponent"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.data.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.internationalization.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Properties of Taxa"))).andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -1370,18 +1522,22 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                    final int status = result.getResponse().getStatus();
-                    if (status > 300) {
-                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                    }
-                }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andDo(result -> {
+                            final int status = result.getResponse().getStatus();
+                            if (status > 300) {
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                            }
+                        }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
         }
         {
-            mockMvc.perform(get("/api/v1/applications/pattern/data/{refType}/json", "taxon").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful())
+            mockMvc.perform(get("/api/v1/applications/pattern/data/{refType}/json", "taxon")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful())
                     .andExpect(jsonPath("$..values.tel_S2_value[*].__VALUE__", containsInAnyOrder("7.2", "3.4", "2.1", "2.6", "2.5", "5.2", "3.9", "3.2", "1.2")))
                     .andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_resolution", containsInAnyOrder(3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2, 3.2)))
                     .andExpect(jsonPath("$..values.tel_S2_value[*].tel_S2_qualifier", containsInAnyOrder(3, 3, 3, 3, 3, 3, 3, 3, 3)))
@@ -1389,12 +1545,14 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$..values.tel_S2_value[*].swc_qc", containsInAnyOrder(1, 1, 0, 2, 1, 0, 0, 1, 1)))
                     .andExpect(jsonPath("$..values.tel_S2_value[*].swc_sd", containsInAnyOrder(3.9, 2.5, 7.2, 3.2, 2.1, 3.4, 1.2, 5.2, 3.9)))
                     .andExpect(jsonPath("$.rows[*].refsLinkeds[?(     @.referenceType == 'proprietes_taxon'      && @.naturalKey.sql == 'niveau_incertitude_de_determination' )][? (@.naturalKey.sql=='niveau_incertitude_de_determination')].length()", containsInAnyOrder(7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7)))
-                    .andExpect(jsonPath("$.rows[*].refsLinkeds[?(@.referenceType == 'site')].naturalKey.sql", containsInAnyOrder( "aiguebelette","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy","annecy","aiguebelette","annecy","annecy")))
+                    .andExpect(jsonPath("$.rows[*].refsLinkeds[?(@.referenceType == 'site')].naturalKey.sql", containsInAnyOrder("aiguebelette", "annecy", "aiguebelette", "annecy", "annecy", "annecy", "aiguebelette", "annecy", "annecy", "annecy", "annecy", "annecy", "annecy", "aiguebelette", "annecy", "annecy", "annecy", "aiguebelette", "annecy", "annecy", "annecy", "aiguebelette", "annecy", "annecy", "annecy", "aiguebelette", "annecy", "annecy", "annecy", "aiguebelette", "annecy", "annecy", "annecy", "aiguebelette", "annecy", "annecy")))
                     .andReturn().getResponse().getContentAsString();
 
         }
         {
-            mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/pattern/data/taxon/zip").accept(MediaType.APPLICATION_OCTET_STREAM_VALUE).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn()))
+            mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/pattern/data/taxon/zip").accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                            .andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn()))
 
 
                     .andExpect(testZip(java.util.List.of("taxon.csv", "references/proprietes_taxon.csv", "references/site.csv")));
@@ -1406,7 +1564,9 @@ public class OreSiResourcesTest {
                 try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                     final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                    response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                    response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey()).file(refFile)
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                            .andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                     JsonPath.parse(response).read("$.id");
                 }
@@ -1416,7 +1576,9 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/pattern/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
@@ -1434,8 +1596,10 @@ public class OreSiResourcesTest {
             final MockMultipartFile configuration = new MockMultipartFile("file", "computedWithNaturalKeyColumns.yaml", "text/plain", in);
             //définition de l'application
             fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "computedwithnaturalkeycolumns");
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "computedwithnaturalkeycolumns", ""));
-            final String response = mockMvc.perform(get("/api/v1/applications/computedwithnaturalkeycolumns").param("filter", "ALL").cookie(fixtures.adminConnection.cookie())).andReturn().getResponse().getContentAsString();
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "computedwithnaturalkeycolumns", ""));
+            final String response = mockMvc.perform(get("/api/v1/applications/computedwithnaturalkeycolumns").param("filter", "ALL")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -1447,18 +1611,22 @@ public class OreSiResourcesTest {
             try (final InputStream refStream = getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
 
-                response = mockMvc.perform(multipart("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                    final int status = result.getResponse().getStatus();
-                    if (status > 300) {
-                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                    }
-                }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
+                response = mockMvc.perform(multipart("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andDo(result -> {
+                            final int status = result.getResponse().getStatus();
+                            if (status > 300) {
+                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                            }
+                        }).andExpect(status().isCreated()).andExpect(jsonPath("$.id", IsNull.notNullValue())).andReturn().getResponse().getContentAsString();
 
                 JsonPath.parse(response).read("$.id");
             }
         }
         {
-            mockMvc.perform(get("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}/json", "site_sit").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values.site_natural_key", contains("type_de_site1__site1", "type_de_site1__site2", "type_de_site2__site1", "type_de_site2__site2"))).andExpect(jsonPath("$.rows[*].refsLinkedTo.site_sit.site_natural_key", hasSize(4))).andExpect(jsonPath("$.rows[0].values.site_natural_key_multi", containsInAnyOrder("type_de_site1__site1", "type_de_site2__site1"))).andExpect(jsonPath("$.rows[1].values.site_natural_key_multi", containsInAnyOrder("type_de_site1__site2", "type_de_site2__site2"))).andExpect(jsonPath("$.rows[2].values.site_natural_key_multi", contains(""))).andExpect(jsonPath("$.rows[3].values.site_natural_key_multi", contains(""))).andExpect(jsonPath("$.rows[0].refsLinkedTo.site_sit.site_natural_key_multi.uuids", hasSize(1))).andExpect(jsonPath("$.rows[0].refsLinkedTo.type_site_tsi.tsi_noms.uuids", hasSize(1))).andExpect(jsonPath("$.rows[1].refsLinkedTo.site_sit.site_natural_key_multi.uuids", hasSize(1))).andExpect(jsonPath("$.rows[1].refsLinkedTo.type_site_tsi.tsi_noms.uuids", hasSize(1))).andExpect(jsonPath("$.rows[2].refsLinkedTo.site_sit.keys()", hasSize(1))).andExpect(jsonPath("$.rows[2].refsLinkedTo.type_site_tsi.keys()", hasSize(1))).andExpect(jsonPath("$.rows[*].refsLinkedTo.site_sit.site_natural_key", hasSize(4))).andExpect(jsonPath("$.rows[0].values.site_natural_key_multi", containsInAnyOrder("type_de_site1__site1", "type_de_site2__site1"))).andExpect(jsonPath("$.rows[1].values.site_natural_key_multi", containsInAnyOrder("type_de_site1__site2", "type_de_site2__site2"))).andExpect(jsonPath("$.rows[2].values.site_natural_key_multi", contains(""))).andExpect(jsonPath("$.rows[3].values.site_natural_key_multi", contains("")))
+            mockMvc.perform(get("/api/v1/applications/computedwithnaturalkeycolumns/data/{refType}/json", "site_sit")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows[*].values.site_natural_key", contains("type_de_site1__site1", "type_de_site1__site2", "type_de_site2__site1", "type_de_site2__site2"))).andExpect(jsonPath("$.rows[*].refsLinkedTo.site_sit.site_natural_key", hasSize(4))).andExpect(jsonPath("$.rows[0].values.site_natural_key_multi", containsInAnyOrder("type_de_site1__site1", "type_de_site2__site1"))).andExpect(jsonPath("$.rows[1].values.site_natural_key_multi", containsInAnyOrder("type_de_site1__site2", "type_de_site2__site2"))).andExpect(jsonPath("$.rows[2].values.site_natural_key_multi", contains(""))).andExpect(jsonPath("$.rows[3].values.site_natural_key_multi", contains(""))).andExpect(jsonPath("$.rows[0].refsLinkedTo.site_sit.site_natural_key_multi.uuids", hasSize(1))).andExpect(jsonPath("$.rows[0].refsLinkedTo.type_site_tsi.tsi_noms.uuids", hasSize(1))).andExpect(jsonPath("$.rows[1].refsLinkedTo.site_sit.site_natural_key_multi.uuids", hasSize(1))).andExpect(jsonPath("$.rows[1].refsLinkedTo.type_site_tsi.tsi_noms.uuids", hasSize(1))).andExpect(jsonPath("$.rows[2].refsLinkedTo.site_sit.keys()", hasSize(1))).andExpect(jsonPath("$.rows[2].refsLinkedTo.type_site_tsi.keys()", hasSize(1))).andExpect(jsonPath("$.rows[*].refsLinkedTo.site_sit.site_natural_key", hasSize(4))).andExpect(jsonPath("$.rows[0].values.site_natural_key_multi", containsInAnyOrder("type_de_site1__site1", "type_de_site2__site1"))).andExpect(jsonPath("$.rows[1].values.site_natural_key_multi", containsInAnyOrder("type_de_site1__site2", "type_de_site2__site2"))).andExpect(jsonPath("$.rows[2].values.site_natural_key_multi", contains(""))).andExpect(jsonPath("$.rows[3].values.site_natural_key_multi", contains("")))
                     //.andExpect(jsonPath("$.rows[0].refsLinkedTo.site_sit.site_natural_key_multi.uuids", hasSize(2))) //TODO
                     //.andExpect(jsonPath("$.rows[0].refsLinkedTo.type_site_tsi.tsi_noms", hasSize(2))) //TODO
                     //.andExpect(jsonPath("$.rows[1].refsLinkedTo.site_sit.site_natural_key_multi.uuids", hasSize(2))) //TODO
@@ -1468,7 +1636,9 @@ public class OreSiResourcesTest {
     }
 
     private void testFilesAndDataOnServer(final String plateforme, final String projet, final String site, final int expected, final int numberOfVersions, final String fileUUID, final boolean published) throws Exception {
-        ResultActions resultActions = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem").param("repositoryId", getPemRepositoryId(plateforme, projet, site)).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(numberOfVersions)));
+        ResultActions resultActions = mockMvc.perform(get("/api/v1/applications/monsore/filesOnRepository/pem").param("repositoryId", getPemRepositoryId(plateforme, projet, site))
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$").isArray()).andExpect(jsonPath("$", hasSize(numberOfVersions)));
 
         if (published) {
             resultActions = resultActions.andExpect(jsonPath("$[*][?(@.params.published == true )]", hasSize(1))).andExpect(jsonPath("$[*][?(@.params.published == true )].id").value(fileUUID));
@@ -1489,7 +1659,7 @@ public class OreSiResourcesTest {
                     assert resource != null;
                     try (final InputStream in = resource.openStream()) {
                         final MockMultipartFile configuration = new MockMultipartFile("file", "acbb.yaml", "text/plain", in);
-                        final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "acbb_openadom_v2", ""));
+                        final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "acbb_openadom_v2", ""));
                     } catch (final Throwable e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
                     }
@@ -1498,32 +1668,36 @@ public class OreSiResourcesTest {
                     try (final InputStream in = getClass().getResourceAsStream(AcbbFixture.getFluxToursDataResourceName())) {
                         final MockMultipartFile file = new MockMultipartFile("file", "Flux_tours.csv", "text/plain", in);
 
-                        final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx").file(file).with(csrf().asHeader()).param("params", """
-                                {
-                                    "fileid":null,
-                                    "binaryfiledataset":{
-                                        "datatype":"t_flux_tours_flx",
-                                        "requiredAuthorizations":{
-                                           "tr_sites_sit":["laqueuille"]
-                                        },
-                                        "from":"2003-12-31 23:00:00",
-                                        "to":"2004-12-31 23:00:00",
-                                        "comment":null
-                                    },
-                                    "topublish":true}"""
+                        final String response = mockMvc.perform(multipart("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx").file(file).param("params", """
+                                                {
+                                                    "fileid":null,
+                                                    "binaryfiledataset":{
+                                                        "datatype":"t_flux_tours_flx",
+                                                        "requiredAuthorizations":{
+                                                           "tr_sites_sit":["laqueuille"]
+                                                        },
+                                                        "from":"2003-12-31 23:00:00",
+                                                        "to":"2004-12-31 23:00:00",
+                                                        "comment":null
+                                                    },
+                                                    "topublish":true}"""
 
-                        ).cookie(fixtures.adminConnection.cookie())).andDo(result -> {
-                            final int status = result.getResponse().getStatus();
-                            if (status > 300) {
-                                System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
-                            }
-                        }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+                                        )
+                                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                                .andDo(result -> {
+                                    final int status = result.getResponse().getStatus();
+                                    if (status > 300) {
+                                        System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
+                                    }
+                                }).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
 
                     }
                 }), dynamicTest("read SWC to json", () -> {
 //            String expectedJson = Resources.toString(getClass().getResource("/data/acbb_openadom_v2/compare/export.json"), StandardCharsets.UTF_8);
-                    mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_JSON)).andDo(result -> {
+                    mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json")
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                                    .accept(MediaType.APPLICATION_JSON)).andDo(result -> {
                                 final int status = result.getResponse().getStatus();
                                 if (status > 300) {
                                     System.out.println(Objects.requireNonNull(result.getResolvedException()).getMessage());
@@ -1532,7 +1706,10 @@ public class OreSiResourcesTest {
 //                    .andExpect(content().json(expectedJson))
                             .andReturn().getResponse().getContentAsString();
                 }), dynamicTest("read SWC to csv", () -> {
-                    final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/zip").cookie(fixtures.adminConnection.cookie()).accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)).andExpect(request().asyncStarted()).andExpect(status().isOk()).andReturn();
+                    final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/zip")
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                                    .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)).
+                            andExpect(request().asyncStarted()).andExpect(status().isOk()).andReturn();
                     Objects.requireNonNull(mvcResult.getRequest().getAsyncContext()).setTimeout(120000);
 
                     mockMvc.perform(asyncDispatch(mvcResult)).andExpect(testZip(List.of("t_flux_tours_flx.csv")));
@@ -1547,21 +1724,25 @@ public class OreSiResourcesTest {
         fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "hautefrequence");
         try (final InputStream configurationFile = fixtures.getClass().getResourceAsStream(HauteFrequenceFixture.getHauteFrequenceApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "hautefrequence.yaml", "text/plain", configurationFile);
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "hautefrequence", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "hautefrequence", ""));
         }
 
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : HauteFrequenceFixture.getHauteFrequenceReferentielFiles().entrySet()) {
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+                mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().is2xxSuccessful());
             }
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(HauteFrequenceFixture.getHauteFrequenceDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "hautefrequence.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/hautefrequence").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/hautefrequence/data/hautefrequence").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
     }
 
@@ -1572,7 +1753,7 @@ public class OreSiResourcesTest {
         fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "duplicated");
         try (final InputStream configurationFile = fixtures.getClass().getResourceAsStream(Fixtures.getDuplicatedApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "duplicated.yaml", "text/plain", configurationFile);
-            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.cookie(), "duplicated", ""));
+            final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, fixtures.adminConnection.jwt(), "duplicated", ""));
         }
         String message;
 
@@ -1580,28 +1761,37 @@ public class OreSiResourcesTest {
         String typezonewithoutduplicationDuplication = Fixtures.getDuplicatedReferentielFiles().get("typezonewithoutduplication");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
         }
 
         // on vérifie le nombre de ligne
-        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
 
 
         //on recharge le fichier de type zone d'étude
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude2.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
 
 
         //on charge le fichier de zone type d'étude avec une duplication
         String typezonewithduplicationDuplication = Fixtures.getDuplicatedReferentielFiles().get("typezonewithduplication");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(typezonewithduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "type_zone_etude_duplicate.csv", "text/plain", refStream);
-            ResultActions error = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie()));
+            ResultActions error = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").file(refFile)
+                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()));
             //fail();
         } catch (final ServletException e) {
             Assertions.assertInstanceOf(InvalidDatasetContentException.class, e.getCause());
@@ -1620,7 +1810,9 @@ public class OreSiResourcesTest {
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "types_de_zones_etudes")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
 /*
 on test le dépôt d'un fichier récursif
  */
@@ -1630,28 +1822,37 @@ on test le dépôt d'un fichier récursif
         String zonewithoutduplicationDuplication = Fixtures.getDuplicatedReferentielFiles().get("zonewithoutduplication");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
         }
 
         // on vérifie le nombre de ligne
-        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
 
 
         //on recharge le fichier de zone d'étude
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithoutduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude2.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
 
 
         //on charge le fichier de zone d'étudeavec une duplication
         String zonewithduplicationDuplication = Fixtures.getDuplicatedReferentielFiles().get("zonewithduplication");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithduplicationDuplication)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude_duplicated.csv", "text/plain", refStream);
-            ResultActions error = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie()));
+            ResultActions error = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").file(refFile)
+                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()));
             //fail();
         } catch (final ServletException e) {
             Assertions.assertInstanceOf(InvalidDatasetContentException.class, e.getCause());
@@ -1670,13 +1871,16 @@ on test le dépôt d'un fichier récursif
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
 
         //on charge le fichier de zone d'étudeavec une duplication
         String zonewithmissingParent = Fixtures.getDuplicatedReferentielFiles().get("zonewithmissingparent");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(zonewithmissingParent)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zone_etude_missing_parent.csv", "text/plain", refStream);
-            ResultActions error = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie()));
+            ResultActions error = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").file(refFile)
+                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()));
             //fail();
         } catch (final ServletException e) {
             Assertions.assertInstanceOf(InvalidDatasetContentException.class, e.getCause());
@@ -1695,17 +1899,23 @@ on test le dépôt d'un fichier récursif
         }
 
         //il doit toujours y avoir le même nombre de ligne
-        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
+        mockMvc.perform(get("/api/v1/applications/duplicated/data/{refType}", "zones_etudes")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.referenceValues.length()", IsEqual.equalTo(2))).andReturn().getResponse().getContentAsString();
 
         //on teste un dépot de fichier de données
         String dataWithoutDuplicateds = Fixtures.getDuplicatedDataFiles().get("data_without_duplicateds");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data_without_duplicateds.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
         //on teste le nombre de ligne
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
-            String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(4)))
+            String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
         }
@@ -1714,13 +1924,17 @@ on test le dépôt d'un fichier récursif
 
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data_without_duplicateds.csv", "text/plain", refStream);
-            String response = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful())
+            String response = mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful())
                     //.andExpect(jsonPath("$[0].validationCheckResult.messageParams.file", IsEqual.equalTo("dty"))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.failingRowContent", StringContains.containsString("1980-02-23")))
                     .andReturn().getResponse().getContentAsString();
         }
         // le nombre de ligne est inchangé
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
-            String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(4)))
+            String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
         }
@@ -1728,12 +1942,16 @@ on test le dépôt d'un fichier récursif
         String dataWithDuplicateds = Fixtures.getDuplicatedDataFiles().get("data_with_duplicateds");
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithDuplicateds)) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "data_with_duplicateds.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is4xxClientError()).andExpect(jsonPath("$[0].validationCheckResult.message", IsEqual.equalTo("duplicatedLineInDatatype"))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.duplicatedRows", CoreMatchers.hasItem(5))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.duplicatedRows", CoreMatchers.hasItem(6))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.uniquenessKey.Date_day.value", hasItems(1980, 2, 24, 0, 0))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.uniquenessKey.localization_zones_etudes.value.sql", IsEqual.equalTo("site1")));
+            mockMvc.perform(multipart("/api/v1/applications/duplicated/data/dty").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is4xxClientError()).andExpect(jsonPath("$[0].validationCheckResult.message", IsEqual.equalTo("duplicatedLineInDatatype"))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.duplicatedRows", CoreMatchers.hasItem(5))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.duplicatedRows", CoreMatchers.hasItem(6))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.uniquenessKey.Date_day.value", hasItems(1980, 2, 24, 0, 0))).andExpect(jsonPath("$[0].validationCheckResult.messageParams.uniquenessKey.localization_zones_etudes.value.sql", IsEqual.equalTo("site1")));
 
         }
         // le nombre de ligne est inchangé
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(dataWithoutDuplicateds)) {
-            String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json").cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(4)))
+            String response = mockMvc.perform(get("/api/v1/applications/duplicated/data/dty/json")
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.rows", hasSize(4)))
                     //.andExpect(jsonPath("$.totalRows", IsEqual.equalTo(4)))
                     .andReturn().getResponse().getContentAsString();
         }
@@ -1746,59 +1964,80 @@ on test le dépôt d'un fichier récursif
         fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "olac");
         try (final InputStream configurationFile = fixtures.getClass().getResourceAsStream(Fixtures.getOlaApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "olac.yaml", "text/plain", configurationFile);
-            mockMvc.perform(multipart("/api/v1/applications/olac").file(configuration).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/olac").file(configuration)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
-        String contentAsString = mockMvc.perform(get("/api/v1/applications/olac", "ALL,ReferenceType").cookie(fixtures.adminConnection.cookie()).param("filter", "ALL")).andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
+        String contentAsString = mockMvc.perform(get("/api/v1/applications/olac", "ALL,ReferenceType")
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+                        .param("filter", "ALL")).
+                andExpect(status().is2xxSuccessful()).andReturn().getResponse().getContentAsString();
 
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : Fixtures.getOlaReferentielFiles().entrySet()) {
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+                mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().is2xxSuccessful());
             }
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getConditionPrelevementDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "condition_prelevements.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/condition_prelevements").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/condition_prelevements").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getPhysicoChimieDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/physico-chimie").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/physico-chimie").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getSondeDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/sonde_truncated").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/sonde_truncated").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
 
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getPhytoAggregatedDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton_aggregated").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton_aggregated").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getPhytoplanctonDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "phytoplancton__truncated.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton__truncated").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton__truncated").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getZooplanctonDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zooplancton__truncated.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton__truncated").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton__truncated").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getZooplactonBiovolumDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "zooplancton_biovolumes.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton_biovolumes").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton_biovolumes").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
     }
 
@@ -1809,7 +2048,9 @@ on test le dépôt d'un fichier récursif
         fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "foret");
         try (final InputStream configurationFile = fixtures.getClass().getResourceAsStream(Fixtures.getForetEssaiApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "foret_essai.yaml", "text/plain", configurationFile);
-            mockMvc.perform(multipart("/api/v1/applications/foret").file(configuration).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/foret").file(configuration)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // Ajout de referentiel
@@ -1817,7 +2058,9 @@ on test le dépôt d'un fichier récursif
             log.debug(e.getKey());
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+                mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().is2xxSuccessful());
             }
         }
 
@@ -1825,12 +2068,18 @@ on test le dépôt d'un fichier récursif
         for (final Map.Entry<String, String> entry : Fixtures.getForetEssaiDataResourceName().entrySet()) {
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(entry.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/foret/data/" + entry.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+                mockMvc.perform(multipart("/api/v1/applications/foret/data/" + entry.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().is2xxSuccessful());
 
                 if ("swc_j".equals(entry.getKey())) {
                     authenticationService.setRoleAdmin();
-                    String responseForBuildSynthesis = mockMvc.perform(put("/api/v1/applications/foret/synthesis/{refType}", entry.getKey()).cookie(fixtures.adminConnection.cookie())).andExpect(jsonPath("$.SWC", hasSize(8))).andReturn().getResponse().getContentAsString();
-                    String responseForGetSynthesis = mockMvc.perform(get("/api/v1/applications/foret/synthesis/{refType}", entry.getKey()).cookie(fixtures.adminConnection.cookie())).andExpect(jsonPath("$.SWC", hasSize(8))).andExpect(jsonPath("$.SWC[*].aggregation", containsInAnyOrder("10.0", "120.0", "160.0", "200.0", "250.0", "30.0", "55.0", "80.0"))).andReturn().getResponse().getContentAsString();
+                    String responseForBuildSynthesis = mockMvc.perform(put("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                            .andExpect(jsonPath("$.SWC", hasSize(8))).andReturn().getResponse().getContentAsString();
+                    String responseForGetSynthesis = mockMvc.perform(get("/api/v1/applications/foret/synthesis/{refType}", entry.getKey())
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                            .andExpect(jsonPath("$.SWC", hasSize(8))).andExpect(jsonPath("$.SWC[*].aggregation", containsInAnyOrder("10.0", "120.0", "160.0", "200.0", "250.0", "30.0", "55.0", "80.0"))).andReturn().getResponse().getContentAsString();
                 }
             }
         }
@@ -1843,21 +2092,27 @@ on test le dépôt d'un fichier récursif
         fixtures.addUserRightCreateApplication(fixtures.adminConnection.userResult().userId(), "foret");
         try (final InputStream configurationFile = fixtures.getClass().getResourceAsStream(Fixtures.getForetApplicationConfigurationResourceName())) {
             final MockMultipartFile configuration = new MockMultipartFile("file", "foret.yaml", "text/plain", configurationFile);
-            mockMvc.perform(multipart("/api/v1/applications/foret").file(configuration).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/foret").file(configuration)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // Ajout de referentiel
         for (final Map.Entry<String, String> e : Fixtures.getForetReferentielFiles().entrySet()) {
             try (final InputStream refStream = fixtures.getClass().getResourceAsStream(e.getValue())) {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
-                mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey()).file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+                mockMvc.perform(multipart("/api/v1/applications/foret/data/{refType}", e.getKey()).file(refFile)
+                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                        .andExpect(status().is2xxSuccessful());
             }
         }
 
         // ajout de data
         try (final InputStream refStream = fixtures.getClass().getResourceAsStream(Fixtures.getFluxMeteoForetDataResourceName())) {
             final MockMultipartFile refFile = new MockMultipartFile("file", "flux_meteo_dataResult.csv", "text/plain", refStream);
-            mockMvc.perform(multipart("/api/v1/applications/foret/data/flux_meteo_dataResult").file(refFile).with(csrf().asHeader()).cookie(fixtures.adminConnection.cookie())).andExpect(status().is2xxSuccessful());
+            mockMvc.perform(multipart("/api/v1/applications/foret/data/flux_meteo_dataResult").file(refFile)
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful());
         }
     }
 
@@ -1894,7 +2149,9 @@ on test le dépôt d'un fichier récursif
     }
 
     private byte[] getAndTestUploadBundleZip() throws Exception {
-        return mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/upload-bundle").accept(MediaType.APPLICATION_OCTET_STREAM).cookie(fixtures.adminConnection.cookie())) //appel du sevice zip
+        return mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/upload-bundle").accept(MediaType.APPLICATION_OCTET_STREAM)
+                        .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
+                //appel du sevice zip
                 .andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andExpect(result -> {
             List<ZipEntry> entries = new ArrayList<>();
             try (ZipInputStream zi = new ZipInputStream(new ByteArrayInputStream(result.getResponse().getContentAsByteArray()))) {

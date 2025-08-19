@@ -85,7 +85,7 @@ class AuthenticationServiceTest {
         final String email = "toto@codelutin.com";
         final String password = "xxxx";
          mockMvc.perform(
-                        post("/api/v1/users").with(csrf().asHeader())
+                        post("/api/v1/users")
                                 .param("login", login)
                                 .param("password", password)
                                 .param("email", email)
@@ -99,7 +99,7 @@ class AuthenticationServiceTest {
         String[] lines = Objects.requireNonNull(message.getText()).split("\n");
         String validationKey = lines[6];
         String user = mockMvc.perform(put("/api/v1/users")
-                        .with(csrf().asHeader())
+                        
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -109,7 +109,7 @@ class AuthenticationServiceTest {
         assertEquals(login, loginAdminResult.login());
         final OreSiUserRole userRole = authenticationService.getUserRole(UUID.fromString(id));
 
-        mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
+        mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"email\": \"" + email + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -124,7 +124,7 @@ class AuthenticationServiceTest {
         validationKey = getValidationKey(messageArgumentCaptor, login, password, "pending", newEmail);
 
         //on valide l'email
-        mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
+        mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -133,7 +133,7 @@ class AuthenticationServiceTest {
         validationKey = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
         final String validationKey2 = getValidationKey(messageArgumentCaptor, login, password, "active", newEmail);
         assertEquals(validationKey2, validationKey);
-        mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
+        mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\"" +
                                 ", \"email\": \"" + newEmail + "\", " +
@@ -162,7 +162,7 @@ class AuthenticationServiceTest {
         final String user;
         final String validationKey;
         final SimpleMailMessage message;
-        mockMvc.perform(put("/api/v1/users").with(csrf().asHeader())
+        mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"email\": \"" + email + "\", \"password\": \"" + password + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is(expectedState)))
