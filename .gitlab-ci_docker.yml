@@ -87,7 +87,7 @@ production:
     - |
       if [ -n "$CI_COMMIT_TAG" ];  then
         # Validate tag format with grep
-        if echo "$CI_COMMIT_TAG" | grep -qE "^[0-9]+(\.[0-9]+){0,2}$" && ! echo "$CI_COMMIT_TAG" | grep -q "\.$"; then
+        if echo "$CI_COMMIT_TAG" | grep -qE '^[0-9]+(\.[0-9]+){0,2}(-[A-Za-z0-9._-]+)?$' && ! echo "$CI_COMMIT_TAG" | grep -q "\.$"; then
           echo  "Tag format is valid = $CI_COMMIT_TAG"
           echo  "Building Docker image = $OPENADOM_DOCK_REG:$CI_COMMIT_TAG"
           docker build -f docker/Dockerfile -t $OPENADOM_DOCK_REG:$CI_COMMIT_TAG .
@@ -96,7 +96,7 @@ production:
         else
           echo "Invalid tag format = $CI_COMMIT_TAG"
           echo "Tag must be in format : <int>, <int>.<int>, or <int>.<int>.<int>"
-          echo "Examples : 1, 1.0, 1.0.0"
+          echo "Examples : 1, 1.0, 1.0.0, 1-gigi, 1.2-gigi, 1.3.1-gigi"
           exit 1
         fi
       else
