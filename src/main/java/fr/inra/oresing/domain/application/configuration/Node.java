@@ -62,10 +62,7 @@ public record Node(
                         node.nodeName(),
                         node.componentKey(),
                         node.columnToLookUpForRecursive(),
-                        Optional.of(node)
-                                .map(BuilderNode::parent)
-                                .map(BuilderNode::nodeName)
-                                .orElse(null),
+                        (node.parent() != null ? node.parent().nodeName() : null),
                         new TreeSet<>(),
                         node.depends(),
                         node.order(),
@@ -144,37 +141,44 @@ public record Node(
 
 
     private boolean isRoot() {
-        return Optional.ofNullable(parent()).map(String::isEmpty).orElse(true);
+        return parent()==null || parent().isEmpty();
     }
 
     private List<String> dependsRecursively() {
         Set<String> result = new HashSet<>(depends());
         children().forEach(child -> result.addAll(child.dependsRecursively()));
         return new ArrayList<>(result);
-    }
-
-    @Override
+    }@Override
     public int compareTo(final Node o) {
         if (o == null) {
             return 1;
         }
-        int compareDeepLevel = deepLevel(level(), children()).compareTo(o.deepLevel(o.level(), o.children()));
+        Integer thisLevel = level();
+        Integer oLevel = o.level();
+        SortedSet<Node> thisChildren = children();
+        SortedSet<Node> oChildren = o.children();
+
+        int compareDeepLevel = deepLevel(thisLevel, thisChildren)
+                .compareTo(o.deepLevel(oLevel, oChildren));
         if (compareDeepLevel != 0) {
             return compareDeepLevel;
         }
-        int compareLevel = level().compareTo(o.level());
+        int compareLevel = thisLevel.compareTo(oLevel);
         if (compareLevel != 0) {
             return compareLevel;
         }
-
-        if (depends().contains(o.nodeName())) return 1;
-        if (o.depends().contains(nodeName())) return -1;
-        int compareOrder = Optional.ofNullable(order()).orElse(9999).compareTo(Optional.ofNullable(o.order()).orElse(9999));
+        String thisName = nodeName();
+        String oName = o.nodeName();
+        if (depends() != null && oName != null && depends().contains(oName)) return 1;
+        if (o.depends() != null && thisName != null && o.depends().contains(thisName)) return -1;
+        int compareOrder = Optional.ofNullable(order()).orElse(9999)
+                .compareTo(Optional.ofNullable(o.order()).orElse(9999));
         if (compareOrder != 0) {
             return compareOrder;
         }
-        return nodeName().compareTo(o.nodeName());
+        return thisName.compareTo(oName);
     }
+
 
     private Integer deepLevel(int deepLevel, SortedSet<Node> childrenLevel) {
         if (CollectionUtils.isEmpty(children())) {

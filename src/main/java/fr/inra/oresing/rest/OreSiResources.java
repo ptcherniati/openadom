@@ -87,7 +87,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.FileCopyUtils;
-import org.springframework.util.MimeType;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -106,6 +105,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -143,7 +144,8 @@ public class OreSiResources {
     public static final String LIST_DELIMITER = ",";
     public static final String IO_DELETE_ERROR = "Erreur lors de la suppression du fichier temporaire";
     public static final String IO_ERROR_WRITE = "Error writing to one of the outputs";
-    public static final String HEADER_ATTACHMENT_FILENAME_DATA_ZIP = "attachment; filename=\"data.zip\"";
+    public static final DateTimeFormatter TIMESTAMP_FORMATER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+    public static final String HEADER_ATTACHMENT_FILENAME_DATA_ZIP = "attachment; filename=\"%1$s-%2$s-%3$s.zip\"";
     public static final String HEADER_ZIP_MIME = "application/zip";
     public static final String EMAIL_ERROR = "Erreur lors de l'envoi du lien ZIP par e-mail";
     public static final String IO_ADDING_ERROR = "Error adding error file to ZIP";
@@ -1118,9 +1120,6 @@ public class OreSiResources {
 
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataType, false);
 
-        response.setContentType(HEADER_ZIP_MIME);
-        response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME_DATA_ZIP);
-
         AtomicReference<OreSiUser> user = new AtomicReference<>();
         StreamingResponseBody responseBody = outputStream -> {
             ZipOutputStream zipOutputStream = null;
@@ -1170,7 +1169,11 @@ public class OreSiResources {
         };
 
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME_DATA_ZIP)
+                .header(HttpHeaders.CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME_DATA_ZIP.formatted(
+                        downloadDatasetQuery.application().getName(),
+                        downloadDatasetQuery.dataName(),
+                        LocalDateTime.now().format(TIMESTAMP_FORMATER)
+                ))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(responseBody);
     }
@@ -1432,14 +1435,17 @@ public class OreSiResources {
                                             fluxSink.next(new ReactiveTypeInfo("LOADED_DATA", Map.of("dataName", dataName, "fileName", fileName)));
                                         } catch (IOException e) {
                                             fluxSink.next(new ReactiveTypeError(Map.of("dataName", dataName, "fileName", fileName, "errorType", "ERROR_LOADING_DATA")));
+                                            done.addAndGet(1);
                                             throw new RuntimeException(e);
                                         } catch (InvalidDatasetContentException e) {
                                             fluxSink.next(new ReactiveTypeError(Map.of(
                                                     "dataName", dataName,
                                                     "fileName", fileName,
-                                                    "errorType", "ERROR_LOADING_DATA",
-                                                    "INVALID_DATASET_EXCEPTION", e
+                                                    "errorType", e.getMessage(),
+                                                    "message", e.getErrors().stream().limit(1).map(firstError->firstError.validationCheckResult().message()).findFirst().orElse(""),
+                                                    "params", e.getErrors().stream().limit(1).map(firstError->firstError.validationCheckResult().messageParams()).findFirst().orElse(Map.of())
                                             )));
+                                            done.addAndGet(1);
                                         }
                                         done.addAndGet(1);
                                     });
@@ -1450,9 +1456,9 @@ public class OreSiResources {
                     } catch (DatabindException e) {
                         throw new RuntimeException(e);
                     } catch (IOException e) {
-                        fluxSink.next(new ReactiveTypeError(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e)));
+                        fluxSink.next(new ReactiveTypeError(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e).getMessage()));
                     } catch (Exception e) {
-                        fluxSink.next(new ReactiveTypeError(e));
+                        fluxSink.next(new ReactiveTypeError(e.getMessage()));
                     } finally {
                         fluxSink.complete();
                     }

@@ -86,13 +86,13 @@ public class JWTExtractor {
                     .getPayload()
                     .getSubject();
         } catch (ExpiredJwtException ex) {
-            throw new AuthenticationCredentialsNotFoundException("JWT expiré", ex);
+            throw new BadCredentialsException("expired JWT", ex);
         } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
-            throw new BadCredentialsException("JWT invalide", ex);
+            throw new BadCredentialsException("Invalid JWT", ex);
         } catch (SignatureException ex) {
-            throw new BadCredentialsException("Signature JWT invalide", ex);
+            throw new BadCredentialsException("Invalid JWT", ex);
         } catch (JwtException ex) {
-            throw new AuthenticationCredentialsNotFoundException("Erreur d'authentification JWT", ex);
+            throw new AuthenticationCredentialsNotFoundException("Invalid JWT", ex);
         }
 
         return mapper.readValue(json, OpenAdomJwtValue.class).requestClient();
