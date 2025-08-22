@@ -30,6 +30,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -101,7 +102,7 @@ public class RightsTest {
             mockMvc.perform(get("/api/v1/applications")
                     .header("Authorization", "Bearer " + token));
             Assertions.fail();
-        } catch (AuthenticationCredentialsNotFoundException e) {
+        } catch (BadCredentialsException e) {
             Assertions.assertTrue(e.getCause() instanceof ExpiredJwtException);
         }
     }

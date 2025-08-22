@@ -64,7 +64,7 @@ class FileContentTest {
                   	END
                 ,'dd-MM-yyyy')
                 ) as "fileName",
-                    EXTRACT(epoch FROM MIN(bf.updateDate) OVER(PARTITION BY rv.referencetype))::bigint AS "updateDate",
+                    EXTRACT(epoch FROM MIN((bf.params #>> '{publisheddate}')::TIMESTAMP) OVER())::bigint AS "updateDate",
                     convert_from(bf.filedata, 'UTF8') AS "fileContent"
                 FROM null.referencevalue rv
                 JOIN null.binaryfile bf ON bf.id = rv.binaryfile
