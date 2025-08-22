@@ -20,8 +20,8 @@ public record FileContent(Long firstDate, String fileName, String fileContent) {
 
     public static final String EXPORT_REGISTER_DATA_CSV_SQL = """
             SELECT DISTINCT ON (rv.binaryfile)
-                %3$s as "fileName",            
-                EXTRACT(epoch FROM MIN(bf.updateDate) OVER(PARTITION BY rv.referencetype))::bigint AS "updateDate",
+                %3$s as "fileName",       
+                EXTRACT(epoch FROM MIN((bf.params #>> '{publisheddate}')::TIMESTAMP) OVER())::bigint AS "updateDate",
                 convert_from(bf.filedata, 'UTF8') AS "fileContent"
             FROM %1$s.referencevalue rv
             JOIN %1$s.binaryfile bf ON bf.id = rv.binaryfile
