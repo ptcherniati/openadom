@@ -547,29 +547,78 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public Flux<FilterList> getFilterList(final String dataName) {
         final Stream result;
         final String query = """
-               with json as ( SELECT
-                    referenceby.referencetype as "listName",
-                    jsonb_agg(
-                        DISTINCT jsonb_build_object(
-                            'referenceType', referenceby.referencetype,
-                            'hierarchicalKey', referenceby.hierarchicalkey,
-                            'naturalKey', referenceby.naturalkey,
-                            '__display_default', referenceby.refvalues->'__display_default',
-                            '__display_fr', referenceby.refvalues->'__display_fr',
-                            '__display_en', referenceby.refvalues->'__display_en',
-                            'id', referenceby.id
-                        )
-                    ) AS "refsLinkeds"
-                FROM %1$s.referencevalue rs
-                JOIN %1$s.reference_reference rr ON rr.referenceid = rs.id
-                JOIN %1$s.referencevalue referenceby ON referenceby.id = rr.referencesby
-                WHERE rs.referencetype = :referenceType
-                GROUP BY referenceby.referencetype)
-                select 
-                          'fr.inra.oresing.persistence.FilterList' AS "@class",
-                          to_json(json) as "json"
-                          from json;
-                          
+                WITH parents_grouped AS (
+                             SELECT
+                               child.hierarchicalkey AS child_hkey,
+                               jsonb_agg(DISTINCT jsonb_build_object(
+                                 'referenceType', p.referencetype,
+                                 'hierarchicalKey', p.hierarchicalkey,
+                                 'naturalKey', p.naturalkey,
+                                 '__display_default', p.refvalues->'__display_default',
+                                 '__display_fr', p.refvalues->'__display_fr',
+                                 '__display_en', p.refvalues->'__display_en',
+                                 'id', p.id
+                               )) AS parents
+                             FROM %1$s.referencevalue child
+                             CROSS JOIN LATERAL (
+                                SELECT
+                                  (regexp_match(s, '([0-9a-z_]*)K(.*)'))[1] AS parent_type,
+                                  (regexp_match(s, '([0-9a-z_]*)K(.*)'))[2] AS parent_naturalkey
+                                FROM unnest(
+                                  string_to_array(
+                                    regexp_replace(child.hierarchicalkey::text, '\\.[^\\.]+$',''),
+                                    '.'
+                                  )
+                                ) AS s
+                             ) ps
+                             JOIN %1$s.referencevalue p
+                               ON p.referencetype = ps.parent_type
+                              AND p.naturalkey    = ps.parent_naturalkey::ltree
+                             WHERE p.id IS NOT NULL
+                               AND p.hierarchicalkey <> child.hierarchicalkey
+                             GROUP BY child.hierarchicalkey
+                           ),
+                           json AS (
+                             SELECT
+                               referenceby.referencetype AS "listName",
+                               jsonb_agg(DISTINCT jsonb_build_object(
+                                'isHierarchique', jsonb_path_exists(
+                                                    application."configuration",
+                                                    ('$.datadescription.'||referenceby.referencetype||'.componentdescriptions.*.checker ? (@.isparent == true)')::jsonpath
+                                                    ),                 
+                                 'referenceType', referenceby.referencetype,
+                                 'hierarchicalKey', referenceby.hierarchicalkey,
+                                 'naturalKey', referenceby.naturalkey,
+                                 '__display_default', referenceby.refvalues->'__display_default',
+                                 '__display_fr', referenceby.refvalues->'__display_fr',
+                                 '__display_en', referenceby.refvalues->'__display_en',
+                                 'id', referenceby.id,
+                                 'components', COALESCE((
+                                   SELECT array_agg(DISTINCT comp_key)
+                                   FROM jsonb_each(rs.refslinkedto -> referenceby.referencetype) AS comp(comp_key, comp_val)
+                                   WHERE comp_val ?? referenceby.hierarchicalkey::text
+                                     AND EXISTS (
+                                       SELECT 1
+                                       FROM jsonb_array_elements_text(
+                                         comp_val -> referenceby.hierarchicalkey::text -> 'uuids'
+                                       ) AS u
+                                       WHERE u = referenceby.id::text
+                                     )
+                                 ), ARRAY[]::text[]),
+                                 'parents', COALESCE(pg.parents, '[]'::jsonb)
+                               )) AS "refsLinkeds"
+                             FROM %1$s.referencevalue rs
+                             JOIN %1$s.reference_reference rr ON rr.referenceid = rs.id
+                             JOIN %1$s.referencevalue referenceby ON referenceby.id = rr.referencesby
+                             LEFT JOIN parents_grouped pg ON pg.child_hkey = referenceby.hierarchicalkey
+                             JOIN application on application.id = referenceby.application
+                             WHERE rs.referencetype = :referenceType
+                             GROUP BY referenceby.referencetype
+                           )
+                           SELECT
+                             'fr.inra.oresing.persistence.FilterList' AS "@class",
+                             to_json(json) AS "json"
+                           FROM json;
                 """.formatted(getSchema().getSqlIdentifier());
         result = getNamedParameterJdbcTemplate().queryForStream(
                 query,
