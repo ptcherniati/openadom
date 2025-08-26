@@ -192,6 +192,7 @@ OA_additionalFiles:
             OA_pattern: "[a-z]*"
 OA_data:
   especes:
+    OA_allowUnexpectedColumns: true
     OA_tags: [ data ]
     OA_i18n:
       OA_title:

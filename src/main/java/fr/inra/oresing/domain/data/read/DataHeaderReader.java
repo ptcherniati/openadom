@@ -95,7 +95,7 @@ public record DataHeaderReader(DataDatum constantValues,
         ImmutableList<String> headersForRow = Streams.stream(headerRow)
                 .map(String::trim)
                 .collect(ImmutableList.toImmutableList());
-        InvalidDatasetContentException.checkHeader(
+        headersForRow = InvalidDatasetContentException.checkHeader(
                 headersForRow,
                 dataImporterContext().getExpectedHeaders(),
                 dataImporterContext().getMandatoryHeaders(),

@@ -38,6 +38,8 @@ public class PatternColumnFactory {
     private final Map<String, PatternColumn> patternColumns = new HashMap<>();
     @Getter
     private List<Column> expectedPatternColumns = ImmutableList.of();
+    @Getter
+    private List<String> extraColumns = ImmutableList.of();
     public PatternColumnFactory(final DataRepository dataRepository, final List<PatternDescription> patternComponentDescriptions) {
         super();
         this.patternComponentDescriptions = patternComponentDescriptions;
@@ -93,7 +95,7 @@ public class PatternColumnFactory {
                 .orElse(new PatternDescription.ExceptionPattern(potentialPatternColumn.columnHeader()));
     }
 
-    public boolean test(final List<ContextHeader> potentialPatternColumns) {
+    public boolean test(final List<ContextHeader> potentialPatternColumns, boolean allowUnexpectedColumns) {
         final Function<ContextHeader, PatternDescription.RapportForPatterns> test = (s) -> test(s, patternColumns);
         AtomicInteger atomicLong = new AtomicInteger(0);
         final List<PatternDescription.RapportForPatterns> rapports = potentialPatternColumns.stream()
@@ -110,13 +112,18 @@ public class PatternColumnFactory {
                 .collect(Collectors.partitioningBy(PatternDescription.MatchingPattern.class::isInstance))
                 .get(false)
                 .isEmpty();
-        if (rapportWithNoErrors) {
-
-            expectedPatternColumns = rapports.stream()
-                    .collect(Collectors.partitioningBy(PatternDescription.MatchingPattern.class::isInstance))
+        expectedPatternColumns = rapports.stream()
+                .collect(Collectors.partitioningBy(PatternDescription.MatchingPattern.class::isInstance))
+                .get(true).stream()
+                .map(PatternDescription.MatchingPattern.class::cast)
+                .map(PatternDescription.MatchingPattern::column)
+                .collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
+        if(allowUnexpectedColumns) {
+            extraColumns = rapports.stream()
+                    .collect(Collectors.partitioningBy(PatternDescription.ExceptionPattern.class::isInstance))
                     .get(true).stream()
-                    .map(PatternDescription.MatchingPattern.class::cast)
-                    .map(PatternDescription.MatchingPattern::column)
+                    .map(PatternDescription.ExceptionPattern.class::cast)
+                    .map(PatternDescription.ExceptionPattern::columnName)
                     .collect(Collectors.collectingAndThen(Collectors.toList(), ImmutableList::copyOf));
         }
 
@@ -297,7 +304,7 @@ public class PatternColumnFactory {
             }
         }
 
-        public sealed interface RapportForPatterns permits MatchingPattern, ExceptionPattern {
+        public sealed interface RapportForPatterns permits ExceptionPattern,  MatchingPattern {
 
             String columnName();
         }

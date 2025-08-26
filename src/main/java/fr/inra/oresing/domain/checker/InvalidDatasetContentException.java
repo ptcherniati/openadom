@@ -82,8 +82,12 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
                         .filter(column -> !expectedColumns.contains(column))
                         .map(columnHeader -> new ContextHeader(columnHeader, headersForRow))
                         .toList();
-                if (patternColumnFactory.test(notOrdinaryColumns)) {
+                if (patternColumnFactory.test(notOrdinaryColumns, allowUnexpectedColumns)) {
                     return headersForRow;
+                } else if (!patternColumnFactory.getExtraColumns().isEmpty()) {
+                    return headersForRow.stream()
+                            .filter(Predicate.not(patternColumnFactory.getExtraColumns()::contains))
+                            .collect(ImmutableList.toImmutableList());
                 }
             } else if (mandatoryColumnIsMissing) {
                 Set<String> missingMandatoryColumns = mandatoryColumns.stream()

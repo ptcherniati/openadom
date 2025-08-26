@@ -195,6 +195,7 @@ OA_data:
             fr: code sandre de la Masse d'eau plan d'eau
             en: Sandre code for Water Body Mass
   taxon:
+    OA_allowUnexpectedColumns: true
     OA_i18n:
       OA_title:
         fr: Taxons

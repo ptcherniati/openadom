@@ -1,8 +1,8 @@
-esp_nom;esp_definition_fr;esp_definition_en;colonne_homonyme_entre_referentiels
-LPF;LPF;LPF
-ANG;ANG;ANG
-LPM;LPM;LPM
-ALO;ALO;ALO
-TRM;TRM;TRM
-TRF;TRF;TRF
-SAT;SAT;SAT
+esp_nom;esp_definition_fr;esp_definition_en;colonne_homonyme_entre_referentiels;Unexpected column
+LPF;LPF;LPF;;not a value
+ANG;ANG;ANG;;not a value
+LPM;LPM;LPM;;not a value
+ALO;ALO;ALO;;not a value
+TRM;TRM;TRM;;not a value
+TRF;TRF;TRF;;not a value
+SAT;SAT;SAT;;not a value
