@@ -37,12 +37,10 @@ public class RightsRequestService {
     private ServiceContainer serviceContainer;
 
     private final OreSiRepository repository;
-    private final OreSiApiRequestContext request;
 
-    public RightsRequestService(OreSiRepository repository, OreSiApiRequestContext request,
+    public RightsRequestService(OreSiRepository repository,
                                 ServiceContainer serviceContainer) {
         this.repository = repository;
-        this.request = request;
         this.serviceContainer = serviceContainer;
     }
 
@@ -126,7 +124,7 @@ public class RightsRequestService {
                 })
                 .orElse(null);
         rightsRequest.setRightsRequest(authorizations);
-        rightsRequest.setUser(rightsRequest.getUser() == null ? request.getRequestUserId() : rightsRequest.getUser());
+        rightsRequest.setUser(rightsRequest.getUser() == null ? OreSiApiRequestContext.getRequestUserId() : rightsRequest.getUser());
         rightsRequest.getRightsRequest().setOreSiUsers(Set.of(rightsRequest.getUser()));
         serviceContainer.authenticationService().setRoleForClient();
         return repository.getRepository(application).rightsRequestRepository().store(rightsRequest);

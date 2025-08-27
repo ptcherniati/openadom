@@ -44,19 +44,15 @@ public class AuthenticationService implements AuthenticationServiceImpl {
 
     private final SqlService db;
 
-    private final OreSiApiRequestContext request;
-
     @Value("${bcryptCost:12}")
     private int bcryptCost;
 
     public AuthenticationService(
             UserRepository userRepository,
             SqlService db,
-            OreSiApiRequestContext request,
             ServiceContainer serviceContainer) {
         this.userRepository = userRepository;
         this.db = db;
-        this.request = request;
         this.serviceContainer = serviceContainer;
     }
 
@@ -86,12 +82,12 @@ public class AuthenticationService implements AuthenticationServiceImpl {
      * Utilise le rôle de l'utilisateur courant pour l'accès à la base de données.
      */
     public void setRoleForClient() {
-        final OreSiRoleToAccessDatabase roleToAccessDatabase = request.getRequestClientRole();
+        final OreSiRoleToAccessDatabase roleToAccessDatabase = OreSiApiRequestContext.getRequestClientRole();
         setRole(roleToAccessDatabase);
     }
 
     public OreSiUser getCurrentUser() {
-        return userRepository.findById(request.getRequestUserId());
+        return userRepository.findById(OreSiApiRequestContext.getRequestUserId());
     }
 
     /**

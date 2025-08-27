@@ -24,8 +24,6 @@ import java.util.stream.Collectors;
 
 @Component
 public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> implements fr.inra.oresing.domain.repository.user.file.UserRepository {
-    @Autowired
-    private OreSiApiRequestContext request;
 
     @Override
     protected String getUpsertQuery() {
@@ -184,7 +182,7 @@ public class UserRepository extends JsonTableRepositoryTemplate<OreSiUser> imple
     }
 
     public CurrentUserRoles getRolesForCurrentUser() {
-        return Optional.ofNullable(request.getRequestClient())
+        return Optional.ofNullable(OreSiApiRequestContext.getRequestClient())
                 .map(OreSiRequestClient::role)
                 .map(OreSiRole::getAsSqlRole)
                 .map(this::getRolesForRole)

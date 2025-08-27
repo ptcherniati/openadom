@@ -86,6 +86,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
@@ -162,8 +164,6 @@ public class OreSiResources {
     public static final String BUNDLE_NAME = "%s-upload-bundle.zip";
     public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
     public static final String MANIFEST_JSON = "manifest.json";
-    final
-    OreSiApiRequestContext request;
     final UserRepository userRepository;
     final ServiceContainer serviceContainer;
     final LocaleResolver localeResolver;
@@ -171,14 +171,12 @@ public class OreSiResources {
     private final JsonRowMapper mapper;
 
     public OreSiResources(
-            OreSiApiRequestContext request,
             UserRepository userRepository,
             ServiceContainer serviceContainer,
             LocaleResolver localeResolver,
             JsonRowMapper mapper,
             @Value("${allowed.origin}") String frontendOrigin
     ) {
-        this.request = request;
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
         this.localeResolver = localeResolver;
@@ -307,8 +305,8 @@ public class OreSiResources {
                 .stream()
                 .map(UserDescriptionResult::of)
                 .collect(Collectors.toMap(UserDescriptionResult::id, Function.identity()));
-        final Application application = request.getAuthenticationToken().getApplicationPersona().application();
-        final String dataName = request.getAuthenticationToken().getDataName();
+        final Application application = OreSiApiRequestContext.getAuthenticationToken().getApplicationPersona().application();
+        final String dataName = OreSiApiRequestContext.getAuthenticationToken().getDataName();
         final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
         final LocalDateTimeRange localDateTimeRange = LocalDateTimeRange.of(
                 submissionDatePattern,
@@ -1125,7 +1123,7 @@ public class OreSiResources {
             ZipOutputStream zipOutputStream = null;
             Path tempFile;
             try {
-                user.set(userRepository.findById(request.getRequestClient().id()));
+                user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
                 tempFile = Files.createTempFile(Paths.get(TMP), "data-" + UUID.randomUUID(), ".zip");
 
                 try (OutputStream fileOutputStream = Files.newOutputStream(tempFile);
@@ -1310,66 +1308,69 @@ public class OreSiResources {
         response.addHeader(HEADER_EXPIRES, EXPIRED_TIME);
 
         AtomicReference<BuildBundleReport> reportRef = new AtomicReference<>();
+            SecurityContext securityContext = SecurityContextHolder.getContext();
+            Executors.newSingleThreadExecutor()
+                    .submit(() -> {
+                        ZipOutputStream zipOutputStream = null;
+                        Path tempFile;
+                        AtomicReference<OreSiUser> user = new AtomicReference<>();
 
-        StreamingResponseBody responseBody = outputStream -> {
-            ZipOutputStream zipOutputStream = null;
-            Path tempFile;
-            AtomicReference<OreSiUser> user = new AtomicReference<>();
-            try {
-                user.set(userRepository.findById(this.request.getRequestClient().id()));
-                tempFile = Files.createTempFile(Paths.get(TMP), UPLOAD_BUNDLE + UUID.randomUUID(), ".zip");
-
-                try (OutputStream fileOutputStream = Files.newOutputStream(tempFile);
-                     TeeOutputStream teeOutputStream = new TeeOutputStream(outputStream, fileOutputStream)) {
-
-                    zipOutputStream = new KeepAliveZipOutputStream(new BufferedOutputStream(teeOutputStream, 2000));
-                    BuildBundleReport report = serviceContainer.dataService().writeUploadBundle(instanceUrl, nameOrId, withData, locale, zipOutputStream);
-                    reportRef.set(report);
-                } catch (IOException e) {
-                    log.error(IO_ERROR_WRITE, e);
-                }
-
-                if (reportRef.get() != null && reportRef.get().referentielsEnErreur().isEmpty()) {
-                    // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
-                    ExecutorService executorService = Executors.newSingleThreadExecutor();
-                    executorService.submit(() -> {
+                        SecurityContextHolder.setContext(securityContext);
                         try {
-                            serviceContainer.dataService().sendZipLinkByMail(tempFile, reportRef.get(), user.get());
-                        } catch (Exception e) {
-                            log.error(EMAIL_ERROR, e);
-                        } finally {
-                            try {
-                                Files.deleteIfExists(tempFile);
+                            user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
+                            tempFile = Files.createTempFile(Paths.get(TMP), UPLOAD_BUNDLE + UUID.randomUUID(), ".zip");
+
+                            try (OutputStream fileOutputStream = Files.newOutputStream(tempFile)) {
+
+                                zipOutputStream = new ZipOutputStream(new BufferedOutputStream(fileOutputStream, 2000));
+                                BuildBundleReport report = serviceContainer.dataService().writeUploadBundle(instanceUrl, nameOrId, withData, locale, zipOutputStream);
+                                reportRef.set(report);
                             } catch (IOException e) {
-                                log.error(IO_DELETE_ERROR, e);
+                                log.error(IO_ERROR_WRITE, e);
                             }
-                            executorService.shutdown();
+
+                            if (reportRef.get() != null && reportRef.get().referentielsEnErreur().isEmpty()) {
+                                // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
+                                ExecutorService executorService = Executors.newSingleThreadExecutor();
+                                executorService.submit(() -> {
+                                    try {
+                                        serviceContainer.dataService().sendZipLinkByMail(tempFile, reportRef.get(), user.get());
+                                    } catch (Exception e) {
+                                        log.error(EMAIL_ERROR, e);
+                                    } finally {
+                                        try {
+                                            Files.deleteIfExists(tempFile);
+                                        } catch (IOException e) {
+                                            log.error(IO_DELETE_ERROR, e);
+                                        }
+                                        executorService.shutdown();
+                                    }
+                                });
+                            } else {
+                                log.warn(BAD_REPORT);
+                                try {
+                                    Files.deleteIfExists(tempFile);
+                                } catch (IOException e) {
+                                    log.error(IO_DELETE_ERROR, e);
+                                }
+                            }
+
+                        } catch (Exception e) {
+                            if (zipOutputStream != null) {
+                                try {
+                                    addErrorFileToZip(zipOutputStream, e);
+                                } catch (IOException ioe) {
+                                    log.error(IO_ADDING_ERROR, ioe);
+                                }
+                            }
+                            throw new OreSiTechnicalException(BAD_BUNDLE, e);
                         }
                     });
-                } else {
-                    log.warn(BAD_REPORT);
-                    try {
-                        Files.deleteIfExists(tempFile);
-                    } catch (IOException e) {
-                        log.error(IO_DELETE_ERROR, e);
-                    }
-                }
 
-            } catch (Exception e) {
-                if (zipOutputStream != null) {
-                    try {
-                        addErrorFileToZip(zipOutputStream, e);
-                    } catch (IOException ioe) {
-                        log.error(IO_ADDING_ERROR, ioe);
-                    }
-                }
-                throw new OreSiTechnicalException(BAD_BUNDLE, e);
-            }
-        };
 
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(responseBody);
+                .body(null);
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_DOWNLOAD_BUNDLE')")
@@ -1442,8 +1443,8 @@ public class OreSiResources {
                                                     "dataName", dataName,
                                                     "fileName", fileName,
                                                     "errorType", e.getMessage(),
-                                                    "message", e.getErrors().stream().limit(1).map(firstError->firstError.validationCheckResult().message()).findFirst().orElse(""),
-                                                    "params", e.getErrors().stream().limit(1).map(firstError->firstError.validationCheckResult().messageParams()).findFirst().orElse(Map.of())
+                                                    "message", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().message()).findFirst().orElse(""),
+                                                    "params", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().messageParams()).findFirst().orElse(Map.of())
                                             )));
                                             done.addAndGet(1);
                                         }

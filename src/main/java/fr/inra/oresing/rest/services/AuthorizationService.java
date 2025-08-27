@@ -61,20 +61,17 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     private final SqlService db;
     private final OreSiRepository repository;
     private final UserRepository userRepository;
-    private final OreSiApiRequestContext request;
     private ServiceContainer serviceContainer;
 
     public AuthorizationService(
             SqlService db,
             ServiceContainer serviceContainer,
             OreSiRepository repository,
-            UserRepository userRepository,
-            OreSiApiRequestContext request) {
+            UserRepository userRepository) {
         this.db = db;
         this.serviceContainer = serviceContainer;
         this.repository = repository;
         this.userRepository = userRepository;
-        this.request = request;
     }
 
     private static void removeAuthorizationAdditionalFilesThatCantBeModified(final Map.Entry<OperationAdditionalFileType, List<String>> authByTypeEntry, final Set<String> authorizationListForCurrentUser) {
@@ -222,7 +219,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     }
 
     public List<OreSiAuthorization> findUserAuthorizationsForApplication(final Application application) {
-        UUID currentUserId = request.getRequestUserId();
+        UUID currentUserId = OreSiApiRequestContext.getRequestUserId();
         final AuthorizationRepository authorizationRepository = repository.getRepository(application).authorization();
         return authorizationRepository.findAuthorizationsByUserId(currentUserId);
     }
@@ -615,7 +612,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
         Application application = getApplication(applicationNameOrId);
         CurrentUserRoles rolesForCurrentUser = userRepository.getRolesForCurrentUser();
         boolean isApplicationCreator = rolesForCurrentUser.memberOf().contains(OreSiRightOnApplicationRole.adminOn(application).getAsSqlRole());
-        UUID requestUserId = request.getRequestUserId();
+        UUID requestUserId = OreSiApiRequestContext.getRequestUserId();
         final List<OreSiAuthorization> authorizationsForCurrentUser = findUserAuthorizationsForApplication(application);
         if (!isApplicationCreator && authorizationsForCurrentUser.stream().allMatch(
                 a -> a.getAuthorizations().get(application.getName()).get(OperationType.admin).isEmpty()
@@ -749,7 +746,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     }
 
     public List<OreSiAdditionalFileAuthorization> findUserAdditionalFilesAuthorizationsForApplicationAndDataType(final Application application) {
-        UUID currentUserId = request.getRequestUserId();
+        UUID currentUserId = OreSiApiRequestContext.getRequestUserId();
         final AuthorizationAdditionalFilesRepository authorizationRepository = repository.getRepository(application).authorizationAdditionalFiles();
         return authorizationRepository.findAuthorizations(currentUserId);
     }
@@ -791,7 +788,7 @@ public class AuthorizationService implements fr.inra.oresing.domain.services.aut
     }
 
     public OreSiUser getCurrentUser() {
-        return userRepository.findById(request.getRequestUserId());
+        return userRepository.findById(OreSiApiRequestContext.getRequestUserId());
     }
 
     private AuthorizationsForApplicationUser getAuthorizationsForApplicationUser(Application application) {

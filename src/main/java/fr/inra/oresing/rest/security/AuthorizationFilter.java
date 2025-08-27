@@ -65,7 +65,6 @@ public class AuthorizationFilter extends GenericFilterBean {
     public static final String ECHEC_TECHNIQUE = "Échec technique";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
     public static final String BAD_LOGIN_PASSWORD = "BAD_LOGIN_PASSWORD";
-    private final OreSiApiRequestContext requestContext;
     private static JsonRowMapper<OreSiUserRequestClient> mapper;
     private final OreExceptionHandler exceptionHandler;
     private final JWTExtractor jWTExtractor;
@@ -74,13 +73,11 @@ public class AuthorizationFilter extends GenericFilterBean {
     @Autowired
     public AuthorizationFilter(
             ServiceContainer serviceContainer,
-            OreSiApiRequestContext requestContext,
             JsonRowMapper<OreSiUserRequestClient> jsonRowMapper,
             @Value("${jwt.expiration:3600}") int jwtExpiration,
             @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret,
             OreExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
-        this.requestContext = requestContext;
         AuthorizationFilter.mapper = jsonRowMapper;
         this.jWTExtractor = new JWTExtractor(
                 serviceContainer.authenticationService()::getUserRole,
@@ -96,7 +93,7 @@ public class AuthorizationFilter extends GenericFilterBean {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         HttpServletResponse response = (HttpServletResponse) servletResponse;
         String path = request.getRequestURI();
-        OreSiAuthenticationToken authenticationToken = requestContext.getAuthenticationToken();
+        OreSiAuthenticationToken authenticationToken = OreSiApiRequestContext.getAuthenticationToken();
         if (authenticationToken != null) {
             chain.doFilter(request, response);
             return;
@@ -126,7 +123,7 @@ public class AuthorizationFilter extends GenericFilterBean {
         request.setAttribute(AUTHORIZATION_ALREADY_DONE, true);
         try {
             OreSiAuthenticationToken token = buildAuthentication(request, response, request.isSecure());
-            requestContext.setAuthenticationToken(token);
+            OreSiApiRequestContext.setAuthenticationToken(token);
         } catch (AuthenticationFailure e) {
             ResponseEntity<String> handle = exceptionHandler.handle(e);
             response.setStatus(handle.getStatusCode().value());
@@ -157,7 +154,7 @@ public class AuthorizationFilter extends GenericFilterBean {
         }
 
         OreSiAuthenticationToken oreSiAuthenticationToken = handleJwtAuthentication(request, response, isSecureEnvironnement);
-        requestContext.setAuthenticationToken(oreSiAuthenticationToken); //premier stockage pour certaines méthodes
+        OreSiApiRequestContext.setAuthenticationToken(oreSiAuthenticationToken); //premier stockage pour certaines méthodes
         if (oreSiAuthenticationToken == null) {
             return null;
         }

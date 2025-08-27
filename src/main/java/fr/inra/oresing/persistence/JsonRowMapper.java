@@ -55,8 +55,6 @@ import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
 
     @Autowired
-    private OreSiApiRequestContext request;
-    @Autowired
     private ServiceContainer serviceContainer;
     /**
      * Mapper json pour la persistence (dialogue avec la base de données)
@@ -250,9 +248,9 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
             @Override
             public void serialize(BinaryFileDataset value, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {
                 BinaryFileDataset binaryFileDataset = value.copy();
-                final String applicationName = request.getAuthenticationToken().getApplicationName();
-                final String dataName = request.getAuthenticationToken().getDataName();
-                final Application application = request.getAuthenticationToken().getApplicationPersona().application();
+                final String applicationName = OreSiApiRequestContext.getAuthenticationToken().getApplicationName();
+                final String dataName = OreSiApiRequestContext.getAuthenticationToken().getDataName();
+                final Application application = OreSiApiRequestContext.getAuthenticationToken().getApplicationPersona().application();
                 final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
                 String from = submissionDatePattern.dateToStandardFormat(value.getFrom());
                 binaryFileDataset.setFrom(from);
@@ -277,8 +275,8 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
             @Override
             public BinaryFileDataset deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 ObjectNode node = p.readValueAsTree();
-                final String applicationName = request.getAuthenticationToken().getApplicationName();
-                final String dataName = request.getAuthenticationToken().getDataName();
+                final String applicationName = OreSiApiRequestContext.getAuthenticationToken().getApplicationName();
+                final String dataName = OreSiApiRequestContext.getAuthenticationToken().getDataName();
                 final Application application = serviceContainer.applicationService().getApplication(applicationName);
                 final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);
                 String fromDate = node.findPath("from").asText(), to_date = node.findPath("to").asText();

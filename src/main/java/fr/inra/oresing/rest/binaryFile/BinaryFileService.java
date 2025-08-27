@@ -48,14 +48,12 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
     @Setter
     private final ServiceContainer serviceContainer;
     private final AuthenticationService authenticationService;
-    private final OreSiApiRequestContext request;
     private final JsonRowMapper<?> jsonRowMapper;
 
-    public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, OreSiApiRequestContext request, JsonRowMapper jsonRowMapper) {
+    public BinaryFileService(OreSiRepository repository, ServiceContainer serviceContainer, AuthenticationService authenticationService, JsonRowMapper jsonRowMapper) {
         this.repository = repository;
         this.serviceContainer = serviceContainer;
         this.authenticationService = authenticationService;
-        this.request = request;
         this.jsonRowMapper = jsonRowMapper;
     }
 
@@ -88,7 +86,7 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         binaryFile.setName(file.fileName() != null ? file.fileName() : "charte.pdf");
         binaryFile.setSize(file.fileSize());
         binaryFile.setFileData(file.inputStream());
-        final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, request.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
+        final BinaryFileInfos binaryFileInfos = BinaryFileInfos.forPublish(false, OreSiApiRequestContext.getRequestUserId(), LocalDateTime.now().toString(), binaryFileDataset);
         binaryFile.setParams(binaryFileInfos);
         return getBinaryFileRepository(application).store(binaryFile);
     }

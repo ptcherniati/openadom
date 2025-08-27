@@ -58,18 +58,15 @@ public class ApplicationService{
     public static final String END = "end";
     private final OreSiRepository repository;
     private final BeanFactory beanFactory;
-    private final OreSiApiRequestContext request;
     @Setter
     private ServiceContainer serviceContainer;
 
     public ApplicationService(
             OreSiRepository repository,
             BeanFactory beanFactory,
-            OreSiApiRequestContext request,
             ServiceContainer serviceContainer) {
         this.repository = repository;
         this.beanFactory = beanFactory;
-        this.request = request;
         this.serviceContainer= serviceContainer;
     }
 
@@ -207,7 +204,7 @@ public class ApplicationService{
         MigrateService migrateService = beanFactory.getBean(MigrateService.class);
         migrateService.setApplication(application);
         serviceContainer.authenticationService().resetRole();
-        final OreSiUserRole creator = serviceContainer.authenticationService().getUserRole(request.getRequestUserId());
+        final OreSiUserRole creator = serviceContainer.authenticationService().getUserRole(OreSiApiRequestContext.getRequestUserId());
 
         migrateService.runFlywayUpdate(creator);
         serviceContainer.authenticationService().setRoleForClient();

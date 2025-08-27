@@ -57,19 +57,15 @@ public class AuthorizationResources {
     private ServiceContainer serviceContainer;
     private final UserRepository userRepository;
 
-    private final OreSiApiRequestContext request;
-
     private final OreSiRepository repo;
 
     public AuthorizationResources(
             HealthEndpoint healthEndpoint,
             UserRepository userRepository,
             ServiceContainer serviceContainer,
-            OreSiApiRequestContext request,
             OreSiRepository repo) {
         this.healthEndpoint = healthEndpoint;
         this.userRepository = userRepository;
-        this.request = request;
         this.repo = repo;
         this.serviceContainer = serviceContainer;
     }
@@ -86,7 +82,7 @@ public class AuthorizationResources {
     public ResponseEntity<GetAuthorizationResult> getAuthorizationById(
             @PathVariable("nameOrId") final String applicationNameOrId,
             @PathVariable(AUTHORIZATION_ID) final UUID authorizationId) {
-        AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
+        AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, OreSiApiRequestContext.getRequestUserId().toString());
         Application application = serviceContainer.authorizationService().getApplication(applicationNameOrId);
         final GetAuthorizationResult getAuthorizationResult = serviceContainer.authorizationService().getAuthorization(
                 new AuthorizationRequest(
@@ -349,7 +345,7 @@ public class AuthorizationResources {
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/authorization", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetAuthorizationResults> getAdminAuthorizationsForOpenAdom(@PathVariable("nameOrId") final String applicationNameOrId) {
-        AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
+        AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, OreSiApiRequestContext.getRequestUserId().toString());
         final ImmutableSet<GetAuthorizationResult> getAuthorizationResults = serviceContainer.authorizationService().getAuthorizations(applicationNameOrId, authorizationsForUser);
         GetAuthorizationResults getAuthorizationResultsWithOwnRights1 = new GetAuthorizationResults(getAuthorizationResults, authorizationsForUser);
         return ResponseEntity.ok(getAuthorizationResultsWithOwnRights1);
@@ -391,7 +387,7 @@ public class AuthorizationResources {
 
     @GetMapping(value = "/applications/{applicationNameOrId}/additionalFiles/authorization/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
     public AuthorizationsAdditionalFilesResult getAdditionalFilesAuthorizationsForUser(@PathVariable(name = "applicationNameOrId") final String applicationNameOrId, @PathVariable(name = "userLoginOrId", required = false) String userLoginOrId) {
-        String userLoginOrId1 = userLoginOrId == null || "null".equals(userLoginOrId) ? request.getRequestUserId().toString() : userLoginOrId;
+        String userLoginOrId1 = userLoginOrId == null || "null".equals(userLoginOrId) ? OreSiApiRequestContext.getRequestUserId().toString() : userLoginOrId;
         return serviceContainer.authorizationService().getAdditionalFilesAuthorizationsForUser(applicationNameOrId, userLoginOrId1);
     }
 
@@ -643,7 +639,7 @@ public class AuthorizationResources {
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @GetMapping(value = "/applications/{nameOrId}/grantable", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<GetGrantableResult> getGrantable(@PathVariable("nameOrId") final String applicationNameOrId) {
-        AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, request.getRequestUserId().toString());
+        AuthorizationsResult authorizationsForUser = getAuthorizationsForUser(applicationNameOrId, OreSiApiRequestContext.getRequestUserId().toString());
         final GetGrantableResult getGrantableResult = serviceContainer.authorizationService().getGrantable(applicationNameOrId, authorizationsForUser);
         return ResponseEntity.ok(getGrantableResult);
     }

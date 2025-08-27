@@ -41,11 +41,9 @@ import java.util.UUID;
 public class AuthenticationResources {
 
     protected final AuthenticationService authenticationService;
-    private final OreSiApiRequestContext request;
 
-    public AuthenticationResources(AuthenticationService authenticationService, OreSiApiRequestContext request) {
+    public AuthenticationResources(AuthenticationService authenticationService) {
         this.authenticationService = authenticationService;
-        this.request = request;
     }
 
     @Tag(name = "Sécurité", description = "Endpoints liés à la sécurité et à l’authentification")
@@ -69,7 +67,7 @@ public class AuthenticationResources {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
     public OreSiRequestClient me() {
-        return request.getRequestClient();
+        return OreSiApiRequestContext.getRequestClient();
     }
 
     @Operation(

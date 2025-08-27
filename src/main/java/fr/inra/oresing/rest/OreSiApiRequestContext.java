@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 import java.util.Optional;
 import java.util.UUID;
 
-@Component
 public class OreSiApiRequestContext {
     public static Optional<OreSiAuthenticationToken> getAuthentication() {
         return Optional.ofNullable(SecurityContextHolder.getContext())
@@ -27,11 +26,11 @@ public class OreSiApiRequestContext {
                 .map(OreSiAuthenticationToken.class::cast);
     }
 
-    public OreSiAuthenticationToken getAuthenticationToken() {
+    public static OreSiAuthenticationToken getAuthenticationToken() {
         return getAuthenticationTokenOptional().orElse(null);
     }
 
-    public void setAuthenticationToken(OreSiAuthenticationToken authenticationToken) {
+    public static void setAuthenticationToken(OreSiAuthenticationToken authenticationToken) {
         SecurityContext context = SecurityContextHolder.createEmptyContext();
         context.setAuthentication(authenticationToken);
         SecurityContextHolder.getContextHolderStrategy().setContext(
@@ -40,23 +39,23 @@ public class OreSiApiRequestContext {
         //SecurityContextHolder.setStrategyName(SecurityContextHolder.MODE_INHERITABLETHREADLOCAL);
     }
 
-    public OreSiRequestClient getRequestClient() {
+    public static OreSiRequestClient getRequestClient() {
         return getRequestClientOptional()
                 .orElse(null);
     }
 
-    private Optional<OreSiUserRequestClient> getRequestClientOptional() {
+    private static Optional<OreSiUserRequestClient> getRequestClientOptional() {
         return getAuthenticationTokenOptional()
                 .map(OreSiAuthenticationToken::getRequestClient);
     }
 
-    public UUID getRequestUserId() {
+    public static UUID getRequestUserId() {
         return getRequestClientOptional()
                 .map(OreSiRequestClient::id)
                 .orElse(null);
     }
 
-    public OreSiRoleToAccessDatabase getRequestClientRole() {
+    public static OreSiRoleToAccessDatabase getRequestClientRole() {
         return getRequestClientOptional()
                 .map(OreSiRequestClient::role)
                 .orElse(null);
