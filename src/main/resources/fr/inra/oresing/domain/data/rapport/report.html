@@ -1,0 +1,15 @@
+<script>
+    window.onload = function() {
+        const results = %1$s; // le results en base64
+        const applicationName = "%2$s"; // le nom de l'application
+        const origin = "%3$s"; // URL du front
+
+        window.name = JSON.stringify({
+            results,           // objet JS prêt à l'emploi
+            applicationName,   // string
+            origin             // string (optionnel, utile pour réutilisation)
+        });
+
+        window.location.href = `${origin}/applications/${applicationName}/bundleReport`;
+    };
+</script>

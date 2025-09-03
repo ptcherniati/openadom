@@ -25,6 +25,8 @@ import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.column.*;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
+import fr.inra.oresing.domain.data.rapport.BundleReport;
+import fr.inra.oresing.domain.data.rapport.Manifest;
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
@@ -574,16 +576,14 @@ public class DataService {
         return getReferenceValueRepository(application).buildReferenceSynthesis();
     }
 
-    public Boolean getDataFromStoredCsvStream(Map<Long, Map<String, List<String>>> manifest, ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
+    public Boolean getDataFromStoredCsvStream(Manifest manifest, ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
         DataRepository dataRepository = repo.getRepository(application).data();
         Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
         return storedData
                 .flatMap(fileContent -> Mono.fromCallable(() -> {
                     String entryName = String.format("%s/%s", reference, fileContent.fileName());
-                    manifest
-                            .computeIfAbsent(fileContent.firstDate(), k -> new HashMap<>())
-                            .computeIfAbsent(reference, k -> new ArrayList<>()).add(fileContent.fileName());
+                    manifest.add(reference, fileContent);
                     ZipEntry zipEntry = new ZipEntry(entryName);
                     zipOutputStream.putNextEntry(zipEntry);
                     zipOutputStream.write(fileContent.fileContent().getBytes(StandardCharsets.UTF_8));
@@ -787,7 +787,7 @@ public class DataService {
                             fileSenderInternationalisation.getInternationnalizedApplication(locale)
                     ).orElseGet(() -> Optional.ofNullable(
                             fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage())
-                    ).orElse(buildBundleReport.applicationName().getName()));
+                    ).orElse(buildBundleReport.application().getName()));
 
                     String subject = fileSenderInternationalisation.subjectPattern().formatted(applicationName);
                     String message = fileSenderInternationalisation.messagePattern().formatted(applicationName);
@@ -819,6 +819,31 @@ public class DataService {
                     throw new OreSiTechnicalException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
                 }
             }
+            case BundleReport bundleReport -> {
+                try {
+                    Locale locale = bundleReport.locale();
+
+                    String applicationName = bundleReport.application().getName();
+
+                    String subject = bundleReport.title();
+                    String emailMessage = bundleReport.message();
+
+                    FileInfos fileInfos = new FileInfos(
+                            applicationName,
+                            "BulkUploadZIP",
+                            filePath,
+                            currentUser.getEmail(),
+                            subject,
+                            emailMessage
+                    );
+                    String downloadUrl = fileRepository.postTransfer(fileInfos);
+                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
+
+                } catch (Exception e) {
+                    log.error("Erreur lors de la création ou de l'envoi du rapport pour dépôt en masse", e);
+                    throw new OreSiTechnicalException("Erreur lors de la création ou de l'envoi du rapport pour dépôt en masse", e);
+                }
+            }
             default -> throw new IllegalStateException("Unexpected value: " + messageInformations);
         }
 
@@ -842,7 +867,7 @@ public class DataService {
             writeConfigurationFile(zipOutputStream, fichiersGeneres, application);
             writeReadMe(zipOutputStream, fichiersGeneres);
             writeDirectoryToZip(zipOutputStream, fichiersGeneres);
-            Map<Long, Map<String, List<String>>> manifest = new LinkedHashMap<>();
+            Manifest manifest = new Manifest();
 
             // Traiter chaque référentiel
             for (String reference : application.getConfiguration().dataDescription().keySet()) {
@@ -888,17 +913,9 @@ public class DataService {
         return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
     }
 
-    private static void addManifest(ZipOutputStream zipOutputStream, Map<Long, Map<String, List<String>>> manifest) throws IOException {
+    private static void addManifest(ZipOutputStream zipOutputStream, Manifest manifest) throws IOException {
         Map<String, List<String>> orderedManifest = new LinkedHashMap<>();
-
-        manifest.entrySet().stream()
-                .sorted(Map.Entry.comparingByKey()) // ordre croissant des Long
-                .forEach(entry -> {
-                    Map<String, List<String>> innerMap = entry.getValue();
-                    innerMap.forEach((key, fileList) -> {
-                        orderedManifest.computeIfAbsent(key, k -> new ArrayList<>()).addAll(fileList);
-                    });
-                });
+        orderedManifest = manifest.orderedReferenceTypes();
 
         String manifestJson = new ObjectMapper().writeValueAsString(orderedManifest);
         zipOutputStream.putNextEntry(new ZipEntry(MANIFEST_JSON));

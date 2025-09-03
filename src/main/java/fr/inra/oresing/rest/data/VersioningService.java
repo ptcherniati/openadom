@@ -45,7 +45,13 @@ public class VersioningService {
     }
 
     @Transactional
-    public DataVersioningResult createData(Locale locale, String nameOrId, String dataName, fr.inra.oresing.domain.data.DataFile file, boolean beforeDelete) throws IOException {
+    public DataVersioningResult createData(
+            Locale locale,
+            String nameOrId,
+            String dataName,
+            fr.inra.oresing.domain.data.DataFile file,
+            boolean beforeDelete,
+            boolean withEmail) throws IOException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         String fileName = file == null ? null : file.fileName();
         Optional<FileOrUUID> fileOrUUIDOpt = OreSiApiRequestContext.getAuthentication()
@@ -74,8 +80,10 @@ public class VersioningService {
             } else {
                 uploadState = EmailService.UPLOAD_STATE.UPLOADED;
             }
-            serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
-            return dataVersioningResult;
+            if (withEmail) {
+                serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+                return dataVersioningResult;
+            }
         }
         if (state instanceof JustStoredFile justStoredFile && file == null) {
             uploadState = EmailService.UPLOAD_STATE.DELETED;
@@ -84,7 +92,9 @@ public class VersioningService {
         }
         final List<ApplicationResult.DataSynthesis> dataSynthesis = Optional.ofNullable(serviceContainer.dataService().getReferenceSynthesis(application)).orElseGet(List::of);
         DataVersioningResult dataVersioningResult = DataVersioningResult.of(nameOrId, dataName, state.binaryFile().getId(), dataSynthesis);
-        serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+        if (withEmail) {
+            serviceContainer.emailService().sendUpoadSuccessMail(application, dataName, uploadState, locale, dataVersioningResult, serviceContainer.authenticationService().getCurrentUser());
+        }
         return dataVersioningResult;
 
     }
@@ -128,7 +138,8 @@ public class VersioningService {
     }
 
     @Transactional
-    public DataVersioningResult unPublishVersionBeforeDelete(Locale locale, String applicationName, UUID id) throws IOException {
+    public DataVersioningResult unPublishVersionBeforeDelete(
+            Locale locale, String applicationName, UUID id, boolean withEmail) throws IOException {
         Optional<BinaryFile> storedFile = serviceContainer.binaryFileService().getFile(applicationName, id);
         if (storedFile.isPresent()) {
             Optional<String> dataName = storedFile
@@ -141,7 +152,8 @@ public class VersioningService {
                         applicationName,
                         dataName.get(),
                         null,
-                        true
+                        true,
+                        withEmail
                 );
             }
 

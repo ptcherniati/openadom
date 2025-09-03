@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 
 public record BuildBundleReport(
-        Application applicationName,
+        Application application,
         List<String> referentielsAvecDonnees,
         Map<String, Set<String>> fichiersGeneres,
         List<String> referentielsAvecDonneesExemple,

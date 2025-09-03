@@ -11,7 +11,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public record FileContent(Long firstDate, String fileName, String fileContent) {
+public record FileContent(List<String> refsLinked, String fileName, String fileContent) {
     private static final Pattern FORBIDDEN_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"<>| ]");
 
     public static String sanitizePatternForFilename(String pattern) {
@@ -19,16 +19,30 @@ public record FileContent(Long firstDate, String fileName, String fileContent) {
     }
 
     public static final String EXPORT_REGISTER_DATA_CSV_SQL = """
+            WITH linkeds AS (
+                  SELECT DISTINCT
+                      referencetype,
+                      jsonb_object_keys(refslinkedto) AS linkedto
+                  FROM sipro_v01.referencevalue
+              ),
+              linkedsarray AS (
+                  SELECT
+                      referencetype,
+                      array_agg(linkedto) AS "refsLinked"
+                  FROM linkeds
+                  GROUP BY referencetype
+              )
             SELECT DISTINCT ON (rv.binaryfile)
-                %3$s as "fileName",       
-                EXTRACT(epoch FROM MIN((bf.params #>> '{publisheddate}')::TIMESTAMP) OVER())::bigint AS "updateDate",
+                %3$s AS "fileName",
+                la."refsLinked",
                 convert_from(bf.filedata, 'UTF8') AS "fileContent"
             FROM %1$s.referencevalue rv
             JOIN %1$s.binaryfile bf ON bf.id = rv.binaryfile
+            JOIN linkedsarray la ON la.referencetype = rv.referencetype
             WHERE rv.referencetype = '%2$s'
-            ORDER BY rv.binaryfile, bf.updatedate DESC;
+            ORDER BY rv.binaryfile;            
             """;
-    public static final String GENERIC_FILE_NAME = "format('%s_%s.csv', 'name', LPAD(ROW_NUMBER() OVER (ORDER BY bf.updatedate)::text, 3, '0'))";
+    public static final String GENERIC_FILE_NAME = "format('%s_%s.csv', rv.referencetype, LPAD(ROW_NUMBER() OVER (ORDER BY bf.updatedate)::text, 3, '0'))";
 
     public static String buildFileNameRequest(Application application, String dataName) {
         String patternForFileNameRequest = application.findSubmission(dataName)

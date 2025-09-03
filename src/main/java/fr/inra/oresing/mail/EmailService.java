@@ -7,6 +7,10 @@ import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +19,8 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.LocaleResolver;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 
@@ -28,14 +34,14 @@ public class EmailService implements Email {
     public static final String MSG_ERROR_SUBJECT_EN = "An error occurred while operating on data type % of application %s";
     private static final String NEW_ACCOUNT_SUBJECT = "Création de compte / Account creation";
     private static final String NEW_ACCOUNT_FR = "Vous venez de créer un compte sur l'application OPENAdom. %n" +
-            "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
+                                                 "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
     private static final String NEW_ACCOUNT_EN = "You have just created an account on the OPENAdomoresie application. %n" +
-            "To validate your e-mail, enter the validation key when connecting.%n\n";
+                                                 "To validate your e-mail, enter the validation key when connecting.%n\n";
     private static final String EMAIL_CHANGED_SUBJECT = "Validation email / Email validation";
     private static final String EMAIL_CHANGED_FR = "Vous venez de modifier votre email. \n" +
-            "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.";
+                                                   "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.";
     private static final String EMAIL_CHANGED_EN = "You have just changed your email. \n" +
-            "To validate your e-mail, enter the validation key when connecting.";
+                                                   "To validate your e-mail, enter the validation key when connecting.";
     private static final String VALIDATION_KEY_SUBJECT = "Clef de validation / Validation key";
     private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_SUBJECTS = Map.of(
             UNPUBLISHED, Map.of(
@@ -95,8 +101,8 @@ public class EmailService implements Email {
             """;
     private static final String MAIL_MESSAGE_TEMPLATE =
             "Bonjour %1$s%n%n" +
-                    "%2$s%n" +
-                    "L'équipe d'OpenAdom";
+            "%2$s%n" +
+            "L'équipe d'OpenAdom";
     private final JavaMailSender mailSender;
     private final ServiceContainer serviceContainer;
     @Value("${spring.mail.from}")
@@ -119,6 +125,28 @@ public class EmailService implements Email {
         mailMessage.setText(String.format(MAIL_MESSAGE_TEMPLATE, login, message));
         mailSender.send(mailMessage);
     }
+
+   /* @Override
+    public void sendEmailWithAttachment(final String login, final String to, final String subject, final String message, File attachment) throws IOException, MessagingException {
+        MimeMessage mailMessage = mailSender.createMimeMessage();
+
+
+        mailMessage.setFrom(mailFrom);
+        mailMessage.setSubject(subject);
+        mailMessage.setText(message);
+        if (attachment != null && attachment.exists()) {
+            MimeMultipart multipart = new MimeMultipart();
+            MimeBodyPart messageBodyPart = new MimeBodyPart();
+            messageBodyPart.setText(message);
+            multipart.addBodyPart(messageBodyPart);
+
+            MimeBodyPart attachmentPart = new MimeBodyPart();
+            attachmentPart.attachFile(attachment);
+            multipart.addBodyPart(attachmentPart);
+            mailMessage.setContent(multipart);
+        }
+        mailSender.send(mailMessage);
+    }*/
 
     @Override
     public void sendEmailValidation(final String login, final String email, final String verificationKey, final MESSAGES messages) {
@@ -203,6 +231,7 @@ public class EmailService implements Email {
         final String subject;
         final String title_fr;
         final String title_en;
+
         MESSAGES(final String subject, final String title_fr, final String title_en) {
             this.subject = subject;
             this.title_fr = title_fr;

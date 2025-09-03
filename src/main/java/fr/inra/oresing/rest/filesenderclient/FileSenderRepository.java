@@ -113,13 +113,7 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
         try (InputStream inputStream = Files.newInputStream(path)) {
             JSONObject fileInfo = new JSONObject();
 
-            fileInfo.put("name", sanitizeFileName("""
-                            %s_%s_%s.zip""".formatted(
-                            fileInfos.applicationName(),
-                            fileInfos.dataName(),
-                            DateTimeFormatter.ofPattern("yyyy-MM-dd_HH:mm:ss").format(LocalDateTime.now())
-                    ))
-            );
+            fileInfo.put("name",fileInfos.fileName().toString().replaceAll(".*/", "") );
             fileInfo.put("size", fileSize);
             fileInfo.put("mime_type", mimeType);
 

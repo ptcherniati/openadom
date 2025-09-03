@@ -35,6 +35,7 @@ import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest;
 import fr.inra.oresing.domain.data.menu.MenuType;
+import fr.inra.oresing.domain.data.rapport.BundleReport;
 import fr.inra.oresing.domain.data.read.ouput.KeepAliveZipOutputStream;
 import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
@@ -107,6 +108,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -233,11 +235,18 @@ public class OreSiResources {
         } catch (final IOException e) {
             throw new BadFileOrUUIDQuery(e.getMessage());
         }
+
     }
 
     private Flux<ReactiveResult> buildFluxRequestNDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
-        return Flux.create(fluxSink);
+        final Flux<ReactiveResult> mainProcess = Flux.create(fluxSink);
+        Flux<ReactiveResult> heartbeats = Flux.interval(Duration.ofSeconds(5))
+                .takeUntilOther(mainProcess.ignoreElements())
+                .map(i -> new ReactiveTypeInfo("HEARTBEAT"));
+        Flux<ReactiveResult> merged = Flux.merge(mainProcess, heartbeats);
+        return merged;
     }
+
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DELETE_FILE')")
     @DeleteMapping(value = "/applications/{name}/file/{id}", produces = MediaType.TEXT_PLAIN_VALUE)
@@ -285,7 +294,7 @@ public class OreSiResources {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
             DataVersioningResult dataVersioningResult = serviceContainer.versioningService()
-                    .unPublishVersionBeforeDelete(locale, applicationName, id);
+                    .unPublishVersionBeforeDelete(locale, applicationName, id, true);
         }
         Optional<UUID> uuid = serviceContainer.binaryFileService().removeFile(application, id);
         if (uuid.isPresent()) {
@@ -634,7 +643,8 @@ public class OreSiResources {
         }
         DataVersioningResult dataVersioningResult = null;
         try {
-            dataVersioningResult = serviceContainer.versioningService().createData(locale, nameOrId, dataName, dataFile, false);
+            dataVersioningResult = serviceContainer.versioningService().createData(
+                    locale, nameOrId, dataName, dataFile, false, true);
         } catch (InvalidDatasetContentException invalidDatasetContentException) {
             List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                     .stream()
@@ -1287,8 +1297,8 @@ public class OreSiResources {
 
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
-    @GetMapping(value = "/applications/{nameOrId}/upload-bundle", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<StreamingResponseBody> getUploadBundle(
+    @GetMapping(value = "/applications/{nameOrId}/upload-bundle")
+    public ResponseEntity getUploadBundle(
             @PathVariable("nameOrId") String nameOrId,
             @RequestParam(value = "withData", required = false, defaultValue = "false") boolean withData,
             @RequestParam(value = "locale", required = false) Locale locale,
@@ -1308,162 +1318,198 @@ public class OreSiResources {
         response.addHeader(HEADER_EXPIRES, EXPIRED_TIME);
 
         AtomicReference<BuildBundleReport> reportRef = new AtomicReference<>();
-            SecurityContext securityContext = SecurityContextHolder.getContext();
-            Executors.newSingleThreadExecutor()
-                    .submit(() -> {
-                        ZipOutputStream zipOutputStream = null;
-                        Path tempFile;
-                        AtomicReference<OreSiUser> user = new AtomicReference<>();
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        Executors.newVirtualThreadPerTaskExecutor()
+                .submit(() -> {
+                    ZipOutputStream zipOutputStream = null;
+                    Path tempFile;
+                    AtomicReference<OreSiUser> user = new AtomicReference<>();
 
-                        SecurityContextHolder.setContext(securityContext);
-                        try {
-                            user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
-                            tempFile = Files.createTempFile(Paths.get(TMP), UPLOAD_BUNDLE + UUID.randomUUID(), ".zip");
+                    SecurityContextHolder.setContext(securityContext);
+                    try {
+                        user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
+                        tempFile = Files.createTempFile(Paths.get(TMP), UPLOAD_BUNDLE + UUID.randomUUID(), ".zip");
 
-                            try (OutputStream fileOutputStream = Files.newOutputStream(tempFile)) {
+                        try (OutputStream fileOutputStream = Files.newOutputStream(tempFile)) {
 
-                                zipOutputStream = new ZipOutputStream(new BufferedOutputStream(fileOutputStream, 2000));
-                                BuildBundleReport report = serviceContainer.dataService().writeUploadBundle(instanceUrl, nameOrId, withData, locale, zipOutputStream);
-                                reportRef.set(report);
-                            } catch (IOException e) {
-                                log.error(IO_ERROR_WRITE, e);
-                            }
-
-                            if (reportRef.get() != null && reportRef.get().referentielsEnErreur().isEmpty()) {
-                                // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
-                                ExecutorService executorService = Executors.newSingleThreadExecutor();
-                                executorService.submit(() -> {
-                                    try {
-                                        serviceContainer.dataService().sendZipLinkByMail(tempFile, reportRef.get(), user.get());
-                                    } catch (Exception e) {
-                                        log.error(EMAIL_ERROR, e);
-                                    } finally {
-                                        try {
-                                            Files.deleteIfExists(tempFile);
-                                        } catch (IOException e) {
-                                            log.error(IO_DELETE_ERROR, e);
-                                        }
-                                        executorService.shutdown();
-                                    }
-                                });
-                            } else {
-                                log.warn(BAD_REPORT);
-                                try {
-                                    Files.deleteIfExists(tempFile);
-                                } catch (IOException e) {
-                                    log.error(IO_DELETE_ERROR, e);
-                                }
-                            }
-
-                        } catch (Exception e) {
-                            if (zipOutputStream != null) {
-                                try {
-                                    addErrorFileToZip(zipOutputStream, e);
-                                } catch (IOException ioe) {
-                                    log.error(IO_ADDING_ERROR, ioe);
-                                }
-                            }
-                            throw new OreSiTechnicalException(BAD_BUNDLE, e);
+                            zipOutputStream = new ZipOutputStream(new BufferedOutputStream(fileOutputStream, 2000));
+                            BuildBundleReport report = serviceContainer.dataService().writeUploadBundle(instanceUrl, nameOrId, withData, locale, zipOutputStream);
+                            reportRef.set(report);
+                        } catch (IOException e) {
+                            log.error(IO_ERROR_WRITE, e);
                         }
-                    });
+
+                        if (reportRef.get() != null && reportRef.get().referentielsEnErreur().isEmpty()) {
+                            // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
+                            ExecutorService executorService = Executors.newSingleThreadExecutor();
+                            executorService.submit(() -> {
+                                try {
+                                    serviceContainer.dataService().sendZipLinkByMail(tempFile, reportRef.get(), user.get());
+                                } catch (Exception e) {
+                                    log.error(EMAIL_ERROR, e);
+                                } finally {
+                                    try {
+                                        Files.deleteIfExists(tempFile);
+                                    } catch (IOException e) {
+                                        log.error(IO_DELETE_ERROR, e);
+                                    }
+                                    executorService.shutdown();
+                                }
+                            });
+                        } else {
+                            log.warn(BAD_REPORT);
+                            try {
+                                Files.deleteIfExists(tempFile);
+                            } catch (IOException e) {
+                                log.error(IO_DELETE_ERROR, e);
+                            }
+                        }
+
+                    } catch (Exception e) {
+                        if (zipOutputStream != null) {
+                            try {
+                                addErrorFileToZip(zipOutputStream, e);
+                            } catch (IOException ioe) {
+                                log.error(IO_ADDING_ERROR, ioe);
+                            }
+                        }
+                        throw new OreSiTechnicalException(BAD_BUNDLE, e);
+                    }
+                });
 
 
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(null);
+        return ResponseEntity.ok().build();
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_DOWNLOAD_BUNDLE')")
     @PostMapping(value = "/applications/{nameOrId}/download-bundle", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public StreamingResponseBody uploadBundle(
+    public Flux<ReactiveResult> uploadBundle(
             HttpServletRequest request,
             @PathVariable String nameOrId,
             @RequestParam("file") MultipartFile zipBundle) {
 
-        return getStreamingResponseBody(
-                buildFluxRequestNDJson(fluxSink -> {
-                    File zipFile = null;
-                    try {
-                        zipFile = getPhysicalFileOrCopy(zipBundle);
-                    } catch (IOException e) {
-                        fluxSink.error(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e));
+        Locale locale = localeResolver.resolveLocale(request);
+        final String origin = request.getHeader("Origin");
+        final OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
+        final SecurityContext context = SecurityContextHolder.getContext();
+        Flux<ReactiveResult> resultsFlux = Flux.create(sink -> {
+            Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+                SecurityContextHolder.setContext(context);
+                File zipFile = null;
+                try {
+                    zipFile = getPhysicalFileOrCopy(zipBundle);
+                } catch (IOException e) {
+                    sink.error(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e));
+                }
+                sink.next(new ReactiveTypeProgress(0L));
+                sink.next(new ReactiveTypeInfo("MANIFEST"));
+                final Application application = getOrLoadApplication(nameOrId, zipFile);
+
+                BundleReport rapport = new BundleReport(locale, origin, application);
+                record RegisterReactiveResult(FluxSink<ReactiveResult> resultFluxSink, BundleReport bundleReport) {
+                    public void add(ReactiveResult reactiveResult) {
+                        try {
+                            resultFluxSink().next(reactiveResult);
+                        } catch (Exception e) {
+                            log.debug("Stream clased");
+                        } finally {
+                            bundleReport().add(reactiveResult);
+                        }
                     }
-                    Locale locale = localeResolver.resolveLocale(request);
-                    fluxSink.next(new ReactiveTypeProgress(0L));
-                    fluxSink.next(new ReactiveTypeInfo("MANIFEST"));
-                    final Application application = getOrLoadApplication(nameOrId, zipFile);
+                }
+                final RegisterReactiveResult registerReactiveResult = new RegisterReactiveResult(sink, rapport);
+                try (InputStream manifestStream = serviceContainer.dataService().readEntry(zipFile, MANIFEST_JSON)) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    File finalZipFile = zipFile;
+                    final Map<String, List<String>> manifest = mapper.readValue
+                            (manifestStream,
+                                    new TypeReference<Map<String, List<String>>>() {
+                                    }
+                            );
+                    final ReactiveTypeInfo reactiveTypeInfo = new ReactiveTypeInfo("MANIFEST", Map.of("manifest", manifest));
+                    registerReactiveResult.add(reactiveTypeInfo);
+                    rapport.add(reactiveTypeInfo);
 
-                    try (InputStream manifestStream = serviceContainer.dataService().readEntry(zipFile, MANIFEST_JSON)) {
-                        ObjectMapper mapper = new ObjectMapper();
-                        File finalZipFile = zipFile;
-                        final Map<String, List<String>> manifest = mapper.readValue
-                                (manifestStream,
-                                        new TypeReference<Map<String, List<String>>>() {
-                                        }
-                                );
-                        fluxSink.next(new ReactiveTypeInfo("MANIFEST", Map.of("manifest", manifest)));
-
-                        AtomicInteger done = new AtomicInteger(0);
-                        int countFiles = manifest.values().stream()
-                                .mapToInt(List::size)
-                                .sum();
-                        manifest
-                                .forEach((dataName, fileList) -> {
-                                    fileList.forEach(fileName -> {
-                                        fluxSink.next(new ReactiveTypeProgress(0.1 + (0.9 / countFiles * done.get())));
-                                        try (InputStream fileToUpload = serviceContainer.dataService().readEntry(finalZipFile, "%s/%s".formatted(dataName, fileName))) {
-                                            final String[] split = fileName.split("\\.");
-                                            File tempFile = File.createTempFile(split[0], split[1]);
-                                            tempFile.deleteOnExit();
-                                            try (OutputStream out = new FileOutputStream(tempFile)) {
-                                                byte[] buffer = new byte[8192];
-                                                int bytesRead;
-                                                while ((bytesRead = fileToUpload.read(buffer)) != -1) {
-                                                    out.write(buffer, 0, bytesRead);
-                                                }
+                    AtomicInteger done = new AtomicInteger(0);
+                    int countFiles = manifest.values().stream()
+                            .mapToInt(List::size)
+                            .sum();
+                    manifest.entrySet()
+                            //.stream().limit(0)
+                            .forEach(entry -> {
+                                String dataName = entry.getKey();
+                                log.info(dataName);
+                                entry.getValue().forEach(fileName -> {
+                                    registerReactiveResult.add(new ReactiveTypeProgress(0.1 + (0.9 / countFiles * done.get())));
+                                    try (InputStream fileToUpload = serviceContainer.dataService().readEntry(finalZipFile, "%s/%s".formatted(dataName, fileName))) {
+                                        final String[] split = fileName.split("\\.");
+                                        File tempFile = File.createTempFile(split[0], split[1]);
+                                        tempFile.deleteOnExit();
+                                        try (OutputStream out = new FileOutputStream(tempFile)) {
+                                            byte[] buffer = new byte[8192];
+                                            int bytesRead;
+                                            while ((bytesRead = fileToUpload.read(buffer)) != -1) {
+                                                out.write(buffer, 0, bytesRead);
                                             }
-                                            final DataVersioningResult data = serviceContainer.versioningService().createData(
-                                                    locale,
-                                                    application.getName(),
-                                                    dataName,
-                                                    fileToUpload == null ? null : new DataFile(
-                                                            tempFile,
-                                                            (long) tempFile.length(),
-                                                            fileName
-                                                    ),
-                                                    false
-                                            );
-                                            fluxSink.next(new ReactiveTypeInfo("LOADED_DATA", Map.of("dataName", dataName, "fileName", fileName)));
-                                        } catch (IOException e) {
-                                            fluxSink.next(new ReactiveTypeError(Map.of("dataName", dataName, "fileName", fileName, "errorType", "ERROR_LOADING_DATA")));
-                                            done.addAndGet(1);
-                                            throw new RuntimeException(e);
-                                        } catch (InvalidDatasetContentException e) {
-                                            fluxSink.next(new ReactiveTypeError(Map.of(
-                                                    "dataName", dataName,
-                                                    "fileName", fileName,
-                                                    "errorType", e.getMessage(),
-                                                    "message", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().message()).findFirst().orElse(""),
-                                                    "params", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().messageParams()).findFirst().orElse(Map.of())
-                                            )));
-                                            done.addAndGet(1);
                                         }
+                                        final DataVersioningResult data = serviceContainer.versioningService().createData(
+                                                locale,
+                                                application.getName(),
+                                                dataName,
+                                                fileToUpload == null ? null : new DataFile(
+                                                        tempFile,
+                                                        (long) tempFile.length(),
+                                                        fileName
+                                                ),
+                                                false,
+                                                false
+                                        );
+                                        final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA", Map.of("dataName", dataName, "fileName", fileName));
+                                        registerReactiveResult.add(reactiveResult);
+                                        rapport.add(reactiveResult);
+                                    } catch (IOException e) {
+                                        final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(Map.of("dataName", dataName, "fileName", fileName, "errorType", "ERROR_LOADING_DATA"));
+                                        registerReactiveResult.add(reactiveTypeError);
                                         done.addAndGet(1);
-                                    });
-                                    fluxSink.next(new ReactiveTypeProgress(1));
+                                        throw new RuntimeException(e);
+                                    } catch (InvalidDatasetContentException e) {
+                                        final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(
+                                                Map.of(
+                                                        "dataName", dataName,
+                                                        "fileName", fileName,
+                                                        "errorType", e.getMessage(),
+                                                        "message", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().message()).findFirst().orElse(""),
+                                                        "params", e.getErrors().stream().limit(1).map(firstError -> firstError.validationCheckResult().messageParams()).findFirst().orElse(Map.of())
+                                                )
+                                        );
+                                        registerReactiveResult.add(reactiveTypeError);
+                                        done.addAndGet(1);
+                                    }
+                                    done.addAndGet(1);
                                 });
-                    } catch (StreamReadException e) {
-                        throw new RuntimeException(e);
-                    } catch (DatabindException e) {
-                        throw new RuntimeException(e);
+                                registerReactiveResult.add(new ReactiveTypeProgress(1));
+                            });
+                    //final manifest
+                    //debut envoie mail
+                    try {
+                        serviceContainer.dataService().sendZipLinkByMail(registerReactiveResult.bundleReport().attachmentFile(), registerReactiveResult.bundleReport(), currentUser);
                     } catch (IOException e) {
-                        fluxSink.next(new ReactiveTypeError(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e).getMessage()));
-                    } catch (Exception e) {
-                        fluxSink.next(new ReactiveTypeError(e.getMessage()));
-                    } finally {
-                        fluxSink.complete();
+                        throw new RuntimeException(e);
                     }
-                }));
+                } catch (StreamReadException e) {
+                    sink.error(e);
+                    throw new RuntimeException(e);
+                } catch (DatabindException e) {
+                    sink.error(e);
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    sink.error(e);
+                    throw new RuntimeException(e);
+                }
+                sink.complete();
+            });
+        });
+        return resultsFlux;
     }
 
     private Application getOrLoadApplication(String nameOrId, File zipFile) {
@@ -1535,7 +1581,7 @@ public class OreSiResources {
                             outputStream.write('\n');
                             outputStream.flush();
                         } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            log.warn("closed stream");
                         }
                     });
         };

@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
 
+import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -652,7 +653,13 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 getNamedParameterJdbcTemplate().queryForStream(
                         sql,
                         params,
-                        (rs, rowNum) -> new FileContent(rs.getLong("updateDate"), rs.getString("fileName"), rs.getString("fileContent"))
+                        (rs, rowNum) -> {
+                            final Array sqlArray = rs.getArray("refsLinked");
+                            List<String> refsLinked = sqlArray != null
+                                    ? Arrays.asList((String[]) sqlArray.getArray())
+                                    : Collections.emptyList();
+                            return new FileContent(refsLinked, rs.getString("fileName"), rs.getString("fileContent"));
+                        }
                 )
         );
     }

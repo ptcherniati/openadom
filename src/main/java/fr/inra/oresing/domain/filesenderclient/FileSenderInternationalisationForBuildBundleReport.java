@@ -62,24 +62,24 @@ public record FileSenderInternationalisationForBuildBundleReport(BuildBundleRepo
 
     @Override
     public String getInternationnalizedApplication(Locale locale) {
-        return Optional.ofNullable(buildBundleReport.applicationName().getConfiguration())
+        return Optional.ofNullable(buildBundleReport.application().getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
                 .map(i18nApplication -> i18nApplication.getTitle().get(Locale.of(locale.getLanguage())))
-                .orElse(buildBundleReport.applicationName().getName());
+                .orElse(buildBundleReport.application().getName());
     }
 
     @Override
     public String getInternationnalizedApplicationDescription(Locale locale) {
-        return Optional.ofNullable(buildBundleReport.applicationName().getConfiguration())
+        return Optional.ofNullable(buildBundleReport.application().getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
                 .map(i18nApplication -> i18nApplication.getDescription().get(Locale.of(locale.getLanguage())))
-                .orElse(buildBundleReport.applicationName().getName());
+                .orElse(buildBundleReport.application().getName());
     }
 
     public Locale getDefaultLanguage() {
-        return Optional.ofNullable(buildBundleReport.applicationName().getConfiguration())
+        return Optional.ofNullable(buildBundleReport.application().getConfiguration())
                 .map(Configuration::applicationDescription)
                 .map(ApplicationDescription::defaultLanguage)
                 .orElse(Locale.FRENCH);
