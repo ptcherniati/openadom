@@ -38,7 +38,7 @@ public record FileContent(List<String> refsLinked, String fileName, String fileC
                 convert_from(bf.filedata, 'UTF8') AS "fileContent"
             FROM %1$s.referencevalue rv
             JOIN %1$s.binaryfile bf ON bf.id = rv.binaryfile
-            JOIN linkedsarray la ON la.referencetype = rv.referencetype
+            LEFT JOIN linkedsarray la ON la.referencetype = rv.referencetype
             WHERE rv.referencetype = '%2$s'
             ORDER BY rv.binaryfile;            
             """;
