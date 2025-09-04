@@ -2,10 +2,6 @@ package fr.inra.oresing.rest.security;
 
 import fr.inra.oresing.rest.authentication.evaluator.ApplicationPermissionEvaluator;
 import fr.inra.oresing.rest.services.AuthorizationService;
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,16 +16,10 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.context.RequestAttributeSecurityContextRepository;
-import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
-import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.io.IOException;
 import java.util.List;
 
 @Configuration
@@ -77,6 +67,8 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthorizationFilter authorizationFilter) throws Exception {
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .headers(headers-> headers.contentSecurityPolicy(
+                        csp->csp.policyDirectives("frame-ancestors %s;".formatted(frontendOrigin))))
                 .formLogin(AbstractHttpConfigurer::disable) // Désactive le formulaire de login
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .csrf(AbstractHttpConfigurer::disable)
