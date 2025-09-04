@@ -590,7 +590,8 @@ public class DataService {
                     zipOutputStream.closeEntry();
                     return true;
                 }))
-                .any(b -> b)
+                .collectList() // attend la fin du flux
+                .map(list -> list.stream().anyMatch(b -> b)) // si tu dois renvoyer true si au moins un élément a réussi
                 .onErrorResume(e -> {
                     log.error("Erreur lors du traitement des données stockées", e);
                     return Mono.just(false);
