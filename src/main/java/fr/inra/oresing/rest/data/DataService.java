@@ -5,7 +5,6 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
 import com.google.common.io.Resources;
 import fr.inra.oresing.client.Client;
-import fr.inra.oresing.domain.BinaryFile;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.GroovyDataInjectionConfiguration;
 import fr.inra.oresing.domain.OreSiUser;
@@ -58,6 +57,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.*;
 import java.net.URISyntaxException;
@@ -66,7 +67,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -79,17 +83,10 @@ import java.util.zip.ZipOutputStream;
 @Slf4j
 @Component
 public class DataService {
-    public static final String OPEN_ADOM_CLIENT_GROOVY = "OpenAdomClient.groovy";
-    public static final String OPEN_ADOM_CLIENT_JS = "bundle.js";
-    public static final String OPEN_ADOM_CLIENT_HTML = "index.html";
-    public static final String OPEN_ADOM_CLIENT_CONFIGURATION_JSON = "openAdom-client-configuration.json";
     public static final String README_FILE_NAME = "README";
-    public static final String SCRIPTS = "Scripts";
-    public static final String SETUP_SCRIPT_NAME = "setup.sh";
     public static final String MANIFEST_JSON = "manifest.json";
-    public static final String CONFIGURATION = "Configuration";
+    public static final String REFERENCES_JSON = "references.json";
     public static final String CONFIGURATION_FILE = "configuration.yaml";
-    public static final String COMPOSE = "compose/";
     @Setter
     ServiceContainer serviceContainer;
     private final OreSiRepository repo;
@@ -576,36 +573,39 @@ public class DataService {
         return getReferenceValueRepository(application).buildReferenceSynthesis();
     }
 
-    public Boolean getDataFromStoredCsvStream(Manifest manifest, ZipOutputStream zipOutputStream, String name, String reference, Application application, Locale locale) {
+    public Boolean getDataFromStoredCsvStream(
+            Manifest manifest,
+            Path tempZipDirectory,
+            String name,
+            String reference,
+            Application application,
+            Locale locale) {
+
         DataRepository dataRepository = repo.getRepository(application).data();
         Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
         return storedData
                 .flatMap(fileContent -> Mono.fromCallable(() -> {
-                    String entryName = String.format("%s/%s", reference, fileContent.fileName());
+                    String relativePath = String.format("%s/%s", reference, fileContent.fileName());
                     manifest.add(reference, fileContent);
-                    ZipEntry zipEntry = new ZipEntry(entryName);
-                    zipOutputStream.putNextEntry(zipEntry);
-                    try (InputStream is = fileContent.fileContent()) {
-                        byte[] buffer = new byte[1024];
-                        int length;
-                        while ((length = is.read(buffer)) >= 0) {
-                            zipOutputStream.write(buffer, 0, length);
-                        }
-                    }catch (Exception e){
+                    Path targetFile = tempZipDirectory.resolve(relativePath);
+                    Files.createDirectories(targetFile.getParent());
+                    try (InputStream is = fileContent.fileContent();) {
+                        Files.copy(is, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                    } catch (Exception e) {
                         manifest.addError(reference, fileContent);
                     }
-                    zipOutputStream.closeEntry();
                     return true;
                 }))
                 .collectList() // attend la fin du flux
-                .map(list -> list.stream().anyMatch(b -> b)) // si tu dois renvoyer true si au moins un élément a réussi
+                .map(list -> list.stream().anyMatch(b -> b)) // renvoie true si au moins un élément a réussi
                 .onErrorResume(e -> {
                     log.error("Erreur lors du traitement des données stockées", e);
                     return Mono.just(false);
                 })
                 .block();
     }
+
 
     public DataRepository getDataRepository(Application application) {
         return repository.getRepository(application).data();
@@ -859,142 +859,90 @@ public class DataService {
     }
 
     @Transactional(readOnly = true)
-    public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData, Locale locale, ZipOutputStream zipOutputStream) {
+    public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData, Locale locale, Path tempZipDirectory) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         String applicationName = application.getName();
         List<String> referentielsAvecDonnees = new ArrayList<>();
-        Map<String, Set<String>> fichiersGeneres = new HashMap<>();
+        //Map<String, Set<String>> fichiersGeneres = new HashMap<>();
         List<String> referentielsAvecDonneesExemple = new ArrayList<>();
         List<String> referentielsEnErreur = new ArrayList<>();
         Optional.of(locale)
                 .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
 
-        try (zipOutputStream) {
-            writeJsClient(zipOutputStream, fichiersGeneres);
-            writeHtml(zipOutputStream, fichiersGeneres);
-            writeConfiguration(zipOutputStream, fichiersGeneres, instanceUrl, nameOrId);
-            writeConfigurationFile(zipOutputStream, fichiersGeneres, application);
-            writeReadMe(zipOutputStream, fichiersGeneres);
-            writeDirectoryToZip(zipOutputStream, fichiersGeneres);
+        try {
+            writeReadMe(tempZipDirectory);
+            // writeDirectoryToZip(tempZipDirectory, fichiersGeneres);
             Manifest manifest = new Manifest();
 
-            // Traiter chaque référentiel
-            for (String reference : application.getConfiguration().dataDescription().keySet()) {
-                String fileName = application.getConfiguration().findData(reference)
-                        .map(StandardDataDescription::submission)
-                        .map(Submission::fileNameParsing)
-                        .map(Submission.SubmissionFileNameParsing::createExampleSubmissionFileName)
-                        .orElse("%s.csv".formatted(reference));
-                String dataCsvFilePath = "%1$s/%2$s".formatted(reference, fileName);
+            Executor executor = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().factory());
+            Scheduler virtualScheduler = Schedulers.fromExecutor(executor);
 
-                try {
+            Flux.fromIterable(application.getConfiguration().dataDescription().keySet())
+                    .flatMap(reference ->
+                            Mono.fromCallable(() -> {
+                                        String fileName = application.getConfiguration().findData(reference)
+                                                .map(StandardDataDescription::submission)
+                                                .map(Submission::fileNameParsing)
+                                                .map(Submission.SubmissionFileNameParsing::createExampleSubmissionFileName)
+                                                .orElse("%s.csv".formatted(reference));
+                                        String dataCsvFilePath = "%1$s/%2$s".formatted(reference, fileName);
+                                        try {
+                                            final Boolean dataFromStoredCsvStream = serviceContainer.dataService()
+                                                    .getDataFromStoredCsvStream(
+                                                            manifest,
+                                                            tempZipDirectory,
+                                                            application.getName(),
+                                                            reference,
+                                                            application,
+                                                            locale);
+                                            if (withData && dataFromStoredCsvStream) {
+                                                referentielsAvecDonnees.add(reference);
+                                            } else {
+                                                Path filePath = tempZipDirectory.resolve(dataCsvFilePath);
+                                                Files.createDirectories(filePath.getParent());
+                                                Files.createFile(filePath);
+                                                referentielsAvecDonneesExemple.add(reference);
+                                            }
+                                        } catch (Exception e) {
+                                            log.error("Erreur lors du traitement du référentiel {}", reference, e);
+                                            referentielsEnErreur.add(reference);
+                                        }
+                                        return reference; // ou tout autre type utile
+                                    })
+                                    .subscribeOn(virtualScheduler) // Chaque tâche sur un virtual thread
+                    )
+                    .collectList()
+                    .block(); // attend la fin de tous les traitements
 
-                    final Boolean dataFromStoredCsvStream = serviceContainer.dataService()
-                            .getDataFromStoredCsvStream(
-                                    manifest,
-                                    zipOutputStream,
-                                    application.getName(),
-                                    reference,
-                                    application,
-                                    locale);
-                    if (withData && dataFromStoredCsvStream) {
-                        referentielsAvecDonnees.add(reference);
-                        fichiersGeneres.computeIfAbsent(reference, k -> new LinkedHashSet<>()).add(dataCsvFilePath);
-                    } else {
-                        zipOutputStream.putNextEntry(new ZipEntry(dataCsvFilePath));
-                        application.getConfiguration().dataDescription().get(reference).buildEmptyFile(zipOutputStream);
-                        zipOutputStream.flush();
-                        zipOutputStream.closeEntry();
-                        referentielsAvecDonneesExemple.add(reference);
-                        fichiersGeneres.computeIfAbsent(reference, k -> new LinkedHashSet<>()).add(dataCsvFilePath);
-                    }
-                } catch (Exception e) {
-                    log.error("Erreur lors du traitement du référentiel {}", reference, e);
-                    referentielsEnErreur.add(reference);
-                }
-            }
-            addManifest(zipOutputStream, manifest);
+            addManifest(tempZipDirectory, manifest);
         } catch (Exception e) {
             log.error("Erreur générale lors de la création du bundle", e);
             referentielsEnErreur.add("ERREUR_GENERALE");
         }
 
-        return new BuildBundleReport(application, referentielsAvecDonnees, fichiersGeneres, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
+        return new BuildBundleReport(application, referentielsAvecDonnees, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
     }
 
-    private static void addManifest(ZipOutputStream zipOutputStream, Manifest manifest) throws IOException {
-        Map<String, List<String>> orderedManifest = new LinkedHashMap<>();
-        orderedManifest = manifest.orderedReferenceTypes();
-
+    private static void addManifest(Path directory, Manifest manifest) throws IOException {
+        Map<String, List<String>> orderedManifest = manifest.orderedReferenceTypes();
         String manifestJson = new ObjectMapper().writeValueAsString(orderedManifest);
-        zipOutputStream.putNextEntry(new ZipEntry(MANIFEST_JSON));
-        zipOutputStream.write(manifestJson.getBytes(StandardCharsets.UTF_8));
-        zipOutputStream.flush();
-        zipOutputStream.closeEntry();
+        Path manifestFile = directory.resolve(MANIFEST_JSON);
+        Files.createDirectories(manifestFile.getParent());
+        Files.writeString(manifestFile, manifestJson, StandardCharsets.UTF_8);
+        addReferencesFile(directory,manifest);
     }
 
-    private void writeGroovyClient(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
-        writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_GROOVY, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_GROOVY));
-        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
-                .add(OPEN_ADOM_CLIENT_GROOVY);
-    }
-
-    private void writeJsClient(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
-        writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_JS, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_JS));
-        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
-                .add(OPEN_ADOM_CLIENT_JS);
-    }
-
-    private void writeHtml(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
-        writeFileToZip(zipOutputStream, OPEN_ADOM_CLIENT_HTML, Resources.getResource(Client.class, OPEN_ADOM_CLIENT_HTML));
-        fichiersGeneres.getOrDefault(SCRIPTS, new LinkedHashSet<>())
-                .add(OPEN_ADOM_CLIENT_HTML);
-    }
-
-    private void writeConfiguration(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres, String instanceUrl, String dataName) throws IOException {
-        String configurationJson = """
-                {
-                  "instanceUrl": "%s",
-                  "applicationName": "%s"
-                }
-                """.formatted(instanceUrl, dataName);
-        writeStringToZip(zipOutputStream, OPEN_ADOM_CLIENT_CONFIGURATION_JSON, configurationJson);
-        fichiersGeneres.computeIfAbsent(CONFIGURATION, k -> new LinkedHashSet<>())
-                .add(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
-    }
-
-    private void writeReadMe(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException {
-        writeFileToZip(zipOutputStream, README_FILE_NAME, Resources.getResource(Client.class, README_FILE_NAME));
-        fichiersGeneres.getOrDefault(README_FILE_NAME, new LinkedHashSet<>())
-                .add(README_FILE_NAME);
-
+    private static void addReferencesFile(Path directory, Manifest manifest) throws IOException {
+        Map<String, List<String>> referenceDeps = manifest.referenceTypeDeps();
+        String referencesJson = new ObjectMapper().writeValueAsString(referenceDeps);
+        Path referencesFile = directory.resolve(REFERENCES_JSON);
+        Files.createDirectories(referencesFile.getParent());
+        Files.writeString(referencesFile, referencesJson, StandardCharsets.UTF_8);
     }
 
 
-    private void writeConfigurationFile(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres, Application application) throws IOException {
-        final String configurationString = serviceContainer.binaryFileService().getFileWithData(application.getName(), application.getConfigFile())
-                .map(BinaryFile::getFileData)
-                .map(inputStream -> {
-                    try {
-                        return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .orElse(null);
-        writeStringToZip(zipOutputStream, CONFIGURATION_FILE, configurationString);
-        fichiersGeneres.computeIfAbsent(CONFIGURATION, k -> new LinkedHashSet<>())
-                .add(CONFIGURATION_FILE);
-    }
-
-    private void writeDirectoryToZip(ZipOutputStream zipOutputStream, Map<String, Set<String>> fichiersGeneres) throws IOException, URISyntaxException {
-        List<String> allFiles = listAllFilesFromResources(COMPOSE); // à implémenter selon ton contexte
-
-        for (String resourcePath : allFiles) {
-            String zipEntryName = COMPOSE + resourcePath; // ajoute dans le zip sous compose/
-            writeFileToZip(zipOutputStream, resourcePath, Resources.getResource(Client.class, zipEntryName));
-            fichiersGeneres.computeIfAbsent(COMPOSE, k -> new LinkedHashSet<>()).add(zipEntryName);
-        }
+    private void writeReadMe(Path zipOutputStream) throws IOException {
+        writeFileToDirectory(zipOutputStream, README_FILE_NAME, Resources.getResource(Client.class, README_FILE_NAME));
     }
 
     private List<String> listAllFilesFromResources(String baseDirPath) throws IOException, URISyntaxException {
@@ -1008,17 +956,19 @@ public class DataService {
     }
 
 
-    private void writeFileToZip(ZipOutputStream zipOutputStream, String fileName, URL resourceUrl) throws IOException {
-        zipOutputStream.putNextEntry(new ZipEntry(fileName));
-        byte[] fileBytes = Resources.toByteArray(resourceUrl);
-        zipOutputStream.write(fileBytes);
-        zipOutputStream.closeEntry();
+    private void writeFileToDirectory(Path directoryPath, String fileName, URL resourceUrl) throws IOException {
+        Path targetFile = directoryPath.resolve(fileName);
+        Files.createDirectories(targetFile.getParent());
+        try (InputStream in = resourceUrl.openStream()) {
+            Files.copy(in, targetFile); // tout est stream, aucune manipulation de byte[] ni full en mémoire
+        }
     }
 
-    private void writeStringToZip(ZipOutputStream zipOutputStream, String fileName, String content) throws IOException {
-        zipOutputStream.putNextEntry(new ZipEntry(fileName));
-        zipOutputStream.write(content.getBytes(StandardCharsets.UTF_8));
-        zipOutputStream.closeEntry();
+
+    private void writeStringToZip(Path tempZipDirectory, String fileName, String content) throws IOException {
+        Path targetFile = tempZipDirectory.resolve(fileName);
+        Files.createDirectories(targetFile.getParent());
+        Files.writeString(targetFile, content, StandardCharsets.UTF_8);
     }
 
     @Transactional()

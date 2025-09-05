@@ -27,10 +27,12 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 
 import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -652,7 +654,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
         MapSqlParameterSource params = new MapSqlParameterSource();
         String sql = FileContent.buildFileNameRequest(application, dataName);
 
-        return Flux.fromStream(
+        return Flux.<FileContent>fromStream(
                 getNamedParameterJdbcTemplate().queryForStream(
                         sql,
                         params,

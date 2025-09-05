@@ -10,7 +10,6 @@ import java.util.Set;
 public record BuildBundleReport(
         Application application,
         List<String> referentielsAvecDonnees,
-        Map<String, Set<String>> fichiersGeneres,
         List<String> referentielsAvecDonneesExemple,
         List<String> referentielsEnErreur,
         Locale locale) implements MessageInformations {
