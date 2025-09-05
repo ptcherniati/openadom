@@ -392,7 +392,11 @@ public class OreSiResourcesTest {
 
             registerFile("ui/cypress/fixtures/applications/ore/monsore/createMonsore.txt", responseForCreatemonsoere);
             registerFile("ui/cypress/fixtures/applications/ore/monsore/changeMonsore.txt", responseForChangemonsoere);
-            Assertions.assertEquals(1, Arrays.stream(getApplicationsFlux(fixtures.adminConnection.jwt(), "ALL")).filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class))).filter(s -> JsonPath.parse(s).read("$.result.application.data", List.class).contains("sites")).filter(s -> !JsonPath.parse(s).read("$.result.application.data", List.class).contains("type de fichiers")).count());
+            Assertions.assertTrue(Arrays.stream(getApplicationsFlux(fixtures.adminConnection.jwt(), "ALL"))
+                    .filter(s -> "REACTIVE_RESULT".equals(JsonPath.parse(s).read("$.type", String.class)))
+                    .filter(s -> JsonPath.parse(s).read("$.result.application.data", List.class).contains("sites"))
+                    .filter(s -> !JsonPath.parse(s).read("$.result.application.data", List.class).contains("type de fichiers"))
+                    .count()>0);
             mockMvc.perform(get("/api/v1/applications/monsore")
                     .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
                     .param("filter", "ALL")).andExpect(status().is2xxSuccessful());

@@ -45,6 +45,19 @@ class FileContentTest {
         Mockito.doReturn(Optional.of(submission)).when(application).findSubmission(dataName);
         String request = FileContent.buildFileNameRequest(application, dataName);
         assertEquals("""
+                WITH linkeds AS (
+                      SELECT DISTINCT
+                          referencetype,
+                          jsonb_object_keys(refslinkedto) AS linkedto
+                      FROM sipro_v01.referencevalue
+                  ),
+                  linkedsarray AS (
+                      SELECT
+                          referencetype,
+                          array_agg(linkedto) AS "refsLinked"
+                      FROM linkeds
+                      GROUP BY referencetype
+                  )
                 SELECT DISTINCT ON (rv.binaryfile)
                     format('%1$s_%2$s_%3$s_%4$s.csv',
                     ((bf."authorization").requiredauthorizations).projet[1],
@@ -63,13 +76,14 @@ class FileContentTest {
                         ELSE upper((bf."authorization").timescope)
                   	END
                 ,'dd-MM-yyyy')
-                ) as "fileName",
-                    EXTRACT(epoch FROM MIN((bf.params #>> '{publisheddate}')::TIMESTAMP) OVER())::bigint AS "updateDate",
+                ) AS "fileName",
+                    la."refsLinked",
                     convert_from(bf.filedata, 'UTF8') AS "fileContent"
                 FROM null.referencevalue rv
                 JOIN null.binaryfile bf ON bf.id = rv.binaryfile
+                LEFT JOIN linkedsarray la ON la.referencetype = rv.referencetype
                 WHERE rv.referencetype = 'data'
-                ORDER BY rv.binaryfile, bf.updatedate DESC;
+                ORDER BY rv.binaryfile;
                 """, request);
     }
 }
