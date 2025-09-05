@@ -4,7 +4,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.ReferenceDatumAfterChecking;
 
 public record KeysAndReferenceDatumAfterChecking(ReferenceDatumAfterChecking referenceDatumAfterChecking,
-                                                 Ltree naturalKey, Ltree hierarchicalKey) {
+                                                 Ltree naturalKey, Ltree hierarchicalKey, String patternColumnName) {
     public long getLineNumber() {
         return referenceDatumAfterChecking.lineNumber();
     }

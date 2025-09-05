@@ -139,11 +139,11 @@ public record WithRecursion(
             RecursionStrategy recursionStrategy,
             ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         KeysAndReferenceDatumAfterChecking keys = buildKey.apply(referenceDatumAfterChecking);
-        Optional<UUID> knownId = dataImporterContext().getKnownId(keys.naturalKey());
-        DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keys.naturalKey(), keys.hierarchicalKey());
+        Optional<UUID> knownId = dataImporterContext().getKnownId(keys.naturalKey(), keys.patternColumnName());
+        DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keys.naturalKey(), keys.hierarchicalKey(), keys.patternColumnName());
         if (knownId.isEmpty()) {
             dataImporterContext().getAfterPreloadReferenceUuids().put(key, UUID.randomUUID());
-            dataImporterContext().getKnownId(keys.naturalKey());
+            dataImporterContext().getKnownId(keys.naturalKey(), keys.patternColumnName());
         }
         return List.of(referenceDatumAfterChecking);
     }

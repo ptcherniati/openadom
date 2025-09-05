@@ -35,7 +35,7 @@ class ReferenceTypeTest {
         String goodValueNotLabel = "LéMan";
         uuid1 = UUID.randomUUID();
         referenceValues = new ImmutableMap.Builder()
-                .put(new DataValue.LineIdentityColumnName(Ltree.fromSql(goodValue), Ltree.fromSql(goodValue)), ImmutableSet.of(uuid1))
+                .put(new DataValue.LineIdentityColumnName(Ltree.fromSql(goodValue), Ltree.fromSql(goodValue), ""), ImmutableSet.of(uuid1))
                 .build();
         checker = Mockito.mock(LineChecker.OneChecker.class);
 

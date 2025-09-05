@@ -218,7 +218,7 @@ public class DataService {
         PublishContext.PublishContextBuilder publishContextBuilder = new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference);
         final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers = checkerFactory.getCheckers(application, dataName,
                 publishContextBuilder);
-        ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences = referenceValueRepository.getDataIdPerKeys(dataName);
+        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences = referenceValueRepository.getDataIdPerKeys(dataName);
 
         final StandardDataDescription referenceDescription = configuration.dataDescription().get(dataName);
         final boolean allowUnexpectedColumns = referenceDescription.allowUnexpectedColumns();

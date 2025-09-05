@@ -25,12 +25,12 @@ public sealed interface CheckerDescription permits
         StringChecker {
     CheckerDescription NO_CHECKER = new StringChecker(CheckerDescriptionType.StringChecker, Multiplicity.ONE, false, ".*");
 
-    static ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getUUidByNaturalKey(final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys) {
+    static ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getUUidByNaturalKey(final ImmutableMap<DataValue.LineIdentityColumnName, UUID> referenceIdPerKeys) {
         return ImmutableMap.copyOf(
                 referenceIdPerKeys.entrySet().stream()
                         .collect(
                                 Collectors.groupingBy(
-                                        e -> e.getKey().identity(),
+                                        e -> e.getKey(),
                                         Collectors.mapping(
                                                 Map.Entry::getValue,
                                                 ImmutableSet.toImmutableSet()
@@ -50,7 +50,7 @@ public sealed interface CheckerDescription permits
         return (F) switch (this) {
             case null -> NullType.INSTANCE;
             case final ReferenceChecker referenceChecker -> {
-                final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> referenceIdPerKeys = repository.getDataIdPerKeys(referenceChecker.refType());
+                final ImmutableMap<DataValue.LineIdentityColumnName, UUID> referenceIdPerKeys = repository.getDataIdPerKeys(referenceChecker.refType());
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = getUUidByNaturalKey(referenceIdPerKeys);
                 yield new ReferenceType(target, referenceChecker.refType(), referenceValues, transformer, null);
             }

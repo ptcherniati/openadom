@@ -120,9 +120,9 @@ public class DataValidator {
             ReferenceDatumAfterChecking referenceDatumAfterChecking
     ) {
         KeysAndReferenceDatumAfterChecking keyForLine = buildKey.apply(referenceDatumAfterChecking);
-        DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keyForLine.naturalKey(), keyForLine.hierarchicalKey());
+        DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keyForLine.naturalKey(), keyForLine.hierarchicalKey(), keyForLine.patternColumnName());
 
-        recursionStrategy.dataImporterContext().getKnownId(keyForLine.naturalKey())
+        recursionStrategy.dataImporterContext().getKnownId(keyForLine.naturalKey(), keyForLine.patternColumnName())
                 .or(() -> {
                     UUID newUuid = UUID.randomUUID();
                     recursionStrategy.dataImporterContext().addKnownIdToReferenceValues(

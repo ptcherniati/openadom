@@ -125,9 +125,9 @@ class FieldTypeTest {
         UUID UUID1 = UUID.randomUUID();
         UUID UUID2 = UUID.randomUUID();
         ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = ImmutableMap.of(
-                new DataValue.LineIdentityColumnName(Ltree.fromSql("parent__enfant"), Ltree.fromSql("parent.parent__enfant")),
+                new DataValue.LineIdentityColumnName(Ltree.fromSql("parent__enfant"), Ltree.fromSql("parent.parent__enfant"),""),
                 ImmutableSet.of(UUID1),
-                new DataValue.LineIdentityColumnName(Ltree.fromSql("parent"), Ltree.fromSql("parent")),
+                new DataValue.LineIdentityColumnName(Ltree.fromSql("parent"), Ltree.fromSql("parent"),""),
                 ImmutableSet.of(UUID2)
         );
         return List.of(

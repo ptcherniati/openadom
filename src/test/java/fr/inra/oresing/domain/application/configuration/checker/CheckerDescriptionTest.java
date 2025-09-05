@@ -160,15 +160,9 @@ class CheckerDescriptionTest {
         UUID uuid1 = UUID.randomUUID();
         UUID uuid2 = UUID.randomUUID();
         Mockito.when(repository.getDataIdPerKeys("refType")).thenReturn(ImmutableMap.of(
-                new DataValue.LineIdentityPatternColumnName(
-                        new DataValue.LineIdentityColumnName(Ltree.fromSql("path1"), Ltree.fromSql("path1")),
-                        "data1"
-                ),
+                 new DataValue.LineIdentityColumnName(Ltree.fromSql("path1"), Ltree.fromSql("path1"), "data1"),
                 uuid1,
-                new DataValue.LineIdentityPatternColumnName(
-                        new DataValue.LineIdentityColumnName(Ltree.fromSql("path2"), Ltree.fromSql("path2")),
-                        "data2"
-                ),
+                new DataValue.LineIdentityColumnName(Ltree.fromSql("path2"), Ltree.fromSql("path2"),"data2"),
                 uuid2
         ));
         // Mock repository.getDataIdPerKeys() et autres méthodes nécessaires ici

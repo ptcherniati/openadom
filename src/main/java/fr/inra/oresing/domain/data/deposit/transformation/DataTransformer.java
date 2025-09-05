@@ -73,7 +73,8 @@ public class DataTransformer {
         return new KeysAndReferenceDatumAfterChecking(
                 referenceDatumAfterChecking,
                 naturalKey,
-                hierarchicalKey);
+                hierarchicalKey,
+                referenceDatumAfterChecking.patternColumnName());
     }
 
     /**
@@ -86,13 +87,13 @@ public class DataTransformer {
 
         DataValue e = new DataValue();
         Ltree naturalKey = keysAndReferenceDatumAfterChecking.naturalKey();
-        dataImporterContext.getKnownId(naturalKey)
+        final String patternColumnName = referenceDatumAfterChecking.patternColumnName();
+        dataImporterContext.getKnownId(naturalKey, patternColumnName)
                 .ifPresent(e::setId);
         referenceDatum.putAll(InternationalizationDisplay.getDisplaysName(dataImporterContext, referenceDatum));
         referenceDatum.putAll(InternationalizationDisplay.getDisplaysDescription(dataImporterContext, referenceDatum));
 
-        final String patternColumnName = referenceDatumAfterChecking.patternColumnName();
-        dataImporterContext.getIdForSameHierarchicalKeyInDatabase(hierarchicalKey)
+        dataImporterContext.getIdForSameHierarchicalKeyInDatabase(hierarchicalKey, patternColumnName)
                 .ifPresent(e::setId);
 
         Authorization lineAuthorization = configurationSi.getLineAuthorization(referenceDatum, referenceDatumAfterChecking.lineNumber(), errors);

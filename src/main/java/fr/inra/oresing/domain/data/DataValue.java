@@ -23,23 +23,18 @@ public class DataValue extends OreSiEntity {
     private Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo;
     private UUID binaryFile;
     private Map referencingreferences;
-    private LineIdentityPatternColumnName lineHierarchicalKeyPatternColumnName;
-    private LineIdentityPatternColumnName lineNaturalKeyPatternColumnName;
+    private LineIdentityColumnName lineHierarchicalKeyPatternColumnName;
+    private LineIdentityColumnName lineNaturalKeyPatternColumnName;
     private Authorization authorization;
 
-    public LineIdentityPatternColumnName buildLineIdentityPatternColumnName() {
-        return new LineIdentityPatternColumnName(
-                new LineIdentityColumnName(getNaturalKey(), getHierarchicalKey()),
-                getPatternColumnName()
-        );
+    public LineIdentityColumnName buildLineIdentityColumnName() {
+        return new LineIdentityColumnName(getNaturalKey(), getHierarchicalKey(),getPatternColumnName());
     }
 
     public record LineIdentityColumnName(
             Ltree naturalKey,
-            Ltree hierarchicalKey
+            Ltree hierarchicalKey,
+            String patternColomnName
     ) {
-    }
-
-    public record LineIdentityPatternColumnName(LineIdentityColumnName identity, String patternColumnName) {
     }
 }

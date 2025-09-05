@@ -365,11 +365,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
 
     @Override
-    public ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> getDataIdPerKeys(final String ReferenceType) {
-        Map<DataValue.LineIdentityPatternColumnName, UUID> dataIdPerKeys = new HashMap<>();
+    public ImmutableMap<DataValue.LineIdentityColumnName, UUID> getDataIdPerKeys(final String ReferenceType) {
+        Map<DataValue.LineIdentityColumnName, UUID> dataIdPerKeys = new HashMap<>();
         findAllByReferenceTypeStream(ReferenceType)
                 .forEach(dataValue -> {
-                    DataValue.LineIdentityPatternColumnName naturalKey = dataValue.buildLineIdentityPatternColumnName();
+                    DataValue.LineIdentityColumnName naturalKey = dataValue.buildLineIdentityColumnName();
                     dataIdPerKeys.put(naturalKey, dataValue.getId());
                 });
         return ImmutableMap.copyOf(dataIdPerKeys);

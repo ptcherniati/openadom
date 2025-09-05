@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 
 public interface DataRepository {
     @Transactional(readOnly = true)
-    ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> getDataIdPerKeys(String s);
+    ImmutableMap<DataValue.LineIdentityColumnName, UUID> getDataIdPerKeys(String s);
 
     @Transactional(readOnly = true)
     Stream<DataValue> findAllByReferenceTypeStream(String referenceName);

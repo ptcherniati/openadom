@@ -7,7 +7,6 @@ import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
@@ -51,7 +50,7 @@ public class DataImporterContext {
     /**
      * Les clés techniques de chaque clé naturelle hiérarchique de toutes les lignes existantes en base (avant l'import)
      */
-    private final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences;
+    private final ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences;
     private final ImmutableSet<Column> columns;
     @Getter
     private final PatternColumnFactory patternColumnFactory;
@@ -72,7 +71,7 @@ public class DataImporterContext {
 
     public <F extends FieldType<?>> DataImporterContext(final ContextConstants constants,
                                                         final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers,
-                                                        final ImmutableMap<DataValue.LineIdentityPatternColumnName, UUID> storedReferences,
+                                                        final ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences,
                                                         final ImmutableSet<Column> columns,
                                                         final PatternColumnFactory patternColumnFactory,
                                                         final Mapper jsonRowMapper,
@@ -103,9 +102,11 @@ public class DataImporterContext {
         return COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR;
     }
 
-    public Optional<UUID> getKnownId(final Ltree naturalKey) {
+    public Optional<UUID> getKnownId(final Ltree naturalKey, String patternColumnName) {
         return getAfterPreloadReferenceUuids().entrySet().stream()
-                .filter(entry -> entry.getKey().naturalKey().equals(naturalKey))
+                .filter(entry -> entry.getKey().naturalKey().equals(naturalKey) &&
+                                 entry.getKey().patternColomnName().equals(patternColumnName)
+                )
                 .map(Map.Entry::getValue)
                 .findFirst();
     }
@@ -221,12 +222,15 @@ public class DataImporterContext {
         return constants.application();
     }
 
-    public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(final Ltree hierarchicalKey) {
+    public Optional<UUID> getIdForSameHierarchicalKeyInDatabase(final Ltree hierarchicalKey, String patternColumnName) {
         if (storedReferences == null) {
             return Optional.empty();
         }
         return storedReferences.entrySet().stream()
-                .filter(entry -> entry.getKey().identity().hierarchicalKey().equals(hierarchicalKey))
+                .filter(entry ->
+                        entry.getKey().hierarchicalKey().equals(hierarchicalKey) &&
+                        entry.getKey().patternColomnName().equals(patternColumnName)
+                )
                 .map(Map.Entry::getValue)
                 .findFirst();
     }
