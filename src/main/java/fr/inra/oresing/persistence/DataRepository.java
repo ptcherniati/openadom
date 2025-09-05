@@ -661,7 +661,10 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                             List<String> refsLinked = sqlArray != null
                                     ? Arrays.asList((String[]) sqlArray.getArray())
                                     : Collections.emptyList();
-                            return new FileContent(refsLinked, rs.getString("fileName"), rs.getString("fileContent"));
+                            return new FileContent(refsLinked,
+                                    rs.getString("fileName"),
+                                    rs.getBinaryStream("fileContent")
+                            );
                         }
                 )
         );

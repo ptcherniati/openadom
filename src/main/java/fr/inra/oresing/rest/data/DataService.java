@@ -586,7 +586,15 @@ public class DataService {
                     manifest.add(reference, fileContent);
                     ZipEntry zipEntry = new ZipEntry(entryName);
                     zipOutputStream.putNextEntry(zipEntry);
-                    zipOutputStream.write(fileContent.fileContent().getBytes(StandardCharsets.UTF_8));
+                    try (InputStream is = fileContent.fileContent()) {
+                        byte[] buffer = new byte[1024];
+                        int length;
+                        while ((length = is.read(buffer)) >= 0) {
+                            zipOutputStream.write(buffer, 0, length);
+                        }
+                    }catch (Exception e){
+                        manifest.addError(reference, fileContent);
+                    }
                     zipOutputStream.closeEntry();
                     return true;
                 }))
@@ -951,7 +959,7 @@ public class DataService {
                 }
                 """.formatted(instanceUrl, dataName);
         writeStringToZip(zipOutputStream, OPEN_ADOM_CLIENT_CONFIGURATION_JSON, configurationJson);
-        fichiersGeneres.computeIfAbsent(CONFIGURATION, k->new LinkedHashSet<>())
+        fichiersGeneres.computeIfAbsent(CONFIGURATION, k -> new LinkedHashSet<>())
                 .add(OPEN_ADOM_CLIENT_CONFIGURATION_JSON);
     }
 
@@ -974,8 +982,8 @@ public class DataService {
                     }
                 })
                 .orElse(null);
-        writeStringToZip(zipOutputStream, CONFIGURATION_FILE, configurationString );
-        fichiersGeneres.computeIfAbsent(CONFIGURATION, k->new LinkedHashSet<>())
+        writeStringToZip(zipOutputStream, CONFIGURATION_FILE, configurationString);
+        fichiersGeneres.computeIfAbsent(CONFIGURATION, k -> new LinkedHashSet<>())
                 .add(CONFIGURATION_FILE);
     }
 

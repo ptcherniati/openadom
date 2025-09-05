@@ -7,10 +7,11 @@ import java.util.stream.Collectors;
 
 public record Manifest(
         Map<String, List<FileContent>> referenceTypeFiles,
+        Map<String, List<FileContent>> referenceFilesInErrors,
         Map<String, List<String>> referenceTypeDeps
 ) {
     public Manifest() {
-        this(new LinkedHashMap<>(), new LinkedHashMap<>());
+        this(new LinkedHashMap<>(), new LinkedHashMap<>(), new LinkedHashMap<>());
     }
 
     public void add(String reference, FileContent fileContent) {
@@ -56,5 +57,11 @@ public record Manifest(
         visiting.remove(node);
         visited.add(node);
         sorted.add(node);
+    }
+
+    public void addError(String reference, FileContent fileContent) {
+        referenceFilesInErrors
+                .computeIfAbsent(reference, k -> new ArrayList<>())
+                .add(fileContent);
     }
 }

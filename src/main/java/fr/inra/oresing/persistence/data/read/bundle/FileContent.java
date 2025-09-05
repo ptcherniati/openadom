@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 
+import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -11,7 +12,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-public record FileContent(List<String> refsLinked, String fileName, String fileContent) {
+public record FileContent(List<String> refsLinked, String fileName, InputStream fileContent) {
     private static final Pattern FORBIDDEN_FILENAME_CHARS = Pattern.compile("[\\\\/:*?\"<>| ]");
 
     public static String sanitizePatternForFilename(String pattern) {
@@ -35,7 +36,7 @@ public record FileContent(List<String> refsLinked, String fileName, String fileC
             SELECT DISTINCT ON (rv.binaryfile)
                 %3$s AS "fileName",
                 la."refsLinked",
-                convert_from(bf.filedata, 'UTF8') AS "fileContent"
+                bf.filedata AS "fileContent"
             FROM %1$s.referencevalue rv
             JOIN %1$s.binaryfile bf ON bf.id = rv.binaryfile
             LEFT JOIN linkedsarray la ON la.referencetype = rv.referencetype
