@@ -24,10 +24,6 @@ public class FileBomResolver extends InputStream {
         );
     }
 
-    public static FileBomResolver of(final byte[] byteArray) throws IOException {
-        return FileBomResolver.of(new ByteArrayInputStream(byteArray));
-    }
-
     public static FileBomResolver of(final String text) throws IOException {
         ByteArrayInputStream textToByte = new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8));
         BOMInputStream bomInputStream = BOMInputStream.builder()

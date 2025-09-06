@@ -9,20 +9,21 @@ import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Function;
 
 public record ConfigurationBuiderTestBuilder<T>(T result, List<ValidationError> errors) {
-    public static ConfigurationBuiderTestBuilder<?> of(String config, Function<Configuration, ?> doWithconfiguration) {
+    public static ConfigurationBuiderTestBuilder<?> of(InputStream config, Function<Configuration, ?> doWithconfiguration) {
         return executeDoWithConfigurationTest(config, doWithconfiguration);
     }
 
-    private static <T> ConfigurationBuiderTestBuilder<T> executeDoWithConfigurationTest(String config, Function<Configuration, T> doWithconfiguration) {
+    private static <T> ConfigurationBuiderTestBuilder<T> executeDoWithConfigurationTest(InputStream config, Function<Configuration, T> doWithconfiguration) {
         List<T> results = new LinkedList<>();
         List<ValidationError> errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    Configuration configuration = ConfigurationBuilder.build(config.getBytes(), progression, "une application de test");
+                    Configuration configuration = ConfigurationBuilder.build(config, progression, "une application de test");
                     // Call the function you want to test
                     results.add(doWithconfiguration.apply(configuration));
                     fluxSink.complete();

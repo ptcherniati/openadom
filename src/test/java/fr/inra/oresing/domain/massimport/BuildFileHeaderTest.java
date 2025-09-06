@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
@@ -24,7 +25,7 @@ class BuildFileHeaderTest {
         // Put your configuration file paths here
     void buildFileHeader(String filePath) throws IOException {
         URL url = Resources.getResource(filePath);
-        String config = Resources.toString(url, StandardCharsets.UTF_8);
+        InputStream config = url.openStream();
 
         // Define your function
         Function<Configuration, Void> myFunction = configuration -> {

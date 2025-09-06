@@ -1728,11 +1728,7 @@ public class OreSiResources {
             tempFile.deleteOnExit(); // Optionnel selon ta politique de nettoyage
             try (InputStream in = multipartFile.getInputStream();
                  OutputStream out = new FileOutputStream(tempFile)) {
-                byte[] buffer = new byte[8192];
-                int read;
-                while ((read = in.read(buffer)) != -1) {
-                    out.write(buffer, 0, read);
-                }
+                in.transferTo(out); // Copie tout le flux, optimal et idiomatique
             }
             return tempFile;
         }

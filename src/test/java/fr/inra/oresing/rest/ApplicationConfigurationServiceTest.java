@@ -1289,14 +1289,11 @@ public class ApplicationConfigurationServiceTest {
                     new ReactiveProgression.CreateApplicationProgressionMessagesLabel()
             );
 
-            FileBomResolver fileBomResolver = FileBomResolver.of(in);
-            byte[] configBytes = fileBomResolver.readAllBytes();
-
             Application application = ApplicationConfigurationService.parseConfigurationBytes(
                     "",
                     "test",
                     progression,
-                    FileBomResolver.of(configBytes)
+                    FileBomResolver.of(in)
             );
             assertNotNull(application, "L'application ne devrait pas être nulle pour " + resource);
             progression.pushResult(application);

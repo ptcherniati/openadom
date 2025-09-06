@@ -21,6 +21,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -30,47 +31,47 @@ import static org.junit.jupiter.api.Assertions.*;
 @org.junit.jupiter.api.Tag("SUITE")
 class ConfigurationBuilderTest {
 
-    public static String CONFIGURATION;
-    public static String SCHEMA;
-    public static String MONSORE_CONFIGURATION;
-    public static String LOCALIZATION_RESULT;
-    public static String DATA_RESULT;
-    public static String LOCALIZATION_MONSORE_RESULT;
-    public static String DATA_MONSORE_RESULT;
-    public static String LOCALIZATION_EXAMPLE_RESULT;
-    public static String DATA_EXAMPLE_RESULT;
-    public static String HIERARCHICAL_CONFIGURATION;
-    public static String HIERARCHICAL_RESULT;
+    public static InputStream CONFIGURATION;
+    public static InputStream SCHEMA;
+    public static InputStream MONSORE_CONFIGURATION;
+    public static InputStream LOCALIZATION_RESULT;
+    public static InputStream DATA_RESULT;
+    public static InputStream LOCALIZATION_MONSORE_RESULT;
+    public static InputStream DATA_MONSORE_RESULT;
+    public static InputStream LOCALIZATION_EXAMPLE_RESULT;
+    public static InputStream DATA_EXAMPLE_RESULT;
+    public static InputStream HIERARCHICAL_CONFIGURATION;
+    public static InputStream HIERARCHICAL_RESULT;
     private List<ValidationError> errors;
     private Configuration configuration;
 
     @BeforeAll
     static void getConfigurationFile() throws IOException {
         URL url = Resources.getResource("data/configuration/configuration.yaml");
-        CONFIGURATION = Resources.toString(url, StandardCharsets.UTF_8);
+        CONFIGURATION = url.openStream();
         url = Resources.getResource("data/configuration/schemaExample.yaml");
-        SCHEMA = Resources.toString(url, StandardCharsets.UTF_8);
+        SCHEMA = url.openStream();
         url = Resources.getResource("data/monsore/monsore-with-repository.yaml");
-        MONSORE_CONFIGURATION = Resources.toString(url, StandardCharsets.UTF_8);
+        MONSORE_CONFIGURATION =  url.openStream();
         url = Resources.getResource("data/configuration/hierarchical.yaml");
-        HIERARCHICAL_CONFIGURATION = Resources.toString(url, StandardCharsets.UTF_8);
+        HIERARCHICAL_CONFIGURATION =  url.openStream();
         url = Resources.getResource("data/configuration/localization.result.json");
-        LOCALIZATION_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
+        LOCALIZATION_RESULT =  url.openStream();
         url = Resources.getResource("data/configuration/data.result.json");
-        DATA_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
+        DATA_RESULT =  url.openStream();
         url = Resources.getResource("data/configuration/localization.monsore.result.json");
-        LOCALIZATION_MONSORE_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
+        LOCALIZATION_MONSORE_RESULT =  url.openStream();
         url = Resources.getResource("data/configuration/data.result.monsore.json");
-        DATA_MONSORE_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
+        DATA_MONSORE_RESULT =  url.openStream();
         url = Resources.getResource("data/configuration/localization.example.result.json");
-        LOCALIZATION_EXAMPLE_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
+        LOCALIZATION_EXAMPLE_RESULT =  url.openStream();
         url = Resources.getResource("data/configuration/data.result.example.json");
-        DATA_EXAMPLE_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
+        DATA_EXAMPLE_RESULT =  url.openStream();
         url = Resources.getResource("data/configuration/hierarchical.json");
-        HIERARCHICAL_RESULT = Resources.toString(url, StandardCharsets.UTF_8);
+        HIERARCHICAL_RESULT =  url.openStream();
     }
 
-    private static void testConfiguration(final Configuration configuration) throws JsonProcessingException {
+    private static void testConfiguration(final Configuration configuration) throws IOException {
         testTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testInternationalisation(configuration.i18n());
@@ -78,7 +79,7 @@ class ConfigurationBuilderTest {
         testComponents(configuration.dataDescription());
     }
 
-    private static void testExampleConfiguration(final Configuration configuration) throws JsonProcessingException {
+    private static void testExampleConfiguration(final Configuration configuration) throws IOException {
         testExampleTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testExampleInternationalisation(configuration.i18n());
@@ -86,7 +87,7 @@ class ConfigurationBuilderTest {
         testExampleComponents(configuration.dataDescription());
     }
 
-    private static void testMonsoreConfiguration(final Configuration configuration) throws JsonProcessingException, JSONException {
+    private static void testMonsoreConfiguration(final Configuration configuration) throws IOException, JSONException {
         testMonsoreTags(configuration.tags());
         assertEquals("2.0.1", configuration.version().version());
         testMonsoreInternationalisation(configuration.i18n());
@@ -94,7 +95,7 @@ class ConfigurationBuilderTest {
         testMonsoreComponents(configuration.dataDescription());
     }
 
-    private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
+    private static void testComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
         String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
@@ -107,7 +108,7 @@ class ConfigurationBuilderTest {
     }
 
 
-    private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
+    private static void testMonsoreComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
 
         String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
@@ -119,7 +120,7 @@ class ConfigurationBuilderTest {
         Assertions.assertThat(actualNode).isEqualTo(expectedNode);
     }
 
-    private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws JsonProcessingException {
+    private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws IOException {
 
         String expectedResult = new ObjectMapper().registerModule(new JavaTimeModule())
                 .writer()
@@ -167,19 +168,19 @@ class ConfigurationBuilderTest {
 
     }
 
-    private static void testInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
+    private static void testInternationalisation(final Internationalizations localizations) throws IOException {
         Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
-                .isEqualTo(LOCALIZATION_RESULT);
+                .isEqualTo(new String(LOCALIZATION_RESULT.readAllBytes(), StandardCharsets.UTF_8));
     }
 
-    private static void testMonsoreInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
+    private static void testMonsoreInternationalisation(final Internationalizations localizations) throws IOException {
         Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
-                .isEqualTo(LOCALIZATION_MONSORE_RESULT);
+                .isEqualTo(new String(LOCALIZATION_MONSORE_RESULT.readAllBytes(), StandardCharsets.UTF_8));
     }
 
-    private static void testExampleInternationalisation(final Internationalizations localizations) throws JsonProcessingException {
+    private static void testExampleInternationalisation(final Internationalizations localizations) throws IOException {
         Assertions.assertThat(new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(localizations))
-                .isEqualTo(LOCALIZATION_EXAMPLE_RESULT);
+                .isEqualTo(new String(LOCALIZATION_EXAMPLE_RESULT.readAllBytes(), StandardCharsets.UTF_8));
     }
 
     private static void testTags(final Set<Tag> tags) {
@@ -213,12 +214,14 @@ class ConfigurationBuilderTest {
     void buildApplicationTest() {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(CONFIGURATION.getBytes(), progression, "une application de test");
+                    configuration = ConfigurationBuilder.build(CONFIGURATION, progression, "une application de test");
                     try {
                         testConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {
@@ -240,12 +243,14 @@ class ConfigurationBuilderTest {
     void buildApplicationSchemaTest() {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(SCHEMA.getBytes(), progression, "une application de test");
+                    configuration = ConfigurationBuilder.build(SCHEMA, progression, "une application de test");
                     try {
                         testExampleConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {
@@ -266,13 +271,15 @@ class ConfigurationBuilderTest {
     void buildHierarchicalTest() {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION.getBytes(), progression, "un commentaire");
+                    configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION, progression, "un commentaire");
                     assertNotNull(configuration);
                     try {
                         testHierarchicalNodes(configuration.hierarchicalNodes());
                         fluxSink.complete();
                     } catch (final JsonProcessingException e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {
@@ -289,21 +296,23 @@ class ConfigurationBuilderTest {
                 .toString());
     }
 
-    private void testHierarchicalNodes(SortedSet<Node> nodes) throws JsonProcessingException {
+    private void testHierarchicalNodes(SortedSet<Node> nodes) throws IOException {
         Assertions.assertThat(new ObjectMapper().writerWithDefaultPrettyPrinter().writeValueAsString(nodes))
-                .isEqualTo(HIERARCHICAL_RESULT);
+                .isEqualTo(new String(HIERARCHICAL_RESULT.readAllBytes(), StandardCharsets.UTF_8));
     }
 
     @Test
     void buildMonsoreTest() {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
                     final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(MONSORE_CONFIGURATION.getBytes(), progression, "un commentaire");
+                    configuration = ConfigurationBuilder.build(MONSORE_CONFIGURATION, progression, "un commentaire");
                     try {
                         testMonsoreConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
                     } catch (final JsonProcessingException | JSONException e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
                     }
                 })
                 .flatMap(reactiveResult -> switch (reactiveResult) {

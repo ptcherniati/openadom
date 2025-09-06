@@ -21,16 +21,11 @@ public class MultiYamlTest {
             // Création du fichier temporaire
             File tempFile = File.createTempFile("multiyaml-", ".zip");
             tempFile.deleteOnExit(); // Nettoyage automatique à la fin du process
-
             try (OutputStream out = new FileOutputStream(tempFile)) {
-                byte[] buffer = new byte[8192];
-                int bytesRead;
-                while ((bytesRead = fileInputStream.read(buffer)) != -1) {
-                    out.write(buffer, 0, bytesRead);
-                }
+                fileInputStream.transferTo(out);
             }
             final DataFile multipartFile = new DataFile(tempFile, 0L, "monzip");
-            byte[] bytes = MultiYaml.parseConfigurationBytes(multipartFile).readAllBytes();
+            InputStream bytes = MultiYaml.parseConfigurationBytes(multipartFile);
             Object configuration = new YAMLMapper().readValue(bytes, Object.class);
             assertNotNull(configuration);
             assertNotNull(((Map) configuration).get(ConfigurationSchemaNode.OA_DATA));

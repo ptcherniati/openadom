@@ -51,19 +51,24 @@ public class ApplicationConfigurationService {
             final FileBomResolver fileBomResolver) {
         progression.pushMessage("testYamlIsvalid", null);
         try {
-            byte[] bytes = fileBomResolver.readAllBytes();
 
-            if (bytes.length == 0) {
-                progression.pushError(ConfigurationException.EMPTY_FILE, Map.of());
-                progression.complete();
-                return null;
+            if (fileBomResolver.markSupported()) {
+                fileBomResolver.mark(1);
+                int firstByte = fileBomResolver.read();
+                if (firstByte == -1) {
+                    progression.pushError(ConfigurationException.EMPTY_FILE, Map.of());
+                    progression.complete();
+                    return null;
+                }
+                fileBomResolver.reset(); // On revient au début pour tout relire
             }
+
             progression.pushMessage("yamlIsvalid", null);
             progression.pushMessage("versionIsValid", null);
             P progression1 = (P) progression.incrementAndPush(i -> i + 0.01D);
 
             final Configuration configuration;
-            configuration = ConfigurationBuilder.build(bytes, progression1, comment);
+            configuration = ConfigurationBuilder.build(fileBomResolver, progression1, comment);
             final ReactiveProgression.ChangeOrCreateApplicationProgression<?> progressionForCheckSyntax = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression1.withSubLabel("CheckSyntax");
             if (configuration == null) {
                 progression1.complete();

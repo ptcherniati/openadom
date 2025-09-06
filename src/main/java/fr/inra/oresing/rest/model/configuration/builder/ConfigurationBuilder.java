@@ -13,17 +13,18 @@ import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.reactive.ReactiveProgression;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 public record ConfigurationBuilder(RootBuilder rootBuilder) {
 
-    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Configuration build(final byte[] bytes, final P progression, final String comment) {
+    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Configuration build(final InputStream inputStream, final P progression, final String comment) {
 
         final YAMLMapper mapper = YAMLMapper.builder().build();
         mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
         JsonNode rootNode;
         DocumentContext documentContext;
         try {
-            rootNode = mapper.readTree(bytes);
+            rootNode = mapper.readTree(inputStream);
             documentContext = JsonPath.parse(mapper.writeValueAsString(rootNode));
         } catch (JsonParseException jpe) {
             progression.pushError(JacksonErrorParser.parse(jpe));
@@ -38,6 +39,6 @@ public record ConfigurationBuilder(RootBuilder rootBuilder) {
                 progression,
                 rootNode,
                 documentContext
-        ).build(bytes, comment);
+        ).build(inputStream, comment);
     }
 }

@@ -876,7 +876,7 @@ public class OreSiResourcesTest {
                     .andExpect(jsonPath("$.rows[*].values[? (@.chemin == 'NULL_KEY__oir__p1' && @.projet == 'projet_manche')]", hasSize(34))).andReturn().getResponse().getContentAsString();
 
 
-            final byte[] responseToByteArray = mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/data/pem/zip").accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)
+            mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/data/pem/zip").accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                             .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
                     .andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andDo(result -> {
                 if (result.getResponse().getStatus() != 200) {

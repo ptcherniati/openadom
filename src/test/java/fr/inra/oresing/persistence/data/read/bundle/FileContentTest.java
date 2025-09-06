@@ -78,7 +78,7 @@ class FileContentTest {
                 ,'dd-MM-yyyy')
                 ) AS "fileName",
                     la."refsLinked",
-                    convert_from(bf.filedata, 'UTF8') AS "fileContent"
+                    bf.filedata AS "fileContent"
                 FROM null.referencevalue rv
                 JOIN null.binaryfile bf ON bf.id = rv.binaryfile
                 LEFT JOIN linkedsarray la ON la.referencetype = rv.referencetype

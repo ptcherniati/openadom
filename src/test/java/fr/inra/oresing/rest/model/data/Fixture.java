@@ -13,6 +13,7 @@ import org.springframework.util.FileCopyUtils;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -22,10 +23,10 @@ public class Fixture {
     public static final Resource yaml = new ClassPathResource("data/configuration/data.configuration.monsore.json");
 
     public static DownloadDatasetQuery addApplication(final DownloadDatasetQuery downloadDatasetQuery) throws IOException {
-        final byte[] yamlContent = FileCopyUtils.copyToByteArray(yaml.getInputStream());
+        final InputStream yamlContent = yaml.getInputStream();
         final YAMLMapper mapper = new YAMLMapper();
         final Configuration configuration = new JsonRowMapper<>()
-                .readValue(new String(yamlContent), Configuration.class);
+                .readStream(yamlContent, Configuration.class);
         final ImmutableSet.Builder<String> requiredAuthorizationsAttributesBuilder = ImmutableSet.builder();
 
         for (final Map.Entry<String, StandardDataDescription> dataTypeEntry : configuration.dataDescription().entrySet()) {

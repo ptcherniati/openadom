@@ -20,6 +20,7 @@ import jakarta.annotation.Nullable;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.io.InputStream;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -103,7 +104,7 @@ public class RootBuilder {
         progression.pushError(exception, params);
     }
 
-    public Configuration build(final byte[] bytes, final String comment) {
+    public Configuration build(InputStream inputStreams, final String comment) {
         final JsonNode versionNode = rootNode.get(OA_VERSION);
         final Version version = getAndTestOpenAdomVersion(versionNode);
         if (version == null) return null;
