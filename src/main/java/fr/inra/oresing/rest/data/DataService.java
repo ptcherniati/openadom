@@ -1037,11 +1037,15 @@ public class DataService {
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
     }
 
-    public InputStream readEntry(File zipBundleFile, String entryName) throws IOException {
-        ZipFile zipFile = new ZipFile(zipBundleFile);
-        ZipEntry entry = zipFile.getEntry(entryName);
-        if (entry == null) throw new FileNotFoundException("Entrée absente: " + entryName);
-        return zipFile.getInputStream(entry);
+    public void readEntry(File zipBundleFile, String entryName, Consumer<InputStream> consumer) throws IOException {
+        try (ZipFile zipFile = new ZipFile(zipBundleFile)) {
+            ZipEntry entry = zipFile.getEntry(entryName);
+            if (entry == null) throw new FileNotFoundException("Entrée absente: " + entryName);
+            try (InputStream is = zipFile.getInputStream(entry)) {
+                consumer.accept(is); // tout traitement doit être fait ici
+            }
+        }
     }
+
 
 }

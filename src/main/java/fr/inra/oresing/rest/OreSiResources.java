@@ -111,14 +111,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -243,13 +241,18 @@ public class OreSiResources {
 
     }
 
-    private Flux<ReactiveResult> buildFluxRequestNDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
-        final Flux<ReactiveResult> mainProcess = Flux.create(fluxSink);
-        Flux<ReactiveResult> heartbeats = Flux.interval(Duration.ofSeconds(5))
-                .takeUntilOther(mainProcess.ignoreElements())
-                .map(i -> new ReactiveTypeInfo("HEARTBEAT"));
-        Flux<ReactiveResult> merged = Flux.merge(mainProcess, heartbeats);
-        return merged;
+    private Flux<ReactiveResult> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink) {
+        final SecurityContext context = SecurityContextHolder.getContext();
+        return Flux.create(sink -> {
+            Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+                try {
+                    SecurityContextHolder.setContext(context);
+                    fluxSink.accept(sink);
+                } finally {
+                    SecurityContextHolder.clearContext();
+                }
+            });
+        });
     }
 
 
@@ -385,10 +388,15 @@ public class OreSiResources {
         final Optional<BinaryFile> optionalBinaryFile = serviceContainer.binaryFileService().getFileWithData(name, id);
         if (optionalBinaryFile.isPresent()) {
             final BinaryFile binaryFile = optionalBinaryFile.get();
-            InputStream inputStream = binaryFile.getFileData(); // Ton InputStream depuis la BDD
-            String filename = binaryFile.getName();
 
-            StreamingResponseBody body = outputStream -> FileCopyUtils.copy(inputStream, outputStream);
+            StreamingResponseBody body;// Ton InputStream depuis la BDD
+            String filename;
+            try (InputStream inputStream = binaryFile.getFileData()) { // Ton InputStream depuis la BDD
+                filename = binaryFile.getName();
+                body = outputStream -> FileCopyUtils.copy(inputStream, outputStream);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
             return ResponseEntity.ok()
                     .contentLength(binaryFile.getSize())
@@ -1455,34 +1463,50 @@ public class OreSiResources {
 
                 BundleReport rapport = new BundleReport(locale, origin, application);
 
-                try (
-                        InputStream manifestStream = serviceContainer.dataService().readEntry(zipFile, DataService.MANIFEST_JSON);
-                        InputStream referencesStream = serviceContainer.dataService().readEntry(zipFile, DataService.REFERENCES_JSON);
-                ) {
+                try {
                     ObjectMapper mapper = new ObjectMapper();
                     File finalZipFile = zipFile;
-                    final Map<String, List<String>> manifest = mapper.readValue
-                            (manifestStream,
-                                    new TypeReference<Map<String, List<String>>>() {
-                                    }
-                            );
-                    int countFiles = manifest.values().stream()
+                    AtomicReference<Map<String, List<String>>> manifest= new AtomicReference<>();
+                    serviceContainer.dataService().readEntry(zipFile, DataService.MANIFEST_JSON,
+                            manifestStream -> {
+                                try {
+                                    manifest.set(mapper.readValue
+                                            (manifestStream,
+                                                    new TypeReference<Map<String, List<String>>>() {
+                                                    }
+                                            ));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                    );
+
+                    int countFiles = manifest.get().values().stream()
                             .mapToInt(List::size)
                             .sum();
 
-                    final Map<String, List<String>> references = mapper.readValue
-                            (referencesStream,
-                                    new TypeReference<Map<String, List<String>>>() {
-                                    }
-                            );
+                    AtomicReference<Map<String, List<String>>> references = null;
+                    serviceContainer.dataService().readEntry(zipFile, DataService.REFERENCES_JSON,
+                            referencesStream -> {
+                                try {
+                                    references.set(mapper.readValue
+                                            (referencesStream,
+                                                    new TypeReference<Map<String, List<String>>>() {
+                                                    }
+                                            ));
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                    );
                     final RegisterReactiveResult registerReactiveResult = new RegisterReactiveResult(sink, countFiles, rapport);
                     final ReactiveTypeInfo reactiveTypeInfo = new ReactiveTypeInfo("MANIFEST", Map.of("manifest", manifest));
                     registerReactiveResult.add(reactiveTypeInfo, false);
                     rapport.add(reactiveTypeInfo);
                     int MAX_DB_CONCURRENCY = 30; // ou ton pool JDBC size
                     readManifestAndSendMailTopological(
-                            manifest,
-                            references,
+                            manifest.get(),
+                            references.get(),
                             registerReactiveResult,
                             finalZipFile,
                             locale,
@@ -1558,7 +1582,7 @@ public class OreSiResources {
                             );
                         } catch (IOException e) {
                             throw new RuntimeException(e);
-                        }finally {
+                        } finally {
                             registerReactiveResult.add(new ReactiveTypeProgress(1), false);
                         }
                     }));
@@ -1597,29 +1621,47 @@ public class OreSiResources {
         String dataName = entry.getKey();
         log.info(dataName);
         entry.getValue().forEach(fileName -> {
-            try (InputStream fileToUpload = serviceContainer.dataService().readEntry(finalZipFile, "%s/%s".formatted(dataName, fileName))) {
-                final String[] split = fileName.split("\\.");
-                File tempFile = File.createTempFile(split[0], split[1]);
-                tempFile.deleteOnExit();
-                try (OutputStream out = new FileOutputStream(tempFile);
-                     InputStream in = fileToUpload) {
-                    in.transferTo(out); // Transfert direct du flux, pas de gestion de byte[] manuelle
-                }
-                final DataVersioningResult data = serviceContainer.versioningService().createData(
-                        locale,
-                        application.getName(),
-                        dataName,
-                        fileToUpload == null ? null : new DataFile(
-                                tempFile,
-                                (long) tempFile.length(),
-                                fileName
-                        ),
-                        false,
-                        false
+            try {
+                serviceContainer.dataService().readEntry(finalZipFile, "%s/%s".formatted(dataName, fileName),
+                        fileToUpload -> {
+
+                            final String[] split = fileName.split("\\.");
+                            File tempFile = null;
+                            try {
+                                tempFile = File.createTempFile(split[0], split[1]);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            tempFile.deleteOnExit();
+                            try (OutputStream out = new FileOutputStream(tempFile);
+                                 InputStream in = fileToUpload) {
+                                in.transferTo(out); // Transfert direct du flux, pas de gestion de byte[] manuelle
+                            } catch (FileNotFoundException e) {
+                                throw new RuntimeException(e);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            try {
+                                final DataVersioningResult data = serviceContainer.versioningService().createData(
+                                        locale,
+                                        application.getName(),
+                                        dataName,
+                                        fileToUpload == null ? null : new DataFile(
+                                                tempFile,
+                                                (long) tempFile.length(),
+                                                fileName
+                                        ),
+                                        false,
+                                        false
+                                );
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA", Map.of("dataName", dataName, "fileName", fileName));
+                            registerReactiveResult.add(reactiveResult, true);
+                            rapport.add(reactiveResult);
+                        }
                 );
-                final ReactiveResult reactiveResult = new ReactiveTypeInfo("LOADED_DATA", Map.of("dataName", dataName, "fileName", fileName));
-                registerReactiveResult.add(reactiveResult, true);
-                rapport.add(reactiveResult);
             } catch (IOException e) {
                 final ReactiveTypeError reactiveTypeError = new ReactiveTypeError(Map.of("dataName", dataName, "fileName", fileName, "errorType", "ERROR_LOADING_DATA"));
                 registerReactiveResult.add(reactiveTypeError, true);
@@ -1640,65 +1682,68 @@ public class OreSiResources {
     }
 
     private Application getOrLoadApplication(String nameOrId, File zipFile) {
-        Application application;
+        AtomicReference<Application> application = null;
         try {
-            application = serviceContainer.applicationService().getApplication(nameOrId);
+            application.set(serviceContainer.applicationService().getApplication(nameOrId));
         } catch (Exception e) {
-            try (
-                    InputStream configurationFile = serviceContainer.dataService().readEntry(zipFile, DataService.MANIFEST_JSON)
-            ) {
-                MultipartFile tmpConfigurationFile = new MultipartFile() {
-                    @Override
-                    public String getName() {
-                        return DataService.CONFIGURATION_FILE;
-                    }
+            try {
+                serviceContainer.dataService().readEntry(zipFile, DataService.MANIFEST_JSON,
+                        configurationFile -> {
+                            MultipartFile tmpConfigurationFile = new MultipartFile() {
+                                @Override
+                                public String getName() {
+                                    return DataService.CONFIGURATION_FILE;
+                                }
 
-                    @Override
-                    public String getOriginalFilename() {
-                        return DataService.CONFIGURATION_FILE;
-                    }
+                                @Override
+                                public String getOriginalFilename() {
+                                    return DataService.CONFIGURATION_FILE;
+                                }
 
-                    @Override
-                    public String getContentType() {
-                        return "application/x-yaml";
-                    }
+                                @Override
+                                public String getContentType() {
+                                    return "application/x-yaml";
+                                }
 
-                    @Override
-                    public boolean isEmpty() {
-                        return false;
-                    }
+                                @Override
+                                public boolean isEmpty() {
+                                    return false;
+                                }
 
-                    @Override
-                    public long getSize() {
-                        try {
-                            return configurationFile.available();
-                        } catch (IOException ex) {
-                            return 0L;
+                                @Override
+                                public long getSize() {
+                                    try {
+                                        return configurationFile.available();
+                                    } catch (IOException ex) {
+                                        return 0L;
+                                    }
+                                }
+
+                                @Override
+                                public byte[] getBytes() throws IOException {
+                                    return configurationFile.readAllBytes();
+                                }
+
+                                @Override
+                                public InputStream getInputStream() throws IOException {
+                                    return configurationFile;
+                                }
+
+                                @Override
+                                public void transferTo(File dest) throws IOException, IllegalStateException {
+
+                                }
+                            };
+                            createApplication(nameOrId, "uploadBundle", tmpConfigurationFile);
+                            application.set(serviceContainer.applicationService().getApplication(nameOrId));
                         }
-                    }
+                );
 
-                    @Override
-                    public byte[] getBytes() throws IOException {
-                        return configurationFile.readAllBytes();
-                    }
-
-                    @Override
-                    public InputStream getInputStream() throws IOException {
-                        return configurationFile;
-                    }
-
-                    @Override
-                    public void transferTo(File dest) throws IOException, IllegalStateException {
-
-                    }
-                };
-                createApplication(nameOrId, "uploadBundle", tmpConfigurationFile);
-                application = serviceContainer.applicationService().getApplication(nameOrId);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
         }
-        return application;
+        return application.get();
     }
 
     private StreamingResponseBody getStreamingResponseBody(Flux<ReactiveResult> reactiveResultFlux) {
