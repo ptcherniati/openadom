@@ -32,7 +32,7 @@ public record BundleReport(List<ReactiveResult> results, Locale locale, String o
             htmlTemplate = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         }
         final String json = new JsonRowMapper<BundleReport>().toJson(this);
-        String html = htmlTemplate.formatted(json, application().getName(), origin());
+        String html = htmlTemplate.formatted(json, application().getName(), origin(), "bundleReport");
 
         File tempFile = new File(System.getProperty("java.io.tmpdir"), attachmentName());
         Files.writeString(tempFile.toPath(), html, StandardCharsets.UTF_8);
