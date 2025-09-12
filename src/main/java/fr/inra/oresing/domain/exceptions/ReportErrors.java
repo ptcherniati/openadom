@@ -5,15 +5,16 @@ import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 
 import java.util.Collection;
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.atomic.AtomicLong;
 
-public class ReportErrors extends LinkedList<CsvRowValidationCheckResult> {
+public class ReportErrors extends ConcurrentLinkedQueue<CsvRowValidationCheckResult> {
 
     private static final int MAX_ERRORS_SIZE = 15;
     private static final long MAX_ERRORS_BYTE = 1000000;
     final Mapper jsonRowMapper;
-    private long length;
+    private final AtomicLong length = new AtomicLong();
 
     public ReportErrors(final List<CsvRowValidationCheckResult> list, final Mapper jsonRowMapper) {
         super(list);
@@ -31,8 +32,8 @@ public class ReportErrors extends LinkedList<CsvRowValidationCheckResult> {
 
     private boolean test(final CsvRowValidationCheckResult csvRowValidationCheckResult) {
         final String str = jsonRowMapper.toJson(csvRowValidationCheckResult);
-        length += str.codePointCount(0, str.length());
-        return isOverload() && super.add(csvRowValidationCheckResult);
+        final long newLength = length.addAndGet(str.codePointCount(0, str.length()));
+        return isOverload(newLength) && super.add(csvRowValidationCheckResult);
     }
 
     @Override
@@ -42,10 +43,10 @@ public class ReportErrors extends LinkedList<CsvRowValidationCheckResult> {
     }
 
     public boolean canRegisterErrors() {
-        return size() < MAX_ERRORS_SIZE && isOverload();
+        return size() < MAX_ERRORS_SIZE && isOverload(length.get());
     }
 
-    private boolean isOverload() {
+    private boolean isOverload(long length) {
         return length <= MAX_ERRORS_BYTE;
     }
 }

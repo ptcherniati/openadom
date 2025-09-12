@@ -9,10 +9,12 @@ import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResu
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
+import io.swagger.v3.oas.models.links.Link;
 import lombok.Getter;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -126,7 +128,7 @@ public class InvalidDatasetContentException extends OreSiTechnicalException {
 
     public static void checkErrorsIsEmpty(final ReportErrors errors) {
         if (!errors.isEmpty()) {
-            throw new InvalidDatasetContentException(errors);
+            throw new InvalidDatasetContentException(new LinkedList<>(errors));
         }
     }
 

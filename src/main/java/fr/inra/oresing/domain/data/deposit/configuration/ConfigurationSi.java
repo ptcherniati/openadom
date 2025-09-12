@@ -22,9 +22,7 @@ import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.file.FileOrUUID;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
@@ -73,7 +71,7 @@ public class ConfigurationSi {
     }
 
 
-    public void checkTimescopRangeInDatasetRange(LocalDateTimeRange timeScope, List<CsvRowValidationCheckResult> errors, BinaryFileDataset binaryFileDataset, long rowNumber) {
+    public void checkTimescopRangeInDatasetRange(LocalDateTimeRange timeScope, ReportErrors errors, BinaryFileDataset binaryFileDataset, long rowNumber) {
         if (binaryFileDataset == null) {
             return;
         }
