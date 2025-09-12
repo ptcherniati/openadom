@@ -117,6 +117,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -654,37 +655,49 @@ public class OreSiResources {
         } catch (IOException e) {
             throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
         }
-        DataVersioningResult dataVersioningResult = null;
+        Future<DataVersioningResult> futureOfDdataVersioningResult = null;
         try {
-            dataVersioningResult = serviceContainer.versioningService().createData(
-                    locale, nameOrId, dataName, dataFile, false, true);
-        } catch (InvalidDatasetContentException invalidDatasetContentException) {
-            List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
-                    .stream()
-                    .map(row -> {
-                        long lineNumber = row.lineNumber();
-                        return row.validationCheckResult().validationCheckResultToRest(row.lineNumber());
-                    })
-                    .toList();
-            Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
-            String errorsToJson = new ObjectMapper()
-                    .registerModule(new JavaTimeModule())
-                    .writeValueAsString(validations);
-            String localizedApplicationName = application.getLocalizedLocalName(locale);
-            String localizedDataName = application.getLocalizedDataName(locale, dataName);
-            OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
-            serviceContainer.emailService().sendUpoadErrorsMail(
-                    locale,
-                    localizedApplicationName,
-                    localizedDataName,
-                    currentUser,
-                    errorsToJson
-            );
-            throw invalidDatasetContentException;
-        } catch (IOException e) {
-            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+            DataFile finalDataFile = dataFile;
+            final SecurityContext context = SecurityContextHolder.getContext();
+            futureOfDdataVersioningResult = Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+                try {
+                    SecurityContextHolder.setContext(context);
+                    return serviceContainer.versioningService().createData(
+                            locale, nameOrId, dataName, finalDataFile, false, true);
+                } catch (InvalidDatasetContentException invalidDatasetContentException) {
+                    List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
+                            .stream()
+                            .map(row -> {
+                                long lineNumber = row.lineNumber();
+                                return row.validationCheckResult().validationCheckResultToRest(row.lineNumber());
+                            })
+                            .toList();
+                    Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
+                    String errorsToJson = new ObjectMapper()
+                            .registerModule(new JavaTimeModule())
+                            .writeValueAsString(validations);
+                    String localizedApplicationName = application.getLocalizedLocalName(locale);
+                    String localizedDataName = application.getLocalizedDataName(locale, dataName);
+                    OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
+                    serviceContainer.emailService().sendUpoadErrorsMail(
+                            locale,
+                            localizedApplicationName,
+                            localizedDataName,
+                            currentUser,
+                            errorsToJson
+                    );
+                    throw invalidDatasetContentException;
+                } catch (IOException e) {
+                    throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+                }
+            });
+            final DataVersioningResult dataVersioningResult = futureOfDdataVersioningResult.get();
+            return ResponseEntity
+                    .created(URI.create(dataVersioningResult.uri()))
+                    .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
-        return ResponseEntity.created(URI.create(dataVersioningResult.uri())).body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
     }
 
     @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -1466,7 +1479,7 @@ public class OreSiResources {
                 try {
                     ObjectMapper mapper = new ObjectMapper();
                     File finalZipFile = zipFile;
-                    AtomicReference<Map<String, List<String>>> manifest= new AtomicReference<>();
+                    AtomicReference<Map<String, List<String>>> manifest = new AtomicReference<>();
                     serviceContainer.dataService().readEntry(zipFile, DataService.MANIFEST_JSON,
                             manifestStream -> {
                                 try {
