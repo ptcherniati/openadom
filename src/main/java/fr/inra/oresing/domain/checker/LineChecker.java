@@ -329,7 +329,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                             PatternValidationCheckResult.of(GroovyValidationCheckResult.success(target(), valuesToCheck), patternType)
                             : GroovyValidationCheckResult.success(target(), valuesToCheck);
                 } catch (GroovyException groovyException) {
-                    return GroovyValidationCheckResult.error(target(), groovyException.getMessage(), ImmutableMap.copyOf(groovyException.getParams()));
+                    return GroovyValidationCheckResult.error(target(), groovyException.getMessage(), ImmutableMap.copyOf(groovyException.getParamsCopy()));
                 }
             }
             final DataDatum transformedReferenceDatum = transformer().transform(referenceDatum, context);

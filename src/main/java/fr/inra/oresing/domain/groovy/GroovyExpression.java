@@ -108,6 +108,10 @@ public non-sealed class GroovyExpression implements Expression<Object> {
         }
     }
 
+    public String getExpression() {
+        return expression;
+    }
+
     @Override
     public String toString() {
         return MoreObjects.toStringHelper(this)
