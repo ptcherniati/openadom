@@ -1471,8 +1471,7 @@ public class OreSiResources {
                     sink.error(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e));
                 }
                 sink.next(new ReactiveTypeProgress(0L));
-                sink.next(new ReactiveTypeInfo("MANIFEST"));
-                final Application application = getOrLoadApplication(nameOrId, zipFile);
+                final Application application = serviceContainer.applicationService().getApplication(nameOrId);
 
                 BundleReport rapport = new BundleReport(locale, origin, application);
 
@@ -1498,15 +1497,16 @@ public class OreSiResources {
                             .mapToInt(List::size)
                             .sum();
 
-                    AtomicReference<Map<String, List<String>>> references = null;
+                    AtomicReference<Map<String, List<String>>> references  = new AtomicReference<>();;
                     serviceContainer.dataService().readEntry(zipFile, DataService.REFERENCES_JSON,
                             referencesStream -> {
                                 try {
-                                    references.set(mapper.readValue
+                                    final Map<String, List<String>> reference = mapper.readValue
                                             (referencesStream,
                                                     new TypeReference<Map<String, List<String>>>() {
                                                     }
-                                            ));
+                                            );
+                                    references.set(reference);
                                 } catch (IOException e) {
                                     throw new RuntimeException(e);
                                 }
