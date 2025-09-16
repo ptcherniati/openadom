@@ -906,7 +906,6 @@ public class OreSiResourcesTest {
 
         try {
             publishOrDepublish(fixtures.getWithRightsUserConnection().jwt(), "manche", "plateforme", "NULL_KEY__nivelle", 34, true, 1, true);
-
         } catch (final NotApplicationDataWriterForDepositException e) {
             Assertions.assertEquals(NotApplicationDataWriterForDepositException.NO_RIGHT_FOR_USER_DATA_WRITER_FOR_DEPOSIT, e.getMessage());
             Assertions.assertEquals("pem", e.dataName);

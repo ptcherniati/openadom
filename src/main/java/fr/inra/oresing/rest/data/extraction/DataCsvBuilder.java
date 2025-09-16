@@ -18,7 +18,6 @@ import fr.inra.oresing.persistence.AdditionalFileRepository;
 import fr.inra.oresing.persistence.DataRow;
 import fr.inra.oresing.rest.data.DataService;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.csv.CSVFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Flux;
@@ -28,12 +27,12 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipOutputStream;
 
 public class DataCsvBuilder {
     private static final Logger log = LoggerFactory.getLogger(DataCsvBuilder.class);
@@ -42,7 +41,7 @@ public class DataCsvBuilder {
     private DataRepository dataRepository;
 
     private Flux<DataRow> datas;
-    private OutputStream outputStream;
+    private Path zipRepository;
 
     public DataCsvBuilder() {
         super();
@@ -84,33 +83,34 @@ public class DataCsvBuilder {
                 .findData(downloadDatasetQuery.dataName());
         final StandardDataDescription dataDescription = data
                 .orElseThrow(() -> new IllegalStateException("can't find application %s".formatted(downloadDatasetQuery.dataName())));
-        ZipEntry zipEntry = new ZipEntry(String.format(fileNamePattern, downloadDatasetQuery.dataName()));
-        if (outputStream instanceof ZipOutputStream zipOutputStream) {
-            zipOutputStream.putNextEntry(zipEntry);
-        }
-        UUIDsfromData uuiDsfromData = new UUIDsfromData();
-        String language = downloadDatasetQuery.getLanguage();
-        try {
-            uuiDsfromData = buildDataCsv(language, dataDescription, downloadDatasetQuery.horizontalDisplay());
+        final String relativeFileName = String.format(fileNamePattern, downloadDatasetQuery.dataName());
+        Path outputFile = zipRepository.resolve(relativeFileName);
+        Files.createDirectories(outputFile.getParent());
+        String language = "fr";
+        UUIDsfromData uuiDsfromData = null;
+        try (OutputStream outputStream = Files.newOutputStream(outputFile)) {
+            uuiDsfromData = new UUIDsfromData();
+            language = downloadDatasetQuery.getLanguage();
+            uuiDsfromData = buildDataCsv(outputStream, language, dataDescription, downloadDatasetQuery.horizontalDisplay());
         } catch (final Exception e) {
-            if (outputStream instanceof ZipOutputStream zipOutputStream) {
-                zipOutputStream.closeEntry();
-                zipEntry = new ZipEntry(e.getClass().getSimpleName());
-                zipOutputStream.putNextEntry(zipEntry);
+            // Nom du fichier d’erreur à générer (à côté du CSV)
+            String errorFileName = String.format("error-%s.txt", downloadDatasetQuery.dataName());
+            Path errorFile = zipRepository.resolve(errorFileName);
+            Files.createDirectories(errorFile.getParent());
+            try (OutputStream errOutput = Files.newOutputStream(errorFile)) {
                 switch (language) {
-                    case "fr" -> outputStream.write("Une erreur c'est produite lors du télécharger.".getBytes());
-                    case "en" -> outputStream.write("An error occurred during download.".getBytes());
-                    case null, default -> outputStream.write("An error occurred during download.".getBytes());
+                    case "fr" -> errOutput.write("Une erreur s'est produite lors du téléchargement.".getBytes());
+                    case "en" -> errOutput.write("An error occurred during download.".getBytes());
+                    default -> errOutput.write("An error occurred during download.".getBytes());
                 }
-                outputStream.write("\n\n".getBytes());
-                outputStream.write(e.getMessage().getBytes());
-                zipOutputStream.closeEntry();
+                errOutput.write("\n\n".getBytes());
+                errOutput.write(e.getMessage().getBytes());
             }
         }
         return uuiDsfromData;
     }
 
-    public UUIDsfromData buildDataCsv(String language, StandardDataDescription dataDescription, boolean horizontalDisplay) {
+    public UUIDsfromData buildDataCsv(OutputStream outputStream, String language, StandardDataDescription dataDescription, boolean horizontalDisplay) {
         final UUIDsfromData uuiDsfromData = new UUIDsfromData();
         Character separator = downloadDatasetQuery.application().findData(downloadDatasetQuery.dataName())
                 .map(StandardDataDescription::separator)
@@ -184,8 +184,8 @@ public class DataCsvBuilder {
         return uuiDsfromData;
     }
 
-    public DataCsvBuilder withOutputStream(final OutputStream outputStream) {
-        this.outputStream = outputStream;
+    public DataCsvBuilder withZipRepository(final Path zipRepository) {
+        this.zipRepository = zipRepository;
         return this;
     }
 

@@ -18,10 +18,14 @@ import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
-import java.util.zip.ZipOutputStream;
 
+import static fr.inra.oresing.rest.OreSiResources.TMP;
 import static org.junit.Assert.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doReturn;
@@ -99,21 +103,31 @@ public class DataCsvBuilderTest {
     @MethodSource("provideDownloadDatasetQuery")
     @DisplayName("On peut builder")
     public void testBuildShouldReturnUUIDsfromData(DownloadDatasetQueryArguments arguments) throws IOException {
-
+        final Path tmpDir = Files.createTempDirectory(Paths.get(TMP), "zipTest");
         DataService dataService = mock(DataService.class);
         doReturn(datasFlux).when(dataService).findDataFlux(any(DownloadDatasetQuery.class));
         final DataCsvBuilder builder = DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> null)
                 .withDownloadDatasetQuery(arguments.query())
+                .withZipRepository(tmpDir)
                 .withReferenceService(dataService)
                 .addDatas(datasFlux);
         try (FileOutputStream fis = new FileOutputStream(DATA_ZIP_OUT);
-             BufferedOutputStream bos = new BufferedOutputStream(fis);
-             ZipOutputStream zipOutPut = new ZipOutputStream(bos);) {
-            builder.withOutputStream(zipOutPut);
+             BufferedOutputStream bos = new BufferedOutputStream(fis)) {
             var result = builder.build("test-%s.csv");
             assertNotNull(result);
         } catch (Exception e) {
             throw new RuntimeException(e);
+        } finally {
+            try (Stream<Path> walk = Files.walk(tmpDir)) {
+                walk.sorted(Comparator.reverseOrder())
+                        .forEach(path -> {
+                            try {
+                                Files.deleteIfExists(path);
+                            } catch (IOException e) {
+                                // log ou throw si besoin
+                            }
+                        });
+            }
         }
     }
 

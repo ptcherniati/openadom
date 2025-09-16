@@ -82,8 +82,8 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.output.TeeOutputStream;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -114,17 +114,13 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 @Slf4j
@@ -164,10 +160,10 @@ public class OreSiResources {
     public static final String FR = "fr";
     public static final String EN = "en";
     public static final String TMP = "/tmp";
-    public static final String UPLOAD_BUNDLE = "upload-bundle-";
     public static final String BAD_REPORT = "Le rapport est incomplet ou contient des erreurs. L'e-mail n'a pas été envoyé.";
     public static final String BAD_BUNDLE = "Erreur lors de la création du bundle de téléchargement";
     public static final String BUNDLE_NAME = "%s-%s-upload-bundle";
+    public static final String DATA_ZIP = "%s-%s-data";
     public static final String DATA_SERVICE_PATH_PATTERN = "/applications/%s/data/%s";
     private final ConcurrentHashMap<String, Boolean> runningBundleCreation = new ConcurrentHashMap<>();
     final UserRepository userRepository;
@@ -660,9 +656,9 @@ public class OreSiResources {
             DataFile finalDataFile = dataFile;
             final SecurityContext context = SecurityContextHolder.getContext();
             futureOfDdataVersioningResult = Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+                SecurityContextHolder.setContext(context);
                 try {
-                    SecurityContextHolder.setContext(context);
-                    return serviceContainer.versioningService().createData(
+                     return serviceContainer.versioningService().createData(
                             locale, nameOrId, dataName, finalDataFile, false, true);
                 } catch (InvalidDatasetContentException invalidDatasetContentException) {
                     List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
@@ -695,6 +691,11 @@ public class OreSiResources {
             return ResponseEntity
                     .created(URI.create(dataVersioningResult.uri()))
                     .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
+        } catch (ExecutionException e) {
+            throw switch (e.getCause()){
+                case OreSiTechnicalException oreSiTechnicalException -> oreSiTechnicalException;
+                default -> throw new IllegalStateException("Unexpected value: " + e.getCause());
+            };
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -1150,66 +1151,87 @@ public class OreSiResources {
             final HttpServletResponse response,
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataType,
-            @RequestParam(value = "downloadDatasetQuery", required = false) final String params) {
+            @RequestParam(value = "downloadDatasetQuery", required = false) final String params) throws InterruptedException, ExecutionException, FileNotFoundException {
 
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataType, false);
 
         AtomicReference<OreSiUser> user = new AtomicReference<>();
-        StreamingResponseBody responseBody = outputStream -> {
-            ZipOutputStream zipOutputStream = null;
-            Path tempFile;
-            try {
-                user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
-                tempFile = Files.createTempFile(Paths.get(TMP), "data-" + UUID.randomUUID(), ".zip");
-
-                try (OutputStream fileOutputStream = Files.newOutputStream(tempFile);
-                     TeeOutputStream teeOutputStream = new TeeOutputStream(outputStream, fileOutputStream)) {
-
-                    zipOutputStream = new KeepAliveZipOutputStream(new BufferedOutputStream(teeOutputStream, 2000));
-                    serviceContainer.dataService().buildDataZip(zipOutputStream, downloadDatasetQuery);
-                } catch (IOException e) {
-                    log.error(IO_ERROR_WRITE, e);
-                    // Handle specific output stream errors if necessary
-                }
-
-                // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
-                ExecutorService executorService = Executors.newSingleThreadExecutor();
-                Path finalTempFile = tempFile;
-                executorService.submit(() -> {
+        AtomicReference<Path> zipFile = new AtomicReference<>();
+        SecurityContext securityContext = SecurityContextHolder.getContext();
+        SecurityContextHolder.setContext(securityContext);
+        String fileName = DATA_ZIP.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
+        AtomicReference<Path> tempDirectory = new AtomicReference<>();
+        ;
+        try {
+            Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+                try {
+                    SecurityContextHolder.setContext(securityContext);
+                    user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
+                    tempDirectory.set(Files.createTempDirectory(Paths.get(TMP), fileName));
+                    serviceContainer.dataService().buildDataZip(tempDirectory.get(), downloadDatasetQuery);
+                    Path finalTempZipDirectory = tempDirectory.get();
                     try {
-                        serviceContainer.dataService().sendZipLinkByMail(finalTempFile, downloadDatasetQuery, user.get());
+                        zipFile.set(finalTempZipDirectory.resolveSibling(finalTempZipDirectory.getFileName() + ".zip"));
+                        ZipUtils.zipDirectory(finalTempZipDirectory, zipFile.get()); //
                     } catch (Exception e) {
                         log.error(EMAIL_ERROR, e);
                     } finally {
+                        removeRepository(finalTempZipDirectory);
+                    }
+
+                } catch (Exception e) {
+                    if (zipFile != null) {
                         try {
-                            Files.deleteIfExists(finalTempFile);
-                        } catch (IOException e) {
-                            log.error(IO_DELETE_ERROR, e);
+                            addErrorFileToZip(zipFile.get(), e);
+                        } catch (IOException ioe) {
+                            log.error(IO_ADDING_ERROR, ioe);
                         }
-                        executorService.shutdown();
                     }
-                });
-
-            } catch (Exception e) {
-                if (zipOutputStream != null) {
-                    try {
-                        addErrorFileToZip(zipOutputStream, e);
-                    } catch (IOException ioe) {
-                        log.error(IO_ADDING_ERROR, ioe);
-                    }
+                    throw new OreSiTechnicalException(IO_WRITING_CSV_ERROR, e);
                 }
-                throw new OreSiTechnicalException(IO_WRITING_CSV_ERROR, e);
-            }
+            }).get();
+            Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+                SecurityContextHolder.setContext(securityContext);
+                try {
+                    serviceContainer.dataService().sendZipLinkByMail(zipFile.get(), downloadDatasetQuery, user.get());
+                } catch (Exception e) {
+                    log.error(EMAIL_ERROR, e);
+                }
+            }).get();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        final Path source = zipFile.get();
+        StreamingResponseBody body = outputStream -> {
+            Files.copy(source, outputStream);
+            outputStream.flush(); // Important pour garantir le flush
+            Files.deleteIfExists(source); // Nettoyage juste après la copie
         };
-
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME_DATA_ZIP.formatted(
-                        downloadDatasetQuery.application().getName(),
-                        downloadDatasetQuery.dataName(),
-                        LocalDateTime.now().format(TIMESTAMP_FORMATER)
-                ))
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(responseBody);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + zipFile.get().getFileName() + "\"")
+                .body(body);
+
+    }
+
+    private static void removeRepository(Path finalTempZipDirectory) {
+        if (Files.exists(finalTempZipDirectory)) {
+            try (Stream<Path> walk = Files.walk(finalTempZipDirectory)) {
+                walk.sorted(Comparator.reverseOrder())
+                        .forEach(path -> {
+                            try {
+                                Files.delete(path);
+                            } catch (IOException e) {
+                                log.error(IO_DELETE_ERROR, e);
+                            }
+                        });
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+        }
     }
 
 
@@ -1233,32 +1255,6 @@ public class OreSiResources {
             e.printStackTrace(pw);
             writer.write(sw.toString());
         }
-    }
-
-
-    private void addErrorFileToZip(ZipOutputStream zipOutputStream, Exception e) throws IOException {
-        ZipEntry errorEntry = new ZipEntry(FILE_ERROR);
-        zipOutputStream.putNextEntry(errorEntry);
-
-        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(zipOutputStream, StandardCharsets.UTF_8))) {
-            String errorMessage = switch (OreSiResources.getDefaultLocale().getLanguage()) {
-                case FR -> IO_UPOAD_ERROR_FR;
-                case EN -> IO_UPOAD_ERROR_EN;
-                default -> IO_UPOAD_ERROR_EN;
-            };
-            writer.write(errorMessage);
-            writer.newLine();
-            writer.write(e.getMessage());
-            writer.newLine();
-
-            // Écrire la stack trace
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            e.printStackTrace(pw);
-            writer.write(sw.toString());
-        }
-
-        zipOutputStream.closeEntry();
     }
 
     private fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery deserialiseParamDownloadDatasetQuery(
@@ -1395,7 +1391,6 @@ public class OreSiResources {
                             // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
                             ExecutorService executorService = Executors.newSingleThreadExecutor();
                             Path finalTempZipDirectory = tempZipDirectory;
-                            Path finalTempZipDirectory1 = tempZipDirectory;
                             executorService.submit(() -> {
                                 try {
                                     Path zipFile = finalTempZipDirectory.resolveSibling(finalTempZipDirectory.getFileName() + ".zip");
@@ -1404,21 +1399,7 @@ public class OreSiResources {
                                 } catch (Exception e) {
                                     log.error(EMAIL_ERROR, e);
                                 } finally {
-                                    if (Files.exists(finalTempZipDirectory)) {
-                                        try (Stream<Path> walk = Files.walk(finalTempZipDirectory1)) {
-                                            walk.sorted(Comparator.reverseOrder())
-                                                    .forEach(path -> {
-                                                        try {
-                                                            Files.delete(path);
-                                                        } catch (IOException e) {
-                                                            log.error(IO_DELETE_ERROR, e);
-                                                        }
-                                                    });
-                                        } catch (IOException e) {
-                                            throw new RuntimeException(e);
-                                        }
-
-                                    }
+                                    removeRepository(finalTempZipDirectory);
 
                                     executorService.shutdown();
                                 }
@@ -1497,7 +1478,8 @@ public class OreSiResources {
                             .mapToInt(List::size)
                             .sum();
 
-                    AtomicReference<Map<String, List<String>>> references  = new AtomicReference<>();;
+                    AtomicReference<Map<String, List<String>>> references = new AtomicReference<>();
+                    ;
                     serviceContainer.dataService().readEntry(zipFile, DataService.REFERENCES_JSON,
                             referencesStream -> {
                                 try {
