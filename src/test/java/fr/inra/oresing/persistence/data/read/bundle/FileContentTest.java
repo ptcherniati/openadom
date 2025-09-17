@@ -49,7 +49,7 @@ class FileContentTest {
                       SELECT DISTINCT
                           referencetype,
                           jsonb_object_keys(refslinkedto) AS linkedto
-                      FROM  %1$s.referencevalue
+                      FROM  null.referencevalue
                   ),
                   linkedsarray AS (
                       SELECT
