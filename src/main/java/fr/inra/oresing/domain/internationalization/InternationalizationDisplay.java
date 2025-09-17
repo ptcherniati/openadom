@@ -36,29 +36,31 @@ public class InternationalizationDisplay {
                 .map(ApplicationDescription::defaultLanguage)
                 .orElse(Locale.FRENCH);
         displayPattern
-                .ifPresent(patterns -> patterns.getTitle().forEach((key, value) -> {
-                    DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
-                            StringType.getStringTypeFromStringValue(
-                                    parsePattern(value).stream()
-                                            .map(patternSection -> {
-                                                        String internationalizedPattern = patternSection.text;
-                                                        if (!Strings.isNullOrEmpty(patternSection.variable)) {
-                                                            String referencedColumn = patternSection.variable;
-                                                            internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, key.getDisplayName());
-                                                        }
-                                                        return internationalizedPattern;
-                                                    }
-                                            )
-                                            .collect(Collectors.joining()))
-                    );
-                    displaysName.put(DataColumn.forDisplayName(key),
-                            displayForLocale
-                    );
-                    if (key.equals(defaultLanguage)) {
-                        displaysName.put(DataColumn.forDisplayName("default"), displayForLocale);
-                    }
-                }));
-        if (!displaysName.contains(DataColumn.forDisplayName("default"))) {
+                .ifPresent(patterns -> patterns.getTitle()
+                        .forEach((key, value) -> {
+                            DataColumnSingleValue displayForLocale = new DataColumnSingleValue(
+                                    StringType.getStringTypeFromStringValue(
+                                            parsePattern(value).stream()
+                                                    .map(patternSection -> {
+                                                                String internationalizedPattern = patternSection.text;
+                                                                if (!Strings.isNullOrEmpty(patternSection.variable)) {
+                                                                    String referencedColumn = patternSection.variable;
+                                                                    internationalizedPattern += refValues.get(new DataColumn(referencedColumn)).toValueString(dataImporterContext, referencedColumn, key.getDisplayName());
+                                                                }
+                                                                return internationalizedPattern;
+                                                            }
+                                                    )
+                                                    .collect(Collectors.joining()))
+                            );
+                            displaysName.put(DataColumn.forDisplayName(key),
+                                    displayForLocale
+                            );
+                            if (key.equals(defaultLanguage)) {
+                                displaysName.put(DataColumn.forDisplayName(DataColumn.DEFAULT), displayForLocale);
+                            }
+                        }));
+        if (!displaysName.contains(DataColumn.forDisplayName(DataColumn.DEFAULT)) ||
+            Strings.isNullOrEmpty(displaysName.get(DataColumn.forDisplayName(DataColumn.DEFAULT)).toJsonForFrontend().toString())) {
             String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
                     .stream()
                     .map(columnName ->
@@ -74,7 +76,10 @@ public class InternationalizationDisplay {
                     )
                     .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
 
-            displaysName.put(DataColumn.forDisplayName("default"), new DataColumnSingleValue(StringType.getStringTypeFromStringValue(defaultDisplay)));
+            displaysName.put(DataColumn.forDisplayName(DataColumn.DEFAULT), new DataColumnSingleValue(
+                            StringType.getStringTypeFromStringValue(defaultDisplay)
+                    )
+            );
 
         }
         return displaysName;
@@ -109,10 +114,11 @@ public class InternationalizationDisplay {
                             displayForLocale
                     );
                     if (key.equals(defaultLanguage)) {
-                        displaysDescription.put(DataColumn.forDisplayName("default"), displayForLocale);
+                        displaysDescription.put(DataColumn.forDisplayDescription(DataColumn.DEFAULT), displayForLocale);
                     }
                 }));
-        if (!displaysDescription.contains(DataColumn.forDisplayName("default"))) {
+        if (!displaysDescription.contains(DataColumn.forDisplayName(DataColumn.DEFAULT)) ||
+            Strings.isNullOrEmpty(displaysDescription.get(DataColumn.forDisplayName(DataColumn.DEFAULT)).toJsonForFrontend().toString())) {
             String defaultDisplay = dataImporterContext.getNaturalKeyColumns()
                     .stream()
                     .map(columnName ->
@@ -127,6 +133,13 @@ public class InternationalizationDisplay {
 
                     )
                     .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+            displaysDescription.put(DataColumn.forDisplayDescription(DataColumn.DEFAULT), new DataColumnSingleValue(
+                            StringType.getStringTypeFromStringValue(
+                                    defaultDisplay
+                            )
+                    )
+            );
+
         }
         return displaysDescription;
     }

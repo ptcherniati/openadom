@@ -8,6 +8,7 @@ public record DataColumn(String column) implements CheckerTarget, SomethingToBeS
 
     public static final String DISPLAY = "__display_";
     public static final String DISPLAY_NAME = "%s%%s".formatted(DataColumn.DISPLAY);
+    public static final String DEFAULT = "default";
     public static final String DISPLAY_DESCRIPTION = "%sdescription_%%s".formatted(DataColumn.DISPLAY);
 
     public static DataColumn forDisplayName(final Locale locale) {

@@ -796,7 +796,7 @@ OA_data:
           datatype name : {datatype}, variable name : {variable}, : unit name {unite}
       OA_description:
         fr: >-
-          Jointure des nom du type de données : {datatype}, nom de la variable
+          Jointure des noms du type de données : {datatype}, nom de la variable
           : {variable}, : nom de l'unité {unite}
         en: >-
           Join ondatatype name : {datatype}, variable name : {variable}, : unit name {unite}

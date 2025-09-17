@@ -746,7 +746,7 @@
           },
           "description": {
             "en": "Join ondatatype name : {datatype}, variable name : {variable}, : unit name {unite}",
-            "fr": "Jointure des nom du type de données : {datatype}, nom de la variable : {variable}, : nom de l'unité {unite}"
+            "fr": "Jointure des noms du type de données : {datatype}, nom de la variable : {variable}, : nom de l'unité {unite}"
           }
         }
       }
