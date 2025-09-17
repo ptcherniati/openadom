@@ -1,6 +1,6 @@
 services:
   postgresql:
-    image: postgres:17.5
+    image: postgres:18rc1
     ports:
       - "5432:5432"
     environment:
@@ -12,7 +12,7 @@ services:
     networks:
       - default
   postgresql_graphana:
-    image: postgres:16.9
+    image: postgres:18rc1
     ##ports:
       ##- "5433:5432"
     environment:
