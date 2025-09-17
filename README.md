@@ -18,10 +18,9 @@ Le projet est constitué de 2 sous projet :
 
 ### Prérequis
 
-  - JDK ≥ 23
+  - JDK ≥ 24
   - maven 3
   - Docker
-  - nodejs 18
   - postgresql 17.5
 
 Pour constuire le projet avec maven, l'utilisateur doit avoir le droit de démarrer de conteneurs docker.

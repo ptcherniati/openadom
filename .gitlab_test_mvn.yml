@@ -1,5 +1,5 @@
 .st_test_template: &test_template
-  image: maven:3.9.9-amazoncorretto-23
+  image: maven:3.9.11-amazoncorretto-24
   stage: test
   artifacts:
     when: always
