@@ -24,7 +24,7 @@ public record FileContent(List<String> refsLinked, String fileName, InputStream 
                   SELECT DISTINCT
                       referencetype,
                       jsonb_object_keys(refslinkedto) AS linkedto
-                  FROM sipro_v01.referencevalue
+                  FROM  %1$s.referencevalue
               ),
               linkedsarray AS (
                   SELECT

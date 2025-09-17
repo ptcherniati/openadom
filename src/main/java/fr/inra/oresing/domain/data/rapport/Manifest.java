@@ -3,6 +3,7 @@ package fr.inra.oresing.domain.data.rapport;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public record Manifest(
@@ -19,7 +20,7 @@ public record Manifest(
                 .computeIfAbsent(reference, k -> new ArrayList<>())
                 .add(fileContent);
 
-        List<String> deps = fileContent.refsLinked();
+        List<String> deps = fileContent.refsLinked().stream().filter(Predicate.not(reference::equals)).toList();
         referenceTypeDeps
                 .computeIfAbsent(reference, k -> new ArrayList<>())
                 .addAll(deps);
@@ -49,11 +50,12 @@ public record Manifest(
 
     private void visit(String node, List<String> sorted, Set<String> visited, Set<String> visiting) {
         if (visited.contains(node)) return;
-        if (visiting.contains(node)) throw new RuntimeException("Cycle detected");
-        visiting.add(node);
-        for (String dep : referenceTypeDeps.getOrDefault(node, Collections.emptyList())) {
-            visit(dep, sorted, visited, visiting);
+        if (visiting.contains(node)) {
+            throw new RuntimeException("Cycle detected");
         }
+        visiting.add(node);
+        referenceTypeDeps.getOrDefault(node, Collections.emptyList()).stream()
+                .forEach(dep-> visit(dep, sorted, visited, visiting));
         visiting.remove(node);
         visited.add(node);
         sorted.add(node);

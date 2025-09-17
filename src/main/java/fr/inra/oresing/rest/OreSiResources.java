@@ -83,7 +83,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -658,7 +657,7 @@ public class OreSiResources {
             futureOfDdataVersioningResult = Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
                 SecurityContextHolder.setContext(context);
                 try {
-                     return serviceContainer.versioningService().createData(
+                    return serviceContainer.versioningService().createData(
                             locale, nameOrId, dataName, finalDataFile, false, true);
                 } catch (InvalidDatasetContentException invalidDatasetContentException) {
                     List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
@@ -692,7 +691,7 @@ public class OreSiResources {
                     .created(URI.create(dataVersioningResult.uri()))
                     .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
         } catch (ExecutionException e) {
-            throw switch (e.getCause()){
+            throw switch (e.getCause()) {
                 case OreSiTechnicalException oreSiTechnicalException -> oreSiTechnicalException;
                 default -> throw new IllegalStateException("Unexpected value: " + e.getCause());
             };
@@ -1400,13 +1399,13 @@ public class OreSiResources {
                                     log.error(EMAIL_ERROR, e);
                                 } finally {
                                     removeRepository(finalTempZipDirectory);
-
                                     executorService.shutdown();
                                 }
                             });
                         } else {
                             log.warn(BAD_REPORT);
                             try {
+                                removeRepository(tempZipDirectory);
                                 Files.deleteIfExists(tempZipDirectory);
                             } catch (IOException e) {
                                 log.error(IO_DELETE_ERROR, e);
