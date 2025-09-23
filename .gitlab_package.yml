@@ -1,5 +1,5 @@
 maven:
-  image: maven:3.9.11-amazoncorretto-24
+  image: maven:3.9.11-amazoncorretto-25
   stage: package
   script: mvn --batch-mode clean package -Dmaven.test.skip=true
   tags:
@@ -12,7 +12,7 @@ maven:
     - if: $CI_JOB_MANUAL!= "true"
 
 maven_registry:
-  image: maven:3.9.11-amazoncorretto-24
+  image: maven:3.9.11-amazoncorretto-25
   stage: package
   script:
     - MVN_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout) && echo $MVN_VERSION;
