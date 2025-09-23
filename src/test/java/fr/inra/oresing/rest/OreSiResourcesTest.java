@@ -1033,8 +1033,8 @@ public class OreSiResourcesTest {
 
             @Override
             public void _dont_implement_Matcher___instead_extend_BaseMatcher_() {
-
             }
+
         };
         mockMvc.perform(get("/api/v1/applications/teledec/data/{refType}", "tr_variable_local_vloc")
                         .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))

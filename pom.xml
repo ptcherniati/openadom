@@ -64,7 +64,7 @@
         <license.licenseName>lgpl_v3</license.licenseName>
 
         <!-- Java Version -->
-        <java.version>24</java.version>
+        <java.version>25</java.version>
 
         <jwt.version>0.12.6</jwt.version>
         <flyway.version>11.7.2</flyway.version>
@@ -139,6 +139,7 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <version>1.18.42</version>
             <optional>true</optional>
         </dependency>
         <dependency>
@@ -283,6 +284,11 @@
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-afterburner</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <scope>provided</scope>
+        </dependency>
 
     </dependencies>
 
@@ -351,6 +357,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <compilerArgs>--enable-preview</compilerArgs>
+                    <release>${java.version}</release>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                 </configuration>
@@ -435,6 +442,15 @@
                     <url>https://forge.inrae.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
                 </snapshotRepository>
             </distributionManagement>
+            <dependencyManagement>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.projectlombok</groupId>
+                        <artifactId>lombok</artifactId>
+                        <version>1.18.42</version>
+                    </dependency>
+                </dependencies>
+            </dependencyManagement>
             <build>
                 <plugins>
                     <plugin>

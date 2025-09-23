@@ -18,7 +18,7 @@ Le projet est constitué de 2 sous projet :
 
 ### Prérequis
 
-  - JDK ≥ 24
+  - JDK ≥ 25
   - maven 3
   - Docker
   - postgresql 17.5

@@ -2,7 +2,7 @@
 # ---- Stage 1: Build and Test the Maven project ----
 ######################################################
 
-FROM maven:3.9.11-amazoncorretto-24 AS build-test-stage
+FROM maven:3.9.11-amazoncorretto-25 AS build-test-stage
 
 # Set the working directory inside the container
 WORKDIR /app

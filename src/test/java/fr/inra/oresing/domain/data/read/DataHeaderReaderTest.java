@@ -112,7 +112,7 @@ class DataHeaderReaderTest {
         final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT)
                 .setDelimiter(dataDescription.separator())
                 .setSkipHeaderRecord(true)
-                .build();
+                .get();
 
         final CSVParser csvParser = CSVParser.parse(csv, StandardCharsets.UTF_8, csvFormat);
         lineIterator = csvParser.iterator();
