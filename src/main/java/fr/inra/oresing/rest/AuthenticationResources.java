@@ -49,35 +49,38 @@ public class AuthenticationResources {
         this.authenticationService = authenticationService;
     }
 
-    @Tag(name = "Sécurité", description = "Endpoints liés à la sécurité et à l’authentification")
-
-    @Operation(
-            summary = "Obtenir un token CSRF",
-            description = "Renvoie le token CSRF à utiliser dans les requêtes POST/PUT/DELETE. Nécessite d’être authentifié.",
-            security = @SecurityRequirement(name = "bearerAuth"),
-            responses = {
-                    @ApiResponse(responseCode = "200", description = "Token CSRF renvoyé"),
-                    @ApiResponse(responseCode = "401", description = "Non authentifié")
-            }
-    )
-
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("/csrf-token")
-    public CsrfToken csrf(CsrfToken token) {
-        return token;
-    }
-
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/me")
+    @SecurityRequirement(name = "Bearer Authentication")
     public OreSiRequestClient me() {
         return OreSiApiRequestContext.getRequestClient();
     }
 
 
+    @Tag(name = "Sécurité", description = "Endpoints liés à la sécurité et à l’authentification")
     @Operation(
             summary = "Authentication and JWT retrieval",
             description = "Returns the JWT token if the user is authenticated. If authentication fails, returns NO_TOKEN.",
-            tags = {"Authentication"}
+            tags = {"Authentication"},
+            parameters = {
+                    @Parameter(
+                            name = "login",
+                            description = "Identifiant de l'utilisateur",
+                            required = true,
+                            in = ParameterIn.QUERY,
+                            examples = {
+                                    @ExampleObject(name = "Admin", value = "\"admin\""),
+                                    @ExampleObject(name = "Utilisateur standard", value = "\"user123\"")
+                            }
+                    ),
+                    @Parameter(
+                            name = "password",
+                            description = "Mot de passe de l'utilisateur",
+                            required = true,
+                            in = ParameterIn.QUERY,
+                            schema = @Schema(type = "string", format = "password")
+                    )
+            }
     )
     @ApiResponses({
             @ApiResponse(
@@ -91,7 +94,10 @@ public class AuthenticationResources {
             )
     })
     @GetMapping(value = "/login", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String getCrsf(final HttpServletResponse response, @RequestParam("login") final String login, @RequestParam("password") final String password) {
+    public String getCrsf(
+            final HttpServletResponse response,
+            @RequestParam("login") final String login,
+            @RequestParam("password") final String password) {
 
         return Optional.ofNullable(SecurityContextHolder.getContext())
                 .map(SecurityContext::getAuthentication)
@@ -101,11 +107,12 @@ public class AuthenticationResources {
                 .orElse("NO_TOKEN");
     }
 
+    @Tag(name = "Sécurité", description = "Endpoints liés à la sécurité et à l’authentification")
     @Operation(
             summary = "Connexion utilisateur",
             description = "Authentifie un utilisateur et retourne un BEARER. " +
                           "Ce BEARER est à passer dans tout appel au serveur",
-            tags = {"authentication-resources"},
+            tags = {"authentication-resources", "Authentication"},
             parameters = {
                     @Parameter(
                             name = "login",
@@ -144,6 +151,7 @@ public class AuthenticationResources {
                     """,
             tags = {"Authentification"})
     @DeleteMapping("/logout")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<String> logout(HttpServletResponse response) {
         return ResponseEntity
                 .ok("{\"message\": \"Disconnected\"}");
@@ -155,6 +163,7 @@ public class AuthenticationResources {
             tags = {"Utilisateurs"})
     @PreAuthorize("isAnonymous() || isAuthenticated()")
     @PostMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE)
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<Map<String, UUID>> createUser(
             @Parameter(
                     name = "login",
@@ -205,6 +214,7 @@ public class AuthenticationResources {
             tags = {"Utilisateurs"})
     @PreAuthorize("isAnonymous() || isAuthenticated()")
     @PutMapping(value = "/users", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<CreateUserResult> updateUser(
             final HttpServletResponse response/*,
             @RequestBody() final Mono<CreateUserRequest> createUserRequest*/
@@ -232,6 +242,7 @@ public class AuthenticationResources {
             tags = {"Utilisateurs"})
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_USER_READER')")
     @GetMapping(value = "/users/{userLoginOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    @SecurityRequirement(name = "Bearer Authentication")
     public OreSiUser getByIdOrLogin(@PathVariable(name = "userLoginOrId") final String userLoginOrId) {
         return authenticationService.getByIdOrLogin(userLoginOrId);
     }
