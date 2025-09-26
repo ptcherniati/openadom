@@ -3,6 +3,9 @@ package fr.inra.oresing;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
@@ -127,7 +130,14 @@ public class OreSiNg implements WebMvcConfigurer {
         }
     }
 
+
     @Configuration
+    @SecurityScheme(
+            name = "Bearer Authentication",
+            type = SecuritySchemeType.HTTP,
+            bearerFormat = "JWT",
+            scheme = "bearer"
+    )
     public static class OpenApiConfig {
 
         @Value("${allowed.origin}")

@@ -31,6 +31,7 @@ import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
 import org.springframework.boot.actuate.health.HealthComponent;
@@ -48,6 +49,7 @@ import java.util.*;
 
 @RestController
 @RequestMapping("/api/v1")
+@SecurityRequirement(name = "Bearer Authentication")
 public class AuthorizationResources {
 
     public static final String AUTHORIZATION_ID = "authorizationId";

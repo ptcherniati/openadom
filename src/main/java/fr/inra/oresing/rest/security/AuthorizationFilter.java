@@ -143,10 +143,7 @@ public class AuthorizationFilter extends GenericFilterBean {
         if (HttpMethod.OPTIONS.name().equals(method)) {
             return null;
         }
-        if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.LOGIN)) {
-            return buildLoginAuthentication(request, response, isSecureEnvironnement);
-        }
-        if (HttpMethod.GET.name().equals(method) && path.endsWith(SecurityConfig.LOGIN)) {
+        if (List.of(HttpMethod.POST.name(), HttpMethod.GET.name()).contains(method) && path.endsWith(SecurityConfig.LOGIN)) {
             return buildLoginAuthentication(request, response, isSecureEnvironnement);
         }
         if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.USERS)) {
