@@ -1,0 +1,924 @@
+{
+  "data": {
+    "monsore_dn_pem": [
+      {
+        "date": "01/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 54
+      },
+      {
+        "date": "01/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 38
+      },
+      {
+        "date": "01/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 27
+      },
+      {
+        "date": "01/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 15
+      },
+      {
+        "date": "01/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 25
+      },
+      {
+        "date": "01/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 18
+      },
+      {
+        "date": "01/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 39
+      },
+      {
+        "date": "02/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 0
+      },
+      {
+        "date": "02/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 25
+      },
+      {
+        "date": "02/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 32
+      },
+      {
+        "date": "02/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 18
+      },
+      {
+        "date": "02/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 25
+      },
+      {
+        "date": "02/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 14
+      },
+      {
+        "date": "02/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 15
+      },
+      {
+        "date": "03/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 45
+      },
+      {
+        "date": "03/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 0
+      },
+      {
+        "date": "03/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 41
+      },
+      {
+        "date": "03/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 16
+      },
+      {
+        "date": "03/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 27
+      },
+      {
+        "date": "03/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 0
+      },
+      {
+        "date": "04/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 51
+      },
+      {
+        "date": "04/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 22
+      },
+      {
+        "date": "04/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 43
+      },
+      {
+        "date": "04/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 15
+      },
+      {
+        "date": "04/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 27
+      },
+      {
+        "date": "04/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 0
+      },
+      {
+        "date": "04/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 24
+      },
+      {
+        "date": "05/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 59
+      },
+      {
+        "date": "05/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 27
+      },
+      {
+        "date": "05/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 49
+      },
+      {
+        "date": "05/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 17
+      },
+      {
+        "date": "05/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "rouge"
+        },
+        "color_value_fr": "rouge",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 25
+      },
+      {
+        "date": "05/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "bleu"
+        },
+        "color_value_fr": "bleu",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 21
+      },
+      {
+        "date": "05/01/1984",
+        "projet_": {
+          "nom_fr": "Projet manche",
+          "definition_fr": "Projet manche"
+        },
+        "site_": {
+          "type_de_site": {
+            "tze_nom_fr": "plateforme"
+          },
+          "zet_description_fr": "",
+          "zet_nom_fr": "p1"
+        },
+        "unite": {
+          "code_fr": "*"
+        },
+        "valeurs_qualitative_": {
+          "nom_fr": "couleur des individus",
+          "valeur_fr": "vert"
+        },
+        "color_value_fr": "vert",
+        "individusnumber_": {
+          "code_fr": "*",
+          "nom_fr": "sans unite"
+        },
+        "individusnumbervalue": 24
+      }
+    ]
+  }
+}
