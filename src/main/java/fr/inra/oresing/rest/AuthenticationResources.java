@@ -7,13 +7,16 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.NotConnectedU
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.persistence.AuthenticationFailure;
 import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
@@ -70,10 +73,38 @@ public class AuthenticationResources {
         return OreSiApiRequestContext.getRequestClient();
     }
 
+
+    @Operation(
+            summary = "Authentication and JWT retrieval",
+            description = "Returns the JWT token if the user is authenticated. If authentication fails, returns NO_TOKEN.",
+            tags = {"Authentication"}
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "JWT token successfully retrieved",
+                    content = @Content(mediaType = "text/plain", schema = @Schema(implementation = String.class))
+            ),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Authentication failed"
+            )
+    })
+    @GetMapping(value = "/login", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String getCrsf(final HttpServletResponse response, @RequestParam("login") final String login, @RequestParam("password") final String password) {
+
+        return Optional.ofNullable(SecurityContextHolder.getContext())
+                .map(SecurityContext::getAuthentication)
+                .filter(OreSiAuthenticationToken.class::isInstance)
+                .map(OreSiAuthenticationToken.class::cast)
+                .map(OreSiAuthenticationToken::getBearerJwt)
+                .orElse("NO_TOKEN");
+    }
+
     @Operation(
             summary = "Connexion utilisateur",
             description = "Authentifie un utilisateur et retourne un BEARER. " +
-                    "Ce BEARER est à passer dans tout appel au serveur",
+                          "Ce BEARER est à passer dans tout appel au serveur",
             tags = {"authentication-resources"},
             parameters = {
                     @Parameter(

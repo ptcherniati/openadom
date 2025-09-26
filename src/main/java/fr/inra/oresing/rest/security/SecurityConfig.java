@@ -85,6 +85,7 @@ public class SecurityConfig {
                                         API_DOCS_YAML,
                                         ERROR).permitAll()
                                 .requestMatchers(HttpMethod.POST, API_V_1_LOGIN).hasAuthority(AuthorizationFilter.ROLE_AUTHENTIFIED_USER.getAuthority())
+                                .requestMatchers(HttpMethod.GET, API_V_1_LOGIN).hasAuthority(AuthorizationFilter.ROLE_AUTHENTIFIED_USER.getAuthority())
                                 .requestMatchers(HttpMethod.POST, API_V_1_USERS).hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_CREATE_USER.getAuthority())
                                 .requestMatchers(HttpMethod.PUT, API_V_1_USERS).hasAuthority(AuthorizationFilter.ROLE_UNAUTHENTIFIED_UPDATE_USER.getAuthority())
                                 .anyRequest().authenticated())
