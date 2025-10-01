@@ -177,11 +177,11 @@ public record Component(
                         }
                         sqls.select().add("MAX(\"%1$s\".display_fr)::TEXT\t\t\"%1$s_fr\"".formatted(fieldName()));
                         sqls.select().add("MAX(\"%1$s\".display_en)::TEXT\t\t\"%1$s_en\"".formatted(fieldName()));
+                        addIndex(sqls, "\"%1$s_id\"".formatted(escapedFieldName()), sqls.schemaName(), sqls.tableName());
+                        sqls.foreignKeys()
+                                .computeIfAbsent(refType(), _ -> new LinkedList<>())
+                                .add("\"%1$s_id\"".formatted(escapedFieldName()));
                     }
-                    addIndex(sqls, "\"%1$s_id\"".formatted(escapedFieldName()), sqls.schemaName(), sqls.tableName());
-                    sqls.foreignKeys()
-                            .computeIfAbsent(refType(), _ -> new LinkedList<>())
-                            .add("\"%1$s_id\"".formatted(escapedFieldName()));
 
                 }
                 default -> {
@@ -200,7 +200,7 @@ public record Component(
         sqls.indexes().add("""
                 CREATE INDEX IF NOT EXISTS "%1$s_idx"
                     ON %2$s_dn."%3$s" USING btree ("%1$s" ASC NULLS LAST);"""
-                .formatted(fieldName.replace("\"",""), schemaName, tableName)
+                .formatted(fieldName.replace("\"", ""), schemaName, tableName)
         );
     }
 

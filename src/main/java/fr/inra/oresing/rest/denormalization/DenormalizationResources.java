@@ -5,9 +5,12 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.SqlService;
 import fr.inra.oresing.rest.services.DenormalizedService;
 import fr.inra.oresing.rest.services.ServiceContainer;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -40,10 +43,15 @@ public class DenormalizationResources {
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
     @PostMapping(value = "/applications/{nameOrId}/denormalized")
+    @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<String> buildDenormalizedSchema(@PathVariable("nameOrId") final String nameOrId) throws ExecutionException, InterruptedException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        final SecurityContext context = SecurityContextHolder.getContext();
         final String sql = executorService
-                .submit(() -> denormalizedService.buildDenormalizedSchema(application))
+                .submit(() -> {
+                    SecurityContextHolder.setContext(context);
+                    return denormalizedService.buildDenormalizedSchema(application);
+                })
                 .get();
         return ResponseEntity.ok(sql);
     }

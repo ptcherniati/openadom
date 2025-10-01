@@ -11,7 +11,6 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -39,6 +38,7 @@ public class DenormalizedService {
         this.sqlService = sqlService;
     }
 
+    @Transactional
     public String buildDenormalizedSchema(Application application) {
         List<Sql> buildedSqls = application.getConfiguration().dataDescription().entrySet().stream()
                 .map(entry -> {
