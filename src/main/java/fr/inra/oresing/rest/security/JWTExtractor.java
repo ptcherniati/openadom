@@ -98,7 +98,7 @@ public class JWTExtractor {
         return mapper.readValue(json, OpenAdomJwtValue.class).requestClient();
     }
 
-    public void refreshJwtInResponse(HttpServletResponse response, UUID id, boolean isSecureEnvironnement) {
+    public String refreshJwtInResponse(HttpServletResponse response, UUID id, boolean isSecureEnvironnement) {
         OreSiUserRole userRole = getUserRole.apply(id);
         OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(id, userRole);
         String json = mapper.toJson(new OpenAdomJwtValue(requestClient));
@@ -108,6 +108,7 @@ public class JWTExtractor {
         } catch (Exception e) {
             log.trace("pas grave");
         }
+        return jwt;
     }
 
     public void setSetGetUserRole(Function<UUID, OreSiUserRole> getUserRole) {

@@ -143,7 +143,7 @@ public class AuthorizationFilter extends GenericFilterBean {
         if (HttpMethod.OPTIONS.name().equals(method)) {
             return null;
         }
-        if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.LOGIN)) {
+        if (List.of(HttpMethod.POST.name(), HttpMethod.GET.name()).contains(method) && path.endsWith(SecurityConfig.LOGIN)) {
             return buildLoginAuthentication(request, response, isSecureEnvironnement);
         }
         if (HttpMethod.POST.name().equals(method) && path.endsWith(SecurityConfig.USERS)) {
@@ -264,12 +264,14 @@ public class AuthorizationFilter extends GenericFilterBean {
             LoginAdminResult loginAdminResult = serviceContainer.authorizationService()
                     .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
                     .forLoginPassword(loginValue, passwordValue);
-            jWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
-            return new OreSiAuthenticationToken(
+            final String jwt = jWTExtractor.refreshJwtInResponse(response, loginAdminResult.id(), isSecureEnvironnement);
+            final OreSiAuthenticationToken oreSiAuthenticationToken = new OreSiAuthenticationToken(
                     loginAdminResult,
                     request.getRequestURI(),
                     List.of(ROLE_AUTHENTIFIED_USER)
             );
+            oreSiAuthenticationToken.setJwtToken(jwt);
+            return oreSiAuthenticationToken;
         }
         throw new AuthenticationFailure(BAD_LOGIN_PASSWORD, (OreSiUser) null);
     }

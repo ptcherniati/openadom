@@ -21,6 +21,7 @@ public class OreSiAuthenticationToken extends AbstractAuthenticationToken implem
 
     private final Object principal;
     private final Object credentials;
+    private String jwtToken;
     @Getter
     private ApplicationPersona applicationPersona;
     @Setter
@@ -133,5 +134,13 @@ public class OreSiAuthenticationToken extends AbstractAuthenticationToken implem
     public StoreFile setStoreFile(StoreFile storeFile) {
         this.storeFile = storeFile;
         return storeFile;
+    }
+
+    public void setJwtToken(String jwt) {
+        this.jwtToken = jwt;
+    }
+
+    public String getBearerJwt() {
+        return  "Authorization: Bearer %s".formatted(jwtToken);
     }
 }
