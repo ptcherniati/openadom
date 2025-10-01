@@ -30,11 +30,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * @author jrobert
@@ -52,7 +48,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
       new GsonBuilder()
           .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
           .create();*/
-    private final ExecutorService executorService = Executors.newFixedThreadPool(5);
     @Value("${filesender.baseurl}")
     private String BASE_URL;
     @Value("${filesender.username}")

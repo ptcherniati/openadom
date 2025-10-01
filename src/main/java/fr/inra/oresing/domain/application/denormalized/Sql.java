@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 public record Sql(
         String schemaName,
         String tableName,
+        UUID applicationId,
         List<String> select,
         List<String> refValuesTable,
         List<ReferenceJoin> referenceJoin,
@@ -55,10 +56,11 @@ public record Sql(
         }
         return sorted;
     }
-    public Sql(String schemaName, String tableName) {
+    public Sql(String schemaName, String tableName, UUID applicationId) {
         this(
                 schemaName,
                 tableName,
+                applicationId,
                 new ArrayList<>(),
                 new ArrayList<>(),
                 new ArrayList<>(),
@@ -142,6 +144,8 @@ public record Sql(
                                 WHERE referencetype = '%2$s'
                                 GROUP BY referencevalue.id, referencevalue.naturalkey, referencevalue.hierarchicalkey
                             );
+                            ALTER TABLE IF EXISTS  %1$s_dn.%2$s
+                                OWNER TO "%8$s_applicationManager";
                             
                             GRANT SELECT ON TABLE %1$s_dn.%2$s TO PUBLIC;
                             
@@ -162,13 +166,14 @@ public record Sql(
                             
                             """
                 .formatted(
-                        schemaName,
-                        tableName,
+                        schemaName(),
+                        tableName(),
                         buildSelects(),
                         buildFrom(),
                         buildIndexes(),
                         buildForeignKeys(),
-                        buildPolicies()
+                        buildPolicies(),
+                        applicationId()
                 );
     }
 

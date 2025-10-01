@@ -174,6 +174,15 @@ public class SqlService {
         return Boolean.TRUE.equals(namedParameterJdbcTemplate.queryForObject(sql, EmptySqlParameterSource.INSTANCE, Boolean.class));
     }
 
+    public boolean createDenormalizedTable(String sqlTable){
+        try{
+            execute(sqlTable);
+            return true;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private void execute(final String sql) {
         namedParameterJdbcTemplate.execute(sql, PreparedStatement::execute);
     }

@@ -2,7 +2,6 @@ package fr.inra.oresing.rest.services;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.application.denormalized.ReferenceJoin;
 import fr.inra.oresing.domain.application.denormalized.Sql;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlService;
@@ -12,9 +11,9 @@ import org.springframework.beans.factory.BeanFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -23,6 +22,7 @@ import java.util.stream.Stream;
 @Component
 @Transactional(readOnly = true)
 public class DenormalizedService {
+    public static final String CANT_CREATE_DENORMALIZED_TABLE = "CANT_CREATE_DENORMALIZED_TABLE";
     private final OreSiRepository repository;
     private final BeanFactory beanFactory;
     private final SqlService sqlService;
@@ -39,21 +39,21 @@ public class DenormalizedService {
         this.sqlService = sqlService;
     }
 
-    public void buildDenormalizedSchema(Application application) {
+    public String buildDenormalizedSchema(Application application) {
         List<Sql> buildedSqls = application.getConfiguration().dataDescription().entrySet().stream()
                 .map(entry -> {
                     String schemaName = application.getName();
                     String tableName = entry.getKey();
-                    Sql sqls = new Sql(schemaName, tableName);
+                    Sql sqls = new Sql(schemaName, tableName, application.getId());
                     StandardDataDescription dataDescription = entry.getValue();
                     final Optional<Authorization> authorization = Optional.of(dataDescription)
                             .map(StandardDataDescription::authorization);
                     dataDescription.componentDescriptions().entrySet().stream()
-                            .sorted((a, b)->{
-                                if(a.getKey().equals(b.getKey())) {
+                            .sorted((a, b) -> {
+                                if (a.getKey().equals(b.getKey())) {
                                     return 0;
                                 }
-                                return (b.getValue() instanceof PatternComponent) || (b.getValue() instanceof DynamicComponent) ?-1:1;
+                                return (b.getValue() instanceof PatternComponent) || (b.getValue() instanceof DynamicComponent) ? -1 : 1;
                             })
                             .flatMap(componentDescriptionEntry -> {
                                 fr.inra.oresing.domain.application.denormalized.Component component = fr.inra.oresing.domain.application.denormalized.Component.of(
@@ -71,8 +71,8 @@ public class DenormalizedService {
                                         componentDescriptionEntry.getKey()
                                 );
                                 return switch (componentDescriptionEntry.getValue()) {
-                                    case PatternComponentAdjacents _ ->Stream.empty();
-                                    case PatternComponentQualifiers _ ->Stream.empty();
+                                    case PatternComponentAdjacents _ -> Stream.empty();
+                                    case PatternComponentQualifiers _ -> Stream.empty();
                                     case PatternComponent patternComponent -> {
                                         List<fr.inra.oresing.domain.application.denormalized.Component> components = new ArrayList<>();
                                         components.add(component);
@@ -123,26 +123,41 @@ public class DenormalizedService {
                 .map(Sql::createTable)
                 .collect(Collectors.joining("\n\t"));
         String tableSql = """
-               drop schema if exists %2$s_dn cascade;
-               create schema %2$s_dn;
-               
-               GRANT USAGE ON SCHEMA %2$s_dn TO PUBLIC;
+                drop schema if exists %2$s_dn cascade;
+                create schema %2$s_dn;
+                ALTER SCHEMA monsore_dn
+                 OWNER TO "%3$s_applicationManager";
                 
-               create table %2$s_dn.referenceDisplay as
-                    (select id,
-                            hierarchicalkey,
-                            COALESCE(
-                                    NULLIF(refvalues ->> '__display_fr', ''),
-                                    refvalues ->> '__display_default'
-                            ) display_fr,
-                            COALESCE(
-                                    NULLIF(refvalues ->> '__display_en', ''),
-                                    NULLIF(refvalues ->> '__display_fr', ''),
-                                    refvalues ->> '__display_default'
-                            ) display_en
-                     from %2$s.referencevalue);
-                      %1$s
-                      drop table %2$s_dn.referenceDisplay; """.formatted(tablesCreationSchema, application.getName());
-        System.out.println(tableSql);
+                GRANT USAGE ON SCHEMA %2$s_dn TO PUBLIC;
+                
+                create table %2$s_dn.referenceDisplay as
+                     (select id,
+                             hierarchicalkey,
+                             COALESCE(
+                                     NULLIF(refvalues ->> '__display_fr', ''),
+                                     refvalues ->> '__display_default'
+                             ) display_fr,
+                             COALESCE(
+                                     NULLIF(refvalues ->> '__display_en', ''),
+                                     NULLIF(refvalues ->> '__display_fr', ''),
+                                     refvalues ->> '__display_default'
+                             ) display_en
+                      from %2$s.referencevalue);
+                       %1$s
+                       drop table %2$s_dn.referenceDisplay; """
+                .formatted(
+                        tablesCreationSchema,
+                        application.getName(),
+                        application.getId().toString()
+                );
+        try {
+            if(!sqlService.createDenormalizedTable(tableSql)){
+                return CANT_CREATE_DENORMALIZED_TABLE;
+            };
+        } catch (Exception e) {
+            log.error(CANT_CREATE_DENORMALIZED_TABLE, e);
+            return CANT_CREATE_DENORMALIZED_TABLE;
+        }
+        return tableSql;
     }
 }

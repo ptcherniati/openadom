@@ -35,6 +35,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @Slf4j
 @EnableWebMvc
@@ -157,6 +159,21 @@ public class OreSiNg implements WebMvcConfigurer {
         @Bean
         public FileRepository fileRepository() {
             return fileInfos -> "mockedWebAddress";
+        }
+    }
+
+    @Configuration
+    public class VirtualThreadExecutorConfig {
+
+        public static final int N_THREADS = 100;
+
+        @Bean
+        public ExecutorService virtualThreadExecutor() {
+            final ExecutorService executorService =Executors.newFixedThreadPool(
+                    N_THREADS, // max simultané
+                    Thread.ofVirtual().factory()
+            );
+            return executorService;
         }
     }
 }

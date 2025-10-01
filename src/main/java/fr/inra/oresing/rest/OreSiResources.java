@@ -170,8 +170,10 @@ public class OreSiResources {
     final LocaleResolver localeResolver;
     final String frontendOrigin;
     private final JsonRowMapper mapper;
+    private ExecutorService executorService;
 
     public OreSiResources(
+            ExecutorService executorService,
             UserRepository userRepository,
             ServiceContainer serviceContainer,
             LocaleResolver localeResolver,
@@ -183,6 +185,7 @@ public class OreSiResources {
         this.localeResolver = localeResolver;
         this.frontendOrigin = frontendOrigin;
         this.mapper = mapper;
+        this.executorService = executorService;
     }
 
 
@@ -240,7 +243,7 @@ public class OreSiResources {
     private Flux<ReactiveResult> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink) {
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
-            Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+            executorService.submit(() -> {
                 try {
                     SecurityContextHolder.setContext(context);
                     fluxSink.accept(sink);
@@ -654,7 +657,7 @@ public class OreSiResources {
         try {
             DataFile finalDataFile = dataFile;
             final SecurityContext context = SecurityContextHolder.getContext();
-            futureOfDdataVersioningResult = Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+            futureOfDdataVersioningResult = executorService.submit(() -> {
                 SecurityContextHolder.setContext(context);
                 try {
                     return serviceContainer.versioningService().createData(
@@ -1162,7 +1165,7 @@ public class OreSiResources {
         AtomicReference<Path> tempDirectory = new AtomicReference<>();
         ;
         try {
-            Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+            executorService.submit(() -> {
                 try {
                     SecurityContextHolder.setContext(securityContext);
                     user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
@@ -1189,7 +1192,7 @@ public class OreSiResources {
                     throw new OreSiTechnicalException(IO_WRITING_CSV_ERROR, e);
                 }
             }).get();
-            Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+            executorService.submit(() -> {
                 SecurityContextHolder.setContext(securityContext);
                 try {
                     serviceContainer.dataService().sendZipLinkByMail(zipFile.get(), downloadDatasetQuery, user.get());
@@ -1370,7 +1373,7 @@ public class OreSiResources {
 
         AtomicReference<BuildBundleReport> reportRef = new AtomicReference<>();
         SecurityContext securityContext = SecurityContextHolder.getContext();
-        Executors.newVirtualThreadPerTaskExecutor()
+        executorService
                 .submit(() -> {
                     Path tempZipDirectory = null;
 
@@ -1388,7 +1391,6 @@ public class OreSiResources {
 
                         if (reportRef.get() != null && reportRef.get().referentielsEnErreur().isEmpty()) {
                             // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
-                            ExecutorService executorService = Executors.newSingleThreadExecutor();
                             Path finalTempZipDirectory = tempZipDirectory;
                             executorService.submit(() -> {
                                 try {
@@ -1442,7 +1444,7 @@ public class OreSiResources {
         final OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
-            Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
+            executorService.submit(() -> {
                 SecurityContextHolder.setContext(context);
                 File zipFile = null;
                 try {

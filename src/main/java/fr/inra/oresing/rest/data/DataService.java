@@ -71,6 +71,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -93,18 +94,21 @@ public class DataService {
     private final JsonRowMapper jsonRowMapper;
     private final OreSiRepository repository;
     private final FileRepository fileRepository;
+    private ExecutorService executorService;
 
     public DataService(
             OreSiRepository repo,
             JsonRowMapper jsonRowMapper,
             OreSiRepository repository,
             FileRepository fileRepository,
-            ServiceContainer serviceContainer) {
+            ServiceContainer serviceContainer,
+            ExecutorService executorService) {
         this.repo = repo;
         this.jsonRowMapper = jsonRowMapper;
         this.repository = repository;
         this.fileRepository = fileRepository;
         this.serviceContainer = serviceContainer;
+        this.executorService = executorService;
     }
 
     private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription, TransformationConfiguration defaultValue) {
@@ -872,9 +876,7 @@ public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, 
         writeReadMe(tempZipDirectory);
         // writeDirectoryToZip(tempZipDirectory, fichiersGeneres);
         Manifest manifest = new Manifest();
-
-        Executor executor = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().factory());
-        Scheduler virtualScheduler = Schedulers.fromExecutor(executor);
+        Scheduler virtualScheduler = Schedulers.fromExecutor(executorService);
 
         Flux.fromIterable(application.getConfiguration().dataDescription().keySet())
                 .flatMap(reference ->
