@@ -125,7 +125,7 @@ public class DenormalizedService {
         String tableSql = """
                 drop schema if exists %2$s_dn cascade;
                 create schema %2$s_dn;
-                ALTER SCHEMA monsore_dn
+                ALTER SCHEMA %2$s_dn
                  OWNER TO "%3$s_applicationManager";
                 
                 GRANT USAGE ON SCHEMA %2$s_dn TO PUBLIC;
