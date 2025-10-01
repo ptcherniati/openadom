@@ -1,0 +1,2535 @@
+{
+  "id" : "7c5632b1-a6a5-4c8c-a6de-e602846ba3a8",
+  "creationdate" : "2025-09-30T09:54:29.721515",
+  "updatedate" : "2025-09-30T09:54:29.721515",
+  "lastchartes" : "2025-09-30T09:54:29.721515",
+  "name" : "pattern",
+  "version" : "3.0.1",
+  "data" : [ "site", "condition_prelevements", "proprietes_taxon", "taxon" ],
+  "additionalfiles" : [ ],
+  "configuration" : {
+    "version" : {
+      "version" : "2.0.1"
+    },
+    "tags" : [ {
+      "tagdefinition" : "DOMAIN_TAG",
+      "tagname" : "data"
+    } ],
+    "i18n" : {
+      "tags" : {
+        "data" : {
+          "en" : "data",
+          "fr" : "données"
+        }
+      },
+      "application" : {
+        "title" : {
+          "en" : "Recursivity",
+          "fr" : "Récursivité"
+        },
+        "description" : {
+          "en" : "Recursivity",
+          "fr" : "Récursivité"
+        }
+      },
+      "data" : {
+        "site" : {
+          "validations" : { },
+          "exceptions" : { },
+          "components" : {
+            "sandre" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Sandre code for Water Body Mass",
+                  "fr" : "code sandre de la Masse d'eau plan d'eau"
+                },
+                "description" : { }
+              }
+            },
+            "site_en" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "site name (English)",
+                  "fr" : "nom du site_en"
+                },
+                "description" : { }
+              }
+            },
+            "site_fr" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "site name (French)",
+                  "fr" : "nom du site_fr"
+                },
+                "description" : { }
+              }
+            },
+            "site_key" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "site key name",
+                  "fr" : "nom du site_key"
+                },
+                "description" : { }
+              }
+            },
+            "type_site" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "site type name",
+                  "fr" : "nom du type de site"
+                },
+                "description" : { }
+              }
+            },
+            "sandre_eau" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Sandre code for Water Body",
+                  "fr" : "code sandre du Plan d'eau"
+                },
+                "description" : { }
+              }
+            },
+            "description_en" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "site description (English)",
+                  "fr" : "description du site_en"
+                },
+                "description" : { }
+              }
+            },
+            "description_fr" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "site description (French)",
+                  "fr" : "description du site_fr"
+                },
+                "description" : { }
+              }
+            }
+          },
+          "submissions" : {
+            "referencescopes" : { }
+          },
+          "i18ndisplaypattern" : {
+            "title" : {
+              "en" : "{site_en}",
+              "fr" : "{site_fr}"
+            },
+            "description" : {
+              "en" : "{description_en}",
+              "fr" : "{description_fr}"
+            }
+          },
+          "i18n" : {
+            "title" : {
+              "en" : "Site",
+              "fr" : "Site"
+            },
+            "description" : {
+              "en" : "Site",
+              "fr" : "Site"
+            }
+          }
+        },
+        "taxon" : {
+          "validations" : {
+            "nomDuTaxonDetermine" : {
+              "en" : "determined taxon name",
+              "fr" : "nom du taxon déterminé"
+            }
+          },
+          "exceptions" : { },
+          "components" : {
+            "nom" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "determined taxon name",
+                  "fr" : "nom du taxon déterminé"
+                },
+                "description" : { }
+              }
+            },
+            "annee" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Description year",
+                  "fr" : "Année de la description"
+                },
+                "description" : { }
+              }
+            },
+            "notes" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Free notes",
+                  "fr" : "Notes libres"
+                },
+                "description" : { }
+              }
+            },
+            "auteur" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Description author",
+                  "fr" : "Auteur de la description"
+                },
+                "description" : { }
+              }
+            },
+            "sandre" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Sandre Code",
+                  "fr" : "Code Sandre"
+                },
+                "description" : { }
+              }
+            },
+            "bourrelly" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Algal class sensu Bourrelly",
+                  "fr" : "Classe algale sensu Bourrelly"
+                },
+                "description" : { }
+              }
+            },
+            "incertitude" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "determination uncertainty level",
+                  "fr" : "niveau incertitude de détermination"
+                },
+                "description" : { }
+              }
+            },
+            "niveau_taxon" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "taxon level name",
+                  "fr" : "nom du niveau de taxon"
+                },
+                "description" : { }
+              }
+            },
+            "sandre_taxon" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Sandre code for taxon",
+                  "fr" : "code sandre du taxon"
+                },
+                "description" : { }
+              }
+            },
+            "tel_S1_value" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "value",
+                  "fr" : "valeur"
+                },
+                "description" : {
+                  "en" : "value",
+                  "fr" : "valeur"
+                }
+              }
+            },
+            "tel_S2_value" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "value",
+                  "fr" : "valeur"
+                },
+                "description" : {
+                  "en" : "value",
+                  "fr" : "valeur"
+                }
+              }
+            },
+            "synonyme_ancien" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Old synonym",
+                  "fr" : "Synonyme ancien"
+                },
+                "description" : { }
+              }
+            },
+            "synonyme_recent" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Recent synonym",
+                  "fr" : "Synonyme récent"
+                },
+                "description" : { }
+              }
+            },
+            "taxon_superieur" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "higher taxon name",
+                  "fr" : "nom du taxon superieur"
+                },
+                "description" : { }
+              }
+            },
+            "tel_S1_variable" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "variable en",
+                  "fr" : "variable fr"
+                },
+                "description" : {
+                  "en" : "variable en",
+                  "fr" : "variable fr"
+                }
+              }
+            },
+            "tel_S2_variable" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "variable en",
+                  "fr" : "variable fr"
+                },
+                "description" : {
+                  "en" : "variable en",
+                  "fr" : "variable fr"
+                }
+              }
+            },
+            "references_taxon" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "References related to this taxon",
+                  "fr" : "Références relatives à ce taxon"
+                },
+                "description" : { }
+              }
+            },
+            "sandre_superieur" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Sandre code for higher taxon",
+                  "fr" : "code sandre du taxon supérieur"
+                },
+                "description" : { }
+              }
+            },
+            "tel_S1_qualifier" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "qualifier en",
+                  "fr" : "qualificatif fr"
+                },
+                "description" : {
+                  "en" : "qualifier en",
+                  "fr" : "qualificatif fr"
+                }
+              }
+            },
+            "tel_S2_qualifier" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "qualifier en",
+                  "fr" : "qualificatif fr"
+                },
+                "description" : {
+                  "en" : "qualifier en",
+                  "fr" : "qualificatif fr"
+                }
+              }
+            },
+            "proprietesDeTaxon" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Properties of Taxa",
+                  "fr" : "Propriétés de Taxons"
+                },
+                "description" : {
+                  "en" : "Properties of Taxa",
+                  "fr" : "Proprétés de Taxons"
+                }
+              }
+            },
+            "tel_S1_resolution" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "resolution en",
+                  "fr" : "resolution fr"
+                },
+                "description" : {
+                  "en" : "resolution en",
+                  "fr" : "resolution fr"
+                }
+              }
+            },
+            "tel_S2_resolution" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "resolution en",
+                  "fr" : "resolution fr"
+                },
+                "description" : {
+                  "en" : "resolution en",
+                  "fr" : "resolution fr"
+                }
+              }
+            },
+            "tel_S1_value::swc_qc" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Quality class",
+                  "fr" : "Indice de qualité"
+                },
+                "description" : {
+                  "en" : "0 for valid value; 2 for invalid value",
+                  "fr" : "0 pour une valeur valide ; 2 pour une valeur incorrecte"
+                }
+              }
+            },
+            "tel_S1_value::swc_sd" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "standard deviation",
+                  "fr" : "écart type"
+                },
+                "description" : { }
+              }
+            },
+            "tel_S2_value::swc_qc" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Quality class",
+                  "fr" : "Indice de qualité"
+                },
+                "description" : {
+                  "en" : "0 for valid value; 2 for bad value",
+                  "fr" : "0 pour une valeur valide ; 2 pour une valeur incorrecte"
+                }
+              }
+            },
+            "tel_S2_value::swc_sd" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "standard deviation",
+                  "fr" : "écart type"
+                },
+                "description" : { }
+              }
+            },
+            "reference_description" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Description reference",
+                  "fr" : "Référence de la description"
+                },
+                "description" : { }
+              }
+            }
+          },
+          "submissions" : {
+            "referencescopes" : { }
+          },
+          "i18ndisplaypattern" : {
+            "title" : {
+              "en" : "{nom}",
+              "fr" : "{nom}"
+            },
+            "description" : {
+              "en" : "{taxon_superieur} : {nom}",
+              "fr" : "{taxon_superieur} : {nom}"
+            }
+          },
+          "i18n" : {
+            "title" : {
+              "en" : "Taxa",
+              "fr" : "Taxons"
+            },
+            "description" : {
+              "en" : "Taxa",
+              "fr" : "Taxons"
+            }
+          }
+        },
+        "proprietes_taxon" : {
+          "validations" : {
+            "floats" : {
+              "en" : "the decimals",
+              "fr" : "les décimaux"
+            },
+            "integer" : {
+              "en" : "the integers",
+              "fr" : "les entiers"
+            },
+            "reference" : {
+              "en" : "the references",
+              "fr" : "les reference"
+            }
+          },
+          "exceptions" : { },
+          "components" : {
+            "date" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "Date",
+                  "fr" : "Date"
+                },
+                "description" : { }
+              }
+            },
+            "isFloatValue" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "isFloatValue",
+                  "fr" : "isFloatValue"
+                },
+                "description" : { }
+              }
+            },
+            "propriete_en" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "property name (English)",
+                  "fr" : "nom de la propriété_en"
+                },
+                "description" : { }
+              }
+            },
+            "propriete_fr" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "property name (French)",
+                  "fr" : "nom de la propriété_fr"
+                },
+                "description" : { }
+              }
+            },
+            "type_associe" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "associated type",
+                  "fr" : "type associé"
+                },
+                "description" : { }
+              }
+            },
+            "definition_en" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "definition (English)",
+                  "fr" : "définition_en"
+                },
+                "description" : { }
+              }
+            },
+            "definition_fr" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "definition (French)",
+                  "fr" : "définition_fr"
+                },
+                "description" : { }
+              }
+            },
+            "isQualitative" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "isQualitative",
+                  "fr" : "isQualitative"
+                },
+                "description" : { }
+              }
+            },
+            "propriete_key" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "property key name",
+                  "fr" : "nom de la propriété_key"
+                },
+                "description" : { }
+              }
+            },
+            "ordre_affichage" : {
+              "exportheader" : {
+                "title" : {
+                  "en" : "display order",
+                  "fr" : "ordre d'affichage"
+                },
+                "description" : { }
+              }
+            }
+          },
+          "submissions" : {
+            "referencescopes" : { }
+          },
+          "i18ndisplaypattern" : {
+            "title" : {
+              "en" : "{propriete_en}",
+              "fr" : "{propriete_fr}"
+            },
+            "description" : {
+              "en" : "{definition_en}",
+              "fr" : "{definition_fr}"
+            }
+          },
+          "i18n" : {
+            "title" : {
+              "en" : "Properties of Taxa",
+              "fr" : "Proprétés de Taxon"
+            },
+            "description" : {
+              "en" : "Properties of Taxa",
+              "fr" : "Proprétés de Taxon"
+            }
+          }
+        },
+        "condition_prelevements" : {
+          "validations" : { },
+          "exceptions" : { },
+          "components" : { },
+          "submissions" : {
+            "referencescopes" : {
+              "site" : {
+                "title" : {
+                  "en" : "Site name",
+                  "fr" : "Nom du site"
+                },
+                "description" : {
+                  "en" : "Site name",
+                  "fr" : "Nom du site"
+                }
+              }
+            }
+          },
+          "i18ndisplaypattern" : null,
+          "i18n" : {
+            "title" : {
+              "en" : "Collection condition",
+              "fr" : "Condition de prélèvement"
+            },
+            "description" : {
+              "en" : "Collection condition",
+              "fr" : "Condition de prélèvement"
+            }
+          }
+        }
+      },
+      "rightsrequest" : {
+        "fields" : { },
+        "i18n" : null
+      },
+      "additionalfiles" : { }
+    },
+    "applicationdescription" : {
+      "name" : "pattern",
+      "version" : {
+        "version" : "3.0.1"
+      },
+      "defaultlanguage" : "fr",
+      "comment" : "Fichier de test de l'application pattern"
+    },
+    "datadescription" : {
+      "site" : {
+        "separator" : ";",
+        "headerline" : 1,
+        "firstrowline" : 2,
+        "allowunexpectedcolumns" : false,
+        "tags" : [ ],
+        "naturalkey" : [ "site_key" ],
+        "componentdescriptions" : {
+          "sandre" : {
+            "type" : "BasicComponent",
+            "componentkey" : "sandre",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "code sandre de la Masse d'eau plan d'eau",
+            "exportheadername" : "sandre",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "site_en" : {
+            "type" : "BasicComponent",
+            "componentkey" : "site_en",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nom du site_en",
+            "exportheadername" : "site_en",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "site_fr" : {
+            "type" : "BasicComponent",
+            "componentkey" : "site_fr",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nom du site_fr",
+            "exportheadername" : "site_fr",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "site_key" : {
+            "type" : "BasicComponent",
+            "componentkey" : "site_key",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nom du site_key",
+            "exportheadername" : "site_key",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "type_site" : {
+            "type" : "BasicComponent",
+            "componentkey" : "type_site",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nom du type de site",
+            "exportheadername" : "type_site",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "sandre_eau" : {
+            "type" : "BasicComponent",
+            "componentkey" : "sandre_eau",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "code sandre du Plan d'eau",
+            "exportheadername" : "sandre_eau",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "description_en" : {
+            "type" : "BasicComponent",
+            "componentkey" : "description_en",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "description du site_en",
+            "exportheadername" : "description_en",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "description_fr" : {
+            "type" : "BasicComponent",
+            "componentkey" : "description_fr",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "description du site_fr",
+            "exportheadername" : "description_fr",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          }
+        },
+        "submission" : null,
+        "authorization" : null,
+        "validations" : { },
+        "depends" : [ ],
+        "migrations" : null,
+        "hidden" : false,
+        "order" : 9999
+      },
+      "taxon" : {
+        "separator" : ";",
+        "headerline" : 1,
+        "firstrowline" : 2,
+        "allowunexpectedcolumns" : true,
+        "tags" : [ ],
+        "naturalkey" : [ "nom" ],
+        "componentdescriptions" : {
+          "nom" : {
+            "type" : "BasicComponent",
+            "componentkey" : "nom",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 1
+            } ],
+            "importheader" : "nom du taxon déterminé",
+            "exportheadername" : "nom",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "annee" : {
+            "type" : "BasicComponent",
+            "componentkey" : "annee",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 9
+            } ],
+            "importheader" : "Année de la description",
+            "exportheadername" : "annee",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "notes" : {
+            "type" : "BasicComponent",
+            "componentkey" : "notes",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 16
+            } ],
+            "importheader" : "Notes libres",
+            "exportheadername" : "notes",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "theme" : {
+            "type" : "BasicComponent",
+            "componentkey" : "theme",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 2
+            } ],
+            "importheader" : "theme",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "auteur" : {
+            "type" : "BasicComponent",
+            "componentkey" : "auteur",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 8
+            } ],
+            "importheader" : "Auteur de la description",
+            "exportheadername" : "auteur",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "sandre" : {
+            "type" : "BasicComponent",
+            "componentkey" : "sandre",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 15
+            } ],
+            "importheader" : "Code Sandre",
+            "exportheadername" : "sandre",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "bourrelly" : {
+            "type" : "BasicComponent",
+            "componentkey" : "bourrelly",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 14
+            } ],
+            "importheader" : "Classe algale sensu Bourrelly",
+            "exportheadername" : "bourrelly",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "incertitude" : {
+            "type" : "BasicComponent",
+            "componentkey" : "incertitude",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 7
+            } ],
+            "importheader" : "niveau incertitude de détermination",
+            "exportheadername" : "incertitude",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "niveau_taxon" : {
+            "type" : "BasicComponent",
+            "componentkey" : "niveau_taxon",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 3
+            } ],
+            "importheader" : "nom du niveau de taxon",
+            "exportheadername" : "niveau_taxon",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "sandre_taxon" : {
+            "type" : "BasicComponent",
+            "componentkey" : "sandre_taxon",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 5
+            } ],
+            "importheader" : "code sandre du taxon",
+            "exportheadername" : "sandre_taxon",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S1_value" : {
+            "type" : "PatternComponent",
+            "componentkey" : "tel_S1_value",
+            "defaultvalue" : null,
+            "exportheadername" : "tel_S1_value",
+            "langrestrictions" : [ ],
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "patternforcomponents" : "(.*)_S1_(.*)_(.*)",
+            "patterncomponentqualifiers" : {
+              "tel_S1_variable" : {
+                "type" : "PatternComponentQualifiers",
+                "componentkey" : "tel_S1_variable",
+                "defaultvalue" : null,
+                "tags" : [ {
+                  "tagdefinition" : "ORDER_TAG",
+                  "tagorder" : 1
+                } ],
+                "exportheadername" : "tel_S1_variable",
+                "langrestrictions" : [ ],
+                "patternnumber" : 1,
+                "checker" : {
+                  "type" : "ReferenceChecker",
+                  "componentkey" : "tel_S1_value",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "reftype" : "site",
+                  "isrecursive" : false,
+                  "isparent" : false
+                },
+                "submissionauthorizationscope" : null,
+                "hidden" : false,
+                "reference" : true,
+                "chartdescription" : null,
+                "referencecheckertype" : "site"
+              },
+              "tel_S1_qualifier" : {
+                "type" : "PatternComponentQualifiers",
+                "componentkey" : "tel_S1_qualifier",
+                "defaultvalue" : null,
+                "tags" : [ {
+                  "tagdefinition" : "ORDER_TAG",
+                  "tagorder" : 2
+                } ],
+                "exportheadername" : "tel_S1_qualifier",
+                "langrestrictions" : [ ],
+                "patternnumber" : 2,
+                "checker" : {
+                  "type" : "IntegerChecker",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "min" : -2147483648,
+                  "max" : 2147483647
+                },
+                "submissionauthorizationscope" : null,
+                "hidden" : false,
+                "reference" : false,
+                "chartdescription" : null,
+                "referencecheckertype" : "StringChecker"
+              },
+              "tel_S1_resolution" : {
+                "type" : "PatternComponentQualifiers",
+                "componentkey" : "tel_S1_resolution",
+                "defaultvalue" : null,
+                "tags" : [ {
+                  "tagdefinition" : "ORDER_TAG",
+                  "tagorder" : 3
+                } ],
+                "exportheadername" : "tel_S1_resolution",
+                "langrestrictions" : [ ],
+                "patternnumber" : 3,
+                "checker" : {
+                  "type" : "FloatChecker",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "min" : "-Infinity",
+                  "max" : "Infinity"
+                },
+                "submissionauthorizationscope" : null,
+                "hidden" : false,
+                "reference" : false,
+                "chartdescription" : null,
+                "referencecheckertype" : "StringChecker"
+              }
+            },
+            "patterncomponentadjacents" : {
+              "swc_qc" : {
+                "type" : "PatternComponentAdjacents",
+                "componentkey" : "swc_qc",
+                "importheaderpattern" : "{$1}_qc",
+                "tags" : [ {
+                  "tagdefinition" : "DOMAIN_TAG",
+                  "tagname" : "data"
+                } ],
+                "exportheadername" : "tel_S1_value::swc_qc",
+                "required" : false,
+                "mandatory" : "OPTIONAL",
+                "langrestrictions" : [ ],
+                "checker" : {
+                  "type" : "IntegerChecker",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "min" : 0,
+                  "max" : 2
+                },
+                "hidden" : false,
+                "reference" : false,
+                "chartdescription" : null,
+                "referencecheckertype" : "StringChecker"
+              },
+              "swc_sd" : {
+                "type" : "PatternComponentAdjacents",
+                "componentkey" : "swc_sd",
+                "importheaderpattern" : "{$1}_sd",
+                "tags" : [ {
+                  "tagdefinition" : "DOMAIN_TAG",
+                  "tagname" : "data"
+                } ],
+                "exportheadername" : "tel_S1_value::swc_sd",
+                "required" : false,
+                "mandatory" : "OPTIONAL",
+                "langrestrictions" : [ ],
+                "checker" : {
+                  "type" : "FloatChecker",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "min" : 0.0,
+                  "max" : 500.0
+                },
+                "hidden" : false,
+                "reference" : false,
+                "chartdescription" : null,
+                "referencecheckertype" : "StringChecker"
+              }
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S2_value" : {
+            "type" : "PatternComponent",
+            "componentkey" : "tel_S2_value",
+            "defaultvalue" : null,
+            "exportheadername" : "tel_S2_value",
+            "langrestrictions" : [ ],
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "patternforcomponents" : "(.*)_S2_(.*)_(.*)",
+            "patterncomponentqualifiers" : {
+              "tel_S2_variable" : {
+                "type" : "PatternComponentQualifiers",
+                "componentkey" : "tel_S2_variable",
+                "defaultvalue" : null,
+                "tags" : [ {
+                  "tagdefinition" : "ORDER_TAG",
+                  "tagorder" : 1
+                } ],
+                "exportheadername" : "tel_S2_variable",
+                "langrestrictions" : [ ],
+                "patternnumber" : 1,
+                "checker" : {
+                  "type" : "ReferenceChecker",
+                  "componentkey" : "tel_S2_value",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "reftype" : "site",
+                  "isrecursive" : false,
+                  "isparent" : false
+                },
+                "submissionauthorizationscope" : null,
+                "hidden" : false,
+                "reference" : true,
+                "chartdescription" : null,
+                "referencecheckertype" : "site"
+              },
+              "tel_S2_qualifier" : {
+                "type" : "PatternComponentQualifiers",
+                "componentkey" : "tel_S2_qualifier",
+                "defaultvalue" : null,
+                "tags" : [ {
+                  "tagdefinition" : "ORDER_TAG",
+                  "tagorder" : 2
+                } ],
+                "exportheadername" : "tel_S2_qualifier",
+                "langrestrictions" : [ ],
+                "patternnumber" : 2,
+                "checker" : {
+                  "type" : "IntegerChecker",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "min" : -2147483648,
+                  "max" : 2147483647
+                },
+                "submissionauthorizationscope" : null,
+                "hidden" : false,
+                "reference" : false,
+                "chartdescription" : null,
+                "referencecheckertype" : "StringChecker"
+              },
+              "tel_S2_resolution" : {
+                "type" : "PatternComponentQualifiers",
+                "componentkey" : "tel_S2_resolution",
+                "defaultvalue" : null,
+                "tags" : [ {
+                  "tagdefinition" : "ORDER_TAG",
+                  "tagorder" : 3
+                } ],
+                "exportheadername" : "tel_S2_resolution",
+                "langrestrictions" : [ ],
+                "patternnumber" : 3,
+                "checker" : {
+                  "type" : "FloatChecker",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "min" : "-Infinity",
+                  "max" : "Infinity"
+                },
+                "submissionauthorizationscope" : null,
+                "hidden" : false,
+                "reference" : false,
+                "chartdescription" : null,
+                "referencecheckertype" : "StringChecker"
+              }
+            },
+            "patterncomponentadjacents" : {
+              "swc_qc" : {
+                "type" : "PatternComponentAdjacents",
+                "componentkey" : "swc_qc",
+                "importheaderpattern" : "qc",
+                "tags" : [ {
+                  "tagdefinition" : "DOMAIN_TAG",
+                  "tagname" : "data"
+                } ],
+                "exportheadername" : "tel_S2_value::swc_qc",
+                "required" : false,
+                "mandatory" : "OPTIONAL",
+                "langrestrictions" : [ ],
+                "checker" : {
+                  "type" : "IntegerChecker",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "min" : 0,
+                  "max" : 2
+                },
+                "hidden" : false,
+                "reference" : false,
+                "chartdescription" : null,
+                "referencecheckertype" : "StringChecker"
+              },
+              "swc_sd" : {
+                "type" : "PatternComponentAdjacents",
+                "componentkey" : "swc_sd",
+                "importheaderpattern" : "sd",
+                "tags" : [ {
+                  "tagdefinition" : "DOMAIN_TAG",
+                  "tagname" : "data"
+                } ],
+                "exportheadername" : "tel_S2_value::swc_sd",
+                "required" : false,
+                "mandatory" : "OPTIONAL",
+                "langrestrictions" : [ ],
+                "checker" : {
+                  "type" : "FloatChecker",
+                  "multiplicity" : "ONE",
+                  "required" : false,
+                  "min" : 0.0,
+                  "max" : 500.0
+                },
+                "hidden" : false,
+                "reference" : false,
+                "chartdescription" : null,
+                "referencecheckertype" : "StringChecker"
+              }
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "synonyme_ancien" : {
+            "type" : "BasicComponent",
+            "componentkey" : "synonyme_ancien",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 12
+            } ],
+            "importheader" : "Synonyme ancien",
+            "exportheadername" : "synonyme_ancien",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "synonyme_recent" : {
+            "type" : "BasicComponent",
+            "componentkey" : "synonyme_recent",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 13
+            } ],
+            "importheader" : "Synonyme récent",
+            "exportheadername" : "synonyme_recent",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "taxon_superieur" : {
+            "type" : "BasicComponent",
+            "componentkey" : "taxon_superieur",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 4
+            } ],
+            "importheader" : "nom du taxon superieur",
+            "exportheadername" : "taxon_superieur",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "references_taxon" : {
+            "type" : "BasicComponent",
+            "componentkey" : "references_taxon",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 11
+            } ],
+            "importheader" : "Références relatives à ce taxon",
+            "exportheadername" : "references_taxon",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "sandre_superieur" : {
+            "type" : "BasicComponent",
+            "componentkey" : "sandre_superieur",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 6
+            } ],
+            "importheader" : "code sandre du taxon supérieur",
+            "exportheadername" : "sandre_superieur",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "proprietesDeTaxon" : {
+            "type" : "DynamicComponent",
+            "componentkey" : "proprietesDeTaxon",
+            "defaultvalue" : null,
+            "exportheadername" : "proprietesDeTaxon",
+            "langrestrictions" : [ ],
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 17
+            } ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "prefix" : "pt_",
+            "reference" : "proprietes_taxon",
+            "referencecolumntolookforheader" : "propriete_key",
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S1_value::swc_qc" : {
+            "type" : "PatternComponentAdjacents",
+            "componentkey" : "swc_qc",
+            "importheaderpattern" : "{$1}_qc",
+            "tags" : [ {
+              "tagdefinition" : "DOMAIN_TAG",
+              "tagname" : "data"
+            } ],
+            "exportheadername" : "tel_S1_value::swc_qc",
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "langrestrictions" : [ ],
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : 0,
+              "max" : 2
+            },
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S1_value::swc_sd" : {
+            "type" : "PatternComponentAdjacents",
+            "componentkey" : "swc_sd",
+            "importheaderpattern" : "{$1}_sd",
+            "tags" : [ {
+              "tagdefinition" : "DOMAIN_TAG",
+              "tagname" : "data"
+            } ],
+            "exportheadername" : "tel_S1_value::swc_sd",
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "langrestrictions" : [ ],
+            "checker" : {
+              "type" : "FloatChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : 0.0,
+              "max" : 500.0
+            },
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S2_value::swc_qc" : {
+            "type" : "PatternComponentAdjacents",
+            "componentkey" : "swc_qc",
+            "importheaderpattern" : "qc",
+            "tags" : [ {
+              "tagdefinition" : "DOMAIN_TAG",
+              "tagname" : "data"
+            } ],
+            "exportheadername" : "tel_S2_value::swc_qc",
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "langrestrictions" : [ ],
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : 0,
+              "max" : 2
+            },
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S2_value::swc_sd" : {
+            "type" : "PatternComponentAdjacents",
+            "componentkey" : "swc_sd",
+            "importheaderpattern" : "sd",
+            "tags" : [ {
+              "tagdefinition" : "DOMAIN_TAG",
+              "tagname" : "data"
+            } ],
+            "exportheadername" : "tel_S2_value::swc_sd",
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "langrestrictions" : [ ],
+            "checker" : {
+              "type" : "FloatChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : 0.0,
+              "max" : 500.0
+            },
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "reference_description" : {
+            "type" : "BasicComponent",
+            "componentkey" : "reference_description",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 10
+            } ],
+            "importheader" : "Référence de la description",
+            "exportheadername" : "reference_description",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S1_value::tel_S1_variable" : {
+            "type" : "PatternComponentQualifiers",
+            "componentkey" : "tel_S1_variable",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 1
+            } ],
+            "exportheadername" : "tel_S1_variable",
+            "langrestrictions" : [ ],
+            "patternnumber" : 1,
+            "checker" : {
+              "type" : "ReferenceChecker",
+              "componentkey" : "tel_S1_value",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "reftype" : "site",
+              "isrecursive" : false,
+              "isparent" : false
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : true,
+            "chartdescription" : null,
+            "referencecheckertype" : "site"
+          },
+          "tel_S2_value::tel_S2_variable" : {
+            "type" : "PatternComponentQualifiers",
+            "componentkey" : "tel_S2_variable",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 1
+            } ],
+            "exportheadername" : "tel_S2_variable",
+            "langrestrictions" : [ ],
+            "patternnumber" : 1,
+            "checker" : {
+              "type" : "ReferenceChecker",
+              "componentkey" : "tel_S2_value",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "reftype" : "site",
+              "isrecursive" : false,
+              "isparent" : false
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : true,
+            "chartdescription" : null,
+            "referencecheckertype" : "site"
+          },
+          "tel_S1_value::tel_S1_qualifier" : {
+            "type" : "PatternComponentQualifiers",
+            "componentkey" : "tel_S1_qualifier",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 2
+            } ],
+            "exportheadername" : "tel_S1_qualifier",
+            "langrestrictions" : [ ],
+            "patternnumber" : 2,
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : -2147483648,
+              "max" : 2147483647
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S2_value::tel_S2_qualifier" : {
+            "type" : "PatternComponentQualifiers",
+            "componentkey" : "tel_S2_qualifier",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 2
+            } ],
+            "exportheadername" : "tel_S2_qualifier",
+            "langrestrictions" : [ ],
+            "patternnumber" : 2,
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : -2147483648,
+              "max" : 2147483647
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S1_value::tel_S1_resolution" : {
+            "type" : "PatternComponentQualifiers",
+            "componentkey" : "tel_S1_resolution",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 3
+            } ],
+            "exportheadername" : "tel_S1_resolution",
+            "langrestrictions" : [ ],
+            "patternnumber" : 3,
+            "checker" : {
+              "type" : "FloatChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : "-Infinity",
+              "max" : "Infinity"
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "tel_S2_value::tel_S2_resolution" : {
+            "type" : "PatternComponentQualifiers",
+            "componentkey" : "tel_S2_resolution",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "ORDER_TAG",
+              "tagorder" : 3
+            } ],
+            "exportheadername" : "tel_S2_resolution",
+            "langrestrictions" : [ ],
+            "patternnumber" : 3,
+            "checker" : {
+              "type" : "FloatChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : "-Infinity",
+              "max" : "Infinity"
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          }
+        },
+        "submission" : null,
+        "authorization" : null,
+        "validations" : {
+          "nomDuTaxonDetermine" : {
+            "checkers" : {
+              "nom" : {
+                "type" : "StringChecker",
+                "multiplicity" : "ONE",
+                "required" : true,
+                "pattern" : ""
+              }
+            },
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "columns" : [ "nom" ],
+            "required" : true,
+            "mandatory" : "OPTIONAL"
+          }
+        },
+        "depends" : [ {
+          "type" : "DependsReferences",
+          "references" : "site",
+          "component" : "tel_S1_value::tel_S1_variable"
+        }, {
+          "type" : "DependsReferences",
+          "references" : "site",
+          "component" : "tel_S2_value::tel_S2_variable"
+        } ],
+        "migrations" : null,
+        "hidden" : false,
+        "order" : 9999
+      },
+      "proprietes_taxon" : {
+        "separator" : ";",
+        "headerline" : 1,
+        "firstrowline" : 2,
+        "allowunexpectedcolumns" : false,
+        "tags" : [ ],
+        "naturalkey" : [ "propriete_key" ],
+        "componentdescriptions" : {
+          "date" : {
+            "type" : "BasicComponent",
+            "componentkey" : "date",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "Date",
+            "exportheadername" : "date",
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "DateChecker",
+              "multiplicity" : "ONE",
+              "required" : true,
+              "pattern" : "dd/MM/yyyy",
+              "min" : "-999999999-01-01T00:00:00",
+              "max" : "+999999999-12-31T23:59:59.999999999",
+              "duration" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "site" : {
+            "type" : "BasicComponent",
+            "componentkey" : "site",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "site",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "isFloatValue" : {
+            "type" : "BasicComponent",
+            "componentkey" : "isFloatValue",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "isFloatValue",
+            "exportheadername" : "isFloatValue",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "propriete_en" : {
+            "type" : "BasicComponent",
+            "componentkey" : "propriete_en",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nom de la propriété_en",
+            "exportheadername" : "propriete_en",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "propriete_fr" : {
+            "type" : "BasicComponent",
+            "componentkey" : "propriete_fr",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nom de la propriété_fr",
+            "exportheadername" : "propriete_fr",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "type_associe" : {
+            "type" : "BasicComponent",
+            "componentkey" : "type_associe",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "type associé",
+            "exportheadername" : "type_associe",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "definition_en" : {
+            "type" : "BasicComponent",
+            "componentkey" : "definition_en",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "définition_en",
+            "exportheadername" : "definition_en",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "definition_fr" : {
+            "type" : "BasicComponent",
+            "componentkey" : "definition_fr",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "définition_fr",
+            "exportheadername" : "definition_fr",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "isQualitative" : {
+            "type" : "BasicComponent",
+            "componentkey" : "isQualitative",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "isQualitative",
+            "exportheadername" : "isQualitative",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "propriete_key" : {
+            "type" : "BasicComponent",
+            "componentkey" : "propriete_key",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nom de la propriété_key",
+            "exportheadername" : "propriete_key",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "ordre_affichage" : {
+            "type" : "BasicComponent",
+            "componentkey" : "ordre_affichage",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "ordre d'affichage",
+            "exportheadername" : "ordre_affichage",
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          }
+        },
+        "submission" : null,
+        "authorization" : null,
+        "validations" : {
+          "floats" : {
+            "checkers" : {
+              "isFloatValue" : {
+                "type" : "FloatChecker",
+                "multiplicity" : "ONE",
+                "required" : false,
+                "min" : "-Infinity",
+                "max" : "Infinity"
+              }
+            },
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "columns" : [ "isFloatValue" ],
+            "required" : false,
+            "mandatory" : "OPTIONAL"
+          },
+          "integer" : {
+            "checkers" : {
+              "ordre_affichage" : {
+                "type" : "IntegerChecker",
+                "multiplicity" : "ONE",
+                "required" : false,
+                "min" : -2147483648,
+                "max" : 2147483647
+              }
+            },
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "columns" : [ "ordre_affichage" ],
+            "required" : false,
+            "mandatory" : "OPTIONAL"
+          },
+          "reference" : {
+            "checkers" : {
+              "site" : {
+                "type" : "ReferenceChecker",
+                "componentkey" : "site",
+                "multiplicity" : "ONE",
+                "required" : false,
+                "reftype" : "site",
+                "isrecursive" : false,
+                "isparent" : true
+              }
+            },
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "columns" : [ "site" ],
+            "required" : false,
+            "mandatory" : "OPTIONAL"
+          }
+        },
+        "depends" : [ ],
+        "migrations" : null,
+        "hidden" : false,
+        "order" : 9999
+      },
+      "condition_prelevements" : {
+        "separator" : ";",
+        "headerline" : 1,
+        "firstrowline" : 2,
+        "allowunexpectedcolumns" : false,
+        "tags" : [ {
+          "tagdefinition" : "DATA_TAG"
+        } ],
+        "naturalkey" : [ "date_day", "date_time", "siteName" ],
+        "componentdescriptions" : {
+          "temps" : {
+            "type" : "BasicComponent",
+            "componentkey" : "temps",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "temps",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "projet" : {
+            "type" : "BasicComponent",
+            "componentkey" : "projet",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "projet",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "date_day" : {
+            "type" : "BasicComponent",
+            "componentkey" : "date_day",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "date_day",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "DateChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "pattern" : "dd/MM/yyyy",
+              "min" : "-999999999-01-01T00:00:00",
+              "max" : "+999999999-12-31T23:59:59.999999999",
+              "duration" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "siteName" : {
+            "type" : "BasicComponent",
+            "componentkey" : "siteName",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "Nom du site",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "ReferenceChecker",
+              "componentkey" : "siteName",
+              "multiplicity" : "ONE",
+              "required" : true,
+              "reftype" : "site",
+              "isrecursive" : false,
+              "isparent" : false
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : true,
+            "chartdescription" : null,
+            "referencecheckertype" : "site"
+          },
+          "date_time" : {
+            "type" : "BasicComponent",
+            "componentkey" : "date_time",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "date_time",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "DateChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "pattern" : "HH:mm:ss",
+              "min" : "-999999999-01-01T00:00:00",
+              "max" : "+999999999-12-31T23:59:59.999999999",
+              "duration" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "nebulosite" : {
+            "type" : "BasicComponent",
+            "componentkey" : "nebulosite",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nebulosite",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "commentaire" : {
+            "type" : "BasicComponent",
+            "componentkey" : "commentaire",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "commentaire",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "aspectDeLEau" : {
+            "type" : "BasicComponent",
+            "componentkey" : "aspectDeLEau",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "aspect de l'eau",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "couleurDeLEau" : {
+            "type" : "BasicComponent",
+            "componentkey" : "couleurDeLEau",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "couleur de l'eau",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "etatDeSurface" : {
+            "type" : "BasicComponent",
+            "componentkey" : "etatDeSurface",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "etat de surface",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "vitesseDuVent" : {
+            "type" : "BasicComponent",
+            "componentkey" : "vitesseDuVent",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "vitesse du vent",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "ensoleillement" : {
+            "type" : "BasicComponent",
+            "componentkey" : "ensoleillement",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "ensoleillement",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "sitePlateforme" : {
+            "type" : "BasicComponent",
+            "componentkey" : "sitePlateforme",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "Plateforme du site",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "directionDuVent" : {
+            "type" : "BasicComponent",
+            "componentkey" : "directionDuVent",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "direction du vent",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "temperatureDeLAir" : {
+            "type" : "BasicComponent",
+            "componentkey" : "temperatureDeLAir",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "temperature de l'air",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : -2147483648,
+              "max" : 2147483647
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "pressionAtmospherique" : {
+            "type" : "BasicComponent",
+            "componentkey" : "pressionAtmospherique",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "pression atmospherique",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "transparenceParSecchi" : {
+            "type" : "BasicComponent",
+            "componentkey" : "transparenceParSecchi",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "transparence par secchi",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "FloatChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : "-Infinity",
+              "max" : "Infinity"
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "transparenceParDisqueInra" : {
+            "type" : "BasicComponent",
+            "componentkey" : "transparenceParDisqueInra",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "transparence par disque inra",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          }
+        },
+        "submission" : {
+          "strategy" : "OA_VERSIONING",
+          "filenameparsing" : null,
+          "submissionscope" : {
+            "referencescopes" : [ {
+              "reference" : "site",
+              "component" : "siteName"
+            } ],
+            "timescope" : {
+              "component" : "date_day"
+            }
+          }
+        },
+        "authorization" : null,
+        "validations" : { },
+        "depends" : [ {
+          "type" : "DependsReferences",
+          "references" : "site",
+          "component" : "siteName"
+        } ],
+        "migrations" : null,
+        "hidden" : false,
+        "order" : 9999
+      }
+    },
+    "rightsrequest" : {
+      "formfields" : null
+    },
+    "additionalfiles" : { },
+    "hierarchicalnodes" : [ {
+      "level" : 0,
+      "nodename" : "taxon",
+      "componentkey" : null,
+      "columntolookupforrecursive" : null,
+      "parent" : null,
+      "children" : [ ],
+      "depends" : [ ],
+      "order" : 9999,
+      "isrecursive" : false
+    }, {
+      "level" : 0,
+      "nodename" : "site",
+      "componentkey" : null,
+      "columntolookupforrecursive" : null,
+      "parent" : null,
+      "children" : [ {
+        "level" : 1,
+        "nodename" : "proprietes_taxon",
+        "componentkey" : "site",
+        "columntolookupforrecursive" : null,
+        "parent" : "site",
+        "children" : [ ],
+        "depends" : [ "site" ],
+        "order" : 9999,
+        "isrecursive" : false
+      } ],
+      "depends" : [ ],
+      "order" : 9999,
+      "isrecursive" : false
+    }, {
+      "level" : 1,
+      "nodename" : "condition_prelevements",
+      "componentkey" : "siteName",
+      "columntolookupforrecursive" : null,
+      "parent" : null,
+      "children" : [ ],
+      "depends" : [ "site" ],
+      "order" : 9999,
+      "isrecursive" : false
+    }, {
+      "level" : 1,
+      "nodename" : "tel_S1_variable",
+      "componentkey" : "tel_S1_value",
+      "columntolookupforrecursive" : null,
+      "parent" : null,
+      "children" : [ ],
+      "depends" : [ "site" ],
+      "order" : null,
+      "isrecursive" : false
+    }, {
+      "level" : 1,
+      "nodename" : "tel_S2_variable",
+      "componentkey" : "tel_S2_value",
+      "columntolookupforrecursive" : null,
+      "parent" : null,
+      "children" : [ ],
+      "depends" : [ "site" ],
+      "order" : null,
+      "isrecursive" : false
+    } ],
+    "requiredauthorizationsattributes" : [ "site", "condition_prelevements", "taxon", "proprietes_taxon" ],
+    "hiddendata" : [ ]
+  },
+  "configfile" : "92fe4547-45b4-4924-af4b-4a69e265ec0b",
+  "alldatanames" : [ "taxon", "site", "proprietes_taxon", "tel_S1_variable", "tel_S2_variable", "condition_prelevements" ]
+}

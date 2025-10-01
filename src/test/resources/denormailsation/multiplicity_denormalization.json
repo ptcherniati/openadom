@@ -1,0 +1,714 @@
+{
+  "id" : "8caab1fb-9574-4a08-bff2-05b32f0b2c0c",
+  "creationdate" : "2025-09-29T17:11:16.070576",
+  "updatedate" : "2025-09-29T17:11:16.070576",
+  "lastchartes" : "2025-09-29T17:11:16.070576",
+  "name" : "multiplicity",
+  "version" : "1.0.1",
+  "data" : [ "bugs", "reference1", "reference2" ],
+  "additionalfiles" : [ ],
+  "configuration" : {
+    "version" : {
+      "version" : "2.0.1"
+    },
+    "tags" : [ ],
+    "i18n" : {
+      "tags" : { },
+      "application" : {
+        "title" : {
+          "en" : "Multiple values test",
+          "fr" : "Test de valeurs multiples"
+        },
+        "description" : {
+          "en" : "Multiple values test",
+          "fr" : "Test de valeurs multiples"
+        }
+      },
+      "data" : { },
+      "rightsrequest" : {
+        "fields" : { },
+        "i18n" : null
+      },
+      "additionalfiles" : { }
+    },
+    "applicationdescription" : {
+      "name" : "multiplicity",
+      "version" : {
+        "version" : "1.0.1"
+      },
+      "defaultlanguage" : "fr",
+      "comment" : "no comment"
+    },
+    "datadescription" : {
+      "bugs" : {
+        "separator" : ";",
+        "headerline" : 1,
+        "firstrowline" : 2,
+        "allowunexpectedcolumns" : false,
+        "tags" : [ ],
+        "naturalkey" : [ "no" ],
+        "componentdescriptions" : {
+          "no" : {
+            "type" : "ComputedComponent",
+            "componentkey" : "no",
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "ONE",
+              "required" : true,
+              "min" : -2147483648,
+              "max" : 2147483647
+            },
+            "computationchecker" : {
+              "type" : "ComputationChecker",
+              "multiplicity" : "ONE",
+              "required" : true,
+              "expression" : "datum.nos.split(\",\")[0]",
+              "references" : null,
+              "exceptionmessages" : [ ],
+              "codify" : false,
+              "data" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "nos" : {
+            "type" : "BasicComponent",
+            "componentkey" : "nos",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "nos",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "MANY",
+              "required" : true,
+              "min" : -2147483648,
+              "max" : 2147483647
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "date" : {
+            "type" : "ComputedComponent",
+            "componentkey" : "date",
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "DateChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "pattern" : "dd/MM/yyyy",
+              "min" : "-999999999-01-01T00:00:00",
+              "max" : "+999999999-12-31T23:59:59.999999999",
+              "duration" : null
+            },
+            "computationchecker" : {
+              "type" : "ComputationChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "expression" : "datum.dates.split(\",\")[0]",
+              "references" : null,
+              "exceptionmessages" : [ ],
+              "codify" : false,
+              "data" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "dates" : {
+            "type" : "BasicComponent",
+            "componentkey" : "dates",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "dates",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "DateChecker",
+              "multiplicity" : "MANY",
+              "required" : false,
+              "pattern" : "dd/MM/yyyy",
+              "min" : "-999999999-01-01T00:00:00",
+              "max" : "+999999999-12-31T23:59:59.999999999",
+              "duration" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "projet" : {
+            "type" : "ComputedComponent",
+            "componentkey" : "projet",
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "ONE",
+              "required" : true,
+              "min" : -2147483648,
+              "max" : 2147483647
+            },
+            "computationchecker" : {
+              "type" : "ComputationChecker",
+              "multiplicity" : "ONE",
+              "required" : true,
+              "expression" : "datum.projets.split(\",\")[0]",
+              "references" : null,
+              "exceptionmessages" : [ ],
+              "codify" : false,
+              "data" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "fichier" : {
+            "type" : "ComputedComponent",
+            "componentkey" : "fichier",
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "StringChecker",
+              "multiplicity" : "ONE",
+              "required" : true,
+              "pattern" : ".*"
+            },
+            "computationchecker" : {
+              "type" : "ComputationChecker",
+              "multiplicity" : "ONE",
+              "required" : true,
+              "expression" : "datum.fichiers.split(\",\")[0]",
+              "references" : null,
+              "exceptionmessages" : [ ],
+              "codify" : false,
+              "data" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "projets" : {
+            "type" : "BasicComponent",
+            "componentkey" : "projets",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "projets",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "MANY",
+              "required" : true,
+              "min" : -2147483648,
+              "max" : 2147483647
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "duration" : {
+            "type" : "ComputedComponent",
+            "componentkey" : "duration",
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "FloatChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "min" : "-Infinity",
+              "max" : "Infinity"
+            },
+            "computationchecker" : {
+              "type" : "ComputationChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "expression" : "datum.durations.split(\",\")[0]",
+              "references" : null,
+              "exceptionmessages" : [ ],
+              "codify" : false,
+              "data" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "fichiers" : {
+            "type" : "BasicComponent",
+            "componentkey" : "fichiers",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "fichiers",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "StringChecker",
+              "multiplicity" : "MANY",
+              "required" : true,
+              "pattern" : ".*"
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "durations" : {
+            "type" : "BasicComponent",
+            "componentkey" : "durations",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "durations",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "FloatChecker",
+              "multiplicity" : "MANY",
+              "required" : false,
+              "min" : "-Infinity",
+              "max" : "Infinity"
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "reference" : {
+            "type" : "ComputedComponent",
+            "componentkey" : "reference",
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "ReferenceChecker",
+              "componentkey" : "reference",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "reftype" : "reference1",
+              "isrecursive" : false,
+              "isparent" : false
+            },
+            "computationchecker" : {
+              "type" : "ComputationChecker",
+              "multiplicity" : "ONE",
+              "required" : false,
+              "expression" : "datum.references.split(\",\")[0]",
+              "references" : null,
+              "exceptionmessages" : [ ],
+              "codify" : false,
+              "data" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : true,
+            "chartdescription" : null,
+            "referencecheckertype" : "reference1"
+          },
+          "references" : {
+            "type" : "BasicComponent",
+            "componentkey" : "references",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "references",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "ReferenceChecker",
+              "componentkey" : "references",
+              "multiplicity" : "MANY",
+              "required" : false,
+              "reftype" : "reference1",
+              "isrecursive" : false,
+              "isparent" : false
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : true,
+            "chartdescription" : null,
+            "referencecheckertype" : "reference1"
+          }
+        },
+        "submission" : null,
+        "authorization" : null,
+        "validations" : { },
+        "depends" : [ {
+          "type" : "DependsReferences",
+          "references" : "reference1",
+          "component" : "reference"
+        }, {
+          "type" : "DependsReferences",
+          "references" : "reference1",
+          "component" : "references"
+        } ],
+        "migrations" : null,
+        "hidden" : false,
+        "order" : 9999
+      },
+      "reference1" : {
+        "separator" : ";",
+        "headerline" : 1,
+        "firstrowline" : 2,
+        "allowunexpectedcolumns" : false,
+        "tags" : [ ],
+        "naturalkey" : [ "groupe", "equipe" ],
+        "componentdescriptions" : {
+          "dates" : {
+            "type" : "BasicComponent",
+            "componentkey" : "dates",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "dates",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "DateChecker",
+              "multiplicity" : "MANY",
+              "required" : true,
+              "pattern" : "dd/MM/yyyy",
+              "min" : "-999999999-01-01T00:00:00",
+              "max" : "+999999999-12-31T23:59:59.999999999",
+              "duration" : null
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "names" : {
+            "type" : "BasicComponent",
+            "componentkey" : "names",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "names",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "StringChecker",
+              "multiplicity" : "MANY",
+              "required" : false,
+              "pattern" : ""
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "equipe" : {
+            "type" : "BasicComponent",
+            "componentkey" : "equipe",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "equipe",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "groupe" : {
+            "type" : "BasicComponent",
+            "componentkey" : "groupe",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "groupe",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "projets" : {
+            "type" : "BasicComponent",
+            "componentkey" : "projets",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "projets",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : true,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "IntegerChecker",
+              "multiplicity" : "MANY",
+              "required" : true,
+              "min" : -2147483648,
+              "max" : 2147483647
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "durations" : {
+            "type" : "BasicComponent",
+            "componentkey" : "durations",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "durations",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "FloatChecker",
+              "multiplicity" : "MANY",
+              "required" : false,
+              "min" : "-Infinity",
+              "max" : "Infinity"
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          }
+        },
+        "submission" : null,
+        "authorization" : null,
+        "validations" : { },
+        "depends" : [ ],
+        "migrations" : null,
+        "hidden" : false,
+        "order" : 9999
+      },
+      "reference2" : {
+        "separator" : ";",
+        "headerline" : 1,
+        "firstrowline" : 2,
+        "allowunexpectedcolumns" : false,
+        "tags" : [ ],
+        "naturalkey" : [ "groupe" ],
+        "componentdescriptions" : {
+          "groupe" : {
+            "type" : "BasicComponent",
+            "componentkey" : "groupe",
+            "defaultvalue" : null,
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "importheader" : "groupe",
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : null,
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : false,
+            "chartdescription" : null,
+            "referencecheckertype" : "StringChecker"
+          },
+          "reference1" : {
+            "type" : "ComputedComponent",
+            "componentkey" : "reference1",
+            "tags" : [ {
+              "tagdefinition" : "NO_TAG",
+              "tagname" : "no_tag"
+            } ],
+            "exportheadername" : null,
+            "langrestrictions" : [ ],
+            "required" : false,
+            "mandatory" : "OPTIONAL",
+            "checker" : {
+              "type" : "ReferenceChecker",
+              "componentkey" : "reference1",
+              "multiplicity" : "MANY",
+              "required" : false,
+              "reftype" : "reference1",
+              "isrecursive" : false,
+              "isparent" : false
+            },
+            "computationchecker" : {
+              "type" : "ComputationChecker",
+              "multiplicity" : "MANY",
+              "required" : false,
+              "expression" : "String groupe = (String)datum[\"groupe\"]; references.reference1 .findAll({it.refValues.groupe.equals(groupe)}) .collect({it.naturalKey}) .join(\",\");\n",
+              "references" : [ "reference1" ],
+              "exceptionmessages" : [ ],
+              "codify" : false,
+              "data" : [ "reference1" ]
+            },
+            "submissionauthorizationscope" : null,
+            "hidden" : false,
+            "reference" : true,
+            "chartdescription" : null,
+            "referencecheckertype" : "reference1"
+          }
+        },
+        "submission" : null,
+        "authorization" : null,
+        "validations" : { },
+        "depends" : [ {
+          "type" : "DependsReferences",
+          "references" : "reference1",
+          "component" : "reference1"
+        } ],
+        "migrations" : null,
+        "hidden" : false,
+        "order" : 9999
+      }
+    },
+    "rightsrequest" : {
+      "formfields" : null
+    },
+    "additionalfiles" : { },
+    "hierarchicalnodes" : [ {
+      "level" : 0,
+      "nodename" : "reference1",
+      "componentkey" : null,
+      "columntolookupforrecursive" : null,
+      "parent" : null,
+      "children" : [ ],
+      "depends" : [ ],
+      "order" : 9999,
+      "isrecursive" : false
+    }, {
+      "level" : 1,
+      "nodename" : "bugs",
+      "componentkey" : "references",
+      "columntolookupforrecursive" : null,
+      "parent" : null,
+      "children" : [ ],
+      "depends" : [ "reference1" ],
+      "order" : 9999,
+      "isrecursive" : false
+    }, {
+      "level" : 1,
+      "nodename" : "reference2",
+      "componentkey" : "reference1",
+      "columntolookupforrecursive" : null,
+      "parent" : null,
+      "children" : [ ],
+      "depends" : [ "reference1" ],
+      "order" : 9999,
+      "isrecursive" : false
+    } ],
+    "requiredauthorizationsattributes" : [ "bugs", "reference1", "reference2" ],
+    "hiddendata" : [ ]
+  },
+  "configfile" : "43c77727-a094-4c63-9340-4609f5d18ce5",
+  "alldatanames" : [ "reference1", "bugs", "reference2" ]
+}

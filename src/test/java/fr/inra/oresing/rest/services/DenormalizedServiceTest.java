@@ -101,8 +101,34 @@ class DenormalizedServiceTest {
     }
 
     @Test
-    public void denormalize() {
+    public void denormalizeMonsore() {
         try (final InputStream applicationStream = getClass().getResourceAsStream("/data/monsore/denormalized/monsoereApplication.json")) {
+            jsonRowMapper.getJsonMapper()
+                    .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
+                    .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
+            denormalizedService.buildDenormalizedSchema(application);
+        } catch (final Throwable e) {
+            throw new OreSiTechnicalException(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void denormalizeMultiplicity() {
+        try (final InputStream applicationStream = getClass().getResourceAsStream("/data/multiplicity/dernormalized/multiplicityApplication.json")) {
+            jsonRowMapper.getJsonMapper()
+                    .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
+                    .setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
+            denormalizedService.buildDenormalizedSchema(application);
+        } catch (final Throwable e) {
+            throw new OreSiTechnicalException(e.getMessage(), e);
+        }
+    }
+
+    @Test
+    public void denormalizePattern() {
+        try (final InputStream applicationStream = getClass().getResourceAsStream("/data/pattern/denormalized/patternApplication.json")) {
             jsonRowMapper.getJsonMapper()
                     .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
