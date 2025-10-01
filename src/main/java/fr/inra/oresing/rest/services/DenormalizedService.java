@@ -143,6 +143,8 @@ public class DenormalizedService {
                                      refvalues ->> '__display_default'
                              ) display_en
                       from %2$s.referencevalue);
+                      ALTER TABLE IF EXISTS %2$s_dn.referenceDisplay
+                          ADD CONSTRAINT "PK" PRIMARY KEY (id);
                        %1$s
                        drop table %2$s_dn.referenceDisplay; """
                 .formatted(
