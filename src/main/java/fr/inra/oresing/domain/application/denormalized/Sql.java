@@ -143,6 +143,8 @@ public record Sql(
                                 GROUP BY referencevalue.id, referencevalue.naturalkey, referencevalue.hierarchicalkey
                             );
                             
+                            GRANT SELECT ON TABLE %1$s_dn.%2$s TO PUBLIC;
+                            
                             -- primary key
                             ALTER TABLE %1$s_dn.%2$s
                                 ALTER COLUMN id SET NOT NULL;
@@ -172,6 +174,8 @@ public record Sql(
 
     private String buildPolicies() {
        return  """
+                ALTER TABLE IF EXISTS %1$s_dn.%2$s
+                ENABLE ROW LEVEL SECURITY;
                 
                 DO
                 $$

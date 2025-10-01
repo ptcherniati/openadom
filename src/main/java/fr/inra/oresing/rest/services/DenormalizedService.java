@@ -123,10 +123,12 @@ public class DenormalizedService {
                 .map(Sql::createTable)
                 .collect(Collectors.joining("\n\t"));
         String tableSql = """
-                drop schema if exists %2$s_dn cascade;
-                create schema %2$s_dn;
+               drop schema if exists %2$s_dn cascade;
+               create schema %2$s_dn;
+               
+               GRANT USAGE ON SCHEMA %2$s_dn TO PUBLIC;
                 
-                create table %2$s_dn.referenceDisplay as
+               create table %2$s_dn.referenceDisplay as
                     (select id,
                             hierarchicalkey,
                             COALESCE(
