@@ -65,10 +65,9 @@ public record MonSoereFixture(Fixtures fixtures, MockMvc mockMvc, UserRepository
     }
 
 
-    public Stream<? extends DynamicNode> loadMonsore() {
+    public Stream<? extends DynamicNode> loadMonsore(AtomicReference appId ) {
         final URL monSoereConfiguration = getClass().getResource(getMonsoreApplicationConfigurationResourceName());
         final URL pemResource = getClass().getResource(getPemDataResourceName());
-        AtomicReference appId = new AtomicReference<>();
         return Stream.of(
                 dynamicTest("ajout de l'application MONSOERE sans les droits doit lancer une exception", () -> {
                     try (final InputStream in = Objects.requireNonNull(monSoereConfiguration).openStream()) {

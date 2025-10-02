@@ -5,7 +5,7 @@ import org.springframework.jdbc.support.incrementer.HsqlSequenceMaxValueIncremen
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
-
+import fr.inra.oresing.domain.application.normalized.ReferenceJoin;
 public record Sql(
         String schemaName,
         String tableName,
@@ -16,7 +16,7 @@ public record Sql(
         List<String> indexes,
         Map<String, List<String>> foreignKeys,
         List<String> timescopes,
-        List<String> authorizationScopes
+        Map<String, String> authorizationScopes
 ) {
     public static List<Sql> sortSqlsByForeignKeyDependency(List<Sql> buildedSqls) {
         Map<String, Sql> sqlByName = new HashMap<>();
@@ -67,7 +67,7 @@ public record Sql(
                 new ArrayList<>(),
                 new LinkedHashMap<>(),
                 new ArrayList<>(),
-                new ArrayList<>()
+                new LinkedHashMap<>()
         );
     }
 
@@ -80,13 +80,14 @@ public record Sql(
     public String buildFrom() {
         return """
                                             
-                                            \t\t%1$s.referencevalue,
+                                            \t\t%1$s.referencevalue
                                             \t\t%2$s%3$s
-                                            \t\t%4$s
-                                            \t\t%5$s
+                                            \t\t%4$s%5$s
+                                            \t\t%6$s
                                             """.formatted(
                 schemaName,
-                """
+                refValuesTable().isEmpty() ? "" : ",",
+                refValuesTable().isEmpty() ? "" : """
                         -- add simple fields
                                 JSON_TABLE(
                                             refvalues, 
@@ -102,7 +103,7 @@ public record Sql(
                                         )
                         ),
                 referenceJoin().isEmpty() ? "" : ",",
-                referenceJoin().isEmpty() ? "" : """
+                referenceJoin().isEmpty() ? "" : """                                                 
                                                     -- add references fields
                                                             JSON_TABLE(
                                                                         refslinkedto, 
@@ -224,7 +225,7 @@ public record Sql(
                 .findFirst()
                 .map(_->"rec.timescope")
                 .ifPresent(assignements::add);
-        authorizationScopes().stream()
+        authorizationScopes().keySet().stream()
                 .map("rec.%s"::formatted)
                 .forEach(assignements::add);
         if(assignements.isEmpty()) {
@@ -239,8 +240,8 @@ public record Sql(
                 .findFirst()
                 .map(_->" (authorizations #>> '{%1$s, timescope}')::tsrange                 AS timescope".formatted(tableName()))
                 .ifPresent(selects::add);
-        authorizationScopes().stream()
-                .map(scope->"(authorizations #>> '{%1$s, authorizationscope,%2$s,0}')         AS %2$s".formatted(tableName(), scope))
+        authorizationScopes().keySet().stream()
+                .map(refType->"(authorizations #>> '{%1$s, authorizationscope,%2$s,0}')         AS %2$s".formatted(tableName(), refType))
                 .forEach(selects::add);
         if(selects.isEmpty()) {
             return "";
@@ -259,7 +260,7 @@ public record Sql(
                           ELSE %1$s <@ '%2$s'::tsrange
                         END""".formatted(name,"%"+counter.getAndIncrement()+"$s"))
                 .ifPresent(usings::add);
-        authorizationScopes().stream()
+        authorizationScopes().values().stream()
                 .map(name-> """
                         %1$s_hk <@ '%2$s'::ltree""".formatted(name,"%"+counter.getAndIncrement()+"$s"))
                 .forEach(usings::add);

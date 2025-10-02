@@ -163,9 +163,9 @@ public record Component(
                         aggregateType = "[]";
                         sqls.select().add("ARRAY_AGG(refs.\"%1$s\" ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::uuid[]\t\t\"%1$s_id\"".formatted(fieldName()));
                         if (isAuthorizationAuthorizationScopeField()) {
-                            sqls.select().add("ARRAY_AGG(\"%1$s\".hierarchicalkey::TEXT ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::UUID[]\t\t\"%1$s_hk\"".formatted(fieldName()));
+                            sqls.select().add("ARRAY_AGG(\"%1$s\".hierarchicalkey::TEXT ORDER BY \"%2$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::UUID[]\t\t\"%1$s_hk\"".formatted(fieldName()));
                             addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
-                            sqls.authorizationScopes().add("%1$s".formatted(escapedFieldName()));
+                            sqls.authorizationScopes().put(refType(), "%1$s".formatted(escapedFieldName()));
                         }
                         sqls.select().add("ARRAY_AGG(\"%1$s\".display_fr ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::TEXT[]\t\t\"%1$s_fr\"".formatted(fieldName()));
                         sqls.select().add("ARRAY_AGG(\"%1$s\".display_en ORDER BY \"%1$s_id\")FILTER (WHERE \"%1$s_id\" IS NOT NULL)::TEXT[]\t\t\"%1$s_en\"".formatted(fieldName()));
@@ -174,7 +174,7 @@ public record Component(
                         if (isAuthorizationAuthorizationScopeField()) {
                             sqls.select().add("MAX(\"%1$s\".hierarchicalkey::TEXT)::LTREE\t\t\"%1$s_hk\"".formatted(fieldName()));
                             addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
-                            sqls.authorizationScopes().add("%1$s".formatted(escapedFieldName()));
+                            sqls.authorizationScopes().put(refType(), "%1$s".formatted(escapedFieldName()));
                         }
                         sqls.select().add("MAX(\"%1$s\".display_fr)::TEXT\t\t\"%1$s_fr\"".formatted(fieldName()));
                         sqls.select().add("MAX(\"%1$s\".display_en)::TEXT\t\t\"%1$s_en\"".formatted(fieldName()));

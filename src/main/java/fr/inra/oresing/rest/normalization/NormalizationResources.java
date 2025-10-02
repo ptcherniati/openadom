@@ -7,6 +7,7 @@ import fr.inra.oresing.rest.services.NormalizedService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
+import org.postgresql.util.PSQLException;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+
+import static fr.inra.oresing.rest.services.NormalizedService.CANT_CREATE_DENORMALIZED_TABLE;
 
 @Slf4j
 @RestController
@@ -48,7 +51,12 @@ public class NormalizationResources {
         final String sql = executorService
                 .submit(() -> {
                     SecurityContextHolder.setContext(context);
-                    return normalizedService.buildNormalizedSchema(application, true);
+                    try {
+                        return normalizedService.buildNormalizedSchema(application, true);
+                    }catch(Exception e){
+                        log.error("Error building normalized schema for application {}", nameOrId, e);
+                        return CANT_CREATE_DENORMALIZED_TABLE;
+                    }
                 })
                 .get();
         return ResponseEntity.ok(sql);

@@ -64,6 +64,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -175,6 +176,8 @@ public class OreSiResourcesTest {
     @Tag("MONSOERE")
     public Stream<DynamicNode> addApplicationMonsoreDynamic() throws Exception {
         MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures, mockMvc, userRepository, jsonRowMapper);
+
+        AtomicReference appId = new AtomicReference<>();
         return Stream.of(
                 dynamicContainer("initialisation des utilisateurs", Stream.of(dynamicTest("initialisation de l'utilisateur monsoresimple",
                                 () -> {
@@ -200,7 +203,7 @@ public class OreSiResourcesTest {
                     monSoereFixture.testPublic();
                 }),
                 dynamicContainer("chargement de MONSOERE",
-                        monSoereFixture.loadMonsore()),
+                        monSoereFixture.loadMonsore(appId)),
                 dynamicContainer("vérification des chargements et enregitrement des résultats", monSoereFixture.checkAndRegisterResults())/*,
                 dynamicTest("delete pem", () -> {
 

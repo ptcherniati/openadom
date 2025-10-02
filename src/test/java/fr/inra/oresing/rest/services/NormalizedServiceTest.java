@@ -25,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.InputStream;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_AS_NULL;
@@ -68,6 +69,7 @@ class NormalizedServiceTest {
     @TestFactory
     @DisplayName("Tests de la normalization de MONSOERE")
     public Stream<DynamicNode> testNormalization() {
+        AtomicReference appId = new AtomicReference<>();
         MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures, mockMvc, userRepository, jsonRowMapper);
         return Stream.of(
                 dynamicContainer("initialisation des utilisateurs", Stream.of(dynamicTest("initialisation de l'utilisateur monsoresimple",
@@ -81,7 +83,7 @@ class NormalizedServiceTest {
                     monSoereFixture.testPublic();
                 }),
                 dynamicContainer("chargement de MONSOERE",
-                        monSoereFixture.loadMonsore()),
+                        monSoereFixture.loadMonsore(appId)),
                 dynamicContainer("chargement de MONSOERE",
                         buildNormalized("monsoresimple"))
         );
@@ -107,7 +109,7 @@ class NormalizedServiceTest {
                     .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, false)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
             Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
-            normalizedService.buildNormalizedSchema(application, true);
+            normalizedService.buildNormalizedSchema(application, false);
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -115,7 +117,7 @@ class NormalizedServiceTest {
 
     @Test
     public void normalizeMultiplicity() {
-        try (final InputStream applicationStream = getClass().getResourceAsStream("/data/multiplicity/dernormalized/multiplicityApplication.json")) {
+        try (final InputStream applicationStream = getClass().getResourceAsStream("/data/multiplicity/normalized/multiplicityApplication.json")) {
             jsonRowMapper.getJsonMapper()
                     .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
