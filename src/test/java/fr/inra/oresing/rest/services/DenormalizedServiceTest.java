@@ -104,10 +104,10 @@ class DenormalizedServiceTest {
     public void denormalizeMonsore() {
         try (final InputStream applicationStream = getClass().getResourceAsStream("/data/monsore/denormalized/monsoereApplication.json")) {
             jsonRowMapper.getJsonMapper()
-                    .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
+                    .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, false)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
             Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
-            denormalizedService.buildDenormalizedSchema(application);
+            denormalizedService.buildDenormalizedSchema(application, true);
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -120,7 +120,7 @@ class DenormalizedServiceTest {
                     .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
             Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
-            denormalizedService.buildDenormalizedSchema(application);
+            denormalizedService.buildDenormalizedSchema(application, false);
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
@@ -133,7 +133,7 @@ class DenormalizedServiceTest {
                     .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
             Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
-            denormalizedService.buildDenormalizedSchema(application);
+            denormalizedService.buildDenormalizedSchema(application, false);
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }

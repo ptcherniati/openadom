@@ -254,11 +254,14 @@ public record Sql(
         timescopes().stream()
                 .findFirst()
                 .map(name->"""
-                        %1$s <@ '%2$s'::tsrange""".formatted(name,"%"+counter.getAndIncrement()+"$s"))
+                        CASE
+                          WHEN '%2$s' = '' THEN TRUE
+                          ELSE %1$s <@ '%2$s'::tsrange
+                        END""".formatted(name,"%"+counter.getAndIncrement()+"$s"))
                 .ifPresent(usings::add);
         authorizationScopes().stream()
                 .map(name-> """
-                        %1$s <@ '%2$s'::ltree""".formatted(name,"%"+counter.getAndIncrement()+"$s"))
+                        %1$s_hk <@ '%2$s'::ltree""".formatted(name,"%"+counter.getAndIncrement()+"$s"))
                 .forEach(usings::add);
         if(usings.isEmpty()) {
             return "true";

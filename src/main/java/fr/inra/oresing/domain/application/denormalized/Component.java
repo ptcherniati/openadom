@@ -91,19 +91,20 @@ public record Component(
         } else {
             switch (type()) {
                 case DateChecker -> {
-                    String aggregate = "MAX";
+                    String defaut = "''";
                     String aggregateType = "";
                     if (Multiplicity.MANY.equals(multiplicity())) {
-                        aggregate = "ARRAY_AGG";
+                        defaut = "'{}'";
                         aggregateType = "[]";
                     }
                     sqls.select().add(
                             """
-                                    MAX(val."%1$s")::composite_date%2$s::timestamp%2$s \"ts_%1$s\",
-                                    \t\tMAX(val."%1$s")::composite_date%2$s::text%2$s \"%1$s\" """
+                                    MAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::timestamp%2$s \"ts_%1$s\",
+                                    \t\tMAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::text%2$s \"%1$s\" """
                                     .formatted(
                                             fieldName(),
-                                            aggregateType
+                                            aggregateType,
+                                            defaut
                                     )
                     );
                     sqls.refValuesTable().add("""
@@ -164,7 +165,7 @@ public record Component(
                         if (isAuthorizationAuthorizationScopeField()) {
                             sqls.select().add("ARRAY_AGG(\"%1$s\".hierarchicalkey::TEXT ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::UUID[]\t\t\"%1$s_hk\"".formatted(fieldName()));
                             addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
-                            sqls.authorizationScopes().add("%1$s_hk".formatted(escapedFieldName()));
+                            sqls.authorizationScopes().add("%1$s".formatted(escapedFieldName()));
                         }
                         sqls.select().add("ARRAY_AGG(\"%1$s\".display_fr ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::TEXT[]\t\t\"%1$s_fr\"".formatted(fieldName()));
                         sqls.select().add("ARRAY_AGG(\"%1$s\".display_en ORDER BY \"%1$s_id\")FILTER (WHERE \"%1$s_id\" IS NOT NULL)::TEXT[]\t\t\"%1$s_en\"".formatted(fieldName()));
@@ -173,7 +174,7 @@ public record Component(
                         if (isAuthorizationAuthorizationScopeField()) {
                             sqls.select().add("MAX(\"%1$s\".hierarchicalkey::TEXT)::LTREE\t\t\"%1$s_hk\"".formatted(fieldName()));
                             addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
-                            sqls.authorizationScopes().add("%1$s_hk".formatted(escapedFieldName()));
+                            sqls.authorizationScopes().add("%1$s".formatted(escapedFieldName()));
                         }
                         sqls.select().add("MAX(\"%1$s\".display_fr)::TEXT\t\t\"%1$s_fr\"".formatted(fieldName()));
                         sqls.select().add("MAX(\"%1$s\".display_en)::TEXT\t\t\"%1$s_en\"".formatted(fieldName()));
@@ -228,18 +229,14 @@ public record Component(
             }
             sqls.select().add(
                     """
-                            MAX(val.\"%1$s\")::%2$s%3$s  \t\t\"%1$s\""""
+                            MAX(val.\"%1$s\")::TEXT%2$s  \t\t\"%1$s\""""
                             .formatted(fieldName(),
-                                    type.name(),
                                     aggregateType
                             )
             );
             sqls.refValuesTable().add("""
-                    "%2$s" %1$s%3$s PATH '$.%4$s'"""
+                    "%1$s" TEXT%2$s PATH '$.%3$s'"""
                     .formatted(
-                            Optional.ofNullable(type)
-                                    .map(Enum::name)
-                                    .orElse("TEXT"),
                             fieldName(),
                             aggregateType,
                             fieldPath().replace("::", "\".\"")

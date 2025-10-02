@@ -39,7 +39,7 @@ public class DenormalizedService {
     }
 
     @Transactional
-    public String buildDenormalizedSchema(Application application) {
+    public String buildDenormalizedSchema(Application application, boolean execute) {
         List<Sql> buildedSqls = application.getConfiguration().dataDescription().entrySet().stream()
                 .map(entry -> {
                     String schemaName = application.getName();
@@ -152,14 +152,23 @@ public class DenormalizedService {
                         application.getName(),
                         application.getId().toString()
                 );
+        if (execute) {
+            final String cantCreateDenormalizedTable = storeDenormalizedSchema(tableSql);
+            if (cantCreateDenormalizedTable != null) return cantCreateDenormalizedTable;
+        }
+        return tableSql;
+    }
+
+    private String storeDenormalizedSchema(String tableSql) {
         try {
-            if(!sqlService.createDenormalizedTable(tableSql)){
+            if (!sqlService.createDenormalizedTable(tableSql)) {
                 return CANT_CREATE_DENORMALIZED_TABLE;
-            };
+            }
+            ;
         } catch (Exception e) {
             log.error(CANT_CREATE_DENORMALIZED_TABLE, e);
             return CANT_CREATE_DENORMALIZED_TABLE;
         }
-        return tableSql;
+        return null;
     }
 }

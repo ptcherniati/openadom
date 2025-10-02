@@ -7,14 +7,12 @@ import fr.inra.oresing.rest.services.DenormalizedService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -42,7 +40,7 @@ public class DenormalizationResources {
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
-    @PostMapping(value = "/applications/{nameOrId}/denormalized")
+    @PostMapping(value = "/applications/{nameOrId}/denormalized",produces = {MediaType.TEXT_PLAIN_VALUE})
     @SecurityRequirement(name = "Bearer Authentication")
     public ResponseEntity<String> buildDenormalizedSchema(@PathVariable("nameOrId") final String nameOrId) throws ExecutionException, InterruptedException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
@@ -50,7 +48,22 @@ public class DenormalizationResources {
         final String sql = executorService
                 .submit(() -> {
                     SecurityContextHolder.setContext(context);
-                    return denormalizedService.buildDenormalizedSchema(application);
+                    return denormalizedService.buildDenormalizedSchema(application, true);
+                })
+                .get();
+        return ResponseEntity.ok(sql);
+    }
+
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
+    @GetMapping(value = "/applications/{nameOrId}/denormalized",produces = {MediaType.TEXT_PLAIN_VALUE})
+    @SecurityRequirement(name = "Bearer Authentication")
+    public ResponseEntity<String> getDenormalizedSchema(@PathVariable("nameOrId") final String nameOrId) throws ExecutionException, InterruptedException {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        final SecurityContext context = SecurityContextHolder.getContext();
+        final String sql = executorService
+                .submit(() -> {
+                    SecurityContextHolder.setContext(context);
+                    return denormalizedService.buildDenormalizedSchema(application, false);
                 })
                 .get();
         return ResponseEntity.ok(sql);
