@@ -1,4 +1,4 @@
-package fr.inra.oresing.domain.application.denormalized;
+package fr.inra.oresing.domain.application.normalized;
 
 import org.springframework.jdbc.support.incrementer.HsqlSequenceMaxValueIncrementer;
 

@@ -39,9 +39,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureWebMvc
 @AutoConfigureMockMvc(print = MockMvcPrint.NONE)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
-@Tag("database.denormalization")
+@Tag("database.normalization")
 @Slf4j
-class DenormalizedServiceTest {
+class NormalizedServiceTest {
     public final Fixtures.CreateUser monsoresimple = new Fixtures.CreateUser("monsoresimple", "xxxxxxxx", "monsoresimple@inrae.fr");
     public final Fixtures.CreateUser withRightsUser = new Fixtures.CreateUser("withrigths", "xxxxxxxx", "withrigths@inrae.fr");
 
@@ -56,7 +56,7 @@ class DenormalizedServiceTest {
     @Autowired
     private AuthenticationService authenticationService;
     @Autowired
-    private DenormalizedService denormalizedService;
+    private NormalizedService normalizedService;
     private Fixtures fixtures;
 
 
@@ -66,8 +66,8 @@ class DenormalizedServiceTest {
     }
 
     @TestFactory
-    @DisplayName("Tests de la denormalization de MONSOERE")
-    public Stream<DynamicNode> testDenormalization() {
+    @DisplayName("Tests de la normalization de MONSOERE")
+    public Stream<DynamicNode> testNormalization() {
         MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures, mockMvc, userRepository, jsonRowMapper);
         return Stream.of(
                 dynamicContainer("initialisation des utilisateurs", Stream.of(dynamicTest("initialisation de l'utilisateur monsoresimple",
@@ -83,57 +83,57 @@ class DenormalizedServiceTest {
                 dynamicContainer("chargement de MONSOERE",
                         monSoereFixture.loadMonsore()),
                 dynamicContainer("chargement de MONSOERE",
-                        buildDenormalized("monsoresimple"))
+                        buildNormalized("monsoresimple"))
         );
 
     }
 
-    private Stream<? extends DynamicNode> buildDenormalized(String applicationName) {
+    private Stream<? extends DynamicNode> buildNormalized(String applicationName) {
 
         return Stream.of(
                 dynamicTest("dénormalization de mon %s".formatted(applicationName), () -> {
                     log.debug(applicationName);
                     mockMvc.perform(
-                            MockMvcRequestBuilders.post("/api/v1/applications/{applicationName}/denormalized", applicationName)
+                            MockMvcRequestBuilders.post("/api/v1/applications/{applicationName}/normalized", applicationName)
                                     .header("Authorization", "Bearer " + fixtures.getMonsoresimpleConnection().jwt())
                     ).andExpect(status().isOk());
                 }));
     }
 
     @Test
-    public void denormalizeMonsore() {
-        try (final InputStream applicationStream = getClass().getResourceAsStream("/data/monsore/denormalized/monsoereApplication.json")) {
+    public void normalizeMonsore() {
+        try (final InputStream applicationStream = getClass().getResourceAsStream("/data/monsore/normalized/monsoereApplication.json")) {
             jsonRowMapper.getJsonMapper()
                     .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, false)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
             Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
-            denormalizedService.buildDenormalizedSchema(application, true);
+            normalizedService.buildNormalizedSchema(application, true);
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 
     @Test
-    public void denormalizeMultiplicity() {
+    public void normalizeMultiplicity() {
         try (final InputStream applicationStream = getClass().getResourceAsStream("/data/multiplicity/dernormalized/multiplicityApplication.json")) {
             jsonRowMapper.getJsonMapper()
                     .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
             Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
-            denormalizedService.buildDenormalizedSchema(application, false);
+            normalizedService.buildNormalizedSchema(application, false);
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
     }
 
     @Test
-    public void denormalizePattern() {
-        try (final InputStream applicationStream = getClass().getResourceAsStream("/data/pattern/denormalized/patternApplication.json")) {
+    public void normalizePattern() {
+        try (final InputStream applicationStream = getClass().getResourceAsStream("/data/pattern/normalized/patternApplication.json")) {
             jsonRowMapper.getJsonMapper()
                     .configure(READ_UNKNOWN_ENUM_VALUES_AS_NULL, true)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL);
             Application application = (Application) jsonRowMapper.readStream(applicationStream, Application.class);
-            denormalizedService.buildDenormalizedSchema(application, false);
+            normalizedService.buildNormalizedSchema(application, false);
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }

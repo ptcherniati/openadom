@@ -176,7 +176,7 @@ public class SqlService {
         return Boolean.TRUE.equals(namedParameterJdbcTemplate.queryForObject(sql, EmptySqlParameterSource.INSTANCE, Boolean.class));
     }
 
-    public boolean createDenormalizedTable(String sqlTable){
+    public boolean createNormalizedTable(String sqlTable){
         try{
             resetRole();
             namedParameterJdbcTemplate.getJdbcTemplate().update(sqlTable);

@@ -1,4 +1,4 @@
-package fr.inra.oresing.domain.application.denormalized;
+package fr.inra.oresing.domain.application.normalized;
 
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;

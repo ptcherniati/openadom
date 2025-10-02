@@ -2,7 +2,7 @@ package fr.inra.oresing.rest.services;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.application.denormalized.Sql;
+import fr.inra.oresing.domain.application.normalized.Sql;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlService;
 import lombok.Setter;
@@ -20,7 +20,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class DenormalizedService {
+public class NormalizedService {
     public static final String CANT_CREATE_DENORMALIZED_TABLE = "CANT_CREATE_DENORMALIZED_TABLE";
     private final OreSiRepository repository;
     private final BeanFactory beanFactory;
@@ -28,7 +28,7 @@ public class DenormalizedService {
     @Setter
     private ServiceContainer serviceContainer;
 
-    public DenormalizedService(
+    public NormalizedService(
             OreSiRepository repository,
             BeanFactory beanFactory,
             ServiceContainer serviceContainer, SqlService sqlService) {
@@ -39,7 +39,7 @@ public class DenormalizedService {
     }
 
     @Transactional
-    public String buildDenormalizedSchema(Application application, boolean execute) {
+    public String buildNormalizedSchema(Application application, boolean execute) {
         List<Sql> buildedSqls = application.getConfiguration().dataDescription().entrySet().stream()
                 .map(entry -> {
                     String schemaName = application.getName();
@@ -56,7 +56,7 @@ public class DenormalizedService {
                                 return (b.getValue() instanceof PatternComponent) || (b.getValue() instanceof DynamicComponent) ? -1 : 1;
                             })
                             .flatMap(componentDescriptionEntry -> {
-                                fr.inra.oresing.domain.application.denormalized.Component component = fr.inra.oresing.domain.application.denormalized.Component.of(
+                                fr.inra.oresing.domain.application.normalized.Component component = fr.inra.oresing.domain.application.normalized.Component.of(
                                         componentDescriptionEntry.getKey(),
                                         componentDescriptionEntry.getValue(),
                                         authorization
@@ -74,10 +74,10 @@ public class DenormalizedService {
                                     case PatternComponentAdjacents _ -> Stream.empty();
                                     case PatternComponentQualifiers _ -> Stream.empty();
                                     case PatternComponent patternComponent -> {
-                                        List<fr.inra.oresing.domain.application.denormalized.Component> components = new ArrayList<>();
+                                        List<fr.inra.oresing.domain.application.normalized.Component> components = new ArrayList<>();
                                         components.add(component);
                                         patternComponent.patternComponentQualifiers().entrySet().stream()
-                                                .map(qualifierComponentEntry -> fr.inra.oresing.domain.application.denormalized.Component.of(
+                                                .map(qualifierComponentEntry -> fr.inra.oresing.domain.application.normalized.Component.of(
                                                                 qualifierComponentEntry.getKey(),
                                                                 qualifierComponentEntry.getValue(),
                                                                 authorization
@@ -94,7 +94,7 @@ public class DenormalizedService {
                                                 )
                                                 .forEach(qualifierComponent -> components.add(qualifierComponent));
                                         patternComponent.patternComponentAdjacents().entrySet().stream()
-                                                .map(adjacentComponentEntry -> fr.inra.oresing.domain.application.denormalized.Component.of(
+                                                .map(adjacentComponentEntry -> fr.inra.oresing.domain.application.normalized.Component.of(
                                                         adjacentComponentEntry.getKey(),
                                                         adjacentComponentEntry.getValue(),
                                                         authorization
@@ -153,15 +153,15 @@ public class DenormalizedService {
                         application.getId().toString()
                 );
         if (execute) {
-            final String cantCreateDenormalizedTable = storeDenormalizedSchema(tableSql);
-            if (cantCreateDenormalizedTable != null) return cantCreateDenormalizedTable;
+            final String cantCreateNormalizedTable = storeNormalizedSchema(tableSql);
+            if (cantCreateNormalizedTable != null) return cantCreateNormalizedTable;
         }
         return tableSql;
     }
 
-    private String storeDenormalizedSchema(String tableSql) {
+    private String storeNormalizedSchema(String tableSql) {
         try {
-            if (!sqlService.createDenormalizedTable(tableSql)) {
+            if (!sqlService.createNormalizedTable(tableSql)) {
                 return CANT_CREATE_DENORMALIZED_TABLE;
             }
             ;

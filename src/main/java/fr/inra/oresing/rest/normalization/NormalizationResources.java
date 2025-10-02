@@ -1,9 +1,9 @@
-package fr.inra.oresing.rest.denormalization;
+package fr.inra.oresing.rest.normalization;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.SqlService;
-import fr.inra.oresing.rest.services.DenormalizedService;
+import fr.inra.oresing.rest.services.NormalizedService;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
@@ -20,50 +20,50 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 @RestController
 @RequestMapping("/api/v1")
-public class DenormalizationResources {
+public class NormalizationResources {
     final ServiceContainer serviceContainer;
     private final JsonRowMapper mapper;
-    private final DenormalizedService denormalizedService;
+    private final NormalizedService normalizedService;
     private final ExecutorService executorService;
     private final SqlService sqlService;
 
-    public DenormalizationResources(
+    public NormalizationResources(
             ServiceContainer serviceContainer,
             JsonRowMapper mapper,
-            DenormalizedService denormalizedService,
+            NormalizedService normalizedService,
             ExecutorService executorService, SqlService sqlService) {
         this.serviceContainer = serviceContainer;
         this.mapper = mapper;
-        this.denormalizedService = denormalizedService;
+        this.normalizedService = normalizedService;
         this.executorService = executorService;
         this.sqlService = sqlService;
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
-    @PostMapping(value = "/applications/{nameOrId}/denormalized",produces = {MediaType.TEXT_PLAIN_VALUE})
+    @PostMapping(value = "/applications/{nameOrId}/normalized",produces = {MediaType.TEXT_PLAIN_VALUE})
     @SecurityRequirement(name = "Bearer Authentication")
-    public ResponseEntity<String> buildDenormalizedSchema(@PathVariable("nameOrId") final String nameOrId) throws ExecutionException, InterruptedException {
+    public ResponseEntity<String> buildNormalizedSchema(@PathVariable("nameOrId") final String nameOrId) throws ExecutionException, InterruptedException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         final SecurityContext context = SecurityContextHolder.getContext();
         final String sql = executorService
                 .submit(() -> {
                     SecurityContextHolder.setContext(context);
-                    return denormalizedService.buildDenormalizedSchema(application, true);
+                    return normalizedService.buildNormalizedSchema(application, true);
                 })
                 .get();
         return ResponseEntity.ok(sql);
     }
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
-    @GetMapping(value = "/applications/{nameOrId}/denormalized",produces = {MediaType.TEXT_PLAIN_VALUE})
+    @GetMapping(value = "/applications/{nameOrId}/normalized",produces = {MediaType.TEXT_PLAIN_VALUE})
     @SecurityRequirement(name = "Bearer Authentication")
-    public ResponseEntity<String> getDenormalizedSchema(@PathVariable("nameOrId") final String nameOrId) throws ExecutionException, InterruptedException {
+    public ResponseEntity<String> getNormalizedSchema(@PathVariable("nameOrId") final String nameOrId) throws ExecutionException, InterruptedException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
         final SecurityContext context = SecurityContextHolder.getContext();
         final String sql = executorService
                 .submit(() -> {
                     SecurityContextHolder.setContext(context);
-                    return denormalizedService.buildDenormalizedSchema(application, false);
+                    return normalizedService.buildNormalizedSchema(application, false);
                 })
                 .get();
         return ResponseEntity.ok(sql);

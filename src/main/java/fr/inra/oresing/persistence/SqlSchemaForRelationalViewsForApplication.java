@@ -19,9 +19,9 @@ public record SqlSchemaForRelationalViewsForApplication(Application application,
         return new SqlTable(this, dataType);
     }
 
-    public SqlTable forDenormalizedDataType(final String dataType) {
+    public SqlTable forNormalizedDataType(final String dataType) {
         checkDataName(dataType);
-        return new SqlTable(this, "denormalized_" + dataType);
+        return new SqlTable(this, "normalized_" + dataType);
     }
 
     private void checkDataName(final String dataName) {
