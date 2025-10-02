@@ -141,6 +141,6 @@ public class OreSiAuthenticationToken extends AbstractAuthenticationToken implem
     }
 
     public String getBearerJwt() {
-        return  "Authorization: Bearer %s".formatted(jwtToken);
+        return  "Bearer %s".formatted(jwtToken);
     }
 }
