@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.application.configuration;
 
 import com.google.common.collect.Maps;
 import fr.inra.oresing.domain.application.configuration.checker.*;
-import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.data.read.query.*;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;

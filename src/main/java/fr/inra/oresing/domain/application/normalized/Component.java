@@ -87,110 +87,150 @@ public record Component(
         }
         if (type() == null) {
             sqlForSimpleField(sqls, SqlTypes.TEXT);
+            return;
+        }
+        switch (type()) {
+            case DateChecker -> {
+                sqlForDateField(sqls);
+            }
+            case FloatChecker -> {
+                sqlForSimpleField(sqls, SqlTypes.FLOAT);
+            }
+            case IntegerChecker -> {
+                sqlForSimpleField(sqls, SqlTypes.INTEGER);
 
-        } else {
-            switch (type()) {
-                case DateChecker -> {
-                    String defaut = "''";
-                    String aggregateType = "";
-                    if (Multiplicity.MANY.equals(multiplicity())) {
-                        defaut = "'{}'";
-                        aggregateType = "[]";
-                    }
-                    sqls.select().add(
-                            """
-                                    MAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::timestamp%2$s \"ts_%1$s\",
-                                    \t\tMAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::text%2$s \"%1$s\" """
-                                    .formatted(
-                                            fieldName(),
-                                            aggregateType,
-                                            defaut
-                                    )
-                    );
-                    sqls.refValuesTable().add("""
-                            "%1$s" TEXT%2$s PATH '$."%3$s"'"""
-                            .formatted(
-                                    fieldName(),
-                                    aggregateType,
-                                    fieldPath()
-                            )
-                    );
-                    if (isAuthorizationTimeScopeField()) {
-                        sqls.indexes().add("""
-                                CREATE INDEX IF NOT EXISTS "ts_%1$s_idx"
-                                    ON %2$s_dn."%3$s" USING brin
-                                        (ts_date timestamp_minmax_multi_ops)
-                                    WITH (pages_per_range =128, autosummarize= False)
-                                    TABLESPACE pg_default;""".formatted(escapedFieldName(), sqls.schemaName(), sqls.tableName())
-                        );
-                        sqls.timescopes().add("ts_%1$s".formatted(escapedFieldName()));
-                    }
-                }
-                case FloatChecker -> {
-                    sqlForSimpleField(sqls, SqlTypes.FLOAT);
-                }
-                case IntegerChecker -> {
-                    sqlForSimpleField(sqls, SqlTypes.INTEGER);
+            }
+            case BooleanChecker -> {
+                sqlForSimpleField(sqls, SqlTypes.BOOLEAN);
 
-                }
-                case BooleanChecker -> {
-                    sqlForSimpleField(sqls, SqlTypes.BOOLEAN);
-
-                }
-                case ReferenceChecker -> {
-                    String aggregate = "MAX";
-                    String aggregateType = "";
-                    final String refslinkedToTable = """
-                            NESTED PATH '$.%2$s.%3$s.*.uuids[*]' COLUMNS(
-                            "%1$s_id" FOR ORDINALITY,
-                            "%1$s" TEXT PATH '$'
-                            )"""
-                            .formatted(
-                                    fieldName(),
-                                    refType(),
-                                    fieldPath()
-                            );
-                    final String join = "left join %1$s_dn.referenceDisplay \"%2$s\" on \"%2$s\".id = refs.\"%2$s\"::uuid"
-                            .formatted(
-                                    sqls.schemaName(),
-                                    fieldName()
-                            );
-                    sqls.referenceJoin().add(
-                            new ReferenceJoin(refslinkedToTable, join)
-                    );
-                    if (Multiplicity.MANY.equals(multiplicity())) {
-                        aggregate = "ARRAY_AGG";
-                        aggregateType = "[]";
-                        sqls.select().add("ARRAY_AGG(refs.\"%1$s\" ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::uuid[]\t\t\"%1$s_id\"".formatted(fieldName()));
-                        if (isAuthorizationAuthorizationScopeField()) {
-                            sqls.select().add("ARRAY_AGG(\"%1$s\".hierarchicalkey::TEXT ORDER BY \"%2$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::UUID[]\t\t\"%1$s_hk\"".formatted(fieldName()));
-                            addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
-                            sqls.authorizationScopes().put(refType(), "%1$s".formatted(escapedFieldName()));
-                        }
-                        sqls.select().add("ARRAY_AGG(\"%1$s\".display_fr ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::TEXT[]\t\t\"%1$s_fr\"".formatted(fieldName()));
-                        sqls.select().add("ARRAY_AGG(\"%1$s\".display_en ORDER BY \"%1$s_id\")FILTER (WHERE \"%1$s_id\" IS NOT NULL)::TEXT[]\t\t\"%1$s_en\"".formatted(fieldName()));
-                    } else {
-                        sqls.select().add("MAX(refs.\"%1$s\")::UUID\t\t\"%1$s_id\"".formatted(fieldName()));
-                        if (isAuthorizationAuthorizationScopeField()) {
-                            sqls.select().add("MAX(\"%1$s\".hierarchicalkey::TEXT)::LTREE\t\t\"%1$s_hk\"".formatted(fieldName()));
-                            addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
-                            sqls.authorizationScopes().put(refType(), "%1$s".formatted(escapedFieldName()));
-                        }
-                        sqls.select().add("MAX(\"%1$s\".display_fr)::TEXT\t\t\"%1$s_fr\"".formatted(fieldName()));
-                        sqls.select().add("MAX(\"%1$s\".display_en)::TEXT\t\t\"%1$s_en\"".formatted(fieldName()));
-                        addIndex(sqls, "\"%1$s_id\"".formatted(escapedFieldName()), sqls.schemaName(), sqls.tableName());
-                        sqls.foreignKeys()
-                                .computeIfAbsent(refType(), _ -> new LinkedList<>())
-                                .add("\"%1$s_id\"".formatted(escapedFieldName()));
-                    }
-
-                }
-                default -> {
-                    sqlForSimpleField(sqls, SqlTypes.TEXT);
-
-                }
+            }
+            case ReferenceChecker -> {
+                sqlForReferenceField(sqls);
+            }
+            default -> {
+                sqlForSimpleField(sqls, SqlTypes.TEXT);
             }
         }
+    }
+
+    private void sqlForReferenceField(Sql sqls) {
+        String aggregate = "MAX";
+        String aggregateType = "";
+        final String refslinkedToTable = """
+                NESTED PATH '$.%2$s.%3$s.*.uuids[*]' COLUMNS(
+                "%1$s_id" FOR ORDINALITY,
+                "%1$s" TEXT PATH '$'
+                )"""
+                .formatted(
+                        fieldName(),
+                        refType(),
+                        fieldPath()
+                );
+        final String join = "left join %1$s_dn.referenceDisplay \"%2$s\" on \"%2$s\".id = refs.\"%2$s\"::uuid"
+                .formatted(
+                        sqls.schemaName(),
+                        fieldName()
+                );
+        sqls.referenceJoin().add(
+                new ReferenceJoin(refslinkedToTable, join)
+        );
+        if (Multiplicity.MANY.equals(multiplicity())) {
+            sqlForManyReferenceField(sqls);
+        } else {
+            sqlForOneReferenceField(sqls);
+        }
+    }
+
+    private void sqlForOneReferenceField(Sql sqls) {
+        sqls.select().add("MAX(refs.\"%1$s\")::UUID\t\t\"%1$s_id\"".formatted(fieldName()));
+        if (isAuthorizationAuthorizationScopeField()) {
+            sqls.select().add("MAX(\"%1$s\".hierarchicalkey::TEXT)::LTREE\t\t\"%1$s_hk\"".formatted(fieldName()));
+            addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
+            sqls.authorizationScopes().put(refType(), "%1$s".formatted(escapedFieldName()));
+        }
+        sqls.select().add("MAX(\"%1$s\".display_fr)::TEXT\t\t\"%1$s_fr\"".formatted(fieldName()));
+        sqls.select().add("MAX(\"%1$s\".display_en)::TEXT\t\t\"%1$s_en\"".formatted(fieldName()));
+        addIndex(sqls, "\"%1$s_id\"".formatted(escapedFieldName()), sqls.schemaName(), sqls.tableName());
+        sqls.foreignKeys()
+                .computeIfAbsent(refType(), _ -> new LinkedList<>())
+                .add("\"%1$s_id\"".formatted(escapedFieldName()));
+    }
+
+    private void sqlForManyReferenceField(Sql sqls) {
+        sqls.select().add("ARRAY_AGG(refs.\"%1$s\" ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::uuid[]\t\t\"%1$s_id\"".formatted(fieldName()));
+        if (isAuthorizationAuthorizationScopeField()) {
+            sqls.select().add("ARRAY_AGG(\"%1$s\".hierarchicalkey::TEXT ORDER BY \"%2$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::UUID[]\t\t\"%1$s_hk\"".formatted(fieldName()));
+            addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
+            sqls.authorizationScopes().put(refType(), "%1$s".formatted(escapedFieldName()));
+        }
+        sqls.select().add("ARRAY_AGG(\"%1$s\".display_fr ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::TEXT[]\t\t\"%1$s_fr\"".formatted(fieldName()));
+        sqls.select().add("ARRAY_AGG(\"%1$s\".display_en ORDER BY \"%1$s_id\")FILTER (WHERE \"%1$s_id\" IS NOT NULL)::TEXT[]\t\t\"%1$s_en\"".formatted(fieldName()));
+        sqls.normalizedJoinManyToManies()
+                .computeIfAbsent(refType(), _ -> new LinkedList<>())
+                .add(fieldName());
+    }
+
+    private void sqlForDateField(Sql sqls) {
+        String defaut = "''";
+        String aggregateType = "";
+        if (Multiplicity.MANY.equals(multiplicity())) {
+            defaut = "'{}'";
+            aggregateType = "[]";
+        }
+        sqls.select().add(
+                """
+                        MAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::timestamp%2$s \"ts_%1$s\",
+                        \t\tMAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::text%2$s \"%1$s\" """
+                        .formatted(
+                                fieldName(),
+                                aggregateType,
+                                defaut
+                        )
+        );
+        sqls.refValuesTable().add("""
+                "%1$s" TEXT%2$s PATH '$."%3$s"'"""
+                .formatted(
+                        fieldName(),
+                        aggregateType,
+                        fieldPath()
+                )
+        );
+        if (isAuthorizationTimeScopeField()) {
+            sqls.indexes().add("""
+                    CREATE INDEX IF NOT EXISTS "ts_%1$s_idx"
+                        ON %2$s_dn."%3$s" USING brin
+                            (ts_date timestamp_minmax_multi_ops)
+                        WITH (pages_per_range =128, autosummarize= False)
+                        TABLESPACE pg_default;""".formatted(escapedFieldName(), sqls.schemaName(), sqls.tableName())
+            );
+            sqls.timescopes().add("ts_%1$s".formatted(escapedFieldName()));
+        }
+    }
+
+    private void sqlForDynamicComponent(Sql sqls) {
+        sqls.select().add("ARRAY_AGG(refs.\"%1$s\" ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::uuid[]\t\t\"%1$s_id\"".formatted(fieldName()));
+
+        final String foreignTableName = Optional.of(fieldDescription()).map(DynamicComponent.class::cast).map(DynamicComponent::reference).orElse("");
+        final String refslinkedToTable = """
+                NESTED PATH '$.%2$s.*.*.uuids[*]' COLUMNS (
+                 "%1$s_id" FOR ORDINALITY,
+                 "%1$s" TEXT PATH '$'
+                )"""
+                .formatted(
+                        fieldName(),
+                        foreignTableName
+                );
+        final String join = "left join %1$s_dn.referenceDisplay \"%2$s\" on \"%2$s\".id = refs.\"%2$s\"::uuid"
+                .formatted(
+                        sqls.schemaName(),
+                        fieldName()
+                );
+        sqls.referenceJoin().add(
+                new ReferenceJoin(refslinkedToTable, join)
+        );
+        sqls.normalizedJoinManyToManies()
+                .computeIfAbsent(foreignTableName, _ -> new LinkedList<>())
+                .add(fieldName());
     }
 
     private String escapedFieldName() {
@@ -208,40 +248,31 @@ public record Component(
 
     private void sqlForSimpleField(Sql sqls, SqlTypes type) {
         if (isDynamic()) {
-            sqls.select().add(
-                    """
-                            jsonb_object_agg(val.\"%1$s\")  \t\t\"%1$s\""""
-                            .formatted(fieldName(),
-                                    type.name()
-                            )
-            );
-            sqls.refValuesTable().add("""
-                    "%1$s"JSONB PATH '$.%2$s'"""
-                    .formatted(
-                            fieldName(),
-                            fieldPath()
-                    )
-            );
+            sqlForDynamicComponent(sqls);
         } else {
-            String aggregateType = "";
-            if (Multiplicity.MANY.equals(multiplicity())) {
-                aggregateType = "[]";
-            }
-            sqls.select().add(
-                    """
-                            MAX(val.\"%1$s\")::TEXT%2$s  \t\t\"%1$s\""""
-                            .formatted(fieldName(),
-                                    aggregateType
-                            )
-            );
-            sqls.refValuesTable().add("""
-                    "%1$s" TEXT%2$s PATH '$.%3$s'"""
-                    .formatted(
-                            fieldName(),
-                            aggregateType,
-                            fieldPath().replace("::", "\".\"")
-                    )
-            );
+            sqlForTextField(sqls);
         }
+    }
+
+    private void sqlForTextField(Sql sqls) {
+        String aggregateType = "";
+        if (Multiplicity.MANY.equals(multiplicity())) {
+            aggregateType = "[]";
+        }
+        sqls.select().add(
+                """
+                        MAX(val.\"%1$s\")::TEXT%2$s  \t\t\"%1$s\""""
+                        .formatted(fieldName(),
+                                aggregateType
+                        )
+        );
+        sqls.refValuesTable().add("""
+                "%1$s" TEXT%2$s PATH '$.%3$s'"""
+                .formatted(
+                        fieldName(),
+                        aggregateType,
+                        fieldPath().replace("::", "\".\"")
+                )
+        );
     }
 }
