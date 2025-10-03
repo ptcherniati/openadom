@@ -284,11 +284,6 @@
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-afterburner</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
 
     </dependencies>
 
@@ -448,6 +443,7 @@
                         <groupId>org.projectlombok</groupId>
                         <artifactId>lombok</artifactId>
                         <version>1.18.42</version>
+                        <scope>provided</scope>
                     </dependency>
                 </dependencies>
             </dependencyManagement>
