@@ -1162,8 +1162,12 @@ public class OreSiResources {
         SecurityContext securityContext = SecurityContextHolder.getContext();
         SecurityContextHolder.setContext(securityContext);
         String fileName = DATA_ZIP.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
+
+        final ResponseEntity.BodyBuilder header = ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\".zip");
+
         AtomicReference<Path> tempDirectory = new AtomicReference<>();
-        ;
         try {
             Executors.newVirtualThreadPerTaskExecutor().submit(() -> {
                 try {
@@ -1211,9 +1215,8 @@ public class OreSiResources {
             outputStream.flush(); // Important pour garantir le flush
             Files.deleteIfExists(source); // Nettoyage juste après la copie
         };
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + zipFile.get().getFileName() + "\"")
+        return header
+
                 .body(body);
 
     }
