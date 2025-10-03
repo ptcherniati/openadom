@@ -5,6 +5,7 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.normalized.Sql;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlService;
+import fr.inra.oresing.persistence.denormalized.SchemaBuilder;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
@@ -118,40 +119,9 @@ public class NormalizedService {
                     return sqls;
                 })
                 .toList();
-        buildedSqls = Sql.sortSqlsByForeignKeyDependency(buildedSqls);
-        final String tablesCreationSchema = buildedSqls.stream()
-                .map(Sql::createTable)
-                .collect(Collectors.joining("\n\t"));
-        String tableSql = """
-                drop schema if exists %2$s_dn cascade;
-                create schema %2$s_dn;
-                ALTER SCHEMA %2$s_dn
-                 OWNER TO "%3$s_applicationManager";
-                
-                GRANT USAGE ON SCHEMA %2$s_dn TO PUBLIC;
-                
-                create table %2$s_dn.referenceDisplay as
-                     (select id,
-                             hierarchicalkey,
-                             COALESCE(
-                                     NULLIF(refvalues ->> '__display_fr', ''),
-                                     refvalues ->> '__display_default'
-                             ) display_fr,
-                             COALESCE(
-                                     NULLIF(refvalues ->> '__display_en', ''),
-                                     NULLIF(refvalues ->> '__display_fr', ''),
-                                     refvalues ->> '__display_default'
-                             ) display_en
-                      from %2$s.referencevalue);
-                      ALTER TABLE IF EXISTS %2$s_dn.referenceDisplay
-                          ADD CONSTRAINT "PK" PRIMARY KEY (id);
-                       %1$s
-                       drop table %2$s_dn.referenceDisplay; """
-                .formatted(
-                        tablesCreationSchema,
-                        application.getName(),
-                        application.getId().toString()
-                );
+        final SchemaBuilder schemaBuilder = new SchemaBuilder(buildedSqls, application);
+        String tableSql =  schemaBuilder.buildSchema();
+
         if (execute) {
             final String cantCreateNormalizedTable = storeNormalizedSchema(tableSql);
             if (cantCreateNormalizedTable != null) return cantCreateNormalizedTable;
