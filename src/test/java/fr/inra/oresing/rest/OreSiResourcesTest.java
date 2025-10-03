@@ -881,13 +881,15 @@ public class OreSiResourcesTest {
 
             mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/monsore/data/pem/zip").accept(MediaType.APPLICATION_OCTET_STREAM_VALUE)
                             .header("Authorization", "Bearer " + fixtures.adminConnection.jwt()))
-                    .andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn())).andDo(result -> {
+                    .andExpect(status().is2xxSuccessful()).andExpect(request().asyncStarted()).andReturn()))
+                    .andDo(result -> {
                 if (result.getResponse().getStatus() != 200) {
                     log.info(Objects.requireNonNull(result.getResolvedException()).getMessage());
                 }
             }).andExpect(testZip(List.of("pem.csv", "references/especes.csv", "references/type_de_sites.csv", "references/unites.csv", "references/projet.csv", "references/valeurs_qualitatives.csv", "references/sites.csv"/*,
                             "additionalFiles/fichiers/monsoere/monsoere_infos.txt",
-                            "additionalFiles/fichiers/monsoere/monsoere.yaml"*/))).andReturn().getResponse().getContentAsByteArray();
+                            "additionalFiles/fichiers/monsoere/monsoere.yaml"*/)))
+                    .andReturn().getResponse().getContentAsByteArray();
         }
         //on publie 4 fichiers
 
