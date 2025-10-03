@@ -42,7 +42,9 @@ public record SchemaBuilder(List<Sql> buildedSqls, Application application) {
                 if (visited.contains(name)) return;
                 if (visiting.contains(name)) throw new IllegalArgumentException("Cycle detected at " + name);
                 visiting.add(name);
-                for (String dep : dependencies.getOrDefault(name, Collections.emptySet())) {
+                final Set<String> dependencyForName = dependencies.getOrDefault(name, Collections.emptySet());
+                dependencyForName.remove(name);
+                for (String dep : dependencyForName) {
                     if (sqlByName.containsKey(dep)) visit(dep);
                 }
                 visiting.remove(name);
