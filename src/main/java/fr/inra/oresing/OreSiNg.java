@@ -179,11 +179,7 @@ public class OreSiNg implements WebMvcConfigurer {
 
         @Bean
         public ExecutorService virtualThreadExecutor() {
-            final ExecutorService executorService =Executors.newFixedThreadPool(
-                    N_THREADS, // max simultané
-                    Thread.ofVirtual().factory()
-            );
-            return executorService;
+            return Executors.newFixedThreadPool(N_THREADS, Thread.ofVirtual().factory());
         }
     }
 }

@@ -114,7 +114,10 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -1351,89 +1354,75 @@ public class OreSiResources {
 
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
     @GetMapping(value = "/applications/{nameOrId}/upload-bundle")
-    public ResponseEntity getUploadBundle(
+    public ResponseEntity<?> getUploadBundle(
             @PathVariable("nameOrId") String nameOrId,
             @RequestParam(value = "withData", required = false, defaultValue = "false") boolean withData,
             @RequestParam(value = "locale", required = false) Locale locale,
-            HttpServletRequest request/*,
-            HttpServletResponse response*/) {
+            HttpServletRequest request) {
 
-        OreSiUser user;
-        user = userRepository.findById(OreSiApiRequestContext.getRequestClient().id());
+        OreSiUser user = userRepository.findById(OreSiApiRequestContext.getRequestClient().id());
         if (runningBundleCreation.get(user.getLogin()) != null) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS).body("Opération déjà en cours");
         } else {
             runningBundleCreation.put(user.getLogin(), true);
         }
-        String instanceUrl = "%s://%s:%s".formatted(
+
+        String instanceUrl = String.format("%s://%s:%s",
                 request.getScheme(),
                 request.getServerName(),
                 request.getServerPort()
         );
 
-        //response.setContentType(HEADER_ZIP_MIME);
         String fileName = BUNDLE_NAME.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
-        //response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ATTACHMENT_FILENAME.formatted(fileName));
-        //response.addHeader(HEADER_PRAGMA, HEADER_NO_CACHE);
-        //response.addHeader(HEADER_EXPIRES, EXPIRED_TIME);
 
-        AtomicReference<BuildBundleReport> reportRef = new AtomicReference<>();
         SecurityContext securityContext = SecurityContextHolder.getContext();
-        executorService
-                .submit(() -> {
-                    Path tempZipDirectory = null;
 
-                    SecurityContextHolder.setContext(securityContext);
+        executorService.submit(() -> {
+            Path tempZipDirectory = null;
+            try {
+                SecurityContextHolder.setContext(securityContext);
+                tempZipDirectory = Files.createTempDirectory(Paths.get(TMP), fileName);
+
+                BuildBundleReport report = null;
+                try {
+                    report = serviceContainer.dataService()
+                            .writeUploadBundle(instanceUrl, nameOrId, withData, locale, tempZipDirectory);
+                } catch (Exception e) {
+                    log.error(IO_ERROR_WRITE, e);
+                }
+
+                if (report != null && report.referentielsEnErreur().isEmpty()) {
                     try {
-                        tempZipDirectory = Files.createTempDirectory(Paths.get(TMP), fileName);
-
-                        try {
-
-                            BuildBundleReport report = serviceContainer.dataService().writeUploadBundle(instanceUrl, nameOrId, withData, locale, tempZipDirectory);
-                            reportRef.set(report);
-                        } catch (Exception e) {
-                            log.error(IO_ERROR_WRITE, e);
-                        }
-
-                        if (reportRef.get() != null && reportRef.get().referentielsEnErreur().isEmpty()) {
-                            // Exécuter l'envoi d'e-mail dans un thread séparé après avoir retourné la réponse
-                            Path finalTempZipDirectory = tempZipDirectory;
-                            executorService.submit(() -> {
-                                try {
-                                    Path zipFile = finalTempZipDirectory.resolveSibling(finalTempZipDirectory.getFileName() + ".zip");
-                                    ZipUtils.zipDirectory(finalTempZipDirectory, zipFile); //
-                                    serviceContainer.dataService().sendZipLinkByMail(zipFile, reportRef.get(), user);
-                                } catch (Exception e) {
-                                    log.error(EMAIL_ERROR, e);
-                                } finally {
-                                    removeRepository(finalTempZipDirectory);
-                                    executorService.shutdown();
-                                }
-                            });
-                        } else {
-                            log.warn(BAD_REPORT);
-                            try {
-                                removeRepository(tempZipDirectory);
-                                Files.deleteIfExists(tempZipDirectory);
-                            } catch (IOException e) {
-                                log.error(IO_DELETE_ERROR, e);
-                            }
-                        }
-
+                        Path zipFile = tempZipDirectory.resolveSibling(tempZipDirectory.getFileName() + ".zip");
+                        ZipUtils.zipDirectory(tempZipDirectory, zipFile);
+                        serviceContainer.dataService().sendZipLinkByMail(zipFile, report, user);
                     } catch (Exception e) {
-                        if (tempZipDirectory != null) {
-                            try {
-                                addErrorFileToZip(tempZipDirectory, e);
-                            } catch (IOException ioe) {
-                                log.error(IO_ADDING_ERROR, ioe);
-                            }
-                        }
-                        throw new OreSiTechnicalException(BAD_BUNDLE, e);
-                    } finally {
-                        runningBundleCreation.remove(user.getLogin());
+                        log.error(EMAIL_ERROR, e);
                     }
-                });
+                } else {
+                    log.warn(BAD_REPORT);
+                }
 
+                try {
+                    removeRepository(tempZipDirectory);
+                    Files.deleteIfExists(tempZipDirectory);
+                } catch (IOException e) {
+                    log.error(IO_DELETE_ERROR, e);
+                }
+
+            } catch (Exception e) {
+                if (tempZipDirectory != null) {
+                    try {
+                        addErrorFileToZip(tempZipDirectory, e);
+                    } catch (IOException ioe) {
+                        log.error(IO_ADDING_ERROR, ioe);
+                    }
+                }
+                log.error(BAD_BUNDLE, e);
+            } finally {
+                runningBundleCreation.remove(user.getLogin());
+            }
+        });
 
         return ResponseEntity.ok().build();
     }
@@ -1486,7 +1475,6 @@ public class OreSiResources {
                             .sum();
 
                     AtomicReference<Map<String, List<String>>> references = new AtomicReference<>();
-                    ;
                     serviceContainer.dataService().readEntry(zipFile, DataService.REFERENCES_JSON,
                             referencesStream -> {
                                 try {
@@ -1548,69 +1536,102 @@ public class OreSiResources {
         Set<String> remaining = ConcurrentHashMap.newKeySet();
         remaining.addAll(manifest.keySet());
 
-        Function<String, Mono<Void>> processReference = dataName -> Mono.defer(() -> {
-            return Flux.fromIterable(manifest.getOrDefault(dataName, List.of()))
-                    .flatMap(fileName -> Mono.create(sink -> {
-                        Thread.startVirtualThread(() -> {
-                            SecurityContextHolder.setContext(secCtx);
-                            try {
-
-                                readManifestEntryAndLoadData(
-                                        Map.entry(dataName, List.of(fileName)),
-                                        registerReactiveResult,
-                                        finalZipFile,
-                                        locale,
-                                        application,
-                                        rapport
-                                );
-                                sink.success();
-                            } catch (Exception e) {
-                                sink.error(e);
-                            }
+        Function<String, Mono<Void>> processReference = dataName ->
+                Flux.fromIterable(manifest.getOrDefault(dataName, List.of()))
+                        .flatMap(fileName ->
+                                Mono.create(sink -> {
+                                    executorService.submit(() -> {
+                                        SecurityContextHolder.setContext(secCtx);
+                                        try {
+                                            readManifestEntryAndLoadData(
+                                                    Map.entry(dataName, List.of(fileName)),
+                                                    registerReactiveResult,
+                                                    finalZipFile,
+                                                    locale,
+                                                    application,
+                                                    rapport
+                                            );
+                                            sink.success();
+                                        } catch (Exception e) {
+                                            sink.error(e);
+                                        }
+                                    });
+                                }), MAX_DB_CONCURRENCY
+                        )
+                        .then()
+                        .doOnSuccess(v -> {
+                            processed.add(dataName);
+                            log.info("Référence {} traitée. Processed: {}/{}", dataName, processed.size(), manifest.size());
                         });
-                    }))
-                    .then()
-                    .doOnSuccess(v -> processed.add(dataName));
-        });
 
-        return Mono.defer(() -> {
-            return processBatch(processed, remaining, processReference, references, MAX_DB_CONCURRENCY)
-                    .then(Mono.fromRunnable(() -> {
-                        try {
-                            serviceContainer.dataService().sendZipLinkByMail(
-                                    registerReactiveResult.bundleReport().attachmentFile(),
-                                    registerReactiveResult.bundleReport(),
-                                    currentUser
-                            );
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        } finally {
-                            registerReactiveResult.add(new ReactiveTypeProgress(1), false);
-                        }
-                    }));
-        });
+        // Traitement par vagues en respectant les dépendances
+        return processBatchTopological(processed, remaining, processReference, references, MAX_DB_CONCURRENCY)
+                .then(Mono.fromRunnable(() -> {
+                    try {
+                        serviceContainer.dataService().sendZipLinkByMail(
+                                registerReactiveResult.bundleReport().attachmentFile(),
+                                registerReactiveResult.bundleReport(),
+                                currentUser
+                        );
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } finally {
+                        registerReactiveResult.add(new ReactiveTypeProgress(1), false);
+                    }
+                }));
     }
 
-    private Mono<Void> processBatch(Set<String> processed, Set<String> remaining,
-                                    Function<String, Mono<Void>> processReference,
-                                    Map<String, List<String>> references,
-                                    int MAX_DB_CONCURRENCY) {
-        List<String> ready = remaining.stream()
-                .filter(ref -> references.getOrDefault(ref, List.of())
-                        .stream().allMatch(processed::contains))
-                .limit(MAX_DB_CONCURRENCY)
-                .collect(Collectors.toList());
+    private Mono<Void> processBatchTopological(
+            Set<String> processed,
+            Set<String> remaining,
+            Function<String, Mono<Void>> processReference,
+            Map<String, List<String>> references,
+            int MAX_DB_CONCURRENCY) {
 
-        if (ready.isEmpty()) return Mono.empty(); // Terminé
+        // Trouve les références "prêtes" (toutes leurs dépendances sont traitées)
+        List<String> ready;
+        synchronized (remaining) {
+            ready = remaining.stream()
+                    .filter(ref -> {
+                        List<String> deps = references.getOrDefault(ref, List.of())
+                                .stream()
+                                .filter(dep -> !dep.equals(ref)) // EXCLURE l'auto-référence
+                                .collect(Collectors.toList());
+                        boolean allDepsProcessed = deps.isEmpty() || processed.containsAll(deps);
+                        if (allDepsProcessed) {
+                            log.debug("Référence {} est prête (dépendances externes: {})", ref, deps);
+                        }
+                        return allDepsProcessed;
+                    })
+                    .limit(MAX_DB_CONCURRENCY)
+                    .collect(Collectors.toList());
+        }
 
+        // Si aucune référence n'est prête, on a terminé (ou il y a un cycle)
+        if (ready.isEmpty()) {
+            if (!remaining.isEmpty()) {
+                log.error("Cycle détecté ou dépendances non satisfaites pour: {}", remaining);
+                throw new RuntimeException("Cycle détecté dans les dépendances: " + remaining);
+            }
+            log.info("Toutes les références ont été traitées");
+            return Mono.empty();
+        }
+
+        log.info("Traitement de la vague: {} (concurrence: {})", ready, ready.size());
+
+        // Traite cette vague en parallèle
         return Flux.fromIterable(ready)
                 .flatMap(processReference, MAX_DB_CONCURRENCY)
                 .then(Mono.defer(() -> {
-                    remaining.removeAll(ready);
-                    // On relance le batch sur les nouveaux "ready"
-                    return processBatch(processed, remaining, processReference, references, MAX_DB_CONCURRENCY);
+                    // Retire les références traitées
+                    synchronized (remaining) {
+                        remaining.removeAll(ready);
+                    }
+                    // Récursion : traite la vague suivante
+                    return processBatchTopological(processed, remaining, processReference, references, MAX_DB_CONCURRENCY);
                 }));
     }
+
 
 
     private void readManifestEntryAndLoadData(
