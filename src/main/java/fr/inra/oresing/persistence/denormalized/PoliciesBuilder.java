@@ -68,7 +68,12 @@ public record PoliciesBuilder(String schemaName, String tableName, List<String> 
         List<String> selects = new ArrayList<>();
         timescopes().stream()
                 .findFirst()
-                .map(_ -> " (authorizations #>> '{%1$s, timescope}')::tsrange                 AS timescope".formatted(tableName()))
+                .map(_ -> """
+                     NULLIF(
+                       (authorizations #>> '{%1$s, timescope}'),
+                       ''
+                     )::tsrange AS timescope"""
+                        .formatted(tableName()))
                 .ifPresent(selects::add);
         authorizationScopes().keySet().stream()
                 .map(refType -> "(authorizations #>> '{%1$s, authorizationscope,%2$s,0}')         AS %2$s".formatted(tableName(), refType))
