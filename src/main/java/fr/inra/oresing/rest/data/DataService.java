@@ -50,6 +50,7 @@ import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -68,7 +69,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -93,8 +94,11 @@ public class DataService {
     private final JsonRowMapper jsonRowMapper;
     private final OreSiRepository repository;
     private final FileRepository fileRepository;
-    private ExecutorService executorService;
     private PlatformTransactionManager transactionManager;
+    Executor fastExecutor;
+    Executor normalExecutor;
+    Executor heavyExecutor;
+    Executor backupExecutor;
 
     public DataService(
             OreSiRepository repo,
@@ -103,14 +107,21 @@ public class DataService {
             FileRepository fileRepository,
             ServiceContainer serviceContainer,
             PlatformTransactionManager transactionManager,
-            ExecutorService executorService) {
+            @Qualifier("fastServiceExecutor") Executor fastExecutor,      // ✅ Fast executor
+            @Qualifier("normalServiceExecutor") Executor normalExecutor,  // ✅ Normal executor
+            @Qualifier("heavyServiceExecutor") Executor heavyExecutor,    // ✅ Heavy executor
+            @Qualifier("backupExecutor") Executor backupExecutor
+    ) {
         this.repo = repo;
         this.jsonRowMapper = jsonRowMapper;
         this.repository = repository;
         this.fileRepository = fileRepository;
         this.serviceContainer = serviceContainer;
-        this.executorService = executorService;
         this.transactionManager = transactionManager;
+        this.fastExecutor = fastExecutor;
+        this.normalExecutor = normalExecutor;
+        this.heavyExecutor = heavyExecutor;
+        this.backupExecutor = backupExecutor;
     }
 
     private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription, TransformationConfiguration defaultValue) {
@@ -623,7 +634,6 @@ public class DataService {
     }
 
 
-
     public DataRepository getDataRepository(Application application) {
         return repository.getRepository(application).data();
     }
@@ -881,7 +891,7 @@ private PlatformTransactionManager transactionManager;
     public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData,
                                                Locale locale, Path tempZipDirectory) throws IOException {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        Scheduler virtualScheduler = Schedulers.fromExecutor(executorService);
+        Scheduler virtualScheduler = Schedulers.fromExecutor(heavyExecutor);
         List<String> referentielsAvecDonnees = Collections.synchronizedList(new ArrayList<>());
         List<String> referentielsAvecDonneesExemple = Collections.synchronizedList(new ArrayList<>());
         List<String> referentielsEnErreur = Collections.synchronizedList(new ArrayList<>());
@@ -943,7 +953,6 @@ private PlatformTransactionManager transactionManager;
         return new BuildBundleReport(application, referentielsAvecDonnees, referentielsAvecDonneesExemple,
                 referentielsEnErreur, locale);
     }
-
 
 
     private static void addManifest(Path directory, Manifest manifest) throws IOException {

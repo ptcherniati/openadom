@@ -83,6 +83,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -114,10 +115,7 @@ import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -143,8 +141,6 @@ public class OreSiResources {
     public static final String HEADER_EXPIRES = "Expires";
     public static final String EXPIRED_TIME = "0";
     public static final String HEADER_NO_CACHE = "no-cache";
-    public static final String HEADER_ACCEPT_RANGES = "Accept-Ranges";
-    public static final String HEADER_BYTES = "bytes";
     public static final String IO_ERROR_FR = "Exception lors de la lecture et du streaming de données ";
     public static final String IO_ERROR_EN = "Exception while reading and streaming data  ";
     public static final String HEADER_ZIP = "attachment; filename=additionalFiles.zip";
@@ -153,8 +149,6 @@ public class OreSiResources {
     public static final String IO_DELETE_ERROR = "Erreur lors de la suppression du fichier temporaire";
     public static final String IO_ERROR_WRITE = "Error writing to one of the outputs";
     public static final DateTimeFormatter TIMESTAMP_FORMATER = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-    public static final String HEADER_ATTACHMENT_FILENAME_DATA_ZIP = "attachment; filename=\"%1$s-%2$s-%3$s.zip\"";
-    public static final String HEADER_ZIP_MIME = "application/zip";
     public static final String EMAIL_ERROR = "Erreur lors de l'envoi du lien ZIP par e-mail";
     public static final String IO_ADDING_ERROR = "Error adding error file to ZIP";
     public static final String IO_WRITING_CSV_ERROR = "Erreur lors de l'écriture des données CSV";
@@ -175,22 +169,43 @@ public class OreSiResources {
     final LocaleResolver localeResolver;
     final String frontendOrigin;
     private final JsonRowMapper mapper;
-    private ExecutorService executorService;
+    Executor fastExecutor;
+    Executor normalExecutor;
+    Executor heavyExecutor;
+    Executor backupExecutor;
+    ExecutorService fastExecutorService;
+    ExecutorService normalExecutorService;
+    ExecutorService heavyExecutorService;
+    ExecutorService backupExecutorService;
 
     public OreSiResources(
-            ExecutorService executorService,
             UserRepository userRepository,
             ServiceContainer serviceContainer,
             LocaleResolver localeResolver,
             JsonRowMapper mapper,
-            @Value("${allowed.origin}") String frontendOrigin
+            @Value("${allowed.origin}") String frontendOrigin,
+            @Qualifier("fastServiceExecutor") Executor fastExecutor,      // ✅ Fast executor
+            @Qualifier("normalServiceExecutor") Executor normalExecutor,  // ✅ Normal executor
+            @Qualifier("heavyServiceExecutor") Executor heavyExecutor,    // ✅ Heavy executor
+            @Qualifier("backupExecutor") Executor backupExecutor,
+            @Qualifier("fastExecutorService") ExecutorService fastExecutorService,      // ✅ Fast executor
+            @Qualifier("normalExecutorService") ExecutorService normalExecutorService,  // ✅ Normal executor
+            @Qualifier("heavyExecutorService") ExecutorService heavyExecutorService,    // ✅ Heavy executor
+            @Qualifier("backupExecutorService") ExecutorService backupExecutorService
     ) {
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
         this.localeResolver = localeResolver;
         this.frontendOrigin = frontendOrigin;
         this.mapper = mapper;
-        this.executorService = executorService;
+        this.fastExecutor = fastExecutor;
+        this.normalExecutor = normalExecutor;
+        this.heavyExecutor = heavyExecutor;
+        this.backupExecutor = backupExecutor;
+        this.fastExecutorService = fastExecutorService;
+        this.normalExecutorService = normalExecutorService;
+        this.heavyExecutorService = heavyExecutorService;
+        this.backupExecutorService = backupExecutorService;
     }
 
 
@@ -248,7 +263,7 @@ public class OreSiResources {
     private Flux<ReactiveResult> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink) {
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
-            executorService.submit(() -> {
+            heavyExecutorService.submit(() -> {
                 try {
                     SecurityContextHolder.setContext(context);
                     fluxSink.accept(sink);
@@ -663,7 +678,7 @@ public class OreSiResources {
         try {
             DataFile finalDataFile = dataFile;
             final SecurityContext context = SecurityContextHolder.getContext();
-            futureOfDdataVersioningResult = executorService.submit(() -> {
+            futureOfDdataVersioningResult = heavyExecutorService.submit(() -> {
                 SecurityContextHolder.setContext(context);
                 try {
                     return serviceContainer.versioningService().createData(
@@ -1175,7 +1190,7 @@ public class OreSiResources {
 
         AtomicReference<Path> tempDirectory = new AtomicReference<>();
         try {
-            executorService.submit(() -> {
+            heavyExecutorService.submit(() -> {
                 try {
                     SecurityContextHolder.setContext(securityContext);
                     user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
@@ -1202,7 +1217,7 @@ public class OreSiResources {
                     throw new OreSiTechnicalException(IO_WRITING_CSV_ERROR, e);
                 }
             }).get();
-            executorService.submit(() -> {
+            heavyExecutorService.submit(() -> {
                 SecurityContextHolder.setContext(securityContext);
                 try {
                     serviceContainer.dataService().sendZipLinkByMail(zipFile.get(), downloadDatasetQuery, user.get());
@@ -1377,7 +1392,7 @@ public class OreSiResources {
 
         SecurityContext securityContext = SecurityContextHolder.getContext();
 
-        executorService.submit(() -> {
+        heavyExecutorService.submit(() -> {
             Path tempZipDirectory = null;
             try {
                 SecurityContextHolder.setContext(securityContext);
@@ -1439,7 +1454,7 @@ public class OreSiResources {
         final OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
-            executorService.submit(() -> {
+            heavyExecutorService.submit(() -> {
                 SecurityContextHolder.setContext(context);
                 File zipFile = null;
                 try {
@@ -1540,7 +1555,7 @@ public class OreSiResources {
                 Flux.fromIterable(manifest.getOrDefault(dataName, List.of()))
                         .flatMap(fileName ->
                                 Mono.create(sink -> {
-                                    executorService.submit(() -> {
+                                    heavyExecutorService.submit(() -> {
                                         SecurityContextHolder.setContext(secCtx);
                                         try {
                                             readManifestEntryAndLoadData(
@@ -1631,7 +1646,6 @@ public class OreSiResources {
                     return processBatchTopological(processed, remaining, processReference, references, MAX_DB_CONCURRENCY);
                 }));
     }
-
 
 
     private void readManifestEntryAndLoadData(

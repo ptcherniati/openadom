@@ -4,7 +4,6 @@ import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
@@ -38,8 +37,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Properties;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @Slf4j
 @EnableWebMvc
@@ -169,17 +166,6 @@ public class OreSiNg implements WebMvcConfigurer {
         @Bean
         public FileRepository fileRepository() {
             return fileInfos -> "mockedWebAddress";
-        }
-    }
-
-    @Configuration
-    public class VirtualThreadExecutorConfig {
-
-        public static final int N_THREADS = 100;
-
-        @Bean
-        public ExecutorService virtualThreadExecutor() {
-            return Executors.newFixedThreadPool(N_THREADS, Thread.ofVirtual().factory());
         }
     }
 }
