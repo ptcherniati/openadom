@@ -24,7 +24,7 @@ public record HierarchicalDependancesBuilder(
     ) {
 
         final Map<String, List<ReferenceChecker>> checkerdescriptions = checkers
-                .getOrDefault(ReferenceChecker.CheckerDescriptionType.ReferenceChecker, new HashMap<>())
+                .getOrDefault(CheckerDescription.CheckerDescriptionType.ReferenceChecker, new HashMap<>())
                 .entrySet().stream()
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,

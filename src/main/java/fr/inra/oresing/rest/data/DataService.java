@@ -3,14 +3,11 @@ package fr.inra.oresing.rest.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-import com.google.common.io.Resources;
-import fr.inra.oresing.client.Client;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.GroovyDataInjectionConfiguration;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.CheckerFactory;
@@ -54,7 +51,11 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -62,16 +63,12 @@ import reactor.core.scheduler.Scheduler;
 import reactor.core.scheduler.Schedulers;
 
 import java.io.*;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.*;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -87,24 +84,33 @@ public class DataService {
     public static final String MANIFEST_JSON = "manifest.json";
     public static final String REFERENCES_JSON = "references.json";
     public static final String CONFIGURATION_FILE = "configuration.yaml";
+
+
+    public static final int MAX_CONCURRENCY = 6; // Ou ta limite pour contrôler la charge
     @Setter
     ServiceContainer serviceContainer;
     private final OreSiRepository repo;
     private final JsonRowMapper jsonRowMapper;
     private final OreSiRepository repository;
     private final FileRepository fileRepository;
+    private ExecutorService executorService;
+    private PlatformTransactionManager transactionManager;
 
     public DataService(
             OreSiRepository repo,
             JsonRowMapper jsonRowMapper,
             OreSiRepository repository,
             FileRepository fileRepository,
-            ServiceContainer serviceContainer) {
+            ServiceContainer serviceContainer,
+            PlatformTransactionManager transactionManager,
+            ExecutorService executorService) {
         this.repo = repo;
         this.jsonRowMapper = jsonRowMapper;
         this.repository = repository;
         this.fileRepository = fileRepository;
         this.serviceContainer = serviceContainer;
+        this.executorService = executorService;
+        this.transactionManager = transactionManager;
     }
 
     private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription, TransformationConfiguration defaultValue) {
@@ -580,30 +586,42 @@ public class DataService {
             Application application,
             Locale locale) {
 
+        log.info("getDataFromStoredCsvStream {}", reference);
+
         DataRepository dataRepository = repo.getRepository(application).data();
         Flux<FileContent> storedData = dataRepository.getStoredData(application, reference);
 
-        return storedData
-                .flatMap(fileContent -> Mono.fromCallable(() -> {
-                    String relativePath = String.format("%s/%s", reference, fileContent.fileName());
-                    manifest.add(reference, fileContent);
-                    Path targetFile = tempZipDirectory.resolve(relativePath);
-                    Files.createDirectories(targetFile.getParent());
-                    try (InputStream is = fileContent.fileContent();) {
-                        Files.copy(is, targetFile, StandardCopyOption.REPLACE_EXISTING);
-                    } catch (Exception e) {
-                        manifest.addError(reference, fileContent);
-                    }
-                    return true;
-                }))
-                .collectList() // attend la fin du flux
-                .map(list -> list.stream().anyMatch(b -> b)) // renvoie true si au moins un élément a réussi
-                .onErrorResume(e -> {
-                    log.error("Erreur lors du traitement des données stockées", e);
-                    return Mono.just(false);
-                })
-                .block();
+        try {
+            Boolean result = storedData
+                    .map(fileContent -> {
+                        log.info("reference is loading {} - file {}", reference, fileContent.fileName());
+                        try {
+                            String relativePath = String.format("%s/%s", reference, fileContent.fileName());
+                            manifest.add(reference, fileContent);
+                            Path targetFile = tempZipDirectory.resolve(relativePath);
+                            Files.createDirectories(targetFile.getParent());
+                            try (InputStream is = fileContent.fileContent()) {
+                                Files.copy(is, targetFile, StandardCopyOption.REPLACE_EXISTING);
+                                return true;
+                            }
+                        } catch (Exception e) {
+                            log.error("Erreur traitement fichier {} pour référence {}", fileContent.fileName(), reference, e);
+                            manifest.addError(reference, fileContent);
+                            return false;
+                        }
+                    })
+                    .reduce(false, (acc, current) -> acc || current) // Force la consommation et accumule
+                    .block();
+
+            log.info("Reference {} finished - hasData: {}", reference, result);
+            return result != null ? result : false;
+
+        } catch (Exception e) {
+            log.error("Erreur lors du traitement des données stockées pour {}", reference, e);
+            return false;
+        }
     }
+
 
 
     public DataRepository getDataRepository(Application application) {
@@ -669,7 +687,7 @@ public class DataService {
                     throw new SiOreIllegalArgumentException("IOException", Map.of("message", Optional.ofNullable(e).map(Exception::getLocalizedMessage).orElse(OreSiTechnicalException.NO_MESSAGE)));
                 }
             }*/
-    //TODO add additionalFiles
+        //TODO add additionalFiles
 
         /*Flux.fromStream(dataRepository.getLinkedReferenceValuesStream(uuiDsfromData.uuidsfromData()))
                 //.filter(dataValuesByDataType -> "tr_metadata_agri_magri".equals(dataValuesByDataType.getDataType()))
@@ -700,8 +718,8 @@ public class DataService {
                 })
                 .subscribe();*/
 
-    // 3. Construire la liste des fichiers additionnels
-    //AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
+        // 3. Construire la liste des fichiers additionnels
+        //AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
         /*for (String additionalFileType : downloadDatasetQuery.application().getConfiguration().additionalFiles()) {
             if (!additionalFileType.isEmpty()) {
                 additionalFileRepository.getAssociatedAdditionalFilesStream(uuiDsfromData.getDatasIds())
@@ -714,66 +732,66 @@ public class DataService {
                         });
             }
         }*/
-}
-
-public UUIDsfromData addDatacsv(
-        final Path zipRepository,
-        DataRepository dataRepository,
-        final DownloadDatasetQuery downloadDatasetQuery,
-        String fileNamePattern) {
-    final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
-    try {
-        AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
-        return DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> serviceContainer.dataService().getDataImporterContext(downloadDatasetQuery.application(), referenceType, null))
-                .withDownloadDatasetQuery(downloadDatasetQuery)
-                .withReferenceService(serviceContainer.dataService())
-                .withZipRepository(zipRepository)
-                .onRepositories(dataRepository, additionalFileRepository)
-                .addDatas(datas)
-                .build(fileNamePattern);
-    } catch (IOException e) {
-        throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
     }
 
-}
+    public UUIDsfromData addDatacsv(
+            final Path zipRepository,
+            DataRepository dataRepository,
+            final DownloadDatasetQuery downloadDatasetQuery,
+            String fileNamePattern) {
+        final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
+        try {
+            AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
+            return DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> serviceContainer.dataService().getDataImporterContext(downloadDatasetQuery.application(), referenceType, null))
+                    .withDownloadDatasetQuery(downloadDatasetQuery)
+                    .withReferenceService(serviceContainer.dataService())
+                    .withZipRepository(zipRepository)
+                    .onRepositories(dataRepository, additionalFileRepository)
+                    .addDatas(datas)
+                    .build(fileNamePattern);
+        } catch (IOException e) {
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+        }
 
-public List<DataRow> findData(final DownloadDatasetQuery downloadDatasetQuery) {
-    return serviceContainer.dataService().findDataFlux(downloadDatasetQuery).collectList().block();
-}
+    }
 
-public void sendZipLinkByMail(Path filePath, MessageInformations messageInformations, OreSiUser currentUser) {
-    switch (messageInformations) {
-        case DownloadDatasetQuery downloadDatasetQuery -> {
-            try {
-                FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForDownloadDatasetQuery(downloadDatasetQuery);
-                Locale locale = downloadDatasetQuery.outPut().locale();
-                String applicationName = Optional.ofNullable(
-                                fileSenderInternationalisation.getInternationnalizedApplication(locale)
-                        )
-                        .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage()))
-                                .orElse(downloadDatasetQuery.application().getName()));
-                String dataName = Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(locale, downloadDatasetQuery.dataName()))
-                        .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(fileSenderInternationalisation.getDefaultLanguage(), downloadDatasetQuery.dataName()))
-                                .orElse(downloadDatasetQuery.dataName()));
-                String subject = fileSenderInternationalisation.subjectPattern();
-                String message = fileSenderInternationalisation.messagePattern();
-                String internationnalizedDataName = fileSenderInternationalisation.getInternationnalizedDataName(
-                        Locale.of(downloadDatasetQuery.getLanguage()),
-                        dataName
-                );
+    public List<DataRow> findData(final DownloadDatasetQuery downloadDatasetQuery) {
+        return serviceContainer.dataService().findDataFlux(downloadDatasetQuery).collectList().block();
+    }
 
-                String messageWithReport = fileSenderInternationalisation.
-                        mailMessagefor(message.formatted(internationnalizedDataName),
-                                FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID);
-                FileInfos fileInfos = new FileInfos(
-                        applicationName,
-                        dataName,
-                        filePath,
-                        currentUser.getEmail(),
-                        subject.formatted(applicationName),
-                        messageWithReport);
-                String downloadUrl = fileRepository.postTransfer(fileInfos);
-                log.info("Adresse de téléchargement : %s".formatted(downloadUrl));
+    public void sendZipLinkByMail(Path filePath, MessageInformations messageInformations, OreSiUser currentUser) {
+        switch (messageInformations) {
+            case DownloadDatasetQuery downloadDatasetQuery -> {
+                try {
+                    FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForDownloadDatasetQuery(downloadDatasetQuery);
+                    Locale locale = downloadDatasetQuery.outPut().locale();
+                    String applicationName = Optional.ofNullable(
+                                    fileSenderInternationalisation.getInternationnalizedApplication(locale)
+                            )
+                            .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage()))
+                                    .orElse(downloadDatasetQuery.application().getName()));
+                    String dataName = Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(locale, downloadDatasetQuery.dataName()))
+                            .orElseGet(() -> Optional.ofNullable(fileSenderInternationalisation.getInternationnalizedDataName(fileSenderInternationalisation.getDefaultLanguage(), downloadDatasetQuery.dataName()))
+                                    .orElse(downloadDatasetQuery.dataName()));
+                    String subject = fileSenderInternationalisation.subjectPattern();
+                    String message = fileSenderInternationalisation.messagePattern();
+                    String internationnalizedDataName = fileSenderInternationalisation.getInternationnalizedDataName(
+                            Locale.of(downloadDatasetQuery.getLanguage()),
+                            dataName
+                    );
+
+                    String messageWithReport = fileSenderInternationalisation.
+                            mailMessagefor(message.formatted(internationnalizedDataName),
+                                    FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID);
+                    FileInfos fileInfos = new FileInfos(
+                            applicationName,
+                            dataName,
+                            filePath,
+                            currentUser.getEmail(),
+                            subject.formatted(applicationName),
+                            messageWithReport);
+                    String downloadUrl = fileRepository.postTransfer(fileInfos);
+                    log.info("Adresse de téléchargement : %s".formatted(downloadUrl));
                     /*sendUploadZipEmail(
                             currentUser.getEmail(),
                             subject.formatted(applicationName),
@@ -782,28 +800,30 @@ public void sendZipLinkByMail(Path filePath, MessageInformations messageInformat
                             fileSenderInternationalisation,
                             internationnalizedDataName
                     );*/
-            } catch (Exception e) {
-                throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+                } catch (Exception e) {
+                    throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+                }
             }
-        }
-        case BuildBundleReport buildBundleReport -> {
-            try {
-                FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForBuildBundleReport(buildBundleReport);
-                Locale locale = buildBundleReport.locale();
+            case BuildBundleReport buildBundleReport -> {
+                try {
+                    FileSenderInternationalisation fileSenderInternationalisation = new FileSenderInternationalisationForBuildBundleReport(buildBundleReport);
+                    Locale locale = buildBundleReport.locale();
 
-                String applicationName = Optional.ofNullable(
-                        fileSenderInternationalisation.getInternationnalizedApplication(locale)
-                ).orElseGet(() -> Optional.ofNullable(
-                        fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage())
-                ).orElse(buildBundleReport.application().getName()));
+                    String applicationName = Optional.ofNullable(
+                            fileSenderInternationalisation.getInternationnalizedApplication(locale)
+                    ).orElseGet(() -> Optional.ofNullable(
+                            fileSenderInternationalisation.getInternationnalizedApplication(fileSenderInternationalisation.getDefaultLanguage())
+                    ).orElse(buildBundleReport.application().getName()));
 
-                String subject = fileSenderInternationalisation.subjectPattern().formatted(applicationName);
-                String message = fileSenderInternationalisation.messagePattern().formatted(applicationName);
+                    String subject = fileSenderInternationalisation.subjectPattern().formatted(applicationName);
+                    String message = fileSenderInternationalisation.messagePattern().formatted(applicationName);
 
 
-                String emailMessage = fileSenderInternationalisation.mailMessagefor(message, FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID);
+                    String emailMessage = fileSenderInternationalisation.mailMessagefor(message, FileSenderRepository.DEFAULT_TRANSFER_DAYS_VALID);
 
-                    /*sendUploadZipEmail(
+                    /*sendUploadZipEmail(@Autowired
+private PlatformTransactionManager transactionManager;
+
                             currentUser.getEmail(),
                             subject,
                             emailMessage,
@@ -811,233 +831,227 @@ public void sendZipLinkByMail(Path filePath, MessageInformations messageInformat
                             fileSenderInternationalisation,
                             applicationName
                     );*/
-                FileInfos fileInfos = new FileInfos(
-                        applicationName,
-                        "BulkUploadZIP",
-                        filePath,
-                        currentUser.getEmail(),
-                        subject,
-                        message
-                );
-                String downloadUrl = fileRepository.postTransfer(fileInfos);
-                log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
+                    FileInfos fileInfos = new FileInfos(
+                            applicationName,
+                            "BulkUploadZIP",
+                            filePath,
+                            currentUser.getEmail(),
+                            subject,
+                            message
+                    );
+                    String downloadUrl = fileRepository.postTransfer(fileInfos);
+                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
 
-            } catch (Exception e) {
-                log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
-                throw new OreSiTechnicalException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                } catch (Exception e) {
+                    log.error("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                    throw new OreSiTechnicalException("Erreur lors de la création ou de l'envoi du ZIP pour dépôt en masse", e);
+                }
             }
-        }
-        case BundleReport bundleReport -> {
-            try {
-                Locale locale = bundleReport.locale();
+            case BundleReport bundleReport -> {
+                try {
+                    Locale locale = bundleReport.locale();
 
-                String applicationName = bundleReport.application().getName();
+                    String applicationName = bundleReport.application().getName();
 
-                String subject = bundleReport.title();
-                String emailMessage = bundleReport.message();
+                    String subject = bundleReport.title();
+                    String emailMessage = bundleReport.message();
 
-                FileInfos fileInfos = new FileInfos(
-                        applicationName,
-                        "BulkUploadZIP",
-                        filePath,
-                        currentUser.getEmail(),
-                        subject,
-                        emailMessage
-                );
-                String downloadUrl = fileRepository.postTransfer(fileInfos);
-                log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
+                    FileInfos fileInfos = new FileInfos(
+                            applicationName,
+                            "BulkUploadZIP",
+                            filePath,
+                            currentUser.getEmail(),
+                            subject,
+                            emailMessage
+                    );
+                    String downloadUrl = fileRepository.postTransfer(fileInfos);
+                    log.info("Adresse de téléchargement du ZIP pour dépôt en masse : %s".formatted(downloadUrl));
 
-            } catch (Exception e) {
-                log.error("Erreur lors de la création ou de l'envoi du rapport pour dépôt en masse", e);
-                throw new OreSiTechnicalException("Erreur lors de la création ou de l'envoi du rapport pour dépôt en masse", e);
+                } catch (Exception e) {
+                    log.error("Erreur lors de la création ou de l'envoi du rapport pour dépôt en masse", e);
+                    throw new OreSiTechnicalException("Erreur lors de la création ou de l'envoi du rapport pour dépôt en masse", e);
+                }
             }
+            default -> throw new IllegalStateException("Unexpected value: " + messageInformations);
         }
-        default -> throw new IllegalStateException("Unexpected value: " + messageInformations);
+
     }
 
-}
+    @Transactional(readOnly = true)
+    public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData,
+                                               Locale locale, Path tempZipDirectory) throws IOException {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        Scheduler virtualScheduler = Schedulers.fromExecutor(executorService);
+        List<String> referentielsAvecDonnees = Collections.synchronizedList(new ArrayList<>());
+        List<String> referentielsAvecDonneesExemple = Collections.synchronizedList(new ArrayList<>());
+        List<String> referentielsEnErreur = Collections.synchronizedList(new ArrayList<>());
 
-@Transactional(readOnly = true)
-public BuildBundleReport writeUploadBundle(String instanceUrl, String nameOrId, boolean withData, Locale locale, Path tempZipDirectory) {
-    Application application = serviceContainer.applicationService().getApplication(nameOrId);
-    String applicationName = application.getName();
-    List<String> referentielsAvecDonnees = new ArrayList<>();
-    //Map<String, Set<String>> fichiersGeneres = new HashMap<>();
-    List<String> referentielsAvecDonneesExemple = new ArrayList<>();
-    List<String> referentielsEnErreur = new ArrayList<>();
-    Optional.of(locale)
-            .orElseGet(application.getConfiguration().applicationDescription()::defaultLanguage);
-
-    try {
-        writeReadMe(tempZipDirectory);
-        // writeDirectoryToZip(tempZipDirectory, fichiersGeneres);
         Manifest manifest = new Manifest();
 
-        Executor executor = Executors.newThreadPerTaskExecutor(Thread.ofVirtual().factory());
-        Scheduler virtualScheduler = Schedulers.fromExecutor(executor);
+        // Capture le gestionnaire de transactions
+        PlatformTransactionManager txManager = transactionManager;
+        TransactionDefinition txDef = new DefaultTransactionDefinition(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
         Flux.fromIterable(application.getConfiguration().dataDescription().keySet())
                 .flatMap(reference ->
-                        Mono.fromCallable(() -> {
-                                    String fileName = application.getConfiguration().findData(reference)
-                                            .map(StandardDataDescription::submission)
-                                            .map(Submission::fileNameParsing)
-                                            .map(Submission.SubmissionFileNameParsing::createExampleSubmissionFileName)
-                                            .orElse("%s.csv".formatted(reference));
-                                    String dataCsvFilePath = "%1$s/%2$s".formatted(reference, fileName);
-                                    try {
-                                        final Boolean dataFromStoredCsvStream = serviceContainer.dataService()
-                                                .getDataFromStoredCsvStream(
-                                                        manifest,
-                                                        tempZipDirectory,
-                                                        application.getName(),
-                                                        reference,
-                                                        application,
-                                                        locale);
-                                        if (withData && dataFromStoredCsvStream) {
-                                            referentielsAvecDonnees.add(reference);
-                                        } else {
-                                            Path filePath = tempZipDirectory.resolve(dataCsvFilePath);
-                                            Files.createDirectories(filePath.getParent());
-                                            Files.createFile(filePath);
-                                            referentielsAvecDonneesExemple.add(reference);
-                                        }
-                                    } catch (Exception e) {
-                                        log.error("Erreur lors du traitement du référentiel {}", reference, e);
-                                        referentielsEnErreur.add(reference);
-                                    }
-                                    return reference; // ou tout autre type utile
-                                })
-                                .subscribeOn(virtualScheduler) // Chaque tâche sur un virtual thread
-                )
+                                Mono.fromCallable(() -> {
+                                            // Crée une NOUVELLE transaction pour ce thread
+                                            TransactionStatus txStatus = txManager.getTransaction(txDef);
+                                            try {
+                                                Boolean dataFromStoredCsvStream = serviceContainer.dataService()
+                                                        .getDataFromStoredCsvStream(
+                                                                manifest,
+                                                                tempZipDirectory,
+                                                                application.getName(),
+                                                                reference,
+                                                                application,
+                                                                locale);
+
+                                                if (withData && dataFromStoredCsvStream) {
+                                                    referentielsAvecDonnees.add(reference);
+                                                } else {
+                                                    String fileName = application.getConfiguration().findData(reference)
+                                                            .map(StandardDataDescription::submission)
+                                                            .map(Submission::fileNameParsing)
+                                                            .map(Submission.SubmissionFileNameParsing::createExampleSubmissionFileName)
+                                                            .orElse("%s.csv".formatted(reference));
+                                                    String dataCsvFilePath = "%1$s/%2$s".formatted(reference, fileName);
+                                                    Path filePath = tempZipDirectory.resolve(dataCsvFilePath);
+                                                    Files.createDirectories(filePath.getParent());
+                                                    Files.createFile(filePath);
+                                                    referentielsAvecDonneesExemple.add(reference);
+                                                }
+
+                                                txManager.commit(txStatus);
+                                                return reference;
+                                            } catch (Exception e) {
+                                                txManager.rollback(txStatus);
+                                                throw e;
+                                            }
+                                        })
+                                        .subscribeOn(virtualScheduler)
+                                        .onErrorResume(e -> {
+                                            log.error("Erreur lors du traitement du référentiel {}", reference, e);
+                                            referentielsEnErreur.add(reference);
+                                            return Mono.empty();
+                                        }),
+                        MAX_CONCURRENCY)
                 .collectList()
-                .block(); // attend la fin de tous les traitements
+                .block();
 
         addManifest(tempZipDirectory, manifest);
-    } catch (Exception e) {
-        log.error("Erreur générale lors de la création du bundle", e);
-        referentielsEnErreur.add("ERREUR_GENERALE");
+        return new BuildBundleReport(application, referentielsAvecDonnees, referentielsAvecDonneesExemple,
+                referentielsEnErreur, locale);
     }
 
-    return new BuildBundleReport(application, referentielsAvecDonnees, referentielsAvecDonneesExemple, referentielsEnErreur, locale);
-}
-
-private static void addManifest(Path directory, Manifest manifest) throws IOException {
-    Map<String, List<String>> orderedManifest = manifest.orderedReferenceTypes();
-    String manifestJson = new ObjectMapper().writeValueAsString(orderedManifest);
-    Path manifestFile = directory.resolve(MANIFEST_JSON);
-    Files.createDirectories(manifestFile.getParent());
-    Files.writeString(manifestFile, manifestJson, StandardCharsets.UTF_8);
-    addReferencesFile(directory, manifest);
-}
-
-private static void addReferencesFile(Path directory, Manifest manifest) throws IOException {
-    Map<String, List<String>> referenceDeps = manifest.referenceTypeDeps();
-    String referencesJson = new ObjectMapper().writeValueAsString(referenceDeps);
-    Path referencesFile = directory.resolve(REFERENCES_JSON);
-    Files.createDirectories(referencesFile.getParent());
-    Files.writeString(referencesFile, referencesJson, StandardCharsets.UTF_8);
-}
 
 
-private void writeReadMe(Path zipOutputStream) throws IOException {
-    writeFileToDirectory(zipOutputStream, README_FILE_NAME, Resources.getResource(Client.class, README_FILE_NAME));
-}
+    private static void addManifest(Path directory, Manifest manifest) throws IOException {
 
-private List<String> listAllFilesFromResources(String baseDirPath) throws IOException, URISyntaxException {
-    List<String> fileList = new ArrayList<>();
-    URL resourceUrl = Resources.getResource(Client.class, baseDirPath);  // baseDirPath = "compose"
-    Path baseDir = Paths.get(resourceUrl.toURI());
-    Files.walk(baseDir)
-            .filter(Files::isRegularFile)
-            .forEach(path -> fileList.add(baseDir.relativize(path).toString().replace("\\", "/")));
-    return fileList;
-}
-
-
-private void writeFileToDirectory(Path directoryPath, String fileName, URL resourceUrl) throws IOException {
-    Path targetFile = directoryPath.resolve(fileName);
-    Files.createDirectories(targetFile.getParent());
-    try (InputStream in = resourceUrl.openStream()) {
-        Files.copy(in, targetFile); // tout est stream, aucune manipulation de byte[] ni full en mémoire
+        final Map<String, List<String>> orderedDependancies = addReferencesFile(directory, manifest);
+        final LinkedHashMap<String, List<String>> orderedManifest = orderedDependancies.keySet()
+                .stream()
+                .collect(
+                        Collectors.toMap(
+                                Function.identity(),
+                                referenceName -> manifest.referenceTypeFiles()
+                                        .get(referenceName).stream()
+                                        .map(FileContent::fileName)
+                                        .toList(),
+                                (v1, v2) -> v1,
+                                LinkedHashMap::new
+                        )
+                );
+        String manifestJson = new ObjectMapper().writeValueAsString(orderedManifest);
+        Path manifestFile = directory.resolve(MANIFEST_JSON);
+        Files.createDirectories(manifestFile.getParent());
+        Files.writeString(manifestFile, manifestJson, StandardCharsets.UTF_8);
     }
-}
 
-@Transactional()
-public List<UUID> deleteData(final DownloadDatasetQuery downloadDatasetQuery) {
-    serviceContainer.authenticationService().setRoleForClient();
-    final Application application = downloadDatasetQuery.application();
-    return repository.getRepository(application).data().delete(downloadDatasetQuery);
-}
-
-public Map<Ltree, List<DataValue>> getReferenceDisplaysById(final Application application, final Set<String> listOfDataIds) {
-    return repository.getRepository(application).data().getReferenceDisplaysById(listOfDataIds);
-}
-
-public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
-    Application application = serviceContainer.applicationService().getApplication(nameOrId);
-    return new CheckerFactory(repository.getRepository(application).data()).getCheckers(application, dataName, new PublishContext.PublishContextBuilder(application, dataName, null, r -> List.of())).stream()
-            .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
-                    .groupingBy(
-                            c -> c.underlyingType().getClass().getSimpleName(),
-                            Collectors.toMap(c -> {
-                                        final DataColumn dataColumn = c.target();
-                                        return dataColumn.toHumanReadableString();
-                                    },
-                                    DefaultLineCheckerResult::fromLineChecker)
-                    )
-            );
-}
-
-@Transactional(readOnly = true)
-public Map<String, Map<String, LineChecker>> getFormatChecked(final String nameOrId, final String references) {
-    final DataRepository dataRepository = repository.getRepository(serviceContainer.applicationService().getApplication(nameOrId)).data();
-    return new CheckerFactory(dataRepository)
-            .getCheckers(
-                    serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId),
-                    references,
-                    null
-            ).stream()
-            .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
-                    .groupingBy(
-                            c -> c.fieldTypeForOne().getClass().getSimpleName(),
-                            Collectors.toMap(
-                                    c -> {
-                                        final DataColumn vc = c.target();
-                                        return vc.asString();
-                                    },
-                                    c -> c)
-                    )
-            );
-}
-
-public List<List<String>> getDataColumn(final Application application, final String refType, final String column) {
-    List<List<String>> list = List.of();
-    if (application.findData(refType)
-            .map(StandardDataDescription::tags)
-            .filter(Tag.HiddenTag.HAS_HIDDEN_TAG_PREDICATE)
-            .isPresent()) {
-        list = repository.getRepository(application).data().findDataColumn(refType, column);
+    private static Map<String, List<String>> addReferencesFile(Path directory, Manifest manifest) throws IOException {
+        Map<String, List<String>> referenceDeps = manifest.orderedReferenceTypes();
+        String referencesJson = new ObjectMapper().writeValueAsString(referenceDeps);
+        Path referencesFile = directory.resolve(REFERENCES_JSON);
+        Files.createDirectories(referencesFile.getParent());
+        Files.writeString(referencesFile, referencesJson, StandardCharsets.UTF_8);
+        return referenceDeps;
     }
-    return list;
-}
 
-public Flux<FilterList> filterList(final Application application, final String refType) {
-    return repository.getRepository(application).data().getFilterList(refType);
-}
+    @Transactional()
+    public List<UUID> deleteData(final DownloadDatasetQuery downloadDatasetQuery) {
+        serviceContainer.authenticationService().setRoleForClient();
+        final Application application = downloadDatasetQuery.application();
+        return repository.getRepository(application).data().delete(downloadDatasetQuery);
+    }
 
-private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
-}
+    public Map<Ltree, List<DataValue>> getReferenceDisplaysById(final Application application, final Set<String> listOfDataIds) {
+        return repository.getRepository(application).data().getReferenceDisplaysById(listOfDataIds);
+    }
 
-public void readEntry(File zipBundleFile, String entryName, Consumer<InputStream> consumer) throws IOException {
-    try (ZipFile zipFile = new ZipFile(zipBundleFile)) {
-        ZipEntry entry = zipFile.getEntry(entryName);
-        if (entry == null) throw new FileNotFoundException("Entrée absente: " + entryName);
-        try (InputStream is = zipFile.getInputStream(entry)) {
-            consumer.accept(is); // tout traitement doit être fait ici
+    public Map<String, Map<String, LineCheckerResult>> getCheckedFormatComponents(final String nameOrId, final String dataName) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        return new CheckerFactory(repository.getRepository(application).data()).getCheckers(application, dataName, new PublishContext.PublishContextBuilder(application, dataName, null, r -> List.of())).stream()
+                .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
+                        .groupingBy(
+                                c -> c.underlyingType().getClass().getSimpleName(),
+                                Collectors.toMap(c -> {
+                                            final DataColumn dataColumn = c.target();
+                                            return dataColumn.toHumanReadableString();
+                                        },
+                                        DefaultLineCheckerResult::fromLineChecker)
+                        )
+                );
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Map<String, LineChecker>> getFormatChecked(final String nameOrId, final String references) {
+        final DataRepository dataRepository = repository.getRepository(serviceContainer.applicationService().getApplication(nameOrId)).data();
+        return new CheckerFactory(dataRepository)
+                .getCheckers(
+                        serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId),
+                        references,
+                        null
+                ).stream()
+                .filter(c -> (c.underlyingType() instanceof DateType) || (c.underlyingType() instanceof IntegerType) || (c.underlyingType() instanceof FloatType) || (c.underlyingType() instanceof ReferenceType)).collect(Collectors
+                        .groupingBy(
+                                c -> c.fieldTypeForOne().getClass().getSimpleName(),
+                                Collectors.toMap(
+                                        c -> {
+                                            final DataColumn vc = c.target();
+                                            return vc.asString();
+                                        },
+                                        c -> c)
+                        )
+                );
+    }
+
+    public List<List<String>> getDataColumn(final Application application, final String refType, final String column) {
+        List<List<String>> list = List.of();
+        if (application.findData(refType)
+                .map(StandardDataDescription::tags)
+                .filter(Tag.HiddenTag.HAS_HIDDEN_TAG_PREDICATE)
+                .isPresent()) {
+            list = repository.getRepository(application).data().findDataColumn(refType, column);
+        }
+        return list;
+    }
+
+    public Flux<FilterList> filterList(final Application application, final String refType) {
+        return repository.getRepository(application).data().getFilterList(refType);
+    }
+
+    private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
+    }
+
+    public void readEntry(File zipBundleFile, String entryName, Consumer<InputStream> consumer) throws IOException {
+        try (ZipFile zipFile = new ZipFile(zipBundleFile)) {
+            ZipEntry entry = zipFile.getEntry(entryName);
+            if (entry == null) throw new FileNotFoundException("Entrée absente: " + entryName);
+            try (InputStream is = zipFile.getInputStream(entry)) {
+                consumer.accept(is); // tout traitement doit être fait ici
+            }
         }
     }
-}
 
 
 }

@@ -21,7 +21,7 @@ Le projet est constitué de 2 sous projet :
   - JDK ≥ 25
   - maven 3
   - Docker
-  - postgresql 17.5
+  - postgresql 18
 
 Pour constuire le projet avec maven, l'utilisateur doit avoir le droit de démarrer de conteneurs docker.
 

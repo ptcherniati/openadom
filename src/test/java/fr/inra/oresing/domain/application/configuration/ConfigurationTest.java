@@ -151,7 +151,6 @@ class ConfigurationTest {
         }
     }
 
-    @SneakyThrows
     private void addComponents(List<ComponentDefinition> componentDefinitions) {
         ObjectNode componentsNode = (ObjectNode) dataDescriptionNode.get("componentDescriptions");
         componentDefinitions.stream()
@@ -160,7 +159,11 @@ class ConfigurationTest {
                         component.get("componentkey").asText(),
                         component)
                 );
-        buildDataDescription();
+        try {
+            buildDataDescription();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test

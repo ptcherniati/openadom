@@ -1,0 +1,144 @@
+type Especes {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  espnom: String
+  espdefinitionfr: String
+  espdefinitionen: String
+}
+
+type Projet {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  nomkey: String
+  nomfr: String
+  nomen: String
+  definitionfr: String
+  definitionen: String
+}
+
+type Typedesites {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  tzenomkey: String
+  tzenomfr: String
+  tzenomen: String
+  tzedefinitionfr: String
+  tzedefinitionen: String
+}
+
+type Sites {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  zetnomkey: String
+  zetnomfr: String
+  zetnomen: String
+  zetdescriptionfr: String
+  zetdescriptionen: String
+  tzetypenom: Typedesites
+  tzetypenomfr: String
+  tzetypenomen: String
+  zetcheminparent: Sites
+  zetcheminparentfr: String
+  zetcheminparenten: String
+}
+
+type Themes {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  nomkey: String
+  nomfr: String
+  nomen: String
+  descriptionfr: String
+  descriptionen: String
+}
+
+type Sitethemedatatype {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  datatype: String
+  site: Sites
+  sitefr: String
+  siteen: String
+  projet: Projet
+  projetfr: String
+  projeten: String
+  theme: Themes
+  themefr: String
+  themeen: String
+}
+
+type Unites {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  nomkey: String
+  nomfr: String
+  nomen: String
+  codekey: String
+  codefr: String
+  codeen: String
+}
+
+type Variables {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  nomkey: String
+  nomfr: String
+  nomen: String
+  definitionfr: String
+  definitionen: String
+  isqualitative: Boolean
+}
+
+type VariablesEtUnitesParTypesDeDonnees {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  datatype: String
+  unite: Unites
+  unitefr: String
+  uniteen: String
+  variable: Variables
+  variablefr: String
+  variableen: String
+}
+
+type Pem {
+  id: ID!
+  naturalkey: String
+  hierarchicalkey: String
+  tsdate: String
+  date: String
+  site: Sites
+  sitehk: String
+  sitefr: String
+  siteen: String
+  chemin: Sites
+  cheminfr: String
+  cheminen: String
+  projet: Projet
+  projethk: String
+  projetfr: String
+  projeten: String
+  colorunit: Unites
+  colorunitfr: String
+  coloruniten: String
+  individusnumberunit: Unites
+  individusnumberunitfr: String
+  individusnumberuniten: String
+  espece: Especes
+  especefr: String
+  especeen: String
+  colorvalue: String
+  colorvaluefr: String
+  colorvalueen: String
+  plateforme: String
+  individusnumbervalue: Float
+}

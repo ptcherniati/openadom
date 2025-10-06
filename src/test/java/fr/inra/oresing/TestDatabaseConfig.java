@@ -14,7 +14,7 @@ public class TestDatabaseConfig {
     @Bean
     @Primary
     public DataSource dataSource() {
-        PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:16.0")
+        PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:18.0")
                 .withDatabaseName("test")
                 .withUsername("postgres")
                 .withPassword("postgres")
