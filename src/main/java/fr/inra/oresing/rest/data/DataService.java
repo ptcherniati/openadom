@@ -180,7 +180,7 @@ public class DataService {
             List<UUID> uuids = referenceValueRepository.storeAll(
                     referenceValueStream
             );
-            referenceValueRepository.updateConstraintForeignReferences(uuids);
+            //referenceValueRepository.updateConstraintForeignReferences(uuids);
         };
         final DataImporter referenceImporter = new DataImporter(referenceImporterContext, storeAll);
         referenceImporter.doImport(file, fileOrUUID.fileid());

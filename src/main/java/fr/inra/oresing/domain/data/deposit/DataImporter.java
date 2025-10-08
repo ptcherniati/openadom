@@ -118,13 +118,13 @@ public class DataImporter {
                 })
                 .filter(referenceDatumAfterChecking -> referenceDatumAfterChecking.errors().isEmpty())
                 .map(dataTransformer::computeKeys)
-                .sequential()
+                //.sequential()
                 .map(storeHierarchicalKeyForConflictDetection)
                 .filter(keysAndReferenceDatumAfterChecking -> {
                     final Ltree hierarchicalKey = keysAndReferenceDatumAfterChecking.hierarchicalKey();
                     return encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
-                }).map(keysAndReferenceDatumAfterChecking -> dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
-        storeAll(dataValueStream);
+                })
+                .map(keysAndReferenceDatumAfterChecking -> dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
         final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = csvReader.getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         if (!recursionStrategy.dataImporterContext().getMissingLines().isEmpty()) {
@@ -145,6 +145,7 @@ public class DataImporter {
                     });
         }
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
+        storeAll(dataValueStream);
     }
 
     void storeAll(final Stream<DataValue> referenceValueStream) {

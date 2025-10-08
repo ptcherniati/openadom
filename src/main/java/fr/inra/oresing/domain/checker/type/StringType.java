@@ -97,27 +97,6 @@ public non-sealed class StringType implements FieldType<String> {
     public String toString() {
         return value;
     }
-
-    @Override
-    public void serialize(final JsonGenerator gen) throws IOException {
-        if (value == null) {
-            gen.writeNull();
-            return;
-        }
-        gen.writeString(value);
-    }
-
-    @Override
-    public void serialize(final JsonGenerator gen, final String key) throws IOException {
-        gen.writeObjectField(key, value);
-    }
-
-
-    @Override
-    public void serialize(final ObjectNode node, final ObjectMapper mapper, final String key) {
-        node.put(key, value);
-    }
-
     @Override
     public void serializeAddArray(final ArrayNode arrayNode) {
         arrayNode.add(value);
@@ -128,4 +107,53 @@ public non-sealed class StringType implements FieldType<String> {
     public Object toJsonForFrontend() {
         return value;
     }
+    @Override
+    public void serialize(final JsonGenerator gen) throws IOException {
+        if (value == null) {
+            gen.writeNull();
+            return;
+        }
+        // Échapper les caractères de contrôle avant écriture
+        String escapedValue = escapeJsonString(value);
+        gen.writeString(escapedValue);
+    }
+
+    @Override
+    public void serialize(final JsonGenerator gen, final String key) throws IOException {
+        if (value == null) {
+            gen.writeNullField(key);
+            return;
+        }
+        String escapedValue = escapeJsonString(value);
+        gen.writeStringField(key, escapedValue);
+    }
+
+    @Override
+    public void serialize(final ObjectNode node, final ObjectMapper mapper, final String key) {
+        if (value == null) {
+            node.putNull(key);
+            return;
+        }
+        String escapedValue = escapeJsonString(value);
+        node.put(key, escapedValue);
+    }
+
+    /**
+     * Échappe les caractères de contrôle dans une chaîne JSON
+     */
+    private String escapeJsonString(String str) {
+        if (str == null || str.isEmpty()) {
+            return str;
+        }
+
+        // Échapper les caractères de contrôle
+        return str.replace("\\", "\\\\")   // \ → \\
+                .replace("\"", "\\\"")   // " → \"
+                .replace("\n", "\\n")    // newline → \n
+                .replace("\r", "\\r")    // carriage return → \r
+                .replace("\t", "\\t")    // tab → \t
+                .replace("\b", "\\b")    // backspace → \b
+                .replace("\f", "\\f");   // form feed → \f
+    }
+
 }

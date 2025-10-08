@@ -19,21 +19,26 @@ import fr.inra.oresing.rest.model.application.ApplicationResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.LoggerFactory;
+import org.postgresql.PGConnection;
+import org.postgresql.copy.CopyManager;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
+import org.springframework.jdbc.core.ConnectionCallback;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.Array;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.*;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +48,8 @@ import java.util.stream.Stream;
 public class DataRepository extends JsonTableInApplicationSchemaRepositoryTemplate<DataValue> implements fr.inra.oresing.domain.repository.data.DataRepository {
     public static final String APPLICATION_ID = "applicationId";
     public static final String REF_TYPE = "refType";
+    public static final String[] ORDERED_COLUMNS = new String[]{"id", "patternColumnName", "application", "ReferenceType", "hierarchicalKey", "naturalKey", "refsLinkedTo", "refValues", "binaryFile", "\"authorization\""};
+    public static final int PIPE_SIZE = 65536;
 
     public DataRepository(final Application application) {
         super(application);
@@ -102,8 +109,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     protected String getUpsertQuery() {
         return """
                 INSERT INTO %1$s
-                    (id, patternColumnName,  application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, "authorization")
-                SELECT id, patternColumnName, application, ReferenceType, hierarchicalKey, naturalKey, refsLinkedTo, refValues, binaryFile, "authorization"
+                    (%3$s)
+                SELECT %3$s
                 FROM json_populate_recordset(
                     NULL::%2$s,
                     :json::json
@@ -111,8 +118,173 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
                 DO UPDATE SET updateDate=current_timestamp, hierarchicalKey=EXCLUDED.hierarchicalKey, naturalKey=EXCLUDED.naturalKey, refsLinkedTo=EXCLUDED.refsLinkedTo,
                 refValues=EXCLUDED.refValues, binaryFile=EXCLUDED.binaryFile, "authorization"=EXCLUDED."authorization" RETURNING id
-                """.formatted(getTable().getSqlIdentifier(), getTable().getSqlIdentifier());
+                """.formatted(
+                getTable().getSqlIdentifier(),
+                getTable().getSqlIdentifier(),
+                Arrays.stream(ORDERED_COLUMNS).collect(Collectors.joining(","))
+        );
     }
+
+    @Override
+    public List<UUID> storeAll(Stream<DataValue> dataStream) {
+        final String columns = Arrays.stream(ORDERED_COLUMNS)
+                .map(String::toLowerCase)
+                .collect(Collectors.joining(","));
+        return getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
+                (ConnectionCallback<List<UUID>>) connection -> {
+                    connection.setAutoCommit(false);
+                    try {
+                        connection.setAutoCommit(false);
+                        PGConnection pgConn = connection.unwrap(PGConnection.class);
+                        CopyManager copyManager = pgConn.getCopyAPI();
+                        Iterator<DataValue> iterator = dataStream.iterator();
+                        if (!iterator.hasNext()) {
+                            // Aucun élément → on libère et on retourne
+                            dataStream.close(); // Fermer le stream vide
+                            connection.commit();
+                            return List.of();
+                        }
+                        connection.createStatement().execute(
+                                "CREATE TEMP TABLE referencevalue_import (data jsonb) ON COMMIT DROP"
+                        );
+                        PipedInputStream inputStream = new PipedInputStream(PIPE_SIZE);
+                        PipedOutputStream outputStream = new PipedOutputStream(inputStream);
+
+                        Thread writerThread = new Thread(() -> {
+                            try (BufferedWriter writer = new BufferedWriter(
+                                    new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
+
+                                // Utiliser l'itérateur au lieu du stream pour controler la fermeture
+                                while (iterator.hasNext()) {
+                                    DataValue dataValue = iterator.next();
+                                    try {
+                                        String json = getJsonRowMapper().toJson(dataValue);
+                                        json = fixTimescopeFormat(json);
+                                        writer.write(json);
+                                        writer.write('\n');
+                                        //System.out.println(json);
+                                    } catch (IOException e) {
+                                        throw new UncheckedIOException(e);
+                                    }
+                                }
+
+                            } catch (IOException e) {
+                                throw new UncheckedIOException(e);
+                            }
+                        });
+
+                        writerThread.setName("COPY-Writer-Thread");
+                        writerThread.start();
+                        copyManager.copyIn("COPY referencevalue_import (data) FROM STDIN  ", inputStream);
+                        writerThread.join();
+
+                        connection.createStatement().execute("""
+                                DELETE FROM %1$s.reference_reference
+                                WHERE referenceid IN (
+                                    SELECT (data->>'id')::uuid 
+                                    FROM referencevalue_import
+                                )
+                                """
+                                .formatted(getSchema().getName()));
+                        String insertSql = String.format("""
+                                        INSERT INTO %1$s (%2$s)
+                                        SELECT %2$s
+                                        FROM referencevalue_import,
+                                        jsonb_populate_record(
+                                            NULL::%1$s,
+                                            data
+                                        )
+                                        ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
+                                        DO UPDATE SET 
+                                            updateDate = current_timestamp,
+                                            hierarchicalKey = EXCLUDED.hierarchicalKey,
+                                            naturalKey = EXCLUDED.naturalKey,
+                                            refsLinkedTo = EXCLUDED.refsLinkedTo,
+                                            refValues = EXCLUDED.refValues,
+                                            binaryFile = EXCLUDED.binaryFile,
+                                            "authorization" = EXCLUDED."authorization"
+                                        RETURNING id;
+                                        """,
+                                getTable().getSqlIdentifier(), columns
+                        );
+
+                        List<UUID> insertedIds = new ArrayList<>();
+                        try (PreparedStatement ps = connection.prepareStatement(insertSql);
+                             ResultSet rs = ps.executeQuery()) {
+                            while (rs.next()) {
+                                insertedIds.add((UUID) rs.getObject("id"));
+                            }
+                        }
+                        getNamedParameterJdbcTemplate().query("""
+                                 SELECT DISTINCT
+                                     referenceid, referencesby  
+                                FROM 
+                                    referencevalue_import s,
+                                    JSON_TABLE(s.data, '$.refslinkedto.*.*.*' columns (
+                                         referenceid UUID PATH '$.id',
+                                         NESTED PATH '$.uuids' COLUMNS(referencesby  UUID PATH '$')
+                                        )
+                                    ) as joins;""", rs -> {
+                            final UUID referenceid = rs.getObject(1, UUID.class);
+                            final UUID referencesby = rs.getObject(2, UUID.class);
+                            System.out.println("%s : %s ".formatted(referenceid, referencesby));
+
+                        });
+
+                        connection.createStatement().execute("""
+                                INSERT INTO %1$s.reference_reference(referenceid, referencesby)
+                                SELECT DISTINCT                                    
+                                 (s.data->>'id')::uuid referenceid,
+                                 referencesby::uuid
+                                FROM\s
+                                 referencevalue_import s,
+                                     JSON_TABLE (
+                                         s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS (
+                                         NESTED PATH '$[*]' COLUMNS(
+                                                 referencesby  TEXT PATH '$')
+                                             )
+                                     ) as joins;
+                                """
+                                .formatted(getSchema().getName())
+                        );
+                        connection.commit();
+                        return insertedIds;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (InterruptedException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+    }
+
+    private String fixTimescopeFormat(String json) {
+        Pattern pattern = Pattern.compile(
+                "\"timescope\":\"([\\[\\(])(\\\\\"(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})\\\\\")?,(\\\\\"(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})\\\\\")?([\\]\\)])\""
+        );
+
+        Matcher matcher = pattern.matcher(json);
+        StringBuffer result = new StringBuffer();
+
+        while (matcher.find()) {
+            String openBracket = matcher.group(1);   // [ ou (
+            String date1 = matcher.group(3);         // date1 (sans les \")
+            String date2 = matcher.group(5);         // date2 (sans les \")
+            String closeBracket = matcher.group(6);  // ] ou )
+
+            String cleanDate1 = (date1 != null) ? date1 : "";
+            String cleanDate2 = (date2 != null) ? date2 : "";
+
+            String replacement = "\"timescope\":\"" + openBracket +
+                                 cleanDate1 + "," + cleanDate2 +
+                                 closeBracket + "\"";
+
+            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        }
+        matcher.appendTail(result);
+
+        return result.toString();
+    }
+
 
     @Override
     protected Class<DataValue> getEntityClass() {

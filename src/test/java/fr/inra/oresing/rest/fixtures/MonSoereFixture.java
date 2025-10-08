@@ -11,7 +11,6 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.Fixtures;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
-import jakarta.servlet.http.Cookie;
 import net.minidev.json.JSONObject;
 import org.apache.commons.io.IOUtils;
 import org.hamcrest.core.Is;

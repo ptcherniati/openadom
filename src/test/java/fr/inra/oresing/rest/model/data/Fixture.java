@@ -9,7 +9,6 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
-import org.springframework.util.FileCopyUtils;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableSet;
 
 import java.io.IOException;
