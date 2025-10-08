@@ -1,7 +1,6 @@
-package fr.inra.oresing.persistence.denormalized;
+package fr.inra.oresing.persistence.normalized;
 
 import fr.inra.oresing.domain.application.normalized.Sql;
-import org.apache.hc.client5.http.entity.mime.FormBodyPartBuilder;
 
 public record TableBuilder(Sql sql) {
     public String createTable() {

@@ -107,7 +107,7 @@ public class DataImporter {
         Stream<RowWithReferenceDatum> checkStream =
                 (dataImporterContext.isRecursive())
                         ? baseStream // séquentiel si recursion
-                        : baseStream.parallel(); //
+                        : baseStream; //
         final Stream<DataValue> dataValueStream = baseStream.map(dataTransformer::computeComputedColumns)
                 //.parallel()
                 .filter(rowWithReferenceDatum -> allErrors.canRegisterErrors())
@@ -125,6 +125,8 @@ public class DataImporter {
                     return encounteredHierarchicalKeysForConflictDetection.get(hierarchicalKey).size() == 1;
                 })
                 .map(keysAndReferenceDatumAfterChecking -> dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, fileId, allErrors));
+
+        storeAll(dataValueStream);
         final Set<CsvRowValidationCheckResult> hierarchicalKeysConflictErrors = csvReader.getHierarchicalKeysConflictErrors(encounteredHierarchicalKeysForConflictDetection);
         allErrors.addAll(hierarchicalKeysConflictErrors);
         if (!recursionStrategy.dataImporterContext().getMissingLines().isEmpty()) {
@@ -145,7 +147,6 @@ public class DataImporter {
                     });
         }
         InvalidDatasetContentException.checkErrorsIsEmpty(allErrors);
-        storeAll(dataValueStream);
     }
 
     void storeAll(final Stream<DataValue> referenceValueStream) {

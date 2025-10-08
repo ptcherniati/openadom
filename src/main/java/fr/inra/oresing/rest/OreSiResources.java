@@ -674,11 +674,10 @@ public class OreSiResources {
         } catch (IOException e) {
             throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
         }
-        Future<DataVersioningResult> futureOfDdataVersioningResult = null;
         try {
             DataFile finalDataFile = dataFile;
             final SecurityContext context = SecurityContextHolder.getContext();
-            futureOfDdataVersioningResult = heavyExecutorService.submit(() -> {
+            final DataVersioningResult dataVersioningResult =  heavyExecutorService.submit(() -> {
                 SecurityContextHolder.setContext(context);
                 try {
                     return serviceContainer.versioningService().createData(
@@ -709,16 +708,18 @@ public class OreSiResources {
                 } catch (IOException e) {
                     throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
-            });
-            final DataVersioningResult dataVersioningResult = futureOfDdataVersioningResult.get();
+            }).get();
             return ResponseEntity
                     .created(URI.create(dataVersioningResult.uri()))
                     .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
         } catch (ExecutionException e) {
             throw switch (e.getCause()) {
                 case OreSiTechnicalException oreSiTechnicalException -> oreSiTechnicalException;
-                default -> throw new IllegalStateException("Unexpected value: " + e.getCause());
+                default -> new IllegalStateException("Unexpected value: " + e.getCause());
             };
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new OreSiTechnicalException("Thread interrompu", e);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

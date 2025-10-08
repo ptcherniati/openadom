@@ -1,4 +1,4 @@
-package fr.inra.oresing.persistence.denormalized;
+package fr.inra.oresing.persistence.normalized;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.normalized.Sql;

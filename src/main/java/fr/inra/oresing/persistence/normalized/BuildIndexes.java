@@ -1,4 +1,4 @@
-package fr.inra.oresing.persistence.denormalized;
+package fr.inra.oresing.persistence.normalized;
 
 import java.util.stream.Collectors;
 

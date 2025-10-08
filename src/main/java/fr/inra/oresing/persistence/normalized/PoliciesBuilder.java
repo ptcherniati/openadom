@@ -1,4 +1,4 @@
-package fr.inra.oresing.persistence.denormalized;
+package fr.inra.oresing.persistence.normalized;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +92,7 @@ public record PoliciesBuilder(String schemaName, String tableName, List<String> 
                 .map(name -> """
                         CASE
                           WHEN '%2$s' = '' THEN TRUE
-                          ELSE %1$s <@ '%2$s'::tsrange
+                          ELSE %1$s <@ NULLIF('%2$s', '')::tsrange
                         END""".formatted(name, "%" + counter.getAndIncrement() + "$s"))
                 .ifPresent(usings::add);
         authorizationScopes().values().stream()

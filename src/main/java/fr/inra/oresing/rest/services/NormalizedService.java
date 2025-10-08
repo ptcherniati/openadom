@@ -5,7 +5,7 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.normalized.Sql;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.SqlService;
-import fr.inra.oresing.persistence.denormalized.SchemaBuilder;
+import fr.inra.oresing.persistence.normalized.SchemaBuilder;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
@@ -15,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j

@@ -227,9 +227,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                     ) as joins;""", rs -> {
                             final UUID referenceid = rs.getObject(1, UUID.class);
                             final UUID referencesby = rs.getObject(2, UUID.class);
-                            System.out.println("%s : %s ".formatted(referenceid, referencesby));
-
-                        });
+                            });
 
                         connection.createStatement().execute("""
                                 INSERT INTO %1$s.reference_reference(referenceid, referencesby)
