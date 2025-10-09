@@ -100,7 +100,7 @@ public class DataImporter {
         final Function<CSVRecord, Stream<RowWithReferenceDatum>> csvRecordToReferenceDatumFn = csvRecord -> csvReader.csvRecordToRowWithReferenceDatum(columns, csvRecord);
         final Stream<CSVRecord> csvRecordsStream = Streams.stream(csvParser);
         dataImporterContext.setTransformedLineCheckers(csvReader.buildLineCheckers(dataHeaderReader.constantValues().values()));
-        final Stream<RowWithReferenceDatum> baseStream = csvRecordsStream
+        final Stream<RowWithReferenceDatum> baseStream = csvRecordsStream.parallel()
                 .flatMap(csvRecordToReferenceDatumFn)
                 .map(dataHeaderReader::addConstantsToRow);
 

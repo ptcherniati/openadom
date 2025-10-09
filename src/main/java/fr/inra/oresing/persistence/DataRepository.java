@@ -30,12 +30,17 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -127,132 +132,161 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     @Override
     public List<UUID> storeAll(Stream<DataValue> dataStream) {
-        final String columns = Arrays.stream(ORDERED_COLUMNS)
-                .map(String::toLowerCase)
-                .collect(Collectors.joining(","));
-        return getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
-                (ConnectionCallback<List<UUID>>) connection -> {
-                    connection.setAutoCommit(false);
-                    try {
+        try {
+            // 1. Créer le fichier AVANT le CompletableFuture
+            Path csvFile = Files.createTempFile("data_import_", ".csv");
+            csvFile.toFile().deleteOnExit();
+
+            BlockingQueue<String> lineQueue = new LinkedBlockingQueue<>(10000);
+            final String POISON_PILL = "###END###";
+
+            // 2. Créer un ExecutorService réutilisable
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+
+            // 3. Lancer l'écriture asynchrone
+            CompletableFuture<Void> writerFuture = CompletableFuture.runAsync(() -> {
+                try (BufferedWriter writer = Files.newBufferedWriter(csvFile, StandardCharsets.UTF_8)) {
+                    while (true) {
+                        String line = lineQueue.take();
+                        if (POISON_PILL.equals(line)) {
+                            break;
+                        }
+                        writer.write(line);
+                        writer.newLine();
+                    }
+                    writer.flush();
+                } catch (IOException | InterruptedException e) {
+                    throw new RuntimeException("Erreur d'écriture asynchrone", e);
+                }
+            }, executor);
+
+            // 4. Production des lignes
+            dataStream.forEach(dataValue -> {
+                try {
+                    String line = convertToCSVLine(dataValue);
+                    if (!lineQueue.offer(line, 10, TimeUnit.SECONDS)) {
+                        throw new RuntimeException("Timeout lors de l'écriture dans la queue");
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new RuntimeException("Interruption lors de l'écriture", e);
+                }
+            });
+
+            // 5. Signal de fin
+            lineQueue.put(POISON_PILL);
+
+            // 6. Attendre la fin de l'écriture
+            writerFuture.join();
+            executor.shutdown();
+
+            // 7. Colonnes pour l'insertion
+            final String columns = Arrays.stream(ORDERED_COLUMNS)
+                    .map(String::toLowerCase)
+                    .collect(Collectors.joining(","));
+
+            // 8. COPY et insertion PostgreSQL
+            Path finalCsvFile = csvFile;
+            return getNamedParameterJdbcTemplate().getJdbcTemplate().execute(
+                    (ConnectionCallback<List<UUID>>) connection -> {
                         connection.setAutoCommit(false);
-                        PGConnection pgConn = connection.unwrap(PGConnection.class);
-                        CopyManager copyManager = pgConn.getCopyAPI();
-                        Iterator<DataValue> iterator = dataStream.iterator();
-                        if (!iterator.hasNext()) {
-                            // Aucun élément → on libère et on retourne
-                            dataStream.close(); // Fermer le stream vide
-                            connection.commit();
-                            return List.of();
-                        }
-                        connection.createStatement().execute(
-                                "CREATE TEMP TABLE referencevalue_import (data jsonb) ON COMMIT DROP"
-                        );
-                        PipedInputStream inputStream = new PipedInputStream(PIPE_SIZE);
-                        PipedOutputStream outputStream = new PipedOutputStream(inputStream);
+                        try {
+                            connection.setAutoCommit(false);
+                            PGConnection pgConn = connection.unwrap(PGConnection.class);
+                            CopyManager copyManager = pgConn.getCopyAPI();
+                            connection.createStatement().execute(
+                                    "CREATE TEMP TABLE referencevalue_import (data jsonb) ON COMMIT DROP"
+                            );
 
-                        Thread writerThread = new Thread(() -> {
-                            try (BufferedWriter writer = new BufferedWriter(
-                                    new OutputStreamWriter(outputStream, StandardCharsets.UTF_8))) {
+                            try (BufferedReader reader = Files.newBufferedReader(finalCsvFile, StandardCharsets.UTF_8)) {
+                                long rowsInserted = copyManager.copyIn("COPY referencevalue_import (data) FROM STDIN  ",
+                                        reader);
+                                log.info("Inserted {} rows using COPY", rowsInserted);
+                            }
 
-                                // Utiliser l'itérateur au lieu du stream pour controler la fermeture
-                                while (iterator.hasNext()) {
-                                    DataValue dataValue = iterator.next();
-                                    try {
-                                        String json = getJsonRowMapper().toJson(dataValue);
-                                        json = fixTimescopeFormat(json);
-                                        writer.write(json);
-                                        writer.write('\n');
-                                        //System.out.println(json);
-                                    } catch (IOException e) {
-                                        throw new UncheckedIOException(e);
-                                    }
+                            connection.createStatement().execute("""
+                                    DELETE FROM %1$s.reference_reference
+                                    WHERE referenceid IN (
+                                        SELECT (data->>'id')::uuid 
+                                        FROM referencevalue_import
+                                    )
+                                    """
+                                    .formatted(getSchema().getName()));
+                            String insertSql = String.format("""
+                                            INSERT INTO %1$s (%2$s)
+                                            SELECT %2$s
+                                            FROM referencevalue_import,
+                                            jsonb_populate_record(
+                                                NULL::%1$s,
+                                                data
+                                            )
+                                            ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
+                                            DO UPDATE SET 
+                                                updateDate = current_timestamp,
+                                                hierarchicalKey = EXCLUDED.hierarchicalKey,
+                                                naturalKey = EXCLUDED.naturalKey,
+                                                refsLinkedTo = EXCLUDED.refsLinkedTo,
+                                                refValues = EXCLUDED.refValues,
+                                                binaryFile = EXCLUDED.binaryFile,
+                                                "authorization" = EXCLUDED."authorization"
+                                            RETURNING id;
+                                            """,
+                                    getTable().getSqlIdentifier(), columns
+                            );
+
+                            List<UUID> insertedIds = new ArrayList<>();
+                            try (PreparedStatement ps = connection.prepareStatement(insertSql);
+                                 ResultSet rs = ps.executeQuery()) {
+                                while (rs.next()) {
+                                    insertedIds.add((UUID) rs.getObject("id"));
                                 }
-
-                            } catch (IOException e) {
-                                throw new UncheckedIOException(e);
                             }
-                        });
-
-                        writerThread.setName("COPY-Writer-Thread");
-                        writerThread.start();
-                        copyManager.copyIn("COPY referencevalue_import (data) FROM STDIN  ", inputStream);
-                        writerThread.join();
-
-                        connection.createStatement().execute("""
-                                DELETE FROM %1$s.reference_reference
-                                WHERE referenceid IN (
-                                    SELECT (data->>'id')::uuid 
-                                    FROM referencevalue_import
-                                )
-                                """
-                                .formatted(getSchema().getName()));
-                        String insertSql = String.format("""
-                                        INSERT INTO %1$s (%2$s)
-                                        SELECT %2$s
-                                        FROM referencevalue_import,
-                                        jsonb_populate_record(
-                                            NULL::%1$s,
-                                            data
-                                        )
-                                        ON CONFLICT ON CONSTRAINT "hierarchicalKey_uniqueness"
-                                        DO UPDATE SET 
-                                            updateDate = current_timestamp,
-                                            hierarchicalKey = EXCLUDED.hierarchicalKey,
-                                            naturalKey = EXCLUDED.naturalKey,
-                                            refsLinkedTo = EXCLUDED.refsLinkedTo,
-                                            refValues = EXCLUDED.refValues,
-                                            binaryFile = EXCLUDED.binaryFile,
-                                            "authorization" = EXCLUDED."authorization"
-                                        RETURNING id;
-                                        """,
-                                getTable().getSqlIdentifier(), columns
-                        );
-
-                        List<UUID> insertedIds = new ArrayList<>();
-                        try (PreparedStatement ps = connection.prepareStatement(insertSql);
-                             ResultSet rs = ps.executeQuery()) {
-                            while (rs.next()) {
-                                insertedIds.add((UUID) rs.getObject("id"));
-                            }
-                        }
-                        getNamedParameterJdbcTemplate().query("""
-                                 SELECT DISTINCT
-                                     referenceid, referencesby  
-                                FROM 
-                                    referencevalue_import s,
-                                    JSON_TABLE(s.data, '$.refslinkedto.*.*.*' columns (
-                                         referenceid UUID PATH '$.id',
-                                         NESTED PATH '$.uuids' COLUMNS(referencesby  UUID PATH '$')
-                                        )
-                                    ) as joins;""", rs -> {
-                            final UUID referenceid = rs.getObject(1, UUID.class);
-                            final UUID referencesby = rs.getObject(2, UUID.class);
+                            getNamedParameterJdbcTemplate().query("""
+                                     SELECT DISTINCT
+                                         referenceid, referencesby  
+                                    FROM 
+                                        referencevalue_import s,
+                                        JSON_TABLE(s.data, '$.refslinkedto.*.*.*' columns (
+                                             referenceid UUID PATH '$.id',
+                                             NESTED PATH '$.uuids' COLUMNS(referencesby  UUID PATH '$')
+                                            )
+                                        ) as joins;""", rs -> {
+                                final UUID referenceid = rs.getObject(1, UUID.class);
+                                final UUID referencesby = rs.getObject(2, UUID.class);
                             });
 
-                        connection.createStatement().execute("""
-                                INSERT INTO %1$s.reference_reference(referenceid, referencesby)
-                                SELECT DISTINCT                                    
-                                 (s.data->>'id')::uuid referenceid,
-                                 referencesby::uuid
-                                FROM\s
-                                 referencevalue_import s,
-                                     JSON_TABLE (
-                                         s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS (
-                                         NESTED PATH '$[*]' COLUMNS(
-                                                 referencesby  TEXT PATH '$')
-                                             )
-                                     ) as joins;
-                                """
-                                .formatted(getSchema().getName())
-                        );
-                        connection.commit();
-                        return insertedIds;
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    } catch (InterruptedException e) {
-                        throw new RuntimeException(e);
-                    }
-                });
+                            connection.createStatement().execute("""
+                                    INSERT INTO %1$s.reference_reference(referenceid, referencesby)
+                                    SELECT DISTINCT                                    
+                                     (s.data->>'id')::uuid referenceid,
+                                     referencesby::uuid
+                                    FROM\s
+                                     referencevalue_import s,
+                                         JSON_TABLE (
+                                             s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS (
+                                             NESTED PATH '$[*]' COLUMNS(
+                                                     referencesby  TEXT PATH '$')
+                                                 )
+                                         ) as joins;
+                                    """
+                                    .formatted(getSchema().getName())
+                            );
+                            connection.commit();
+                            return insertedIds;
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String convertToCSVLine(DataValue dataValue) {
+        String json = getJsonRowMapper().toJson(dataValue);
+        return fixTimescopeFormat(json);
     }
 
     private String fixTimescopeFormat(String json) {
