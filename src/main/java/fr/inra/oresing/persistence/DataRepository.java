@@ -260,7 +260,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                     SELECT DISTINCT                                    
                                      (s.data->>'id')::uuid referenceid,
                                      referencesby::uuid
-                                    FROM\s
+                                    FROM
                                      referencevalue_import s,
                                          JSON_TABLE (
                                              s.data, '$.refslinkedto.*.*.*.uuids' COLUMNS (
@@ -757,78 +757,99 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
     public Flux<FilterList> getFilterList(final String dataName) {
         final Stream result;
         final String query = """
-                WITH parents_grouped AS (
-                             SELECT
-                               child.hierarchicalkey AS child_hkey,
-                               jsonb_agg(DISTINCT jsonb_build_object(
-                                 'referenceType', p.referencetype,
-                                 'hierarchicalKey', p.hierarchicalkey,
-                                 'naturalKey', p.naturalkey,
-                                 '__display_default', p.refvalues->'__display_default',
-                                 '__display_fr', p.refvalues->'__display_fr',
-                                 '__display_en', p.refvalues->'__display_en',
-                                 'id', p.id
-                               )) AS parents
-                             FROM %1$s.referencevalue child
-                             CROSS JOIN LATERAL (
-                                SELECT
-                                  (regexp_match(s, '([0-9a-z_]*)K(.*)'))[1] AS parent_type,
-                                  (regexp_match(s, '([0-9a-z_]*)K(.*)'))[2] AS parent_naturalkey
-                                FROM unnest(
-                                  string_to_array(
-                                    regexp_replace(child.hierarchicalkey::text, '\\.[^\\.]+$',''),
-                                    '.'
-                                  )
-                                ) AS s
-                             ) ps
-                             JOIN %1$s.referencevalue p
-                               ON p.referencetype = ps.parent_type
-                              AND p.naturalkey    = ps.parent_naturalkey::ltree
-                             WHERE p.id IS NOT NULL
-                               AND p.hierarchicalkey <> child.hierarchicalkey
-                             GROUP BY child.hierarchicalkey
-                           ),
-                           json AS (
-                             SELECT
-                               referenceby.referencetype AS "listName",
-                               jsonb_agg(DISTINCT jsonb_build_object(
-                                'isHierarchique', jsonb_path_exists(
-                                                    application."configuration",
-                                                    ('$.datadescription.'||referenceby.referencetype||'.componentdescriptions.*.checker ? (@.isparent == true)')::jsonpath
-                                                    ),                 
-                                 'referenceType', referenceby.referencetype,
-                                 'hierarchicalKey', referenceby.hierarchicalkey,
-                                 'naturalKey', referenceby.naturalkey,
-                                 '__display_default', referenceby.refvalues->'__display_default',
-                                 '__display_fr', referenceby.refvalues->'__display_fr',
-                                 '__display_en', referenceby.refvalues->'__display_en',
-                                 'id', referenceby.id,
-                                 'components', COALESCE((
-                                   SELECT array_agg(DISTINCT comp_key)
-                                   FROM jsonb_each(rs.refslinkedto -> referenceby.referencetype) AS comp(comp_key, comp_val)
-                                   WHERE comp_val ?? referenceby.hierarchicalkey::text
-                                     AND EXISTS (
-                                       SELECT 1
-                                       FROM jsonb_array_elements_text(
-                                         comp_val -> referenceby.hierarchicalkey::text -> 'uuids'
-                                       ) AS u
-                                       WHERE u = referenceby.id::text
-                                     )
-                                 ), ARRAY[]::text[]),
-                                 'parents', COALESCE(pg.parents, '[]'::jsonb)
-                               )) AS "refsLinkeds"
-                             FROM %1$s.referencevalue rs
-                             JOIN %1$s.reference_reference rr ON rr.referenceid = rs.id
-                             JOIN %1$s.referencevalue referenceby ON referenceby.id = rr.referencesby
-                             LEFT JOIN parents_grouped pg ON pg.child_hkey = referenceby.hierarchicalkey
-                             JOIN application on application.id = referenceby.application
-                             WHERE rs.referencetype = :referenceType
-                             GROUP BY referenceby.referencetype
-                           )
-                           SELECT
-                             'fr.inra.oresing.persistence.FilterList' AS "@class",
-                             to_json(json) AS "json"
-                           FROM json;
+                WITH
+                referenceBase AS MATERIALIZED(
+                    SELECT distinct listName, colonne, hk, uuid
+                    FROM %1$s.referencevalue,
+                    JSON_TABLE(
+                        refslinkedto, '$.keyvalue()' columns(
+                            listName text PATH '$.key',
+                            NESTED PATH '$.value.keyvalue()' columns(
+                                colonne text PATH '$.key',
+                                NESTED PATH '$.value.keyvalue()' columns(
+                                    hk ltree PATH '$.key',
+                                    NESTED PATH '$.value.uuids[*]' columns(
+                                        uuid uuid PATH '$'
+                                    )
+                                )
+                            )
+                        )
+                    )
+                    WHERE referencetype = :referenceType
+                ),
+                -- CTE pour agréger les colonnes par hk
+                components_grouped AS MATERIALIZED(
+                    SELECT
+                        hk,
+                        listName,
+                        array_agg(DISTINCT colonne) AS components
+                    FROM referenceBase
+                    GROUP BY hk, listName
+                ),
+                parents_grouped AS MATERIALIZED(
+                    SELECT
+                        child.hierarchicalkey AS child_hkey,
+                        jsonb_agg(DISTINCT jsonb_build_object(
+                            'referenceType', p.referencetype,
+                            'hierarchicalKey', p.hierarchicalkey,
+                            'naturalKey', p.naturalkey,
+                            '__display_default', p.refvalues->'__display_default',
+                            '__display_fr', p.refvalues->'__display_fr',
+                            '__display_en', p.refvalues->'__display_en',
+                            'id', p.id
+                        )) AS parents
+                    FROM %1$s.referencevalue child
+                    CROSS JOIN LATERAL regexp_split_to_table(
+                        regexp_replace(child.hierarchicalkey::text, '\\.[^\\.]+$',''),
+                        '\\.'
+                    ) AS ancestor_segment(segment)
+                    CROSS JOIN LATERAL (
+                        SELECT
+                            (regexp_match(ancestor_segment.segment, '([0-9a-z_]*)K(.*)'))[1] AS parent_type,
+                            (regexp_match(ancestor_segment.segment, '([0-9a-z_]*)K(.*)'))[2] AS parent_naturalkey
+                        WHERE ancestor_segment.segment != ''
+                    ) AS ps
+                    JOIN %1$s.referencevalue p
+                        ON p.referencetype = ps.parent_type
+                        AND p.naturalkey = ps.parent_naturalkey::ltree
+                    WHERE child.hierarchicalkey <> ''
+                      AND child.hierarchicalkey IN (SELECT hk FROM referenceBase)
+                    GROUP BY child.hierarchicalkey
+                ),
+                referenceByReftype AS (
+                    SELECT
+                        components_grouped.listName AS "listName",
+                        jsonb_build_object(
+                            'listName', components_grouped.listName,
+                            'refsLinkeds', jsonb_agg(
+                                jsonb_build_object(
+                                    'id', parents_grouped.parents->0->>'id',
+                                    'naturalKey', parents_grouped.parents->0->>'naturalKey',
+                                    '__display_default', parents_grouped.parents->0->>'__display_default',
+                                    '__display_fr', parents_grouped.parents->0->>'__display_fr',
+                                    '__display_en', parents_grouped.parents->0->>'__display_en',
+                                    'referenceType', components_grouped.listName,
+                                    'hierarchicalKey', components_grouped.hk,
+                                    'isHierarchique', jsonb_path_exists(
+                                        application."configuration",
+                                        ('$.datadescription.' || components_grouped.listName || '.componentdescriptions.*.checker ? (@.isparent == true)')::jsonpath
+                                    ),
+                                    'components', components_grouped.components,
+                                    'parents', '[]'::jsonb
+                                )
+                            )
+                        ) AS ref_object
+                    FROM components_grouped
+                    JOIN parents_grouped ON parents_grouped.child_hkey = components_grouped.hk
+                    JOIN application ON application.name = '%1$s'
+                    GROUP BY application.configuration, components_grouped.listName
+                    ORDER BY components_grouped.listName
+                )
+                SELECT
+                    'fr.inra.oresing.persistence.FilterList' AS "@class",
+                    ref_object AS "json"
+                FROM referenceByReftype;
+                
                 """.formatted(getSchema().getSqlIdentifier());
         result = getNamedParameterJdbcTemplate().queryForStream(
                 query,
