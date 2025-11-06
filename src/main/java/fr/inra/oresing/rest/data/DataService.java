@@ -176,9 +176,9 @@ public class DataService {
                          final FileOrUUID fileOrUUID) throws IOException {
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
         DataImporterContext referenceImporterContext = getDataImporterContext(application, refType, fileOrUUID);
-        final Consumer<Stream<DataValue>> storeAll = (final Stream<DataValue> referenceValueStream) -> {
-            List<UUID> uuids = referenceValueRepository.storeAll(
-                    referenceValueStream
+        final Consumer<Path> storeAll = (final Path csvFile) -> {
+            referenceValueRepository.storeAll(
+                    csvFile
             );
             //referenceValueRepository.updateConstraintForeignReferences(uuids);
         };

@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.MultiValueMap;
 import reactor.core.publisher.Flux;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -27,6 +28,8 @@ public interface DataRepository {
 
     @Transactional(readOnly = true)
     Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final MultiValueMap<String, String> params);
+
+    List<UUID> storeAll(Path finalCsvFile);
 
     void removeByFileId(UUID id);
 
