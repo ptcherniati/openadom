@@ -737,7 +737,7 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                                     '__display_fr', parents_grouped.parents->0->>'__display_fr',
                                     '__display_en', parents_grouped.parents->0->>'__display_en',
                                     'referenceType', components_grouped.listName,
-                                    'hierarchicalKey', parents_grouped.parents->0->>'hierarchicalKey',,
+                                    'hierarchicalKey', parents_grouped.parents->0->>'hierarchicalKey',
                                     'isHierarchique', jsonb_path_exists(
                                         application."configuration",
                                         ('$.datadescription.' || components_grouped.listName || '.componentdescriptions.*.checker ? (@.isparent == true)')::jsonpath
