@@ -30,8 +30,8 @@ import static fr.inra.oresing.mail.EmailService.UPLOAD_STATE.UNPUBLISHED;
 @RequiredArgsConstructor
 public class EmailService implements Email {
     public static final String OPENADOM_INRAE_FR = "openadom@inrae.fr";
-    public static final String MSG_ERROR_SUBJECT_FR = "Une erreur c'est produite lors de  l'opération sur le type de   données % de l'application %s";
-    public static final String MSG_ERROR_SUBJECT_EN = "An error occurred while operating on data type % of application %s";
+    public static final String MSG_ERROR_SUBJECT_FR = "Une erreur s'est produite lors de  l'opération sur le type de données %s de l'application %s";
+    public static final String MSG_ERROR_SUBJECT_EN = "An error occurred while operating on data type %s of application %s";
     private static final String NEW_ACCOUNT_SUBJECT = "Création de compte / Account creation";
     private static final String NEW_ACCOUNT_FR = "Vous venez de créer un compte sur l'application OPENAdom. %n" +
                                                  "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
@@ -205,11 +205,12 @@ public class EmailService implements Email {
     }
 
     @Override
-    public void sendUpoadErrorsMail(Locale application, String dataName, String locale, OreSiUser currentUser, String body) {
+    public void sendUpoadErrorsMail(Locale locale, String application, String dataName, OreSiUser currentUser, String body) {
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
         mailMessage.setFrom(OPENADOM_INRAE_FR);
-        mailMessage.setSubject(Locale.ENGLISH.getLanguage().equals(locale) ? MSG_ERROR_SUBJECT_EN : MSG_ERROR_SUBJECT_FR);
+        final String subjectTemplate = Locale.ENGLISH.getLanguage().equals(locale) ? MSG_ERROR_SUBJECT_EN : MSG_ERROR_SUBJECT_FR;
+        mailMessage.setSubject(subjectTemplate.formatted(dataName, application));
         mailMessage.setText(body);
 
         mailSender.send(mailMessage);
