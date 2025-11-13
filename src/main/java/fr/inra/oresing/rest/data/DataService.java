@@ -28,6 +28,7 @@ import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.DataFile;
+import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
@@ -74,7 +75,6 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -183,7 +183,7 @@ public class DataService {
             //referenceValueRepository.updateConstraintForeignReferences(uuids);
         };
         final DataImporter referenceImporter = new DataImporter(referenceImporterContext, storeAll);
-        referenceImporter.doImport(file, fileOrUUID.fileid());
+        referenceImporter.doImport(FileBomResolver.of(file), fileOrUUID.fileid());
     }
 
     public HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(final Application application, final String lowestLevelReference) {
