@@ -1,25 +1,17 @@
 .st_test_template: &test_template
   image: maven:3.9.11-amazoncorretto-25
   stage: test
-  
-  services:
-    - name: docker:dind
-      alias: docker
-      command: [ '--tls=false' ]
-  
-  needs:
-    - job: maven_build
-      artifacts: true
-  
+  needs: ["maven_build"]
   artifacts:
     when: always
     reports:
       junit: target/surefire-reports/*.xml
     paths:
       - target/surefire-reports/
-  
   script:
     - |
+      # Par défaut, si le job est nommé "test_all" on ne filtre pas (profil all-tests)
+      # Sinon, on retire le préfixe "test_" et on remplace le premier underscore par un point.
       if [[ "$CI_JOB_NAME" == "test_all" ]]; then
           export MAVEN_PROFILE=all-tests
       else
@@ -27,7 +19,6 @@
       fi
       echo "Utilisation du profil Maven: $MAVEN_PROFILE"
     - mvn test -P$MAVEN_PROFILE
-
 
 test_core_basic:
   <<: *test_template
