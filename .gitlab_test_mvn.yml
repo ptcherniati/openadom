@@ -1,8 +1,7 @@
 .st_test_template: &test_template
-  image: maven:3.9.11-amazoncorretto-25
+  image: docker:stable
   stage: test
   needs: ["maven_build"]
-
   services:
     - name: docker:dind
       alias: docker
@@ -10,7 +9,8 @@
   variables:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
-
+    DOCKER_DRIVER: overlay2
+    MAVEN_IMAGE: maven:3.9.11-amazoncorretto-25
   artifacts:
     when: always
     reports:
