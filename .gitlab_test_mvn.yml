@@ -3,19 +3,17 @@
   stage: test
   needs: ["maven_build"]
   
-  # AJOUT CRUCIAL : Services Docker pour Testcontainers
+  # Ajouter Docker-in-Docker pour Testcontainers
   services:
     - name: docker:dind
       alias: docker
       command: ['--tls=false']
   
-  # AJOUT : Variables pour Testcontainers
+  # Variables pour Testcontainers
   variables:
     DOCKER_HOST: tcp://docker:2375
-    DOCKER_DRIVER: overlay2
     DOCKER_TLS_CERTDIR: ""
     TESTCONTAINERS_RYUK_DISABLED: "true"
-    TESTCONTAINERS_CHECKS_DISABLE: "true"
   
   artifacts:
     when: always
@@ -23,17 +21,13 @@
       junit: target/surefire-reports/*.xml
     paths:
       - target/surefire-reports/
-      - target/logs/
   
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - .m2/repository/
-    policy: pull
+  before_script:
+    # just install Docker CLI in the Maven image 
+    - yum install -y docker || amazon-linux-extras install docker -y
   
   script:
     - |
-      # Configuration du profil Maven
       if [[ "$CI_JOB_NAME" == "test_all" ]]; then
           export MAVEN_PROFILE=all-tests
       else
@@ -42,17 +36,10 @@
       echo "Utilisation du profil Maven: $MAVEN_PROFILE"
     
     # Attendre que Docker soit prêt
-    - |
-      echo "Vérification de Docker..."
-      timeout 30 sh -c 'until docker info; do sleep 1; done' || (echo "Docker n'est pas disponible" && exit 1)
+    - timeout 30 sh -c 'until docker info 2>/dev/null; do sleep 1; done'
     
-    # Lancer les tests
-    - mvn $MAVEN_CLI_OPTS test -P$MAVEN_PROFILE
-  
-  tags:
-    - docker
+    - mvn test -P$MAVEN_PROFILE
 
-# Jobs de test (inchangés)
 test_core_basic:
   <<: *test_template
 
