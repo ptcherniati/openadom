@@ -27,6 +27,11 @@ variables:
   # comme on n'a pas accès à la configuration des runners, on désactive explicitement la génération d'un certificat TLS
   DOCKER_TLS_CERTDIR: ""
 
+  # for testcontainers
+  TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal
+  TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE: /var/run/docker.sock
+  TESTCONTAINERS_RYUK_DISABLED: "true"
+
 stages:
   - build
   - pages
