@@ -1,16 +1,8 @@
 image: docker:stable
 
-# Pour l'utilisation de testcontainers
-# https://www.testcontainers.org/supported_docker_environment/continuous_integration/gitlab_ci/
-services: &dind_definition
-  - name: docker:dind
-    alias: docker
-    command: [ '--tls=false' ]
-
 cache:
   paths:
     - ./.m2/repository
-  # Utiliser une clé cohérente pour tous les jobs
   key: "maven-deps-${CI_COMMIT_REF_SLUG}"
 
 variables:
@@ -39,8 +31,6 @@ maven_build:
   stage: build
   script:
     - mvn --batch-mode clean compile test-compile -DskipTests
-  # local cache deleted
-  # This job will use the global cache already defined .
   artifacts:
     paths:
       - target/
