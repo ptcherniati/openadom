@@ -13,7 +13,7 @@
     MAVEN_OPTS: "-Djava.awt.headless=true -Dmaven.repo.local=./.m2/repository"
 
   before_script:
-    # Installation Docker CLI statique (binaire autonome)
+    - yum install -y tar gzip curl
     - curl -fsSL https://download.docker.com/linux/static/stable/x86_64/docker-25.0.5.tgz -o docker.tgz
     - tar xzvf docker.tgz
     - mv docker/* /usr/bin/
