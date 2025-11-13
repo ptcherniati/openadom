@@ -1,6 +1,5 @@
 image: docker:stable
 
-
 # Pour l'utilisation de testcontainers
 # https://www.testcontainers.org/supported_docker_environment/continuous_integration/gitlab_ci/
 services: &dind_definition
@@ -11,8 +10,8 @@ services: &dind_definition
 cache:
   paths:
     - ./.m2/repository
-  # keep cache across branch
-  key: "$CI_BUILD_REF_NAME"
+  # Utiliser une clé cohérente pour tous les jobs
+  key: "maven-deps-${CI_COMMIT_REF_SLUG}"
 
 variables:
   MAVEN_OPTS: "-Djava.awt.headless=true -Dmaven.repo.local=./.m2/repository"
@@ -21,13 +20,8 @@ variables:
   DOCKER_HOST: tcp://docker:2375
   # Improve performance with overlayfs.
   DOCKER_DRIVER: overlay2
-  # Depuis la version 18.09, l'image docker dind génère un certificat TLS, et pour le bon fonctionnement des services, ce certificat doit être partagé par l'ensemble de ces derniers !
-  # Le lien ci-dessous explique la procédure à suivre au niveau des runners afin de partager le certificat généré sous forme d'un volume :
-  # https://about.gitlab.com/releases/2019/07/31/docker-in-docker-with-docker-19-dot-03/
-  # comme on n'a pas accès à la configuration des runners, on désactive explicitement la génération d'un certificat TLS
+  # Désactivation explicite du TLS
   DOCKER_TLS_CERTDIR: ""
-  # For TestContainers
-  TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal 
 
 stages:
   - build
@@ -38,17 +32,15 @@ stages:
   - package
   # Docker image build
   - build_env
-  - trigger   # trigger openadom/deployment
+  - trigger    # trigger openadom/deployment
 
 maven_build:
   image: maven:3.9.11-amazoncorretto-25
   stage: build
   script:
     - mvn --batch-mode clean compile test-compile -DskipTests
-  cache:
-    key: ${CI_COMMIT_REF_SLUG}
-    paths:
-      - .m2/repository/
+  # local cache deleted
+  # This job will use the global cache already defined .
   artifacts:
     paths:
       - target/
