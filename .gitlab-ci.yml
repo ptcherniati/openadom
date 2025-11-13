@@ -26,6 +26,8 @@ variables:
   # https://about.gitlab.com/releases/2019/07/31/docker-in-docker-with-docker-19-dot-03/
   # comme on n'a pas accès à la configuration des runners, on désactive explicitement la génération d'un certificat TLS
   DOCKER_TLS_CERTDIR: ""
+  # For TestContainers
+  TESTCONTAINERS_HOST_OVERRIDE: host.docker.internal 
 
 stages:
   - build
