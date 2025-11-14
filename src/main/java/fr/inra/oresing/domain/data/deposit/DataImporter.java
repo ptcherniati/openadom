@@ -21,6 +21,7 @@ import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.Ref
 import fr.inra.oresing.domain.data.read.DataHeaderReader;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -87,7 +88,7 @@ public class DataImporter {
     /**
      *
      */
-    public void doImport(final InputStream csv, final UUID fileId) throws IOException {
+    public void doImport(final FileBomResolver csv, final UUID fileId) throws IOException {
         final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT).setDelimiter(dataImporterContext.getCsvSeparator()).setSkipHeaderRecord(true).get();
 
         SetMultimap<Ltree, Long> encounteredHierarchicalKeysForConflictDetection = HashMultimap.create();
