@@ -245,4 +245,4 @@ page-refs:
     link: "[A propos](about.md)"
   # example
   meteo:
-    link: "[Exemple de data complet](fichiers/examples/meteo/description.qmd)"
+    link: "[Exemple de data complet](/fichiers/examples/meteo/description.qmd)"

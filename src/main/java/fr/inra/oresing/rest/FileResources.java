@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest;
 
 import fr.inra.oresing.domain.BinaryFile;
-import fr.inra.oresing.rest.usecases.storage.GetFileWithDataUseCase;
+import fr.inra.oresing.rest.usecases.storage.binaryfile.GetFileWithDataUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.MediaType;

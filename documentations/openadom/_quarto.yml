@@ -30,6 +30,8 @@ website:
             href: fichiers/introduction/introduction.qmd
           - text: Vocabulaire
             href: fichiers/introduction/vocabulaire.qmd
+          - text: Architecture et Services
+            href: fichiers/introduction/architecture_et_services.qmd
           - text: Fichier d'échange
             href: fichiers/introduction/fichier_csv.qmd
       - section: Fichiers d'échange

@@ -1,0 +1,68 @@
+---
+title: Architecture et Services
+page-navigation: true
+abstract: >
+  Ce document décrit l'architecture technique d'OpenADOM, l'organisation des services (Use Cases) et les différents profils d'utilisateurs (personae) amenés à interagir avec le système.
+---
+
+# Introduction
+
+OpenADOM a évolué vers une architecture plus modulaire et performante, s'appuyant sur les dernières innovations de l'écosystème Java. Cette modernisation (Run 1) vise à séparer clairement la logique métier de l'infrastructure technique, tout en offrant des capacités de traitement de données à grande échelle, sans modification du schéma de base de données actuel. Voir [RELEASES.md](../../../../RELEASES.md) pour plus de détails sur la roadmap.
+
+# Personae : Qui utilise OpenADOM ?
+
+Il est important de distinguer deux types d'acteurs principaux qui interagissent avec le backend :
+
+## 1. Le Développeur OpenADOM
+*   **Rôle** : Intervient sur le cœur du système (le moteur OpenADOM).
+*   **Compétences** : Java 25, Spring Boot 4, Programmation Réactive (Project Reactor), SQL, Docker.
+*   **Actions** : Ajout de nouveaux Use Cases, optimisation des workers de parallélisation, maintenance de l'API REST.
+
+## 2. Le Gestionnaire de SI (Propriétaire de SI)
+*   **Rôle** : Responsable d'une instance spécifique (ex: SI OPTmix, SI OLA).
+*   **Compétences** : Maîtrise du domaine métier (écologie, agronomie), rédaction de fichiers YAML de configuration, requêtage SQL de base.
+*   **Actions** : 
+    *   Rédaction et mise à jour de la configuration de son SI.
+    *   Gestion des droits d'accès via l'interface ou les services dédiés.
+    *   Intervention directe en base de données pour des corrections fines ou des exports complexes.
+    *   Utilisation des services de stockage pour gérer les fichiers additionnels.
+
+# Architecture "Clean" et Use Cases
+
+Pour garantir la maintenabilité, la logique métier est désormais découpée en **Use Cases** (Cas d'Usage). Chaque Use Case représente une action atomique du système.
+
+Les Use Cases sont regroupés par domaines logiques :
+
+*   **`application`** : Gestion du cycle de vie des applications (SI).
+*   **`data`** : Recherche, filtrage et manipulation des données métier.
+*   **`security`** : Authentification et gestion fine des autorisations (droits d'accès).
+    *   **Concept d'Autorisation** : Une autorisation définit un périmètre de données (types, scopes spatiaux et temporels) et des opérations autorisées (lecture, écriture, suppression).
+    *   **Sécurité PostgreSQL (RLS)** : Chaque autorisation génère dynamiquement des rôles PostgreSQL et des politiques de sécurité au niveau des lignes (*Row Level Security*), garantissant une protection des données directement au niveau du moteur SQL.
+*   **`storage`** : Gestion physique et logique des fichiers (binaires, fichiers additionnels) et versionnage.
+*   **`metadata`** : Gestion des synthèses, de la normalisation et des demandes de droits.
+*   **`messaging`** : Services de notification (envoi d'emails d'erreurs d'import, etc.).
+
+Cette organisation permet aux gestionnaires de SI de mieux comprendre quels services sont à leur disposition, même s'ils ne lisent pas directement le code Java.
+
+# Parallélisation et Workers
+
+Pour traiter des fichiers de données de plus en plus volumineux, OpenADOM utilise un système de **Workers**.
+
+1.  **Orchestration** : Le système découpe les fichiers entrants en morceaux (*chunks*).
+2.  **Traitement Parallèle** : Plusieurs Workers traitent ces morceaux simultanément, exploitant ainsi toute la puissance du processeur.
+3.  **Fusion et Chargement** : Une fois tous les morceaux validés, ils sont fusionnés et chargés en base de données.
+4.  **Fail-Fast** : Si un seul morceau présente une erreur critique, tout le processus est annulé pour garantir l'intégrité des données.
+
+# Stack Technologique
+
+OpenADOM s'appuie sur une stack moderne et performante :
+*   **Java 25 (LTS)** : Pour bénéficier des dernières optimisations de la JVM.
+*   **Spring Boot 4.0.0** : Pour une gestion robuste des services et de l'injection de dépendances.
+*   **Programmation Réactive** : Utilisation de `Flux` et `Mono` pour une gestion efficace des flux de données sans blocage.
+*   **PostgreSQL 18** : Pour un stockage relationnel performant et des capacités JSON avancées.
+
+# Observabilité
+
+Le système intègre nativement des outils de monitoring :
+*   **Micrometer & Prometheus** : Collecte de métriques en temps réel sur les performances du système (temps de traitement des fichiers, charge CPU, mémoire).
+*   **Grafana** : Tableaux de bord visuels permettant aux administrateurs de surveiller la santé globale de l'infrastructure.

@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.normalization;
 
-import fr.inra.oresing.rest.usecases.metadata.BuildNormalizedSchemaUseCase;
-import fr.inra.oresing.rest.usecases.metadata.GetNormalizedSchemaUseCase;
+import fr.inra.oresing.rest.usecases.metadata.normalization.BuildNormalizedSchemaUseCase;
+import fr.inra.oresing.rest.usecases.metadata.normalization.GetNormalizedSchemaUseCase;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
