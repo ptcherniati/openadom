@@ -217,9 +217,4 @@ public record DataRepositoryWithBuffer(
             throw new UncheckedIOException("Erreur lors du nettoyage du répertoire temporaire", e);
         }
     }
-
-    @Override
-    public Stream<DataValue> findAllByReferenceTypeStream(String referenceName) {
-        return repository().findAllByReferenceTypeStream(referenceName);
-    }
 }

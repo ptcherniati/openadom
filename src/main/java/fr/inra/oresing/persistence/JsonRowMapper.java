@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.Mapper;
@@ -48,7 +49,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import com.fasterxml.jackson.module.afterburner.AfterburnerModule;
 
 @Component
 @Primary
@@ -159,7 +159,7 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
             @Override
             public Tag deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 JsonNode node = p.readValueAsTree();
-                Tag.TagDefinitions type = Optional.ofNullable(node.get("tagdefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
+                Tag.TagDefinitions type = Optional.ofNullable(node.get("tagDefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
                 return switch (type) {
                     case NO_TAG -> node.isTextual() ? Tag.buildTag(node.asText()) : Tag.NoTag.instance();
                     case DATA_TAG -> Tag.DataTag.instance();

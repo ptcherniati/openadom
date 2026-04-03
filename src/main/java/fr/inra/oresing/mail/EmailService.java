@@ -7,10 +7,6 @@ import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeBodyPart;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.internet.MimeMultipart;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +15,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.LocaleResolver;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 

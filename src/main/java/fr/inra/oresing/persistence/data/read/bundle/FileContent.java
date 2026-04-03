@@ -2,10 +2,8 @@ package fr.inra.oresing.persistence.data.read.bundle;
 
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 
 import java.io.InputStream;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -98,7 +96,7 @@ public record FileContent(List<String> refsLinked, String fileName, InputStream 
                             .map(Submission.SubmissionScope::referenceScopes)
                             .stream().flatMap(List::stream)
                             .filter(referenceScope -> referenceScope.component().equals(group))
-                            .map(Submission.SubmissionScope.ReferenceScope::reference)
+                            .map(Submission.SubmissionScope.SubmissionReferenceScope::reference)
                             .findFirst()
                             .orElse(group);
                     return "((bf.\"authorization\").requiredauthorizations).%s[1]".formatted(reference);

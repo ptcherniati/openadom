@@ -10,34 +10,46 @@ import fr.inra.oresing.domain.checker.type.MapType;
 import fr.inra.oresing.domain.checker.type.StringType;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithReferenceDatum;
 import fr.inra.oresing.domain.file.FileOrUUID;
+import fr.inra.oresing.rest.data.BuildColumns;
 import org.apache.commons.csv.CSVRecord;
 
 import java.util.*;
 import java.util.function.Function;
 
-public record DataHeaderReader(DataDatum constantValues,
-                               DataImporterContext dataImporterContext,
-                               PublishContext.PublishContextBuilder publishContextBuilder
+public record DataHeaderReader(
+        DataDatum constantValues,
+        BuildColumns buildColumns,
+        PublishContext.PublishContextBuilder publishContextBuilder,
+        StandardDataDescription dataDescription
 ) {
-    public DataHeaderReader(DataImporterContext dataImporterContext, PublishContext.PublishContextBuilder publishContextBuilder) {
-        this(new DataDatum(), dataImporterContext, publishContextBuilder);
+    public DataHeaderReader(
+            BuildColumns buildColumns,
+            PublishContext.PublishContextBuilder publishContextBuilder,
+            StandardDataDescription dataDescription
+    ) {
+        this(
+                new DataDatum(),
+                buildColumns,
+                publishContextBuilder,
+                dataDescription
+        );
     }
 
     public DataHeaderReader {
+        Objects.requireNonNull(buildColumns);
+        Objects.requireNonNull(dataDescription);
         Objects.requireNonNull(publishContextBuilder);
-        Objects.requireNonNull(dataImporterContext);
     }
 
-    private static void addConstants(final DataDatum constantValues, final ConstantComponent constant, final FieldType<?> value) {
+    private void addConstants(final ConstantComponent constant, final FieldType<?> value) {
         switch (value) {
             case final ListType listType ->
-                    constantValues.put(new DataColumn(constant.componentKey()), new DataColumnMultipleValue(listType.getValue()));
+                    constantValues().put(new DataColumn(constant.componentKey()), new DataColumnMultipleValue(listType.getValue()));
             case final MapType mapType -> throw new IllegalArgumentException("NO MAP HERE");
             case null, default ->
-                    constantValues.put(new DataColumn(constant.componentKey()), new DataColumnSingleValue(value));
+                    constantValues().put(new DataColumn(constant.componentKey()), new DataColumnSingleValue(value));
         }
     }
 
@@ -51,10 +63,10 @@ public record DataHeaderReader(DataDatum constantValues,
         };
     }
 
-    private void readPreHeaders(final StandardDataDescription dataDescription, final DataDatum constantValues, final Iterator<CSVRecord> linesIterator, final PublishContext.PublishContextBuilder publishContextBuilder) {
-        final Map<String, ConstantComponent> constantComponents = dataDescription.getComponentByType(ConstantComponent.class);
-        final int headerLine = dataDescription.headerLine();
-        final Integer firstRowLine = dataDescription.firstRowLine();
+    private void readPreHeaders(final Iterator<CSVRecord> linesIterator) {
+        final Map<String, ConstantComponent> constantComponents = dataDescription().getComponentByType(ConstantComponent.class);
+        final int headerLine = dataDescription().headerLine();
+        final Integer firstRowLine = dataDescription().firstRowLine();
         final ImmutableSetMultimap<Integer, ConstantComponent> perRowNumberConstants = constantComponents.values().stream()
                 .filter(constantComponent -> constantComponent.constantImportHeader() instanceof FileColumnConstantHeader)
                 .collect(ImmutableSetMultimap.toImmutableSetMultimap(ConstantComponent::rowNumber, Function.identity()));
@@ -67,16 +79,15 @@ public record DataHeaderReader(DataDatum constantValues,
                 final int columnNumber = ((FileColumnConstantHeader) constant.constantImportHeader()).columnNumber();
                 final String valueInFile = row.size() >= columnNumber ? row.get(columnNumber - 1) : "".trim();
                 final FieldType<String> value = StringType.getStringTypeFromStringValue(valueInFile);
-                addConstants(constantValues, constant, value);
+                addConstants(constant, value);
             });
         }
         constantComponents.values().stream()
                 .filter(constantComponent -> constantComponent.constantImportHeader() instanceof SubmissionConstantHeader)
                 .forEach(constantComponent -> addConstants(
-                        constantValues,
                         constantComponent,
                         StringType.getStringTypeFromStringValue(
-                                Optional.of(publishContextBuilder.build())
+                                Optional.of(publishContextBuilder().build())
                                         .map(PublishContext::fileOrUUID)
                                         .map(FileOrUUID::binaryfiledataset)
                                         .map(BinaryFileDataset::getRequiredAuthorizations)
@@ -90,19 +101,19 @@ public record DataHeaderReader(DataDatum constantValues,
     /**
      *
      */
-    private ImmutableList<String> readHeaderRows(final Iterator<CSVRecord> linesIterator, final PublishContext.PublishContextBuilder publishContextBuilder) {
+    private ImmutableList<String> readHeaderRows(final Iterator<CSVRecord> linesIterator) {
         final CSVRecord headerRow = linesIterator.next();
         ImmutableList<String> headersForRow = Streams.stream(headerRow)
                 .map(String::trim)
                 .collect(ImmutableList.toImmutableList());
         headersForRow = InvalidDatasetContentException.checkHeader(
                 headersForRow,
-                dataImporterContext().getExpectedHeaders(),
-                dataImporterContext().getMandatoryHeaders(),
+                buildColumns().expectedHeaders(),
+                buildColumns().mandatoryHeaders(),
                 ImmutableMultiset.copyOf(headersForRow),
-                dataImporterContext().getPatternColumnFactory(),
-                dataImporterContext().getDataDescription().headerLine(),
-                dataImporterContext().getDataDescription().allowUnexpectedColumns()
+                buildColumns().patternColumnFactory(),
+                dataDescription().headerLine(),
+                dataDescription().allowUnexpectedColumns()
         );
         publishContextBuilder().withHeaderRow(headersForRow);
         return headersForRow;
@@ -111,10 +122,10 @@ public record DataHeaderReader(DataDatum constantValues,
     /**
      *
      */
-    private void readPostHeaders(final StandardDataDescription dataDescription, final ImmutableList<String> headerRow, final DataDatum constantValues, final Iterator<CSVRecord> linesIterator, final PublishContext.PublishContextBuilder publishContextBuilder) {
-        final Map<String, ConstantComponent> constantComponents = dataDescription.getComponentByType(ConstantComponent.class);
-        final int headerLine = dataDescription.headerLine();
-        final Integer firstRowLine = dataDescription.firstRowLine();
+    private void readPostHeaders(final ImmutableList<String> headerRow, final Iterator<CSVRecord> linesIterator) {
+        final Map<String, ConstantComponent> constantComponents = dataDescription().getComponentByType(ConstantComponent.class);
+        final int headerLine = dataDescription().headerLine();
+        final Integer firstRowLine = dataDescription().firstRowLine();
         final ImmutableSetMultimap<Integer, ConstantComponent> perRowNumberConstants = constantComponents.values().stream()
                 .filter(constantComponent -> constantComponent.constantImportHeader() instanceof ColumnConstantHeader)
                 .collect(ImmutableSetMultimap.toImmutableSetMultimap(ConstantComponent::rowNumber, Function.identity()));
@@ -128,17 +139,16 @@ public record DataHeaderReader(DataDatum constantValues,
                 final String columnValue = columnNumber > 0 ? row.get(columnNumber - 1) : "";
                 final FieldType<String> value = StringType.getStringTypeFromStringValue((row.size() >= columnNumber ? columnValue : "").trim());
                 final String componentKey = constant.componentKey();
-                addConstants(constantValues, constant, value);
+                addConstants(constant, value);
             });
         }
         publishContextBuilder().withPostHeaderRow(postHeaderRows);
     }
 
     public ImmutableList<String> readHeader(final Iterator<CSVRecord> linesIterator) {
-        final StandardDataDescription dataDescription = dataImporterContext().getDataDescription();
-        readPreHeaders(dataDescription, constantValues, linesIterator, publishContextBuilder);
-        final ImmutableList<String> columns = readHeaderRows(linesIterator, publishContextBuilder);
-        readPostHeaders(dataDescription, columns, constantValues, linesIterator, publishContextBuilder);
+        readPreHeaders(linesIterator);
+        final ImmutableList<String> columns = readHeaderRows(linesIterator);
+        readPostHeaders(columns, linesIterator);
         return columns;
     }
 

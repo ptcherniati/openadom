@@ -12,7 +12,6 @@ import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.rest.OreSiApiRequestContext;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import org.apache.commons.collections4.keyvalue.DefaultMapEntry;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.jdbc.core.RowMapper;

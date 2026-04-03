@@ -85,43 +85,43 @@ class ApplicationPermissionEvaluatorTest {
         return List.of(
                 // Tests pour le domaine SYSTEM
                 new UserTest(
-                        permissionEvaluator.SYSTEM,
-                        permissionEvaluator.SYSTEM_USER,
+                        ApplicationPermissionEvaluator.SYSTEM,
+                        ApplicationPermissionEvaluator.SYSTEM_USER,
                         "Utilisateur système connecté",
                         List.of(connectedUser),
                         List.of()
                 ),
                 new UserTest(
-                        permissionEvaluator.SYSTEM,
-                        permissionEvaluator.SYSTEM_OPENADOM_ADMIN,
+                        ApplicationPermissionEvaluator.SYSTEM,
+                        ApplicationPermissionEvaluator.SYSTEM_OPENADOM_ADMIN,
                         "Administrateur OpenADOM",
                         List.of(openAdomAdmin),
                         List.of()
                 ),
                 new UserTest(
-                        permissionEvaluator.SYSTEM,
-                        permissionEvaluator.SYSTEM_APPLICATION_CREATOR,
+                        ApplicationPermissionEvaluator.SYSTEM,
+                        ApplicationPermissionEvaluator.SYSTEM_APPLICATION_CREATOR,
                         "Création d'application",
                         List.of(openAdomAdmin, applicationCreatorUser),
                         List.of()
                 ),
                 new UserTest(
-                        permissionEvaluator.SYSTEM,
-                        permissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_UPDATE,
+                        ApplicationPermissionEvaluator.SYSTEM,
+                        ApplicationPermissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_UPDATE,
                         "Gestion des rôles système - mise à jour",
                         List.of(openAdomAdmin),
                         List.of()
                 ),
                 new UserTest(
-                        permissionEvaluator.SYSTEM,
-                        permissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_DELETE,
+                        ApplicationPermissionEvaluator.SYSTEM,
+                        ApplicationPermissionEvaluator.SYSTEM_MANAGE_ROLE_FOR_DELETE,
                         "Gestion des rôles système - suppression",
                         List.of(openAdomAdmin),
                         List.of()
                 ),
                 new UserTest(
-                        permissionEvaluator.SYSTEM,
-                        permissionEvaluator.SYSTEM_USER_READER,
+                        ApplicationPermissionEvaluator.SYSTEM,
+                        ApplicationPermissionEvaluator.SYSTEM_USER_READER,
                         "Lecteur d'utilisateurs système",
                         List.of(openAdomAdmin),
                         List.of()
@@ -129,80 +129,80 @@ class ApplicationPermissionEvaluatorTest {
 
                 // Tests pour le domaine APPLICATION
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_APPLICATION_MODIFY,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_APPLICATION_MODIFY,
                         "Modification d'application",
                         List.of(applicationToken),
                         List.of(applicationAdminUser, applicationManagerUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_DELETE,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_DELETE,
                         "Gestion des rôles - suppression",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_ROLE_MANAGEMENT_FOR_UPDATE,
                         "Gestion des rôles - mise à jour",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ,
                         "Gestion des autorisations - lecture",
                         List.of(applicationToken),
                         List.of(applicationAdminUser, applicationManagerUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_DELETE,
                         "Gestion des autorisations - suppression",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_UPDATE,
                         "Gestion des autorisations - mise à jour",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD,
                         "Gestion des autorisations - ajout",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_DATA_READ,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_DATA_READ,
                         "Lecture de données",
                         List.of(applicationToken),
                         List.of(applicationAdminUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_DATA_WRITE,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_DATA_WRITE,
                         "Écriture de données",
                         List.of(applicationToken),
                         List.of(applicationDataReaderUser, applicationDeleteUser, applicationPublishWriterUser,
                                 applicationDepositWriterUser, applicationCreatorUser, applicationManagerUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_WRITE_FILE,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_WRITE_FILE,
                         "Écriture de fichier",
                         List.of(applicationToken),
                         List.of(applicationDeleteUser, applicationPublishWriterUser,
                                 applicationCreatorUser, applicationManagerUser) // Token sans nom d'application
                 ),
                 new UserTest(
-                        permissionEvaluator.APPLICATION,
-                        permissionEvaluator.APPLICATION_DELETE_FILE,
+                        ApplicationPermissionEvaluator.APPLICATION,
+                        ApplicationPermissionEvaluator.APPLICATION_DELETE_FILE,
                         "Suppression de fichier",
                         List.of(applicationToken),
                         List.of(applicationDeleteUser, applicationPublishWriterUser,
@@ -225,7 +225,7 @@ class ApplicationPermissionEvaluatorTest {
         if (testCase.targetDomain.equals(ApplicationPermissionEvaluator.SYSTEM)) {
             assertNotNull(token.getSystemPersona());
         } else if (testCase.targetDomain.equals(ApplicationPermissionEvaluator.APPLICATION)
-                && token.getApplicationName() != null) {
+                   && token.getApplicationName() != null) {
             assertNotNull(token.getApplicationPersona());
         }
     }

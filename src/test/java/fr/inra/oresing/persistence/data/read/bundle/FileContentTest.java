@@ -22,11 +22,11 @@ class FileContentTest {
                     3, 4),
             new Submission.SubmissionScope(
                     List.of(
-                            new Submission.SubmissionScope.ReferenceScope(
+                            new Submission.SubmissionScope.SubmissionReferenceScope(
                                     "projet",
                                     "projet"
                             ),
-                            new Submission.SubmissionScope.ReferenceScope(
+                            new Submission.SubmissionScope.SubmissionReferenceScope(
                                     "sites",
                                     "chemin"
                             )

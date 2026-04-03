@@ -11,31 +11,57 @@ services:
       - ./src/main/resources/migration/openadom_user.sql:/docker-entrypoint-initdb.d/openadom_user.sql
     networks:
       - default
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dbuser}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./src/main/resources/docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    ports:
+      - "9090:9090"
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # Indispensable sous Linux pour accéder au host
+
   hasura:
-      image: hasura/graphql-engine:latest
-      ports:
-        - "8084:8080"
-      environment:
-        HASURA_GRAPHQL_DATABASE_URL: postgres://dbuser:xxxxxxxx@postgresql:5432/openadom
-        HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
-        HASURA_GRAPHQL_ADMIN_SECRET: "secret"
-      depends_on:
-        - postgresql
-      networks:
-        - default
+    image: hasura/graphql-engine:latest
+    ports:
+      - "8084:8080"
+    environment:
+      HASURA_GRAPHQL_DATABASE_URL: postgres://dbuser:xxxxxxxx@postgresql:5432/openadom
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      HASURA_GRAPHQL_ADMIN_SECRET: "secret"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - default
 
   postgresql_graphana:
     image: postgres:18.0
-    ##ports:
-      ##- "5433:5432"
+    labels:
+      org.springframework.boot.ignore: true
+    ports:
+      - "5433:5432"
     environment:
       - POSTGRES_USER=dbuser
       - POSTGRES_PASSWORD=xxxxxxxx
       - POSTGRES_DB=openadom
     networks:
       - default
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dbuser}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
   pgadmin:
-    image: dpage/pgadmin4:9.8
+    image: dpage/pgadmin4:9.10
     ports:
       - "8083:80"
     volumes:
@@ -53,8 +79,8 @@ services:
 
   grafana:
     image: grafana/grafana:10.4.4-ubuntu
-    ##ports:
-      ##- "3000:3000"
+    ports:
+      - "3000:3000"
     environment:
       GF_LOG_LEVEL: debug
       GF_AUTH_POSTGRES_ENABLED: "true"
@@ -67,10 +93,12 @@ services:
       GF_RENDERING_SERVER_URL: http://renderer:8081/render
       GF_RENDERING_CALLBACK_URL: http://grafana:3000/
       GF_LOG_FILTERS: rendering:debug
+      GF_SECURITY_ADMIN_PASSWORD: admin
     restart: unless-stopped
     depends_on:
       - postgresql
       - postgresql_graphana
+      - prometheus
     networks:
       - default
     volumes:
@@ -82,8 +110,8 @@ services:
 
   renderer:
     image: grafana/grafana-image-renderer:latest
-    ##ports:
-      ##- "8081"
+      ##ports:
+    ##- "8081"
     networks:
       - default
 volumes:

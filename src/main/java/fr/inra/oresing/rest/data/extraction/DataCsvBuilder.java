@@ -8,7 +8,7 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.data.UUIDsfromData;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.read.query.ComponentOrderBy;
 import fr.inra.oresing.domain.data.read.query.ComponentOrderByForExport;
 import fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery;
@@ -47,7 +47,7 @@ public class DataCsvBuilder {
         super();
     }
 
-    public static DataCsvBuilder getDataCsvBuilder(final BiFunction<String, String, DataImporterContext> referenceImporterContextBuilder) {
+    public static DataCsvBuilder getDataCsvBuilder(final BiFunction<String, String, AsynchroneFileImporterContext> referenceImporterContextBuilder) {
         return new DataCsvBuilder();
     }
 

@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.security;
 import fr.inra.oresing.OpenAdomJwtValue;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -13,8 +14,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
@@ -22,21 +25,22 @@ import java.util.*;
 import java.util.function.Function;
 
 @Slf4j
+@Component
 public class JWTExtractor {
     public static final String AUTHORIZATION = "Authorization";
     public static final String BEARER_ = "Bearer ";
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     public static SecretKey key;
     public static int jwtExpiration;
-    private final JsonRowMapper<OreSiUserRequestClient> mapper;
+    private final JsonRowMapper<?> mapper;
     private Function<UUID, OreSiUserRole> getUserRole;
 
     public JWTExtractor(
-            Function<UUID, OreSiUserRole> getUserRole,
-            JsonRowMapper<OreSiUserRequestClient> mapper,
-            int jwtExpiration,
-            String jwtSecret) {
-        this.getUserRole = getUserRole;
+            AuthenticationService authenticationService,
+            JsonRowMapper<?> mapper,
+            @Value("${jwt.expiration:3600}") int jwtExpiration,
+            @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret) {
+        this.getUserRole = authenticationService::getUserRole;
         this.mapper = mapper;
         final String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
         final byte[] keyBytes = secureEnoughJwtSecret.getBytes();
@@ -45,7 +49,7 @@ public class JWTExtractor {
     }
 
     public static void addJwtHeader(HttpServletResponse response, String jwt) {
-        response.setHeader(AUTHORIZATION, BEARER_ + jwt);
+        response.setHeader(AUTHORIZATION, jwt);
     }
 
     public static String buildToken(String json) {

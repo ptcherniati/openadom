@@ -27,23 +27,22 @@ import fr.inra.oresing.rest.model.application.ApplicationLightResult;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
-import fr.inra.oresing.rest.reactive.ReactiveProgression;
-import fr.inra.oresing.rest.reactive.ReactiveTypeInfo;
-import fr.inra.oresing.rest.reactive.ReactiveTypeProgress;
-import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
+import fr.inra.oresing.rest.reactive.*;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -94,46 +93,49 @@ public class ApplicationService{
 
     @Transactional()
     public void createApplication(
-            ReactiveProgression.CreateApplicationProgression progression,
+            Consumer<ReactiveResult> sink,
             final String name,
             final DataFile dataFile,
             final String comment) throws IOException {
+        
+        ReactiveEventHelper eventHelper = new ReactiveEventHelper(sink, "application.createConfiguration");
+        
         Objects.requireNonNull(OreSiApiRequestContext.getAuthentication()
                         .map(OreSiAuthenticationToken::getSystemPersona)
                         .filter(ApplicationCreator.class::isInstance)
                         .map(ApplicationCreator.class::cast)
                         .orElse(null))
                 .canCreateApplication(name);
-        progression.pushProgression();
+        eventHelper.pushProgress(0D);
 
         final Application application = new Application();
         application.setName(name);
         try {
             changeApplicationConfiguration(
                     comment,
-                    progression,
+                    eventHelper,
                     application,
                     dataFile,
                     this::initApplication);
         } catch (final OreSiTechnicalException | IOException e) {
             if ("fr.inra.oresing.domain.authorization.privilegeassessor.exception"
                     .equals(e.getClass().getPackage().getName())) {
-                progression.fluxSink().error(e);
+                eventHelper.pushError(e);
                 assert e instanceof OreSiTechnicalException;
                 throw (OreSiTechnicalException) e;
             }
-            progression.fluxSink().error(e);
-            progression.fluxSink().complete();
+            eventHelper.pushError(e);
+            eventHelper.complete();
             return;
         }
-        ReactiveProgression.CreateApplicationProgression progression1 = progression.withSubLabel("viewCreation");
-        progression1.pushMessage(START, Map.of(APPLICATION_NAME, application.getName()));
-        progression1.incrementAndPush(i -> ReactiveProgression.CreateApplicationProgression.PROGRESSION_FOR_READING_CONFIGURATION.progress());
+        ReactiveEventHelper helperViewCreation = eventHelper.withSubLabel("viewCreation");
+        helperViewCreation.pushMessage(START, Map.of(APPLICATION_NAME, application.getName()));
+        helperViewCreation.incrementAndPush(i -> 0.5D); // Valeur arbitraire basée sur l'ancien code
         //TODO
-        progression1.pushMessage(END, Map.of(APPLICATION_NAME, application.getName()));
-        progression1.pushResult(application.getId());
-        progression1.incrementAndPush(i -> 1D);
-        progression1.complete();
+        helperViewCreation.pushMessage(END, Map.of(APPLICATION_NAME, application.getName()));
+        helperViewCreation.pushResult(application.getId());
+        helperViewCreation.incrementAndPush(i -> 1D);
+        helperViewCreation.complete();
     }
 
     public ApplicationResult buildOpenAdom(final Application application, final String[] filter) {
@@ -227,10 +229,13 @@ public class ApplicationService{
 
     @Transactional()
     public UUID changeApplicationConfiguration(
-            ReactiveProgression.ChangeApplicationProgression progression,
+            Consumer<ReactiveResult> sink,
             final String nameOrId,
             final DataFile dataFile,
             final String comment) {
+        
+        ReactiveEventHelper eventHelper = new ReactiveEventHelper(sink, "application.ChangeConfiguration");
+        
         final Application application = getApplication(nameOrId);
         Objects.requireNonNull(OreSiApiRequestContext.getAuthentication()
                         .map(OreSiAuthenticationToken::getApplicationPersona)
@@ -238,21 +243,22 @@ public class ApplicationService{
                         .map(ApplicationManager.class::cast)
                         .orElse(null))
                 .canUpdateApplication();
-        ReactiveProgression.ChangeApplicationProgression progression1 = progression;
-        progression1.pushProgression();
+        
+        eventHelper.pushProgress(0D);
         serviceContainer.relationalService().dropViews(nameOrId);
         serviceContainer.authenticationService().setRoleForClient();
         final Configuration oldConfiguration = application.getConfiguration();
         final UUID oldConfigFileId = application.getConfigFile();
         try {
-            progression1 = (ReactiveProgression.ChangeApplicationProgression) changeApplicationConfiguration(comment,
-                    progression1,
+            ReactiveEventHelper helperMigrate = changeApplicationConfiguration(comment,
+                    eventHelper,
                     application,
                     dataFile,
                     this::modifySchemaApplication
             ).up().withSubLabel("migrate");
+            // Note: helperMigrate is not really used afterwards in the original code except for errors
         } catch (final IOException e) {
-            progression1.pushError(e);
+            eventHelper.pushError(e);
         }
         final String applicationName = application.getName();
         final Configuration newConfiguration = serviceContainer.applicationService().getApplication(applicationName).getConfiguration();
@@ -262,8 +268,8 @@ public class ApplicationService{
         try {
             Preconditions.checkArgument(newVersion.compareTo(oldVersion) > 0, "l'application " + applicationName + " est déjà dans la version " + oldVersion);
         } catch (final IllegalArgumentException e) {
-            progression1.pushError(e);
-            progression1.pushMessage(START, Map.of("application", applicationName, "oldVersion", oldVersion.version(), "newVersion", newVersion.version()));
+            eventHelper.pushError(e);
+            eventHelper.pushMessage(START, Map.of("application", applicationName, "oldVersion", oldVersion.version(), "newVersion", newVersion.version()));
         }
         if (log.isInfoEnabled()) {
             log.info("va migrer les données de {} de la version actuelle {} à la nouvelle version {}", applicationName, oldVersion, newVersion);
@@ -276,31 +282,31 @@ public class ApplicationService{
         return application.getId();
     }
 
-    private ReactiveProgression.ChangeOrCreateApplicationProgression changeApplicationConfiguration(
+    private ReactiveEventHelper changeApplicationConfiguration(
             String comment,
-            final ReactiveProgression.ChangeOrCreateApplicationProgression progression,
+            final ReactiveEventHelper eventHelper,
             Application application,
             final DataFile configurationFile,
             final UnaryOperator<Application> createOrModifySchema) throws IOException {
         String applicationName = application.getName();
         OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
         UUID oldApplicationId = application.getId();
-        ReactiveProgression.ChangeOrCreateApplicationProgression progressionForConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression.withSubLabel("configuration");
-        progressionForConfiguration.pushMessage("rights.checking", Map.of(APPLICATION_NAME, applicationName));
-        progressionForConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForConfiguration.incrementAndPush(i -> i + .02);
-        final ReactiveProgression.ChangeOrCreateApplicationProgression progressionForParsingConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForConfiguration.withSubLabel("parsingConfiguration");
+        ReactiveEventHelper helperConfiguration = eventHelper.withSubLabel("configuration");
+        helperConfiguration.pushMessage("rights.checking", Map.of(APPLICATION_NAME, applicationName));
+        helperConfiguration.incrementAndPush(i -> i + .02);
+        final ReactiveEventHelper helperParsingConfiguration = helperConfiguration.withSubLabel("parsingConfiguration");
         if (Objects.requireNonNull(configurationFile.fileName()).matches(".*\\.zip")) {
             InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile);
-            progressionForParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(multiYAmlInput));
+            helperParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
+            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(multiYAmlInput));
         } else {
-            progressionForParsingConfiguration.pushMessage("forSingle", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(configurationFile.inputStream()));
+            helperParsingConfiguration.pushMessage("forSingle", Map.of(APPLICATION_NAME, applicationName));
+            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(configurationFile.inputStream()));
         }
         if (application == null) {
-            return progression;
+            return eventHelper;
         }
-        progression.fluxSink().next(new ReactiveTypeInfo<>("application.configuration.create.register.start", Map.of(APPLICATION_NAME, applicationName)));
+        eventHelper.pushMessage("application.configuration.create.register.start", Map.of(APPLICATION_NAME, applicationName));
 
         final Configuration configuration = application.getConfiguration();
         application.setId(oldApplicationId);
@@ -314,7 +320,7 @@ public class ApplicationService{
         } else {
             application.setAdditionalFiles(List.of());
         }
-        progressionForParsingConfiguration.pushMessage("endparsing", Map.of(APPLICATION_NAME, applicationName));
+        helperParsingConfiguration.pushMessage("endparsing", Map.of(APPLICATION_NAME, applicationName));
         String comment1 = configuration.applicationDescription().comment();
         Optional.of(applicationName).ifPresent(application::setName);
         try {
@@ -327,53 +333,71 @@ public class ApplicationService{
                     .orElse((new Timestamp(Long.MIN_VALUE)));
             application.setLastChartes(charteLastTimestamp);
             repository.application().store(application);
-            final ReactiveProgression.ChangeOrCreateApplicationProgression progressionRegister = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForParsingConfiguration.up();
-            progressionRegister.pushMessage("register", Map.of(APPLICATION_NAME, applicationName));
+            final ReactiveEventHelper helperRegister = helperParsingConfiguration.up();
+            helperRegister.pushMessage("register", Map.of(APPLICATION_NAME, applicationName));
 
-            return progressionRegister;
+            return helperRegister;
         } catch (final BadSqlGrammarException bsge) {
             throw new NotApplicationCreatorRightsException(applicationName, currentUser.getAuthorizations());
         }
     }
 
-    public void getApplications(ReactiveProgression.GetApplicationProgression progression, final List<ApplicationInformation> filters) {
-        serviceContainer.authenticationService().setRoleForClient();
-        final List<Application> applicationForUser = repository.application().findAll();
-        serviceContainer.authenticationService().setRoleAdmin();
-        final Stream<Application> applicationForAdmin = repository.application().findAllStream();
-        final AtomicLong progres = new AtomicLong(0);
-        progression.fluxSink().next(new ReactiveTypeProgress(progres.get()));
-        CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
-        Function<Application, List<ApplicationResult.DataSynthesis>> getDatynthesis = application ->
-                serviceContainer.dataService().getReferenceSynthesis(application);
+    public Flux<ReactiveResult> getApplications(final List<ApplicationInformation> filters) {
+        return Mono.fromCallable(() -> {
+                    // Charger les applications
+                    serviceContainer.authenticationService().setRoleForClient();
+                    final List<Application> applicationForUser = repository.application().findAll();
 
-        applicationForAdmin
-                .map(application -> applicationForUser.stream()
-                        .filter(app -> app.getId().equals(application.getId()))
-                        .findAny()
-                        .orElse(application.applicationAccordingToRights())
-                )
-                .map(application -> application.filterFieldsAndHidden(filters))
-                .map(application -> ApplicationLightResult.of(application, currentUserRoles, getDatynthesis.apply(application)))
-                .forEach(application -> {
-                    progression.fluxSink().next(new ReactiveTypeResult<ApplicationLightResult>(application));
-                    final double prog = progres.incrementAndGet() / ((double) applicationForUser.size());
-                    progression.fluxSink().next(new ReactiveTypeProgress<Double>(prog));
+                    serviceContainer.authenticationService().setRoleAdmin();
+                    return repository.application().findAllStream()
+                            .map(application -> applicationForUser.stream()
+                                    .filter(app -> app.getId().equals(application.getId()))
+                                    .findAny()
+                                    .orElse(application.applicationAccordingToRights())
+                            )
+                            .toList();
+                })
+                .flatMapMany(allApplications -> {
+                    CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
+                    int total = allApplications.size();
+
+                    return Flux.fromIterable(allApplications)
+                            .index()
+                            .flatMap(tuple -> {
+                                long index = tuple.getT1();
+                                Application app = tuple.getT2();
+
+                                // Traiter l'application
+                                Application filtered = app.filterFieldsAndHidden(filters);
+                                List<ApplicationResult.DataSynthesis> synthesis = serviceContainer.dataService().getReferenceSynthesis(filtered);
+                                ApplicationLightResult result = ApplicationLightResult.of(filtered, currentUserRoles, synthesis);
+
+                                // Calculer la progression
+                                double progress = (index + 1.0) / total;
+
+                                // Émettre résultat + progression
+                                return Flux.just(
+                                        new ReactiveTypeResult<>(result),
+                                        new ReactiveTypeProgress(progress)
+                                );
+                            });
                 });
-        progression.complete();
     }
 
-    public Application validateConfiguration(final ReactiveProgression.CreateApplicationProgression fluxSink, final DataFile file) {
+
+
+    public Application validateConfiguration(final Consumer<ReactiveResult> sink, final DataFile file) {
+        ReactiveEventHelper eventHelper = new ReactiveEventHelper(sink, "application.createConfiguration");
         try {
             final Application application;
             if (Objects.requireNonNull(file.fileName()).matches(".*\\.zip")) {
-                application = ApplicationConfigurationService.unzipConfiguration(file, fluxSink);
+                application = ApplicationConfigurationService.unzipConfiguration(file, eventHelper);
             } else {
-                application = ApplicationConfigurationService.parseConfigurationBytes("","", fluxSink, FileBomResolver.of(file.inputStream()));
+                application = ApplicationConfigurationService.parseConfigurationBytes("","", eventHelper, FileBomResolver.of(file.inputStream()));
             }
             return application;
         } catch (final IOException e) {
-            fluxSink.pushError(e);
+            eventHelper.pushError(e);
             return null;
         }
     }

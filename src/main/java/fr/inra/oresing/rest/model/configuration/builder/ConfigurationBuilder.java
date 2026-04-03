@@ -10,14 +10,14 @@ import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
 import fr.inra.oresing.rest.model.configuration.JacksonErrorParser;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
-import fr.inra.oresing.rest.reactive.ReactiveProgression;
+import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 
 import java.io.IOException;
 import java.io.InputStream;
 
 public record ConfigurationBuilder(RootBuilder rootBuilder) {
 
-    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Configuration build(final InputStream inputStream, final P progression, final String comment) {
+    public static Configuration build(final InputStream inputStream, final ReactiveEventHelper eventHelper, final String comment) {
 
         final YAMLMapper mapper = YAMLMapper.builder().build();
         mapper.enable(JsonParser.Feature.STRICT_DUPLICATE_DETECTION);
@@ -27,16 +27,16 @@ public record ConfigurationBuilder(RootBuilder rootBuilder) {
             rootNode = mapper.readTree(inputStream);
             documentContext = JsonPath.parse(mapper.writeValueAsString(rootNode));
         } catch (JsonParseException jpe) {
-            progression.pushError(JacksonErrorParser.parse(jpe));
-            progression.complete();
+            eventHelper.pushError(JacksonErrorParser.parse(jpe));
+            eventHelper.complete();
             return null;
         } catch (final IOException e) {
-            progression.pushError(new ValidationError(ConfigurationException.INVALID_CONFIGURATION_FILE.getMessage()));
-            progression.complete();
+            eventHelper.pushError(new ValidationError(ConfigurationException.INVALID_CONFIGURATION_FILE.getMessage()));
+            eventHelper.complete();
             return null;
         }
         return new RootBuilder(
-                progression,
+                eventHelper,
                 rootNode,
                 documentContext
         ).build(inputStream, comment);

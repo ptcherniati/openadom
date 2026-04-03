@@ -3,25 +3,18 @@ package fr.inra.oresing.rest.data;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.*;
-import fr.inra.oresing.domain.ComponentPresenceConstraint;
-import fr.inra.oresing.domain.GroovyDataInjectionConfiguration;
 import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationTitle;
 import fr.inra.oresing.domain.checker.CheckerFactory;
 import fr.inra.oresing.domain.checker.LineChecker;
-import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.*;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.ContextConstants;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
-import fr.inra.oresing.domain.data.deposit.context.column.*;
-import fr.inra.oresing.domain.data.menu.MenuType;
-import fr.inra.oresing.domain.data.menu.ReferenceScope;
 import fr.inra.oresing.domain.data.rapport.BundleReport;
 import fr.inra.oresing.domain.data.rapport.Manifest;
 import fr.inra.oresing.domain.data.read.query.*;
@@ -30,14 +23,10 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.domain.file.FileOrUUID;
+import fr.inra.oresing.domain.fileprocessor.WorkflowOrchestratorImportBuilder;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
-import fr.inra.oresing.domain.groovy.Expression;
-import fr.inra.oresing.domain.groovy.GroovyContextHelper;
-import fr.inra.oresing.domain.groovy.StringGroovyExpression;
-import fr.inra.oresing.domain.groovy.StringSetGroovyExpression;
-import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguration;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.persistence.data.read.bundle.FileContent;
 import fr.inra.oresing.rest.HierarchicalReferenceAsTree;
@@ -50,7 +39,6 @@ import fr.inra.oresing.rest.model.data.LineCheckerResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -94,7 +82,8 @@ public class DataService {
     private final JsonRowMapper jsonRowMapper;
     private final OreSiRepository repository;
     private final FileRepository fileRepository;
-    private PlatformTransactionManager transactionManager;
+    private final PlatformTransactionManager transactionManager;
+    private final WorkflowOrchestratorImportBuilder orchestratorImportBuilder;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -106,7 +95,7 @@ public class DataService {
             OreSiRepository repository,
             FileRepository fileRepository,
             ServiceContainer serviceContainer,
-            PlatformTransactionManager transactionManager,
+            PlatformTransactionManager transactionManager, WorkflowOrchestratorImportBuilder orchestratorImportBuilder,
             @Qualifier("fastServiceExecutor") Executor fastExecutor,      // ✅ Fast executor
             @Qualifier("normalServiceExecutor") Executor normalExecutor,  // ✅ Normal executor
             @Qualifier("heavyServiceExecutor") Executor heavyExecutor,    // ✅ Heavy executor
@@ -118,47 +107,11 @@ public class DataService {
         this.fileRepository = fileRepository;
         this.serviceContainer = serviceContainer;
         this.transactionManager = transactionManager;
+        this.orchestratorImportBuilder = orchestratorImportBuilder;
         this.fastExecutor = fastExecutor;
         this.normalExecutor = normalExecutor;
         this.heavyExecutor = heavyExecutor;
         this.backupExecutor = backupExecutor;
-    }
-
-    private static ImmutableSet<Column> dynamicColumnDescriptionToColumns(final DataRepository referenceValueRepository, final DataColumn referenceColumn, final ReferenceDynamicColumnDescription referenceDynamicColumnDescription, TransformationConfiguration defaultValue) {
-        final String reference = referenceDynamicColumnDescription.reference();
-        final DataColumn referenceColumnToLookForHeader = new DataColumn(referenceDynamicColumnDescription.referenceColumnToLookForHeader());
-        final List<DataValue> allByReferenceType = referenceValueRepository.findAllByReferenceTypeStream(reference)
-                .toList();
-        return allByReferenceType.stream()
-                .map(referenceValue -> {
-                    final DataDatum referenceDatum = referenceValue.getRefValues();
-                    final Ltree naturalKey = referenceValue.getNaturalKey();
-                    final DataColumnSingleValue referenceColumnValue = (DataColumnSingleValue) referenceDatum.get(referenceColumnToLookForHeader);
-                    final String header = referenceColumnValue.getValue().toString();
-                    final String fullHeader = referenceDynamicColumnDescription.headerPrefix() + header;
-                    final ComponentPresenceConstraint presenceConstraint = referenceDynamicColumnDescription.presenceConstraint();
-                    return new DynamicColumn(
-                            referenceColumn,
-                            presenceConstraint,
-                            naturalKey,
-                            Map.entry(reference, new RefsLinkedToValue(
-                                            Set.of(referenceValue.getId()),
-                                            naturalKey
-                                    )
-                            ),
-                            defaultValue == null ? ComputedValueUsage.NOT_COMPUTED : ComputedValueUsage.USE_COMPUTED_AS_DEFAULT_VALUE,
-                            defaultValue) {
-                        @Override
-                        public String getExpectedHeader() {
-                            return fullHeader;
-                        }
-
-                        @Override
-                        public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
-                            throw new UnsupportedOperationException("pas de valeur calculable pour " + referenceColumn);
-                        }
-                    };
-                }).collect(ImmutableSet.toImmutableSet());
     }
 
     @Transactional()
@@ -175,15 +128,25 @@ public class DataService {
                          final InputStream file,
                          final FileOrUUID fileOrUUID) throws IOException {
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
-        DataImporterContext referenceImporterContext = getDataImporterContext(application, refType, fileOrUUID);
-        final Consumer<Path> storeAll = (final Path csvFile) -> {
-            referenceValueRepository.storeAll(
-                    csvFile
-            );
-            //referenceValueRepository.updateConstraintForeignReferences(uuids);
-        };
-        final DataImporter referenceImporter = new DataImporter(referenceImporterContext, storeAll);
-        referenceImporter.doImport(FileBomResolver.of(file), fileOrUUID.fileid());
+        AsynchroneFileImporterContext referenceImporterContext = getAsynchroneImporterContext(
+                application,
+                refType,
+                fileOrUUID
+        );
+
+        final DataImporter referenceImporter = new DataImporter(referenceImporterContext);
+        Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file));
+        final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
+        orchestratorImportBuilder.execute(
+                referenceImporter,
+                referenceValueRepository,
+                path,
+                userId
+        );
+        //final Path toMerge = referenceImporter.doDataTreatment(path, sharedContext, chunkInfo, workflowProperties, lifecycleManager);
+        /*referenceImporter.treatErrors();
+        referenceValueRepository.storeAll(toMerge);*/
+
     }
 
     public HierarchicalReferenceAsTree getHierarchicalReferenceAsTree(final Application application, final String lowestLevelReference) {
@@ -224,33 +187,23 @@ public class DataService {
         return new HierarchicalReferenceAsTree(ImmutableSetMultimap.copyOf(tree), roots);
     }
 
-    public DataImporterContext getDataImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
+    public AsynchroneFileImporterContext getAsynchroneImporterContext(final Application application, final String dataName, final FileOrUUID fileOrUUID) {
         final DataRepository referenceValueRepository = getReferenceValueRepository(application);
         final Configuration configuration = application.getConfiguration();
         final CheckerFactory checkerFactory = new CheckerFactory(referenceValueRepository);
-        Function<String, List<DataValue>> getDatavaluesByReference = reference -> referenceValueRepository.findAllByReferenceTypeStream(reference).toList();
+        Function<String, List<DataValue>> getDatavaluesByReference = reference -> referenceValueRepository.findAllByReferenceType(reference);
         PublishContext.PublishContextBuilder publishContextBuilder = new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference);
-        final ImmutableSet<LineChecker<FieldType<?>>> lineCheckers = checkerFactory.getCheckers(application, dataName,
+        final ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers = checkerFactory.getCheckers(application, dataName,
                 publishContextBuilder);
-        ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences = referenceValueRepository.getDataIdPerKeys(dataName);
-
-        final StandardDataDescription referenceDescription = configuration.dataDescription().get(dataName);
-        final boolean allowUnexpectedColumns = referenceDescription.allowUnexpectedColumns();
-        final Map<Class<? extends ComponentDescription>, List<Map.Entry<String, ComponentDescription>>> componentDescriptionEntryByComputedType = referenceDescription.componentDescriptions()
-                .entrySet().stream()
-                .collect(Collectors.groupingBy(entry -> (entry.getValue().getClass())));
-
-        BuildColumns result = buildColumns(componentDescriptionEntryByComputedType, referenceValueRepository);
-
-        ContextConstants constants = ContextConstants.with(
+        final ContextConstants contextConstants = ContextConstants.with(
                 application,
                 dataName);
-        final Set<String> patternColumnsNames = Optional.ofNullable(constants.displayPattern())
+        final Set<String> patternColumnsNames = Optional.ofNullable(contextConstants.displayPattern())
                 .map(InternationalizationTitle::getTitle)
                 .map(Map::values)
                 .map(HashSet::new)
                 .orElseGet(HashSet::new);
-        final Set<String> patternColumnsDescription = Optional.ofNullable(constants.displayPattern())
+        final Set<String> patternColumnsDescription = Optional.ofNullable(contextConstants.displayPattern())
                 .map(InternationalizationTitle::getDescription)
                 .map(Map::values)
                 .map(HashSet::new)
@@ -272,223 +225,14 @@ public class DataService {
                                                 .map(List::getFirst)
                                                 .orElse(ref),
                                 ref -> getReferenceValueRepository(application).findDisplayByNaturalKey(ref)));
-        Map<String, Map<String, Map<String, String>>> displayDescriptionsByReferenceAndNaturalKey =
-                lineCheckers.stream()
-                        .filter(lc -> lc.underlyingType() instanceof ReferenceType)
-                        .map(lc -> ((ReferenceType) lc.underlyingType()).getRefType())
-                        .filter(patternColumnsDescription::contains)
-                        .collect(Collectors.toMap(ref ->
-                                        Optional.ofNullable(referenceToColumnName.getOrDefault(ref, null))
-                                                .map(List::getFirst)
-                                                .orElse(ref),
-                                ref -> getReferenceValueRepository(application).findDisplayByNaturalKey(ref)));
-        List<ReferenceScope.NodeDescription> nodesForMenu = referenceValueRepository.getNodesForMenu(MenuType.authorization);
-        return new DataImporterContext(
-                constants,
+        return AsynchroneFileImporterContext.of(
+                contextConstants,
+                new PublishContext.PublishContextBuilder(application, dataName, fileOrUUID, getDatavaluesByReference),
                 lineCheckers,
-                storedReferences,
-                result.columns(),
-                result.patternColumnFactory(),
-                jsonRowMapper,
                 displayNamesByReferenceAndNaturalKey,
-                displayDescriptionsByReferenceAndNaturalKey,
-                allowUnexpectedColumns,
-                dataName,
-                publishContextBuilder,
-                nodesForMenu
+                jsonRowMapper,
+                referenceValueRepository
         );
-    }
-
-
-    private DataService.BuildColumns buildColumns(Map<Class<? extends ComponentDescription>, List<Map.Entry<String, ComponentDescription>>> componentDescriptionEntryByComputedType, DataRepository referenceValueRepository) {
-        final ImmutableSet<Column> staticColumns = componentDescriptionEntryByComputedType
-                .getOrDefault(
-                        BasicComponent.class,
-                        new LinkedList<>()
-                ).stream()
-                .map(entry -> {
-                    final ComponentDescription basicComponent = entry.getValue();
-                    final TransformationConfiguration defaultValue = basicComponent.defaultValue();
-                    final DataColumn referenceColumn = new DataColumn(entry.getKey());
-                    final String headerForReferenceColumn = Optional.of(basicComponent)
-                            .map(ComponentDescription::importHeader)
-                            .orElse(entry.getKey());
-                    final ComponentPresenceConstraint mandatory = Optional.of(basicComponent)
-                            .map(ComponentDescription::mandatory)
-                            .orElse(ComponentPresenceConstraint.MANDATORY);
-                    final Set<? extends Tag> tags = Optional.of(basicComponent)
-                            .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.instance()));
-                    final CheckerDescription checker = Optional.of(basicComponent)
-                            .map(ComponentDescription::checker)
-                            .orElse(null);
-                    final Multiplicity multiplicity = Optional.ofNullable(basicComponent.checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
-                    return Optional.ofNullable(defaultValue)
-                            .map(defaultValueConfiguration -> Column.staticColumnDescriptionToColumn(
-                                    referenceColumn,
-                                    headerForReferenceColumn,
-                                    mandatory,
-                                    multiplicity,
-                                    defaultValueConfiguration))
-                            .orElseGet(() -> Column.staticColumnDescriptionToColumn(
-                                    referenceColumn,
-                                    headerForReferenceColumn,
-                                    mandatory,
-                                    multiplicity,
-                                    defaultValue));
-                }).collect(ImmutableSet.toImmutableSet());
-
-        final ImmutableSet<Column> computedColumns = componentDescriptionEntryByComputedType
-                .getOrDefault(
-                        ComputedComponent.class,
-                        new LinkedList<>()
-                ).stream()
-                .map(entry -> {
-                    final DataColumn referenceColumn = new DataColumn(entry.getKey());
-                    final ComputedComponent computedComponent = (ComputedComponent) entry.getValue();
-                    final Multiplicity multiplicity = Optional.ofNullable(computedComponent)
-                            .map(ComputedComponent::checker)
-                            .map(CheckerDescription::multiplicity)
-                            .orElse(Multiplicity.ONE);
-
-                    final ComponentPresenceConstraint mandatory = Optional.ofNullable(computedComponent)
-                            .map(ComponentDescription::mandatory)
-                            .orElse(ComponentPresenceConstraint.MANDATORY);
-                    final Set<? extends Tag> tags = Optional.ofNullable(computedComponent)
-                            .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.instance()));
-                    final CheckerDescription checker = Optional.ofNullable(computedComponent)
-                            .map(ComputedComponent::computationChecker)
-                            .orElse(null);
-                    final String headerForReferenceColumn = Optional.ofNullable(entry.getValue())
-                            .map(ComponentDescription::importHeader)
-                            .orElse(entry.getKey());
-                    final ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription =
-                            new ReferenceStaticComputedColumnDescription(
-                                    mandatory,
-                                    tags,
-                                    checker,
-                                    headerForReferenceColumn,
-                                    Objects.requireNonNull(computedComponent).transformation());
-                    return computedColumnDescriptionToColumn(referenceValueRepository, referenceColumn, multiplicity, referenceStaticComputedColumnDescription);
-                }).collect(ImmutableSet.toImmutableSet());
-
-        final ImmutableSet<Column> dynamicColumns = componentDescriptionEntryByComputedType
-                .getOrDefault(
-                        DynamicComponent.class,
-                        new LinkedList<>()).stream()
-                .flatMap(entry -> {
-                    final DataColumn referenceColumn = new DataColumn(entry.getKey());
-                    final DynamicComponent dynamicComponent = (DynamicComponent) entry.getValue();
-                    final ComponentPresenceConstraint mandatory = Optional.ofNullable(dynamicComponent)
-                            .map(ComponentDescription::mandatory)
-                            .orElse(ComponentPresenceConstraint.MANDATORY);
-                    final Set<? extends Tag> tags = Optional.ofNullable(dynamicComponent)
-                            .map(ComponentDescription::tags)
-                            .orElse(Set.of(Tag.NoTag.instance()));
-                    final Multiplicity multiplicity = Optional.ofNullable(Objects.requireNonNull(dynamicComponent).checker()).map(CheckerDescription::multiplicity).orElse(Multiplicity.ONE);
-                    final ReferenceDynamicColumnDescription referenceDynamicColumnDescription =
-                            new ReferenceDynamicColumnDescription(
-                                    mandatory,
-                                    tags,
-                                    null,
-                                    dynamicComponent.prefix(),
-                                    dynamicComponent.reference(),
-                                    dynamicComponent.referenceColumnToLookForHeader()
-                            );
-                    final ImmutableSet<Column> valuedDynamicColumns = dynamicColumnDescriptionToColumns(referenceValueRepository, referenceColumn, referenceDynamicColumnDescription, dynamicComponent.defaultValue());
-                    return valuedDynamicColumns.stream();
-                }).collect(ImmutableSet.toImmutableSet());
-
-        final PatternColumnFactory patternColumnFactory = PatternColumnFactory.of(
-                referenceValueRepository,
-                componentDescriptionEntryByComputedType.getOrDefault(
-                                PatternComponent.class,
-                                new LinkedList<>())
-                        .stream()
-                        .collect(Collectors.toMap(Map.Entry::getKey, e -> (PatternComponent) e.getValue()))
-        );
-
-        final ImmutableSet<Column> columns = ImmutableSet.<Column>builder()
-                .addAll(staticColumns)
-                .addAll(computedColumns)
-                .addAll(dynamicColumns)
-                .build();
-        return new BuildColumns(patternColumnFactory, columns);
-    }
-
-    private Column computedColumnDescriptionToColumn(final DataRepository referenceValueRepository,
-                                                     final DataColumn referenceColumn,
-                                                     final Multiplicity multiplicity,
-                                                     final ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription) {
-        Column column = null;
-        if (multiplicity == Multiplicity.ONE) {
-            column = newComputedColumn(referenceColumn, referenceStaticComputedColumnDescription, referenceValueRepository);
-        } else if (multiplicity == Multiplicity.MANY) {
-            column = newComputedManyColumn(referenceColumn, referenceStaticComputedColumnDescription, referenceValueRepository);
-        } else {
-            //TODO throw Multiplicity.getError(multiplicity);
-        }
-        return column;
-    }
-
-    private Column newComputedManyColumn(final DataColumn referenceColumn, final ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription, final DataRepository referenceValueRepository) {
-        final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
-        final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
-        final Expression<Set<String>> computationExpression = StringSetGroovyExpression.forExpression(computation.expression());
-        return new ManyValuesStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
-            @Override
-            public String getExpectedHeader() {
-                throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié car elle ne doit pas être dans le CSV");
-            }
-
-            @Override
-            public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
-                final ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
-                        .putAll(contextForExpression)
-                        .putAll(referenceDatum.getEvaluationContext())
-                        .build();
-                final Set<String> evaluate = computationExpression.evaluate(evaluationContext);
-                return Optional.ofNullable(evaluate)
-                        .map(l -> l.stream().map(StringType::getStringTypeFromStringValue)
-                                .collect(Collectors.toCollection(LinkedList<FieldType<?>>::new)))
-                        .map(DataColumnMultipleValue::new);
-            }
-        };
-    }
-
-    private Column newComputedColumn(final DataColumn referenceColumn, final ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription, final DataRepository referenceValueRepository) {
-        final TransformationConfiguration computation = referenceStaticComputedColumnDescription.computation();
-        final Map<String, Object> contextForExpression = computeGroovyContext(referenceValueRepository, computation);
-        final Expression<String> computationExpression = StringGroovyExpression.forExpression(computation.expression(), computation.exceptionMessages());
-        return new OneValueStaticColumn(referenceColumn, referenceColumn.column(), ComponentPresenceConstraint.ABSENT, ComputedValueUsage.USE_COMPUTED_VALUE, null) {
-            @Override
-            public String getExpectedHeader() {
-                throw new UnsupportedOperationException("la colonne " + referenceColumn + " est calculée, il n'y a pas d'entête spécifié");
-            }
-
-            @Override
-            public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
-                final ImmutableMap<String, Object> evaluationContext = ImmutableMap.<String, Object>builder()
-                        .putAll(contextForExpression)
-                        .putAll(referenceDatum.getEvaluationContext())
-                        .build();
-                final String evaluate = computationExpression.evaluate(evaluationContext);
-                return Optional.ofNullable(evaluate)
-                        .map(s -> StringUtils.isEmpty(s) ? "" : s)
-                        .map(StringType::getStringTypeFromStringValue)
-                        .map(DataColumnSingleValue::new);
-            }
-        };
-    }
-
-    private Map<String, Object> computeGroovyContext(final DataRepository referenceValueRepository, final GroovyDataInjectionConfiguration groovyDataInjectionConfiguration) {
-        if (Optional.ofNullable(groovyDataInjectionConfiguration)
-                .map(GroovyDataInjectionConfiguration::getReferences).isEmpty()) {
-            return Map.of();
-        }
-        final Set<String> configurationReferences = groovyDataInjectionConfiguration.getReferences();
-        return GroovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, null);
     }
 
     public List<DataValue> findReference(final String nameOrId, final String refType, final MultiValueMap<String, String> params) {
@@ -520,6 +264,7 @@ public class DataService {
         serviceContainer.authenticationService().setRoleForClient();
         return getReferenceValueRepository(application).deleteReferenceType(refType, params);
     }
+
 
     public Flux<DataRow> findDataFlux(final DownloadDatasetQuery downloadDatasetQuery) {
         final Application application = downloadDatasetQuery.application();
@@ -577,7 +322,7 @@ public class DataService {
                 .orElseThrow(() -> new IllegalStateException("can't find application %s".formatted(downloadDatasetQuery.dataName())));
         final AtomicLong counter = new AtomicLong();
         DataCsvBuilder
-                .getDataCsvBuilder((appOrName, referenceType) -> getDataImporterContext(application, referenceType, null))
+                .getDataCsvBuilder((appOrName, referenceType) -> getAsynchroneImporterContext(application, referenceType, null))
                 .withDownloadDatasetQuery(downloadDatasetQuery)
                 .withReferenceService(this)
                 .onRepositories(getDataRepository(application), null)
@@ -752,7 +497,7 @@ public class DataService {
         final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
         try {
             AdditionalFileRepository additionalFileRepository = repository.getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
-            return DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> serviceContainer.dataService().getDataImporterContext(downloadDatasetQuery.application(), referenceType, null))
+            return DataCsvBuilder.getDataCsvBuilder((applicationNameOrId, referenceType) -> serviceContainer.dataService().getAsynchroneImporterContext(downloadDatasetQuery.application(), referenceType, null))
                     .withDownloadDatasetQuery(downloadDatasetQuery)
                     .withReferenceService(serviceContainer.dataService())
                     .withZipRepository(zipRepository)
@@ -1047,9 +792,6 @@ private PlatformTransactionManager transactionManager;
 
     public Flux<FilterList> filterList(final Application application, final String refType) {
         return repository.getRepository(application).data().getFilterList(refType);
-    }
-
-    private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
     }
 
     public void readEntry(File zipBundleFile, String entryName, Consumer<InputStream> consumer) throws IOException {

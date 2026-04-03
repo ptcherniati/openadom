@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.groovy.GroovyExpression;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.Objects;
 
 public class GroovyException extends OreSiTechnicalException implements Serializable {
     public static final String DEFAULT_MESSAGE = "BAD_VALUE_FOR_EXPRESSION";

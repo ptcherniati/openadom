@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.data;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
@@ -59,7 +58,8 @@ class TsvLineRecordTest {
     @Test
     public void testToLine() throws IOException {
         DataValue dataValue = (DataValue) mapper.readValue(dataValueJson, DataValue.class);
-        final Map<String, String> map = (Map<String, String>) mapper.getJsonMapper().readValue( mapper.toJson(dataValue), new TypeReference<Map<String, String>>() {});
+        final Map<String, String> map = mapper.getJsonMapper().readValue(mapper.toJson(dataValue), new TypeReference<Map<String, String>>() {
+        });
         final TsvLineRecord tsvLineRecord = TsvLineRecord.of(
                 map, ORDERED_COLUMNS, mapper
         );

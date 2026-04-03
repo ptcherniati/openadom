@@ -1,8 +1,6 @@
 package fr.inra.oresing.rest;
 
 import com.google.common.collect.ImmutableSet;
-import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.Tag;
@@ -14,17 +12,11 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.fixtures.AcbbFixture;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.reactive.*;
+import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import fr.inra.oresing.rest.services.ApplicationConfigurationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.*;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.FluxSink;
 
@@ -44,17 +36,10 @@ import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.junit.jupiter.api.Assertions.*;
 
-@ActiveProfiles("testmail")
-@SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
-
-@TestPropertySource(locations = "classpath:/application-tests.properties")
-@AutoConfigureWebMvc
-@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Slf4j
 @org.junit.jupiter.api.Tag("SUITE")
 @org.junit.jupiter.api.Tag("core.config")
-public class ApplicationConfigurationServiceTest {
+public class ApplicationConfigurationServiceTest extends AbstractIntegrationTest {
 
     public static final Map<String, List<ReactiveResult>> errors = new HashMap<>();
     protected TestConfigurationBuilder CONFIGURATION_INSTANCE;
@@ -73,10 +58,6 @@ public class ApplicationConfigurationServiceTest {
 
     private static Flux<ReactiveResult> buildFluxRequestJDJson(final Consumer<FluxSink<ReactiveResult>> fluxSink) {
         return Flux.create(fluxSink);
-    }
-
-    record TestCase(String testName, String from, String to,
-                    java.util.function.Consumer<List<ValidationError>> assertion) {
     }
 
     static Stream<TestCase> yamlTestCases() {
@@ -204,7 +185,7 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testInvalidDurationForCheckerDate",
                         "          OA_name: OA_date\n" +
-                                "          OA_params:",
+                        "          OA_params:",
                         """
                                           OA_name: OA_date
                                           OA_params:
@@ -361,9 +342,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testmissingRequiredValueInTimeScopeInSubmission",
                         "        OA_timeScope:\n" +
-                                "          OA_component: date",
+                        "          OA_component: date",
                         "        OA_timeScope:\n" +
-                                "          OA_component: ",
+                        "          OA_component: ",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -374,7 +355,7 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testMissingAnyMandatoriesSectionsForAuthorization",
                         "            OA_reference: projet\n" +
-                                "            OA_component: projet",
+                        "            OA_component: projet",
                         "",
                         errors -> {
                             assertEquals(1, errors.size());
@@ -390,9 +371,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testmissingComponentNameForAuthorization",
                         "            OA_reference: projet\n" +
-                                "            OA_component: projet",
+                        "            OA_component: projet",
                         "            OA_reference: projet\n" +
-                                "            OA_component:",
+                        "            OA_component:",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -528,7 +509,7 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testMissingReferencesForAuthorization",
                         "            OA_reference: projet\n" +
-                                "            OA_component: projet",
+                        "            OA_component: projet",
                         "            OA_component: projet",
                         errors -> {
                             assertEquals(1, errors.size());
@@ -541,9 +522,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testMissingRequiredValueForAuthorization",
                         "            OA_reference: projet\n" +
-                                "            OA_component: projet",
+                        "            OA_component: projet",
                         "            OA_reference:\n" +
-                                "            OA_component: projet",
+                        "            OA_component: projet",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -555,9 +536,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testUnknownColumnNumberToFirstRowLineInConstantComponents",
                         "OA_rowNumber: 1\n" +
-                                "          OA_columnNumber: 2",
+                        "          OA_columnNumber: 2",
                         "OA_rowNumber: 1\n" +
-                                "          OA_columnNumber: -1",
+                        "          OA_columnNumber: -1",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -568,9 +549,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testUnknownColumnNumberToFirstRowLineInConstantComponents",
                         "          OA_rowNumber: 5\n" +
-                                "          OA_columnName: \"site\"",
+                        "          OA_columnName: \"site\"",
                         "          OA_rowNumber: 5\n" +
-                                "          OA_columnNumber: -1",
+                        "          OA_columnNumber: -1",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -602,9 +583,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testNotExpectedTagsInConstantComponents",
                         "      tel_experimental_network:\n" +
-                                "        OA_tags: [ test ]",
+                        "        OA_tags: [ test ]",
                         "      tel_experimental_network:\n" +
-                                "        OA_tags: [ testz ]",
+                        "        OA_tags: [ testz ]",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -644,9 +625,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testUnexpectedNameTagInComputedComponents",
                         "      site_bassin:\n" +
-                                "        OA_tags: [ __HIDDEN__ ]",
+                        "        OA_tags: [ __HIDDEN__ ]",
                         "      site_bassin:\n" +
-                                "        OA_tags: [ contextt, __HIDDEN__ ]",
+                        "        OA_tags: [ contextt, __HIDDEN__ ]",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -758,9 +739,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testUnexpectedReferencesForDefaultValueInSubmission",
                         "            OA_reference: projet\n" +
-                                "            OA_component: projet",
+                        "            OA_component: projet",
                         "            OA_reference: proj\n" +
-                                "            OA_component: projet",
+                        "            OA_component: projet",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -865,9 +846,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testunknownComponentInTimeScopeInSubmission",
                         "        OA_timeScope:\n" +
-                                "          OA_component: date",
+                        "          OA_component: date",
                         "        OA_timeScope:\n" +
-                                "          OA_component: dates",
+                        "          OA_component: dates",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -982,9 +963,9 @@ public class ApplicationConfigurationServiceTest {
                 new TestCase(
                         "testUnsuportedI18nKeyLanguageInTags",
                         "  test:\n" +
-                                "    fr: test",
+                        "    fr: test",
                         "  test:\n" +
-                                "    frrr: test",
+                        "    frrr: test",
                         errors -> {
                             assertEquals(1, errors.size());
                             final ValidationError validationError = errors.getFirst();
@@ -1240,18 +1221,14 @@ public class ApplicationConfigurationServiceTest {
                 parseConfigurationFromResource(resourceName, fluxSink);
             }
 
-            ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(
-                    new ReactiveProgression.DefaultCounter(0L),
-                    fluxSink,
-                    new ReactiveProgression.CreateApplicationProgressionMessagesLabel()
-            );
+            ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
 
             // Tests avec différentes configurations
             try {
-                testConfiguration(progression, "version: 0", false);
-                testConfiguration(progression, "version: 1", true);
-                testConfiguration(progression, "version: 2", false);
-                testConfiguration(progression, "::", false);
+                testConfiguration(eventHelper, "version: 0", false);
+                testConfiguration(eventHelper, "version: 1", true);
+                testConfiguration(eventHelper, "version: 2", false);
+                testConfiguration(eventHelper, "::", false);
             } catch (IOException e) {
                 throw new OreSiTechnicalException(e.getMessage(), e);
             }
@@ -1283,32 +1260,31 @@ public class ApplicationConfigurationServiceTest {
 
     private void parseConfigurationFromResource(String resource, FluxSink<ReactiveResult> fluxSink) {
         try (InputStream in = getClass().getResourceAsStream(resource)) {
-            ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(
-                    new ReactiveProgression.DefaultCounter(0L),
-                    fluxSink,
-                    new ReactiveProgression.CreateApplicationProgressionMessagesLabel()
-            );
+            ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
 
             Application application = ApplicationConfigurationService.parseConfigurationBytes(
                     "",
                     "test",
-                    progression,
+                    eventHelper,
                     FileBomResolver.of(in)
             );
             assertNotNull(application, "L'application ne devrait pas être nulle pour " + resource);
-            progression.pushResult(application);
+            eventHelper.pushResult(application);
         } catch (IOException e) {
             fail("Impossible de lire le fichier de test " + resource + ": " + e.getMessage());
         }
     }
 
-    private void testConfiguration(ReactiveProgression.CreateApplicationProgression progression, String config, boolean expectedValidity) throws IOException {
+    private void testConfiguration(ReactiveEventHelper eventHelper, String config, boolean expectedValidity) throws IOException {
         byte[] configBytes = config.getBytes(StandardCharsets.UTF_8);
         FileBomResolver fileBomResolver = FileBomResolver.of(new ByteArrayInputStream(configBytes));
         ApplicationConfigurationService.parseConfigurationBytes("", "",
-                progression, fileBomResolver);
+                eventHelper, fileBomResolver);
     }
 
+    record TestCase(String testName, String from, String to,
+                    java.util.function.Consumer<List<ValidationError>> assertion) {
+    }
 
     private class TestConfigurationBuilder {
         private static TestConfigurationBuilder INSTANCE;
@@ -1348,9 +1324,9 @@ public class ApplicationConfigurationServiceTest {
                 Exception exception;
 
                 final Object test = buildFluxRequestJDJson(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(new ReactiveProgression.DefaultCounter(0L), fluxSink, new ReactiveProgression.CreateApplicationProgressionMessagesLabel());
+                    final ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
                     try {
-                        ApplicationConfigurationService.parseConfigurationBytes("", "test", progression, FileBomResolver.of(wrongYaml));
+                        ApplicationConfigurationService.parseConfigurationBytes("", "test", eventHelper, FileBomResolver.of(wrongYaml));
                     } catch (IOException e) {
                         throw new OreSiTechnicalException(e.getMessage(), e);
                     }

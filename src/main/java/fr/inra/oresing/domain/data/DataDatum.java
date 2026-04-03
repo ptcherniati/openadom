@@ -114,6 +114,7 @@ public class DataDatum implements SomethingThatCanProvideEvaluationContext, Some
             } else {
                 final FieldType<?> valueThatMayBeNull = Optional.ofNullable(entry.getValue())
                         .map(SomethingToBeStoredAsJsonInDatabase<FieldType<?>>::toJsonForDatabase)
+                        .map(FieldType.class::cast)
                         .orElse(StringType.getStringTypeFromStringValue(""));
                 map.put(entry.getKey().toJsonForDatabase(), valueThatMayBeNull);
             }

@@ -3,7 +3,7 @@ package fr.inra.oresing.domain.data;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.StringType;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import lombok.Value;
 
 import java.util.function.Function;
@@ -47,7 +47,7 @@ public class DataColumnSingleValue implements DataColumnValue<FieldType<?>, Fiel
     }
 
     @Override
-    public String toValueString(final DataImporterContext referenceImporterContext, final String referencedColumn, final String locale) {
+    public String toValueString(final AsynchroneFileImporterContext referenceImporterContext, final String referencedColumn, final String locale) {
         return referenceImporterContext.getDisplayNamesByReferenceAndNaturalKey(referencedColumn, value.toString(), locale);
     }
 

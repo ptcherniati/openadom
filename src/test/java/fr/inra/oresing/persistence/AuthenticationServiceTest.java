@@ -1,12 +1,11 @@
 package fr.inra.oresing.persistence;
 
 import com.jayway.jsonpath.JsonPath;
-import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRole;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiRoleToAccessDatabase;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
 import fr.inra.oresing.rest.model.authorization.LoginAdminResult;
+import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
@@ -16,19 +15,9 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
@@ -37,34 +26,18 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
-@ActiveProfiles("testmail")
-@SpringBootTest(classes = {OreSiNg.class, OreSiNg.MailSenderForTest.class, TestDatabaseConfig.class, OreSiNg.class, TestDatabaseConfig.class})
-
-@TestPropertySource(locations = "classpath:/application-tests.properties")
-@AutoConfigureWebMvc
-@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Tag("SUITE")
 @Tag("core.auth")
-class AuthenticationServiceTest {
+class AuthenticationServiceTest extends AbstractIntegrationTest {
     @Value("${spring.mail.from}")
     String mailFrom;
 
     @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
     private JavaMailSender mailSender;
-
-    @Autowired
-    private AuthenticationService authenticationService;
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
 
     @BeforeEach
@@ -84,7 +57,7 @@ class AuthenticationServiceTest {
         final String login = "toto";
         final String email = "toto@codelutin.com";
         final String password = "xxxx";
-         mockMvc.perform(
+        mockMvc.perform(
                         post("/api/v1/users")
                                 .param("login", login)
                                 .param("password", password)
@@ -99,7 +72,7 @@ class AuthenticationServiceTest {
         String[] lines = Objects.requireNonNull(message.getText()).split("\n");
         String validationKey = lines[6];
         String user = mockMvc.perform(put("/api/v1/users")
-                        
+
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\", \"password\": \"" + password + "\", \"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
@@ -136,10 +109,10 @@ class AuthenticationServiceTest {
         mockMvc.perform(put("/api/v1/users")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{ \"login\": \"" + login + "\"" +
-                                ", \"email\": \"" + newEmail + "\", " +
-                                "\"newPassword\": \"newpassword\", " +
-                                "\"newPasswordConfirm\": \"newpassword\", " +
-                                "\"verificationKey\": \"" + validationKey + "\"}"))
+                                 ", \"email\": \"" + newEmail + "\", " +
+                                 "\"newPassword\": \"newpassword\", " +
+                                 "\"newPasswordConfirm\": \"newpassword\", " +
+                                 "\"verificationKey\": \"" + validationKey + "\"}"))
                 .andExpect(jsonPath("$.accountState", Matchers.is("active")))
                 .andReturn().getResponse().getContentAsString();
 

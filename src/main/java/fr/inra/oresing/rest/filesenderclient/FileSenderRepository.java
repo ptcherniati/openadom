@@ -268,8 +268,6 @@ public class FileSenderRepository implements fr.inra.oresing.rest.filesenderclie
                     throw new Exception("Erreur HTTP " + statusCode + " Réponse vide");
                 }
 
-                log.info("Response: " + responseBody);
-
                 return responseBody.startsWith("{") ? new JSONObject(responseBody) : new JSONObject(String.format("{\"success\": %s}", responseBody));
             }
         }

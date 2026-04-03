@@ -30,7 +30,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.logging.log4j.util.Strings;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -65,7 +64,7 @@ public class AuthorizationFilter extends GenericFilterBean {
     public static final String ECHEC_TECHNIQUE = "Échec technique";
     private static final String AUTHORIZATION_ALREADY_DONE = "AUTHORIZATION_ALREADY_DONE";
     public static final String BAD_LOGIN_PASSWORD = "BAD_LOGIN_PASSWORD";
-    private static JsonRowMapper<OreSiUserRequestClient> mapper;
+    private final JsonRowMapper<?> mapper;
     private final OreExceptionHandler exceptionHandler;
     private final JWTExtractor jWTExtractor;
     private ServiceContainer serviceContainer;
@@ -73,18 +72,12 @@ public class AuthorizationFilter extends GenericFilterBean {
     @Autowired
     public AuthorizationFilter(
             ServiceContainer serviceContainer,
-            JsonRowMapper<OreSiUserRequestClient> jsonRowMapper,
-            @Value("${jwt.expiration:3600}") int jwtExpiration,
-            @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret,
+            JsonRowMapper<?> jsonRowMapper,
+            JWTExtractor jWTExtractor,
             OreExceptionHandler exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
-        AuthorizationFilter.mapper = jsonRowMapper;
-        this.jWTExtractor = new JWTExtractor(
-                serviceContainer.authenticationService()::getUserRole,
-                jsonRowMapper,
-                jwtExpiration,
-                jwtSecret
-        );
+        this.mapper = jsonRowMapper;
+        this.jWTExtractor = jWTExtractor;
         this.serviceContainer = serviceContainer;
     }
 
@@ -108,6 +101,10 @@ public class AuthorizationFilter extends GenericFilterBean {
         }
         if (
                 path.equals("/") ||
+                path.startsWith(SecurityConfig.ADMIN) ||
+                path.startsWith(SecurityConfig.POOLS) ||
+                path.startsWith(SecurityConfig.UPLOAD) ||
+                path.startsWith(SecurityConfig.STATUS) ||
                 path.startsWith(SecurityConfig.ACTUATOR) ||
                 path.startsWith(SecurityConfig.SWAGGER_UI) ||
                 path.startsWith(SecurityConfig.API_DOCS) ||
@@ -288,7 +285,7 @@ public class AuthorizationFilter extends GenericFilterBean {
     }
 
     public OreSiAuthenticationToken buildUpdateUserAuthentication(HttpServletRequest request) throws IOException, AuthenticationFailure {
-        CreateUserRequest createUserRequest = mapper.readStream(request.getInputStream(), CreateUserRequest.class);
+        CreateUserRequest createUserRequest = mapper.getJsonMapper().readValue(request.getInputStream(), CreateUserRequest.class);
         NotConnectedUser updateUser = serviceContainer.authorizationService()
                 .getPrivilegeAssessorForNotConnecteduser(PrivilegeSystemDomainEnum.SYSTEM_USER_NOT_CONNECTED)
                 .forUpdateUser(createUserRequest);

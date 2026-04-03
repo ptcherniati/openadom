@@ -5,7 +5,7 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.data.*;
 import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.domain.data.deposit.configuration.ConfigurationSi;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.deposit.recursion.RecursionStrategy;
 import fr.inra.oresing.domain.data.deposit.storage.KeysAndReferenceDatumAfterChecking;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.ReferenceDatumAfterChecking;
@@ -20,11 +20,11 @@ import java.util.stream.Collectors;
 
 public class DataTransformer {
 
-    private final DataImporterContext dataImporterContext;
+    private final AsynchroneFileImporterContext dataImporterContext;
     private final RecursionStrategy recursionStrategy;
     private final ConfigurationSi configurationSi;
 
-    public DataTransformer(DataImporterContext dataImporterContext, RecursionStrategy recursionStrategy) {
+    public DataTransformer(AsynchroneFileImporterContext dataImporterContext, RecursionStrategy recursionStrategy) {
         this.dataImporterContext = dataImporterContext;
         this.recursionStrategy = recursionStrategy;
         this.configurationSi = new ConfigurationSi(dataImporterContext);
@@ -39,7 +39,7 @@ public class DataTransformer {
 
     public RowWithReferenceDatum computeComputedColumns(final RowWithReferenceDatum rowWithReferenceDatum) {
         final DataDatum rowWithValues = DataDatum.copyOf(rowWithReferenceDatum.referenceDatum());
-        dataImporterContext.getColumns().stream()
+        dataImporterContext.buildColumns().columns().stream()
                 .filter(column -> column.getComputedValueUsage() != ComputedValueUsage.NOT_COMPUTED)
                 .forEach(column -> {
                     final DataColumn referenceColumn = column.getReferenceColumn();
@@ -100,12 +100,12 @@ public class DataTransformer {
 
         e.setPatternColumnName(patternColumnName);
         e.setBinaryFile(fileId);
-        e.setReferenceType(dataImporterContext.getRefType());
+        e.setReferenceType(dataImporterContext.contextConstants().refType());
         e.setHierarchicalKey(hierarchicalKey);
         e.setRefsLinkedTo(referenceDatumAfterChecking.refsLinkedTo());
         e.setAuthorization(lineAuthorization);
         e.setNaturalKey(naturalKey);
-        e.setApplication(dataImporterContext.getApplication().getId());
+        e.setApplication(dataImporterContext.contextConstants().application().getId());
         e.setRefValues(referenceDatum);
         return e;
     }

@@ -18,6 +18,4 @@ public interface DataRepositoryForBuffer {
     Map<String, List<Ltree>> checkHierarchicalKey(Map<String, List<Ltree>> requiredAuthorizations) throws SiOreIllegalArgumentException;
 
     List<Ltree> getHierarchicalKeyForEntry(Map.Entry<String, List<Ltree>> requiredAuthorizationByReference);
-
-    Stream<DataValue> findAllByReferenceTypeStream(String referenceName);
 }

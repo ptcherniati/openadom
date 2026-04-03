@@ -13,9 +13,10 @@ import fr.inra.oresing.domain.application.configuration.internationalization.Int
 import fr.inra.oresing.domain.application.configuration.type.RootType;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
+import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
-import fr.inra.oresing.rest.reactive.ReactiveProgression;
+import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import jakarta.annotation.Nullable;
 import lombok.Getter;
 import org.apache.commons.collections4.CollectionUtils;
@@ -69,17 +70,17 @@ public class RootBuilder {
     private final DataAndComponentTestDoublon dataAndComponentTestDoublon = new DataAndComponentTestDoublon(this);
     @Getter
     Set<Tag> domainTags = Set.of();
-    private ReactiveProgression.Progression progression;
+    private ReactiveEventHelper eventHelper;
     private boolean hasErrors;
     @Getter
     final Consumer<ValidationParams> buildErrorWithValidationParams =
             validationParams -> buildError(validationParams.exception(), validationParams.params(), validationParams.path());
 
-    public RootBuilder(final ReactiveProgression.Progression progression,
+    public RootBuilder(final ReactiveEventHelper eventHelper,
                        final JsonNode rootNode,
                        final DocumentContext documentContext) {
         super();
-        this.progression = progression;
+        this.eventHelper = eventHelper;
         this.rootNode = rootNode;
     }
 
@@ -95,13 +96,13 @@ public class RootBuilder {
         hasErrors = true;
         Map<String, Object> params1 = new HashMap<>(params);
         params1.put("path", path);
-        progression.pushError(exception, params1);
+        eventHelper.pushError(exception, params1);
     }
 
     public void buildError(final ConfigurationException exception, final String path) {
         hasErrors = true;
         final Map<String, String> params = Map.of("path", path);
-        progression.pushError(exception, params);
+        eventHelper.pushError(exception, new HashMap<>(params));
     }
 
     public Configuration build(InputStream inputStreams, final String comment) {
@@ -113,9 +114,9 @@ public class RootBuilder {
         if (hasErrors || dataAndComponentTestDoublon.hasErrors()) {
             return null;
         }
-        progression.pushMessage("Starting parsing of configuration", Map.of());
-        progression = progression.incrementAndPush(operand -> 0D);
-        progression.incrementAndPush(D -> 0D);
+        eventHelper.pushMessage("Starting parsing of configuration", Map.of());
+        eventHelper.pushProgress(0D);
+        
         I18n i18n = new I18n(new HashMap<>());
         Parsing<ApplicationDescription> applicationDescription;
         final Optional<JsonNode> oaApplication = Optional.ofNullable(rootNode.get(OA_APPLICATION));
@@ -186,11 +187,21 @@ public class RootBuilder {
         }
         Version version;
         try {
-            version = Optional.of(versionNode)
+            String versionString = Optional.of(versionNode)
                     .filter(JsonNode::isTextual)
                     .map(JsonNode::asText)
-                    .map(Version::new)
-                    .orElse(Version.BAD_VERSION);
+                    .orElseThrow(() -> new SiOreIllegalArgumentException(ConfigurationException.MISSING_VERSION_APPLICATION.getMessage(), Map.of()));
+            
+            try {
+                Runtime.Version.parse(versionString);
+            } catch (IllegalArgumentException e) {
+                 throw new SiOreConfigurationFormatException(ConfigurationException.BAD_VERSION_PATTERN, Map.of("givenVersion", versionString));
+            }
+            version = new Version(versionString);
+
+        } catch (final SiOreConfigurationFormatException e) {
+             buildError(e.getException(), e.getParams(), OA_VERSION);
+             return null;
         } catch (final SiOreIllegalArgumentException e) {
             version = Version.BAD_VERSION;
         }
@@ -283,8 +294,8 @@ public class RootBuilder {
         }
     }
 
-    ReactiveProgression.Progression getProgression() {
-        return progression;
+    ReactiveEventHelper getEventHelper() {
+        return eventHelper;
     }
 
     ObjectMapper getMapper() {

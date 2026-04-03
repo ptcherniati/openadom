@@ -1,0 +1,67 @@
+{
+  "GENERAL_CASE": {
+    "summary": "general case",
+    "description": "Optional json with componentSelects, componentFilters, componentOrderBy",
+    "value": "{\n    \"componentSelects\": [],\n    \"componentFilters\": [],\n    \"componentOrderBy\": []\n}"
+  },
+  "REDUCE_BY_SELECT": {
+    "summary": "reduce by select",
+    "description": "Select specific components",
+    "value": "{\n    \"componentSelects\": [\"sites\", \"date\"]\n}"
+  },
+  "ORDER_RESULT": {
+    "summary": "order by",
+    "description": "Order results by component",
+    "value": "{\n    \"componentOrderBy\": [\n        {\n            \"componentKey\": \"espece\",\n            \"order\": \"ASC\"\n        }\n    ]\n}"
+  },
+  "FILTER_BY_ROW_ID": {
+    "summary": "select by rowIds",
+    "description": "Filter by row identifiers",
+    "value": "{\n    \"rowIds\": [\"59ae5fec-8ed5-495b-b201-5475ea50906e\"]\n}"
+  },
+  "FILTER_BY_NK": {
+    "summary": "select by naturalKeys",
+    "description": "Filter by natural keys",
+    "value": "{\n    \"naturalKey\": [\"projet_manche__oir__p1__03_01_1984__lpm\"]\n}"
+  },
+  "FILTER_BY_HK": {
+    "summary": "select by hierarchicalKey",
+    "description": "Filter by hierarchical keys",
+    "value": "{\n    \"naturalKey\": [\"pemKprojet_manche__oir__p1__03_01_1984__lpm\"]\n}"
+  },
+  "FILTER_BY_AUTHORIZATION_SCOPE": {
+    "summary": "select by submissionScope",
+    "description": "Filter by authorization scope",
+    "value": "{\n    \"authorizationDescriptions\": [\n        {\n            \"timeScope\": {\n                \"from\": \"1984-01-01\",\n                \"to\": \"1984-01-02\"\n            },\n            \"requiredAuthorizations\": {\n                \"projet\": \"projetKprojet_manche\",\n                \"sites\": \"type_de_sitesKplateforme.sitesKoir.sitesKoir__p1\"\n            }\n        }\n    ]\n}"
+  },
+  "FILTER_USING_LIKE": {
+    "summary": "filter with LIKE",
+    "description": "Text filter using LIKE pattern",
+    "value": "{\n    \"componentFilters\": [\n        {\n            \"componentKey\": \"bassin\",\n            \"filters\": [\"nivelle\"]\n        },\n        {\n            \"componentKey\": \"espece\",\n            \"filters\": [\"tr\"]\n        }\n    ]\n}"
+  },
+  "FILTER_USING_REGEXP": {
+    "summary": "filter with RegExp",
+    "description": "Filter using regular expression (text only)",
+    "value": "{\n    \"componentFilters\": [\n        {\n            \"componentKey\": \"espece\",\n            \"filters\": [\"^[ao]m+\"],\n            \"isRegExp\": true\n        }\n    ]\n}"
+  },
+  "FILTER_BY_DATE": {
+    "summary": "filter by date",
+    "description": "Date filter with declared pattern",
+    "value": "{\n    \"componentFilters\": [\n        {\n            \"componentKey\": \"date\",\n            \"filters\": [\"12:45:00\"]\n        }\n    ]\n}"
+  },
+  "FILTER_BY_DATE_RANGE": {
+    "summary": "filter by date interval",
+    "description": "Date range filter",
+    "value": "{\n    \"componentFilters\": [\n        {\n            \"componentKey\": \"date\",\n            \"intervalsValues\": [\n                {\n                    \"from\": \"01/01/1984\",\n                    \"to\": \"04/01/1984\"\n                }\n            ]\n        }\n    ]\n}"
+  },
+  "FILTER_BY_NUMERIC": {
+    "summary": "filter numeric",
+    "description": "Numeric value filter",
+    "value": "{\n    \"componentSelects\": [\"individusNumbervalue\"],\n    \"componentFilters\": [\n        {\n            \"componentKey\": \"individusNumbervalue\",\n            \"filters\": [41]\n        }\n    ]\n}"
+  },
+  "FILTER_BY_NUMERIC_RANGE": {
+    "summary": "filter numeric interval",
+    "description": "Numeric range filter",
+    "value": "{\n    \"componentFilters\": [\n        {\n            \"componentKey\": {\n                \"variable\": \"Nombre d'individus\",\n                \"component\": \"value\"\n            },\n            \"intervalsValues\": [\n                {\n                    \"from\": 25,\n                    \"to\": 30\n                }\n            ]\n        }\n    ]\n}"
+  }
+}

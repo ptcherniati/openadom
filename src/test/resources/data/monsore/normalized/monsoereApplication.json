@@ -12,19 +12,19 @@
       "version" : "2.0.1"
     },
     "tags" : [ {
-      "tagdefinition" : "DOMAIN_TAG",
+      "tagDefinition" : "DOMAIN_TAG",
       "tagname" : "temporal"
     }, {
-      "tagdefinition" : "DOMAIN_TAG",
+      "tagDefinition" : "DOMAIN_TAG",
       "tagname" : "context"
     }, {
-      "tagdefinition" : "DOMAIN_TAG",
+      "tagDefinition" : "DOMAIN_TAG",
       "tagname" : "unit"
     }, {
-      "tagdefinition" : "DOMAIN_TAG",
+      "tagDefinition" : "DOMAIN_TAG",
       "tagname" : "data"
     }, {
-      "tagdefinition" : "DOMAIN_TAG",
+      "tagDefinition" : "DOMAIN_TAG",
       "tagname" : "test"
     } ],
     "i18n" : {
@@ -960,18 +960,18 @@
         "firstrowline" : 5,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DATA_TAG"
+          "tagDefinition" : "DATA_TAG"
         }, {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "context"
         }, {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "data"
         }, {
-          "tagdefinition" : "ORDER_TAG",
+          "tagDefinition" : "ORDER_TAG",
           "tagorder" : 2
         }, {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "test"
         } ],
         "naturalkey" : [ "projet", "site", "plateforme", "date", "espece" ],
@@ -981,10 +981,10 @@
             "componentkey" : "date",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "DOMAIN_TAG",
+              "tagDefinition" : "DOMAIN_TAG",
               "tagname" : "temporal"
             }, {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 1
             } ],
             "importheader" : "date",
@@ -1012,7 +1012,7 @@
             "componentkey" : "site",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "site",
@@ -1039,7 +1039,7 @@
             "type" : "ComputedComponent",
             "componentkey" : "chemin",
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "exportheadername" : "chemin",
@@ -1076,7 +1076,7 @@
             "componentkey" : "espece",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "espece",
@@ -1104,10 +1104,10 @@
             "componentkey" : "projet",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 2
             }, {
-              "tagdefinition" : "DOMAIN_TAG",
+              "tagDefinition" : "DOMAIN_TAG",
               "tagname" : "test"
             } ],
             "importheader" : "projet",
@@ -1134,7 +1134,7 @@
             "type" : "ComputedComponent",
             "componentkey" : "color_unit",
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "exportheadername" : null,
@@ -1171,7 +1171,7 @@
             "componentkey" : "plateforme",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "plateforme",
@@ -1191,7 +1191,7 @@
             "componentkey" : "color_value",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "Couleur des individus",
@@ -1218,7 +1218,7 @@
             "type" : "ComputedComponent",
             "componentkey" : "individusNumber_unit",
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "exportheadername" : null,
@@ -1264,7 +1264,7 @@
               "data" : null
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "Nombre d'individus",
@@ -1301,7 +1301,7 @@
           "unitOfColor" : {
             "checkers" : { },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : null,
@@ -1311,7 +1311,7 @@
           "unitOfIndividus" : {
             "checkers" : { },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : null,
@@ -1358,7 +1358,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "context"
         } ],
         "naturalkey" : [ "zet_chemin_parent", "zet_nom_key" ],
@@ -1368,7 +1368,7 @@
             "componentkey" : "zet_nom_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "zet_nom_en",
@@ -1388,7 +1388,7 @@
             "componentkey" : "zet_nom_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "zet_nom_fr",
@@ -1408,7 +1408,7 @@
             "componentkey" : "zet_nom_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "zet_nom_key",
@@ -1428,7 +1428,7 @@
             "componentkey" : "tze_type_nom",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "tze_type_nom",
@@ -1456,7 +1456,7 @@
             "componentkey" : "zet_chemin_parent",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "zet_chemin_parent",
@@ -1484,7 +1484,7 @@
             "componentkey" : "zet_description_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "zet_description_en",
@@ -1504,7 +1504,7 @@
             "componentkey" : "zet_description_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "zet_description_fr",
@@ -1542,13 +1542,13 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "context"
         }, {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "data"
         }, {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "test"
         } ],
         "naturalkey" : [ "nom_key" ],
@@ -1558,7 +1558,7 @@
             "componentkey" : "nom_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_en",
@@ -1578,7 +1578,7 @@
             "componentkey" : "nom_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_fr",
@@ -1598,7 +1598,7 @@
             "componentkey" : "nom_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_key",
@@ -1618,7 +1618,7 @@
             "componentkey" : "definition_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "definition_en",
@@ -1638,7 +1638,7 @@
             "componentkey" : "definition_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "definition_fr",
@@ -1658,7 +1658,7 @@
             "componentkey" : "colonne_homonyme_entre_referentiels",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "colonne_homonyme_entre_referentiels",
@@ -1688,7 +1688,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "context"
         } ],
         "naturalkey" : [ "nom_key" ],
@@ -1698,7 +1698,7 @@
             "componentkey" : "nom_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_en",
@@ -1718,7 +1718,7 @@
             "componentkey" : "nom_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_fr",
@@ -1738,7 +1738,7 @@
             "componentkey" : "nom_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_key",
@@ -1758,7 +1758,7 @@
             "componentkey" : "description_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "description_en",
@@ -1778,7 +1778,7 @@
             "componentkey" : "description_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "description_fr",
@@ -1808,7 +1808,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "data"
         } ],
         "naturalkey" : [ "nom_key" ],
@@ -1818,7 +1818,7 @@
             "componentkey" : "nom_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_en",
@@ -1838,7 +1838,7 @@
             "componentkey" : "nom_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_fr",
@@ -1858,7 +1858,7 @@
             "componentkey" : "code_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "code_en",
@@ -1878,7 +1878,7 @@
             "componentkey" : "code_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "code_fr",
@@ -1898,7 +1898,7 @@
             "componentkey" : "nom_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_key",
@@ -1918,7 +1918,7 @@
             "componentkey" : "code_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "code_key",
@@ -1948,7 +1948,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : true,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "data"
         } ],
         "naturalkey" : [ "esp_nom" ],
@@ -1958,7 +1958,7 @@
             "componentkey" : "esp_nom",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "DOMAIN_TAG",
+              "tagDefinition" : "DOMAIN_TAG",
               "tagname" : "test"
             } ],
             "importheader" : "esp_nom",
@@ -1978,7 +1978,7 @@
             "componentkey" : "esp_definition_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "esp_definition_en",
@@ -1998,7 +1998,7 @@
             "componentkey" : "esp_definition_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "esp_definition_fr",
@@ -2017,7 +2017,7 @@
             "type" : "ComputedComponent",
             "componentkey" : "my_computed_column",
             "tags" : [ {
-              "tagdefinition" : "HIDDEN_TAG"
+              "tagDefinition" : "HIDDEN_TAG"
             } ],
             "exportheadername" : "my_computed_column",
             "langrestrictions" : [ ],
@@ -2045,7 +2045,7 @@
             "componentkey" : "colonne_homonyme_entre_referentiels",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "colonne_homonyme_entre_referentiels",
@@ -2075,7 +2075,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "data"
         } ],
         "naturalkey" : [ "nom_key" ],
@@ -2085,7 +2085,7 @@
             "componentkey" : "nom_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_en",
@@ -2105,7 +2105,7 @@
             "componentkey" : "nom_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_fr",
@@ -2125,7 +2125,7 @@
             "componentkey" : "nom_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_key",
@@ -2145,7 +2145,7 @@
             "componentkey" : "definition_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "definition_en",
@@ -2165,7 +2165,7 @@
             "componentkey" : "definition_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "definition_fr",
@@ -2185,7 +2185,7 @@
             "componentkey" : "is_qualitative",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "isQualitative",
@@ -2215,7 +2215,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "context"
         } ],
         "naturalkey" : [ "tze_nom_key" ],
@@ -2225,7 +2225,7 @@
             "componentkey" : "tze_nom_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "tze_nom_en",
@@ -2245,7 +2245,7 @@
             "componentkey" : "tze_nom_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "tze_nom_fr",
@@ -2265,7 +2265,7 @@
             "componentkey" : "tze_nom_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "tze_nom_key",
@@ -2285,7 +2285,7 @@
             "componentkey" : "tze_definition_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "tze_definition_en",
@@ -2305,7 +2305,7 @@
             "componentkey" : "tze_definition_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "tze_definition_fr",
@@ -2335,7 +2335,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "HIDDEN_TAG"
+          "tagDefinition" : "HIDDEN_TAG"
         } ],
         "naturalkey" : [ "nom_key" ],
         "componentdescriptions" : {
@@ -2344,7 +2344,7 @@
             "componentkey" : "nom_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_en",
@@ -2364,7 +2364,7 @@
             "componentkey" : "nom_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_fr",
@@ -2384,7 +2384,7 @@
             "componentkey" : "nom_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_key",
@@ -2404,7 +2404,7 @@
             "componentkey" : "description_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "description_en",
@@ -2424,7 +2424,7 @@
             "componentkey" : "description_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "description_fr",
@@ -2454,7 +2454,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "context"
         } ],
         "naturalkey" : [ "projet", "site", "theme", "datatype" ],
@@ -2464,7 +2464,7 @@
             "componentkey" : "site",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du site",
@@ -2484,7 +2484,7 @@
             "componentkey" : "theme",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du thème",
@@ -2504,7 +2504,7 @@
             "componentkey" : "projet",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du projet",
@@ -2524,7 +2524,7 @@
             "componentkey" : "datatype",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du type de données",
@@ -2556,7 +2556,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "site" ],
@@ -2576,7 +2576,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "projet" ],
@@ -2596,7 +2596,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "theme" ],
@@ -2617,7 +2617,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "datatype" ],
@@ -2636,7 +2636,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "data"
         } ],
         "naturalkey" : [ "nom_key", "valeur_key" ],
@@ -2646,7 +2646,7 @@
             "componentkey" : "nom_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_en",
@@ -2666,7 +2666,7 @@
             "componentkey" : "nom_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_fr",
@@ -2686,7 +2686,7 @@
             "componentkey" : "nom_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom_key",
@@ -2706,7 +2706,7 @@
             "componentkey" : "valeur_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "valeur_en",
@@ -2726,7 +2726,7 @@
             "componentkey" : "valeur_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "valeur_fr",
@@ -2746,7 +2746,7 @@
             "componentkey" : "valeur_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "valeur_key",
@@ -2776,7 +2776,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DOMAIN_TAG",
+          "tagDefinition" : "DOMAIN_TAG",
           "tagname" : "data"
         } ],
         "naturalkey" : [ "datatype", "variable" ],
@@ -2786,7 +2786,7 @@
             "componentkey" : "unite",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom de l'unité",
@@ -2806,7 +2806,7 @@
             "componentkey" : "datatype",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du type de données",
@@ -2826,7 +2826,7 @@
             "componentkey" : "variable",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom de la variable",
@@ -2858,7 +2858,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "unite" ],
@@ -2878,7 +2878,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "variable" ],
@@ -2899,7 +2899,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "datatype" ],

@@ -59,7 +59,9 @@ public non-sealed class MapType<K, V> implements FieldType<Map<K, V>> {
     @Override
     public FieldType copy() {
         final MapType mapType = clone.get();
-        mapType.value = value;
+        if (value != null) {
+            mapType.value = new HashMap<>(value);  // Nouvelle Map
+        }
         return mapType;
     }
 

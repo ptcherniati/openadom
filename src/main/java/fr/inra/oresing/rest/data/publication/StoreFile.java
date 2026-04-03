@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
 import fr.inra.oresing.domain.services.file.BinaryFileService;
 import fr.inra.oresing.rest.exceptions.OreSiIOException;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;

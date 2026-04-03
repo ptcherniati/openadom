@@ -4,11 +4,13 @@ import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.repository.data.DataRepository;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Getter
@@ -86,5 +88,12 @@ public class BinaryFileDataset {
 
     public void setFrom(String from) {
         this.from = "null".equals(from) ? null : from;
+    }
+
+    public void setIfNotPresentDatatype(String dataType) {
+        if(getDatatype()!=null){
+            return;
+        }
+        setDatatype(datatype);
     }
 }

@@ -9,7 +9,6 @@ import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResu
 import fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
-import io.swagger.v3.oas.models.links.Link;
 import lombok.Getter;
 import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.builder.ToStringBuilder;

@@ -25,6 +25,8 @@ public interface DataRepository {
 
     @Transactional(readOnly = true)
     Stream<DataValue> findAllByReferenceTypeStream(String referenceName);
+    @Transactional(readOnly = true)
+    List<DataValue> findAllByReferenceType(String reference);
 
     @Transactional(readOnly = true)
     Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final MultiValueMap<String, String> params);

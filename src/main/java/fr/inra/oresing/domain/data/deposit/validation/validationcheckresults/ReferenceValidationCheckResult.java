@@ -34,7 +34,17 @@ public record ReferenceValidationCheckResult(CheckerTarget target, ValidationLev
     @JsonIgnore
     public static ReferenceValidationCheckResult success(final CheckerTarget target, final String rawValue, final Set<Ltree> matchedReferenceHierarchicalKey, final Set<UUID> matchedReferenceId,
                                                          final ReferenceType value) {
-        return new ReferenceValidationCheckResult(target, ValidationLevel.SUCCESS, rawValue, matchedReferenceHierarchicalKey, matchedReferenceId, null, null, (ReferenceType) value.copy());
+        final ReferenceType copy = (ReferenceType) value.copy();
+        copy.uuid = value.getUuid();
+        return new ReferenceValidationCheckResult(
+                target,
+                ValidationLevel.SUCCESS,
+                rawValue,
+                matchedReferenceHierarchicalKey,
+                matchedReferenceId,
+                null,
+                null,
+                copy);
     }
 
     @JsonIgnore

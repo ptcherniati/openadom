@@ -1,7 +1,7 @@
 package fr.inra.oresing.domain.data;
 
 import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 
 import java.util.function.Function;
 
@@ -25,5 +25,5 @@ public interface DataColumnValue<T, F> extends SomethingToBeStoredAsJsonInDataba
      */
     DataColumnValue<T, F> transform(Function<FieldType<?>, FieldType<?>> transformation);
 
-    String toValueString(DataImporterContext referenceImporterContext, String referencedColumn, String key);
+    String toValueString(AsynchroneFileImporterContext referenceImporterContext, String referencedColumn, String key);
 }

@@ -1,0 +1,75 @@
+# On désactive le cache de preparedStatement car sinon, on risque de tomber sur une
+# org.postgresql.util.PSQLException: ERROR: cached plan must not change result type
+# qui est dû au fait que entre deux tests, flyway écrase et recrée la base de données
+# or, si on réutilise un preparedStatement créé sur le schéma du test précédent, ça échoue
+spring:
+  datasource:
+    url: jdbc:tc:postgresql:18:///test?TC_INITSCRIPT=migration/openadom_user.sql&loggerLevel=INFO
+    username: openAdomTechUser
+    password: "z2I<i}qclq)D?xqT"
+
+  sql:
+    init:
+      username: openAdomTechUser
+      password: "z2I<i}qclq)D?xqT"
+
+  test:
+    database:
+      replace: true
+
+  jpa:
+    enabled: false
+  data:
+    jpa:
+      repositories:
+        enabled: false
+
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration
+      - org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration
+
+  flyway:
+    enabled: true
+    locations: classpath:migration/main
+    baseline-on-migrate: true
+    user: openAdomTechUser
+    password: "z2I<i}qclq)D?xqT"
+
+
+
+  # Configuration de base pour les tests
+  main:
+    allow-bean-definition-overriding: true
+
+  mail:
+    test-connection: false
+
+  # Désactiver les vérifications de sécurité CSRF pour faciliter les tests
+  security:
+    csrf:
+      disabled: true
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+
+# Configuration de sécurité minimale pour les tests
+jwtSecret: test_secret_key_for_testing_purposes_only
+jwtExpiration: 3600
+
+# Configuration de logging pour les tests
+logging:
+  level:
+    org.flywaydb.core: info
+    org.flywaydb.database: info
+    org.flywaydb.test: info
+    org.springframework.security: info
+    fr.inra.oresing: DEBUG
+
+viewStrategy: DISABLED
+
+filesender:
+  baseurl: https://filesender.renater.fr/rest.php
+  username: mail@user.fr
+  apikey: an_api_key

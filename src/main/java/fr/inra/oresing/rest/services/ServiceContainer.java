@@ -6,7 +6,6 @@ import fr.inra.oresing.mail.Email;
 import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.VersioningService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 

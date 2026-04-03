@@ -10,7 +10,7 @@ import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnSingleValue;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.DataDatum;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -27,10 +27,10 @@ public class InternationalizationDisplay {
     //@ApiModelProperty(notes = "pattern in differents locales, used to display a reference when referred to",required = false)
     Map<Locale, String> pattern;
 
-    public static DataDatum getDisplaysName(final DataImporterContext dataImporterContext, final DataDatum refValues) {
+    public static DataDatum getDisplaysName(final AsynchroneFileImporterContext dataImporterContext, final DataDatum refValues) {
         Optional<InternationalizationTitle> displayPattern = dataImporterContext.getDisplayPattern();
         final DataDatum displaysName = new DataDatum();
-        Locale defaultLanguage = Optional.ofNullable(dataImporterContext.getApplication())
+        Locale defaultLanguage = Optional.ofNullable(dataImporterContext.contextConstants().application())
                 .map(Application::getConfiguration)
                 .map(Configuration::applicationDescription)
                 .map(ApplicationDescription::defaultLanguage)
@@ -74,7 +74,7 @@ public class InternationalizationDisplay {
                                     .orElse("")
 
                     )
-                    .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                    .collect(Collectors.joining(AsynchroneFileImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
 
             displaysName.put(DataColumn.forDisplayName(DataColumn.DEFAULT), new DataColumnSingleValue(
                             StringType.getStringTypeFromStringValue(defaultDisplay)
@@ -85,11 +85,11 @@ public class InternationalizationDisplay {
         return displaysName;
     }
 
-    public static DataDatum getDisplaysDescription(final DataImporterContext dataImporterContext, final DataDatum refValues) {
+    public static DataDatum getDisplaysDescription(final AsynchroneFileImporterContext dataImporterContext, final DataDatum refValues) {
         Optional<InternationalizationTitle> displayPattern = dataImporterContext.getDisplayPattern();
-        final String refType = dataImporterContext.getRefType();
+        final String refType = dataImporterContext.contextConstants().refType();
         final DataDatum displaysDescription = new DataDatum();
-        Locale defaultLanguage = Optional.ofNullable(dataImporterContext.getApplication())
+        Locale defaultLanguage = Optional.ofNullable(dataImporterContext.contextConstants().application())
                 .map(Application::getConfiguration)
                 .map(Configuration::applicationDescription)
                 .map(ApplicationDescription::defaultLanguage)
@@ -132,7 +132,7 @@ public class InternationalizationDisplay {
                                     .orElse("")
 
                     )
-                    .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+                    .collect(Collectors.joining(AsynchroneFileImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
             displaysDescription.put(DataColumn.forDisplayDescription(DataColumn.DEFAULT), new DataColumnSingleValue(
                             StringType.getStringTypeFromStringValue(
                                     defaultDisplay

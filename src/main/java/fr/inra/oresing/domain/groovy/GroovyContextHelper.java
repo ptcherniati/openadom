@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.domain.repository.data.DataRepository;
 
 import java.util.*;
 
@@ -14,8 +14,7 @@ public class GroovyContextHelper {
         final Map<String, List<ReferenceValueDecorator>> references = new HashMap<>();
         final Map<String, List<Map<String, Object>>> referencesValues = new HashMap<>();
         refs.forEach(ref -> {
-            final List<DataValue> allByReferenceType = referenceValueRepository.findAllByReferenceTypeStream(ref)
-                    .toList();
+            final List<DataValue> allByReferenceType = referenceValueRepository.findAllByReferenceType(ref);
             allByReferenceType.stream()
                     .map(ReferenceValueDecorator::new)
                     .forEach(referenceValue -> references.computeIfAbsent(ref, k -> new LinkedList<>()).add(referenceValue));

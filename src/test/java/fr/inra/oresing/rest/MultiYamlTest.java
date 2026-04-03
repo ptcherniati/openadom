@@ -4,8 +4,6 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import fr.inra.oresing.domain.application.configuration.ConfigurationSchemaNode;
 import fr.inra.oresing.domain.data.DataFile;
 import org.junit.jupiter.api.Test;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.Map;

@@ -3,7 +3,10 @@ package fr.inra.oresing.rest.model.data.query;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.*;
-import fr.inra.oresing.domain.application.configuration.checker.*;
+import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
+import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
+import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
+import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.data.read.query.*;
 import fr.inra.oresing.persistence.DataRepository;
@@ -22,7 +25,6 @@ import java.util.*;
 
 @Slf4j
 class DownloadDatasetQueryTest {
-    private static final String DATATYPE_NAME = "datatypeName";
     public static final long OFFSET = 6L;
     public static final long LIMIT = 10L;
     public static final Locale FRENCH = Locale.FRENCH;
@@ -91,9 +93,27 @@ class DownloadDatasetQueryTest {
             "toto"
 
     );
+    private static final String DATATYPE_NAME = "datatypeName";
     @Mock
     Application application;
     DownloadDatasetQuery downloadDatasetQuery;
+
+    private static OutPut buildOutput() {
+        return new OutPut(FRENCH, OFFSET, LIMIT);
+    }
+
+    private static Set<ComponentFilters> buildComponentFilter() {
+        return Set.of(
+                new ComponentFilters(
+                        "key1",
+                        List.of("filter1", "filter2"),
+                        List.of(
+                                INTERVAL_VALUE_1,
+                                INTERVAL_VALUE_2
+                        ),
+                        false)
+        );
+    }
 
     @BeforeEach
     void setUp() {
@@ -131,7 +151,7 @@ class DownloadDatasetQueryTest {
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.ASC::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.DESC::equals));
         Assertions.assertEquals(NATURAL_KEYS, ((DownloadDatasetQueryByNaturalKey) buildedDownloadDatasetQuery).naturalOrHierarchicalKey());
-        Assertions.assertEquals(true, buildedDownloadDatasetQuery.horizontalDisplay());
+        Assertions.assertTrue(buildedDownloadDatasetQuery.horizontalDisplay());
     }
 
     @Test
@@ -147,14 +167,14 @@ class DownloadDatasetQueryTest {
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildedDownloadDatasetQuery = DownloadDatasetQuery.build(downloadDatasetQuery);
         Assertions.assertEquals(application, buildedDownloadDatasetQuery.application());
         Assertions.assertEquals(DATATYPE_NAME, buildedDownloadDatasetQuery.dataName());
-        Assertions.assertEquals(new OutPut(Locale.FRENCH, 0l, null), buildedDownloadDatasetQuery.outPut());
+        Assertions.assertEquals(new OutPut(Locale.FRENCH, 0L, null), buildedDownloadDatasetQuery.outPut());
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::componentKey).anyMatch("key1"::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::componentKey).anyMatch("key2"::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.ASC::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.DESC::equals));
         Assertions.assertEquals(DownloadDatasetQueryByRowId.class, buildedDownloadDatasetQuery.getClass());
         Assertions.assertTrue(((DownloadDatasetQueryByRowId) buildedDownloadDatasetQuery).rowIds().stream().map(dataRowIds -> dataRowIds.id()).map(UUID::toString).allMatch(ROW_IDS::contains));
-        Assertions.assertEquals(false, buildedDownloadDatasetQuery.horizontalDisplay());
+        Assertions.assertFalse(buildedDownloadDatasetQuery.horizontalDisplay());
     }
 
     @Test
@@ -175,15 +195,15 @@ class DownloadDatasetQueryTest {
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildedDownloadDatasetQuery = DownloadDatasetQuery.build(downloadDatasetQuery);
         Assertions.assertEquals(application, buildedDownloadDatasetQuery.application());
         Assertions.assertEquals(DATATYPE_NAME, buildedDownloadDatasetQuery.dataName());
-        Assertions.assertEquals(new OutPut(Locale.FRENCH, 0l, null), buildedDownloadDatasetQuery.outPut());
-        Assertions.assertEquals(null, buildedDownloadDatasetQuery.componentSelects());
+        Assertions.assertEquals(new OutPut(Locale.FRENCH, 0L, null), buildedDownloadDatasetQuery.outPut());
+        Assertions.assertNull(buildedDownloadDatasetQuery.componentSelects());
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::componentKey).anyMatch("key1"::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::componentKey).anyMatch("key2"::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.ASC::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.DESC::equals));
         Assertions.assertEquals(DownloadDatasetQueryAdvancedSearch.class, buildedDownloadDatasetQuery.getClass());
         Assertions.assertTrue(((DownloadDatasetQueryAdvancedSearch) buildedDownloadDatasetQuery).componentFilters().stream().map(fr.inra.oresing.domain.data.read.query.ComponentFilters::multiplicity).allMatch(Arrays.stream(Multiplicity.values()).toList()::contains));
-        Assertions.assertEquals(false, buildedDownloadDatasetQuery.horizontalDisplay());
+        Assertions.assertFalse(buildedDownloadDatasetQuery.horizontalDisplay());
     }
 
     @Test
@@ -196,13 +216,13 @@ class DownloadDatasetQueryTest {
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildedDownloadDatasetQuery = DownloadDatasetQuery.build(downloadDatasetQuery);
         Assertions.assertEquals(application, buildedDownloadDatasetQuery.application());
         Assertions.assertEquals(DATATYPE_NAME, buildedDownloadDatasetQuery.dataName());
-        Assertions.assertEquals(new OutPut(Locale.FRENCH, 0l, null), buildedDownloadDatasetQuery.outPut());
+        Assertions.assertEquals(new OutPut(Locale.FRENCH, 0L, null), buildedDownloadDatasetQuery.outPut());
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::componentKey).anyMatch("key1"::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::componentKey).anyMatch("key2"::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.ASC::equals));
         Assertions.assertTrue(buildedDownloadDatasetQuery.componentOrderBy().stream().map(fr.inra.oresing.domain.data.read.query.ComponentOrderBy::order).anyMatch(DataRepository.Order.DESC::equals));
         Assertions.assertEquals(DownloadDatasetQueryNoFilter.class, buildedDownloadDatasetQuery.getClass());
-        Assertions.assertEquals(false, buildedDownloadDatasetQuery.horizontalDisplay());
+        Assertions.assertFalse(buildedDownloadDatasetQuery.horizontalDisplay());
     }
 
     @Test
@@ -229,20 +249,16 @@ class DownloadDatasetQueryTest {
         Assert.assertEquals(outPut, downloadDatasetQuery.getOutPut());
     }
 
-    private static OutPut buildOutput() {
-        return new OutPut(FRENCH, OFFSET, LIMIT);
-    }
-
     @Test
     void getOffset() {
         downloadDatasetQuery.setOffset(OFFSET);
-        Assert.assertEquals((Long) OFFSET, (Long) downloadDatasetQuery.getOffset());
+        Assert.assertEquals((Long) OFFSET, downloadDatasetQuery.getOffset());
     }
 
     @Test
     void getLimit() {
         downloadDatasetQuery.setLimit(LIMIT);
-        Assert.assertEquals((Long) LIMIT, (Long) downloadDatasetQuery.getLimit());
+        Assert.assertEquals((Long) LIMIT, downloadDatasetQuery.getLimit());
     }
 
     @Test
@@ -268,19 +284,6 @@ class DownloadDatasetQueryTest {
         Set<ComponentFilters> componentFilters = buildComponentFilter();
         downloadDatasetQuery.setComponentFilters(componentFilters);
         Assert.assertEquals(componentFilters, downloadDatasetQuery.getComponentFilters());
-    }
-
-    private static Set<ComponentFilters> buildComponentFilter() {
-        return Set.of(
-                new ComponentFilters(
-                        "key1",
-                        List.of("filter1", "filter2"),
-                        List.of(
-                                INTERVAL_VALUE_1,
-                                INTERVAL_VALUE_2
-                        ),
-                        false)
-        );
     }
 
     @Test
@@ -362,8 +365,8 @@ class DownloadDatasetQueryTest {
         Assertions.assertNull(downloadDatasetQuery.getApplication());
         Assertions.assertNull(downloadDatasetQuery.getDataName());
         Assertions.assertNull(downloadDatasetQuery.getOutPut());
-        Assertions.assertEquals((Long) OFFSET, (Long) downloadDatasetQuery.getOffset());
-        Assertions.assertEquals((Long) LIMIT, (Long) downloadDatasetQuery.getLimit());
+        Assertions.assertEquals((Long) OFFSET, downloadDatasetQuery.getOffset());
+        Assertions.assertEquals((Long) LIMIT, downloadDatasetQuery.getLimit());
         Assertions.assertNull(downloadDatasetQuery.getRowIds());
         Assertions.assertNull(downloadDatasetQuery.getNaturalKeys());
         Assertions.assertEquals(COMPONENT_SELECT, downloadDatasetQuery.getComponentSelects());
@@ -392,8 +395,8 @@ class DownloadDatasetQueryTest {
         Assertions.assertEquals(application, downloadDatasetQuery.getApplication());
         Assertions.assertEquals(DATATYPE_NAME, downloadDatasetQuery.getDataName());
         Assertions.assertNull(downloadDatasetQuery.getOutPut());
-        Assertions.assertEquals((Long) OFFSET, (Long) downloadDatasetQuery.getOffset());
-        Assertions.assertEquals((Long) LIMIT, (Long) downloadDatasetQuery.getLimit());
+        Assertions.assertEquals((Long) OFFSET, downloadDatasetQuery.getOffset());
+        Assertions.assertEquals((Long) LIMIT, downloadDatasetQuery.getLimit());
         Assertions.assertEquals(ROW_IDS, downloadDatasetQuery.getRowIds());
         Assertions.assertNull(downloadDatasetQuery.getNaturalKeys());
         Assertions.assertEquals(COMPONENT_SELECT, downloadDatasetQuery.getComponentSelects());

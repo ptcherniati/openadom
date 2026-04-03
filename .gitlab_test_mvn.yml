@@ -68,5 +68,8 @@ test_app_recursivity:
 test_app_teledetection:
   <<: *test_template
 
+test_use-cases:
+  <<: *test_template
+
 test_no-tags:
   <<: *test_template

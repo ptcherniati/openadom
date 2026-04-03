@@ -6,7 +6,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSortedSet;
 import com.google.common.collect.Range;
@@ -42,13 +41,11 @@ import fr.inra.oresing.domain.data.read.query.OutPut;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.BadLabelNameException;
-import fr.inra.oresing.domain.exceptions.binaryfile.binaryfile.BadFileOrUUIDQuery;
 import fr.inra.oresing.domain.exceptions.configuration.BadApplicationConfigurationException;
 import fr.inra.oresing.domain.exceptions.data.data.BadDownloadDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.*;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
-import fr.inra.oresing.rest.binaryFile.BinaryFileService;
 import fr.inra.oresing.rest.data.DataService;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.data.publication.State;
@@ -69,16 +66,49 @@ import fr.inra.oresing.rest.model.rightsrequest.GetRightsRequestResult;
 import fr.inra.oresing.rest.model.rightsrequest.RightsRequestInfos;
 import fr.inra.oresing.rest.model.synthesis.SynthesisResult;
 import fr.inra.oresing.rest.reactive.*;
-import fr.inra.oresing.rest.rightsrequest.BadRightsRequestInfosQuery;
-import fr.inra.oresing.rest.rightsrequest.BadRightsRequestOrUUIDQuery;
+import fr.inra.oresing.rest.usecases.metadata.FindRightsRequestUseCase;
+import fr.inra.oresing.rest.usecases.metadata.CreateOrUpdateRightsRequestUseCase;
+import fr.inra.oresing.rest.usecases.data.FindReferenceUseCase;
+import fr.inra.oresing.rest.usecases.storage.FindAdditionalFileUseCase;
+import fr.inra.oresing.rest.usecases.storage.DeleteAdditionalFilesUseCase;
+import fr.inra.oresing.rest.usecases.storage.CreateOrUpdateAdditionalFileUseCase;
+import fr.inra.oresing.rest.usecases.storage.GetCharteUseCase;
+import fr.inra.oresing.rest.usecases.storage.GetAdditionalFilesZipStreamUseCase;
+import fr.inra.oresing.rest.usecases.storage.CreateDataUseCase;
+import fr.inra.oresing.rest.usecases.storage.GetStoreFileUseCase;
+import fr.inra.oresing.rest.usecases.storage.UnPublishVersionBeforeDeleteUseCase;
+import fr.inra.oresing.rest.usecases.metadata.GetSynthesisUseCase;
+import fr.inra.oresing.rest.usecases.metadata.GetSynthesisWithVariableUseCase;
+import fr.inra.oresing.rest.usecases.metadata.BuildSynthesisUseCase;
+import fr.inra.oresing.rest.usecases.security.authorization.GetAllUsersUseCase;
+import fr.inra.oresing.rest.usecases.security.authorization.GetAuthorizationScopesUseCase;
+import fr.inra.oresing.rest.usecases.application.GetApplicationOrAccordingToRightsUseCase;
+import fr.inra.oresing.rest.usecases.application.BuildOpenAdomUseCase;
+import fr.inra.oresing.rest.usecases.application.GetApplicationUseCase;
+import fr.inra.oresing.rest.usecases.data.GetFormatCheckedUseCase;
+import fr.inra.oresing.rest.usecases.data.GetReferenceDisplaysByIdUseCase;
+import fr.inra.oresing.rest.usecases.data.GetDataCsvStreamUseCase;
+import fr.inra.oresing.rest.usecases.data.GetDataColumnUseCase;
+import fr.inra.oresing.rest.usecases.data.FindDataUseCase;
+import fr.inra.oresing.rest.usecases.data.FilterListUseCase;
+import fr.inra.oresing.rest.usecases.data.GetCheckedFormatComponentsUseCase;
+import fr.inra.oresing.rest.usecases.data.DeleteDataUseCase;
+import fr.inra.oresing.rest.usecases.storage.RemoveFileUseCase;
+import fr.inra.oresing.rest.usecases.storage.GetFileWithDataUseCase;
+import fr.inra.oresing.rest.usecases.storage.GetFilesOnRepositoryUseCase;
+import fr.inra.oresing.rest.usecases.storage.GetReferencedBinaryFilesUseCase;
 import fr.inra.oresing.rest.services.AdditionalFileService;
 import fr.inra.oresing.rest.services.RelationalService;
 import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.usecases.application.*;
+import fr.inra.oresing.rest.usecases.security.authentication.GetCurrentUserUseCase;
+import fr.inra.oresing.rest.usecases.data.*;
+import fr.inra.oresing.rest.usecases.email.SendUploadErrorsMailUseCase;
+import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.Explode;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -169,6 +199,47 @@ public class OreSiResources {
     final LocaleResolver localeResolver;
     final String frontendOrigin;
     private final JsonRowMapper mapper;
+    private final FindRightsRequestUseCase findRightsRequestUseCase;
+    private final CreateOrUpdateRightsRequestUseCase createOrUpdateRightsRequestUseCase;
+    private final FindReferenceUseCase findReferenceUseCase;
+    private final FindAdditionalFileUseCase findAdditionalFileUseCase;
+    private final DeleteAdditionalFilesUseCase deleteAdditionalFilesUseCase;
+    private final CreateOrUpdateAdditionalFileUseCase createOrUpdateAdditionalFileUseCase;
+    private final GetCharteUseCase getCharteUseCase;
+    private final GetAdditionalFilesZipStreamUseCase getAdditionalFilesZipStreamUseCase;
+    private final CreateDataUseCase createDataUseCase;
+    private final RemoveFileUseCase removeFileUseCase;
+    private final GetFileWithDataUseCase getFileWithDataUseCase;
+    private final GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase;
+    private final GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase;
+    private final GetStoreFileUseCase getStoreFileUseCase;
+    private final UnPublishVersionBeforeDeleteUseCase unPublishVersionBeforeDeleteUseCase;
+    private final GetSynthesisUseCase getSynthesisUseCase;
+    private final GetSynthesisWithVariableUseCase getSynthesisWithVariableUseCase;
+    private final BuildSynthesisUseCase buildSynthesisUseCase;
+    private final GetAllUsersUseCase getAllUsersUseCase;
+    private final GetAuthorizationScopesUseCase getAuthorizationScopesUseCase;
+    private final GetApplicationOrAccordingToRightsUseCase getApplicationOrAccordingToRightsUseCase;
+    private final BuildOpenAdomUseCase buildOpenAdomUseCase;
+    private final GetApplicationUseCase getApplicationUseCase;
+    private final GetFormatCheckedUseCase getFormatCheckedUseCase;
+    private final GetReferenceDisplaysByIdUseCase getReferenceDisplaysByIdUseCase;
+    private final GetDataCsvStreamUseCase getDataCsvStreamUseCase;
+    private final GetDataColumnUseCase getDataColumnUseCase;
+    private final FindDataUseCase findDataUseCase;
+    private final FilterListUseCase filterListUseCase;
+    private final GetCheckedFormatComponentsUseCase getCheckedFormatComponentsUseCase;
+    private final DeleteDataUseCase deleteDataUseCase;
+    private final GetApplicationsUseCase getApplicationsUseCase;
+    private final ValidateConfigurationUseCase validateConfigurationUseCase;
+    private final CreateApplicationUseCase createApplicationUseCase;
+    private final ChangeApplicationConfigurationUseCase changeApplicationConfigurationUseCase;
+    private final BuildDataZipUseCase buildDataZipUseCase;
+    private final SendZipLinkByMailUseCase sendZipLinkByMailUseCase;
+    private final WriteUploadBundleUseCase writeUploadBundleUseCase;
+    private final ReadEntryUseCase readEntryUseCase;
+    private final GetCurrentUserUseCase getCurrentUserUseCase;
+    private final SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -191,7 +262,48 @@ public class OreSiResources {
             @Qualifier("fastExecutorService") ExecutorService fastExecutorService,      // ✅ Fast executor
             @Qualifier("normalExecutorService") ExecutorService normalExecutorService,  // ✅ Normal executor
             @Qualifier("heavyExecutorService") ExecutorService heavyExecutorService,    // ✅ Heavy executor
-            @Qualifier("backupExecutorService") ExecutorService backupExecutorService
+            @Qualifier("backupExecutorService") ExecutorService backupExecutorService,
+            FindRightsRequestUseCase findRightsRequestUseCase,
+            CreateOrUpdateRightsRequestUseCase createOrUpdateRightsRequestUseCase,
+            FindReferenceUseCase findReferenceUseCase,
+            FindAdditionalFileUseCase findAdditionalFileUseCase,
+            DeleteAdditionalFilesUseCase deleteAdditionalFilesUseCase,
+            CreateOrUpdateAdditionalFileUseCase createOrUpdateAdditionalFileUseCase,
+            GetCharteUseCase getCharteUseCase,
+            GetAdditionalFilesZipStreamUseCase getAdditionalFilesZipStreamUseCase,
+            CreateDataUseCase createDataUseCase,
+            GetStoreFileUseCase getStoreFileUseCase,
+            UnPublishVersionBeforeDeleteUseCase unPublishVersionBeforeDeleteUseCase,
+            GetSynthesisUseCase getSynthesisUseCase,
+            GetSynthesisWithVariableUseCase getSynthesisWithVariableUseCase,
+            BuildSynthesisUseCase buildSynthesisUseCase,
+            GetAllUsersUseCase getAllUsersUseCase,
+            GetAuthorizationScopesUseCase getAuthorizationScopesUseCase,
+            GetApplicationOrAccordingToRightsUseCase getApplicationOrAccordingToRightsUseCase,
+            BuildOpenAdomUseCase buildOpenAdomUseCase,
+            GetApplicationUseCase getApplicationUseCase,
+            GetFormatCheckedUseCase getFormatCheckedUseCase,
+            GetReferenceDisplaysByIdUseCase getReferenceDisplaysByIdUseCase,
+            GetDataCsvStreamUseCase getDataCsvStreamUseCase,
+            GetDataColumnUseCase getDataColumnUseCase,
+            RemoveFileUseCase removeFileUseCase,
+            GetFileWithDataUseCase getFileWithDataUseCase,
+            GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase,
+            GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase,
+            FindDataUseCase findDataUseCase,
+            FilterListUseCase filterListUseCase,
+            GetCheckedFormatComponentsUseCase getCheckedFormatComponentsUseCase,
+            DeleteDataUseCase deleteDataUseCase,
+            GetApplicationsUseCase getApplicationsUseCase,
+            ValidateConfigurationUseCase validateConfigurationUseCase,
+            CreateApplicationUseCase createApplicationUseCase,
+            ChangeApplicationConfigurationUseCase changeApplicationConfigurationUseCase,
+            BuildDataZipUseCase buildDataZipUseCase,
+            SendZipLinkByMailUseCase sendZipLinkByMailUseCase,
+            WriteUploadBundleUseCase writeUploadBundleUseCase,
+            ReadEntryUseCase readEntryUseCase,
+            GetCurrentUserUseCase getCurrentUserUseCase,
+            SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase
     ) {
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
@@ -206,6 +318,47 @@ public class OreSiResources {
         this.normalExecutorService = normalExecutorService;
         this.heavyExecutorService = heavyExecutorService;
         this.backupExecutorService = backupExecutorService;
+        this.findRightsRequestUseCase = findRightsRequestUseCase;
+        this.createOrUpdateRightsRequestUseCase = createOrUpdateRightsRequestUseCase;
+        this.findReferenceUseCase = findReferenceUseCase;
+        this.findAdditionalFileUseCase = findAdditionalFileUseCase;
+        this.deleteAdditionalFilesUseCase = deleteAdditionalFilesUseCase;
+        this.createOrUpdateAdditionalFileUseCase = createOrUpdateAdditionalFileUseCase;
+        this.getCharteUseCase = getCharteUseCase;
+        this.getAdditionalFilesZipStreamUseCase = getAdditionalFilesZipStreamUseCase;
+        this.createDataUseCase = createDataUseCase;
+        this.getStoreFileUseCase = getStoreFileUseCase;
+        this.unPublishVersionBeforeDeleteUseCase = unPublishVersionBeforeDeleteUseCase;
+        this.getSynthesisUseCase = getSynthesisUseCase;
+        this.getSynthesisWithVariableUseCase = getSynthesisWithVariableUseCase;
+        this.buildSynthesisUseCase = buildSynthesisUseCase;
+        this.getAllUsersUseCase = getAllUsersUseCase;
+        this.getAuthorizationScopesUseCase = getAuthorizationScopesUseCase;
+        this.getApplicationOrAccordingToRightsUseCase = getApplicationOrAccordingToRightsUseCase;
+        this.buildOpenAdomUseCase = buildOpenAdomUseCase;
+        this.getApplicationUseCase = getApplicationUseCase;
+        this.getFormatCheckedUseCase = getFormatCheckedUseCase;
+        this.getReferenceDisplaysByIdUseCase = getReferenceDisplaysByIdUseCase;
+        this.getDataCsvStreamUseCase = getDataCsvStreamUseCase;
+        this.getDataColumnUseCase = getDataColumnUseCase;
+        this.removeFileUseCase = removeFileUseCase;
+        this.getFileWithDataUseCase = getFileWithDataUseCase;
+        this.getFilesOnRepositoryUseCase = getFilesOnRepositoryUseCase;
+        this.getReferencedBinaryFilesUseCase = getReferencedBinaryFilesUseCase;
+        this.findDataUseCase = findDataUseCase;
+        this.filterListUseCase = filterListUseCase;
+        this.getCheckedFormatComponentsUseCase = getCheckedFormatComponentsUseCase;
+        this.deleteDataUseCase = deleteDataUseCase;
+        this.getApplicationsUseCase = getApplicationsUseCase;
+        this.validateConfigurationUseCase = validateConfigurationUseCase;
+        this.createApplicationUseCase = createApplicationUseCase;
+        this.changeApplicationConfigurationUseCase = changeApplicationConfigurationUseCase;
+        this.buildDataZipUseCase = buildDataZipUseCase;
+        this.sendZipLinkByMailUseCase = sendZipLinkByMailUseCase;
+        this.writeUploadBundleUseCase = writeUploadBundleUseCase;
+        this.readEntryUseCase = readEntryUseCase;
+        this.getCurrentUserUseCase = getCurrentUserUseCase;
+        this.sendUploadErrorsMailUseCase = sendUploadErrorsMailUseCase;
     }
 
 
@@ -223,41 +376,6 @@ public class OreSiResources {
         }
 
         return Locale.ENGLISH;
-    }
-
-    private static CreateRightsRequestRequest deserialiseRightsRequestOrUUIDQuery(final String params) {
-        try {
-            return params != null && !JS_UNDEFINED.equals(params) ? new ObjectMapper().readValue(params, CreateRightsRequestRequest.class) : null;
-        } catch (final IOException e) {
-            throw new BadRightsRequestOrUUIDQuery(e.getMessage());
-        }
-    }
-
-    private static RightsRequestInfos deserialiseRightsRequestQuery(final String params) {
-        try {
-            return params != null && !JS_UNDEFINED.equals(params) ? new ObjectMapper().readValue(params, RightsRequestInfos.class) : null;
-        } catch (final IOException e) {
-            throw new BadRightsRequestInfosQuery(e.getMessage());
-        }
-    }
-
-    private static CreateAdditionalFileRequest deserialiseAdditionalFileOrUUIDQuery(final String params) {
-        try {
-            return params != null && !JS_UNDEFINED.equals(params) ?
-                    new JsonRowMapper<CreateAdditionalFileRequest>().readValue(params, CreateAdditionalFileRequest.class) :
-                    null;
-        } catch (final IOException e) {
-            throw new BadFileOrUUIDQuery(e.getMessage());
-        }
-    }
-
-    private static AdditionalFilesInfos deserialiseAdditionalFilesInfos(final String params) {
-        try {
-            return params != null && !JS_UNDEFINED.equals(params) ? new ObjectMapper().readValue(params, AdditionalFilesInfos.class) : null;
-        } catch (final IOException e) {
-            throw new BadFileOrUUIDQuery(e.getMessage());
-        }
-
     }
 
     private Flux<ReactiveResult> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink) {
@@ -303,13 +421,13 @@ public class OreSiResources {
         Optional<ApplicationDataDelete> applicationDataDelete = applicationUser
                 .filter(ApplicationDataDelete.class::isInstance)
                 .map(ApplicationDataDelete.class::cast);
-        StoreFile storeFile = serviceContainer.versioningService().getStoreFile(
-                application,
-                dataName,
-                fileId.orElse(null),
-                null,
-                applicationDataDelete
-                        .orElse(null)
+        StoreFile storeFile = getStoreFileUseCase.execute(
+            application,
+            dataName,
+            fileId.orElse(null),
+            null,
+            applicationDataDelete
+                .orElse(null)
         );
 
         boolean canDelete = applicationDataDelete.get().canDelete(storeFile.fileOrUuid());
@@ -320,10 +438,10 @@ public class OreSiResources {
             if (!applicationDataDelete.get().hasRightForPublishOrUnPublish(storeFile.fileOrUuid())) {
                 throw new NotApplicationDataWriterForPublishException(applicationName, dataName);
             }
-            DataVersioningResult dataVersioningResult = serviceContainer.versioningService()
-                    .unPublishVersionBeforeDelete(locale, applicationName, id, true);
+                DataVersioningResult dataVersioningResult = unPublishVersionBeforeDeleteUseCase
+                    .execute(locale, applicationName, id, true);
         }
-        Optional<UUID> uuid = serviceContainer.binaryFileService().removeFile(application, id);
+        Optional<UUID> uuid = removeFileUseCase.execute(application, id);
         if (uuid.isPresent()) {
             return ResponseEntity.ok(id.toString());
         } else {
@@ -335,9 +453,10 @@ public class OreSiResources {
     @GetMapping(value = "/applications/{nameOrId}/filesOnRepository/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<BinaryFileResult>> getFilesOnRepository(@PathVariable("nameOrId") final String nameOrId,
                                                                        @PathVariable("dataType") final String dataType,
-                                                                       @RequestParam("repositoryId") final String repositoryId) {
-        final BinaryFileDataset binaryFileDataset = BinaryFileService.deserialiseBinaryFileDatasetQuery(dataType, repositoryId);
-        Map<UUID, UserDescriptionResult> users = serviceContainer.authorizationService().getAllUsers()
+                                                                       @JsonParam("repositoryId") final BinaryFileDataset binaryFileDataset) {
+        Optional.ofNullable(binaryFileDataset)
+                .ifPresent(binaryFileDataset1 -> binaryFileDataset1.setIfNotPresentDatatype(dataType));
+        Map<UUID, UserDescriptionResult> users = getAllUsersUseCase.execute()
                 .stream()
                 .map(UserDescriptionResult::of)
                 .collect(Collectors.toMap(UserDescriptionResult::id, Function.identity()));
@@ -363,8 +482,7 @@ public class OreSiResources {
                 .orElse(binaryFileDataset.getTo());
         binaryFileDataset.setTo(to);
         final List<BinaryFileResult> files =
-                serviceContainer.binaryFileService()
-                        .getFilesOnRepository(nameOrId, dataType, binaryFileDataset, false).stream()
+                getFilesOnRepositoryUseCase.execute(nameOrId, dataType, binaryFileDataset, false).stream()
                         .map(binaryFile -> BinaryFileResult.of(
                                 binaryFile,
                                 Optional.ofNullable(binaryFile)
@@ -390,8 +508,7 @@ public class OreSiResources {
             return null;
         }
         return Optional.ofNullable(binaryFile)
-                .map(bf -> serviceContainer.binaryFileService()
-                        .getReferencedBinaryFiles(
+                .map(bf -> getReferencedBinaryFilesUseCase.execute(
                                 bf.getApplication(),
                                 bf.getParams().binaryFiledataset().getDatatype(),
                                 Set.of(bf.getId()))
@@ -399,12 +516,10 @@ public class OreSiResources {
                 .orElseGet(List::of);
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
-    @GetMapping(value = "/applications/{name}/file/{id}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<StreamingResponseBody> getFile(
+    private ResponseEntity<StreamingResponseBody> getFile(
             @PathVariable("name") final String name,
             @PathVariable("id") final UUID id) {
-        final Optional<BinaryFile> optionalBinaryFile = serviceContainer.binaryFileService().getFileWithData(name, id);
+        final Optional<BinaryFile> optionalBinaryFile = getFileWithDataUseCase.execute(name, id);
         if (optionalBinaryFile.isPresent()) {
             final BinaryFile binaryFile = optionalBinaryFile.get();
 
@@ -426,22 +541,21 @@ public class OreSiResources {
         }
     }
 
-    @PreAuthorize("isFullyAuthenticated()")
-    @SecurityRequirement(name = "Bearer Authentication")
-    @GetMapping(value = "/applications", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<ReactiveResult> getApplications(@RequestParam(required = false, defaultValue = "") final String[] filter) {
+    private Flux<ReactiveResult> getApplications(final String[] filter) {
         final List<ApplicationInformation> filters = Arrays.stream(filter)
                 .map(ApplicationInformation::valueOf)
                 .toList();
-        return buildFluxRequestNDJson(fluxSink -> {
-            final ReactiveProgression.GetApplicationProgression progression = new ReactiveProgression.GetApplicationProgression(0L, fluxSink);
-            serviceContainer.applicationService().getApplications(progression, filters);
-        });
+
+        return getApplicationsUseCase.execute(filters);
     }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping(value = "/validate-configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
     public Flux<ReactiveResult> validateConfiguration(@RequestParam("file") final MultipartFile file) throws IOException {
+        return validateConfigurationInternal(file);
+    }
+
+    private Flux<ReactiveResult> validateConfigurationInternal(final MultipartFile file) throws IOException {
         DataFile dataFile = null;
         try {
             final File physicalFileOrCopy = getPhysicalFileOrCopy(file);
@@ -451,22 +565,15 @@ public class OreSiResources {
         }
         DataFile finalDataFile = dataFile;
         return buildFluxRequestNDJson(fluxSink -> {
-            final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-            final Application application = serviceContainer.applicationService().validateConfiguration(progression, finalDataFile);
+            final Application application = validateConfigurationUseCase.execute(fluxSink::next, finalDataFile);
             fluxSink.next(new ReactiveTypeResult(application));
-            progression.complete();
+            fluxSink.complete();
         });
     }
 
-    @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_APPLICATION_CREATE')")
-    @PostMapping(value = "/applications/{name}", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    @Parameter(examples = @ExampleObject(
-            name = "fichier de configuration",
-            description = "<a href= 'https://anaee-dev.pages.mia.inra.fr/si-ore-v2/schemaExample.yaml'>Fichier d'example</a>"
-    ))
-    public Flux<ReactiveResult> createApplication(@PathVariable("name") final String name,
-                                                  @RequestParam(name = "comment", defaultValue = "") final String comment,
-                                                  @RequestParam("file") final MultipartFile file) throws BadApplicationConfigurationException {
+        private Flux<ReactiveResult> createApplication(final String name,
+                               final String comment,
+                               final MultipartFile file) throws BadApplicationConfigurationException {
         DataFile dataFile = null;
         try {
             final File physicalFileOrCopy = getPhysicalFileOrCopy(file);
@@ -480,35 +587,29 @@ public class OreSiResources {
         }
         DataFile finalDataFile = dataFile;
         return buildFluxRequestNDJson(fluxSink -> {
-            final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
             try {
-                serviceContainer.applicationService().createApplication(progression, name, finalDataFile, comment);
+                createApplicationUseCase.execute(fluxSink::next, name, finalDataFile, comment);
+                fluxSink.complete();
             } catch (Exception technicalException) {
                 fluxSink.error(technicalException);
             }
         });
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = "/applications/{nameOrId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ApplicationResult getApplication(@PathVariable("nameOrId") final String nameOrId, @RequestParam(required = false, defaultValue = "") final String[] filter) {
-        final Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
-        return serviceContainer.applicationService().buildOpenAdom(application, filter);
+    private ApplicationResult getApplication(final String nameOrId, final String[] filter) {
+        final Application application = getApplicationOrAccordingToRightsUseCase.execute(nameOrId);
+        return buildOpenAdomUseCase.execute(application, filter);
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_ADD')")
-    @GetMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<StreamingResponseBody> getConfiguration(@PathVariable("nameOrId") final String nameOrId) {
-        final Application application = serviceContainer.applicationService().getApplication(nameOrId);
+    private ResponseEntity<StreamingResponseBody> getConfiguration(final String nameOrId) {
+        final Application application = getApplicationUseCase.execute(nameOrId);
         final UUID configFileId = application.getConfigFile();
         return getFile(nameOrId, configFileId);
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
-    @PostMapping(value = "/applications/{nameOrId}/configuration", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<ReactiveResult> changeConfiguration(@PathVariable("nameOrId") final String nameOrId,
-                                                    @RequestParam("file") final MultipartFile file,
-                                                    @RequestParam(name = "comment", defaultValue = "") final String comment) throws BadApplicationConfigurationException {
+    private Flux<ReactiveResult> changeConfiguration(final String nameOrId,
+                                                     final MultipartFile file,
+                                                     final String comment) throws BadApplicationConfigurationException {
 
         return buildFluxRequestNDJson(fluxSink -> {
             if (file.isEmpty()) {
@@ -522,10 +623,9 @@ public class OreSiResources {
                 throw OreSiIOException.ORE_SI_IOEXCEPTION_CANT_LOAD_FILE();
             }
 
-            final ReactiveProgression.ChangeApplicationProgression progression = new ReactiveProgression.ChangeApplicationProgression(0D, fluxSink);
-            final UUID uuid = serviceContainer.applicationService().changeApplicationConfiguration(progression, nameOrId, dataFile, comment);
-            progression.fluxSink().next(new ReactiveTypeResult(uuid));
-            progression.complete();
+            final UUID uuid = changeApplicationConfigurationUseCase.execute(fluxSink::next, nameOrId, dataFile, comment);
+            fluxSink.next(new ReactiveTypeResult(uuid));
+            fluxSink.complete();
         });
     }
 
@@ -535,26 +635,17 @@ public class OreSiResources {
      * @param nameOrId l'id ou le nom de l'application
      * @return un tableau de chaine
      */
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping(value = "/applications/{nameOrId}/rightsRequest", produces = MediaType.APPLICATION_JSON_VALUE)
-    @Operation(description = "Get a rightsRequest with their description using search params")
-    public ResponseEntity<GetRightsRequestResult> listRightsRequest(
-            @PathVariable("nameOrId") final String nameOrId,
-            @RequestParam(value = "params", required = false) final String params) {
-        final RightsRequestInfos rightsRequestInfos = deserialiseRightsRequestQuery(params);
-        final GetRightsRequestResult list = serviceContainer.rightsRequestService().findRightsRequest(nameOrId, rightsRequestInfos);
+        private ResponseEntity<GetRightsRequestResult> listRightsRequest(
+            final String nameOrId,
+            final RightsRequestInfos rightsRequestInfos) {
+        final GetRightsRequestResult list = findRightsRequestUseCase.execute(nameOrId, rightsRequestInfos);
         return ResponseEntity.ok(list);
     }
 
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping(value = "/applications/{nameOrId}/rightsRequest", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> createRightsRequest(@PathVariable("nameOrId") final String nameOrId,
-                                                 @RequestBody final CreateRightsRequestRequest createRightsRequestRequest) {
-        //CreateRightsRequestRequest createRightsRequestRequest = Strings.isNullOrEmpty(params) || "undefined".equals(params) ? null : deserialiseRightsRequestOrUUIDQuery(params);
-        final UUID fileUUID = serviceContainer.rightsRequestService().createOrUpdate(createRightsRequestRequest, nameOrId);
+    private ResponseEntity<?> createRightsRequest(final String nameOrId,
+                                                  final CreateRightsRequestRequest createRightsRequestRequest) {
+        final UUID fileUUID = createOrUpdateRightsRequestUseCase.execute(createRightsRequestRequest, nameOrId);
         return ResponseEntity.ok(fileUUID);
-
-
     }
 
     /**
@@ -565,9 +656,7 @@ public class OreSiResources {
      * référentiels).
      */
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
-    @GetMapping(value = "/applications/{nameOrId}/references", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<String>> listNameReferences(@PathVariable("nameOrId") String nameOrId) {
+    private ResponseEntity<List<String>> listNameReferences(String nameOrId) {
         String[] filter = {ApplicationInformation.ALL.name()};
         final ApplicationResult application = getApplication(nameOrId, filter);
 
@@ -581,20 +670,19 @@ public class OreSiResources {
      * @param refType  le type du referenciel
      * @return un tableau de chaine
      */
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
-    @GetMapping(value = "/applications/{nameOrId}/references/{refType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetReferenceResult> listDataForColumn(
-            @PathVariable("nameOrId") final String nameOrId,
-            @PathVariable("refType") final String refType,
-            @RequestParam final MultiValueMap<String, String> params) {
-        final List<DataValue> list = serviceContainer.dataService().findReference(nameOrId, refType, params);
+    private ResponseEntity<GetReferenceResult> listDataForColumn(
+            final String nameOrId,
+            final String refType,
+            final MultiValueMap<String, String> params) {
+        final List<DataValue> list = findReferenceUseCase.execute(nameOrId, refType, params);
 
-        final Map<String, Map<String, LineChecker>> checkedFormatColumns = serviceContainer.dataService().getFormatChecked(nameOrId, refType);
+        final Map<String, Map<String, LineChecker>> checkedFormatColumns = getFormatCheckedUseCase.execute(nameOrId, refType);
         Set<String> listOfReferenceIds = list.stream()
                 .map(DataValue::getReferenceType)
                 .collect(Collectors.toSet());
-        final Map<Ltree, List<DataValue>> requiredReferencesValues = serviceContainer.dataService().getReferenceDisplaysById(serviceContainer.applicationService()
-                .getApplicationOrApplicationAccordingToRights(nameOrId), listOfReferenceIds);
+        final Map<Ltree, List<DataValue>> requiredReferencesValues = getReferenceDisplaysByIdUseCase.execute(
+            getApplicationOrAccordingToRightsUseCase.execute(nameOrId),
+            listOfReferenceIds);
         Map<String, LineChecker> referenceLineCheckers = checkedFormatColumns.get(ReferenceType.class.getSimpleName());
         Map<String, String> referenceTypeForReferencingColumns =
                 Optional.ofNullable(checkedFormatColumns.get(ReferenceType.class.getSimpleName()))
@@ -638,7 +726,7 @@ public class OreSiResources {
             @PathVariable("refType") final String refType) {
         Locale language = OreSiResources.getDefaultLocale();
 
-        final StreamingResponseBody streamResponseBody = out -> serviceContainer.dataService().getDataCsvStream(out, nameOrId, refType, language, false);
+        final StreamingResponseBody streamResponseBody = out -> getDataCsvStreamUseCase.execute(out, nameOrId, refType, language, false);
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
         response.setHeader(HEADER_CONTENT_DISPOSITION, String.format(HEADER_ATTACHMENT_FILENAME_S_CSV, refType));
         response.addHeader(HEADER_PRAGMA, HEADER_NO_CACHE);
@@ -653,19 +741,17 @@ public class OreSiResources {
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{refType}/{column}", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<List<String>>> listDataForColumn(@PathVariable("nameOrId") final String nameOrId, @PathVariable("refType") final String refType, @PathVariable("column") final String column) {
-        final Application application = serviceContainer.applicationService().getApplication(nameOrId);
-        final List<List<String>> result = serviceContainer.dataService().getDataColumn(application, refType, column);
+        final Application application = getApplicationUseCase.execute(nameOrId);
+        final List<List<String>> result = getDataColumnUseCase.execute(application, refType, column);
         return ResponseEntity.ok(result);
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_WRITE')")
-    @PostMapping(value = "/applications/{nameOrId}/data/{dataName}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Map<String, Object>> createData(
+    protected ResponseEntity<Map<String, Object>> createData(
             HttpServletRequest request,
-            @PathVariable("nameOrId") final String nameOrId,
-            @PathVariable("dataName") final String dataName,
-            @RequestParam(value = "file", required = false) final MultipartFile file,
-            @RequestParam(value = "params", required = false) final String params) throws JsonProcessingException {
+            final String nameOrId,
+            final String dataName,
+            final MultipartFile file,
+            final String params) throws JsonProcessingException {
         Locale locale = localeResolver.resolveLocale(request);
         DataFile dataFile = null;
         try {
@@ -677,10 +763,10 @@ public class OreSiResources {
         try {
             DataFile finalDataFile = dataFile;
             final SecurityContext context = SecurityContextHolder.getContext();
-            final DataVersioningResult dataVersioningResult =  heavyExecutorService.submit(() -> {
+            final DataVersioningResult dataVersioningResult = heavyExecutorService.submit(() -> {
                 SecurityContextHolder.setContext(context);
                 try {
-                    return serviceContainer.versioningService().createData(
+                    return createDataUseCase.execute(
                             locale, nameOrId, dataName, finalDataFile, false, true);
                 } catch (InvalidDatasetContentException invalidDatasetContentException) {
                     List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
@@ -690,14 +776,14 @@ public class OreSiResources {
                                 return row.validationCheckResult().validationCheckResultToRest(row.lineNumber());
                             })
                             .toList();
-                    Application application = serviceContainer.applicationService().getApplicationOrApplicationAccordingToRights(nameOrId);
+                    Application application = getApplicationOrAccordingToRightsUseCase.execute(nameOrId);
                     String errorsToJson = new ObjectMapper()
                             .registerModule(new JavaTimeModule())
                             .writeValueAsString(validations);
                     String localizedApplicationName = application.getLocalizedLocalName(locale);
                     String localizedDataName = application.getLocalizedDataName(locale, dataName);
-                    OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
-                    serviceContainer.emailService().sendUpoadErrorsMail(
+                    OreSiUser currentUser = getCurrentUserUseCase.execute();
+                    sendUploadErrorsMailUseCase.execute(
                             locale,
                             localizedApplicationName,
                             localizedDataName,
@@ -713,9 +799,12 @@ public class OreSiResources {
                     .created(URI.create(dataVersioningResult.uri()))
                     .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
         } catch (ExecutionException e) {
-            throw switch (e.getCause()) {
+            Throwable cause = unwrapException(e.getCause());
+            throw switch (cause) {
+                case InvalidDatasetContentException invalidEx -> invalidEx;
                 case OreSiTechnicalException oreSiTechnicalException -> oreSiTechnicalException;
-                default -> new IllegalStateException("Unexpected value: " + e.getCause());
+                case RuntimeException runtimeEx -> runtimeEx;
+                default -> new IllegalStateException("Unexpected value: " + cause);
             };
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -725,10 +814,20 @@ public class OreSiResources {
         }
     }
 
-    @GetMapping(value = "/applications/{nameOrId}/data", produces = MediaType.APPLICATION_JSON_VALUE)
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ_SOME')")
-    public ResponseEntity<List<String>> listData(@PathVariable("nameOrId") final String nameOrId) {
-        final Application application = serviceContainer.applicationService().getApplication(nameOrId);
+    private Throwable unwrapException(Throwable throwable) {
+        while (throwable instanceof ExecutionException ||
+               throwable instanceof CompletionException) {
+            Throwable cause = throwable.getCause();
+            if (cause == null || cause == throwable) {
+                break;  // Éviter boucle infinie
+            }
+            throwable = cause;
+        }
+        return throwable;
+    }
+
+    protected ResponseEntity<List<String>> listData(final String nameOrId) {
+        final Application application = getApplicationUseCase.execute(nameOrId);
         List<String> allDataNames = application.getAllDataNames();
         return ResponseEntity.ok(allDataNames);
     }
@@ -740,17 +839,15 @@ public class OreSiResources {
      * @param additionalFileName le type du referenciel
      * @return un tableau de chaine
      */
-    @GetMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetAdditionalFilesResult> listAdditionalFilesNames(
-            @PathVariable("nameOrId") final String nameOrId,
-            @PathVariable("additionalFileName") final String additionalFileName,
-            @RequestParam(required = false) final String params) {
-        AdditionalFilesInfos additionalFilesInfos = deserialiseAdditionalFilesInfos(params);
+    private ResponseEntity<GetAdditionalFilesResult> listAdditionalFilesNames(
+            final String nameOrId,
+            final String additionalFileName,
+            AdditionalFilesInfos additionalFilesInfos) {
         if (additionalFilesInfos == null) {
             additionalFilesInfos = new AdditionalFilesInfos();
         }
         additionalFilesInfos.setFiletype(additionalFilesInfos.getFiletype() == null ? additionalFileName : additionalFilesInfos.getFiletype());
-        final GetAdditionalFilesResult list = serviceContainer.additionalFileService().findAdditionalFile(nameOrId, additionalFilesInfos);
+        final GetAdditionalFilesResult list = findAdditionalFileUseCase.execute(nameOrId, additionalFilesInfos);
         return ResponseEntity.ok(list);
     }
 
@@ -761,19 +858,17 @@ public class OreSiResources {
             //@ApiParam(required = true, value = "The name or uuid of an application")
             @PathVariable("nameOrId") final String nameOrId,
             //@ApiParam(required = false, value = "The parameters for filter the search")
-            @RequestParam(value = "params", required = false) final String params) throws
+            @JsonParam(value = "params", required = false) final AdditionalFilesInfos additionalFilesInfos) throws
             BadAdditionalFileParamsSearchException {
-        final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || JS_UNDEFINED.equals(params) ? null : deserialiseAdditionalFilesInfos(params);
-
         final StreamingResponseBody streamResponseBody;
         if (AdditionalFileService.CHARTE.equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
             response.setHeader("Content-Security-Policy", "frame-ancestors %s".formatted(frontendOrigin));
-            streamResponseBody = out -> serviceContainer.additionalFileService().getCharte(out, response, nameOrId, additionalFilesInfos);
+            streamResponseBody = out -> getCharteUseCase.execute(out, response, nameOrId, additionalFilesInfos);
         } else {
             streamResponseBody = out -> {
                 try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(out)) {
-                    serviceContainer.additionalFileService().getAdditionalFilesNamesZipStream(zipOutputStream, nameOrId, additionalFilesInfos);
+                    getAdditionalFilesZipStreamUseCase.execute(zipOutputStream, nameOrId, additionalFilesInfos);
                 } catch (final IOException ioe) {
                     switch (OreSiResources.getDefaultLocale().getLanguage()) {
                         case FR -> log.error(IO_ERROR_FR, ioe);
@@ -792,16 +887,11 @@ public class OreSiResources {
                 .body(streamResponseBody);
     }
 
-    @DeleteMapping(value = "/applications/{nameOrId}/additionalFiles", produces = MediaType.TEXT_PLAIN_VALUE)
-    @Operation(description = "Delete a additionalFiles ", summary = "Delete additional file based on params search")
-    public ResponseEntity<String> removeAdditionalFiles(
-            //@ApiParam(required = true, value = "The name or uuid of an application")
-            @PathVariable("nameOrId") final String nameOrId,
-            //@ApiParam(required = false, value = "The parameters for filter the search")
-            @RequestParam(value = "params", required = false) final String params) throws
+    private ResponseEntity<String> removeAdditionalFiles(
+            final String nameOrId,
+            final AdditionalFilesInfos additionalFilesInfos) throws
             BadAdditionalFileParamsSearchException {
-        final AdditionalFilesInfos additionalFilesInfos = Strings.isNullOrEmpty(params) || JS_UNDEFINED.equals(params) ? null : deserialiseAdditionalFilesInfos(params);
-        final List<UUID> deletedFiles = serviceContainer.additionalFileService().deleteAdditionalFiles(nameOrId, additionalFilesInfos);
+        final List<UUID> deletedFiles = deleteAdditionalFilesUseCase.execute(nameOrId, additionalFilesInfos);
         if (deletedFiles != null && !deletedFiles.isEmpty()) {
             return ResponseEntity.ok(deletedFiles.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
         } else {
@@ -809,13 +899,11 @@ public class OreSiResources {
         }
     }
 
-    @PostMapping(value = "/applications/{nameOrId}/additionalFiles/{additionalFileName}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<UUID> createAdditionalFile(@PathVariable("nameOrId") final String nameOrId,
-                                                     @PathVariable("additionalFileName") final String additionalFileName,
-                                                     @RequestParam(value = "file", required = false) final MultipartFile file,
-                                                     @RequestParam(value = "params") final String params) {
-        final CreateAdditionalFileRequest createAdditionalFileRequest = Strings.isNullOrEmpty(params) || JS_UNDEFINED.equals(params) ? null : deserialiseAdditionalFileOrUUIDQuery(params);
-        final UUID fileUUID = serviceContainer.additionalFileService().createOrUpdate(createAdditionalFileRequest, additionalFileName, nameOrId, file);
+    private ResponseEntity<UUID> createAdditionalFile(final String nameOrId,
+                                                       final String additionalFileName,
+                                                       final MultipartFile file,
+                                                       final CreateAdditionalFileRequest createAdditionalFileRequest) {
+        final UUID fileUUID = createOrUpdateAdditionalFileUseCase.execute(createAdditionalFileRequest, additionalFileName, nameOrId, file);
         return ResponseEntity.ok(fileUUID);
 
 
@@ -824,271 +912,23 @@ public class OreSiResources {
     /**
      * export as JSON
      */
-    @Operation(parameters = @Parameter(
-            name = "downloadDatasetQuery",
-            ref = "fr.inra.oresing.persistence.requestBuilder.datatype.DownloadDatasetQuery",
-            explode = Explode.TRUE
+        protected ResponseEntity<GetDataResult> getAllDataJson(
+            final String nameOrId,
+            final String dataName,
+            final DownloadDatasetQuery params,
+            boolean loadExample) {
 
-    ), description = "Return an extraction of data of datatType 'dataName' of application 'nameOrId'")
-
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
-    @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/json", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<GetDataResult> getAllDataJson(
-            @PathVariable("nameOrId") final String nameOrId,
-            @PathVariable("dataType") final String dataName,
-            @io.swagger.v3.oas.annotations.parameters.RequestBody(
-                    content = @Content(examples = @ExampleObject(
-                            name = "general case",
-                            summary = "You can provide an optional json with componentSelects, componentFilters, componentOrderBy",
-                            value =
-                                    """
-                                                    {
-                                                        "componentSelects": [...],
-                                                        "componentFilters": [...],
-                                                        "componentOrderBy": [...]
-                                                    }
-                                            """)),
-                    ref = "fr.inra.oresing.persistence.requestBuilder.datatype.DownloadDatasetQuery",
-                    description = "A parameter that can reduce, filter or order the result"
-            )
-            @Parameter(
-                    examples = {
-                            @ExampleObject(
-                                    name = "general case",
-                                    ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = """
-                                            "General case. You can provide an optional json with componentSelects, rowIds, authorizationDescriptions, componentFilters, componentOrderBy\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "componentSelects": [...],
-                                                                "componentFilters": [...],
-                                                                "componentOrderBy": [...]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "reduce by select",
-                                    ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = """
-                                            "Select by. You can provide an optional json with componentSelects\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "componentSelects": [sites, date]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "order by",
-                                    ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = """
-                                            "Order by. You can provide an optional json with componentOrderBy\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "componentOrderBy": [
-                                                                      {
-                                                                         "componentKey": "espece",,
-                                                                         "order": "ASC"
-                                                                      }
-                                                                  ]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select by rowIds",
-                                    ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = """
-                                            "Find by RowIds. You can provide an optional json with rowIds\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "rowIds" : [ "59ae5fec-8ed5-495b-b201-5475ea50906e"]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select by naturalKeys",
-                                    ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = """
-                                            "Find by naturalKeys. You can provide an optional json with naturalKeys\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "naturalKey" : ["projet_manche__oir__p1__03_01_1984__lpm"]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select by hierarchicalKey",
-                                    ref = "fr.inra.oresing.model.data.read.DownloadDatasetQuery.class",
-                                    value = """
-                                            "Find by naturalKeys. You can provide an optional json with naturalKeys\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "naturalKey" : ["pemKprojet_manche__oir__p1__03_01_1984__lpm"]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select by submissionScope",
-                                    ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = """
-                                            "Find by authorizations. You can provide an optional json with submissionScope\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                    "authorizationDescriptions": [
-                                                                              {
-                                                                                "timeScope": {
-                                                                                  "from": "1984-01-01",
-                                                                                  "to": "1984-01-02"
-                                                                                },
-                                                                                "requiredAuthorizations": {
-                                                                                    "projet": "projetKprojet_manche",
-                                                                                    "sites": "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1"
-                                                                                  }
-                                                                              },
-                                                                              {
-                                                                                "timeScope": {
-                                                                                  "from": "1984-01-03",
-                                                                                  "to": "1984-01-04"
-                                                                                },
-                                                                                "requiredAuthorizations": {
-                                                                                    "projet": "projetKprojet_atlantique",
-                                                                                    "sites": "type_de_sitesKplateforme.sitesKoir.sitesKoir__p1"
-                                                                                  }
-                                                                              }
-                                                                   ]
-                                                                 }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select filter by filter (like '%filter%')",
-                                    ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = """
-                                            "Select by filter. You can provide an optional json with componentFilters\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "componentFilters": [
-                                                                   {
-                                                                     "componentKey": "bassin",
-                                                                     "filters": ["nivelle"]
-                                                                   },
-                                                                   {
-                                                                     "componentKey": "espece",,
-                                                                     "filters": ["tr"]
-                                                                   }
-                                                                ]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select filter by filter with regexp (~ '^[ao]m+)",
-                                    ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = """
-                                            "Select by RegExp. You can provide an optional json with componentFilters. Can be apply only on text not for reference.\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "componentFilters": [
-                                                                   "componentFilters": [
-                                                                         {
-                                                                           "componentKey": "espece",
-                                                                           "filters": ["^[ao]m+"],
-                                                                           "isRegExp": "true"
-                                                                         }
-                                                                ]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select filter by filter date (With declared pattern)",
-                                    ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = """
-                                            "Select by date. You can provide an optional json with componentFilters\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "componentFilters": [
-                                                                   {
-                                                                     "componentKey":"date",,
-                                                                     "filters": ["12:45:00"]
-                                                                   }
-                                                                ]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select filter by filter date by interval (With declared pattern)",
-                                    ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = """
-                                            "Select by interval of date. You can provide an optional json with componentFilters\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "componentFilters": [
-                                                                   {
-                                                                         "componentKey": "date",
-                                                                         "intervalsValues": [
-                                                                            "from": "01/01/1984",
-                                                                            "to": "04/01/1984"
-                                                                         ]
-                                                                       }
-                                                                ]
-                                                            }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select filter by filter numeric)",
-                                    ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = """
-                                            "Select by numeric. You can provide an optional json with componentFiltersé\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                    "componentSelects": ["individusNumbervalue"],
-                                                                    "componentFilters": [
-                                                                              {
-                                                                                "componentKey": "individusNumbervalue",
-                                                                                "filters": [41]
-                                                                              }
-                                                                   ]
-                                                                 }
-                                                    """),
-                            @ExampleObject(
-                                    name = "select filter by filter numeric by interval)",
-                                    ref = "fr.inra.oresing.model.data.authorizationDescriptions.class",
-                                    value = """
-                                            "Select by interval of numeric. You can provide an optional json with componentFilters\"""",
-                                    description =
-                                            """
-                                                            {
-                                                                "componentFilters": [
-                                                                   {
-                                                                     "componentKey": {
-                                                                       "variable": "Nombre d'individus",
-                                                                       "component": "value"
-                                                                     },
-                                                                     "intervalsValues":[ {
-                                                                        "from": 25,
-                                                                        "to": 30
-                                                                     }]
-                                                                   }
-                                                                ]
-                                                            }
-                                                    """)
-                    },
-                    name = "downloadDatasetQuery",
-                    description = "An object for reduce, filter and order result"
-            )
-            @RequestParam(value = "downloadDatasetQuery", required = false) final String params,
-            @RequestParam(defaultValue = "false") boolean loadExample) {
-
-        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        Application application = getApplicationUseCase.execute(nameOrId);
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
-                deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, loadExample);
+                buildDownloadDatasetQuery(params, nameOrId, dataName, loadExample);
 
         final Locale locale = Optional.of(downloadDatasetQuery)
                 .map(fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery::getLanguage)
                 .map(Locale::of)
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
-        final List<DataRow> data = serviceContainer.dataService().findData(downloadDatasetQuery);
-        final List<FilterList> filterLists = serviceContainer.dataService()
-                .filterList(downloadDatasetQuery.application(), downloadDatasetQuery.dataName())
+        final List<DataRow> data = findDataUseCase.execute(downloadDatasetQuery);
+        final List<FilterList> filterLists = filterListUseCase.execute(downloadDatasetQuery.application(), downloadDatasetQuery.dataName())
                 .collect(Collectors.toList()).block();
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
@@ -1113,7 +953,7 @@ public class OreSiResources {
                             .equals(a) ? -1 : 1;
                 })
                 .collect(ImmutableSet.toImmutableSet());
-        final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = serviceContainer.dataService().getCheckedFormatComponents(nameOrId, dataName);
+        final Map<String, Map<String, LineCheckerResult>> checkedFormatcomponents = getCheckedFormatComponentsUseCase.execute(nameOrId, dataName);
         final List<DataRowResult> dataRowResults = data.stream()
                 .map(dataRow -> DataRowResult.of(
                         dataRow,
@@ -1121,7 +961,7 @@ public class OreSiResources {
                         locale.getLanguage()
                 ))
                 .toList();
-        Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = serviceContainer.authorizationService().getAuthorizationScopes(application, MenuType.submission);
+        Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = getAuthorizationScopesUseCase.execute(application, MenuType.submission);
 
         return ResponseEntity.ok(new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
@@ -1135,21 +975,18 @@ public class OreSiResources {
     /**
      * export as JSON
      */
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DELETE_FILE')")
-    @DeleteMapping(value = "/applications/{nameOrId}/data/{dataType}", produces = MediaType.TEXT_PLAIN_VALUE)
-    public ResponseEntity<String> deleteData(
-            @PathVariable("nameOrId") final String nameOrId,
-            @PathVariable("dataType") final String dataName,
-            @RequestParam(value = "downloadDatasetQuery", required = false) final String params) {
-        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, false);
-        final List<UUID> deletedData = serviceContainer.dataService().deleteData(downloadDatasetQuery);
+        protected ResponseEntity<String> deleteData(
+            final String nameOrId,
+            final String dataName,
+            final DownloadDatasetQuery params) {
+        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = buildDownloadDatasetQuery(params, nameOrId, dataName, false);
+        final List<UUID> deletedData = deleteDataUseCase.execute(downloadDatasetQuery);
         return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
 
     }
 
     private Set<String> buildOrderedVariables(final String nameOrId, final String dataName) {
-        final Submission.SubmissionScope authorization = serviceContainer.applicationService()
-                .getApplication(nameOrId)
+        final Submission.SubmissionScope authorization = getApplicationUseCase.execute(nameOrId)
                 .findSubmission(dataName)
                 .map(Submission::submissionScope)
                 .orElse(null);
@@ -1175,9 +1012,8 @@ public class OreSiResources {
             final HttpServletResponse response,
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataType,
-            @RequestParam(value = "downloadDatasetQuery", required = false) final String params) throws InterruptedException, ExecutionException, FileNotFoundException {
-
-        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataType, false);
+            @JsonParam(value = "downloadDatasetQuery", required = false) final DownloadDatasetQuery params) {
+        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = buildDownloadDatasetQuery(params, nameOrId, dataType, false);
 
         AtomicReference<OreSiUser> user = new AtomicReference<>();
         AtomicReference<Path> zipFile = new AtomicReference<>();
@@ -1196,7 +1032,7 @@ public class OreSiResources {
                     SecurityContextHolder.setContext(securityContext);
                     user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
                     tempDirectory.set(Files.createTempDirectory(Paths.get(TMP), fileName));
-                    serviceContainer.dataService().buildDataZip(tempDirectory.get(), downloadDatasetQuery);
+                    buildDataZipUseCase.execute(tempDirectory.get(), downloadDatasetQuery);
                     Path finalTempZipDirectory = tempDirectory.get();
                     try {
                         zipFile.set(finalTempZipDirectory.resolveSibling(finalTempZipDirectory.getFileName() + ".zip"));
@@ -1221,7 +1057,7 @@ public class OreSiResources {
             heavyExecutorService.submit(() -> {
                 SecurityContextHolder.setContext(securityContext);
                 try {
-                    serviceContainer.dataService().sendZipLinkByMail(zipFile.get(), downloadDatasetQuery, user.get());
+                    sendZipLinkByMailUseCase.execute(zipFile.get(), downloadDatasetQuery, user.get());
                 } catch (Exception e) {
                     log.error(EMAIL_ERROR, e);
                 }
@@ -1284,14 +1120,15 @@ public class OreSiResources {
         }
     }
 
-    private fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery deserialiseParamDownloadDatasetQuery(
-            final String params, final String applicationNameOrID, final String dataType, boolean loadExample) {
+    private fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery buildDownloadDatasetQuery(
+            DownloadDatasetQuery downloadDatasetQuery, final String applicationNameOrID, final String dataType, boolean loadExample) {
+            downloadDatasetQuery = Optional.ofNullable(downloadDatasetQuery)
+                .orElseGet(DownloadDatasetQuery::new);
         try {
-            final DownloadDatasetQuery downloadDatasetQuery = params != null ? new JsonRowMapper<DownloadDatasetQuery>().toObject(params, DownloadDatasetQuery.class) : new DownloadDatasetQuery();
             if (loadExample) {
                 downloadDatasetQuery.setLimit(500L);
             }
-            final Application application = serviceContainer.applicationService().getApplication(applicationNameOrID);
+            final Application application = getApplicationUseCase.execute(applicationNameOrID);
             downloadDatasetQuery.setApplication(application);
             downloadDatasetQuery.setDataName(dataType);
             final Locale locale = Optional.of(downloadDatasetQuery)
@@ -1309,12 +1146,10 @@ public class OreSiResources {
         }
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
-    @GetMapping(value = "/applications/{nameOrId}/synthesis/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") final String nameOrId,
-                                          @PathVariable("dataType") final String dataType) {
+    private ResponseEntity<?> getSynthesis(final String nameOrId,
+                                           final String dataType) {
         try {
-            final Map<String, List<OreSiSynthesis>> synthesis = serviceContainer.synthesisService().getSynthesis(nameOrId, dataType);
+            final Map<String, List<OreSiSynthesis>> synthesis = getSynthesisUseCase.execute(nameOrId, dataType);
             final String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s", nameOrId, dataType), Charset.defaultCharset());
             Map<String, List<SynthesisResult>> synthesisResults = synthesis.entrySet()
                     .stream()
@@ -1330,13 +1165,11 @@ public class OreSiResources {
         }
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
-    @GetMapping(value = "/applications/{nameOrId}/synthesis/{dataType}/{variable}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> getSynthesis(@PathVariable("nameOrId") final String nameOrId,
-                                          @PathVariable("dataType") final String dataType,
-                                          @PathVariable("variable") final String variable) {
+    private ResponseEntity<?> getSynthesis(final String nameOrId,
+                                           final String dataType,
+                                           final String variable) {
         try {
-            final Map<String, List<OreSiSynthesis>> synthesis = serviceContainer.synthesisService().getSynthesis(nameOrId, dataType, variable);
+            final Map<String, List<OreSiSynthesis>> synthesis = getSynthesisWithVariableUseCase.execute(nameOrId, dataType, variable);
             final String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s/%s", nameOrId, dataType, variable), Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(synthesis);
         } catch (final InvalidDatasetContentException e) {
@@ -1345,13 +1178,11 @@ public class OreSiResources {
         }
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
-    @PutMapping(value = "/applications/{nameOrId}/synthesis/{dataType}/{variable}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> buidSynthesis(@PathVariable("nameOrId") final String nameOrId,
-                                           @PathVariable("dataType") final String dataType,
-                                           @PathVariable("variable") final String variable) {
+    private ResponseEntity<?> buidSynthesis(final String nameOrId,
+                                            final String dataType,
+                                            final String variable) {
         try {
-            final Map<String, List<OreSiSynthesis>> synthesis = serviceContainer.synthesisService().buildSynthesis(nameOrId, dataType, variable);
+            final Map<String, List<OreSiSynthesis>> synthesis = buildSynthesisUseCase.execute(nameOrId, dataType, variable);
             final String uri = UriUtils.encodePath(String.format("/applications/%s/synthesis/%s%s", nameOrId, dataType, variable != null ? "/" + variable : ""), Charset.defaultCharset());
             return ResponseEntity.created(URI.create(uri)).body(synthesis);
         } catch (final InvalidDatasetContentException e) {
@@ -1360,17 +1191,13 @@ public class OreSiResources {
         }
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
-    @PutMapping(value = "/applications/{nameOrId}/synthesis/{dataType}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> buidSynthesis(@PathVariable("nameOrId") final String nameOrId,
-                                           @PathVariable("dataType") final String dataType) {
+    private ResponseEntity<?> buidSynthesis(final String nameOrId,
+                                            final String dataType) {
         return buidSynthesis(nameOrId, dataType, null);
     }
 
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_APPLICATION_MODIFY')")
-    @GetMapping(value = "/applications/{nameOrId}/upload-bundle")
-    public ResponseEntity<?> getUploadBundle(
+    private ResponseEntity<?> getUploadBundle(
             @PathVariable("nameOrId") String nameOrId,
             @RequestParam(value = "withData", required = false, defaultValue = "false") boolean withData,
             @RequestParam(value = "locale", required = false) Locale locale,
@@ -1401,8 +1228,7 @@ public class OreSiResources {
 
                 BuildBundleReport report = null;
                 try {
-                    report = serviceContainer.dataService()
-                            .writeUploadBundle(instanceUrl, nameOrId, withData, locale, tempZipDirectory);
+                    report = writeUploadBundleUseCase.execute(instanceUrl, nameOrId, withData, locale, tempZipDirectory);
                 } catch (Exception e) {
                     log.error(IO_ERROR_WRITE, e);
                 }
@@ -1411,7 +1237,7 @@ public class OreSiResources {
                     try {
                         Path zipFile = tempZipDirectory.resolveSibling(tempZipDirectory.getFileName() + ".zip");
                         ZipUtils.zipDirectory(tempZipDirectory, zipFile);
-                        serviceContainer.dataService().sendZipLinkByMail(zipFile, report, user);
+                        sendZipLinkByMailUseCase.execute(zipFile, report, user);
                     } catch (Exception e) {
                         log.error(EMAIL_ERROR, e);
                     }
@@ -1443,16 +1269,14 @@ public class OreSiResources {
         return ResponseEntity.ok().build();
     }
 
-    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_DOWNLOAD_BUNDLE')")
-    @PostMapping(value = "/applications/{nameOrId}/download-bundle", produces = MediaType.APPLICATION_NDJSON_VALUE)
-    public Flux<ReactiveResult> uploadBundle(
+    private Flux<ReactiveResult> uploadBundle(
             HttpServletRequest request,
             @PathVariable String nameOrId,
             @RequestParam("file") MultipartFile zipBundle) {
 
         Locale locale = localeResolver.resolveLocale(request);
         final String origin = request.getHeader("Origin");
-        final OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
+        final OreSiUser currentUser = getCurrentUserUseCase.execute();
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
             heavyExecutorService.submit(() -> {
@@ -1464,7 +1288,7 @@ public class OreSiResources {
                     sink.error(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e));
                 }
                 sink.next(new ReactiveTypeProgress(0L));
-                final Application application = serviceContainer.applicationService().getApplication(nameOrId);
+                final Application application = getApplicationUseCase.execute(nameOrId);
 
                 BundleReport rapport = new BundleReport(locale, origin, application);
 
@@ -1472,7 +1296,7 @@ public class OreSiResources {
                     ObjectMapper mapper = new ObjectMapper();
                     File finalZipFile = zipFile;
                     AtomicReference<Map<String, List<String>>> manifest = new AtomicReference<>();
-                    serviceContainer.dataService().readEntry(zipFile, DataService.MANIFEST_JSON,
+                    readEntryUseCase.execute(zipFile, DataService.MANIFEST_JSON,
                             manifestStream -> {
                                 try {
                                     manifest.set(mapper.readValue
@@ -1491,7 +1315,7 @@ public class OreSiResources {
                             .sum();
 
                     AtomicReference<Map<String, List<String>>> references = new AtomicReference<>();
-                    serviceContainer.dataService().readEntry(zipFile, DataService.REFERENCES_JSON,
+                    readEntryUseCase.execute(zipFile, DataService.REFERENCES_JSON,
                             referencesStream -> {
                                 try {
                                     final Map<String, List<String>> reference = mapper.readValue
@@ -1584,7 +1408,7 @@ public class OreSiResources {
         return processBatchTopological(processed, remaining, processReference, references, MAX_DB_CONCURRENCY)
                 .then(Mono.fromRunnable(() -> {
                     try {
-                        serviceContainer.dataService().sendZipLinkByMail(
+                        sendZipLinkByMailUseCase.execute(
                                 registerReactiveResult.bundleReport().attachmentFile(),
                                 registerReactiveResult.bundleReport(),
                                 currentUser
@@ -1660,7 +1484,7 @@ public class OreSiResources {
         log.info(dataName);
         entry.getValue().forEach(fileName -> {
             try {
-                serviceContainer.dataService().readEntry(finalZipFile, "%s/%s".formatted(dataName, fileName),
+                readEntryUseCase.execute(finalZipFile, "%s/%s".formatted(dataName, fileName),
                         fileToUpload -> {
 
                             final String[] split = fileName.split("\\.");
@@ -1680,7 +1504,7 @@ public class OreSiResources {
                                 throw new RuntimeException(e);
                             }
                             try {
-                                final DataVersioningResult data = serviceContainer.versioningService().createData(
+                                final DataVersioningResult data = createDataUseCase.execute(
                                         locale,
                                         application.getName(),
                                         dataName,
@@ -1722,10 +1546,10 @@ public class OreSiResources {
     private Application getOrLoadApplication(String nameOrId, File zipFile) {
         AtomicReference<Application> application = null;
         try {
-            application.set(serviceContainer.applicationService().getApplication(nameOrId));
+            application.set(getApplicationUseCase.execute(nameOrId));
         } catch (Exception e) {
             try {
-                serviceContainer.dataService().readEntry(zipFile, DataService.MANIFEST_JSON,
+                readEntryUseCase.execute(zipFile, DataService.MANIFEST_JSON,
                         configurationFile -> {
                             MultipartFile tmpConfigurationFile = new MultipartFile() {
                                 @Override
@@ -1773,7 +1597,7 @@ public class OreSiResources {
                                 }
                             };
                             createApplication(nameOrId, "uploadBundle", tmpConfigurationFile);
-                            application.set(serviceContainer.applicationService().getApplication(nameOrId));
+                            application.set(getApplicationUseCase.execute(nameOrId));
                         }
                 );
 

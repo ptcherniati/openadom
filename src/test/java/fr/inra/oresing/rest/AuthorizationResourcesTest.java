@@ -2,16 +2,12 @@ package fr.inra.oresing.rest;
 
 import com.google.common.base.Strings;
 import com.jayway.jsonpath.JsonPath;
-import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.persistence.AuthenticationService;
-import fr.inra.oresing.persistence.JsonRowMapper;
-import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.fixtures.AcbbFixture;
 import fr.inra.oresing.rest.fixtures.HauteFrequenceFixture;
 import fr.inra.oresing.rest.fixtures.MonSoereFixture;
+import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
@@ -19,18 +15,8 @@ import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import java.io.InputStream;
@@ -45,35 +31,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
-@ActiveProfiles("testmail")
-@SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
-
-@TestPropertySource(locations = "classpath:/application-tests.properties")
-@AutoConfigureWebMvc
-@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Slf4j
 @Tag("core.auth")
-public class AuthorizationResourcesTest {
+public class AuthorizationResourcesTest extends AbstractIntegrationTest {
 
     public static final String INRAE_FR = "@inrae.fr";
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private AuthenticationService authenticationService;
-
-    @Autowired
-    private JsonRowMapper jsonRowMapper;
-
-
-    @Autowired
-    private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-
-    private Fixtures fixtures;
 
 
     @BeforeEach
@@ -343,7 +305,6 @@ public class AuthorizationResourcesTest {
                         .param("password", "xxxxxxxx"))
 
                 .andReturn().getResponse().getHeader("Authorization");
-        ;
 
         final String authorizationId;
 

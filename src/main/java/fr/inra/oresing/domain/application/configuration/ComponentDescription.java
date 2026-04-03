@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.inra.oresing.domain.ComponentPresenceConstraint;
 import fr.inra.oresing.domain.application.configuration.checker.CheckerDescription;
 import fr.inra.oresing.domain.application.configuration.checker.ComputationChecker;
@@ -32,10 +33,12 @@ public sealed interface ComponentDescription permits BasicComponent, ComputedCom
         return Set.of();
     }
 
+    @JsonProperty("importHeader")
     default String importHeader() {
         return componentKey();
     }
 
+    @JsonProperty("exportHeaderName")
     String exportHeaderName();
 
     default ComponentPresenceConstraint mandatory() {

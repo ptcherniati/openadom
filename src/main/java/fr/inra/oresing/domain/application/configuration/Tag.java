@@ -1,5 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.exceptions.application.SiOreConfigurationFormatException;
 import fr.inra.oresing.domain.exceptions.configuration.ConfigurationException;
@@ -63,6 +64,7 @@ public sealed interface Tag {
         }
     }
 
+    @JsonProperty("tagDefinition")
     TagDefinitions tagDefinition();
 
     enum TagDefinitions {

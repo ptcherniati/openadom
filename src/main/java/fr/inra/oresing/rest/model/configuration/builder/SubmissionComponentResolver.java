@@ -19,21 +19,21 @@ public record SubmissionComponentResolver(RootBuilder rootBuilder) {
         return dataKeys;
     }
 
-    public Submission.SubmissionScope.ReferenceScope resolveComponent(String scopePath, Submission.SubmissionScope.ReferenceScope referenceScope, Map<String, ComponentDescription> componentDescriptions) {
+    public Submission.SubmissionScope.SubmissionReferenceScope resolveComponent(String scopePath, Submission.SubmissionScope.SubmissionReferenceScope referenceScope, Map<String, ComponentDescription> componentDescriptions) {
         return verifyComponentBySubmission(scopePath, referenceScope, componentDescriptions);
 
     }
 
-    Submission.SubmissionScope.ReferenceScope verifyComponentBySubmission(
+    Submission.SubmissionScope.SubmissionReferenceScope verifyComponentBySubmission(
             final String componentPath,
-            final Submission.SubmissionScope.ReferenceScope referenceScope,
+            final Submission.SubmissionScope.SubmissionReferenceScope referenceScope,
             final Map<String, ComponentDescription> componentDescriptions
     ) {
         final String reference = referenceScope.reference();
         final String componentName = referenceScope.component();
         final ComponentDescription componentDescription = componentDescriptions.get(componentName);
         try {
-            Submission.SubmissionScope.ReferenceScope referenceScopeFromComponent = findReferenceScopeFromComponent(componentDescription, reference);
+            Submission.SubmissionScope.SubmissionReferenceScope referenceScopeFromComponent = findReferenceScopeFromComponent(componentDescription, reference);
             if (referenceScopeFromComponent != null) {
                 return referenceScopeFromComponent;
             }
@@ -68,7 +68,7 @@ public record SubmissionComponentResolver(RootBuilder rootBuilder) {
                     reference
             );
             componentDescriptions.put(componentName, submissionConstantHeaderComponentDescription);
-            return new Submission.SubmissionScope.ReferenceScope(reference, componentName);
+            return new Submission.SubmissionScope.SubmissionReferenceScope(reference, componentName);
         } catch (SiOreConfigurationFormatException configurationFormatException) {
             rootBuilder().buildError(configurationFormatException.getException(),
                     configurationFormatException.getParams(),
@@ -77,14 +77,14 @@ public record SubmissionComponentResolver(RootBuilder rootBuilder) {
         return referenceScope;
     }
 
-    private Submission.SubmissionScope.ReferenceScope findReferenceScopeFromComponent(ComponentDescription componentDescription, String reference) {
+    private Submission.SubmissionScope.SubmissionReferenceScope findReferenceScopeFromComponent(ComponentDescription componentDescription, String reference) {
         Optional<String> reftype = Optional.ofNullable(componentDescription)
                 .flatMap(ComponentDescription::findReferenceCheckerType);
         if (reftype.isEmpty()) {
             return null;
         }
         if (reftype.get().equals(reference)) {
-            return new Submission.SubmissionScope.ReferenceScope(reference, componentDescription.componentKey());
+            return new Submission.SubmissionScope.SubmissionReferenceScope(reference, componentDescription.componentKey());
         }
         throw new SiOreConfigurationFormatException(
                 ConfigurationException.INVALID_COMPONENT_REFERENCE_FOR_SUBMISSION_SCOPE_REFERENCE,

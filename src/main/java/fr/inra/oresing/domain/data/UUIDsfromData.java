@@ -3,10 +3,8 @@ package fr.inra.oresing.domain.data;
 import fr.inra.oresing.persistence.RefsLinked;
 
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 public record UUIDsfromData(Set<UUID> uuidsfromData) {
 

@@ -101,10 +101,10 @@ public class SectionBuilder {
                     badLocalLabels.add(label);
                 }
             }
+            if (CollectionUtils.isNotEmpty(badLocalLabels)) {
+                throw new SiOreConfigurationFormatException(ConfigurationException.BAD_LOCALE_LABELS, Map.of("badLocalLabels", badLocalLabels));
+            }
             return this;
-        }
-        if (CollectionUtils.isNotEmpty(badLocalLabels)) {
-            throw new SiOreConfigurationFormatException(ConfigurationException.BAD_LOCALE_LABELS, Map.of("badLocalLabels", badLocalLabels));
         }
         final Set<String> unexpectedSections = givenSections.stream()
                 .filter(this::isUnexpected)

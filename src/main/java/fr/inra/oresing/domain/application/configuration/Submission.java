@@ -73,7 +73,7 @@ public record Submission(
                     String component = fileNameParsing().authorizationScopes.get(groupIndex - 1);
                     String reference = submissionScope().referenceScopes().stream()
                             .filter(referenceScope -> referenceScope.component.equals(component))
-                            .map(SubmissionScope.ReferenceScope::reference)
+                            .map(SubmissionScope.SubmissionReferenceScope::reference)
                             .findFirst()
                             .orElse(component);
                     if (binaryFileDataset.getRequiredAuthorizations().get(reference) == null) {
@@ -183,22 +183,22 @@ public record Submission(
     }
 
     public record SubmissionScope(
-            List<ReferenceScope> referenceScopes,
+            List<SubmissionReferenceScope> referenceScopes,
             TimeScope timescope
     ) {
         public Set<String> componentNames() {
             return Optional.ofNullable(referenceScopes())
-                    .map(references -> references.stream().map(ReferenceScope::component).collect(Collectors.toSet()))
+                    .map(references -> references.stream().map(SubmissionReferenceScope::component).collect(Collectors.toSet()))
                     .orElse(Set.of());
         }
 
         public Set<String> referenceNames() {
             return Optional.ofNullable(referenceScopes())
-                    .map(references -> references.stream().map(ReferenceScope::reference).collect(Collectors.toSet()))
+                    .map(references -> references.stream().map(SubmissionReferenceScope::reference).collect(Collectors.toSet()))
                     .orElse(Set.of());
         }
 
-        public record ReferenceScope(
+        public record SubmissionReferenceScope(
                 String reference,
                 String component
         ) {

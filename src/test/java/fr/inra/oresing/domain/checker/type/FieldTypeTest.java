@@ -33,8 +33,8 @@ class FieldTypeTest {
     private static void testValue(FieldTypeCases testCase, ExceptionResponse response, Object value) {
         switch (testCase.fieldType()) {
             case DateType dateType when response.message().equals("badIntervalDateWithComponent") ->
-                    Assertions.assertTrue(value instanceof TemporalAccessor);
-            case DateType dateType -> Assertions.assertTrue(value == null);
+                    Assertions.assertInstanceOf(TemporalAccessor.class, value);
+            case DateType dateType -> Assertions.assertNull(value);
             case StringType stringType -> Assertions.assertTrue(value == null || value.equals(""));
             case BooleanType booleanType -> Assertions.assertTrue(true);
             default -> Assertions.assertTrue(true);
@@ -86,7 +86,7 @@ class FieldTypeTest {
             }
             case ValidResponse validResponse -> {
                 if (testCase.fieldType() instanceof MapType<?, ?> || testCase.fieldType() instanceof PatternType) {
-                    Assertions.assertTrue(check == null);
+                    Assertions.assertNull(check);
                     return;
                 }
                 Assertions.assertTrue(check.isSuccess());
@@ -107,7 +107,7 @@ class FieldTypeTest {
             }
             case ValidResponse validResponse -> {
                 if (testCase.fieldType() instanceof MapType<?, ?> || testCase.fieldType() instanceof PatternType) {
-                    Assertions.assertTrue(check == null);
+                    Assertions.assertNull(check);
                     return;
                 }
                 Assertions.assertTrue(check.isSuccess());
@@ -125,9 +125,9 @@ class FieldTypeTest {
         UUID UUID1 = UUID.randomUUID();
         UUID UUID2 = UUID.randomUUID();
         ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = ImmutableMap.of(
-                new DataValue.LineIdentityColumnName(Ltree.fromSql("parent__enfant"), Ltree.fromSql("parent.parent__enfant"),""),
+                new DataValue.LineIdentityColumnName(Ltree.fromSql("parent__enfant"), Ltree.fromSql("parent.parent__enfant"), ""),
                 ImmutableSet.of(UUID1),
-                new DataValue.LineIdentityColumnName(Ltree.fromSql("parent"), Ltree.fromSql("parent"),""),
+                new DataValue.LineIdentityColumnName(Ltree.fromSql("parent"), Ltree.fromSql("parent"), ""),
                 ImmutableSet.of(UUID2)
         );
         return List.of(

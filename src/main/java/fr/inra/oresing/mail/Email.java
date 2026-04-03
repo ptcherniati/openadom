@@ -4,10 +4,7 @@ import fr.inra.oresing.domain.OreSiUser;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.rest.data.publication.DataVersioningResult;
-import jakarta.mail.MessagingException;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Locale;
 
 public interface Email {

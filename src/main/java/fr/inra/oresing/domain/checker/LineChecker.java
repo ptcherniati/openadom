@@ -21,6 +21,7 @@ import org.apache.commons.lang3.NotImplementedException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.ManyChecker, LineChecker.OneChecker {
 
@@ -194,11 +195,20 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
 
                 @Override
                 public FieldType<?> transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext) {
-                    final Map<String, Object> context = ImmutableMap.<String, Object>builder()
-                            .putAll(this.context)
-                            .putAll(somethingThatCanProvideEvaluationContext.getEvaluationContext())
+                    ImmutableMap<String, Object> result = ImmutableMap.<String, Object>builder()
+                            .putAll(Stream.of(
+                                            this.context,
+                                            somethingThatCanProvideEvaluationContext.getEvaluationContext()
+                                    )
+                                    .flatMap(map -> map.entrySet().stream())
+                                    .collect(Collectors.toMap(
+                                            Map.Entry::getKey,
+                                            Map.Entry::getValue,
+                                            (v1, v2) -> v2  // En cas de conflit, garder v2 (dernière valeur)
+                                    )))
                             .build();
-                    final Object evaluate = groovyExpression().evaluate(context);
+
+                    final Object evaluate = groovyExpression().evaluate(result);
                     if (evaluate instanceof Boolean bool) {
                         return BooleanType.of(bool);
                     }
@@ -271,7 +281,15 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
         }
 
         public CheckerValidationCheckResult check(final String value) {
-            return fieldTypeForOne().copy().check(value, copy());
+            FieldType copiedFieldType = fieldTypeForOne().copy();
+            LineChecker copiedChecker = new ManyChecker(
+                    value(),
+                    copiedFieldType,  // ✅ Utiliser la copie du FieldType
+                    target(),
+                    transformer(),
+                    checkerDescription()
+            );
+            return copiedFieldType.check(value, copiedChecker);
         }
 
         @Override
@@ -281,15 +299,6 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
             FieldType<?> valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
 
             return Optional.ofNullable(valuesToCheck)
-                    /*.map(values->{
-                        if(values instanceof StringType stringType){
-                            List<StringType> listMany = Arrays.stream(stringType.getValue().split(","))
-                                    .map(StringType::getStringTypeFromStringValue)
-                                    .toList();
-                            return ListType.getListTypeFromListValue(listMany);
-                        }
-                        return values;
-                    })*/
                     .map(ListType.class::cast)
                     .map(ListType::getValue)
                     .map(list -> {
@@ -306,7 +315,13 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
 
         @Override
         public LineChecker copy() {
-            return new ManyChecker(value(), fieldTypeForOne(), target(), transformer(), checkerDescription());
+            return new ManyChecker(
+                    value(),
+                    fieldTypeForOne().copy(),  // ✅ Copier le FieldType !
+                    target(),
+                    transformer(),
+                    checkerDescription()
+            );
         }
 
     }
@@ -343,11 +358,23 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
         }
 
         public LineChecker copy() {
-            return new OneChecker(fieldTypeForOne(), target(), transformer(), checkerDescription());
+            return new OneChecker(
+                    fieldTypeForOne().copy(),  // ✅ Copier le FieldType !
+                    target(),
+                    transformer(),
+                    checkerDescription()
+            );
         }
 
         public CheckerValidationCheckResult check(final String value) {
-            return fieldTypeForOne().check(value, this);
+            FieldType copiedFieldType = fieldTypeForOne().copy();
+            LineChecker copiedChecker = new OneChecker(
+                    copiedFieldType,
+                    target(),
+                    transformer(),
+                    checkerDescription()
+            );
+            return copiedFieldType.check(value, copiedChecker);
         }
 
     }

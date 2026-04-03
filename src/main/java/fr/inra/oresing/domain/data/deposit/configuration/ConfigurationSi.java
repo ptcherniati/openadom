@@ -15,7 +15,7 @@ import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
@@ -27,19 +27,19 @@ import java.time.temporal.TemporalAccessor;
 import java.util.*;
 
 public class ConfigurationSi {
-    private final DataImporterContext dataImporterContext;
+    private final AsynchroneFileImporterContext dataImporterContext;
 
-    public ConfigurationSi(DataImporterContext dataImporterContext) {
+    public ConfigurationSi(AsynchroneFileImporterContext dataImporterContext) {
         this.dataImporterContext = dataImporterContext;
     }
 
     public Authorization getLineAuthorization(DataDatum referenceDatum, long lineNumber, ReportErrors errors) {
-        final fr.inra.oresing.domain.application.configuration.Authorization authorization = dataImporterContext.getAuthorization();
+        final fr.inra.oresing.domain.application.configuration.Authorization authorization = dataImporterContext.contextConstants().dataConfiguration().authorization();
         if (authorization == null) {
             return new Authorization();
         }
 
-        BinaryFileDataset binaryFileDataset = Optional.ofNullable(dataImporterContext.getPublishContextBuilder())
+        BinaryFileDataset binaryFileDataset = Optional.ofNullable(dataImporterContext.publishContextBuilder())
                 .map(PublishContext.PublishContextBuilder::build)
                 .map(PublishContext::fileOrUUID)
                 .map(FileOrUUID::binaryfiledataset)
@@ -48,7 +48,7 @@ public class ConfigurationSi {
         final Map<String, List<Ltree>> requiredAuthorizations = buildRequiredAuthorizations(authorization, referenceDatum);
         LocalDateTimeRange timeScope;
         DateType timeScopeDateLineChecker = authorization.timeScope() != null ?
-                dataImporterContext.getLineCheckers().stream()
+                dataImporterContext.lineCheckers().stream()
                         .filter(dateType -> dateType.target().column().equals(authorization.timeScope()))
                         .map(LineChecker::underlyingType)
                         .filter(DateType.class::isInstance)
@@ -120,7 +120,7 @@ public class ConfigurationSi {
     }
 
     public List<Ltree> getHierarchyOfHierarchicalkeys(ReferenceType referenceType) {
-        List<ReferenceScope.NodeDescription> nodesForMenu = dataImporterContext.getNodesForMenu();
+        List<ReferenceScope.NodeDescription> nodesForMenu = dataImporterContext.nodesForMenu();
         List<Ltree> hierarchicalKeys = new LinkedList<>();
         ReferenceScope.NodeDescription referenceNode = nodesForMenu.stream()
                 .filter(node -> node.node_type().equals(referenceType.getRefType()))

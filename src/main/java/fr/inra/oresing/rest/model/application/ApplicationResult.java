@@ -34,6 +34,9 @@ public record ApplicationResult(
 ) {
 
     public List<String> getOrderedReferences() {
+        if(configuration==null) {
+            return List.of();
+        }
         return configuration().hierarchicalNodes().stream()
                 .sorted()
                 .map(Node::nodeName)
@@ -43,7 +46,7 @@ public record ApplicationResult(
     @Setter
     @Getter
     public static class DataSynthesis {
-        String ReferenceType;
+        String referenceType;
         int lineCount;
 
     }

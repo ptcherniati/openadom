@@ -45,27 +45,27 @@ class AuthorizationIndexTest {
         String createIndexSql = authorizationIndex.createIndex(PEM);
         assertEquals(
                 """
-                                                        CREATE INDEX IF NOT EXISTS authorization_pem_index_refvalues_index
-                                                        ON monsore.referencevalue USING gin
-                                                        (
-                                                            refvalues jsonb_path_ops
-                                                        )
-                                                        WHERE referencetype = 'pem';
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_refvalues_index
+                        ON monsore.referencevalue USING gin
+                        (
+                            refvalues jsonb_path_ops
+                        )
+                        WHERE referencetype = 'pem';
                         
-                                                        CREATE INDEX IF NOT EXISTS authorization_pem_index_auth_index
-                                                        ON monsore.referencevalue USING gin
-                                                        (
-                                                            (("authorization").requiredauthorizations.dataProjet),
-                                                            (("authorization").requiredauthorizations.dataSites)
-                                                        )
-                                                        WHERE referencetype = 'pem';
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_auth_index
+                        ON monsore.referencevalue USING gin
+                        (
+                            (("authorization").requiredauthorizations.dataProjet),
+                            (("authorization").requiredauthorizations.dataSites)
+                        )
+                        WHERE referencetype = 'pem';
                         
-                                                        CREATE INDEX IF NOT EXISTS authorization_pem_index_timescope_index
-                                                        ON monsore.referencevalue USING gist
-                                                        ((("authorization").timescope))
-                                                        WHERE referencetype = 'pem';
-                                                        
-                                                        """,
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_timescope_index
+                        ON monsore.referencevalue USING gist
+                        ((("authorization").timescope))
+                        WHERE referencetype = 'pem';
+                        
+                        """,
                 createIndexSql);
     }
 

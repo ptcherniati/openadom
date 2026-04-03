@@ -38,6 +38,7 @@ import java.nio.file.Path;
 import java.sql.Array;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -186,6 +187,8 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                             while (rs.next()) {
                                 insertedIds.add((UUID) rs.getObject("id"));
                             }
+                        } catch (SQLException e) {
+                            throw new RuntimeException(e);
                         }
                         getNamedParameterJdbcTemplate().query("""
                                  SELECT DISTINCT
@@ -331,6 +334,22 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 .addValue(REF_TYPE, referenceName);
         return getNamedParameterJdbcTemplate()
                 .queryForStream(query, paramSource, getJsonRowMapper());
+    }
+
+    public List<DataValue> findAllByReferenceType(final String referenceName) {
+        String query = """
+                SELECT DISTINCT '%1$s' as "@class",
+                to_jsonb(t)  as json
+                FROM
+                %2$s t
+                WHERE application=:applicationId::uuid AND ReferenceType=:refType
+                
+                """
+                .formatted(DataValue.class.getName(), getTable().getSqlIdentifier());
+        final MapSqlParameterSource paramSource = new MapSqlParameterSource(APPLICATION_ID, getApplication().getId())
+                .addValue(REF_TYPE, referenceName);
+        return getNamedParameterJdbcTemplate()
+                .query(query, paramSource, getJsonRowMapper());
     }
 
     public Stream<DataValue> findAllByReferenceTypeWithReferencingReferencesStream(final String refType, final MultiValueMap<String, String> params) {

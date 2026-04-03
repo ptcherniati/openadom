@@ -31,19 +31,16 @@ public class RelationalService implements InitializingBean, DisposableBean {
     private final SqlService db;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final OreSiRepository repository;
-    private final ServiceContainer serviceContainer;
     @Value("${viewStrategy:DISABLED}")
     private ViewStrategy viewStrategy;
 
     public RelationalService(
             SqlService db,
             NamedParameterJdbcTemplate namedParameterJdbcTemplate,
-            OreSiRepository repository,
-            ServiceContainer serviceContainer) {
+            OreSiRepository repository) {
         this.db = db;
         this.namedParameterJdbcTemplate = namedParameterJdbcTemplate;
         this.repository = repository;
-        this.serviceContainer = serviceContainer;
     }
 
     public static Predicate<String> getIsValidIdentifierPattern(int min, int max) {

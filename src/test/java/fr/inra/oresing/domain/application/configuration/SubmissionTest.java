@@ -1,106 +1,78 @@
 package fr.inra.oresing.domain.application.configuration;
 
-import fr.inra.oresing.domain.BinaryFileDataset;
-import fr.inra.oresing.domain.exceptions.authorization.AuthorizationRequestException;
-import fr.inra.oresing.domain.exceptions.authorization.SiOreAuthorizationRequestException;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-@Tag("domain.model")
+@Tag("core.config")
 class SubmissionTest {
-    final Submission submission = new Submission(
-            SubmissionType.OA_VERSIONING,
-            new Submission.SubmissionFileNameParsing(
-                    "(.*)_(.*)_(.*)_(.*).csv",
-                    List.of("projet", "chemin"),
-                    3, 4),
-            new Submission.SubmissionScope(
-                    List.of(
-                            new Submission.SubmissionScope.ReferenceScope(
-                                    "projet",
-                                    "projet"
-                            ),
-                            new Submission.SubmissionScope.ReferenceScope(
-                                    "sites",
-                                    "chemin"
-                            )
-
-                    ),
-                    new Submission.SubmissionScope.TimeScope(
-                            "date"
-                    )
-            )
-    );
-    final BinaryFileDataset binaryFileDataset = new BinaryFileDataset();
 
     @Test
-    void testPatternGroups() {
-        List<Submission.PatternPosition> groupPositions = submission.fileNameParsing().patternGroups();
-        assertEquals(4, groupPositions.size());
-        assertEquals("[[0, 4], [5, 9], [10, 14], [15, 19]]", groupPositions.toString());
+    void testSubmissionReferenceScopeBuilder() {
+        Submission.SubmissionScope.SubmissionReferenceScope scope = SubmissionBuilder.submissionReferenceScope()
+                .reference("ref")
+                .component("comp")
+                .build();
+
+        Assertions.assertEquals("ref", scope.reference());
+        Assertions.assertEquals("comp", scope.component());
     }
 
     @Test
-    void testPatternToBeReplacedByGroupCapture() {
-        assertEquals("%1$s_%2$s_%3$s_%4$s.csv", submission.fileNameParsing().patternToBeReplacedByGroupCapture());
+    void testTimeScopeBuilder() {
+        Submission.SubmissionScope.TimeScope scope = SubmissionBuilder.timeScope()
+                .component("comp")
+                .build();
+
+        Assertions.assertEquals("comp", scope.component());
     }
 
     @Test
-    void testGroupCount() {
-        assertEquals(4, submission.fileNameParsing().groupCount());
+    void testSubmissionFileNameParsingBuilder() {
+        List<String> authScopes = List.of("scope1");
+        Submission.SubmissionFileNameParsing parsing = SubmissionBuilder.submissionFileNameParsing()
+                .pattern("pattern")
+                .authorizationScopes(authScopes)
+                .startDate(1)
+                .endDate(2)
+                .build();
+
+        Assertions.assertEquals("pattern", parsing.pattern());
+        Assertions.assertEquals(authScopes, parsing.authorizationScopes());
+        Assertions.assertEquals(1, parsing.startDate());
+        Assertions.assertEquals(2, parsing.endDate());
     }
 
     @Test
-    void testOrderedGroups() {
-        LinkedList<String> orderedGroups = submission.fileNameParsing().orderedGroups();
-        assertArrayEquals(List.of("projet", "chemin", ConfigurationSchemaNode.OA_START_DATE_MATCH_PATTERN, ConfigurationSchemaNode.OA_END_DATE_MATCH_PATTERN
-        ).toArray(new String[0]), orderedGroups.toArray(new String[0]));
+    void testSubmissionScopeBuilder() {
+        Submission.SubmissionScope.SubmissionReferenceScope refScope = SubmissionBuilder.submissionReferenceScope().build();
+        Submission.SubmissionScope.TimeScope timeScope = SubmissionBuilder.timeScope().build();
+        List<Submission.SubmissionScope.SubmissionReferenceScope> refScopes = List.of(refScope);
+
+        Submission.SubmissionScope scope = SubmissionBuilder.submissionScope()
+                .referenceScopes(refScopes)
+                .timescope(timeScope)
+                .build();
+
+        Assertions.assertEquals(refScopes, scope.referenceScopes());
+        Assertions.assertEquals(timeScope, scope.timescope());
     }
 
     @Test
-    void parseFileName() {
-        submission.parseFileName(Map.of(), "leProjet_leSite_01-01-1984_05-01-1984.csv", binaryFileDataset);
-        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
-        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
-        assertEquals("1984-01-01 00:00:00", binaryFileDataset.getFrom());
-        assertEquals("1984-01-05 00:00:00", binaryFileDataset.getTo());
-        //do nothing if already done
-        submission.parseFileName(Map.of(),"leProjet2_leSite2_01-01-1985_05-01-1985.csv", binaryFileDataset);
-        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("projet").contains(Ltree.fromSql("leProjet")));
-        assertTrue(binaryFileDataset.getRequiredAuthorizations().get("sites").contains(Ltree.fromSql("leSite")));
-        assertEquals("1984-01-01 00:00:00", binaryFileDataset.getFrom());
-        assertEquals("1984-01-05 00:00:00", binaryFileDataset.getTo());
+    void testSubmissionBuilder() {
+        Submission.SubmissionFileNameParsing parsing = SubmissionBuilder.submissionFileNameParsing().build();
+        Submission.SubmissionScope scope = SubmissionBuilder.submissionScope().build();
 
-    }
+        Submission submission = new SubmissionBuilder.SubmissionMainBuilder()
+                .strategy(SubmissionType.OA_VERSIONING)
+                .fileNameParsing(parsing)
+                .submissionScope(scope)
+                .build();
 
-    @Test
-    void parseFileNameWithInvalidStartDate() {
-        try {
-            submission.parseFileName(Map.of(),"leProjet_leSite_01-01x1984_05-01-1984.csv", binaryFileDataset);
-        } catch (SiOreAuthorizationRequestException e) {
-            assertEquals(AuthorizationRequestException.BAD_FILE_NAME_START_DATE, e.getException());
-            assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv", e.getParams().get("fileNameFormat"));
-            assertEquals("01-01x1984", e.getParams().get("startDate"));
-            assertEquals("dd-MM-yyyy", e.getParams().get("dateformat"));
-        }
-
-    }
-
-    @Test
-    void parseFileNameWithInvalidEndDate() {
-        try {
-            submission.parseFileName(Map.of(), "leProjet_leSite_01-01-1984_05-01/1984.csv", binaryFileDataset);
-        } catch (SiOreAuthorizationRequestException e) {
-            assertEquals(AuthorizationRequestException.BAD_FILE_NAME_END_DATE, e.getException());
-            assertEquals("projetNK_cheminNK_dd-MM-yyyy_dd-MM-yyyy.csv", e.getParams().get("fileNameFormat"));
-            assertEquals("05-01/1984", e.getParams().get("endDate"));
-            assertEquals("dd-MM-yyyy", e.getParams().get("dateformat"));
-        }
+        Assertions.assertEquals(SubmissionType.OA_VERSIONING, submission.strategy());
+        Assertions.assertEquals(parsing, submission.fileNameParsing());
+        Assertions.assertEquals(scope, submission.submissionScope());
     }
 }

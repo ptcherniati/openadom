@@ -1,13 +1,10 @@
 package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 
-import com.google.common.base.Strings;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
-import fr.inra.oresing.domain.application.configuration.checker.DateChecker;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
@@ -17,9 +14,7 @@ import org.apache.commons.collections.CollectionUtils;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.function.Predicate;
 
 public sealed interface ApplicationDataWriter extends ApplicationUser, DataWriter
         permits ApplicationAdminUser, ApplicationDataDelete, ApplicationDeleteUser, ApplicationDepositWriterUser, ApplicationManagerUser, ApplicationPublishWriterUser {

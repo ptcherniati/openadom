@@ -42,8 +42,6 @@ import java.util.stream.Collectors;
 
 public class BinaryFileService implements fr.inra.oresing.domain.services.file.BinaryFileService {
     private final OreSiRepository repository;
-
-    @Setter
     private final ServiceContainer serviceContainer;
     private final AuthenticationService authenticationService;
     private final JsonRowMapper<?> jsonRowMapper;
@@ -53,20 +51,6 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         this.serviceContainer = serviceContainer;
         this.authenticationService = authenticationService;
         this.jsonRowMapper = jsonRowMapper;
-    }
-
-
-    public static BinaryFileDataset deserialiseBinaryFileDatasetQuery(final String dataName, final String params) {
-        try {
-            final BinaryFileDataset binaryFileDataset = params != null ? new ObjectMapper().readValue(params, BinaryFileDataset.class) : null;
-            final Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(binaryFileDataset);
-            if (binaryFileDatasetOpt.map(BinaryFileDataset::getDatatype).isEmpty()) {
-                binaryFileDatasetOpt.ifPresent(binaryFileDataset1 -> binaryFileDataset1.setDatatype(dataName));
-            }
-            return binaryFileDataset;
-        } catch (final IOException e) {
-            throw new BadBinaryFileDatasetQuery(e.getMessage());
-        }
     }
 
     @Override

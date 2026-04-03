@@ -1,6 +1,8 @@
 package fr.inra.oresing;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.persistence.flyway.MigrateService;
+import fr.inra.oresing.rest.JsonRequestParamArgumentResolver;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -20,6 +22,7 @@ import org.springframework.boot.info.GitProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.context.support.ResourceBundleMessageSource;
@@ -27,6 +30,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -50,15 +54,25 @@ public class OreSiNg implements WebMvcConfigurer {
     private final MigrateService migrate;
     @Value("${allowed.origin}")
     private String allowedOrigin;
+    private final JsonRequestParamArgumentResolver jsonRequestParamArgumentResolver;
 
-    public OreSiNg(MigrateService migrate) {
+    public OreSiNg(MigrateService migrate, JsonRequestParamArgumentResolver jsonRequestParamArgumentResolver) {
         this.migrate = migrate;
+        this.jsonRequestParamArgumentResolver = jsonRequestParamArgumentResolver;
     }
 
     public static void main(final String[] args) {
         SpringApplication.run(OreSiNg.class, args);
     }
 
+
+    // ✅ Implémenter ici directement
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        log.info("=== Adding JsonRequestParamArgumentResolver ===");
+        resolvers.add(0, jsonRequestParamArgumentResolver);
+        log.info("=== Total resolvers: " + resolvers.size() + " ===");
+    }
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
