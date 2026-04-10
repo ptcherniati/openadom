@@ -40,33 +40,46 @@ public record DataRowResult(
                                 .orElse(NullType.INSTANCE));
             }
         }
-        Map<Object, Object> displaysForRow = dataRow.refsLinkedTo().entrySet()
-                .stream()
+        // Build a lookup map (referenceType -> naturalKey -> RefsLinked) for O(1) access instead of O(n) scan
+        Map<String, Map<String, fr.inra.oresing.persistence.RefsLinked>> refsLinkedMap =
+                dataRow.refsLinked() != null
+                        ? dataRow.refsLinked().stream()
+                                .collect(Collectors.groupingBy(
+                                        fr.inra.oresing.persistence.RefsLinked::referenceType,
+                                        Collectors.toMap(
+                                                r -> r.naturalKey().getSql(),
+                                                r -> r,
+                                                (existing, replacement) -> existing
+                                        )
+                                ))
+                        : Map.of();
+        Map<Object, Object> displaysForRow = dataRow.refsLinkedTo() != null
+                ? dataRow.refsLinkedTo().entrySet().stream()
                 .map(referenceEntry -> {
                     String referenceName = referenceEntry.getKey();
+                    Map<String, fr.inra.oresing.persistence.RefsLinked> refsByNaturalKey =
+                            refsLinkedMap.getOrDefault(referenceName, Map.of());
                     Map<Object, Object> naturalKeysDisplay = referenceEntry.getValue().values().stream()
                             .map(RefsLinkedToValue::hierarchicalKey)
                             .map(hierarchicalKey -> hierarchicalKey.getSql().replaceAll(".*[a-z]K", ""))
                             .map(naturalKey -> {
-                                String fr =dataRow
-                                        .refsLinked()
-                                        .stream().filter(
-                                                refsLinked -> refsLinked.referenceType().equals(referenceName)
-                                        )
-                                        .filter(refsLinked -> refsLinked.naturalKey().getSql().equals(naturalKey))
-                                        .findFirst()
-                                        .map(refsLinked -> {
-                                            String display = locale.equals(Locale.FRENCH.getLanguage()) ? refsLinked.__display_fr() : refsLinked.__display_en();
-                                            display = display==null?refsLinked.__display_default():display;
-                                            return display;
-                                        })
-                                        .orElse(naturalKey);
-                                return new DefaultMapEntry(naturalKey, fr);
+                                fr.inra.oresing.persistence.RefsLinked refsLinked = refsByNaturalKey.get(naturalKey);
+                                String displayValue;
+                                if (refsLinked != null) {
+                                    displayValue = locale.equals(Locale.FRENCH.getLanguage()) ? refsLinked.__display_fr() : refsLinked.__display_en();
+                                    if (displayValue == null) {
+                                        displayValue = refsLinked.__display_default();
+                                    }
+                                } else {
+                                    displayValue = naturalKey;
+                                }
+                                return new DefaultMapEntry(naturalKey, displayValue);
                             })
                             .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> existing));
                     return new DefaultMapEntry(referenceName, naturalKeysDisplay);
                 })
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> existing));
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (existing, replacement) -> existing))
+                : Map.of();
         return new DataRowResult(dataRow.rowId(),
                 dataRow.naturalKey().getSql(),
                 dataRow.hierarchicalKey().getSql(),

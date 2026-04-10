@@ -1087,9 +1087,7 @@ public class OreSiResources {
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
         final List<DataRow> data = serviceContainer.dataService().findData(downloadDatasetQuery);
-        final List<FilterList> filterLists = serviceContainer.dataService()
-                .filterList(downloadDatasetQuery.application(), downloadDatasetQuery.dataName())
-                .collect(Collectors.toList()).block();
+        // filterLists is now loaded asynchronously via the dedicated /filters endpoint
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
@@ -1127,9 +1125,25 @@ public class OreSiResources {
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
-                filterLists,
+                List.of(),
                 checkedFormatcomponents,
                 referenceScopes));
+    }
+
+    /**
+     * Dedicated endpoint for loading filter lists asynchronously.
+     * Separated from getAllDataJson to avoid blocking data display while filters load.
+     */
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/filters", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<FilterList>> getDataFilters(
+            @PathVariable("nameOrId") final String nameOrId,
+            @PathVariable("dataType") final String dataName) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        final List<FilterList> filterLists = serviceContainer.dataService()
+                .filterList(application, dataName)
+                .collect(Collectors.toList()).block();
+        return ResponseEntity.ok(filterLists != null ? filterLists : List.of());
     }
 
     /**

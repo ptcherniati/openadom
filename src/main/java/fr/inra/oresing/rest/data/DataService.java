@@ -1045,8 +1045,47 @@ private PlatformTransactionManager transactionManager;
         return list;
     }
 
+    // Simple in-memory cache for filterList results (TTL-based, size-limited)
+    private record FilterListCacheEntry(List<FilterList> data, long timestamp) {}
+    private static final java.util.concurrent.ConcurrentHashMap<String, FilterListCacheEntry> filterListCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long FILTER_LIST_CACHE_TTL_MS = 10 * 60 * 1000L; // 10 minutes
+    private static final int FILTER_LIST_CACHE_MAX_ENTRIES = 50; // Max 50 dataTypes cached (~90 MB worst case)
+
     public Flux<FilterList> filterList(final Application application, final String refType) {
-        return repository.getRepository(application).data().getFilterList(refType);
+        String cacheKey = application.getName() + "::" + refType;
+        FilterListCacheEntry cached = filterListCache.get(cacheKey);
+        if (cached != null && (System.currentTimeMillis() - cached.timestamp()) < FILTER_LIST_CACHE_TTL_MS) {
+            log.debug("filterList cache hit for {}", cacheKey);
+            return Flux.fromIterable(cached.data());
+        }
+        log.info("filterList cache miss for {}, loading from database", cacheKey);
+        return repository.getRepository(application).data().getFilterList(refType)
+                .collectList()
+                .doOnNext(list -> {
+                    // Evict oldest entries if cache exceeds max size
+                    if (filterListCache.size() >= FILTER_LIST_CACHE_MAX_ENTRIES) {
+                        filterListCache.entrySet().stream()
+                                .min(java.util.Comparator.comparingLong(e -> e.getValue().timestamp()))
+                                .ifPresent(oldest -> filterListCache.remove(oldest.getKey()));
+                    }
+                    filterListCache.put(cacheKey, new FilterListCacheEntry(list, System.currentTimeMillis()));
+                })
+                .flatMapMany(Flux::fromIterable);
+    }
+
+    /**
+     * Invalidate the filterList cache for a given application and data type.
+     * Should be called after data import/modification.
+     */
+    public void invalidateFilterListCache(final Application application, final String refType) {
+        String cacheKey = application.getName() + "::" + refType;
+        filterListCache.remove(cacheKey);
+        log.info("filterList cache invalidated for {}", cacheKey);
+    }
+
+    public void invalidateAllFilterListCaches() {
+        filterListCache.clear();
+        log.info("All filterList caches invalidated");
     }
 
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
