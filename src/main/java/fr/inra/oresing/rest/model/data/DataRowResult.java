@@ -40,7 +40,17 @@ public record DataRowResult(
                                 .orElse(NullType.INSTANCE));
             }
         }
-        // Build a lookup map (referenceType -> naturalKey -> RefsLinked) for O(1) access instead of O(n) scan
+        // PERF #465 — Construction d'un Map de lookup (referenceType -> naturalKey -> RefsLinked)
+        // pour accéder aux noms d'affichage des références en O(1) au lieu de O(n).
+        //
+        // Avant : pour chaque naturalKey de chaque ligne, on parcourait TOUTE la liste refsLinked
+        //         avec stream().filter().findFirst() → O(n × m) pour 500 lignes × 9 refs = ~4500 scans.
+        // Après : on construit un Map une seule fois, puis on fait des get() en O(1).
+        //
+        // Null-safety :
+        //   - refsLinked() peut être null pour certaines apps (ex: télédétection sans références)
+        //   - referenceType() et naturalKey() peuvent être null en mode horizontalisé (PatternComponent)
+        //   - Collectors.groupingBy() ne supporte PAS les clés null → d'où le .filter() avant
         Map<String, Map<String, fr.inra.oresing.persistence.RefsLinked>> refsLinkedMap =
                 dataRow.refsLinked() != null
                         ? dataRow.refsLinked().stream()
@@ -54,24 +64,34 @@ public record DataRowResult(
                                         )
                                 ))
                         : Map.of();
+
+        // Construction du Map des noms d'affichage localisés pour chaque référence de cette ligne.
+        // Pour chaque entrée de refsLinkedTo, on cherche le nom d'affichage (fr/en/default)
+        // dans le Map de lookup construit ci-dessus au lieu de scanner toute la liste.
+        // refsLinkedTo() peut être null pour certaines apps → on retourne un Map vide dans ce cas.
         Map<Object, Object> displaysForRow = dataRow.refsLinkedTo() != null
                 ? dataRow.refsLinkedTo().entrySet().stream()
                 .map(referenceEntry -> {
                     String referenceName = referenceEntry.getKey();
+                    // Lookup O(1) dans le Map au lieu de stream().filter().findFirst()
                     Map<String, fr.inra.oresing.persistence.RefsLinked> refsByNaturalKey =
                             refsLinkedMap.getOrDefault(referenceName, Map.of());
                     Map<Object, Object> naturalKeysDisplay = referenceEntry.getValue().values().stream()
                             .map(RefsLinkedToValue::hierarchicalKey)
+                            // Extraire la naturalKey depuis la hierarchicalKey (ex: "tr_case_study_cstKcss1" → "css1")
                             .map(hierarchicalKey -> hierarchicalKey.getSql().replaceAll(".*[a-z]K", ""))
                             .map(naturalKey -> {
+                                // Lookup O(1) au lieu de stream().filter().findFirst()
                                 fr.inra.oresing.persistence.RefsLinked refsLinked = refsByNaturalKey.get(naturalKey);
                                 String displayValue;
                                 if (refsLinked != null) {
+                                    // Choisir le nom d'affichage selon la locale (fr ou en), avec fallback sur default
                                     displayValue = locale.equals(Locale.FRENCH.getLanguage()) ? refsLinked.__display_fr() : refsLinked.__display_en();
                                     if (displayValue == null) {
                                         displayValue = refsLinked.__display_default();
                                     }
                                 } else {
+                                    // Pas de référence trouvée → afficher la naturalKey brute
                                     displayValue = naturalKey;
                                 }
                                 return new DefaultMapEntry(naturalKey, displayValue);

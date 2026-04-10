@@ -1121,6 +1121,9 @@ public class OreSiResources {
                 .toList();
         Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = serviceContainer.authorizationService().getAuthorizationScopes(application, MenuType.submission);
 
+        // PERF #465 — filterLists est désormais une liste vide ici.
+        // Les filtres sont chargés via l'endpoint séparé GET /filters (voir getDataFilters ci-dessous).
+        // Cela permet d'afficher les données immédiatement sans attendre la requête lente des filtres (~54s).
         return ResponseEntity.ok(new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
@@ -1131,8 +1134,21 @@ public class OreSiResources {
     }
 
     /**
-     * Dedicated endpoint for loading filter lists asynchronously.
-     * Separated from getAllDataJson to avoid blocking data display while filters load.
+     * PERF #465 — Endpoint dédié pour le chargement asynchrone des listes de filtres.
+     *
+     * Pourquoi un endpoint séparé ?
+     *   Avant, les filtres étaient chargés dans getAllDataJson() en même temps que les données.
+     *   La requête SQL des filtres (getFilterList dans DataRepository.java) prend ~54 secondes
+     *   pour 100K lignes, ce qui bloquait l'affichage des données (~80ms) pendant toute la durée.
+     *   En séparant, le frontend affiche les données immédiatement et charge les filtres en
+     *   arrière-plan. L'utilisateur voit ses données en ~1-2s au lieu de ~55s.
+     *
+     * Le résultat est mis en cache par DataService.filterList() (TTL 10 min).
+     * Au 2ème appel, la réponse est quasi-instantanée (< 10ms).
+     *
+     * @param nameOrId nom ou ID de l'application
+     * @param dataName nom du dataType (ex: "t_soil_analysis_sana")
+     * @return la liste des FilterList contenant les valeurs distinctes des dropdowns de filtres
      */
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/filters", produces = MediaType.APPLICATION_JSON_VALUE)
