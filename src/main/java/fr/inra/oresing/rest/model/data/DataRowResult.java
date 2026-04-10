@@ -44,6 +44,7 @@ public record DataRowResult(
         Map<String, Map<String, fr.inra.oresing.persistence.RefsLinked>> refsLinkedMap =
                 dataRow.refsLinked() != null
                         ? dataRow.refsLinked().stream()
+                                .filter(r -> r.referenceType() != null && r.naturalKey() != null)
                                 .collect(Collectors.groupingBy(
                                         fr.inra.oresing.persistence.RefsLinked::referenceType,
                                         Collectors.toMap(
