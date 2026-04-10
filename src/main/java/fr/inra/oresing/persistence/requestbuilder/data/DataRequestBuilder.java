@@ -63,7 +63,7 @@ public class DataRequestBuilder {
                                     sanitize(componentKey),
                                     intervalsValues.stream()
                                             .map(intervalValues ->
-                                                    "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
+                                                    "(@.double() >= %1$s && @.double() <= %2$s) || (@.__VALUE__.double() >= %1$s && @.__VALUE__.double() <= %2$s)".formatted(
                                                             intervalValues.fromFromNumeric(),
                                                             intervalValues.fromToNumeric()
                                                     )
@@ -77,7 +77,7 @@ public class DataRequestBuilder {
                                     sanitize(componentKey),
                                     intervalsValues.stream()
                                             .map(intervalValues ->
-                                                    "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
+                                                    "(@.double() >= %1$s && @.double() <= %2$s) || (@.__VALUE__.double() >= %1$s && @.__VALUE__.double() <= %2$s)".formatted(
                                                             intervalValues.fromFromNumeric(),
                                                             intervalValues.fromToNumeric()
                                                     )
