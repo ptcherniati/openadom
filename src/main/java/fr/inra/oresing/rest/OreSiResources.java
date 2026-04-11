@@ -1153,18 +1153,24 @@ public class OreSiResources {
     @Operation(
             description = "Return the list of available filters (reference dropdowns) for dataType 'dataType' of application 'nameOrId'. "
                     + "Separated from the /json endpoint for asynchronous loading: data is displayed immediately while filters load in the background. "
-                    + "Results are cached server-side for 10 minutes.",
+                    + "Results are cached server-side for 10 minutes. Use refresh=true to force a cache reload.",
             parameters = {
                     @Parameter(name = "nameOrId", description = "The name or uuid of an application", required = true),
-                    @Parameter(name = "dataType", description = "The name of the dataType (e.g. 't_soil_analysis_sana')", required = true)
+                    @Parameter(name = "dataType", description = "The name of the dataType (e.g. 't_soil_analysis_sana')", required = true),
+                    @Parameter(name = "refresh", description = "If true, invalidates the cache and forces a fresh reload from the database", required = false)
             }
     )
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/filters", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<FilterList>> getDataFilters(
             @PathVariable("nameOrId") final String nameOrId,
-            @PathVariable("dataType") final String dataName) {
+            @PathVariable("dataType") final String dataName,
+            @RequestParam(defaultValue = "false") boolean refresh) {
         Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        // Si refresh=true, on invalide le cache pour forcer un rechargement depuis la base
+        if (refresh) {
+            serviceContainer.dataService().invalidateFilterListCache(application, dataName);
+        }
         final List<FilterList> filterLists = serviceContainer.dataService()
                 .filterList(application, dataName)
                 .collect(Collectors.toList()).block();
