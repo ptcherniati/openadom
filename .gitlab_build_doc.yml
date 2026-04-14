@@ -1,9 +1,9 @@
 build_openadom_doc:
-  image: rocker/rstudio:latest #rocker/r-rmd
+  # rocker/verse inclut rmarkdown, knitr et quarto pré-installés
+  image: rocker/verse:latest
   stage: build
   script:
     - set -x
-    - Rscript -e "install.packages(c('rmarkdown', 'knitr'), repos='https://cloud.r-project.org')"
     - cp README.md documentations/openadom/fichiers/readme.md
     - cp src/test/resources/data/configuration/schemaExample.yaml documentations/openadom/fichiers/schema_example.yaml
     - cd documentations/openadom
