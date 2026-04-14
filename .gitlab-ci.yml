@@ -4,7 +4,7 @@ image: docker:stable
 # Pour l'utilisation de testcontainers
 # https://www.testcontainers.org/supported_docker_environment/continuous_integration/gitlab_ci/
 services: &dind_definition
-  - name: docker:23.0.1-dind
+  - name: docker:26.0.1-dind
     alias: docker
     command: [ '--tls=false' ]
 
