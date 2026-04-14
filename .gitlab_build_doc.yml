@@ -1,5 +1,5 @@
 build_openadom_doc:
-  # rocker/verse inclut rmarkdown, knitr et quarto pré-installés (évite l'erreur "no package called rmarkdown")
+  # rocker/verse inclut rmarkdown, knitr et quarto pré-installés
   image: rocker/verse:latest
   stage: build
   script:
