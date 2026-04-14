@@ -4,7 +4,7 @@ build_openadom_doc:
   stage: build
   script:
     - set -x
-    - Rscript -e "if (!requireNamespace('rmarkdown', quietly=TRUE)) install.packages('rmarkdown', repos='https://cloud.r-project.org')"
+    - Rscript -e "install.packages(c('rmarkdown', 'knitr'), repos='https://cloud.r-project.org')"
     - cp README.md documentations/openadom/fichiers/readme.md
     - cp src/test/resources/data/configuration/schemaExample.yaml documentations/openadom/fichiers/schema_example.yaml
     - cd documentations/openadom
