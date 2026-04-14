@@ -1087,9 +1087,7 @@ public class OreSiResources {
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
         final List<DataRow> data = serviceContainer.dataService().findData(downloadDatasetQuery);
-        final List<FilterList> filterLists = serviceContainer.dataService()
-                .filterList(downloadDatasetQuery.application(), downloadDatasetQuery.dataName())
-                .collect(Collectors.toList()).block();
+        // filterLists is now loaded asynchronously via the dedicated /filters endpoint
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
@@ -1123,13 +1121,60 @@ public class OreSiResources {
                 .toList();
         Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = serviceContainer.authorizationService().getAuthorizationScopes(application, MenuType.submission);
 
+        // PERF #465 — filterLists est désormais une liste vide ici.
+        // Les filtres sont chargés via l'endpoint séparé GET /filters (voir getDataFilters ci-dessous).
+        // Cela permet d'afficher les données immédiatement sans attendre la requête lente des filtres (~54s).
         return ResponseEntity.ok(new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
-                filterLists,
+                List.of(),
                 checkedFormatcomponents,
                 referenceScopes));
+    }
+
+    /**
+     * PERF #465 — Endpoint dédié pour le chargement asynchrone des listes de filtres.
+     *
+     * Pourquoi un endpoint séparé ?
+     *   Avant, les filtres étaient chargés dans getAllDataJson() en même temps que les données.
+     *   La requête SQL des filtres (getFilterList dans DataRepository.java) prend ~54 secondes
+     *   pour 100K lignes, ce qui bloquait l'affichage des données (~80ms) pendant toute la durée.
+     *   En séparant, le frontend affiche les données immédiatement et charge les filtres en
+     *   arrière-plan. L'utilisateur voit ses données en ~1-2s au lieu de ~55s.
+     *
+     * Le résultat est mis en cache par DataService.filterList() (TTL 10 min).
+     * Au 2ème appel, la réponse est quasi-instantanée (< 10ms).
+     *
+     * @param nameOrId nom ou ID de l'application
+     * @param dataName nom du dataType (ex: "t_soil_analysis_sana")
+     * @return la liste des FilterList contenant les valeurs distinctes des dropdowns de filtres
+     */
+    @Operation(
+            description = "Return the list of available filters (reference dropdowns) for dataType 'dataType' of application 'nameOrId'. "
+                    + "Separated from the /json endpoint for asynchronous loading: data is displayed immediately while filters load in the background. "
+                    + "Results are cached server-side for 10 minutes. Use refresh=true to force a cache reload.",
+            parameters = {
+                    @Parameter(name = "nameOrId", description = "The name or uuid of an application", required = true),
+                    @Parameter(name = "dataType", description = "The name of the dataType (e.g. 't_soil_analysis_sana')", required = true),
+                    @Parameter(name = "refresh", description = "If true, invalidates the cache and forces a fresh reload from the database", required = false)
+            }
+    )
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/filters", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<FilterList>> getDataFilters(
+            @PathVariable("nameOrId") final String nameOrId,
+            @PathVariable("dataType") final String dataName,
+            @RequestParam(defaultValue = "false") boolean refresh) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        // Si refresh=true, on invalide le cache pour forcer un rechargement depuis la base
+        if (refresh) {
+            serviceContainer.dataService().invalidateFilterListCache(application, dataName);
+        }
+        final List<FilterList> filterLists = serviceContainer.dataService()
+                .filterList(application, dataName)
+                .collect(Collectors.toList()).block();
+        return ResponseEntity.ok(filterLists != null ? filterLists : List.of());
     }
 
     /**

@@ -51,6 +51,14 @@ public class DataRequestBuilder {
             case final NoComponentFilters noComponentFilters -> null;
             case final ComponentFilterForInterval componentFilterForInterval -> switch (componentFilterForInterval) {
 
+                // FIX #465 — Filtre numérique par intervalle (min/max)
+                // Le JSONPath utilise un OU logique (||) pour supporter deux structures de données :
+                //   - Composant simple : la valeur est directement dans le champ → @.double() matche
+                //     Exemple JSON : { "temperature": 25.3 }
+                //   - PatternComponent : la valeur est dans un sous-champ __VALUE__ → @.__VALUE__.double() matche
+                //     Exemple JSON : { "tel_data": { "__VALUE__": 0.2863, "tel_variable": "NDVI", ... } }
+                // Sans le ||, les filtres sur PatternComponent retournaient 0 résultat car @.double()
+                // ne peut pas convertir un objet JSON entier en nombre.
                 case ComponentFiltersForIntervalByNumeric(
                         String componentKey,
                         List<IntervalValuesNumeric> intervalsValues,
@@ -63,7 +71,7 @@ public class DataRequestBuilder {
                                     sanitize(componentKey),
                                     intervalsValues.stream()
                                             .map(intervalValues ->
-                                                    "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
+                                                    "(@.double() >= %1$s && @.double() <= %2$s) || (@.__VALUE__.double() >= %1$s && @.__VALUE__.double() <= %2$s)".formatted(
                                                             intervalValues.fromFromNumeric(),
                                                             intervalValues.fromToNumeric()
                                                     )
@@ -77,7 +85,7 @@ public class DataRequestBuilder {
                                     sanitize(componentKey),
                                     intervalsValues.stream()
                                             .map(intervalValues ->
-                                                    "(@.double() >= %1$s && @.double() <= %2$s)".formatted(
+                                                    "(@.double() >= %1$s && @.double() <= %2$s) || (@.__VALUE__.double() >= %1$s && @.__VALUE__.double() <= %2$s)".formatted(
                                                             intervalValues.fromFromNumeric(),
                                                             intervalValues.fromToNumeric()
                                                     )

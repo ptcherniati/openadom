@@ -45,7 +45,7 @@ record SelectRequest(
                 WITH rs AS (
                     SELECT DISTINCT ON (referencetype, naturalkey)
                         referencetype, naturalkey
-                    FROM %3$s.referencevalue
+                    FROM %3$s.referencevalue rs
                     WHERE referencetype = '%4$s'%5$s
                     %%2$s --offset
                     %%3$s --limit

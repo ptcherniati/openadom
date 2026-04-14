@@ -1045,8 +1045,82 @@ private PlatformTransactionManager transactionManager;
         return list;
     }
 
+    // PERF #465 — Cache en mémoire pour les résultats de la requête filterList.
+    //
+    // Pourquoi ce cache ?
+    //   La requête SQL getFilterList() dans DataRepository.java est très coûteuse (~54 secondes
+    //   pour 100K lignes) car elle parse du JSON (JSON_TABLE), fait des regex (regexp_split_to_table),
+    //   et joint la table referencevalue sur elle-même 3 fois.
+    //   Or, le résultat ne change QUE lors d'un import de données — pas entre deux consultations.
+    //   On cache donc le résultat en mémoire Java pour éviter de re-exécuter la requête.
+    //
+    // Fonctionnement :
+    //   - Clé du cache : "nomApplication::nomDataType" (ex: "bmks_sandbox::t_soil_analysis_sana")
+    //   - Valeur : la liste des FilterList + le timestamp de mise en cache
+    //   - TTL : 10 minutes — après ce délai, le cache est considéré comme périmé
+    //   - Taille max : 50 entrées — au-delà, l'entrée la plus ancienne est supprimée (LRU)
+    //   - Thread-safety : ConcurrentHashMap pour supporter les accès multi-utilisateurs
+    //
+    // Mémoire utilisée :
+    //   - Pour t_soil_analysis_sana (105K lignes) : le résultat fait ~1.8 MB (4850 entrées de filtre)
+    //   - 50 entrées max = ~90 MB worst case (en pratique beaucoup moins)
+    //   - Le cache stocke le RÉSULTAT AGRÉGÉ (valeurs distinctes des dropdowns), PAS les données brutes
+    //
+    // Invalidation :
+    //   - Appeler invalidateFilterListCache() après un import de données pour forcer le rechargement
+    //   - Appeler invalidateAllFilterListCaches() pour vider tout le cache (ex: maintenance)
+    //   - TODO : brancher l'invalidation dans VersioningService.createData()
+    private record FilterListCacheEntry(List<FilterList> data, long timestamp) {}
+    private static final java.util.concurrent.ConcurrentHashMap<String, FilterListCacheEntry> filterListCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final long FILTER_LIST_CACHE_TTL_MS = 10 * 60 * 1000L; // 10 minutes
+    private static final int FILTER_LIST_CACHE_MAX_ENTRIES = 50; // Max 50 dataTypes en cache (~90 MB worst case)
+
     public Flux<FilterList> filterList(final Application application, final String refType) {
-        return repository.getRepository(application).data().getFilterList(refType);
+        String cacheKey = application.getName() + "::" + refType;
+        FilterListCacheEntry cached = filterListCache.get(cacheKey);
+
+        // Cache hit : le résultat existe et n'a pas expiré → on le retourne directement (0ms)
+        if (cached != null && (System.currentTimeMillis() - cached.timestamp()) < FILTER_LIST_CACHE_TTL_MS) {
+            log.debug("filterList cache hit for {}", cacheKey);
+            return Flux.fromIterable(cached.data());
+        }
+
+        // Cache miss : exécuter la requête SQL lente et stocker le résultat en cache
+        log.info("filterList cache miss for {}, loading from database", cacheKey);
+        return repository.getRepository(application).data().getFilterList(refType)
+                .collectList()
+                .doOnNext(list -> {
+                    // Éviction LRU : si le cache est plein, supprimer l'entrée la plus ancienne
+                    if (filterListCache.size() >= FILTER_LIST_CACHE_MAX_ENTRIES) {
+                        filterListCache.entrySet().stream()
+                                .min(java.util.Comparator.comparingLong(e -> e.getValue().timestamp()))
+                                .ifPresent(oldest -> filterListCache.remove(oldest.getKey()));
+                    }
+                    filterListCache.put(cacheKey, new FilterListCacheEntry(list, System.currentTimeMillis()));
+                })
+                .flatMapMany(Flux::fromIterable);
+    }
+
+    /**
+     * Invalide le cache filterList pour une application et un dataType donnés.
+     * À appeler après un import de données pour forcer le rechargement des filtres.
+     *
+     * @param application l'application concernée
+     * @param refType le nom du dataType (ex: "t_soil_analysis_sana")
+     */
+    public void invalidateFilterListCache(final Application application, final String refType) {
+        String cacheKey = application.getName() + "::" + refType;
+        filterListCache.remove(cacheKey);
+        log.info("filterList cache invalidated for {}", cacheKey);
+    }
+
+    /**
+     * Invalide tout le cache filterList (toutes les applications, tous les dataTypes).
+     * Utile en cas de maintenance ou de migration de données.
+     */
+    public void invalidateAllFilterListCaches() {
+        filterListCache.clear();
+        log.info("All filterList caches invalidated");
     }
 
     private record BuildColumns(PatternColumnFactory patternColumnFactory, ImmutableSet<Column> columns) {
