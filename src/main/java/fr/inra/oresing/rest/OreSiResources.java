@@ -1171,7 +1171,7 @@ public class OreSiResources {
     )
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/filters", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<FilterList>> getDataFilters(
+    public ResponseEntity<String> getDataFilters(
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataName,
             @RequestParam(defaultValue = "false") boolean refresh) {
@@ -1180,10 +1180,9 @@ public class OreSiResources {
         if (refresh) {
             serviceContainer.dataService().invalidateFilterListCache(application, dataName);
         }
-        final List<FilterList> filterLists = serviceContainer.dataService()
-                .filterList(application, dataName)
-                .collect(Collectors.toList()).block();
-        return ResponseEntity.ok(filterLists != null ? filterLists : List.of());
+        // Retourne le JSON sérialisé directement depuis le cache (pas de re-sérialisation Jackson)
+        String json = serviceContainer.dataService().filterListAsJson(application, dataName);
+        return ResponseEntity.ok(json);
     }
 
     /**
@@ -1578,7 +1577,7 @@ public class OreSiResources {
                             currentUser,
                             MAX_DB_CONCURRENCY
                     ).block();
-                    // #58 — Reconstruire le cache des filtres uniquement pour les dataTypes importés par le bundle
+                    // #58 - Reconstruire le cache des filtres uniquement pour les dataTypes importés par le bundle
                     for (String dataName : manifest.get().keySet()) {
                         serviceContainer.dataService().refreshFilterListCache(application, dataName);
                     }
