@@ -524,6 +524,12 @@ public class OreSiResources {
 
             final ReactiveProgression.ChangeApplicationProgression progression = new ReactiveProgression.ChangeApplicationProgression(0D, fluxSink);
             final UUID uuid = serviceContainer.applicationService().changeApplicationConfiguration(progression, nameOrId, dataFile, comment);
+            // #58 - Reconstruire le cache des filtres de tous les dataTypes de cette application
+            // après un changement de configuration ( la config peut modifier les références )
+            Application application = serviceContainer.applicationService().getApplication(nameOrId);
+            for (String dataName : application.getAllDataNames()) {
+                serviceContainer.dataService().refreshFilterListCache(application, dataName);
+            }
             progression.fluxSink().next(new ReactiveTypeResult(uuid));
             progression.complete();
         });
@@ -709,6 +715,9 @@ public class OreSiResources {
                     throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
             }).get();
+            // #58 - Reconstruire le cache des filtres après un dépôt réussi ( asynchrone )
+            Application application = serviceContainer.applicationService().getApplication(nameOrId);
+            serviceContainer.dataService().refreshFilterListCache(application, dataName);
             return ResponseEntity
                     .created(URI.create(dataVersioningResult.uri()))
                     .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
@@ -1188,6 +1197,9 @@ public class OreSiResources {
             @RequestParam(value = "downloadDatasetQuery", required = false) final String params) {
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = deserialiseParamDownloadDatasetQuery(params, nameOrId, dataName, false);
         final List<UUID> deletedData = serviceContainer.dataService().deleteData(downloadDatasetQuery);
+        // #58 - Reconstruire le cache des filtres après une suppression réussie ( asynchrone )
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        serviceContainer.dataService().refreshFilterListCache(application, dataName);
         return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
 
     }
@@ -1566,6 +1578,10 @@ public class OreSiResources {
                             currentUser,
                             MAX_DB_CONCURRENCY
                     ).block();
+                    // #58 — Reconstruire le cache des filtres uniquement pour les dataTypes importés par le bundle
+                    for (String dataName : manifest.get().keySet()) {
+                        serviceContainer.dataService().refreshFilterListCache(application, dataName);
+                    }
                 } catch (StreamReadException e) {
                     sink.error(e);
                     throw new RuntimeException(e);
