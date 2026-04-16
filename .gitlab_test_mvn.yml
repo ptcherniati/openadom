@@ -3,6 +3,14 @@
   image: maven:3.9.11-amazoncorretto-25
   stage: test
   needs: ["maven_build"]
+  # Testcontainers a besoin de Docker — on attache le service Docker-in-Docker
+  services:
+    - name: docker:26.0.1-dind
+      alias: docker
+      command: ['--tls=false']
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
   artifacts:
     when: always
     reports:

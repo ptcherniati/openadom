@@ -608,6 +608,12 @@ public class OreSiResources {
             }
 
             final UUID uuid = changeApplicationConfigurationUseCase.execute(fluxSink::next, nameOrId, dataFile, comment);
+            // #58 - Reconstruire le cache des filtres de tous les dataTypes de cette application
+            // après un changement de configuration ( la config peut modifier les références )
+            Application application = serviceContainer.applicationService().getApplication(nameOrId);
+            for (String dataName : application.getAllDataNames()) {
+                serviceContainer.dataService().refreshFilterListCache(application, dataName);
+            }
             fluxSink.next(new ReactiveTypeResult(uuid));
             fluxSink.complete();
         });
@@ -776,6 +782,9 @@ public class OreSiResources {
                     throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
                 }
             }).get();
+            // #58 - Reconstruire le cache des filtres après un dépôt réussi ( asynchrone )
+            Application application = serviceContainer.applicationService().getApplication(nameOrId);
+            serviceContainer.dataService().refreshFilterListCache(application, dataName);
             return ResponseEntity
                     .created(URI.create(dataVersioningResult.uri()))
                     .body(Map.of("id", dataVersioningResult.dataId().toString(), "referenceSynthesis", dataVersioningResult.dataSynthesis()));
@@ -907,8 +916,7 @@ public class OreSiResources {
                 .orElseGet(OreSiResources::getDefaultLocale);
         final Set<String> orderedVariables = buildOrderedVariables(nameOrId, dataName);
         final List<DataRow> data = findDataUseCase.execute(downloadDatasetQuery);
-        final List<FilterList> filterLists = filterListUseCase.execute(downloadDatasetQuery.application(), downloadDatasetQuery.dataName())
-                .collect(Collectors.toList()).block();
+        // PERF #465 — filterLists chargés via l'endpoint séparé GET /filters (asynchrone)
         Predicate<ComponentDescription> isHidden = componentDescription -> componentDescription.isHiddenOrHasLangRestriction(downloadDatasetQuery.getLanguage());
         Predicate<String> isHiddenComponent = componentName -> application.findComponentOfData(dataName, componentName).stream()
                 .anyMatch(isHidden);
@@ -942,24 +950,73 @@ public class OreSiResources {
                 .toList();
         Map<String, List<GetGrantableResult.ReferenceScope>> referenceScopes = getAuthorizationScopesUseCase.execute(application, MenuType.submission);
 
+        // PERF #465 — filterLists est désormais une liste vide ici.
+        // Les filtres sont chargés via l'endpoint séparé GET /filters (voir getDataFilters ci-dessous).
+        // Cela permet d'afficher les données immédiatement sans attendre la requête lente des filtres (~54s).
         return ResponseEntity.ok(new GetDataResult(
                 downloadDatasetQuery.patternDefinitionCount(),
                 variables,
                 dataRowResults,
-                filterLists,
+                List.of(),
                 checkedFormatcomponents,
                 referenceScopes));
     }
 
     /**
+     * PERF #465 — Endpoint dédié pour le chargement asynchrone des listes de filtres.
+     *
+     * Pourquoi un endpoint séparé ?
+     *   Avant, les filtres étaient chargés dans getAllDataJson() en même temps que les données.
+     *   La requête SQL des filtres (getFilterList dans DataRepository.java) prend ~54 secondes
+     *   pour 100K lignes, ce qui bloquait l'affichage des données (~80ms) pendant toute la durée.
+     *   En séparant, le frontend affiche les données immédiatement et charge les filtres en
+     *   arrière-plan. L'utilisateur voit ses données en ~1-2s au lieu de ~55s.
+     *
+     * Le résultat est mis en cache par DataService.filterList() (TTL 10 min).
+     * Au 2ème appel, la réponse est quasi-instantanée (< 10ms).
+     *
+     * @param nameOrId nom ou ID de l'application
+     * @param dataName nom du dataType (ex: "t_soil_analysis_sana")
+     * @return la liste des FilterList contenant les valeurs distinctes des dropdowns de filtres
+     */
+    @Operation(
+            description = "Return the list of available filters (reference dropdowns) for dataType 'dataType' of application 'nameOrId'. "
+                    + "Separated from the /json endpoint for asynchronous loading: data is displayed immediately while filters load in the background. "
+                    + "Results are cached server-side for 10 minutes. Use refresh=true to force a cache reload.",
+            parameters = {
+                    @Parameter(name = "nameOrId", description = "The name or uuid of an application", required = true),
+                    @Parameter(name = "dataType", description = "The name of the dataType (e.g. 't_soil_analysis_sana')", required = true),
+                    @Parameter(name = "refresh", description = "If true, invalidates the cache and forces a fresh reload from the database", required = false)
+            }
+    )
+    @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
+    @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/filters", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> getDataFilters(
+            @PathVariable("nameOrId") final String nameOrId,
+            @PathVariable("dataType") final String dataName,
+            @RequestParam(defaultValue = "false") boolean refresh) {
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        // Si refresh=true, on invalide le cache pour forcer un rechargement depuis la base
+        if (refresh) {
+            serviceContainer.dataService().invalidateFilterListCache(application, dataName);
+        }
+        // Retourne le JSON sérialisé directement depuis le cache (pas de re-sérialisation Jackson)
+        String json = serviceContainer.dataService().filterListAsJson(application, dataName);
+        return ResponseEntity.ok(json);
+    }
+
+    /**
      * export as JSON
      */
-        protected ResponseEntity<String> deleteData(
+    protected ResponseEntity<String> deleteData(
             final String nameOrId,
             final String dataName,
             final DownloadDatasetQuery params) {
         final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = buildDownloadDatasetQuery(params, nameOrId, dataName, false);
         final List<UUID> deletedData = deleteDataUseCase.execute(downloadDatasetQuery);
+        // #58 - Reconstruire le cache des filtres après une suppression réussie
+        Application application = serviceContainer.applicationService().getApplication(nameOrId);
+        serviceContainer.dataService().refreshFilterListCache(application, dataName);
         return ResponseEntity.ok(deletedData.stream().map(UUID::toString).collect(Collectors.joining(LIST_DELIMITER)));
 
     }
@@ -1338,6 +1395,10 @@ public class OreSiResources {
                             MAX_DB_CONCURRENCY
                     ).block();
                     completedSuccessfully = true;
+                    // #58 - Reconstruire le cache des filtres uniquement pour les dataTypes importés par le bundle
+                    for (String dataName : manifest.get().keySet()) {
+                        serviceContainer.dataService().refreshFilterListCache(application, dataName);
+                    }
                 } catch (StreamReadException e) {
                     sink.error(e);
                 } catch (DatabindException e) {
@@ -1640,4 +1701,3 @@ public class OreSiResources {
     }
 
 }
-

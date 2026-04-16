@@ -1,13 +1,9 @@
 build_openadom_doc:
-  # rocker/verse:4.4.2 : image epinglee incluant quarto + tidyverse (evite les regressions :latest)
+  # rocker/verse:4.4.2 : version épinglée incluant rmarkdown, knitr et quarto pré-installés (évite les régressions :latest)
   image: rocker/verse:4.4.2
   stage: build
   script:
     - set -x
-    - "R --version | head -1"
-    - quarto --version
-    # Binaires pre-compiles Posit (Ubuntu Noble 24.04) - evite cmake/compilation systeme
-    - Rscript -e "install.packages(c('rmarkdown', 'knitr'), repos='https://packagemanager.posit.co/cran/__linux__/noble/latest')"
     - cp README.md documentations/openadom/fichiers/readme.md
     - cp src/test/resources/data/configuration/schemaExample.yaml documentations/openadom/fichiers/schema_example.yaml
     - cd documentations/openadom

@@ -790,8 +790,117 @@ private PlatformTransactionManager transactionManager;
         return list;
     }
 
-    public Flux<FilterList> filterList(final Application application, final String refType) {
-        return repository.getRepository(application).data().getFilterList(refType);
+    // PERF #465 - Cache en mémoire pour les résultats de la requête filterList.
+    //
+    // Raison ?
+    //   La requête SQL getFilterList() dans DataRepository.java est très coûteuse ( ~54 secondes
+    //   pour 100K lignes ). Le résultat ne change QUE lors d'un import/suppression de données.
+    //   On cache le résultat en mémoire Java pour éviter de re-exécuter la requête.
+    //
+    // Fonctionnement :
+    //   - Clé du cache : "nomApplication::nomDataType" (ex: "bmks_sandbox::t_soil_analysis_sana")
+    //   - Valeur : le JSON sérialisé des FilterList + le timestamp ( pour l'éviction LRU )
+    //     On stocke le JSON sérialisé (String) au lieu des objets Java pour éviter la re-sérialisation
+    //     Jackson (~700ms) à chaque appel GET /filters. Le endpoint retourne le JSON directement.
+    //   - Pas de TTL : le cache n'expire jamais automatiquement
+    //   - Reconstruction : après un dépôt/suppression de données réussi, le cache est reconstruit
+    //     en asynchrone via refreshFilterListCache(). L'ancien cache reste lisible pendant la
+    //     reconstruction — il n'est jamais supprimé, seulement remplacé par le nouveau résultat.
+    //   - Taille max : 50 entrées — au-delà, l'entrée la plus ancienne est supprimée (LRU)
+    //   - Thread-safety : ConcurrentHashMap pour supporter les accès multi-utilisateurs
+    //   - Rechargement manuel : GET /filters?refresh=true
+    //
+    // Mémoire utilisée :
+    //   - Pour un jeu de 105K lignes : le résultat fait ~1.7 MB de JSON
+    //   - 50 entrées max = ~85 MB worst case ( en pratique beaucoup moins )
+    private record FilterListCacheEntry(String json, long timestamp) {}
+    private static final java.util.concurrent.ConcurrentHashMap<String, FilterListCacheEntry> filterListCache = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final int FILTER_LIST_CACHE_MAX_ENTRIES = 50;
+    private static final ObjectMapper cacheObjectMapper = new ObjectMapper();
+
+    /**
+     * Retourne le JSON sérialisé des filtres, depuis le cache si disponible.
+     * Si le cache est vide (premier appel ou après refresh=true), exécute la requête SQL,
+     * sérialise le résultat en JSON, et le stocke en cache pour les appels suivants.
+     *
+     * @return le JSON sérialisé prêt à être retourné directement par le endpoint, ou null si aucune donnée
+     */
+    public String filterListAsJson(final Application application, final String refType) {
+        String cacheKey = application.getName() + "::" + refType;
+        FilterListCacheEntry cached = filterListCache.get(cacheKey);
+
+        // Cache hit : retourner le JSON déjà sérialisé (0ms, pas de re-sérialisation Jackson)
+        if (cached != null) {
+            log.debug("filterList cache hit for {}", cacheKey);
+            return cached.json();
+        }
+
+        // Cache miss : exécuter la requête SQL, sérialiser en JSON, et stocker
+        log.info("filterList cache miss for {}, loading from database", cacheKey);
+        List<FilterList> list = repository.getRepository(application).data().getFilterList(refType)
+                .collectList()
+                .block();
+        return serializeAndCache(cacheKey, list != null ? list : List.of());
+    }
+
+    /**
+     * Sérialise la liste de FilterList en JSON et la stocke dans le cache.
+     */
+    private String serializeAndCache(String cacheKey, List<FilterList> list) {
+        try {
+            String json = cacheObjectMapper.writeValueAsString(list);
+            if (filterListCache.size() >= FILTER_LIST_CACHE_MAX_ENTRIES) {
+                filterListCache.entrySet().stream()
+                        .min(java.util.Comparator.comparingLong(e -> e.getValue().timestamp()))
+                        .ifPresent(oldest -> filterListCache.remove(oldest.getKey()));
+            }
+            filterListCache.put(cacheKey, new FilterListCacheEntry(json, System.currentTimeMillis()));
+            return json;
+        } catch (Exception e) {
+            log.error("Failed to serialize filterList for {}", cacheKey, e);
+            return "[]";
+        }
+    }
+
+    /**
+     * Reconstruit le cache des filtres pour un dataType donné, en asynchrone.
+     * À appeler après un dépôt ou une suppression de données RÉUSSIE.
+     *
+     * L'ancien cache reste lisible pendant la reconstruction (pas de suppression préalable).
+     * Le nouveau résultat remplace l'ancien atomiquement via ConcurrentHashMap.put().
+     * En cas d'erreur SQL, l'ancien cache reste en place — pas de perte de service.
+     */
+    public void refreshFilterListCache(final Application application, final String refType) {
+        log.info("filterList cache refresh started for {}::{}", application.getName(), refType);
+        String cacheKey = application.getName() + "::" + refType;
+        repository.getRepository(application).data().getFilterList(refType)
+                .collectList()
+                .doOnNext(list -> {
+                    serializeAndCache(cacheKey, list);
+                    log.info("filterList cache refreshed for {}", cacheKey);
+                })
+                .doOnError(error -> {
+                    log.warn("Failed to refresh filterList cache for {}::{}", application.getName(), refType, error);
+                })
+                .subscribe();
+    }
+
+    /**
+     * Invalide le cache filterList pour une application et un dataType donnés.
+     * Utilisé par le endpoint GET /filters?refresh=true pour forcer un rechargement manuel.
+     */
+    public void invalidateFilterListCache(final Application application, final String refType) {
+        String cacheKey = application.getName() + "::" + refType;
+        filterListCache.remove(cacheKey);
+        log.info("filterList cache invalidated for {}", cacheKey);
+    }
+
+    /**
+     * Invalide tout le cache filterList (toutes les applications, tous les dataTypes).
+     */
+    public void invalidateAllFilterListCaches() {
+        filterListCache.clear();
+        log.info("All filterList caches invalidated");
     }
 
     public void readEntry(File zipBundleFile, String entryName, Consumer<InputStream> consumer) throws IOException {

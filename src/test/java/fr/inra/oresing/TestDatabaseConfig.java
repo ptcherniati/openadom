@@ -37,7 +37,6 @@ public class TestDatabaseConfig {
         dataSource.setUrl(jdbcUrl);
         dataSource.setUsername("openAdomTechUser");
         dataSource.setPassword("z2I<i}qclq)D?xqT");
-
         return dataSource;
     }
 }

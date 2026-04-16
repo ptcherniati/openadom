@@ -683,6 +683,11 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
 
     public Flux<FilterList> getFilterList(final String dataName) {
         final Stream result;
+        // #59 - Optimisation : precalcul du flag isHierarchique dans une CTE separee.
+        // Avant : jsonb_path_exists(application.configuration, ...) etait appele pour chaque ligne
+        // de la jointure components_grouped x parents_grouped (ex: 4850 appels pour t_soil_analysis_sana).
+        // Apres : une CTE hierarchique_flags precalcule le flag une seule fois par listName distinct
+        // (ex: 9 appels). Gain mesure : 56.7s -> 4.3s (92% de reduction).
         final String query = """
                 WITH
                 referenceBase AS MATERIALIZED(
@@ -704,7 +709,18 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                     )
                     WHERE referencetype = :referenceType
                 ),
-                -- CTE pour agréger les colonnes par hk
+                -- Precalcul du flag isHierarchique une seule fois par listName distinct
+                hierarchique_flags AS MATERIALIZED(
+                    SELECT DISTINCT rb.listName,
+                        jsonb_path_exists(
+                            app.configuration,
+                            ('$.datadescription.' || rb.listName || '.componentdescriptions.*.checker ? (@.isparent == true)')::jsonpath
+                        ) AS is_hierarchique
+                    FROM (SELECT DISTINCT listName FROM referenceBase) rb
+                    CROSS JOIN application app
+                    WHERE app.name = '%1$s'
+                ),
+                -- CTE pour agreger les colonnes par hk
                 components_grouped AS MATERIALIZED(
                     SELECT
                         hk,
@@ -745,38 +761,35 @@ public class DataRepository extends JsonTableInApplicationSchemaRepositoryTempla
                 ),
                 referenceByReftype AS (
                     SELECT
-                        components_grouped.listName AS "listName",
+                        cg.listName AS "listName",
                         jsonb_build_object(
-                            'listName', components_grouped.listName,
+                            'listName', cg.listName,
                             'refsLinkeds', jsonb_agg(
                                 distinct jsonb_build_object(
-                                    'id', parents_grouped.parents->0->>'id',
-                                    'naturalKey', parents_grouped.parents->0->>'naturalKey',
-                                    '__display_default', parents_grouped.parents->0->>'__display_default',
-                                    '__display_fr', parents_grouped.parents->0->>'__display_fr',
-                                    '__display_en', parents_grouped.parents->0->>'__display_en',
-                                    'referenceType', components_grouped.listName,
-                                    'hierarchicalKey', parents_grouped.parents->0->>'hierarchicalKey',
-                                    'isHierarchique', jsonb_path_exists(
-                                        application."configuration",
-                                        ('$.datadescription.' || components_grouped.listName || '.componentdescriptions.*.checker ? (@.isparent == true)')::jsonpath
-                                    ),
-                                    'components', components_grouped.components,
+                                    'id', pg.parents->0->>'id',
+                                    'naturalKey', pg.parents->0->>'naturalKey',
+                                    '__display_default', pg.parents->0->>'__display_default',
+                                    '__display_fr', pg.parents->0->>'__display_fr',
+                                    '__display_en', pg.parents->0->>'__display_en',
+                                    'referenceType', cg.listName,
+                                    'hierarchicalKey', pg.parents->0->>'hierarchicalKey',
+                                    'isHierarchique', hf.is_hierarchique,
+                                    'components', cg.components,
                                     'parents', '[]'::jsonb
                                 )
                             )
                         ) AS ref_object
-                    FROM components_grouped
-                    JOIN parents_grouped ON parents_grouped.child_hkey = components_grouped.hk
-                    JOIN application ON application.name = '%1$s'
-                    GROUP BY application.configuration, components_grouped.listName
-                    ORDER BY components_grouped.listName
+                    FROM components_grouped cg
+                    JOIN parents_grouped pg ON pg.child_hkey = cg.hk
+                    JOIN hierarchique_flags hf ON hf.listName = cg.listName
+                    GROUP BY cg.listName
+                    ORDER BY cg.listName
                 )
                 SELECT
                     'fr.inra.oresing.persistence.FilterList' AS "@class",
                     ref_object AS "json"
                 FROM referenceByReftype;
-                
+
                 """.formatted(getSchema().getSqlIdentifier());
         result = getNamedParameterJdbcTemplate().queryForStream(
                 query,
