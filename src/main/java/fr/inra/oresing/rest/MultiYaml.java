@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import fr.inra.oresing.domain.data.DataFile;
 import org.apache.commons.io.FilenameUtils;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.*;
 import java.util.HashMap;

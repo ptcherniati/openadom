@@ -20,14 +20,17 @@ import java.util.regex.Pattern;
 
 public non-sealed class StringType implements FieldType<String> {
     final Supplier<StringType> clone;
-    private final Predicate<String> predicate;
+    private final Predicate<CharSequence> predicate;
     private final String pattern;
     String value = "";
 
     public StringType(final String pattern) {
         super();
         this.pattern = pattern;
-        predicate = Optional.ofNullable(pattern).filter(s -> !s.isBlank()).map(StringType::compile).map(Pattern::asMatchPredicate).orElse(null);
+        predicate = Optional.ofNullable(pattern).filter(s -> !s.isBlank())
+                .map(StringType::compile)
+                .<Predicate<CharSequence>>map(p -> cs -> p.matcher(cs).matches())
+                .orElse(null);
         clone = () -> new StringType(pattern);
     }
 
@@ -71,14 +74,61 @@ public non-sealed class StringType implements FieldType<String> {
             this.value = value;
             validationCheckResult = DefaultCheckerValidationCheckResult.success(target, this);
         } else {
-            if (predicate.test(value)) {
+            // Protection DoS : timeout sur l'évaluation de la regex (S5852)
+            // TimedCharSequence lève une exception si le matching dépasse 5 s
+            boolean matched;
+            try {
+                matched = predicate.test(new TimedCharSequence(value, 5_000));
+            } catch (RegexTimeoutException e) {
+                matched = false;
+            }
+            if (matched) {
                 this.value = value;
                 validationCheckResult = DefaultCheckerValidationCheckResult.success(target, this);
             } else {
-                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("patternNotMatched"), ImmutableMap.of("component", target.column(), "pattern", pattern, "value", value), target);
+                validationCheckResult = DefaultCheckerValidationCheckResult.error(
+                        target.getInternationalizedKey("patternNotMatched"),
+                        ImmutableMap.of("component", target.column(), "pattern", pattern, "value", value),
+                        target);
             }
         }
         return validationCheckResult;
+    }
+
+    /** Exception levée quand la regex dépasse le timeout autorisé. */
+    static final class RegexTimeoutException extends RuntimeException {
+        RegexTimeoutException(long timeoutMs) {
+            super("Regex evaluation exceeded timeout of " + timeoutMs + " ms");
+        }
+    }
+
+    /**
+     * CharSequence qui vérifie le timeout à chaque appel de charAt().
+     * Le moteur de regex Java appelle charAt() à chaque pas : cette vérification
+     * permet d'interrompre proprement un backtracking catastrophique (S5852).
+     */
+    private static final class TimedCharSequence implements CharSequence {
+        private final String delegate;
+        private final long deadline;
+        private final long timeoutMs;
+
+        TimedCharSequence(String delegate, long timeoutMs) {
+            this.delegate = delegate;
+            this.timeoutMs = timeoutMs;
+            this.deadline = System.currentTimeMillis() + timeoutMs;
+        }
+
+        @Override
+        public char charAt(int index) {
+            if (System.currentTimeMillis() > deadline) {
+                throw new RegexTimeoutException(timeoutMs);
+            }
+            return delegate.charAt(index);
+        }
+
+        @Override public int length()                           { return delegate.length(); }
+        @Override public CharSequence subSequence(int s, int e) { return new TimedCharSequence(delegate.substring(s, e), timeoutMs); }
+        @Override public String toString()                      { return delegate; }
     }
 
     @Override

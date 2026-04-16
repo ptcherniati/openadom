@@ -1,8 +1,6 @@
 package fr.inra.oresing.domain.application.normalized;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public record Sql(
         String schemaName,

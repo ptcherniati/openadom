@@ -172,6 +172,12 @@ create table Application
 
 CREATE INDEX application_data_gin_idx ON application USING gin (data);
 
+-- Accorder USAGE sur le schéma public à tous les rôles.
+-- Depuis PostgreSQL 15, PUBLIC n'a plus USAGE sur public par défaut. Sans ce grant,
+-- les rôles UUID créés par l'application (membres de openAdomAdmin) obtiennent
+-- "permission denied for schema public" lors des INSERT/SELECT sur public.application.
+GRANT USAGE ON SCHEMA public TO PUBLIC;
+
 -- grant on application
 GRANT ALL PRIVILEGES ON Application TO "openAdomAdmin" WITH GRANT OPTION;
 GRANT INSERT, UPDATE ON Application TO "applicationCreator";

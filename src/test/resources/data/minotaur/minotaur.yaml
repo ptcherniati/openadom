@@ -1,12 +1,14 @@
-version: 1
-application:
-  defaultLanguage: en
-  internationalizationName:
-    fr: Prototype de l'application minotaur
-    en: Minotaur
-  name: minotaur
-  version: 1
-tags:
+OA_version: 2.0.1
+OA_application:
+  OA_name: minotaur
+  OA_version: 1
+  OA_defaultLanguage: en
+  OA_i18n:
+    OA_title:
+      fr: Prototype de l'application minotaur
+      en: Minotaur
+
+OA_tags:
   localisation:
     fr: "Localisation"
     en: "Localization"
@@ -58,87 +60,95 @@ tags:
   earthworms:
     fr: "Verre de terre"
     en: "Earthworms"
-references:
-############################ Metadata study
+
+OA_data:
   site:
-    tags: [localisation]
-    internationalizationName:
-      fr: Site
-      en: Site name
-    internationalizedColumns:
-    keyColumns: [ code ]
-    columns:
+    OA_tags: [localisation]
+    OA_i18n:
+      OA_title:
+        fr: Site
+        en: Site name
+    OA_naturalKey: [ code ]
+    OA_basicComponents:
       nom:
-        headerName: nom site
+        OA_importHeader:
+          OA_headerName: "nom site"
       code:
-        headerName: code site
+        OA_importHeader:
+          OA_headerName: "code site"
   parcelle:
-    keyColumns: [code]
-    columns:
+    OA_naturalKey: [code]
+    OA_basicComponents:
       id:
-        headerName: id site
+        OA_importHeader:
+          OA_headerName: "id site"
       nom:
-        headerName: nom parcelle
+        OA_importHeader:
+          OA_headerName: "nom parcelle"
       code:
-        headerName: code parcelle
+        OA_importHeader:
+          OA_headerName: "code parcelle"
   bloc:
-    keyColumns: [code]
-    columns:
+    OA_naturalKey: [code]
+    OA_basicComponents:
       parcelle:
-        headerName: id parcelle
+        OA_importHeader:
+          OA_headerName: "id parcelle"
       nom:
-        headerName: nom bloc
+        OA_importHeader:
+          OA_headerName: "nom bloc"
       code:
-        headerName: code bloc
-dataTypes:
+        OA_importHeader:
+          OA_headerName: "code bloc"
   dataset:
-    format:
-      headerLine: 1
-      firstRowLine: 2
-      columns:
-        - header: "idnvx"
-          boundTo:
-            variable: informations
-            component: idnvx
-        - header: "nxobs"
-          boundTo:
-            variable: informations
-            component: nxobs
-        - header: "valeur"
-          boundTo:
-            variable: informations
-            component: valeur
-    data:
+    OA_dataHeaderLine: 1
+    OA_dataFirstLine: 2
+    OA_naturalKey: [idnvx]
+    OA_basicComponents:
+      idnvx:
+        OA_importHeader:
+          OA_headerName: "idnvx"
+      nxobs:
+        OA_importHeader:
+          OA_headerName: "nxobs"
+      valeur:
+        OA_importHeader:
+          OA_headerName: "valeur"
+    OA_computedComponents:
+      site:
+        OA_required: false
+        OA_computation:
+          OA_expression: >
+            ((String)datum.nxobs).equals("site")?((String)datum.idnvx):"";
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: site
+      parcelle:
+        OA_required: false
+        OA_computation:
+          OA_expression: >
+            ((String)datum.nxobs).equals("parcelle")?((String)datum.idnvx):"";
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: parcelle
+      bloc:
+        OA_required: false
+        OA_computation:
+          OA_expression: >
+            ((String)datum.nxobs).equals("bloc")?((String)datum.idnvx):"";
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: bloc
       informations:
-        components:
-          idnvx:
-          nxobs:
-          valeur:
-        computedComponents:
-          site:
-            computation:
-              expression: >
-                ((String)datum.informations.nxobs).equals("site")?((String)datum.informations.idnvx):"";
-            checker:
-              name: Reference
-              params:
-                refType: site
-                required: false
-          parcelle:
-            computation:
-              expression: >
-                ((String)datum.informations.nxobs).equals("parcelle")?((String)datum.informations.idnvx):"";
-            checker:
-              name: Reference
-              params:
-                refType: parcelle
-                required: false
-          bloc:
-            computation:
-              expression: >
-                ((String)datum.informations.nxobs).equals("bloc")?((String)datum.informations.idnvx):"";
-            checker:
-              name: Reference
-              params:
-                refType: bloc
-                required: false
+        OA_computation:
+          OA_expression: >
+            def site_val = ((String)datum.nxobs).equals("site")?((String)datum.idnvx):"";
+            def parcelle_val = ((String)datum.nxobs).equals("parcelle")?((String)datum.idnvx):"";
+            def bloc_val = ((String)datum.nxobs).equals("bloc")?((String)datum.idnvx):"";
+            return ['site': site_val, 'parcelle': parcelle_val, 'bloc': bloc_val]

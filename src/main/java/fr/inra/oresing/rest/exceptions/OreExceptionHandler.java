@@ -33,9 +33,6 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-
-import static fr.inra.oresing.rest.security.AuthorizationFilter.BAD_LOGIN_PASSWORD;
 
 @RestControllerAdvice
 @Slf4j

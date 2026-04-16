@@ -9,9 +9,12 @@ import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.ContextConstants;
+import fr.inra.oresing.domain.data.deposit.context.column.PatternColumnFactory;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.rest.data.BuildColumns;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -116,11 +119,22 @@ class DataHeaderReaderTest {
 
         final CSVParser csvParser = CSVParser.parse(csv, StandardCharsets.UTF_8, csvFormat);
         lineIterator = csvParser.iterator();
-        final DataImporterContext dataImporterContext = Mockito.mock(DataImporterContext.class);
-        Mockito.when(dataImporterContext.getDataDescription()).thenReturn(dataDescription);
-        Mockito.when(dataImporterContext.getExpectedHeaders()).thenReturn(ImmutableSet.of("dat_date", "dat_heure", "SMP_20_1", "SMP_20_2", "SMP_30_1"));
-        Mockito.when(dataImporterContext.getMandatoryHeaders()).thenReturn(ImmutableSet.of("dat_date", "dat_heure"));
-        reader = new DataHeaderReader(constants, dataImporterContext, publishContextBuilder);
+        final AsynchroneFileImporterContext dataImporterContext = Mockito.mock(AsynchroneFileImporterContext.class);
+        final ContextConstants contextConstants = Mockito.mock(ContextConstants.class);
+        final BuildColumns buildColumns = Mockito.mock(BuildColumns.class);
+        final PatternColumnFactory patternColumnFactory = Mockito.mock(PatternColumnFactory.class);
+        Mockito.when(dataImporterContext.contextConstants()).thenReturn(contextConstants);
+        Mockito.when(contextConstants.dataConfiguration()).thenReturn(dataDescription);
+        Mockito.when(buildColumns.expectedHeaders()).thenReturn(ImmutableSet.of("dat_date", "dat_heure", "SMP_20_1", "SMP_20_2", "SMP_30_1"));
+        Mockito.when(buildColumns.mandatoryHeaders()).thenReturn(ImmutableSet.of("dat_date", "dat_heure"));
+        Mockito.when(dataImporterContext.buildColumns()).thenReturn(buildColumns);
+        Mockito.when(buildColumns.patternColumnFactory()).thenReturn(patternColumnFactory);
+
+        reader = new DataHeaderReader(
+                buildColumns,
+                publishContextBuilder,
+                dataDescription
+        );
     }
 
     @Test

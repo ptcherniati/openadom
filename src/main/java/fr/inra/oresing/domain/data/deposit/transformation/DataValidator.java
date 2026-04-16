@@ -2,7 +2,6 @@ package fr.inra.oresing.domain.data.deposit.transformation;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.GroovyExpressionChecker;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
@@ -125,13 +124,13 @@ public class DataValidator {
         recursionStrategy.dataImporterContext().getKnownId(keyForLine.naturalKey(), keyForLine.patternColumnName())
                 .or(() -> {
                     UUID newUuid = UUID.randomUUID();
-                    recursionStrategy.dataImporterContext().addKnownIdToReferenceValues(
+                    recursionStrategy.addKnownIdToReferenceValues(
                             key,
                             newUuid
                     );
                     return Optional.of(newUuid);
                 })
-                .ifPresent(uuid -> recursionStrategy.dataImporterContext().addKnownIdToReferenceValues(
+                .ifPresent(uuid -> recursionStrategy.addKnownIdToReferenceValues(
                         key,
                         uuid
                 ));
@@ -211,14 +210,15 @@ public class DataValidator {
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
             final RowWithReferenceDatum rowWithReferenceDatum,
-            final ImmutableSet<LineChecker<F>> transformedLineCheckers,
+            final Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder) {
         final DataDatum referenceDatumBeforeChecking = rowWithReferenceDatum.referenceDatum();
         final Map<String, Map<String, Map<String, LinkedLines>>> refsLinkedTo = new HashMap<>();
         final ImmutableList.Builder<CsvRowValidationCheckResult> allCheckerErrorsBuilder = ImmutableList.builder();
         final DataDatum referenceDatum = DataDatum.copyOf(referenceDatumBeforeChecking);
         for (final LineChecker lineChecker : transformedLineCheckers) {
-            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, lineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
+            final LineChecker copiedLineChecker = lineChecker.copy();
+            final List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = checkLineForChecker(recursionStrategy, rowWithReferenceDatum, publishContextBuilder, copiedLineChecker, referenceDatumBeforeChecking, refsLinkedTo, referenceDatum, allCheckerErrorsBuilder);
             if (referenceDatumAfterCheckings != null) return referenceDatumAfterCheckings;
         }
         refsLinkedTo.putAll(rowWithReferenceDatum.refsLinkedTo());
@@ -233,7 +233,7 @@ public class DataValidator {
         return buildReferenceDataAfterChecking(buildKey, recursionStrategy, transformedLineCheckers, publishContextBuilder, referenceDatumAfterChecking);
     }
 
-    private <F extends FieldType<?>> List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, ImmutableSet<LineChecker<F>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+    private List<ReferenceDatumAfterChecking> buildReferenceDataAfterChecking(Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey, RecursionStrategy recursionStrategy, Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers, PublishContext.PublishContextBuilder publishContextBuilder, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings = List.of();
         if (recursionStrategy instanceof WithRecursion withRecursion) {
             addBuildedLineKeysToReferenceValues(buildKey, withRecursion, referenceDatumAfterChecking);
@@ -244,23 +244,23 @@ public class DataValidator {
                 .addAll(referenceDatumAfterCheckings)
                 .build();
         if (recursionStrategy instanceof WithRecursion withRecursion) {
-            withRecursion.dataImporterContext().getMissingLines()
+            withRecursion.dataImporterContext().missingParentLine()
                     .remove(buildKey.apply(referenceDatumAfterChecking).naturalKey());
         }
         return referenceDatumAfterCheckings;
     }
 
-    private <F extends FieldType<?>> List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(
+    private List<ReferenceDatumAfterChecking> testLinesRegardingRecursivity(
             Function<ReferenceDatumAfterChecking, KeysAndReferenceDatumAfterChecking> buildKey,
             RecursionStrategy recursionStrategy,
-            ImmutableSet<LineChecker<F>> transformedLineCheckers,
+            Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
             PublishContext.PublishContextBuilder publishContextBuilder,
             ReferenceDatumAfterChecking referenceDatumAfterChecking) {
         if (recursionStrategy instanceof WithRecursion withRecursion) {
             withRecursion.testHasParent(buildKey, withRecursion, referenceDatumAfterChecking);
             List<ReferenceDatumAfterChecking> referenceDatumAfterCheckings;
             KeysAndReferenceDatumAfterChecking lineKey = buildKey.apply(referenceDatumAfterChecking);
-            Map<Ltree, List<RowWithReferenceDatum>> missingLines = withRecursion.dataImporterContext().getMissingLines();
+            Map<Ltree, List<RowWithReferenceDatum>> missingLines = withRecursion.dataImporterContext().missingParentLine();
             referenceDatumAfterCheckings = Optional.ofNullable(missingLines.get(lineKey.naturalKey()))
                     .map(LinkedList::new)
                     .map(missingLines1 -> {
@@ -279,7 +279,7 @@ public class DataValidator {
                     })
                     .orElseGet(ImmutableList::of);
             referenceDatumAfterCheckings
-                    .forEach(withRecursion.dataImporterContext().getMissingLines()::remove);
+                    .forEach(withRecursion.dataImporterContext().missingParentLine()::remove);
             return referenceDatumAfterCheckings;
         }
         return List.of();

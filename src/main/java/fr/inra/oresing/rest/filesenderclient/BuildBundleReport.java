@@ -4,8 +4,6 @@ import fr.inra.oresing.domain.application.Application;
 
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
 
 public record BuildBundleReport(
         Application application,

@@ -11,10 +11,9 @@ import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.rest.MultiYaml;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
-import fr.inra.oresing.rest.reactive.ReactiveProgression;
+import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,51 +35,51 @@ public class ApplicationConfigurationService {
     private ApplicationConfigurationService() {
     }
 
-    public static Application unzipConfiguration(final DataFile file, ReactiveProgression.CreateApplicationProgression fluxSink) throws IOException {
+    public static Application unzipConfiguration(final DataFile file, ReactiveEventHelper eventHelper) throws IOException {
         InputStream inputStream = MultiYaml.parseConfigurationBytes(file);
         return ApplicationConfigurationService.parseConfigurationBytes(
                 "", "",
-                fluxSink,
+                eventHelper,
                 FileBomResolver.of(inputStream));
     }
 
-    public static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application parseConfigurationBytes(
+    public static Application parseConfigurationBytes(
             final String applicationName,
             final String comment,
-            P progression,
+            ReactiveEventHelper eventHelper,
             final FileBomResolver fileBomResolver) {
-        progression.pushMessage("testYamlIsvalid", null);
+        eventHelper.pushMessage("testYamlIsvalid", null);
         try {
 
             if (fileBomResolver.markSupported()) {
                 fileBomResolver.mark(1);
                 int firstByte = fileBomResolver.read();
                 if (firstByte == -1) {
-                    progression.pushError(ConfigurationException.EMPTY_FILE, Map.of());
-                    progression.complete();
+                    eventHelper.pushError(ConfigurationException.EMPTY_FILE, Map.of());
+                    eventHelper.complete();
                     return null;
                 }
                 fileBomResolver.reset(); // On revient au début pour tout relire
             }
 
-            progression.pushMessage("yamlIsvalid", null);
-            progression.pushMessage("versionIsValid", null);
-            P progression1 = (P) progression.incrementAndPush(i -> i + 0.01D);
+            eventHelper.pushMessage("yamlIsvalid", null);
+            eventHelper.pushMessage("versionIsValid", null);
+            eventHelper.incrementAndPush(i -> i + 0.01D);
 
             final Configuration configuration;
-            configuration = ConfigurationBuilder.build(fileBomResolver, progression1, comment);
-            final ReactiveProgression.ChangeOrCreateApplicationProgression<?> progressionForCheckSyntax = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression1.withSubLabel("CheckSyntax");
+            configuration = ConfigurationBuilder.build(fileBomResolver, eventHelper, comment);
+            final ReactiveEventHelper helperForCheckSyntax = eventHelper.withSubLabel("CheckSyntax");
             if (configuration == null) {
-                progression1.complete();
+                eventHelper.complete();
                 return null;
             }
-            return getConfigurationParsingResultForSyntacticallyValidYaml(progressionForCheckSyntax, configuration);
+            return getConfigurationParsingResultForSyntacticallyValidYaml(helperForCheckSyntax, configuration);
         } catch (IOException e) {
             throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage());
         }
     }
 
-    private static <P extends ReactiveProgression.ChangeOrCreateApplicationProgression> Application getConfigurationParsingResultForSyntacticallyValidYaml(final P progression, final Configuration configuration) {
+    private static Application getConfigurationParsingResultForSyntacticallyValidYaml(final ReactiveEventHelper eventHelper, final Configuration configuration) {
         final Application application = new Application();
 
         final List<String> data = new ArrayList<>(configuration.dataDescription().keySet());
@@ -94,8 +93,8 @@ public class ApplicationConfigurationService {
                         () -> application.setAdditionalFiles(List.of())
                 );
         final String applicationName = configuration.applicationDescription().name();
-        final ReactiveProgression.ChangeOrCreateApplicationProgression<?> progressionValidation = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression.withSubLabel("startValidation");
-        progressionValidation.pushMessage("start", Map.of("applicationName", applicationName));
+        final ReactiveEventHelper helperValidation = eventHelper.withSubLabel("startValidation");
+        helperValidation.pushMessage("start", Map.of("applicationName", applicationName));
         application.setVersion(application.getConfiguration().applicationDescription().version().version());
         return application;
     }

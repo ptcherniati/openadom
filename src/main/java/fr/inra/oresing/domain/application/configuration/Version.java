@@ -13,7 +13,6 @@ public record Version(String version) implements Comparable<Version> {
 
     public Version(final String version) {
         this.version = version.trim();
-        toRunTimeVersion();
     }
 
     @Override

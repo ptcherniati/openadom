@@ -16,6 +16,7 @@ import fr.inra.oresing.domain.authorization.privilegeassessor.role.OpenAdomAdmin
 import fr.inra.oresing.domain.authorization.request.AuthorizationRequest;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
+import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.persistence.OreSiRepository;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
@@ -24,6 +25,8 @@ import fr.inra.oresing.rest.model.authorization.*;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
+import fr.inra.oresing.rest.usecases.security.authorization.GetAdminAuthorizationsUseCase;
+import fr.inra.oresing.rest.usecases.security.authorization.GetApplicationAuthorizationsUseCase;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -34,8 +37,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Setter;
-import org.springframework.boot.actuate.health.HealthComponent;
-import org.springframework.boot.actuate.health.HealthEndpoint;
+import org.springframework.boot.health.actuate.endpoint.HealthDescriptor;
+import org.springframework.boot.health.actuate.endpoint.HealthEndpoint;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -43,6 +46,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.util.UriUtils;
 
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -54,29 +58,38 @@ public class AuthorizationResources {
 
     public static final String AUTHORIZATION_ID = "authorizationId";
     private final HealthEndpoint healthEndpoint;
+    private final GetAdminAuthorizationsUseCase getAdminAuthorizationsUseCase;
+    private final GetApplicationAuthorizationsUseCase getApplicationAuthorizationsUseCase;
 
     @Setter
     private ServiceContainer serviceContainer;
     private final UserRepository userRepository;
 
     private final OreSiRepository repo;
+    private final JsonRowMapper<CreateAuthorizationRequest> mapper;
 
     public AuthorizationResources(
             HealthEndpoint healthEndpoint,
             UserRepository userRepository,
             ServiceContainer serviceContainer,
-            OreSiRepository repo) {
+            OreSiRepository repo,
+            JsonRowMapper<CreateAuthorizationRequest> mapper,
+            GetAdminAuthorizationsUseCase getAdminAuthorizationsUseCase,
+            GetApplicationAuthorizationsUseCase getApplicationAuthorizationsUseCase) {
         this.healthEndpoint = healthEndpoint;
         this.userRepository = userRepository;
         this.repo = repo;
         this.serviceContainer = serviceContainer;
+        this.mapper = mapper;
+        this.getAdminAuthorizationsUseCase = getAdminAuthorizationsUseCase;
+        this.getApplicationAuthorizationsUseCase = getApplicationAuthorizationsUseCase;
     }
 
 
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
     @GetMapping(value = "/authorizationForAdmin", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<LoginAdminResult> getAdminAuthorizationsForOpenAdom() {
-        return serviceContainer.authenticationService().getAdminAuthorizations();
+        return getAdminAuthorizationsUseCase.execute();
     }
 
     @PreAuthorize("hasPermission('SYSTEM', 'SYSTEM_OPENADOM_ADMIN')")
@@ -112,11 +125,7 @@ public class AuthorizationResources {
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_AUTHORIZATION_MANAGEMENT_FOR_READ')")
     @GetMapping(value = "/applications/{nameOrId}/authorizationAdminForApplication", produces = MediaType.APPLICATION_JSON_VALUE)
     public List<UserAuthorizationForApplication> getAdminAuthorizationsForApplication(@PathVariable("nameOrId") final String applicationNameOrId) {
-        return OreSiApiRequestContext.getAuthentication()
-                .map(OreSiAuthenticationToken::getApplicationPersona)
-                .map(ApplicationPersona::application)
-                .map(serviceContainer.authenticationService()::getApplicationAuthorizations)
-                .orElse(List.of());
+        return getApplicationAuthorizationsUseCase.execute(applicationNameOrId);
     }
 
     @Operation(
@@ -286,9 +295,10 @@ public class AuthorizationResources {
             produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, String>> addOrUpdateAuthorization(
             @PathVariable(name = "nameOrId") final String nameOrId,
-            @RequestBody final CreateAuthorizationRequest createAuthorizationRequest,
+            @RequestBody final String body,
             HttpServletRequest request
-            ) {
+            ) throws IOException {
+        CreateAuthorizationRequest createAuthorizationRequest = mapper.readValue(body, CreateAuthorizationRequest.class);
         verifyMethod( request.getMethod(), createAuthorizationRequest.uuid());
         Application application = OreSiApiRequestContext.getAuthentication()
                 .map(OreSiAuthenticationToken::getApplicationPersona)
@@ -654,11 +664,11 @@ public class AuthorizationResources {
                 .filter(ConnectedUser.class::isInstance)
                 .map(ConnectedUser.class::cast)
                 .orElse(null);
-        HealthComponent health = healthEndpoint.health();
+        final HealthDescriptor health = healthEndpoint.health();
         return ResponseEntity.ok().body(new Health(connectedUser, health));
     }
 
-    record Health(ConnectedUser connectedUser, HealthComponent health) {
+    record Health(ConnectedUser connectedUser, HealthDescriptor health) {
     }
 
 }

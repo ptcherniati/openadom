@@ -7,7 +7,6 @@ import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import lombok.Value;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.CharUtils;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.HashSet;
@@ -82,8 +81,8 @@ public class Ltree implements Comparable<Ltree> {
     private static String extracttolabelFromStringWithSpecialCharacters(String key) {
         final String lowerCased = key.replace(Ltree.NULL_KEY, "____").toLowerCase();
         final String withAccentsStripped = StringUtils.stripAccents(lowerCased);
-        final String withoutSpace = StringUtils.replace(withAccentsStripped, " ", "_");
-        final String toEscape = StringUtils.remove(withoutSpace, "-");
+        final String withoutSpace = withAccentsStripped.replace(" ", "_");
+        final String toEscape = withoutSpace.replace("-", "");
         final String escaped = toEscape.chars()
                 .mapToObj(x -> (char) x)
                 .map(Ltree::escapeSymbolFromKeyComponent)
@@ -116,10 +115,7 @@ public class Ltree implements Comparable<Ltree> {
         if (characterCanBeUsedInLabel(aChar)) {
             escapedChar = CharUtils.toString(aChar);
         } else {
-            escapedChar = RegExUtils.removeAll(
-                    Character.getName(aChar),
-                    LABEL_INVALID_CHARACTERS_REGEX
-            );
+            escapedChar = LABEL_INVALID_CHARACTERS_REGEX.matcher(Character.getName(aChar)).replaceAll("");
         }
         return escapedChar;
     }

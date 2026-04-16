@@ -5,7 +5,7 @@ import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.ListType;
 import fr.inra.oresing.domain.checker.type.StringType;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.column.ManyValuesStaticColumn;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import lombok.Value;
@@ -73,7 +73,7 @@ public class DataColumnMultipleValue<U> implements DataColumnValue<ListType, Fie
     }
 
     @Override
-    public String toValueString(final DataImporterContext referenceImporterContext, final String referencedColumn, final String locale) {
+    public String toValueString(final AsynchroneFileImporterContext referenceImporterContext, final String referencedColumn, final String locale) {
         return (String) values.getValue().stream()
                 .map(s -> referenceImporterContext.getDisplayNamesByReferenceAndNaturalKey(referencedColumn, s.toString(), locale))
                 .collect(Collectors.joining(",", "[", "]"));

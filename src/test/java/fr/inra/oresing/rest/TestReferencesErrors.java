@@ -2,25 +2,15 @@ package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
-import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.persistence.AuthenticationService;
+import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
 import org.hamcrest.core.IsNull;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.io.*;
@@ -35,28 +25,16 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.DynamicContainer.dynamicContainer;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("testmail")
-@SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
-
-@TestPropertySource(locations = "classpath:/application-tests.properties")
-@AutoConfigureWebMvc
-@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_EACH_TEST_METHOD)
 @Slf4j
 @Tag("domain.model")
-public class TestReferencesErrors {
+public class TestReferencesErrors extends AbstractIntegrationTest {
 
     public static final Map<String, String> responses = new HashMap<>();
     public static final String PASSWORD = "xxxxxxxx";
-    @Autowired
-    private MockMvc mockMvc;
-    @Autowired
-    private AuthenticationService authenticationService;
-    private static ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper mapper = new ObjectMapper();
 
     private Fixtures fixtures;
     @Autowired
@@ -69,17 +47,6 @@ public class TestReferencesErrors {
         final BufferedWriter writer = new BufferedWriter(new FileWriter(errorsFile));
         writer.write(errorsAsString);
         writer.close();
-    }
-
-    @BeforeEach
-    public void init() throws Exception {
-        fixtures = new Fixtures(mockMvc, null, namedParameterJdbcTemplate, authenticationService);
-    }
-
-    record RecursivityTestCase(String name, String replace, String by, String expectedResponse) {
-        static RecursivityTestCase of(Map.Entry<String, List<String>> entry) {
-            return new RecursivityTestCase(entry.getKey(), entry.getValue().get(0), entry.getValue().get(1), entry.getValue().get(2));
-        }
     }
 
     public static Stream<RecursivityTestCase> getRecursiviteReferentielErrorsStringReplace() {
@@ -96,6 +63,11 @@ public class TestReferencesErrors {
 
     public static Stream<RecursivityTestCase> getRepeatedColumnsDataErrorsStringReplace() {
         return Fixtures.getRepeatedColumnsDataErrorsStringReplace().entrySet().stream().map(RecursivityTestCase::of);
+    }
+
+    @BeforeEach
+    public void init() throws Exception {
+        fixtures = new Fixtures(mockMvc, null, namedParameterJdbcTemplate, authenticationService);
     }
 
     @TestFactory
@@ -118,7 +90,6 @@ public class TestReferencesErrors {
                                                     try (final InputStream refStream = new ByteArrayInputStream(textCsvModify.getBytes(StandardCharsets.UTF_8))) {
                                                         final MockMultipartFile refFile = new MockMultipartFile("file", recursivityTestCase.name() + ".csv", "text/plain", refStream);
                                                         log.info(recursivityTestCase.name());
-                                                        final ObjectMapper mapper = new ObjectMapper();
                                                         response = mockMvc.perform(MockMvcRequestBuilders.multipart("/api/v1/applications/recursivite/data/{refType}", "proprietes_taxon").file(refFile)
                                                                         .header("Authorization", "Bearer " + recursivityConnection.jwt()))
                                                                 .andExpect(status().is4xxClientError()).andReturn().getResponse().getContentAsString();
@@ -165,7 +136,6 @@ public class TestReferencesErrors {
                 )
         );
     }
-
 
     @TestFactory
     @DisplayName("Tests des erreurs unexpected Columns")
@@ -237,8 +207,8 @@ public class TestReferencesErrors {
             fixtures.addUserRightCreateApplication(recursivityConnection.userResult().userId(), "recursivite");
             final String id = fixtures.getIdFromApplicationResult(fixtures.loadApplication(configuration, recursivityConnection.jwt(), "recursivite", ""));
             mockMvc.perform(MockMvcRequestBuilders.get("/api/v1/applications/recursivite").param("filter", "ALL")
-                                .header("Authorization", "Bearer " + recursivityConnection.jwt()))
-                        .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.configuration.i18n.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties"))).andReturn().getResponse().getContentAsString();
+                            .header("Authorization", "Bearer " + recursivityConnection.jwt()))
+                    .andExpect(status().is2xxSuccessful()).andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.reference", IsEqual.equalTo("proprietes_taxon"))).andExpect(jsonPath("$.configuration.dataDescription.taxon.componentDescriptions.proprietesDeTaxon.prefix", IsEqual.equalTo("pt_"))).andExpect(jsonPath("$.configuration.i18n.data.taxon.components.proprietesDeTaxon.exportHeader.title.en", IsEqual.equalTo("Taxa properties"))).andReturn().getResponse().getContentAsString();
 
         } catch (final Throwable e) {
             throw new OreSiTechnicalException(e.getMessage(), e);
@@ -301,7 +271,6 @@ public class TestReferencesErrors {
         }
     }
 
-
     @TestFactory
     @DisplayName("Tests des erreurs sus les repeated Columns")
     Stream<DynamicNode> repeatedColumnsTest() throws Exception {
@@ -356,5 +325,11 @@ public class TestReferencesErrors {
             throw new OreSiTechnicalException(e.getMessage(), e);
         }
         return repeatedcolumnsConnection;
+    }
+
+    record RecursivityTestCase(String name, String replace, String by, String expectedResponse) {
+        static RecursivityTestCase of(Map.Entry<String, List<String>> entry) {
+            return new RecursivityTestCase(entry.getKey(), entry.getValue().get(0), entry.getValue().get(1), entry.getValue().get(2));
+        }
     }
 }

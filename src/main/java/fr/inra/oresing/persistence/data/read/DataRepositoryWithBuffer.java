@@ -3,7 +3,6 @@ package fr.inra.oresing.persistence.data.read;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.Node;
-import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.repository.data.DataRepository;
@@ -216,10 +215,5 @@ public record DataRepositoryWithBuffer(
         } catch (IOException e) {
             throw new UncheckedIOException("Erreur lors du nettoyage du répertoire temporaire", e);
         }
-    }
-
-    @Override
-    public Stream<DataValue> findAllByReferenceTypeStream(String referenceName) {
-        return repository().findAllByReferenceTypeStream(referenceName);
     }
 }

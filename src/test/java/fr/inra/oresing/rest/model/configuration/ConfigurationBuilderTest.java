@@ -1,7 +1,6 @@
 package fr.inra.oresing.rest.model.configuration;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.google.common.io.Resources;
@@ -9,9 +8,10 @@ import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
-import fr.inra.oresing.rest.reactive.ReactiveProgression;
+import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeError;
+import net.javacrumbs.jsonunit.assertj.JsonAssertions;
 import org.apache.commons.collections4.CollectionUtils;
 import org.assertj.core.api.Assertions;
 import org.json.JSONException;
@@ -52,23 +52,23 @@ class ConfigurationBuilderTest {
         url = Resources.getResource("data/configuration/schemaExample.yaml");
         SCHEMA = url.openStream();
         url = Resources.getResource("data/monsore/monsore-with-repository.yaml");
-        MONSORE_CONFIGURATION =  url.openStream();
+        MONSORE_CONFIGURATION = url.openStream();
         url = Resources.getResource("data/configuration/hierarchical.yaml");
-        HIERARCHICAL_CONFIGURATION =  url.openStream();
+        HIERARCHICAL_CONFIGURATION = url.openStream();
         url = Resources.getResource("data/configuration/localization.result.json");
-        LOCALIZATION_RESULT =  url.openStream();
+        LOCALIZATION_RESULT = url.openStream();
         url = Resources.getResource("data/configuration/data.result.json");
-        DATA_RESULT =  url.openStream();
+        DATA_RESULT = url.openStream();
         url = Resources.getResource("data/configuration/localization.monsore.result.json");
-        LOCALIZATION_MONSORE_RESULT =  url.openStream();
+        LOCALIZATION_MONSORE_RESULT = url.openStream();
         url = Resources.getResource("data/configuration/data.result.monsore.json");
-        DATA_MONSORE_RESULT =  url.openStream();
+        DATA_MONSORE_RESULT = url.openStream();
         url = Resources.getResource("data/configuration/localization.example.result.json");
-        LOCALIZATION_EXAMPLE_RESULT =  url.openStream();
+        LOCALIZATION_EXAMPLE_RESULT = url.openStream();
         url = Resources.getResource("data/configuration/data.result.example.json");
-        DATA_EXAMPLE_RESULT =  url.openStream();
+        DATA_EXAMPLE_RESULT = url.openStream();
         url = Resources.getResource("data/configuration/hierarchical.json");
-        HIERARCHICAL_RESULT =  url.openStream();
+        HIERARCHICAL_RESULT = url.openStream();
     }
 
     private static void testConfiguration(final Configuration configuration) throws IOException {
@@ -100,11 +100,8 @@ class ConfigurationBuilderTest {
 
         String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValueAsString(dataDescriptionMap);
-
-        JsonNode expectedNode = objectMapper.readTree(DATA_RESULT);
-        JsonNode actualNode = objectMapper.readTree(actualJson);
-
-        Assertions.assertThat(actualNode).isEqualTo(expectedNode);
+        JsonAssertions.assertThatJson(actualJson)
+                        .isEqualTo(new String(DATA_RESULT.readAllBytes(), StandardCharsets.UTF_8));
     }
 
 
@@ -113,23 +110,19 @@ class ConfigurationBuilderTest {
 
         String actualJson = objectMapper.writerWithDefaultPrettyPrinter()
                 .writeValueAsString(dataDescriptionMap);
-
-        JsonNode expectedNode = objectMapper.readTree(DATA_MONSORE_RESULT);
-        JsonNode actualNode = objectMapper.readTree(actualJson);
-
-        Assertions.assertThat(actualNode).isEqualTo(expectedNode);
+        JsonAssertions.assertThatJson(actualJson)
+                        .isEqualTo(new String(DATA_MONSORE_RESULT.readAllBytes(), StandardCharsets.UTF_8));
     }
 
     private static void testExampleComponents(final Map<String, StandardDataDescription> dataDescriptionMap) throws IOException {
 
-        String expectedResult = new ObjectMapper().registerModule(new JavaTimeModule())
+        String actualJson = new ObjectMapper().registerModule(new JavaTimeModule())
                 .writer()
                 .withDefaultPrettyPrinter()
                 .writeValueAsString(dataDescriptionMap);
-        ObjectMapper objectMapper = new ObjectMapper().registerModule(new JavaTimeModule());
-        JsonNode expectedNode = objectMapper.readTree(DATA_EXAMPLE_RESULT);
-        JsonNode actualNode = objectMapper.readTree(expectedResult);
-        Assertions.assertThat(actualNode).isEqualTo(expectedNode);
+        JsonAssertions.assertThatJson(actualJson)
+                        .isEqualTo(new String(DATA_EXAMPLE_RESULT.readAllBytes(), StandardCharsets.UTF_8));
+
     }
 
     private static void testApplicationDescription(final ApplicationDescription applicationDescription) {
@@ -213,8 +206,8 @@ class ConfigurationBuilderTest {
     @Test
     void buildApplicationTest() {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(CONFIGURATION, progression, "une application de test");
+                    ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
+                    configuration = ConfigurationBuilder.build(CONFIGURATION, eventHelper, "une application de test");
                     try {
                         testConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
@@ -242,8 +235,8 @@ class ConfigurationBuilderTest {
     @Test
     void buildApplicationSchemaTest() {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(SCHEMA, progression, "une application de test");
+                    ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
+                    configuration = ConfigurationBuilder.build(SCHEMA, eventHelper, "une application de test");
                     try {
                         testExampleConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();
@@ -270,8 +263,8 @@ class ConfigurationBuilderTest {
     @Test
     void buildHierarchicalTest() {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION, progression, "un commentaire");
+                    ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
+                    configuration = ConfigurationBuilder.build(HIERARCHICAL_CONFIGURATION, eventHelper, "un commentaire");
                     assertNotNull(configuration);
                     try {
                         testHierarchicalNodes(configuration.hierarchicalNodes());
@@ -304,8 +297,8 @@ class ConfigurationBuilderTest {
     @Test
     void buildMonsoreTest() {
         errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    configuration = ConfigurationBuilder.build(MONSORE_CONFIGURATION, progression, "un commentaire");
+                    ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
+                    configuration = ConfigurationBuilder.build(MONSORE_CONFIGURATION, eventHelper, "un commentaire");
                     try {
                         testMonsoreConfiguration(Objects.requireNonNull(configuration));
                         fluxSink.complete();

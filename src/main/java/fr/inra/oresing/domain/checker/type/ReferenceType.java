@@ -131,12 +131,16 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
 
     @Override
     public FieldType copy() {
-        final ReferenceType referenceType = clone.get();
+        final ReferenceType referenceType = new ReferenceType(
+                this.target,
+                this.refType,
+                this.referenceValues,
+                this.transformer,
+                this.lineIdentityColumnName
+        );
         referenceType.value = value;
-        referenceType.uuid = uuid;
-        referenceType.lineIdentityColumnName = lineIdentityColumnName;
-        referenceType.setReferenceValues(ImmutableMap.copyOf(getReferenceValues()));
         return referenceType;
+
     }
 
     @Override
@@ -168,8 +172,8 @@ public non-sealed class ReferenceType implements FieldType<Ltree> {
                     refsLinkedTo
                             .computeIfAbsent(
                                     refType, k -> new HashMap<>())
-                            .computeIfAbsent(referenceColumn.column(),k -> new HashMap<>())
-                            .computeIfAbsent( lineIdentityColumnName.hierarchicalKey().getSql(),k->new LinkedLines(getUuid()));
+                            .computeIfAbsent(referenceColumn.column(), k -> new HashMap<>())
+                            .computeIfAbsent(lineIdentityColumnName.hierarchicalKey().getSql(), k -> new LinkedLines(getUuid()));
                     return switch (referenceColumnRawValue) {
                         case DataColumnSingleValue ignored -> new DataColumnSingleValue(this);
                         case DataColumnMultipleValue dataColumnMultipleValue -> dataColumnMultipleValue;

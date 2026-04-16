@@ -217,7 +217,7 @@ public class Application extends OreSiEntity {
 
     public String getLocalizedLocalName(Locale locale) {
         assert getConfiguration() != null;
-        return Optional.ofNullable(getConfiguration())
+        return Optional.of(getConfiguration())
                 .map(Configuration::i18n)
                 .map(Internationalizations::getApplication)
                 .map(InternationalizationTitle::getTitle)
@@ -235,7 +235,8 @@ public class Application extends OreSiEntity {
                 .orElse(null);
     }
 
-    public DatePattern findSubmissionDatePattern(String dataName) {
+    @SuppressWarnings("java:S1452")
+    public DatePattern<?> findSubmissionDatePattern(String dataName) {
         String timescope = findData(dataName)
                 .map(StandardDataDescription::submission)
                 .map(Submission::submissionScope)

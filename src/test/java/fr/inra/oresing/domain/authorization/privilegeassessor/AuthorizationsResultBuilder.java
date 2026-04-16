@@ -12,7 +12,7 @@ import java.util.Map;
 public class AuthorizationsResultBuilder {
     private final Map<String, List<AuthorizationParsed>> userAuthorization = new HashMap<>();
     private final Map<String, AuthorizationParsed> publicAuthorization = new HashMap<>();
-    private String applicationName = "applicationName";
+    private final String applicationName = "applicationName";
     private boolean isApplicationCreator = false;
     private boolean isApplicationManager = false;
     private boolean isUserManager = false;

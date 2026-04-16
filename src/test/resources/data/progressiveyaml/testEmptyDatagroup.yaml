@@ -1,75 +1,44 @@
-version: 1
-
-application:
-  name: Application de test no datagroup
-  version: 1
-
-references:
+OA_version: 2.0.1
+OA_application:
+  OA_name: progressive
+  OA_version: 1
+OA_data:
   agroecosystem:
-    keyColumns: [ nom ]
-    columns:
+    OA_naturalKey: [ nom ]
+    OA_basicComponents:
       nom:
   sites:
-    keyColumns: [ site ]
-    columns:
+    OA_naturalKey: [ site ]
+    OA_basicComponents:
       agroecosystem:
       site:
   parcelles:
-    keyColumns: [ site, parcelle ]
-    columns:
+    OA_naturalKey: [ site, parcelle ]
+    OA_basicComponents:
       site:
       parcelle:
-
-dataTypes:
   date_de_visite:
-    data:
+    OA_naturalKey: [date, heure, agroecosysteme]
+    OA_dataHeaderLine: 2
+    OA_dataFirstLine: 3
+    OA_basicComponents:
       date:
-        components:
-          day:
-            checker:
-              name: Date
-              params:
-                pattern: dd/MM/yyyy
-          time:
-      localisation:
-        components:
-          agroecosysteme:
-            checker:
-              name: Reference
-              params:
-                refType: agroecosystem
-      relevant:
-        components:
-          numero:
-    format:
-      constants:
-        - rowNumber: 1
-          columnNumber: 2
-          boundTo:
-            variable: relevant
-            component: numero
-          exportHeader: relevant_number
-      headerLine: 2
-      firstRowLine: 3
-      columns:
-        - header: date
-          boundTo:
-            variable: date
-            component: day
-        - header: heure
-          boundTo:
-            variable: date
-            component: time
-        - header: agroecosysteme
-          boundTo:
-            variable: localisation
-            component: agroecosysteme
-
-    authorization:
-      authorizationScopes:
-        localization:
-          variable: localisation
-          component: agroecosysteme
-      timeScope:
-        variable: date
-        component: day
+        OA_checker:
+          OA_name: OA_date
+          OA_params:
+            OA_pattern: dd/MM/yyyy
+      heure:
+      agroecosysteme:
+        OA_checker:
+          OA_name: OA_reference
+          OA_params:
+            OA_reference:
+              OA_name: agroecosystem
+    OA_computedComponents:
+      relevant_number:
+        OA_computation:
+          OA_expression: "1"
+    OA_authorizations:
+      OA_authorizationScope:
+        - agroecosysteme
+      OA_timeScope: date

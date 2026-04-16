@@ -195,7 +195,8 @@
         "hidden" : true,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "my_computed_column"
       },
       "esp_nom" : {
         "type" : "BasicComponent",
@@ -1490,7 +1491,8 @@
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "unites",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "individusNumber_unit"
       },
       "projet" : {
         "type" : "BasicComponent",
@@ -1585,7 +1587,8 @@
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "sites",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "chemin"
       },
       "plateforme" : {
         "type" : "BasicComponent",
@@ -1698,7 +1701,8 @@
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "unites",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "color_unit"
       }
     },
     "submission" : {

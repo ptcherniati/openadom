@@ -3,7 +3,7 @@ package fr.inra.oresing.domain.groovy.predefined.script;
 import com.google.common.base.Strings;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.type.DateType;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import groovy.lang.Closure;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public record BuildCompositeKey() implements ScriptConstantProvider {
                 .map(nullOrEmptyToNull)
                 .map(label -> label.matches(DateType.PATTERN_DATE_REGEXP_FIND_DATE) ? DateType.sorteableDateToFormattedDate(label).replace("/", "_") : label)
                 .map(Ltree::escapeToLabel)
-                .collect(Collectors.joining(DataImporterContext.getCompositeNaturalKeyComponentsSeparator()));
+                .collect(Collectors.joining(AsynchroneFileImporterContext.getCompositeNaturalKeyComponentsSeparator()));
     }
 
     @Override

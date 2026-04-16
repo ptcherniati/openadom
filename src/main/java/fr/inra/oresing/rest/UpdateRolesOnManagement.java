@@ -91,7 +91,7 @@ public class UpdateRolesOnManagement {
 
     private void createDataPolicies(OreSiAuthorization authorization, OreSiRightOnApplicationRole role,
                                     String dataName, Set<OperationType> operationTypes) {
-        AuthorizationIndex authorizationIndex = new AuthorizationIndex(application);
+        AuthorizationIndex authorizationIndex = new AuthorizationIndex(application, null);
         AuthorizationForScope authForScope = authorization.getAuthorizations().get(dataName);
 
         String timeScopeExpression = authorizationIndex.sqlFilterForAuthorization(dataName, authForScope, true);

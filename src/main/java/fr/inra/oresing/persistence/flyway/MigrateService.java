@@ -22,6 +22,8 @@ import org.flywaydb.core.api.callback.Event;
 import org.flywaydb.core.api.output.MigrateResult;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -34,10 +36,10 @@ import java.util.*;
 @Component
 @Slf4j
 public class MigrateService {
+    @Value("${SPRING_FLYWAY_PLACEHOLDERS_PUBLIC-ROLE-ID}")
+    private String publicRoleId;
     @Autowired
     ApplicationRepository applicationRepository;
-    @Autowired
-    private SqlService db;
     @Autowired
     private AuthenticationService authenticationService;
     @Autowired
@@ -48,6 +50,36 @@ public class MigrateService {
     private BeanFactory beanFactory;
 
     public void migrateAll() {
+        List<Application> allSchemas;
+        final MigrateService migrateService = beanFactory.getBean(MigrateService.class);
+        try {
+            allSchemas = applicationRepository.findAll();
+        } catch (BadSqlGrammarException e) {
+            log.info("""
+                    \u001B[34m
+                    ****************************************
+                    * initialisation de la base de données *
+                    ****************************************
+                    \u001B[0m
+                    """);
+            final Flyway load = Flyway.configure()
+                    .dataSource(dataSource)
+                    .locations("classpath:migration/main")
+                    .baselineOnMigrate(true)
+                    .placeholders(Map.of(
+                        "publicRoleId", publicRoleId))// initialise si schéma non vide sans table d’historique
+                    .load();
+            load.migrate();
+            allSchemas = applicationRepository.findAll();
+            log.info("""
+                    \u001B[32m
+                    ************************************
+                    *      initialisation terminée     *
+                    ************************************
+                    \u001B[0m
+                    """);
+        }
+
         log.info("""
                 \u001B[34m
                 **************************************
@@ -55,10 +87,8 @@ public class MigrateService {
                 **************************************
                 \u001B[0m
                 """);
-        beanFactory.getBean(MigrateService.class);
-        applicationRepository.findAll()
+        allSchemas
                 .forEach(app -> {
-                    MigrateService migrateService = beanFactory.getBean(MigrateService.class);
                     migrateService.application = app;
                     log.info("->  \u001B[32m{}\u001B[0m  ...", app.getName());
                     migrateService.runFlywayUpdate(null);
@@ -82,7 +112,7 @@ public class MigrateService {
 
     private void updateAuthorizationIndexes(Flyway flyway) {
         try (Connection connection = flyway.getConfiguration().getDataSource().getConnection()) {
-            AuthorizationIndex authorizationIndex = new AuthorizationIndex(application);
+            AuthorizationIndex authorizationIndex = new AuthorizationIndex(application, null);
             String createIndexesSql = authorizationIndex.createIndexes();
             try (Statement statement = connection.createStatement()) {
                 statement.execute(createIndexesSql);
@@ -336,27 +366,11 @@ public class MigrateService {
             ).policyToCreateSql());
 
             log.info("migration 1 --> ok");
-            String indexesSQL = new AuthorizationIndex(application)
+            String indexesSQL = new AuthorizationIndex(application, null)
                     .createIndexes();
             statement.execute(indexesSQL);
             statement.close();
 
         }
-    }
-
-    private class Migrate9 implements ActionToDoAfterMigration {
-
-        @Override
-        public void execute(final Connection connection) throws SQLException {
-            final SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-            final OreSiRightOnApplicationRole applicationManagerOnApplicationRole = OreSiRightOnApplicationRole.adminOn(application);
-            Statement statement = connection.createStatement();
-            log.info("--->migration 9");
-            statement.close();
-
-            log.info("migration 9 --> ok");
-
-        }
-
     }
 }

@@ -19,7 +19,13 @@ public record ApplicationdescriptionBuilder(RootBuilder rootBuilder) {
         final JsonNode internationalization = applicationNode.get(ConfigurationSchemaNode.OA_I_18_N);
         Version version;
         try {
-            version = new Version(applicationNode.findPath(ConfigurationSchemaNode.OA_VERSION).asText());
+            String versionString = applicationNode.findPath(ConfigurationSchemaNode.OA_VERSION).asText();
+            try {
+                Runtime.Version.parse(versionString);
+            } catch (IllegalArgumentException e) {
+                throw new SiOreConfigurationFormatException(ConfigurationException.BAD_VERSION_PATTERN, Map.of("givenVersion", versionString));
+            }
+            version = new Version(versionString);
         } catch (final SiOreConfigurationFormatException e) {
             rootBuilder.buildError(ConfigurationException.BAD_VERSION_PATTERN, e.getParams(), ConfigurationSchemaNode.OA_APPLICATION);
             version = Version.BAD_VERSION;

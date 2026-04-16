@@ -72,7 +72,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
                 ConfigurationSchemaNode.OA_DATA,
                 dataKey
         );
-        final Parsing<List<Submission.SubmissionScope.ReferenceScope>> referenceScopeParsing =
+        final Parsing<List<Submission.SubmissionScope.SubmissionReferenceScope>> referenceScopeParsing =
                 buildReferenceScopes(
                         i18n,
                         (ArrayNode) authorizationNode.get(ConfigurationSchemaNode.OA_REFERENCE_SCOPES),
@@ -134,14 +134,14 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
         );
     }
 
-    Parsing<List<Submission.SubmissionScope.ReferenceScope>> buildReferenceScopes(
+    Parsing<List<Submission.SubmissionScope.SubmissionReferenceScope>> buildReferenceScopes(
             I18n i18n,
             final ArrayNode referenceScopesNode,
             final String dataKey, Map<String, ComponentDescription> componentDescriptions) {
         if (referenceScopesNode == null) {
             return new Parsing<>(i18n, null);
         }
-        final List<Submission.SubmissionScope.ReferenceScope> referenceScopes = new LinkedList<>();
+        final List<Submission.SubmissionScope.SubmissionReferenceScope> referenceScopes = new LinkedList<>();
         Integer index = 1;
         for (JsonNode referenceScopeNode : referenceScopesNode) {
             index++;
@@ -160,7 +160,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
             if (Strings.isNullOrEmpty(referenceScopeReference)) {
                 return new Parsing<>(i18n, List.of());
             }
-            Submission.SubmissionScope.ReferenceScope referenceScope = new Submission.SubmissionScope.ReferenceScope(
+            Submission.SubmissionScope.SubmissionReferenceScope referenceScope = new Submission.SubmissionScope.SubmissionReferenceScope(
                     referenceScopeReference,
                     referenceScopeComponent
             );
@@ -220,7 +220,7 @@ public record SubmissionBuilder(RootBuilder rootBuilder) {
             referenceScopes.add(referenceScope);
         }
         //referencecopes.fieldNames().forEachRemaining(componentNames::add);
-        final ImmutableMap.Builder<String, Submission.SubmissionScope.ReferenceScope> builder = ImmutableMap.builder();
+        final ImmutableMap.Builder<String, Submission.SubmissionScope.SubmissionReferenceScope> builder = ImmutableMap.builder();
         return new Parsing<>(i18n, referenceScopes);
     }
 

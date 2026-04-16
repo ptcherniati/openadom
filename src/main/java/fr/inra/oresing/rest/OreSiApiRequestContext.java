@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.repository.authorization.role.OreSiRoleToAccessDat
 import fr.inra.oresing.rest.authentication.OreSiAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 
 import java.util.Optional;
 import java.util.UUID;

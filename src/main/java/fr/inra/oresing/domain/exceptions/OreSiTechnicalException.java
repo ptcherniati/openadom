@@ -9,15 +9,15 @@ public class OreSiTechnicalException extends RuntimeException {
     public static final String NO_MESSAGE = "NO_MESSAGE";
 
     public OreSiTechnicalException(final String message) {
-        super(message);
+        super(Optional.ofNullable(message).orElse(NO_MESSAGE));
     }
 
     public OreSiTechnicalException(final String message, final Throwable cause) {
-        super(message, cause);
+        super(Optional.ofNullable(message).orElse(NO_MESSAGE), cause);
     }
 
     @Override
     public String getMessage() {
-        return Optional.of(super.getMessage()).orElse(NO_MESSAGE);
+        return super.getMessage();
     }
 }

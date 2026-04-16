@@ -1,8 +1,6 @@
 package fr.inra.oresing.rest.model.authorization;
 
 import com.google.common.io.Resources;
-import fr.inra.oresing.OreSiNg;
-import fr.inra.oresing.TestDatabaseConfig;
 import fr.inra.oresing.domain.OreSiAuthorization;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
@@ -16,6 +14,7 @@ import fr.inra.oresing.persistence.data.read.DataRepositoryWithBuffer;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 import fr.inra.oresing.rest.model.authorization.exception.AuthorizationRequestError;
 import fr.inra.oresing.rest.model.authorization.request.AuthorizationRequestBuilder;
+import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import lombok.extern.slf4j.Slf4j;
 import org.json.JSONException;
 import org.junit.jupiter.api.Assertions;
@@ -25,14 +24,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.skyscreamer.jsonassert.JSONCompareMode;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.MockMvcPrint;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.DirtiesContext;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 import java.io.IOException;
 import java.net.URL;
@@ -40,18 +31,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@ActiveProfiles("testmail")
-@SpringBootTest(classes = {OreSiNg.class, TestDatabaseConfig.class})
 
-@TestPropertySource(locations = "classpath:/application-tests.properties")
-@AutoConfigureWebMvc
-@AutoConfigureMockMvc(print = MockMvcPrint.NONE)
-@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
 @Slf4j
-class CreateAuthorizationRequestTest {
+class CreateAuthorizationRequestTest extends AbstractIntegrationTest {
     static String createAuthorization;
-    @Autowired
-    JsonRowMapper mapper;
 
     @BeforeAll
     static void init() throws IOException {
@@ -184,9 +167,9 @@ class CreateAuthorizationRequestTest {
                   }
                 }""";
 
-        String actualJson = mapper.getJsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
+        String actualJson = jsonRowMapper.getJsonMapper().writerWithDefaultPrettyPrinter().writeValueAsString(authorizationRequest);
         try {
-            mapper.getJsonMapper().readTree(actualJson);
+            jsonRowMapper.getJsonMapper().readTree(actualJson);
             JSONAssert.assertEquals(expectedJson, actualJson, JSONCompareMode.LENIENT);
         } catch (JSONException e) {
             throw new OreSiTechnicalException(ExceptionMessage.JSON_EXCEPTION.toMessage(), e);

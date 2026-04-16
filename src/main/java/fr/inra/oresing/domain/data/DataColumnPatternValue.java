@@ -2,7 +2,7 @@ package fr.inra.oresing.domain.data;
 
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.checker.type.*;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.deposit.context.column.Column;
 
 import java.util.HashMap;
@@ -36,7 +36,7 @@ public record DataColumnPatternValue(
     }
 
     @Override
-    public String toValueString(final DataImporterContext referenceImporterContext, final String referencedColumn, final String locale) {
+    public String toValueString(final AsynchroneFileImporterContext referenceImporterContext, final String referencedColumn, final String locale) {
         return values.entrySet().stream()
                 .map(ltreeStringEntry -> String.format("\"%s\"\"=%s\"", referenceImporterContext.getDisplayNamesByReferenceAndNaturalKey(referencedColumn, ltreeStringEntry.getKey().toString(), locale), ltreeStringEntry.getValue()))
                 .collect(Collectors.joining(",", "[", "]"));

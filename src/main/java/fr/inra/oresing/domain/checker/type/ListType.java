@@ -13,10 +13,7 @@ import fr.inra.oresing.persistence.SqlPrimitiveType;
 import lombok.Getter;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -73,7 +70,9 @@ public non-sealed class ListType<F extends FieldType<?>> implements FieldType<Li
     @Override
     public FieldType copy() {
         final ListType<F> listType = clone.get();
-        listType.value = value;
+        if (value != null) {
+            listType.value = value.stream().collect(Collectors.toCollection(ArrayList::new));
+        }
         return listType;
     }
 

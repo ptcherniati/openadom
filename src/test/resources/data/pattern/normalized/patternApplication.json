@@ -12,7 +12,7 @@
       "version" : "2.0.1"
     },
     "tags" : [ {
-      "tagdefinition" : "DOMAIN_TAG",
+      "tagDefinition" : "DOMAIN_TAG",
       "tagname" : "data"
     } ],
     "i18n" : {
@@ -644,7 +644,7 @@
             "componentkey" : "sandre",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "code sandre de la Masse d'eau plan d'eau",
@@ -664,7 +664,7 @@
             "componentkey" : "site_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du site_en",
@@ -684,7 +684,7 @@
             "componentkey" : "site_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du site_fr",
@@ -704,7 +704,7 @@
             "componentkey" : "site_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du site_key",
@@ -724,7 +724,7 @@
             "componentkey" : "type_site",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom du type de site",
@@ -744,7 +744,7 @@
             "componentkey" : "sandre_eau",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "code sandre du Plan d'eau",
@@ -764,7 +764,7 @@
             "componentkey" : "description_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "description du site_en",
@@ -784,7 +784,7 @@
             "componentkey" : "description_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "description du site_fr",
@@ -821,7 +821,7 @@
             "componentkey" : "nom",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 1
             } ],
             "importheader" : "nom du taxon déterminé",
@@ -841,7 +841,7 @@
             "componentkey" : "annee",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 9
             } ],
             "importheader" : "Année de la description",
@@ -861,7 +861,7 @@
             "componentkey" : "notes",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 16
             } ],
             "importheader" : "Notes libres",
@@ -881,7 +881,7 @@
             "componentkey" : "theme",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 2
             } ],
             "importheader" : "theme",
@@ -901,7 +901,7 @@
             "componentkey" : "auteur",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 8
             } ],
             "importheader" : "Auteur de la description",
@@ -921,7 +921,7 @@
             "componentkey" : "sandre",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 15
             } ],
             "importheader" : "Code Sandre",
@@ -941,7 +941,7 @@
             "componentkey" : "bourrelly",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 14
             } ],
             "importheader" : "Classe algale sensu Bourrelly",
@@ -961,7 +961,7 @@
             "componentkey" : "incertitude",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 7
             } ],
             "importheader" : "niveau incertitude de détermination",
@@ -981,7 +981,7 @@
             "componentkey" : "niveau_taxon",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 3
             } ],
             "importheader" : "nom du niveau de taxon",
@@ -1001,7 +1001,7 @@
             "componentkey" : "sandre_taxon",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 5
             } ],
             "importheader" : "code sandre du taxon",
@@ -1023,7 +1023,7 @@
             "exportheadername" : "tel_S1_value",
             "langrestrictions" : [ ],
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "required" : false,
@@ -1036,7 +1036,7 @@
                 "componentkey" : "tel_S1_variable",
                 "defaultvalue" : null,
                 "tags" : [ {
-                  "tagdefinition" : "ORDER_TAG",
+                  "tagDefinition" : "ORDER_TAG",
                   "tagorder" : 1
                 } ],
                 "exportheadername" : "tel_S1_variable",
@@ -1062,7 +1062,7 @@
                 "componentkey" : "tel_S1_qualifier",
                 "defaultvalue" : null,
                 "tags" : [ {
-                  "tagdefinition" : "ORDER_TAG",
+                  "tagDefinition" : "ORDER_TAG",
                   "tagorder" : 2
                 } ],
                 "exportheadername" : "tel_S1_qualifier",
@@ -1086,7 +1086,7 @@
                 "componentkey" : "tel_S1_resolution",
                 "defaultvalue" : null,
                 "tags" : [ {
-                  "tagdefinition" : "ORDER_TAG",
+                  "tagDefinition" : "ORDER_TAG",
                   "tagorder" : 3
                 } ],
                 "exportheadername" : "tel_S1_resolution",
@@ -1112,7 +1112,7 @@
                 "componentkey" : "swc_qc",
                 "importheaderpattern" : "{$1}_qc",
                 "tags" : [ {
-                  "tagdefinition" : "DOMAIN_TAG",
+                  "tagDefinition" : "DOMAIN_TAG",
                   "tagname" : "data"
                 } ],
                 "exportheadername" : "tel_S1_value::swc_qc",
@@ -1136,7 +1136,7 @@
                 "componentkey" : "swc_sd",
                 "importheaderpattern" : "{$1}_sd",
                 "tags" : [ {
-                  "tagdefinition" : "DOMAIN_TAG",
+                  "tagDefinition" : "DOMAIN_TAG",
                   "tagname" : "data"
                 } ],
                 "exportheadername" : "tel_S1_value::swc_sd",
@@ -1169,7 +1169,7 @@
             "exportheadername" : "tel_S2_value",
             "langrestrictions" : [ ],
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "required" : false,
@@ -1182,7 +1182,7 @@
                 "componentkey" : "tel_S2_variable",
                 "defaultvalue" : null,
                 "tags" : [ {
-                  "tagdefinition" : "ORDER_TAG",
+                  "tagDefinition" : "ORDER_TAG",
                   "tagorder" : 1
                 } ],
                 "exportheadername" : "tel_S2_variable",
@@ -1208,7 +1208,7 @@
                 "componentkey" : "tel_S2_qualifier",
                 "defaultvalue" : null,
                 "tags" : [ {
-                  "tagdefinition" : "ORDER_TAG",
+                  "tagDefinition" : "ORDER_TAG",
                   "tagorder" : 2
                 } ],
                 "exportheadername" : "tel_S2_qualifier",
@@ -1232,7 +1232,7 @@
                 "componentkey" : "tel_S2_resolution",
                 "defaultvalue" : null,
                 "tags" : [ {
-                  "tagdefinition" : "ORDER_TAG",
+                  "tagDefinition" : "ORDER_TAG",
                   "tagorder" : 3
                 } ],
                 "exportheadername" : "tel_S2_resolution",
@@ -1258,7 +1258,7 @@
                 "componentkey" : "swc_qc",
                 "importheaderpattern" : "qc",
                 "tags" : [ {
-                  "tagdefinition" : "DOMAIN_TAG",
+                  "tagDefinition" : "DOMAIN_TAG",
                   "tagname" : "data"
                 } ],
                 "exportheadername" : "tel_S2_value::swc_qc",
@@ -1282,7 +1282,7 @@
                 "componentkey" : "swc_sd",
                 "importheaderpattern" : "sd",
                 "tags" : [ {
-                  "tagdefinition" : "DOMAIN_TAG",
+                  "tagDefinition" : "DOMAIN_TAG",
                   "tagname" : "data"
                 } ],
                 "exportheadername" : "tel_S2_value::swc_sd",
@@ -1313,7 +1313,7 @@
             "componentkey" : "synonyme_ancien",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 12
             } ],
             "importheader" : "Synonyme ancien",
@@ -1333,7 +1333,7 @@
             "componentkey" : "synonyme_recent",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 13
             } ],
             "importheader" : "Synonyme récent",
@@ -1353,7 +1353,7 @@
             "componentkey" : "taxon_superieur",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 4
             } ],
             "importheader" : "nom du taxon superieur",
@@ -1373,7 +1373,7 @@
             "componentkey" : "references_taxon",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 11
             } ],
             "importheader" : "Références relatives à ce taxon",
@@ -1393,7 +1393,7 @@
             "componentkey" : "sandre_superieur",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 6
             } ],
             "importheader" : "code sandre du taxon supérieur",
@@ -1415,7 +1415,7 @@
             "exportheadername" : "proprietesDeTaxon",
             "langrestrictions" : [ ],
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 17
             } ],
             "required" : false,
@@ -1434,7 +1434,7 @@
             "componentkey" : "swc_qc",
             "importheaderpattern" : "{$1}_qc",
             "tags" : [ {
-              "tagdefinition" : "DOMAIN_TAG",
+              "tagDefinition" : "DOMAIN_TAG",
               "tagname" : "data"
             } ],
             "exportheadername" : "tel_S1_value::swc_qc",
@@ -1458,7 +1458,7 @@
             "componentkey" : "swc_sd",
             "importheaderpattern" : "{$1}_sd",
             "tags" : [ {
-              "tagdefinition" : "DOMAIN_TAG",
+              "tagDefinition" : "DOMAIN_TAG",
               "tagname" : "data"
             } ],
             "exportheadername" : "tel_S1_value::swc_sd",
@@ -1482,7 +1482,7 @@
             "componentkey" : "swc_qc",
             "importheaderpattern" : "qc",
             "tags" : [ {
-              "tagdefinition" : "DOMAIN_TAG",
+              "tagDefinition" : "DOMAIN_TAG",
               "tagname" : "data"
             } ],
             "exportheadername" : "tel_S2_value::swc_qc",
@@ -1506,7 +1506,7 @@
             "componentkey" : "swc_sd",
             "importheaderpattern" : "sd",
             "tags" : [ {
-              "tagdefinition" : "DOMAIN_TAG",
+              "tagDefinition" : "DOMAIN_TAG",
               "tagname" : "data"
             } ],
             "exportheadername" : "tel_S2_value::swc_sd",
@@ -1530,7 +1530,7 @@
             "componentkey" : "reference_description",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 10
             } ],
             "importheader" : "Référence de la description",
@@ -1550,7 +1550,7 @@
             "componentkey" : "tel_S1_variable",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 1
             } ],
             "exportheadername" : "tel_S1_variable",
@@ -1576,7 +1576,7 @@
             "componentkey" : "tel_S2_variable",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 1
             } ],
             "exportheadername" : "tel_S2_variable",
@@ -1602,7 +1602,7 @@
             "componentkey" : "tel_S1_qualifier",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 2
             } ],
             "exportheadername" : "tel_S1_qualifier",
@@ -1626,7 +1626,7 @@
             "componentkey" : "tel_S2_qualifier",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 2
             } ],
             "exportheadername" : "tel_S2_qualifier",
@@ -1650,7 +1650,7 @@
             "componentkey" : "tel_S1_resolution",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 3
             } ],
             "exportheadername" : "tel_S1_resolution",
@@ -1674,7 +1674,7 @@
             "componentkey" : "tel_S2_resolution",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "ORDER_TAG",
+              "tagDefinition" : "ORDER_TAG",
               "tagorder" : 3
             } ],
             "exportheadername" : "tel_S2_resolution",
@@ -1707,7 +1707,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "nom" ],
@@ -1741,7 +1741,7 @@
             "componentkey" : "date",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "Date",
@@ -1769,7 +1769,7 @@
             "componentkey" : "site",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "site",
@@ -1789,7 +1789,7 @@
             "componentkey" : "isFloatValue",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "isFloatValue",
@@ -1809,7 +1809,7 @@
             "componentkey" : "propriete_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom de la propriété_en",
@@ -1829,7 +1829,7 @@
             "componentkey" : "propriete_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom de la propriété_fr",
@@ -1849,7 +1849,7 @@
             "componentkey" : "type_associe",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "type associé",
@@ -1869,7 +1869,7 @@
             "componentkey" : "definition_en",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "définition_en",
@@ -1889,7 +1889,7 @@
             "componentkey" : "definition_fr",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "définition_fr",
@@ -1909,7 +1909,7 @@
             "componentkey" : "isQualitative",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "isQualitative",
@@ -1929,7 +1929,7 @@
             "componentkey" : "propriete_key",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nom de la propriété_key",
@@ -1949,7 +1949,7 @@
             "componentkey" : "ordre_affichage",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "ordre d'affichage",
@@ -1979,7 +1979,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "isFloatValue" ],
@@ -1997,7 +1997,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "ordre_affichage" ],
@@ -2017,7 +2017,7 @@
               }
             },
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "columns" : [ "site" ],
@@ -2036,7 +2036,7 @@
         "firstrowline" : 2,
         "allowunexpectedcolumns" : false,
         "tags" : [ {
-          "tagdefinition" : "DATA_TAG"
+          "tagDefinition" : "DATA_TAG"
         } ],
         "naturalkey" : [ "date_day", "date_time", "siteName" ],
         "componentdescriptions" : {
@@ -2045,7 +2045,7 @@
             "componentkey" : "temps",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "temps",
@@ -2065,7 +2065,7 @@
             "componentkey" : "projet",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "projet",
@@ -2085,7 +2085,7 @@
             "componentkey" : "date_day",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "date_day",
@@ -2113,7 +2113,7 @@
             "componentkey" : "siteName",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "Nom du site",
@@ -2141,7 +2141,7 @@
             "componentkey" : "date_time",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "date_time",
@@ -2169,7 +2169,7 @@
             "componentkey" : "nebulosite",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "nebulosite",
@@ -2189,7 +2189,7 @@
             "componentkey" : "commentaire",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "commentaire",
@@ -2209,7 +2209,7 @@
             "componentkey" : "aspectDeLEau",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "aspect de l'eau",
@@ -2229,7 +2229,7 @@
             "componentkey" : "couleurDeLEau",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "couleur de l'eau",
@@ -2249,7 +2249,7 @@
             "componentkey" : "etatDeSurface",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "etat de surface",
@@ -2269,7 +2269,7 @@
             "componentkey" : "vitesseDuVent",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "vitesse du vent",
@@ -2289,7 +2289,7 @@
             "componentkey" : "ensoleillement",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "ensoleillement",
@@ -2309,7 +2309,7 @@
             "componentkey" : "sitePlateforme",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "Plateforme du site",
@@ -2329,7 +2329,7 @@
             "componentkey" : "directionDuVent",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "direction du vent",
@@ -2349,7 +2349,7 @@
             "componentkey" : "temperatureDeLAir",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "temperature de l'air",
@@ -2375,7 +2375,7 @@
             "componentkey" : "pressionAtmospherique",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "pression atmospherique",
@@ -2395,7 +2395,7 @@
             "componentkey" : "transparenceParSecchi",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "transparence par secchi",
@@ -2421,7 +2421,7 @@
             "componentkey" : "transparenceParDisqueInra",
             "defaultvalue" : null,
             "tags" : [ {
-              "tagdefinition" : "NO_TAG",
+              "tagDefinition" : "NO_TAG",
               "tagname" : "no_tag"
             } ],
             "importheader" : "transparence par disque inra",

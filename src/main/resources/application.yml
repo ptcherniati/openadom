@@ -1,0 +1,266 @@
+# Configuration for development mode
+# Need to be overridden in final bundle
+spring:
+  docker:
+    compose:
+      enabled: false
+  config:
+    import: optional:file:.env-default[.properties],optional:file:.env[.properties]
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST_PORT}/${DB_DATABASE}?preparedStatementCacheQueries=0
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
+    hikari:
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT:30000}
+      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE:2}
+      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE:10}
+      idle-timeout: ${SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT:600000}
+      max-lifetime: ${SPRING_DATASOURCE_HIKARI_MAX-LIFETIME:1800000}
+      auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO-COMMIT:true}
+
+  flyway:
+    locations: classpath:migration/main
+    enabled: true
+    baseline-on-migrate: true
+    postgresql-transactional-lock: false
+    placeholders:
+      publicRoleId: ${SPRING_FLYWAY_PLACEHOLDERS_PUBLIC-ROLE-ID}
+    # logging: DEBUG
+    # validate-on-migrate: false
+
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: ${SPRING_SERVLET_MULTIPART_MAXFILESIZE:1MB}
+      file-size-threshold: 10MB
+      max-request-size: ${SPRING_SERVLET_MULTIPART_MAXREQUESTSIZE:1MB}
+      location: ${TEMP_DIR:/tmp/file-processor}/uploads
+    encoding:
+      charset: UTF-8
+      force: ${SPRING_SERVLET_ENCODING_FORCE}
+
+  mail:
+    host: ${SPRING_MAIL_HOST}
+    port: ${SPRING_MAIL_PORT}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    test-connection: ${SPRING_MAIL_TEST-CONNECTION}
+    from: ${MAIL_FROM}
+    properties:
+      mail:
+        smtp:
+          ssl:
+            trust: smtp.inrae.fr
+        starttls:
+          enable: ${SPRING_MAIL_SMTP_STARTSSL_ENABLE}
+          required: ${SPRING_MAIL_SMTP_STARTSSL_REQUIRED}
+
+  security:
+    strategy: MODE_INHERITABLETHREADLOCAL
+
+  threads:
+    virtual:
+      enabled: ${SPRING_THREADS_VIRTUAL_ENABLED:false}
+
+  task:
+    execution:
+      pool:
+        max-size: ${POOL_MAX_SIZE:16}
+        queue-capacity: ${POOL_QUEUE_CAPACITY:100}
+        keep-alive: ${POOL_KEEP_ALIVE:10s}
+      thread-name-prefix: ${POOL_THREAD_PREFIX:openadom-exec-}
+
+  # mvc:
+  #   problemdetails:
+  #     enabled: true
+
+  # reactor:
+  #   context-propagation: auto
+
+server:
+  port: ${SERVER_PORT}
+
+  shutdown: graceful
+  tomcat:
+    threads:
+      # Maximum 100 concurrent requests
+      max: 100
+      # Minimum 10 threads always active
+      min-spare: 5
+    # 100 active + 500 in queue
+    max-connections: 600
+    # Maximum queue size
+    accept-count: 500
+    # Connection timeout in milliseconds ( 60s )
+    connection-timeout: 60000
+    # Enable Tomcat metrics
+    # ex : /actuator/metrics/http.server.requests.active
+    mbeanregistry:
+      enabled: true
+
+allowed:
+  origin: ${ALLOWED_ORIGIN:http://localhost:8080}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    server-url: ${SWAGGER-UI-URI:${allowed.origin}}
+    disable-swagger-default-url: true
+  api-docs:
+    path: /api-docs
+
+filesender:
+  baseurl: ${FILE_SENDER_BASE_URL}
+  username: ${FILE_SENDER_USER_NAME}
+  apikey: ${FILE_SENDER_API_KEY}
+workflow:
+
+  # Global Settings ( max-requests-per-user / mn )
+  max-requests-per-user: ${MAX_REQUESTS_PER_USER:60}
+
+  # Chunker Pool Configuration
+  chunker:
+    threads: ${CHUNKER_THREADS:2}
+    thread-name-prefix: file-chunker-
+    queue-size: ${CHUNKER_QUEUE_SIZE:50}
+    chunk-size-lines: ${CHUNK_SIZE_LINES:1000}
+    temp-directory: ${TEMP_DIR:/tmp/file-processor}/chunks
+    rejection-policy: CALLER_RUNS
+
+  # Worker Pool Configuration
+  worker:
+    threads: ${WORKER_THREADS:2}
+    queue-size: ${WORKER_QUEUE_SIZE:100}
+    thread-name-prefix: chunk-worker-
+    completion-timeout-ms: ${WORKER_COMPLETION_TIMEOUT_MS:1800000}
+    temp-directory: ${TEMP_DIR:/tmp/file-processor}/processed
+    rejection-policy: CALLER_RUNS
+    # Progress update batch size: update line counter every N processed lines
+    # Lower value = more frequent updates (more overhead), Higher value = less frequent updates
+    progress-batch-size: ${WORKER_PROGRESS_BATCH_SIZE:100}
+
+  # Merger Pool Configuration
+  merger:
+    threads: ${MERGER_THREADS:2}
+    thread-name-prefix: chunk-merger-
+    queue-size: ${MERGER_QUEUE_SIZE:50}
+    temp-directory: ${TEMP_DIR:/tmp/file-processor}/merged
+    merge-timeout-ms: ${MERGER_TIMEOUT_MS:300000}
+    rejection-policy: CALLER_RUNS
+
+  # Loader Pool Configuration
+  loader:
+    threads: ${LOADER_THREADS:2}
+    thread-name-prefix: chunk-loader-
+    queue-size: ${LOADER_QUEUE_SIZE:50}
+    # If <= 0 -> COPY FROM STDIN; otherwise batch insert
+    batch-size: ${LOADER_BATCH_SIZE:0}
+    # Target table for loading data
+    target-table: ${LOADER_TARGET_TABLE:processed_data}
+    rejection-policy: CALLER_RUNS
+
+  # =========================
+  # HEADER Configuration
+  # =========================
+  header:
+    enabled: ${HEADER_ENABLED:true}
+    lines-count: ${HEADER_LINES_COUNT:1}
+
+  # =========================
+  # Error Handling Configuration
+  # =========================
+  error-handling:
+    # Maximum number of errors allowed before stopping all workers
+    # When this threshold is reached, all workers are cancelled and workflow fails
+    # Default: 100 (stop after 100 errors)
+    max-errors-threshold: ${MAX_ERRORS_THRESHOLD:100}
+
+  # =========================
+  # Maintenance & Cleanup
+  # =========================
+  maintenance:
+    enabled: ${MAINTENANCE_ENABLED:true}
+    # Cleanup interval in ms (default: every 1 hour * 24 )
+    cleanup-interval-ms: ${CLEANUP_INTERVAL_MS:86400000}
+    # Delete temp files older than N hours
+    temp-file-retention-hours: ${TEMP_FILE_RETENTION_HOURS:48}
+    # Delete completed workflow records older than N days
+    completed-workflow-retention-days: ${COMPLETED_WORKFLOW_RETENTION_DAYS:7}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus,metrics,flyway,beans,logfile,loggers,env,configprops"
+  endpoint:
+    health:
+      show-components: always
+      show-details: always
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+    build:
+      enabled: true
+    git:
+      enabled: true
+  health:
+    show-details: always
+    mail:
+      enabled: true
+    db:
+      enabled: true
+    ping:
+      enabled: true
+    diskspace:
+      enabled: true
+  metrics:
+    tags:
+      application: oresing-backend
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.75,0.95,0.99
+      data:
+        repository:
+          autotime:
+            enabled: true
+  prometheus:
+    metrics:
+      export:
+        enabled: true
+
+info:
+  application:
+    name: openADOM Application
+    description: This is the openAdom application
+    version: 2.0.1
+  spring:
+    version: 4.0.0
+  postgresql:
+    version: 18
+
+logging:
+  level:
+    root: INFO
+    fr.inra.oresing: DEBUG
+    # org.springframework.jdbc: TRACE
+    # org.flywaydb: DEBUG
+    # org.springframework.security: TRACE
+    # org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+viewStrategy: ${VIEW_STRATEGY}
+
+fr:
+  inra:
+    oresing:
+      charte:
+        default: classpath:charte/default_charte.pdf

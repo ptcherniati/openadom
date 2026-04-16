@@ -8,6 +8,8 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
+import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationMode;
+import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManager;
@@ -27,47 +29,49 @@ import fr.inra.oresing.rest.model.application.ApplicationLightResult;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
 import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResult;
-import fr.inra.oresing.rest.reactive.ReactiveProgression;
-import fr.inra.oresing.rest.reactive.ReactiveTypeInfo;
+import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
+import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeProgress;
 import fr.inra.oresing.rest.reactive.ReactiveTypeResult;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class ApplicationService{
+public class ApplicationService {
     public static final String APPLICATION_NAME = "applicationName";
+    public static final String MIGRATION_REPORT = "migrationreport";
     public static final String START = "start";
     public static final String END = "end";
     private final OreSiRepository repository;
-    private final BeanFactory beanFactory;
+    private final MigrationService migrationService;
+    private final MigrateService flywayMigrateService;
     @Setter
     private ServiceContainer serviceContainer;
 
     public ApplicationService(
             OreSiRepository repository,
-            BeanFactory beanFactory,
-            ServiceContainer serviceContainer) {
+            ServiceContainer serviceContainer,
+            MigrationService migrationService,
+            MigrateService flywayMigrateService) {
         this.repository = repository;
-        this.beanFactory = beanFactory;
-        this.serviceContainer= serviceContainer;
+        this.serviceContainer = serviceContainer;
+        this.migrationService = migrationService;
+        this.flywayMigrateService = flywayMigrateService;
     }
 
     public Application getApplication(final String nameOrId) {
@@ -94,46 +98,48 @@ public class ApplicationService{
 
     @Transactional()
     public void createApplication(
-            ReactiveProgression.CreateApplicationProgression progression,
+            Consumer<ReactiveResult> sink,
             final String name,
             final DataFile dataFile,
             final String comment) throws IOException {
+        
+        ReactiveEventHelper eventHelper = new ReactiveEventHelper(sink, "application.createConfiguration");
+        
         Objects.requireNonNull(OreSiApiRequestContext.getAuthentication()
                         .map(OreSiAuthenticationToken::getSystemPersona)
                         .filter(ApplicationCreator.class::isInstance)
                         .map(ApplicationCreator.class::cast)
                         .orElse(null))
                 .canCreateApplication(name);
-        progression.pushProgression();
+        eventHelper.pushProgress(0D);
 
         final Application application = new Application();
         application.setName(name);
         try {
             changeApplicationConfiguration(
                     comment,
-                    progression,
+                    eventHelper,
                     application,
-                    dataFile,
-                    this::initApplication);
+                    dataFile);
         } catch (final OreSiTechnicalException | IOException e) {
             if ("fr.inra.oresing.domain.authorization.privilegeassessor.exception"
                     .equals(e.getClass().getPackage().getName())) {
-                progression.fluxSink().error(e);
+                eventHelper.pushError(e);
                 assert e instanceof OreSiTechnicalException;
                 throw (OreSiTechnicalException) e;
             }
-            progression.fluxSink().error(e);
-            progression.fluxSink().complete();
+            eventHelper.pushError(e);
+            eventHelper.complete();
             return;
         }
-        ReactiveProgression.CreateApplicationProgression progression1 = progression.withSubLabel("viewCreation");
-        progression1.pushMessage(START, Map.of(APPLICATION_NAME, application.getName()));
-        progression1.incrementAndPush(i -> ReactiveProgression.CreateApplicationProgression.PROGRESSION_FOR_READING_CONFIGURATION.progress());
+        ReactiveEventHelper helperViewCreation = eventHelper.withSubLabel("viewCreation");
+        helperViewCreation.pushMessage(START, Map.of(APPLICATION_NAME, application.getName()));
+        helperViewCreation.incrementAndPush(i -> 0.5D); // Valeur arbitraire basée sur l'ancien code
         //TODO
-        progression1.pushMessage(END, Map.of(APPLICATION_NAME, application.getName()));
-        progression1.pushResult(application.getId());
-        progression1.incrementAndPush(i -> 1D);
-        progression1.complete();
+        helperViewCreation.pushMessage(END, Map.of(APPLICATION_NAME, application.getName()));
+        helperViewCreation.pushResult(application.getId());
+        helperViewCreation.incrementAndPush(i -> 1D);
+        helperViewCreation.complete();
     }
 
     public ApplicationResult buildOpenAdom(final Application application, final String[] filter) {
@@ -199,38 +205,15 @@ public class ApplicationService{
                 application.findDependantNodesByDataName());
     }
 
-    @Transactional
-    public Application initApplication(final Application application) {
-        MigrateService migrateService = beanFactory.getBean(MigrateService.class);
-        migrateService.setApplication(application);
-        serviceContainer.authenticationService().resetRole();
-        final OreSiUserRole creator = serviceContainer.authenticationService().getUserRole(OreSiApiRequestContext.getRequestUserId());
-
-        migrateService.runFlywayUpdate(creator);
-        serviceContainer.authenticationService().setRoleForClient();
-        repository.application().store(application);
-        return application;
-    }
-
-    public Application modifySchemaApplication(final Application application) {
-        MigrateService migrateService = beanFactory.getBean(MigrateService.class);
-        migrateService.setApplication(application);
-        serviceContainer.authenticationService().resetRole();
-        migrateService.updateSchema();
-        serviceContainer.authenticationService().setRoleForClient();
-        repository.application().store(application);
-        serviceContainer.authenticationService().setRoleAdmin();
-        repository.application().updateAuthorizationIndexes(application);
-        serviceContainer.authenticationService().setRoleForClient();
-        return application;
-    }
-
     @Transactional()
     public UUID changeApplicationConfiguration(
-            ReactiveProgression.ChangeApplicationProgression progression,
+            Consumer<ReactiveResult> sink,
             final String nameOrId,
             final DataFile dataFile,
             final String comment) {
+        
+        ReactiveEventHelper eventHelper = new ReactiveEventHelper(sink, "application.ChangeConfiguration");
+        
         final Application application = getApplication(nameOrId);
         Objects.requireNonNull(OreSiApiRequestContext.getAuthentication()
                         .map(OreSiAuthenticationToken::getApplicationPersona)
@@ -238,21 +221,20 @@ public class ApplicationService{
                         .map(ApplicationManager.class::cast)
                         .orElse(null))
                 .canUpdateApplication();
-        ReactiveProgression.ChangeApplicationProgression progression1 = progression;
-        progression1.pushProgression();
+        
+        eventHelper.pushProgress(0D);
         serviceContainer.relationalService().dropViews(nameOrId);
         serviceContainer.authenticationService().setRoleForClient();
         final Configuration oldConfiguration = application.getConfiguration();
         final UUID oldConfigFileId = application.getConfigFile();
         try {
-            progression1 = (ReactiveProgression.ChangeApplicationProgression) changeApplicationConfiguration(comment,
-                    progression1,
+            changeApplicationConfiguration(comment,
+                    eventHelper,
                     application,
-                    dataFile,
-                    this::modifySchemaApplication
+                    dataFile
             ).up().withSubLabel("migrate");
         } catch (final IOException e) {
-            progression1.pushError(e);
+            eventHelper.pushError(e);
         }
         final String applicationName = application.getName();
         final Configuration newConfiguration = serviceContainer.applicationService().getApplication(applicationName).getConfiguration();
@@ -262,8 +244,8 @@ public class ApplicationService{
         try {
             Preconditions.checkArgument(newVersion.compareTo(oldVersion) > 0, "l'application " + applicationName + " est déjà dans la version " + oldVersion);
         } catch (final IllegalArgumentException e) {
-            progression1.pushError(e);
-            progression1.pushMessage(START, Map.of("application", applicationName, "oldVersion", oldVersion.version(), "newVersion", newVersion.version()));
+            eventHelper.pushError(e);
+            eventHelper.pushMessage(START, Map.of("application", applicationName, "oldVersion", oldVersion.version(), "newVersion", newVersion.version()));
         }
         if (log.isInfoEnabled()) {
             log.info("va migrer les données de {} de la version actuelle {} à la nouvelle version {}", applicationName, oldVersion, newVersion);
@@ -276,104 +258,177 @@ public class ApplicationService{
         return application.getId();
     }
 
-    private ReactiveProgression.ChangeOrCreateApplicationProgression changeApplicationConfiguration(
+    private ReactiveEventHelper changeApplicationConfiguration(
             String comment,
-            final ReactiveProgression.ChangeOrCreateApplicationProgression progression,
+            final ReactiveEventHelper eventHelper,
             Application application,
-            final DataFile configurationFile,
-            final UnaryOperator<Application> createOrModifySchema) throws IOException {
-        String applicationName = application.getName();
+            final DataFile configurationFile) throws IOException {
+            Application oldApplication = application;
+        String applicationName = oldApplication.getName();
         OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
-        UUID oldApplicationId = application.getId();
-        ReactiveProgression.ChangeOrCreateApplicationProgression progressionForConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progression.withSubLabel("configuration");
-        progressionForConfiguration.pushMessage("rights.checking", Map.of(APPLICATION_NAME, applicationName));
-        progressionForConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForConfiguration.incrementAndPush(i -> i + .02);
-        final ReactiveProgression.ChangeOrCreateApplicationProgression progressionForParsingConfiguration = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForConfiguration.withSubLabel("parsingConfiguration");
+        UUID oldApplicationId = oldApplication.getId();
+        ReactiveEventHelper helperConfiguration = eventHelper.withSubLabel("configuration");
+        helperConfiguration.pushMessage("rights.checking", Map.of(APPLICATION_NAME, applicationName));
+        helperConfiguration.incrementAndPush(i -> i + .02);
+        final ReactiveEventHelper helperParsingConfiguration = helperConfiguration.withSubLabel("parsingConfiguration");
+        Application newApplication;
         if (Objects.requireNonNull(configurationFile.fileName()).matches(".*\\.zip")) {
             InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile);
-            progressionForParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(multiYAmlInput));
+            helperParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
+            newApplication = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(multiYAmlInput));
         } else {
-            progressionForParsingConfiguration.pushMessage("forSingle", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, progressionForConfiguration, FileBomResolver.of(configurationFile.inputStream()));
+            helperParsingConfiguration.pushMessage("forSingle", Map.of(APPLICATION_NAME, applicationName));
+            newApplication = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(configurationFile.inputStream()));
         }
-        if (application == null) {
-            return progression;
+        if (newApplication == null) {
+            return eventHelper;
         }
-        progression.fluxSink().next(new ReactiveTypeInfo<>("application.configuration.create.register.start", Map.of(APPLICATION_NAME, applicationName)));
+        eventHelper.pushMessage("application.configuration.create.register.start", Map.of(APPLICATION_NAME, applicationName));
 
-        final Configuration configuration = application.getConfiguration();
-        application.setId(oldApplicationId);
-        assert configuration != null;
-        application.setData(new ArrayList<>(configuration.dataDescription().keySet()));
-        application.setConfiguration(configuration);
-        final Optional<Set<String>> additionalsFiles = Optional.ofNullable(configuration.additionalFiles())
-                .map(Map::keySet);
-        if (additionalsFiles.isPresent()) {
-            application.setAdditionalFiles(new LinkedList<>(additionalsFiles.get()));
-        } else {
-            application.setAdditionalFiles(List.of());
+        final Configuration configuration = oldApplication.getConfiguration();
+        // Pour la création, oldApplicationId est null → store() générera un UUID
+        // Pour la mise à jour, on préserve l'ID existant pour l'upsert
+        newApplication.setId(oldApplicationId);
+
+        if (configuration != null) {
+            // Cas mise à jour : on préserve la structure des données de l'ancienne configuration
+            newApplication.setData(new ArrayList<>(configuration.dataDescription().keySet()));
+            newApplication.setConfiguration(configuration);
+            final Optional<Set<String>> additionalsFiles = Optional.ofNullable(configuration.additionalFiles())
+                    .map(Map::keySet);
+            if (additionalsFiles.isPresent()) {
+                newApplication.setAdditionalFiles(new LinkedList<>(additionalsFiles.get()));
+            } else {
+                newApplication.setAdditionalFiles(List.of());
+            }
         }
-        progressionForParsingConfiguration.pushMessage("endparsing", Map.of(APPLICATION_NAME, applicationName));
-        String comment1 = configuration.applicationDescription().comment();
-        Optional.of(applicationName).ifPresent(application::setName);
+        // Cas création : newApplication conserve sa propre configuration issue du YAML
+
+        helperParsingConfiguration.pushMessage("endparsing", Map.of(APPLICATION_NAME, applicationName));
+        // Pour la création, pas d'ancienne configuration → on utilise le commentaire passé en paramètre
+        String comment1 = Optional.ofNullable(configuration)
+                .map(Configuration::applicationDescription)
+                .map(ApplicationDescription::comment)
+                .orElse(comment);
+        Optional.of(applicationName).ifPresent(newApplication::setName);
         try {
-            application = createOrModifySchema.apply(application);
-            final UUID confId = serviceContainer.binaryFileService().storeFile(application, configurationFile, comment1, null);
-            application.setConfigFile(confId);
-            Timestamp charteLastTimestamp = Optional.ofNullable(serviceContainer.additionalFileService().findCharte(application))
+            if (configuration == null) {
+                // Création: initialiser le schéma applicatif via Flyway.
+                flywayMigrateService.setApplication(newApplication);
+                serviceContainer.authenticationService().resetRole();
+                final OreSiUserRole creator = serviceContainer.authenticationService().getUserRole(OreSiApiRequestContext.getRequestUserId());
+                flywayMigrateService.runFlywayUpdate(creator);
+                serviceContainer.authenticationService().setRoleForClient();
+                // L'application doit exister dans la table application AVANT d'insérer dans binaryfile
+                // (contrainte FK binaryfile_application_fkey). On la persiste ici sans configFile (null autorisé),
+                // puis on la met à jour après l'enregistrement du fichier de configuration.
+                repository.application().store(newApplication);
+            } else {
+                // Mise à jour: exécuter le pipeline de migration de configuration.
+                migrationService.executeMigration(oldApplication, newApplication, Set.of(), MigrationMode.EXECUTE);
+            }
+            final UUID confId = serviceContainer.binaryFileService().storeFile(newApplication, configurationFile, comment1, null);
+            newApplication.setConfigFile(confId);
+            Timestamp charteLastTimestamp = Optional.ofNullable(serviceContainer.additionalFileService().findCharte(newApplication))
                     .map(AdditionalBinaryFile::getUpdateDate)
                     .map(Timestamp::valueOf)
                     .orElse((new Timestamp(Long.MIN_VALUE)));
-            application.setLastChartes(charteLastTimestamp);
-            repository.application().store(application);
-            final ReactiveProgression.ChangeOrCreateApplicationProgression progressionRegister = (ReactiveProgression.ChangeOrCreateApplicationProgression) progressionForParsingConfiguration.up();
-            progressionRegister.pushMessage("register", Map.of(APPLICATION_NAME, applicationName));
+            newApplication.setLastChartes(charteLastTimestamp);
+            repository.application().store(newApplication);
+            // Propager l'ID généré (création) ou existant (MAJ) vers oldApplication
+            // afin que createApplication puisse pousser application.getId() comme résultat
+            oldApplication.setId(newApplication.getId());
+            final ReactiveEventHelper helperRegister = helperParsingConfiguration.up();
+            helperRegister.pushMessage("register", Map.of(APPLICATION_NAME, applicationName));
 
-            return progressionRegister;
+            return helperRegister;
         } catch (final BadSqlGrammarException bsge) {
+            log.error("""
+                    ╔══════════════════════════════════════════════════════════════════╗
+                    ║  BadSqlGrammarException lors de la création de l'application    ║
+                    ╠══════════════════════════════════════════════════════════════════╣
+                    ║  Application  : {}
+                    ║  SQL échoué   : {}
+                    ║  Cause racine : {}
+                    ╚══════════════════════════════════════════════════════════════════╝
+                    """,
+                    applicationName,
+                    bsge.getSql(),
+                    bsge.getCause() != null ? bsge.getCause().getMessage() : bsge.getMessage(),
+                    bsge);
             throw new NotApplicationCreatorRightsException(applicationName, currentUser.getAuthorizations());
         }
     }
 
-    public void getApplications(ReactiveProgression.GetApplicationProgression progression, final List<ApplicationInformation> filters) {
-        serviceContainer.authenticationService().setRoleForClient();
-        final List<Application> applicationForUser = repository.application().findAll();
-        serviceContainer.authenticationService().setRoleAdmin();
-        final Stream<Application> applicationForAdmin = repository.application().findAllStream();
-        final AtomicLong progres = new AtomicLong(0);
-        progression.fluxSink().next(new ReactiveTypeProgress(progres.get()));
-        CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
-        Function<Application, List<ApplicationResult.DataSynthesis>> getDatynthesis = application ->
-                serviceContainer.dataService().getReferenceSynthesis(application);
+    public Flux<ReactiveResult> getApplications(final List<ApplicationInformation> filters) {
+        return Mono.fromCallable(() -> {
+                    // Charger les applications
+                    serviceContainer.authenticationService().setRoleForClient();
+                    final List<Application> applicationForUser = repository.application().findAll();
 
-        applicationForAdmin
-                .map(application -> applicationForUser.stream()
-                        .filter(app -> app.getId().equals(application.getId()))
-                        .findAny()
-                        .orElse(application.applicationAccordingToRights())
-                )
-                .map(application -> application.filterFieldsAndHidden(filters))
-                .map(application -> ApplicationLightResult.of(application, currentUserRoles, getDatynthesis.apply(application)))
-                .forEach(application -> {
-                    progression.fluxSink().next(new ReactiveTypeResult<ApplicationLightResult>(application));
-                    final double prog = progres.incrementAndGet() / ((double) applicationForUser.size());
-                    progression.fluxSink().next(new ReactiveTypeProgress<Double>(prog));
+                    serviceContainer.authenticationService().setRoleAdmin();
+                    return repository.application().findAllStream()
+                            .map(application -> applicationForUser.stream()
+                                    .filter(app -> app.getId().equals(application.getId()))
+                                    .findAny()
+                                    .orElse(application.applicationAccordingToRights())
+                            )
+                            .toList();
+                })
+                .flatMapMany(allApplications -> {
+                    CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
+                    int total = allApplications.size();
+
+                    return Flux.fromIterable(allApplications)
+                            .index()
+                            .flatMap(tuple -> {
+                                long index = tuple.getT1();
+                                Application app = tuple.getT2();
+
+                                // Traiter l'application
+                                Application filtered = app.filterFieldsAndHidden(filters);
+                                List<ApplicationResult.DataSynthesis> synthesis = serviceContainer.dataService().getReferenceSynthesis(filtered);
+                                ApplicationLightResult result = ApplicationLightResult.of(filtered, currentUserRoles, synthesis);
+
+                                // Calculer la progression
+                                double progress = (index + 1.0) / total;
+
+                                // Émettre résultat + progression
+                                return Flux.just(
+                                        new ReactiveTypeResult<>(result),
+                                        new ReactiveTypeProgress(progress)
+                                );
+                            });
                 });
-        progression.complete();
     }
 
-    public Application validateConfiguration(final ReactiveProgression.CreateApplicationProgression fluxSink, final DataFile file) {
+
+
+    public Application validateConfiguration(final Consumer<ReactiveResult> sink, final DataFile file) {
+        ReactiveEventHelper eventHelper = new ReactiveEventHelper(sink, "application.createConfiguration");
         try {
             final Application application;
             if (Objects.requireNonNull(file.fileName()).matches(".*\\.zip")) {
-                application = ApplicationConfigurationService.unzipConfiguration(file, fluxSink);
+                application = ApplicationConfigurationService.unzipConfiguration(file, eventHelper);
             } else {
-                application = ApplicationConfigurationService.parseConfigurationBytes("","", fluxSink, FileBomResolver.of(file.inputStream()));
+                application = ApplicationConfigurationService.parseConfigurationBytes("", "", eventHelper, FileBomResolver.of(file.inputStream()));
+            }
+            Application oldApplication;
+            try {
+                oldApplication = serviceContainer.applicationService().getApplication(application.getName());
+                final MigrationResult migrationResult = migrationService.executeMigration(oldApplication, application, new HashSet<>(), MigrationMode.DRY_RUN);
+                eventHelper.pushMessage("migration",
+                        Map.of(
+                                APPLICATION_NAME, oldApplication.getName(),
+                                "migrationreport", new fr.inra.oresing.persistence.JsonRowMapper<>().toJson(migrationResult)
+                        )
+                );
+            } catch (Exception e) {
+                //nothing to do
             }
             return application;
         } catch (final IOException e) {
-            fluxSink.pushError(e);
+            eventHelper.pushError(e);
             return null;
         }
     }

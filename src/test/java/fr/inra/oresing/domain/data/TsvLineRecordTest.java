@@ -2,11 +2,12 @@ package fr.inra.oresing.domain.data;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import fr.inra.oresing.persistence.JsonRowMapper;
-import org.json.JSONObject;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class TsvLineRecordTest {
     public static final String[] ORDERED_COLUMNS = new String[]{
@@ -59,12 +60,13 @@ class TsvLineRecordTest {
     @Test
     public void testToLine() throws IOException {
         DataValue dataValue = (DataValue) mapper.readValue(dataValueJson, DataValue.class);
-        final Map<String, String> map = (Map<String, String>) mapper.getJsonMapper().readValue( mapper.toJson(dataValue), new TypeReference<Map<String, String>>() {});
+        final Map<String, String> map = mapper.getJsonMapper().readValue(mapper.toJson(dataValue), new TypeReference<Map<String, String>>() {
+        });
         final TsvLineRecord tsvLineRecord = TsvLineRecord.of(
                 map, ORDERED_COLUMNS, mapper
         );
         final String line = tsvLineRecord.line();
-        System.out.println(line);
+        assertNotNull(line, "La ligne TSV générée ne doit pas être null");
     }
 
 }

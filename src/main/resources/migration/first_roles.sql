@@ -1,6 +1,6 @@
 INSERT INTO public.oresiuser (id, login, password,  authorizations, accountstate, email)
 VALUES
-       ('5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9'::uuid,'openadom', '$2a$12$eF88cLz.KdQDUvWR7ztaiOeN3fstIAqqrDFHLdem0Kq/we1bmxUM2', '{}', 'active', 'openadom@inrae.fr'),
+       ('5a4dbd41-3fc9-4b3e-b593-a46bc888a7f9'::uuid,'openadom', '$2a$12$eF88cLz.KdQDUvWR7ztaiOeN3fstIAqqrDFHLdem0Kq/we1bmxUM2', '{}', 'active', 'openadom@inrae.fr')
 ON CONFLICT DO NOTHING;
 
 

@@ -42,7 +42,7 @@ public record BinaryFileInfos(
         );
     }
 
-    public BinaryFileInfos withBinaryFileDataset(BinaryFileDataset binaryfiledataset) {
+    public BinaryFileInfos withBinaryFileDataset(BinaryFileDataset binaryFiledataset) {
         return new BinaryFileInfos(
                 published(),
                 publisheduser(),

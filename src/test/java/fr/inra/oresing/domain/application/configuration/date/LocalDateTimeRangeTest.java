@@ -12,7 +12,6 @@ import java.time.Year;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalAdjusters;
-import java.time.temporal.TemporalUnit;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +24,43 @@ class LocalDateTimeRangeTest {
     public static final String SQL_INTERVAL = "[\"2024-01-01 23:54:00\",\"2024-03-12 20:55:00\")";
     public static final LocalDateTime FROM = LocalDateTime.of(2024, 1, 1, 23, 54, 0);
     public static final LocalDateTime TO = LocalDateTime.of(2024, 3, 12, 20, 55, 0);
+    public static final Stream<IntervalDescription> INTERVAL_DESCRIPTIONS = Stream.of(
+            new IntervalDescription(
+                    DatePattern.DD_MM_YYYY,
+                    "21/06/2004",
+                    "23/12/2005",
+                    "2004-06-21T00:00:00",
+                    "2005-12-23T00:00:00"
+            ),
+            new IntervalDescription(
+                    "dd/MM/yyyy HH:mm:ss",
+                    "21/06/2004 23:54:32",
+                    "23/12/2005 21:54:01",
+                    "2004-06-21T23:54:32",
+                    "2005-12-23T21:54:01"
+            ),
+            new IntervalDescription(
+                    "HH:mm:ss",
+                    "21:54:32",
+                    "23:54:01",
+                    "1970-01-01T21:54:32",
+                    "1970-01-01T23:54:01"
+            ),
+            new IntervalDescription(
+                    DatePattern.MM_YYYY,
+                    "06/2004",
+                    "12/2005",
+                    "2004-06-01T00:00:00",
+                    "2005-12-31T00:00:00"
+            ),
+            new IntervalDescription(
+                    DatePattern.YYYY,
+                    "2004",
+                    "2005",
+                    "2004-01-01T00:00:00",
+                    "2005-12-31T00:00:00"
+            )
+    );
     public static LocalDateTimeRange instance = new LocalDateTimeRange(
             List.of(
                     FROM,
@@ -58,8 +94,8 @@ class LocalDateTimeRangeTest {
         Assertions.assertEquals("badBoundTypeForInterval", error.getMessage());
         final Map<String, Object> params = error.getParams();
         Assertions.assertEquals(BoundType.CLOSED, params.get("boundType"));
-        org.assertj.core.api.Assertions.assertThat((Set)params.get("knownBoundType"))
-                        .containsExactlyInAnyOrder(BoundType.CLOSED.name(), BoundType.OPEN.name());
+        org.assertj.core.api.Assertions.assertThat((Set) params.get("knownBoundType"))
+                .containsExactlyInAnyOrder(BoundType.CLOSED.name(), BoundType.OPEN.name());
     }
 
     @Test
@@ -99,21 +135,21 @@ class LocalDateTimeRangeTest {
         final LocalDate start = LocalDate.of(2024, 1, 1);
         LocalDateTimeRange since = LocalDateTimeRange.since(start);
         Assertions.assertEquals(start.atStartOfDay(), since.getRange().lowerEndpoint());
-        Assertions.assertFalse( since.getRange().hasUpperBound());
+        Assertions.assertFalse(since.getRange().hasUpperBound());
     }
 
     @Test
     void until() {
         final LocalDate end = LocalDate.of(2024, 1, 1);
         LocalDateTimeRange until = LocalDateTimeRange.until(end);
-        Assertions.assertFalse( until.getRange().hasLowerBound());
+        Assertions.assertFalse(until.getRange().hasLowerBound());
         Assertions.assertEquals(end.atStartOfDay(), until.getRange().upperEndpoint());
     }
 
     @Test
     void toSqlExpression() {
         final String sqlExpression = instance.toSqlExpression();
-        Assertions.assertEquals(SQL_INTERVAL,sqlExpression);
+        Assertions.assertEquals(SQL_INTERVAL, sqlExpression);
     }
 
     @Test
@@ -129,61 +165,12 @@ class LocalDateTimeRangeTest {
         Assertions.assertEquals(LocalDateTimeRange.forDay(day), localDateTimeRange);
     }
 
-    record IntervalDescription(
-            String pattern,
-            String from,
-            String to,
-            String fromDate,
-            String toDate
-    ) {
-
-    }
-
-    public static final Stream<IntervalDescription> INTERVAL_DESCRIPTIONS = Stream.of(
-            new IntervalDescription(
-                    DatePattern.DD_MM_YYYY,
-                    "21/06/2004",
-                    "23/12/2005",
-                    "2004-06-21T00:00:00",
-                    "2005-12-23T00:00:00"
-            ),
-            new IntervalDescription(
-                    "dd/MM/yyyy HH:mm:ss",
-                    "21/06/2004 23:54:32",
-                    "23/12/2005 21:54:01",
-                    "2004-06-21T23:54:32",
-                    "2005-12-23T21:54:01"
-            ),
-            new IntervalDescription(
-                    "HH:mm:ss",
-                    "21:54:32",
-                    "23:54:01",
-                    "1970-01-01T21:54:32",
-                    "1970-01-01T23:54:01"
-            ),
-            new IntervalDescription(
-                    DatePattern.MM_YYYY,
-                    "06/2004",
-                    "12/2005",
-                    "2004-06-01T00:00:00",
-                    "2005-12-31T00:00:00"
-            ),
-            new IntervalDescription(
-                    DatePattern.YYYY,
-                    "2004",
-                    "2005",
-                    "2004-01-01T00:00:00",
-                    "2005-12-31T00:00:00"
-            )
-    );
-
     @Test
-    void parseSql(){
+    void parseSql() {
         final LocalDateTimeRange localDateTimeRange = LocalDateTimeRange.parseSql(SQL_INTERVAL);
         Assertions.assertEquals(FROM, localDateTimeRange.getRange().lowerEndpoint());
         Assertions.assertEquals(TO, localDateTimeRange.getRange().upperEndpoint());
     }
-
 
     @TestFactory
     @DisplayName("Tests for different patterns of date")
@@ -229,5 +216,15 @@ class LocalDateTimeRangeTest {
                             )
                     );
                 });
+    }
+
+    record IntervalDescription(
+            String pattern,
+            String from,
+            String to,
+            String fromDate,
+            String toDate
+    ) {
+
     }
 }

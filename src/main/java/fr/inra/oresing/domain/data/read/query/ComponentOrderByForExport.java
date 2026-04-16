@@ -7,8 +7,6 @@ import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker
 import fr.inra.oresing.domain.checker.type.DateType;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.checker.type.MapType;
-import fr.inra.oresing.domain.checker.type.StringType;
-import fr.inra.oresing.domain.repository.data.DataRepositoryForBuffer;
 import fr.inra.oresing.persistence.RefsLinked;
 
 import java.time.LocalDateTime;

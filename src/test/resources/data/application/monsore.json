@@ -965,23 +965,23 @@
     "tags": [
       {
         "tagname": "context",
-        "tagdefinition": "DOMAIN_TAG"
+        "tagDefinition": "DOMAIN_TAG"
       },
       {
         "tagname": "data",
-        "tagdefinition": "DOMAIN_TAG"
+        "tagDefinition": "DOMAIN_TAG"
       },
       {
         "tagname": "test",
-        "tagdefinition": "DOMAIN_TAG"
+        "tagDefinition": "DOMAIN_TAG"
       },
       {
         "tagname": "unit",
-        "tagdefinition": "DOMAIN_TAG"
+        "tagDefinition": "DOMAIN_TAG"
       },
       {
         "tagname": "temporal",
-        "tagdefinition": "DOMAIN_TAG"
+        "tagDefinition": "DOMAIN_TAG"
       }
     ],
     "version": {
@@ -1145,22 +1145,22 @@
         "tags": [
           {
             "tagorder": 2,
-            "tagdefinition": "ORDER_TAG"
+            "tagDefinition": "ORDER_TAG"
           },
           {
             "tagname": "data",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           },
           {
             "tagname": "test",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           },
           {
             "tagname": "context",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           },
           {
-            "tagdefinition": "DATA_TAG"
+            "tagDefinition": "DATA_TAG"
           }
         ],
         "order": 2,
@@ -1244,7 +1244,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": null,
@@ -1256,7 +1256,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": null,
@@ -1284,11 +1284,11 @@
             "tags": [
               {
                 "tagorder": 1,
-                "tagdefinition": "ORDER_TAG"
+                "tagDefinition": "ORDER_TAG"
               },
               {
                 "tagname": "temporal",
-                "tagdefinition": "DOMAIN_TAG"
+                "tagDefinition": "DOMAIN_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1318,7 +1318,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1348,7 +1348,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "ComputedComponent",
@@ -1386,7 +1386,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1416,11 +1416,11 @@
             "tags": [
               {
                 "tagorder": 2,
-                "tagdefinition": "ORDER_TAG"
+                "tagDefinition": "ORDER_TAG"
               },
               {
                 "tagname": "test",
-                "tagdefinition": "DOMAIN_TAG"
+                "tagDefinition": "DOMAIN_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1450,7 +1450,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "ComputedComponent",
@@ -1488,7 +1488,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1510,7 +1510,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1540,7 +1540,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "ComputedComponent",
@@ -1578,7 +1578,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1612,7 +1612,7 @@
         "tags": [
           {
             "tagname": "context",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -1645,7 +1645,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1669,7 +1669,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1693,7 +1693,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1715,7 +1715,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1745,7 +1745,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1775,7 +1775,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1799,7 +1799,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1826,15 +1826,15 @@
         "tags": [
           {
             "tagname": "data",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           },
           {
             "tagname": "test",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           },
           {
             "tagname": "context",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -1855,7 +1855,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1879,7 +1879,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1903,7 +1903,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1925,7 +1925,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1949,7 +1949,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1973,7 +1973,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -1998,7 +1998,7 @@
         "tags": [
           {
             "tagname": "context",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -2019,7 +2019,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2043,7 +2043,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2067,7 +2067,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2089,7 +2089,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2113,7 +2113,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2140,7 +2140,7 @@
         "tags": [
           {
             "tagname": "data",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -2161,7 +2161,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2185,7 +2185,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2209,7 +2209,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2233,7 +2233,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2257,7 +2257,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2279,7 +2279,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2304,7 +2304,7 @@
         "tags": [
           {
             "tagname": "data",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -2325,7 +2325,7 @@
             "tags": [
               {
                 "tagname": "test",
-                "tagdefinition": "DOMAIN_TAG"
+                "tagDefinition": "DOMAIN_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2347,7 +2347,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2371,7 +2371,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2394,7 +2394,7 @@
           "my_computed_column": {
             "tags": [
               {
-                "tagdefinition": "HIDDEN_TAG"
+                "tagDefinition": "HIDDEN_TAG"
               }
             ],
             "type": "ComputedComponent",
@@ -2424,7 +2424,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2449,7 +2449,7 @@
         "tags": [
           {
             "tagname": "data",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -2470,7 +2470,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2494,7 +2494,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2518,7 +2518,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2540,7 +2540,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2564,7 +2564,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2588,7 +2588,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2613,7 +2613,7 @@
         "tags": [
           {
             "tagname": "context",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -2634,7 +2634,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2658,7 +2658,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2682,7 +2682,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2704,7 +2704,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2728,7 +2728,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2754,7 +2754,7 @@
       "type_de_fichiers": {
         "tags": [
           {
-            "tagdefinition": "HIDDEN_TAG"
+            "tagDefinition": "HIDDEN_TAG"
           }
         ],
         "order": 9999,
@@ -2775,7 +2775,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2797,7 +2797,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2819,7 +2819,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2841,7 +2841,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2865,7 +2865,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -2890,7 +2890,7 @@
         "tags": [
           {
             "tagname": "context",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -2911,7 +2911,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": [
@@ -2935,7 +2935,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": [
@@ -2959,7 +2959,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": [
@@ -2983,7 +2983,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": [
@@ -3012,7 +3012,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3034,7 +3034,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3056,7 +3056,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3078,7 +3078,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3103,7 +3103,7 @@
         "tags": [
           {
             "tagname": "data",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -3125,7 +3125,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3149,7 +3149,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3173,7 +3173,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3195,7 +3195,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3219,7 +3219,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3243,7 +3243,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3268,7 +3268,7 @@
         "tags": [
           {
             "tagname": "data",
-            "tagdefinition": "DOMAIN_TAG"
+            "tagDefinition": "DOMAIN_TAG"
           }
         ],
         "order": 9999,
@@ -3287,7 +3287,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": [
@@ -3311,7 +3311,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": [
@@ -3335,7 +3335,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "columns": [
@@ -3364,7 +3364,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3386,7 +3386,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",
@@ -3408,7 +3408,7 @@
             "tags": [
               {
                 "tagname": "no_tag",
-                "tagdefinition": "NO_TAG"
+                "tagDefinition": "NO_TAG"
               }
             ],
             "type": "BasicComponent",

@@ -37,6 +37,7 @@ class AuthorizationIndexTest {
                 Map.of(PEM, pem)
         );
         Mockito.when(application.findData(PEM)).thenReturn(Optional.of(pem));
+        Mockito.when(application.getAllDataNames()).thenReturn(List.of(PEM));
         authorizationIndex = new AuthorizationIndex(application);
     }
 
@@ -45,27 +46,27 @@ class AuthorizationIndexTest {
         String createIndexSql = authorizationIndex.createIndex(PEM);
         assertEquals(
                 """
-                                                        CREATE INDEX IF NOT EXISTS authorization_pem_index_refvalues_index
-                                                        ON monsore.referencevalue USING gin
-                                                        (
-                                                            refvalues jsonb_path_ops
-                                                        )
-                                                        WHERE referencetype = 'pem';
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_refvalues_index
+                        ON monsore.referencevalue USING gin
+                        (
+                            refvalues jsonb_path_ops
+                        )
+                        WHERE referencetype = 'pem';
                         
-                                                        CREATE INDEX IF NOT EXISTS authorization_pem_index_auth_index
-                                                        ON monsore.referencevalue USING gin
-                                                        (
-                                                            (("authorization").requiredauthorizations.dataProjet),
-                                                            (("authorization").requiredauthorizations.dataSites)
-                                                        )
-                                                        WHERE referencetype = 'pem';
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_auth_index
+                        ON monsore.referencevalue USING gin
+                        (
+                            (("authorization").requiredauthorizations.dataProjet),
+                            (("authorization").requiredauthorizations.dataSites)
+                        )
+                        WHERE referencetype = 'pem';
                         
-                                                        CREATE INDEX IF NOT EXISTS authorization_pem_index_timescope_index
-                                                        ON monsore.referencevalue USING gist
-                                                        ((("authorization").timescope))
-                                                        WHERE referencetype = 'pem';
-                                                        
-                                                        """,
+                        CREATE INDEX IF NOT EXISTS authorization_pem_index_timescope_index
+                        ON monsore.referencevalue USING gist
+                        ((("authorization").timescope))
+                        WHERE referencetype = 'pem';
+                        
+                        """,
                 createIndexSql);
     }
 
@@ -77,11 +78,17 @@ class AuthorizationIndexTest {
                         DO $$
                         DECLARE
                             idx record;
+                            ref_types TEXT[] := ARRAY['pem'];
+                            ref_type TEXT;
                         BEGIN
-                            FOR idx IN (SELECT indexname FROM pg_indexes WHERE schemaname = 'monsore' 
-                            AND indexname LIKE 'authorization_%_index')
+                            FOREACH ref_type IN ARRAY ref_types
                             LOOP
-                                EXECUTE 'DROP INDEX IF EXISTS ' || quote_ident(idx.indexname);
+                                FOR idx IN (SELECT indexname FROM pg_indexes
+                                            WHERE schemaname = 'monsore'
+                                            AND indexname LIKE 'authorization_' || ref_type || '_index%')
+                                LOOP
+                                    EXECUTE 'DROP INDEX IF EXISTS monsore.' || quote_ident(idx.indexname);
+                                END LOOP;
                             END LOOP;
                         END $$;
                         

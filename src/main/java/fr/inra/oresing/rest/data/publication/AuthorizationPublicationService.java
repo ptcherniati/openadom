@@ -6,7 +6,6 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.SubmissionType;
-import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationDataWriter;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.DataWriter;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;

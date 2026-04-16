@@ -303,7 +303,7 @@ public class PrivilegeAccessorDomainTest {
         Object result = assertDoesNotThrow(
                 () -> method.methodCall().apply(assessor),
                 "L'assessor " + getReadableAssessorName(assessor) +
-                        " devrait pouvoir appeler " + method.name() + " sans exception"
+                " devrait pouvoir appeler " + method.name() + " sans exception"
         );
 
         // Vérifie que le résultat est du type attendu
@@ -311,7 +311,7 @@ public class PrivilegeAccessorDomainTest {
         assertTrue(
                 method.returnType().isInstance(result),
                 "Le résultat devrait être une instance de " + method.returnType().getSimpleName() +
-                        " mais était " + result.getClass().getSimpleName()
+                " mais était " + result.getClass().getSimpleName()
         );
     }
 
@@ -324,8 +324,8 @@ public class PrivilegeAccessorDomainTest {
                 method.exceptionType(),
                 () -> method.methodCall().apply(assessor),
                 "L'assessor " + getReadableAssessorName(assessor) +
-                        " devrait déclencher une exception " + method.exceptionType().getSimpleName() +
-                        " en appelant " + method.name()
+                " devrait déclencher une exception " + method.exceptionType().getSimpleName() +
+                " en appelant " + method.name()
         );
 
         // Vérifications supplémentaires sur l'exception si nécessaire
@@ -469,7 +469,7 @@ public class PrivilegeAccessorDomainTest {
                         allAssessors.stream()
                                 .filter(assessor ->
                                         (method instanceof MethodeSystemInfo) && (assessor instanceof PrivilegeAssessorDomainForSystem) ||
-                                                (method instanceof MethodeApplicationInfo) && (assessor instanceof PrivilegeAssessorDomainForApplication)
+                                        (method instanceof MethodeApplicationInfo) && (assessor instanceof PrivilegeAssessorDomainForApplication)
                                 )
                                 .map(assessor -> {
                                     String assessorName = getReadableAssessorName(assessor);
@@ -494,17 +494,17 @@ public class PrivilegeAccessorDomainTest {
                                                     try {
                                                         Object result = ((M) method).methodCall().apply(assessor);
                                                         System.out.println("ATTENTION: L'assessor " + assessorName +
-                                                                " peut accéder à " + ((M) method).name() +
-                                                                " mais n'était pas explicitement listé comme autorisé");
+                                                                           " peut accéder à " + ((M) method).name() +
+                                                                           " mais n'était pas explicitement listé comme autorisé");
                                                         // Le test passe mais affiche un avertissement
                                                     } catch (Exception e) {
                                                         if (((M) method).exceptionType().isInstance(e)) {
                                                             System.out.println("L'assessor " + assessorName +
-                                                                    " ne peut pas accéder à " + ((M) method).name() +
-                                                                    " comme attendu");
+                                                                               " ne peut pas accéder à " + ((M) method).name() +
+                                                                               " comme attendu");
                                                         } else {
                                                             fail("Exception inattendue: " + e.getClass().getSimpleName() +
-                                                                    " au lieu de " + ((M) method).exceptionType().getSimpleName());
+                                                                 " au lieu de " + ((M) method).exceptionType().getSimpleName());
                                                         }
                                                     }
                                                 }

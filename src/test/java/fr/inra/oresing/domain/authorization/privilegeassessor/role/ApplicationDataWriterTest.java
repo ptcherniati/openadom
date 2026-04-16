@@ -216,8 +216,8 @@ class ApplicationDataWriterTest {
                 permittedClasses, hasItemInArray(ApplicationPublishWriterUser.class));
     }
 
-    private static record CorrectAccessRightsParameters(String implName, ApplicationDataWriter writer,
-                                                        boolean expectedCanDelete, boolean expectedCanPublish,
-                                                        boolean expectedCanDeposit) {
+    private record CorrectAccessRightsParameters(String implName, ApplicationDataWriter writer,
+                                                 boolean expectedCanDelete, boolean expectedCanPublish,
+                                                 boolean expectedCanDeposit) {
     }
 }

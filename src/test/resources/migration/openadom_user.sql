@@ -11,8 +11,10 @@ CREATE ROLE "openAdomTechUser" WITH
 -- Configuration du paramètre createrole_self_grant
 ALTER ROLE "openAdomTechUser" SET createrole_self_grant TO 'inherit,set';
 
--- Transférer la propriété du schéma public à "openAdomTechUser"
-ALTER SCHEMA public OWNER TO "openAdomTechUser";
+-- Accorder les droits nécessaires sur le schéma public à "openAdomTechUser"
+-- Le schéma reste la propriété du database owner ; openAdomTechUser opère via des grants
+-- et l'appartenance aux rôles applicatifs (GRANT ... TO "openAdomTechUser" WITH INHERIT TRUE).
+GRANT USAGE, CREATE ON SCHEMA public TO "openAdomTechUser";
 
 -- Accorder les privilèges nécessaires sur la base de données
 GRANT ALL PRIVILEGES ON DATABASE test TO "openAdomTechUser";

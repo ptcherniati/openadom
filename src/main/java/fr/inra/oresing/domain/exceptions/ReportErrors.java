@@ -5,7 +5,6 @@ import fr.inra.oresing.domain.Mapper;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 
 import java.util.Collection;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -15,11 +14,6 @@ public class ReportErrors extends ConcurrentLinkedQueue<CsvRowValidationCheckRes
     private static final long MAX_ERRORS_BYTE = 1000000;
     final Mapper jsonRowMapper;
     private final AtomicLong length = new AtomicLong();
-
-    public ReportErrors(final List<CsvRowValidationCheckResult> list, final Mapper jsonRowMapper) {
-        super(list);
-        this.jsonRowMapper = jsonRowMapper;
-    }
 
     public ReportErrors(final Mapper jsonRowMapper) {
         this.jsonRowMapper = jsonRowMapper;

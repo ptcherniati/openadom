@@ -3,7 +3,7 @@ package fr.inra.oresing.domain;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.rest.model.configuration.ValidationError;
 import fr.inra.oresing.rest.model.configuration.builder.ConfigurationBuilder;
-import fr.inra.oresing.rest.reactive.ReactiveProgression;
+import fr.inra.oresing.rest.reactive.ReactiveEventHelper;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 import fr.inra.oresing.rest.reactive.ReactiveTypeError;
 import reactor.core.publisher.Flux;
@@ -22,8 +22,8 @@ public record ConfigurationBuiderTestBuilder<T>(T result, List<ValidationError> 
     private static <T> ConfigurationBuiderTestBuilder<T> executeDoWithConfigurationTest(InputStream config, Function<Configuration, T> doWithconfiguration) {
         List<T> results = new LinkedList<>();
         List<ValidationError> errors = Flux.<ReactiveResult>create(fluxSink -> {
-                    final ReactiveProgression.CreateApplicationProgression progression = new ReactiveProgression.CreateApplicationProgression(0L, fluxSink);
-                    Configuration configuration = ConfigurationBuilder.build(config, progression, "une application de test");
+                    ReactiveEventHelper eventHelper = new ReactiveEventHelper(fluxSink::next, "test");
+                    Configuration configuration = ConfigurationBuilder.build(config, eventHelper, "une application de test");
                     // Call the function you want to test
                     results.add(doWithconfiguration.apply(configuration));
                     fluxSink.complete();

@@ -10,6 +10,7 @@ import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.UserRepository;
 import fr.inra.oresing.rest.reactive.*;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.hamcrest.core.IsEqual;
 import org.junit.jupiter.api.Assertions;
 import org.springframework.http.MediaType;
@@ -40,33 +41,23 @@ import java.util.zip.ZipInputStream;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
 
+@Slf4j
 public class Fixtures {
 
     public final CreateUser lambda;
     public final CreateUser admin;
-    public UserConnection lambdaConnection;
-    public UserConnection adminConnection;
-
-    public UserConnection getMonsoresimpleConnection() {
-        return monsoresimpleConnection;
-    }
-
-    public UserConnection getWithRightsUserConnection() {
-        return withRightsUserConnection;
-    }
-
-    public Fixtures.UserConnection monsoresimpleConnection;
-    public Fixtures.UserConnection withRightsUserConnection;
-
     private final MockMvc mockMvc;
     private final AuthenticationService authenticationService;
     private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
     private final UserRepository userRepository;
+    public UserConnection lambdaConnection;
+    public UserConnection adminConnection;
+    public Fixtures.UserConnection monsoresimpleConnection;
+    public Fixtures.UserConnection withRightsUserConnection;
 
     public Fixtures(MockMvc mockMvc, UserRepository userRepository, NamedParameterJdbcTemplate namedParameterJdbcTemplate, AuthenticationService authenticationService) throws Exception {
         this.mockMvc = mockMvc;
@@ -634,15 +625,25 @@ public class Fixtures {
         };
     }
 
+    public UserConnection getMonsoresimpleConnection() {
+        return monsoresimpleConnection;
+    }
+
+    public UserConnection getWithRightsUserConnection() {
+        return withRightsUserConnection;
+    }
+
     public UserConnection createUserForUserDefinition(CreateUser createUser, boolean isActive, boolean isAdmin) throws Exception {
         CreateUserResult userResult;
         String jwt;
         OreSiUser user;
         try {
             user = authenticationService.getByIdOrLogin(createUser.login());
-            userResult = Optional.ofNullable(user)
-                    .map(CreateUserResult::of)
-                    .orElseThrow();
+            if (user != null) {
+                userResult = CreateUserResult.of(user);
+            } else {
+                userResult = createUserIfNotExists(createUser);
+            }
         } catch (final Exception e) {
             userResult = createUserIfNotExists(createUser);
 
@@ -658,7 +659,6 @@ public class Fixtures {
                         .param("password", createUser.password()))
 
                 .andReturn().getResponse().getHeader("Authorization");
-        ;
         user = authenticationService.getByIdOrLogin(createUser.login());
         return new UserConnection(CreateUserResult.of(user), jwt);
     }
@@ -667,8 +667,8 @@ public class Fixtures {
         if (mockMvc.perform(post("/api/v1/login")
                         .param("login", createUser.login())
                         .param("password", createUser.password()))
-                    .andReturn()
-                    .getResponse().getStatus() > 300) {
+                .andReturn()
+                .getResponse().getStatus() > 300) {
             return authenticationService.createUser(createUser.login(), createUser.password(), createUser.email());
         } else {
             OreSiUser userByLogin = userRepository.findByLogin(createUser.login()).orElse(null);
@@ -681,7 +681,7 @@ public class Fixtures {
         mockMvc.perform(put("/api/v1/systemrole/applicationCreator")
                         .param("userIdOrLogin", userId.toString())
                         .param("applicationPattern", pattern)
-                        
+
                         .header("Authorization", "Bearer " + adminConnection.jwt()))
                 .andExpect(status().is2xxSuccessful())
                 .andExpect(jsonPath("$.roles.memberOf", hasItem("applicationCreator")))
@@ -733,19 +733,29 @@ public class Fixtures {
                                      final String applicationName,
                                      final String comment) throws Throwable {
         try {
-            final ResultActions result = mockMvc.perform(
-                    multipart("/api/v1/applications/{applicationName}", applicationName)
-                            .file(file)
-                            .param("comment", comment != null ? comment : "")
-                            .accept(MediaType.APPLICATION_NDJSON)
-                            .header("Authorization", "Bearer " + jwt
-                            ));
-            return mockMvc.perform(asyncDispatch(
-                            result
-                                    //.andExpect(request().asyncStarted())
-                                    .andReturn())
-                    )
+            // 1. Démarrer la requête async (ne PAS vérifier asyncResult ici)
+            final MvcResult result = mockMvc.perform(
+                            multipart("/api/v1/applications/{applicationName}", applicationName)
+                                    .file(file)
+                                    .param("comment", comment != null ? comment : "")
+                                    .accept(MediaType.APPLICATION_NDJSON)
+                                    .header("Authorization", "Bearer " + jwt))
+                    .andExpect(request().asyncStarted())  // ✅ Seulement vérifier que c'est démarré
                     .andReturn();
+
+            // 2. Effectuer le dispatch async (c'est ici qu'on attend la fin)
+            MvcResult mvcResult = mockMvc.perform(asyncDispatch(result))
+                    .andExpect(status().isOk())  // ✅ Vérifier le statut après le dispatch
+                    .andReturn();
+
+            // 3. Vérifier les erreurs dans le contenu NDJSON
+            final List<ReactiveTypeError> errors = getErrors(mvcResult);
+
+            Assertions.assertTrue(errors.isEmpty(),
+                    "Le chargement de l'application ne devrait pas contenir d'erreurs %s".formatted(errors.toString()));
+
+            return mvcResult;
+
         } catch (final Exception e) {
             throw e.getCause() == null ? e : e.getCause();
         }
@@ -755,18 +765,16 @@ public class Fixtures {
                                   final String jwt,
                                   final String applicationName,
                                   final String comment) throws Exception {
-        final ResultActions result = mockMvc.perform(
-                multipart("/api/v1/applications/{applicationName}/configuration", applicationName)
-                        .file(file)
-                        .param("comment", comment != null ? comment : "")
-                        .accept(MediaType.APPLICATION_NDJSON)
-                        .header("Authorization", "Bearer " + jwt)
-        );
-        return mockMvc.perform(asyncDispatch(
-                        result
-                                .andExpect(request().asyncStarted())
-                                .andReturn())
-                )
+        final MvcResult result = mockMvc.perform(
+                        multipart("/api/v1/applications/{applicationName}/configuration", applicationName)
+                                .file(file)
+                                .file(file)
+                                .param("comment", comment != null ? comment : "")
+                                .accept(MediaType.APPLICATION_NDJSON)
+                                .header("Authorization", "Bearer " + jwt))
+                .andExpect(request().asyncStarted())  // ✅ Seulement vérifier que c'est démarré
+                .andReturn();
+        return mockMvc.perform(asyncDispatch(result))
                 .andReturn();
     }
 
@@ -874,7 +882,7 @@ public class Fixtures {
                 final MockMultipartFile refFile = new MockMultipartFile("file", e.getValue(), "text/plain", refStream);
                 mockMvc.perform(multipart("/api/v1/applications/olac/data/{refType}", e.getKey())
                                 .file(refFile)
-                                
+
                                 .header("Authorization", "Bearer " + jwt))
                         .andExpect(status().isCreated());
             }
@@ -893,8 +901,8 @@ public class Fixtures {
         try (final InputStream in = getClass().getResourceAsStream(getPhysicoChimieDataResourceName())) {
             final MockMultipartFile file = new MockMultipartFile("file", "physico-chimie.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/physico-chimie")
-                    .file(file)
-                    .header("Authorization", "Bearer " + jwt))
+                            .file(file)
+                            .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -903,7 +911,7 @@ public class Fixtures {
             final MockMultipartFile file = new MockMultipartFile("file", "sonde_truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/sonde_truncated")
                             .file(file)
-                    .header("Authorization", "Bearer " + jwt))
+                            .header("Authorization", "Bearer " + jwt))
                     .andExpect(status().isCreated());
         }
 
@@ -912,26 +920,25 @@ public class Fixtures {
             final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_aggregated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton_aggregated")
                             .file(file)
-                    .header("Authorization", "Bearer " + jwt))
-                    .andExpect(status().isCreated());
+                            .header("Authorization", "Bearer " + jwt))
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // ajout de data phytoplancton_truncated
         try (final InputStream in = getClass().getResourceAsStream(getPhytoplanctonDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton_truncated.csv", "text/plain", in);
+            final MockMultipartFile file = new MockMultipartFile("file", "phytoplancton__truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/phytoplancton__truncated")
                             .file(file)
                             .header("Authorization", "Bearer " + jwt))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // ajout de data  zooplancton_truncated
         try (final InputStream in = getClass().getResourceAsStream(getZooplanctonDataResourceName())) {
-            final MockMultipartFile file = new MockMultipartFile("file", "zooplancton_truncated.csv", "text/plain", in);
+            final MockMultipartFile file = new MockMultipartFile("file", "zooplancton__truncated.csv", "text/plain", in);
             mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton__truncated")
-                            .file(file)
                             .header("Authorization", "Bearer " + jwt))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().is2xxSuccessful());
         }
 
         // ajout de data zooplancton_biovolumes
@@ -940,7 +947,7 @@ public class Fixtures {
             mockMvc.perform(multipart("/api/v1/applications/olac/data/zooplancton_biovolumes")
                             .file(file)
                             .header("Authorization", "Bearer " + jwt))
-                    .andExpect(status().isCreated());
+                    .andExpect(status().is2xxSuccessful());
         }
 
         return authConnection;

@@ -2,6 +2,8 @@ package fr.inra.oresing.domain.data.deposit.recursion;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import fr.inra.oresing.domain.application.configuration.ComponentDescription;
 import fr.inra.oresing.domain.application.configuration.Ltree;
 import fr.inra.oresing.domain.application.configuration.checker.ReferenceChecker;
@@ -12,72 +14,32 @@ import fr.inra.oresing.domain.data.DataColumn;
 import fr.inra.oresing.domain.data.DataColumnValue;
 import fr.inra.oresing.domain.data.DataDatum;
 import fr.inra.oresing.domain.data.DataValue;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import fr.inra.oresing.domain.data.deposit.storage.KeysAndReferenceDatumAfterChecking;
 import fr.inra.oresing.domain.data.deposit.validation.transformer.data.ReferenceDatumAfterChecking;
 import fr.inra.oresing.rest.exceptions.ExceptionMessage;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public record WithRecursion(
-        DataImporterContext dataImporterContext,
-        Map<DataValue.LineIdentityColumnName, Ltree> parentReferenceMap) implements RecursionStrategy {
+        AsynchroneFileImporterContext dataImporterContext,
+        ConcurrentHashMap<DataValue.LineIdentityColumnName, Ltree> parentReferenceMap) implements RecursionStrategy {
     /**
      * When we have the hierarchical key, we can recover the natural key as the leaf of the ltree.
      * In this case you must remove the reference to the data type "[^\\.][a-z][a-z]*K"
      */
-    public WithRecursion(final DataImporterContext dataImporterContext) {
-        this(dataImporterContext, new HashMap<>());
+    public WithRecursion(final AsynchroneFileImporterContext dataImporterContext) {
+        this(dataImporterContext, new ConcurrentHashMap<>());
     }
 
-    public static Function<Ltree, Ltree> toNaturalKey(String dataname) {
-        return nk -> Ltree.fromSql("%sK%s".formatted(dataname, nk.getSql()));
-    }
-
-    /*
-         to construct the natural key we concatenate the values of the key columns.
-         - if the column is a repository type column, its value is an ltree. We take the last element of this ltree as part of the key
-         - otherwise we escape the value
-         - date values receive special treatment
-      */
-    @Override
-    public Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        UnaryOperator<String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
-        Function<DataColumn, String> toEscapedValueFromColumnRegardingColumnIsReferenceType = dataColumn -> getEscapedValueFromColumnRegardingColumnIsReferenceType(dataColumn, referenceDatumAfterChecking.referenceDatumAfterChecking());
-        String naturalKey = dataImporterContext().getNaturalKeyColumns().stream()
-                .map(DataColumn::new)
-                .map(toEscapedValueFromColumnRegardingColumnIsReferenceType)
-                .map(nullOrEmptyToNull)
-                .collect(Collectors.joining(DataImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
-        Preconditions.checkState(!naturalKey.isEmpty(),
-                ExceptionMessage.NULL_NATURAL_KEY.toMessage(),
-                referenceDatumAfterChecking.lineNumber(),
-                String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
-        return Ltree.fromSql(naturalKey);
-    }
-
-    String getEscapedValueFromColumnRegardingColumnIsReferenceType(DataColumn dataColumn, DataDatum referenceDatum) {
-        boolean isReferenceColumn = dataImporterContext().getLineCheckers().stream()
-                .filter(lineChecker -> lineChecker.target().equals(dataColumn))
-                .map(LineChecker::underlyingType)
-                .anyMatch(ReferenceType.class::isInstance);
-        String dataValue = referenceDatum.get(dataColumn).toJsonForDatabase().toString();
-        if (Strings.isNullOrEmpty(dataValue)) {
-            return "";
-        }
-        if (isReferenceColumn) {
-            return Ltree.fromSql(dataValue).last().getSql();
-        } else {
-            return Ltree.fromUnescapedString(dataValue).getSql();
-        }
-    }
 
     @Override
     public Ltree getHierarchicalKey(final Ltree naturalKey, final DataDatum referenceDatum, ReferenceDatumAfterChecking referenceDatumAfterChecking) {
-        Optional<DataValue.LineIdentityColumnName> registerId = dataImporterContext().getAfterPreloadReferenceUuids().keySet()
+        Optional<DataValue.LineIdentityColumnName> registerId = dataImporterContext().afterPreloadReferenceUuids().keySet()
                 .stream()
                 .filter(lineIdentityColumnName -> lineIdentityColumnName.naturalKey().equals(naturalKey))
                 .findFirst();
@@ -85,25 +47,25 @@ public record WithRecursion(
             return registerId.get().hierarchicalKey();
         }
         String parentType = dataImporterContext()
-                .getDataDescription()
-                .findParentDescription(dataImporterContext().getRefType())
+                .contextConstants().dataConfiguration()
+                .findParentDescription(dataImporterContext().contextConstants().refType())
                 .map(ComponentDescription::checker)
                 .map(ReferenceChecker.class::cast)
                 .map(ReferenceChecker::refType)
                 .orElse(null);
         Optional<Ltree> parentValue = dataImporterContext()
-                .getDataDescription()
-                .findParentDescription(dataImporterContext().getRefType())
+                .contextConstants().dataConfiguration()
+                .findParentDescription(dataImporterContext().contextConstants().refType())
                 .map(ComponentDescription::componentKey)
                 .map(DataColumn::new)
                 .map(referenceDatumAfterChecking.referenceDatumAfterChecking()::get)
                 .map(DataColumnValue::toJsonForDatabase)
                 .map(Object::toString)
                 .map(Ltree::fromSql)
-                .map(toNaturalKey(parentType));
+                .map(RecursionStrategy.toNaturalKey(parentType));
         Ltree parentRecursiveValue =
                 dataImporterContext()
-                        .getDataDescription().componentDescriptions().values()
+                        .contextConstants().dataConfiguration().componentDescriptions().values()
                         .stream()
                         .map(ComponentDescription::checker)
                         .filter(ReferenceChecker.class::isInstance)
@@ -130,7 +92,45 @@ public record WithRecursion(
     }
 
     private Ltree recursiveNodeHierarchicalKey(final Ltree naturalKey) {
-        return Ltree.fromSql("%sK%s".formatted(dataImporterContext().getRefType(), naturalKey));
+        return Ltree.fromSql("%sK%s".formatted(dataImporterContext().contextConstants().refType(), naturalKey));
+    }
+
+    /*
+         to construct the natural key we concatenate the values of the key columns.
+         - if the column is a repository type column, its value is an ltree. We take the last element of this ltree as part of the key
+         - otherwise we escape the value
+         - date values receive special treatment
+      */
+    @Override
+    public Ltree computeNaturalKey(ReferenceDatumAfterChecking referenceDatumAfterChecking) {
+        UnaryOperator<String> nullOrEmptyToNull = partialKey -> Strings.isNullOrEmpty(partialKey) ? Ltree.NULL_KEY : partialKey;
+        Function<DataColumn, String> toEscapedValueFromColumnRegardingColumnIsReferenceType = dataColumn -> getEscapedValueFromColumnRegardingColumnIsReferenceType(dataColumn, referenceDatumAfterChecking.referenceDatumAfterChecking());
+        String naturalKey = dataImporterContext().getNaturalKeyColumns().stream()
+                .map(DataColumn::new)
+                .map(toEscapedValueFromColumnRegardingColumnIsReferenceType)
+                .map(nullOrEmptyToNull)
+                .collect(Collectors.joining(AsynchroneFileImporterContext.COMPOSITE_NATURAL_KEY_COMPONENTS_SEPARATOR));
+        Preconditions.checkState(!naturalKey.isEmpty(),
+                ExceptionMessage.NULL_NATURAL_KEY.toMessage(),
+                referenceDatumAfterChecking.lineNumber(),
+                String.join(" - ", dataImporterContext().getNaturalKeyColumnsImportHeaders()));
+        return Ltree.fromSql(naturalKey);
+    }
+
+    String getEscapedValueFromColumnRegardingColumnIsReferenceType(DataColumn dataColumn, DataDatum referenceDatum) {
+        boolean isReferenceColumn = dataImporterContext().lineCheckers().stream()
+                .filter(lineChecker -> lineChecker.target().equals(dataColumn))
+                .map(LineChecker::underlyingType)
+                .anyMatch(ReferenceType.class::isInstance);
+        String dataValue = referenceDatum.get(dataColumn).toJsonForDatabase().toString();
+        if (Strings.isNullOrEmpty(dataValue)) {
+            return "";
+        }
+        if (isReferenceColumn) {
+            return Ltree.fromSql(dataValue).last().getSql();
+        } else {
+            return Ltree.fromUnescapedString(dataValue).getSql();
+        }
     }
 
     @Override
@@ -142,9 +142,43 @@ public record WithRecursion(
         Optional<UUID> knownId = dataImporterContext().getKnownId(keys.naturalKey(), keys.patternColumnName());
         DataValue.LineIdentityColumnName key = new DataValue.LineIdentityColumnName(keys.naturalKey(), keys.hierarchicalKey(), keys.patternColumnName());
         if (knownId.isEmpty()) {
-            dataImporterContext().getAfterPreloadReferenceUuids().put(key, UUID.randomUUID());
+            dataImporterContext().afterPreloadReferenceUuids().put(key, UUID.randomUUID());
             dataImporterContext().getKnownId(keys.naturalKey(), keys.patternColumnName());
         }
         return List.of(referenceDatumAfterChecking);
+    }
+
+    @Override
+    public void addKnownIdToReferenceValues(DataValue.LineIdentityColumnName key, UUID uuid) {
+        Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValuesForSelfType = getReferenceValuesForSelfType();
+        Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = new HashMap<>(referenceValuesForSelfType);
+        if (!referenceValues.containsKey(key)) {
+            referenceValues.put(key, ImmutableSet.of(uuid));
+            addReferenceValuesForSelfType(key, ImmutableSet.of(uuid));
+        }
+        for (LineChecker lineChecker : dataImporterContext().transformedLineCheckers()) {
+            if (lineChecker.checkerDescription() instanceof ReferenceChecker referenceChecker && referenceChecker.refType().equals(dataImporterContext().contextConstants().refType())) {
+                ReferenceType fieldType = (ReferenceType) lineChecker.fieldTypeForOne();
+                fieldType.setReferenceValues(ImmutableMap.copyOf(referenceValues));
+            }
+        }
+    }
+
+    @Override
+    public Map<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> getReferenceValuesForSelfType() {
+        return dataImporterContext().afterPreloadReferenceUuids().entrySet()
+                .stream().collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        entry -> ImmutableSet.of(entry.getValue())
+                ));
+    }
+
+    @Override
+    public void addReferenceValuesForSelfType(DataValue.LineIdentityColumnName key, ImmutableSet<UUID> uuids) {
+        uuids.stream()
+                .findFirst()
+                .ifPresent(uuid ->
+                        dataImporterContext().afterPreloadReferenceUuids().put(key, uuid)
+                );
     }
 }

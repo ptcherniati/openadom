@@ -135,7 +135,8 @@
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "tr_zone_etude_zet",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "zet_computed_key"
       },
       "zet_nom_en" : {
         "type" : "BasicComponent",
@@ -597,7 +598,8 @@
         "submissionAuthorizationScope" : null,
         "hidden" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "tax_propriete_taxon"
       }
     },
     "submission" : null,
@@ -643,7 +645,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "smp_qc"
       },
       "smp::smp_sd" : {
         "type" : "PatternComponentAdjacents",
@@ -667,7 +670,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "smp_sd"
       },
       "dat_date_heure" : {
         "type" : "ComputedComponent",
@@ -703,7 +707,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "dat_date_heure"
       },
       "dat_heure" : {
         "type" : "BasicComponent",
@@ -747,7 +752,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "smp_profondeur"
       },
       "smp::smp_repetition" : {
         "type" : "PatternComponentQualifiers",
@@ -771,7 +777,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "smp_repetition"
       },
       "dat_start_date" : {
         "type" : "ConstantComponent",
@@ -795,7 +802,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "dat_start_date"
       },
       "swc::swc_qc" : {
         "type" : "PatternComponentAdjacents",
@@ -819,7 +827,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "swc_qc"
       },
       "swc::swc_sd" : {
         "type" : "PatternComponentAdjacents",
@@ -843,7 +852,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "swc_sd"
       },
       "dat_type_site" : {
         "type" : "ConstantComponent",
@@ -871,7 +881,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "dat_type_site"
       },
       "dat_end_date" : {
         "type" : "ConstantComponent",
@@ -895,7 +906,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "dat_end_date"
       },
       "swc::swc_repetition" : {
         "type" : "PatternComponentQualifiers",
@@ -919,7 +931,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "swc_repetition"
       },
       "smp" : {
         "type" : "PatternComponent",
@@ -964,7 +977,8 @@
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null
+            "chartDescription" : null,
+            "importHeader" : "smp_profondeur"
           },
           "smp_repetition" : {
             "type" : "PatternComponentQualifiers",
@@ -988,7 +1002,8 @@
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null
+            "chartDescription" : null,
+            "importHeader" : "smp_repetition"
           }
         },
         "patternComponentAdjacents" : {
@@ -1014,7 +1029,8 @@
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null
+            "chartDescription" : null,
+            "importHeader" : "smp_sd"
           },
           "smp_qc" : {
             "type" : "PatternComponentAdjacents",
@@ -1038,14 +1054,16 @@
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null
+            "chartDescription" : null,
+            "importHeader" : "smp_qc"
           }
         },
         "submissionAuthorizationScope" : null,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "smp"
       },
       "dat_date" : {
         "type" : "BasicComponent",
@@ -1091,7 +1109,8 @@
         "hidden" : false,
         "reference" : true,
         "referenceCheckerType" : "tr_zone_etude_zet",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "dat_site"
       },
       "swc::swc_profondeur" : {
         "type" : "PatternComponentQualifiers",
@@ -1115,7 +1134,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "swc_profondeur"
       },
       "swc" : {
         "type" : "PatternComponent",
@@ -1160,7 +1180,8 @@
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null
+            "chartDescription" : null,
+            "importHeader" : "swc_profondeur"
           },
           "swc_repetition" : {
             "type" : "PatternComponentQualifiers",
@@ -1184,7 +1205,8 @@
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null
+            "chartDescription" : null,
+            "importHeader" : "swc_repetition"
           }
         },
         "patternComponentAdjacents" : {
@@ -1210,7 +1232,8 @@
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null
+            "chartDescription" : null,
+            "importHeader" : "swc_sd"
           },
           "swc_qc" : {
             "type" : "PatternComponentAdjacents",
@@ -1234,14 +1257,16 @@
             "hidden" : false,
             "reference" : false,
             "referenceCheckerType" : "StringChecker",
-            "chartDescription" : null
+            "chartDescription" : null,
+            "importHeader" : "swc_qc"
           }
         },
         "submissionAuthorizationScope" : null,
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "swc"
       }
     },
     "submission" : {
@@ -1683,7 +1708,8 @@
         "hidden" : false,
         "reference" : false,
         "referenceCheckerType" : "StringChecker",
-        "chartDescription" : null
+        "chartDescription" : null,
+        "importHeader" : "spe_date_heure"
       },
       "spe_repetition" : {
         "type" : "BasicComponent",

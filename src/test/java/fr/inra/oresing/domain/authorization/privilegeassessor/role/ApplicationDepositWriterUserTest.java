@@ -37,13 +37,13 @@ class ApplicationDepositWriterUserTest {
     @Mock
     private static AuthorizationParsed authorizationParsed;
     @Mock
-    private Application mockApplication;
-    @Mock
     private static Configuration mockConfiguration;
     @Mock
     private static StandardDataDescription mockStandardDataDescription;
     @Mock
     private static Submission.SubmissionScope mockSubmissionScope;
+    @Mock
+    private Application mockApplication;
     @Mock
     private FileOrUUID mockFileOrUUID;
 

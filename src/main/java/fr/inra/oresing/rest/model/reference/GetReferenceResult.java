@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import fr.inra.oresing.domain.checker.type.FieldType;
 import fr.inra.oresing.domain.data.LinkedLines;
-import fr.inra.oresing.domain.data.RefsLinkedToValue;
 import lombok.Value;
 
 import java.util.Map;

@@ -42,7 +42,7 @@ class ConfigurationTest {
                           "componentkey" : "third",
                           "defaultvalue" : null,
                           "tags" : [ {
-                            "tagdefinition" : "NO_TAG",
+                            "tagDefinition" : "NO_TAG",
                             "tagname" : "no_tag"
                           } ],
                           "importheader" : "3",
@@ -64,7 +64,7 @@ class ConfigurationTest {
                           "componentkey" : "first",
                           "defaultvalue" : null,
                           "tags" : [ {
-                            "tagdefinition" : "NO_TAG",
+                            "tagDefinition" : "NO_TAG",
                             "tagname" : "no_tag"
                           } ],
                           "importheader" : "1",
@@ -86,7 +86,7 @@ class ConfigurationTest {
                           "componentkey" : "second",
                           "defaultvalue" : null,
                           "tags" : [ {
-                            "tagdefinition" : "NO_TAG",
+                            "tagDefinition" : "NO_TAG",
                             "tagname" : "no_tag"
                           } ],
                           "importheader" : "2",

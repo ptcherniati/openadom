@@ -2,7 +2,7 @@ package fr.inra.oresing.domain.data;
 
 import fr.inra.oresing.domain.checker.Multiplicity;
 import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.data.deposit.context.DataImporterContext;
+import fr.inra.oresing.domain.data.deposit.context.AsynchroneFileImporterContext;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -37,7 +37,7 @@ public record DataColumnDisplayValue(
     }
 
     @Override
-    public String toValueString(final DataImporterContext referenceImporterContext, final String referencedColumn, final String key) {
+    public String toValueString(final AsynchroneFileImporterContext referenceImporterContext, final String referencedColumn, final String key) {
         return null;
     }
 

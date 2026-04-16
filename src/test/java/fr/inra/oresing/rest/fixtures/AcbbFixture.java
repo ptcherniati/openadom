@@ -28,7 +28,6 @@ import java.util.stream.Stream;
 import static fr.inra.oresing.rest.Fixtures.testZip;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.request;
@@ -228,9 +227,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
 
         {
             final String actualJson = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/biomasse_production_teneur/json")
-                            
-                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
-                        
+
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+
                             .accept(MediaType.APPLICATION_JSON))
                     .andExpect(status().is2xxSuccessful())
                     .andReturn().getResponse().getContentAsString();
@@ -239,9 +238,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
 
         {
             mockMvc.perform(asyncDispatch(mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/biomasse_production_teneur/zip")
-                                    
-                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
-                        
+
+                                    .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+
                                     .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                             .andExpect(request().asyncStarted())
                             .andExpect(status().is2xxSuccessful())
@@ -291,9 +290,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         {
 //            String expectedJson = Resources.toString(getClass().getResource("/data/acbb_openadom_v2/compare/export.json"), StandardCharsets.UTF_8);
             mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/json")
-                            
-                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
-                        
+
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+
                             .accept(MediaType.APPLICATION_JSON))
                     .andDo(result -> {
                         final int status = result.getResponse().getStatus();
@@ -311,9 +310,9 @@ public record AcbbFixture(Fixtures fixtures, MockMvc mockMvc) {
         // restitution de data csv
         {
             final MvcResult mvcResult = mockMvc.perform(get("/api/v1/applications/acbb_openadom_v2/data/t_flux_tours_flx/zip")
-                            
-                                .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
-                        
+
+                            .header("Authorization", "Bearer " + fixtures.adminConnection.jwt())
+
                             .accept(MediaType.APPLICATION_OCTET_STREAM_VALUE))
                     .andExpect(request().asyncStarted())
                     .andExpect(status().isOk())

@@ -1,8 +1,11 @@
-image: maven:3-eclipse-temurin-17
+image: maven:3.9.11-amazoncorretto-25
 
 variables:
-  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Defines the location of the analysis task cache
-  GIT_DEPTH: "0"  # Tells git to fetch all the branches of the project, required by the analysis task
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"  # Emplacement du cache de l'analyse Sonar
+  GIT_DEPTH: "0"  # Récupère toutes les branches (requis par l'analyse Sonar)
+  SONAR_HOST_URL: "https://sonarqube.dev.gissol.fr"
+  MAVEN_OPTS: "-Djava.awt.headless=true -Dmaven.repo.local=./.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end --show-version"
 
 stages:
   - sonarqube-check
@@ -10,10 +13,22 @@ stages:
 
 sonarqube-check:
   stage: sonarqube-check
-  
   script:
-    - mvn verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+    # Phase 1 : compilation + tests unitaires (sans docker-required, DinD non disponible ici)
+    - mvn ${MAVEN_CLI_OPTS} test
+      -DexcludedGroups=docker-required
+    # Phase 2 : analyse Sonar (réutilise le rapport Jacoco généré)
+    - mvn ${MAVEN_CLI_OPTS} sonar:sonar
+      -DskipTests
+      -Dsonar.host.url=${SONAR_HOST_URL}
+      -Dsonar.token=${SONAR_TOKEN}
+      -Dsonar.qualitygate.wait=true
   allow_failure: true
+  cache:
+    key: "${CI_COMMIT_REF_SLUG}-sonar"
+    paths:
+      - .sonar/cache
+      - .m2/repository/
   rules:
     - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
     - if: $CI_COMMIT_BRANCH == 'master'

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 public interface BinaryFileRepository {
     List<ReferencedBinaryFiles> getReferencedBinaryFiles(String referenceType, Set<UUID> binaryfileIds);

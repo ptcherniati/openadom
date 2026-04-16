@@ -1,16 +1,23 @@
 package fr.inra.oresing.rest.security;
 
+import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.rest.authentication.evaluator.ApplicationPermissionEvaluator;
 import fr.inra.oresing.rest.services.AuthorizationService;
+import io.micrometer.common.KeyValue;
+import io.micrometer.common.KeyValues;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.server.observation.DefaultServerRequestObservationConvention;
+import org.springframework.http.server.observation.ServerRequestObservationContext;
+import org.springframework.http.server.observation.ServerRequestObservationConvention;
 import org.springframework.security.access.PermissionEvaluator;
 import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
 import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
@@ -19,14 +26,21 @@ import org.springframework.security.web.context.RequestAttributeSecurityContextR
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.servlet.HandlerMapping;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Configuration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     public static final String ACTUATOR = "/actuator";
+    public static final String ADMIN = "/api/admin";
+    public static final String POOLS = "/api/pools";
+    public static final String UPLOAD = "/api/upload";
+    public static final String STATUS = "/api/status";
     public static final String SWAGGER_UI = "/swagger-ui";
     public static final String API_DOCS = "/api-docs";
     public static final String API_PUBLIC = "/api/public";
@@ -78,6 +92,10 @@ public class SecurityConfig {
                                 .requestMatchers(
                                         BASE,
                                         API_V_1_LOGOUT,
+                                        UPLOAD,
+                                        ADMIN,
+                                        POOLS,
+                                        STATUS,
                                         ALL.formatted(ACTUATOR),
                                         ALL.formatted(SWAGGER_UI),
                                         ALL.formatted(API_DOCS),
@@ -113,5 +131,47 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
 
         return source;
+    }
+
+    @Bean
+    public ServerRequestObservationConvention serverRequestObservationConvention(JWTExtractor jwtExtractor) {
+        return new DefaultServerRequestObservationConvention() {
+            @Override
+            public KeyValues getLowCardinalityKeyValues(ServerRequestObservationContext context) {
+                KeyValues keyValues = super.getLowCardinalityKeyValues(context);
+
+                // User ID Tag from JWT
+                String userId = "none";
+                HttpServletRequest request = context.getCarrier();
+                String token = jwtExtractor.extractJwtCookie(request);
+                if (token != null) {
+                    try {
+                        OreSiUserRequestClient user = jwtExtractor.getRequestClientFromJwt(token);
+                        if (user != null && user.id() != null) {
+                            userId = user.id().toString();
+                        }
+                    } catch (Exception e) {
+                        // Ignore exceptions, userId will remain "none"
+                    }
+                }
+
+                // Path Variables Tags
+                Map<String, String> pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+                if (pathVariables == null) {
+                    pathVariables = Collections.emptyMap();
+                }
+                String appName = pathVariables.getOrDefault("nameOrId", "none");
+                String dataType = pathVariables.get("dataType");
+                if (dataType == null) {
+                    dataType = pathVariables.getOrDefault("dataName", "none");
+                }
+
+                return keyValues.and(
+                    KeyValue.of("user_id", userId),
+                    KeyValue.of("app_name", appName),
+                    KeyValue.of("data_type", dataType)
+                );
+            }
+        };
     }
 }

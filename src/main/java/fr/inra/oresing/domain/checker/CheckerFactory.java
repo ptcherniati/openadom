@@ -26,10 +26,10 @@ public class CheckerFactory {
         this.dataRepository = dataRepository;
     }
 
-    public ImmutableSet<LineChecker<FieldType<?>>> getCheckers(final Application application, final String dataName, final PublishContext.PublishContextBuilder publishContextBuilder) {
+    public ImmutableSet<LineChecker<? extends FieldType<?>>> getCheckers(final Application application, final String dataName, final PublishContext.PublishContextBuilder publishContextBuilder) {
         SiOreIllegalArgumentException.testExistsData(application, dataName);
         final StandardDataDescription dataDescription = application.getConfiguration().dataDescription().get(dataName);
-        final ImmutableSet.Builder<LineChecker<FieldType<?>>> checkers = ImmutableSet.builder();
+        final ImmutableSet.Builder<LineChecker<? extends FieldType<?>>> checkers = ImmutableSet.builder();
         for (final Map.Entry<String, ComponentDescription> variableEntry : dataDescription.componentDescriptions().entrySet()) {
             final ComponentDescription componentDescription = variableEntry.getValue();
             if (componentDescription.checker() != null) {

@@ -7,12 +7,13 @@
     <artifactId>si-ore-ng</artifactId>
     <version>1.0.1</version>
     <packaging>jar</packaging>
-
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.0</version>
+        <version>4.0.0</version>
+        <relativePath/>
     </parent>
+
 
     <name>si-ore-ng</name>
     <description>SI ORE NG</description>
@@ -55,6 +56,24 @@
         <developerConnection>scm:git:git@forge.inrae.fr:anaee-dev/openadom/backend.git</developerConnection>
         <url>https://forge.inrae.fr/anaee-dev/openadom/backend</url>
     </scm>
+    <repositories>
+        <repository>
+            <id>gitlab-processor--maven</id>
+            <url>https://forge.inrae.fr/api/v4/projects/${env.CI_PROCESSOR_PROJECT_ID}/packages/maven</url>
+        </repository>
+    </repositories>
+
+    <distributionManagement>
+        <repository>
+            <id>gitlab-maven</id>
+            <url>https://forge.inrae.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+        </repository>
+        <snapshotRepository>
+            <id>gitlab-maven</id>
+            <url>https://forge.inrae.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
+        </snapshotRepository>
+    </distributionManagement>
+
 
     <properties>
 
@@ -66,13 +85,13 @@
         <!-- Java Version -->
         <java.version>25</java.version>
 
+        <env.CI_PROCESSOR_PROJECT_ID>19085</env.CI_PROCESSOR_PROJECT_ID>
         <jwt.version>0.12.6</jwt.version>
         <flyway.version>11.7.2</flyway.version>
         <flyway.database.version>10.16.0</flyway.database.version>
         <flyway-spring-test.version>10.0.0</flyway-spring-test.version>
-        <springdoc-openapi-starter-webmvc-ui.version>2.8.9</springdoc-openapi-starter-webmvc-ui.version>
+        <springdoc-openapi-starter-webmvc-ui.version>3.0.0</springdoc-openapi-starter-webmvc-ui.version>
         <common-csv.version>1.14.0</common-csv.version>
-        <!--<commons-io.version>2.19.0</commons-io.version>-->
         <guava.version>33.4.8-jre</guava.version>
         <opencsv.version>5.11.1</opencsv.version>
         <bcrypt.version>0.10.2</bcrypt.version>
@@ -82,21 +101,38 @@
         <groovy.version-jsr223>3.0.25</groovy.version-jsr223>
 
         <!--sonar-->
+        <sonar.host.url>https://sonarqube.dev.gissol.fr</sonar.host.url>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.language>java</sonar.language>
         <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
         <sonar.projectName>openADOM-backend</sonar.projectName>
-        <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
+        <!-- false par défaut : l'analyse ne bloque pas le build localement.
+             Le CI override explicitement avec -Dsonar.qualitygate.wait=true -->
+        <sonar.qualitygate.wait>false</sonar.qualitygate.wait>
+        <sonar.java.source>${java.version}</sonar.java.source>
+        <sonar.java.enablePreview>true</sonar.java.enablePreview>
 
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
 
-        <!-- for lombock with java23+ -->
-        <maven.compiler.proc>full</maven.compiler.proc>
+        <!-- Groupes de tests exclus par défaut. Surcharger avec -Dsurefire.excludedGroups=
+             pour inclure les tests Docker (ex: sonar-local.sh avec l'option with-docker-tests). -->
+        <surefire.excludedGroups>docker-required</surefire.excludedGroups>
 
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>2.0.2</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>
@@ -127,11 +163,40 @@
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>${springdoc-openapi-starter-webmvc-ui.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.vaadin.external.google</groupId>
+                    <artifactId>android-json</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.javers</groupId>
+            <artifactId>javers-core</artifactId>
+            <version>7.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jeasy</groupId>
+            <artifactId>easy-rules-core</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jeasy</groupId>
+            <artifactId>easy-rules-support</artifactId>
+            <version>4.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
+        <!--dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
@@ -139,19 +204,31 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.42</version>
-            <optional>true</optional>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.vaadin.external.google</groupId>
+                    <artifactId>android-json</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
+
         <!-- ******************************************************* -->
         <!-- new dependencies-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-docker-compose</artifactId>
+            <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
         <!-- ******************************************************* -->
@@ -236,18 +313,17 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-core</artifactId>
         </dependency>
-
-        <!-- Testcontainers 2.0.3 pour support Docker 29 -->
         <dependency>
             <groupId>org.testcontainers</groupId>
-            <artifactId>testcontainers</artifactId>
-            <version>2.0.3</version>
+            <artifactId>testcontainers-postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.junit.platform</groupId>
-            <artifactId>junit-platform-suite-engine</artifactId>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
         </dependency>
+
 
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
@@ -285,6 +361,17 @@
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-afterburner</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>net.javacrumbs.json-unit</groupId>
+            <artifactId>json-unit-assertj</artifactId>
+            <version>3.2.7</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>fr.inra.oresing</groupId>
+            <artifactId>file-processor</artifactId>
+            <version>1.0.0</version>
         </dependency>
 
     </dependencies>
@@ -357,6 +444,12 @@
                     <release>${java.version}</release>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
@@ -404,7 +497,9 @@
                     <argLine>
                         @{argLine}
                         -javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"
+
                     </argLine>
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                 </configuration>
             </plugin>
             <plugin>
@@ -413,6 +508,44 @@
                 <configuration>
                     <ignoredVersions>.*-M.*,.*-alpha.*,.*-beta.*</ignoredVersions>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>cz.habarta.typescript-generator</groupId>
+                <artifactId>typescript-generator-maven-plugin</artifactId>
+                <version>3.2.1263</version>
+                <executions>
+                    <execution>
+                        <id>generate-backend-types</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <phase>compile</phase>
+                        <configuration>
+                            <jsonLibrary>jackson2</jsonLibrary>
+                            <outputKind>module</outputKind>
+                            <outputFileType>implementationFile</outputFileType>
+                            <classes>
+                                <class>fr.inra.oresing.rest.model.application.ApplicationResult</class>
+                                <class>fr.inra.oresing.rest.model.rightsrequest.GetAdditionalFilesResult</class>
+                                <class>fr.inra.oresing.rest.model.authorization.GetAuthorizationResult</class>
+                                <class>fr.inra.oresing.rest.model.authorization.LoginAdminResult</class>
+                                <class>fr.inra.oresing.domain.OreSiUser</class>
+                                <class>fr.inra.oresing.rest.model.authorization.CreateAdditionalFileAuthorizationRequest</class>
+                                <class>fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery</class>
+                                <class>fr.inra.oresing.rest.model.data.BinaryFileResult</class>
+                                <class>fr.inra.oresing.rest.CreateUserResult</class>
+                                <class>fr.inra.oresing.rest.CreateUserRequest</class>
+                                <class>fr.inra.oresing.domain.data.deposit.validation.ValidationCheckResultRest</class>
+                                <class>fr.inra.oresing.domain.application.configuration.Tag</class>
+                            </classes>
+                            <customTypeMappings>
+                                <mapping>java.util.Locale:string</mapping>
+                            </customTypeMappings>
+                            <outputFile>${project.basedir}/../frontend/src/types/generated/generated-backend-types-module.ts
+                            </outputFile>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
@@ -439,16 +572,6 @@
                     <url>https://forge.inrae.fr/api/v4/projects/${env.CI_PROJECT_ID}/packages/maven</url>
                 </snapshotRepository>
             </distributionManagement>
-            <dependencyManagement>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.projectlombok</groupId>
-                        <artifactId>lombok</artifactId>
-                        <version>1.18.42</version>
-                        <scope>provided</scope>
-                    </dependency>
-                </dependencies>
-            </dependencyManagement>
             <build>
                 <plugins>
                     <plugin>
@@ -479,6 +602,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -499,6 +624,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -519,6 +646,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -539,6 +668,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -559,6 +690,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -579,6 +712,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -599,6 +734,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -619,6 +756,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -639,6 +778,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -658,6 +799,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -677,6 +820,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -696,6 +841,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -715,6 +862,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -734,6 +883,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -753,6 +904,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -772,11 +925,35 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
             </build>
         </profile>
+        <!-- Profil pour les tests use-cases -->
+        <profile>
+            <id>use-cases</id>
+            <properties>
+                <junit.jupiter.tags>use-cases</junit.jupiter.tags>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>${maven-surefire-plugin.version}</version>
+                        <configuration>
+                            <groups>${junit.jupiter.tags}</groups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <profile>
             <id>no-tags</id>
             <build>
@@ -786,13 +963,20 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <!--
+                              Exclure tous les groupes connus pour ne garder que les tests sans tag.
+                              docker-required est géré séparément via ${surefire.excludedGroups}
+                              (défaut: docker-required ; vide en CI Docker pour tout inclure).
+                            -->
                             <excludedGroups>
                                 SUITE,core.basic,core.config,core.auth,
                                 domain.model,domain.checker,domain.i18n,
                                 integration.rest,integration.persistence,
                                 app.monsoere,app.haute_frequence,app.acbb,
-                                app.olac,app.foret,app.pattern,app.recursivity,app.teledetection
+                                app.olac,app.foret,app.pattern,app.recursivity,app.teledetection,
+                                use-cases,
+                                ${surefire.excludedGroups}
                             </excludedGroups>
                         </configuration>
                     </plugin>

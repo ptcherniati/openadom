@@ -10,9 +10,9 @@ import java.util.zip.ZipOutputStream;
 
 public final class ZipUtils {
     public static void zipDirectory(Path sourceDir, Path zipFile) throws IOException {
-        try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipFile))) {
-            Files.walk(sourceDir)
-                    .filter(path -> !Files.isDirectory(path))
+        try (ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipFile));
+             java.util.stream.Stream<Path> walk = Files.walk(sourceDir)) {
+            walk.filter(path -> !Files.isDirectory(path))
                     .forEach(path -> {
                         ZipEntry zipEntry = new ZipEntry(sourceDir.relativize(path).toString().replace("\\", "/"));
                         try (InputStream is = Files.newInputStream(path)) {

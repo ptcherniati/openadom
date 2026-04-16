@@ -40,7 +40,7 @@ public class ReactiveProgression {
             fluxSink().complete();
         }
 
-        default void pushMessage(final String subLabel, final Map<String, String> params) {
+        default void pushMessage(final String subLabel, final Map<String, Object> params) {
             fluxSink().next(new ReactiveTypeInfo(progressionMessagesLabel().withSubLabel(subLabel).label(), params));
         }
 

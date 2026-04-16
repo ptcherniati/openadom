@@ -21,15 +21,6 @@ class DatePatternTest {
     public static final String DATE = "12/01/1925";
     public static final String TIME = "12:23:56";
     public static final String DATETIME = "12/01/1925 12:23:56";
-
-
-    record PatternArgument(
-            String pattern,
-            String dateTotest,
-            Class<? extends TemporalAccessor> type,
-            TypeOfDate typeOfDate) {
-    }
-
     public static Stream<PatternArgument> patternArguments =
             Stream.of(
                     new PatternArgument(
@@ -108,7 +99,7 @@ class DatePatternTest {
                                 }
                         ),
                         DynamicTest.dynamicTest("end of month", () -> {
-                                    final LocalDate date = (LocalDate) DatePattern.of(MM_YYYY).format("02/2014",true);
+                                    final LocalDate date = (LocalDate) DatePattern.of(MM_YYYY).format("02/2014", true);
                                     Assertions.assertEquals(LocalDate.of(2014, 2, 28), date);
                                 }
                         ),
@@ -118,7 +109,7 @@ class DatePatternTest {
                                 }
                         ),
                         DynamicTest.dynamicTest("end of tear", () -> {
-                                    final LocalDate date = (LocalDate) DatePattern.of(YYYY).format("2014",true);
+                                    final LocalDate date = (LocalDate) DatePattern.of(YYYY).format("2014", true);
                                     Assertions.assertEquals(LocalDate.of(2014, 12, 31), date);
                                 }
                         )
@@ -161,6 +152,13 @@ class DatePatternTest {
         final LocalDateTime localDate = localTimeDatePattern.format(DATETIME);
         final String dateFormatted = localTimeDatePattern.formatter().format(Objects.requireNonNull(localDate));
         Assertions.assertEquals(DATETIME, dateFormatted);
+    }
+
+    record PatternArgument(
+            String pattern,
+            String dateTotest,
+            Class<? extends TemporalAccessor> type,
+            TypeOfDate typeOfDate) {
     }
 
 }

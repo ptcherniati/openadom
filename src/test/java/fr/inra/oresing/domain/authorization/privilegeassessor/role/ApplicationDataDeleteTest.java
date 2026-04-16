@@ -216,11 +216,11 @@ class ApplicationDataDeleteTest {
             boolean expectedCanDeposit) {
     }
 
-    private static record TestParameters(String implName, Supplier<ApplicationDataDelete> writer,
-                                         boolean expectedCanDelete,
-                                         boolean expectedCanPublish, boolean expectedCanDeposit) {
+    private record TestParameters(String implName, Supplier<ApplicationDataDelete> writer,
+                                  boolean expectedCanDelete,
+                                  boolean expectedCanPublish, boolean expectedCanDeposit) {
     }
 
-    private static record ParameterTest2(String description, Object instance, Class<?>[] expectedInterfaces) {
+    private record ParameterTest2(String description, Object instance, Class<?>[] expectedInterfaces) {
     }
 }

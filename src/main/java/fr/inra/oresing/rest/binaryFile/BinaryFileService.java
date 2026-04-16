@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest.binaryFile;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.BinaryFile;
@@ -12,7 +11,6 @@ import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.domain.data.deposit.validation.CsvRowValidationCheckResult;
 import fr.inra.oresing.domain.data.deposit.validation.DefaultValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.ReportErrors;
-import fr.inra.oresing.domain.exceptions.data.data.BadBinaryFileDatasetQuery;
 import fr.inra.oresing.domain.file.FileOrUUID;
 import fr.inra.oresing.domain.repository.data.DataRepository;
 import fr.inra.oresing.domain.repository.file.BinaryFileRepository;
@@ -25,7 +23,6 @@ import fr.inra.oresing.rest.model.additionalfiles.AdditionalBinaryFileResult;
 import fr.inra.oresing.rest.model.authorization.AuthorizationParsed;
 import fr.inra.oresing.rest.services.AuthorizationService;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,8 +39,6 @@ import java.util.stream.Collectors;
 
 public class BinaryFileService implements fr.inra.oresing.domain.services.file.BinaryFileService {
     private final OreSiRepository repository;
-
-    @Setter
     private final ServiceContainer serviceContainer;
     private final AuthenticationService authenticationService;
     private final JsonRowMapper<?> jsonRowMapper;
@@ -53,20 +48,6 @@ public class BinaryFileService implements fr.inra.oresing.domain.services.file.B
         this.serviceContainer = serviceContainer;
         this.authenticationService = authenticationService;
         this.jsonRowMapper = jsonRowMapper;
-    }
-
-
-    public static BinaryFileDataset deserialiseBinaryFileDatasetQuery(final String dataName, final String params) {
-        try {
-            final BinaryFileDataset binaryFileDataset = params != null ? new ObjectMapper().readValue(params, BinaryFileDataset.class) : null;
-            final Optional<BinaryFileDataset> binaryFileDatasetOpt = Optional.ofNullable(binaryFileDataset);
-            if (binaryFileDatasetOpt.map(BinaryFileDataset::getDatatype).isEmpty()) {
-                binaryFileDatasetOpt.ifPresent(binaryFileDataset1 -> binaryFileDataset1.setDatatype(dataName));
-            }
-            return binaryFileDataset;
-        } catch (final IOException e) {
-            throw new BadBinaryFileDatasetQuery(e.getMessage());
-        }
     }
 
     @Override

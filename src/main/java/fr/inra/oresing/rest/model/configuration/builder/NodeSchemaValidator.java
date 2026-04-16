@@ -69,6 +69,7 @@ public class NodeSchemaValidator {
         return testChildrenNodeSchema(parentSchema1, path, node, new AtomicBoolean(true));
     }
 
+    @SuppressWarnings("java:S3516") // retourne toujours null — les erreurs sont accumulées via rootBuilder (side-effect)
     private CheckerType testCheckerSection(JsonNode node, String path) {
         try {
             Optional.ofNullable(node)
@@ -280,6 +281,7 @@ public class NodeSchemaValidator {
     }
 
     @Nullable
+    @SuppressWarnings("java:S3516") // retourne toujours null — les erreurs sont accumulées via rootBuilder (side-effect)
     private ConfigurationSchemaNodeType<?> addErrorForExpectingValue(final String path, final CollectionType.ArrayType arrayType, final String childLabel) {
         if (arrayType.nullable() && !arrayType.required()) {
             return null;

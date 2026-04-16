@@ -2,10 +2,8 @@ package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.PolicyDescription;
 import fr.inra.oresing.domain.repository.authorization.role.*;
-import fr.inra.oresing.rest.model.authorization.AuthorizationsForUserResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -15,7 +13,6 @@ import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 @Slf4j
 @Component
 @Transactional()

@@ -28,3 +28,12 @@ mermaid-filter.err
 /documentations/openadom/_freeze/
 /htmlReport/
 /src/main/resources/.firstroles.sql
+# Fichiers créés par Docker en mode root
+src/main/resources/docker/prometheus/prometheus.yml
+
+# Fichiers de session WIP Sonar (non committables)
+.avancement_sonar_wip.md
+.sonar.issue.txt
+.sonar.cobertura.txt
+.failedTest.txt
+

@@ -7,10 +7,6 @@ import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.filesenderclient.FileSenderRepository;
 import fr.inra.oresing.rest.model.application.ApplicationResult;
 import fr.inra.oresing.rest.services.ServiceContainer;
-import jakarta.mail.MessagingException;
-import jakarta.mail.internet.MimeBodyPart;
-import jakarta.mail.internet.MimeMessage;
-import jakarta.mail.internet.MimeMultipart;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,8 +15,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.LocaleResolver;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.Locale;
 import java.util.Map;
 
@@ -126,27 +120,6 @@ public class EmailService implements Email {
         mailSender.send(mailMessage);
     }
 
-   /* @Override
-    public void sendEmailWithAttachment(final String login, final String to, final String subject, final String message, File attachment) throws IOException, MessagingException {
-        MimeMessage mailMessage = mailSender.createMimeMessage();
-
-
-        mailMessage.setFrom(mailFrom);
-        mailMessage.setSubject(subject);
-        mailMessage.setText(message);
-        if (attachment != null && attachment.exists()) {
-            MimeMultipart multipart = new MimeMultipart();
-            MimeBodyPart messageBodyPart = new MimeBodyPart();
-            messageBodyPart.setText(message);
-            multipart.addBodyPart(messageBodyPart);
-
-            MimeBodyPart attachmentPart = new MimeBodyPart();
-            attachmentPart.attachFile(attachment);
-            multipart.addBodyPart(attachmentPart);
-            mailMessage.setContent(multipart);
-        }
-        mailSender.send(mailMessage);
-    }*/
 
     @Override
     public void sendEmailValidation(final String login, final String email, final String verificationKey, final MESSAGES messages) {
@@ -209,7 +182,7 @@ public class EmailService implements Email {
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
         mailMessage.setFrom(OPENADOM_INRAE_FR);
-        final String subjectTemplate = Locale.ENGLISH.getLanguage().equals(locale) ? MSG_ERROR_SUBJECT_EN : MSG_ERROR_SUBJECT_FR;
+        final String subjectTemplate = Locale.ENGLISH.getLanguage().equals(locale.getLanguage()) ? MSG_ERROR_SUBJECT_EN : MSG_ERROR_SUBJECT_FR;
         mailMessage.setSubject(subjectTemplate.formatted(dataName, application));
         mailMessage.setText(body);
 

@@ -11,6 +11,7 @@ import fr.inra.oresing.domain.file.FileOrUUID;
 import lombok.Getter;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 
@@ -41,7 +42,7 @@ public record PublishContext(
         final Application application;
         @Getter
         final String dataName;
-        final Map<String, List<DataValue>> dataValuesByReference = new HashMap<>();
+        final ConcurrentHashMap<String, List<DataValue>> dataValuesByReference = new ConcurrentHashMap<>();
         private final Function<String, List<DataValue>> getDatavaluesByReference;
         List<List<String>> preHeaderRow;
         List<List<String>> postHeaderRow;

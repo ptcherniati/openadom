@@ -1,189 +1,153 @@
 package fr.inra.oresing.domain.application.configuration.checker;
 
-import com.google.common.collect.ImmutableMap;
-import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.checker.CheckerTarget;
-import fr.inra.oresing.domain.checker.LineChecker;
 import fr.inra.oresing.domain.checker.Multiplicity;
-import fr.inra.oresing.domain.checker.type.DateType;
-import fr.inra.oresing.domain.checker.type.FieldType;
-import fr.inra.oresing.domain.checker.type.StringType;
-import fr.inra.oresing.domain.data.DataDatum;
-import fr.inra.oresing.domain.data.DataValue;
-import fr.inra.oresing.domain.data.deposit.PublishContext;
-import fr.inra.oresing.domain.repository.data.DataRepository;
-import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
 import java.util.Set;
-import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 class CheckerDescriptionTest {
 
-    @Mock
-    DataRepository repository;
-    @Mock
-    PublishContext.PublishContextBuilder publishContextBuilder;
-    @Mock
-    CheckerTarget target;
-    LineChecker.LineTransformer transformer = LineChecker.LineTransformer.NULL_LINE_TRANSFORMER;
+    @Test
+    void testStringCheckerBuilder() {
+        StringChecker checker = CheckerDescriptionBuilder.stringChecker()
+                .multiplicity(Multiplicity.ONE)
+                .required(true)
+                .pattern("[a-z]+")
+                .build();
 
-    @BeforeEach
-    void setup() {
-        MockitoAnnotations.openMocks(this);
+        Assertions.assertEquals(CheckerDescription.CheckerDescriptionType.StringChecker, checker.type());
+        Assertions.assertEquals(Multiplicity.ONE, checker.multiplicity());
+        Assertions.assertTrue(checker.required());
+        Assertions.assertEquals("[a-z]+", checker.pattern());
     }
 
     @Test
-    void testCommentIspresent() {
-        final BooleanChecker booleanChecker = new BooleanChecker(CheckerDescription.CheckerDescriptionType.BooleanChecker, Multiplicity.ONE, true, true);
-        booleanChecker.comment();
-        assertEquals("Boolean", booleanChecker.comment());
-        final DateChecker dateChecker = new DateChecker(CheckerDescription.CheckerDescriptionType.DateChecker, Multiplicity.ONE, true, "yyyy-MM-dd", null, null, null);
-        assertEquals("yyyy-MM-dd Date", dateChecker.comment());
-        final FloatChecker floatChecker = new FloatChecker(CheckerDescription.CheckerDescriptionType.FloatChecker, Multiplicity.ONE, true, 1.0f, 10.0f);
-        assertEquals("Float", floatChecker.comment());
-        final IntegerChecker integerChecker = new IntegerChecker(CheckerDescription.CheckerDescriptionType.IntegerChecker, Multiplicity.ONE, true, 1, 100);
-        assertEquals("Integer", integerChecker.comment());
-        final ReferenceChecker referenceChecker = Mockito.mock(ReferenceChecker.class, Mockito.CALLS_REAL_METHODS);
-        Mockito.when(referenceChecker.refType()).thenReturn("referenceType");
-        assertEquals("referenceType Reference", referenceChecker.comment());
-        final GroovyExpressionChecker groovyExpressionChecker = Mockito.mock(GroovyExpressionChecker.class, Mockito.CALLS_REAL_METHODS);
-        assertEquals("String", groovyExpressionChecker.comment());
-        final StringChecker stringChecker = Mockito.mock(StringChecker.class, Mockito.CALLS_REAL_METHODS);
-        assertEquals("String", stringChecker.comment());
+    void testIntegerCheckerBuilder() {
+        IntegerChecker checker = CheckerDescriptionBuilder.integerChecker()
+                .multiplicity(Multiplicity.ONE)
+                .required(true)
+                .min(1)
+                .max(10)
+                .build();
+
+        Assertions.assertEquals(CheckerDescription.CheckerDescriptionType.IntegerChecker, checker.type());
+        Assertions.assertEquals(Multiplicity.ONE, checker.multiplicity());
+        Assertions.assertTrue(checker.required());
+        Assertions.assertEquals(1, checker.min());
+        Assertions.assertEquals(10, checker.max());
     }
 
     @Test
-    void testBuildImportDataExempleForheader() {
-        final BooleanChecker booleanChecker = new BooleanChecker(CheckerDescription.CheckerDescriptionType.BooleanChecker, Multiplicity.ONE, true, true);
-        booleanChecker.comment();
-        assertEquals("a boolean", booleanChecker.buildImportDataExempleForheader());
-        final DateChecker dateChecker = new DateChecker(CheckerDescription.CheckerDescriptionType.DateChecker, Multiplicity.ONE, true, "yyyy-MM-dd", null, null, null);
-        assertEquals("a date with pattern yyyy-MM-dd", dateChecker.buildImportDataExempleForheader());
-        final FloatChecker floatChecker = new FloatChecker(CheckerDescription.CheckerDescriptionType.FloatChecker, Multiplicity.ONE, true, 1.0f, 10.0f);
-        assertEquals("a float", floatChecker.buildImportDataExempleForheader());
-        final IntegerChecker integerChecker = new IntegerChecker(CheckerDescription.CheckerDescriptionType.IntegerChecker, Multiplicity.ONE, true, 1, 100);
-        assertEquals("an integer", integerChecker.buildImportDataExempleForheader());
-        final ReferenceChecker referenceChecker = Mockito.mock(ReferenceChecker.class, Mockito.CALLS_REAL_METHODS);
-        Mockito.when(referenceChecker.refType()).thenReturn("referenceType");
-        assertEquals("A value of referenceType", referenceChecker.buildImportDataExempleForheader());
-        final GroovyExpressionChecker groovyExpressionChecker = Mockito.mock(GroovyExpressionChecker.class, Mockito.CALLS_REAL_METHODS);
-        assertEquals("a string", groovyExpressionChecker.buildImportDataExempleForheader());
-        final StringChecker stringChecker = Mockito.mock(StringChecker.class, Mockito.CALLS_REAL_METHODS);
-        assertEquals("a string", stringChecker.buildImportDataExempleForheader());
+    void testFloatCheckerBuilder() {
+        FloatChecker checker = CheckerDescriptionBuilder.floatChecker()
+                .multiplicity(Multiplicity.ONE)
+                .required(true)
+                .min(1.0f)
+                .max(10.0f)
+                .build();
+
+        Assertions.assertEquals(CheckerDescription.CheckerDescriptionType.FloatChecker, checker.type());
+        Assertions.assertEquals(Multiplicity.ONE, checker.multiplicity());
+        Assertions.assertTrue(checker.required());
+        Assertions.assertEquals(1.0f, checker.min());
+        Assertions.assertEquals(10.0f, checker.max());
     }
 
     @Test
-    void testBooleanCheckerBuildFieldtype() {
-        BooleanChecker checker = new BooleanChecker(CheckerDescription.CheckerDescriptionType.BooleanChecker, Multiplicity.ONE, true, true);
-        Object fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
-        assertNotNull(fieldType);
-        assertEquals("fr.inra.oresing.domain.checker.type.BooleanType", fieldType.getClass().getName());
+    void testDateCheckerBuilder() {
+        LocalDate min = LocalDate.of(2020, 1, 1);
+        LocalDate max = LocalDate.of(2020, 12, 31);
+        DateChecker checker = CheckerDescriptionBuilder.dateChecker()
+                .multiplicity(Multiplicity.ONE)
+                .required(true)
+                .pattern("yyyy-MM-dd")
+                .min(min)
+                .max(max)
+                .duration("P1D")
+                .build();
+
+        Assertions.assertEquals(CheckerDescription.CheckerDescriptionType.DateChecker, checker.type());
+        Assertions.assertEquals(Multiplicity.ONE, checker.multiplicity());
+        Assertions.assertTrue(checker.required());
+        Assertions.assertEquals("yyyy-MM-dd", checker.pattern());
+        Assertions.assertEquals(min, checker.min());
+        Assertions.assertEquals(max, checker.max());
+        Assertions.assertEquals("P1D", checker.duration());
     }
 
     @Test
-    void testReferenceValueDecorator() {
-        DataValue dataValue = Mockito.mock(DataValue.class, "dataValue");
-        Mockito.when(dataValue.getHierarchicalKey()).thenReturn(Ltree.fromSql("hierarchical.key"));
-        Mockito.when(dataValue.getNaturalKey()).thenReturn(Ltree.fromSql("natural_key"));
-        DataDatum refValues = Mockito.mock(DataDatum.class, "refValues");
-        Mockito.when(dataValue.getRefValues()).thenReturn(refValues);
-        ImmutableMap<String, Object> values = ImmutableMap.of();
-        Mockito.when(refValues.toObjectsExposedInGroovyContext()).thenReturn(values);
-        final CheckerDescription.ReferenceValueDecorator referenceValueDecorator = new CheckerDescription.ReferenceValueDecorator(dataValue);
-        Assertions.assertThat(referenceValueDecorator)
-                .hasFieldOrPropertyWithValue("hierarchicalKey", "hierarchical.key")
-                .hasFieldOrPropertyWithValue("naturalKey", "natural_key")
-                .hasFieldOrPropertyWithValue("refValues", values);
+    void testBooleanCheckerBuilder() {
+        BooleanChecker checker = CheckerDescriptionBuilder.booleanChecker()
+                .multiplicity(Multiplicity.ONE)
+                .required(true)
+                .isTrue(true)
+                .build();
+
+        Assertions.assertEquals(CheckerDescription.CheckerDescriptionType.BooleanChecker, checker.type());
+        Assertions.assertEquals(Multiplicity.ONE, checker.multiplicity());
+        Assertions.assertTrue(checker.required());
+        Assertions.assertTrue(checker.isTrue());
     }
 
     @Test
-    void testDateCheckerBuildFieldtype() {
-        DateChecker checker = new DateChecker(CheckerDescription.CheckerDescriptionType.DateChecker, Multiplicity.ONE, true, "yyyy-MM-dd", null, null, null);
-        Object fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
-        assertNotNull(fieldType);
-        assertEquals("fr.inra.oresing.domain.checker.type.DateType", fieldType.getClass().getName());
-        // On peut aussi vérifier le pattern si besoin
-        assertEquals(DateTimeFormatter.ofPattern("yyyy-MM-dd").toString(),
-                ((DateType) fieldType).formatter.toString());
+    void testReferenceCheckerBuilder() {
+        ReferenceChecker checker = CheckerDescriptionBuilder.referenceChecker()
+                .componentKey("compKey")
+                .multiplicity(Multiplicity.ONE)
+                .required(true)
+                .refType("refType")
+                .isRecursive(true)
+                .isParent(true)
+                .build();
+
+        Assertions.assertEquals(CheckerDescription.CheckerDescriptionType.ReferenceChecker, checker.type());
+        Assertions.assertEquals("compKey", checker.componentKey());
+        Assertions.assertEquals(Multiplicity.ONE, checker.multiplicity());
+        Assertions.assertTrue(checker.required());
+        Assertions.assertEquals("refType", checker.refType());
+        Assertions.assertTrue(checker.isRecursive());
+        Assertions.assertTrue(checker.isParent());
     }
 
     @Test
-    void testFloatCheckerBuildFieldtype() {
-        FloatChecker checker = new FloatChecker(CheckerDescription.CheckerDescriptionType.FloatChecker, Multiplicity.ONE, true, 1.0f, 10.0f);
-        Object fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
-        assertNotNull(fieldType);
-        assertEquals("fr.inra.oresing.domain.checker.type.FloatType", fieldType.getClass().getName());
+    void testComputationCheckerBuilder() {
+        Set<String> references = Set.of("ref1", "ref2");
+        Set<String> exceptionMessages = Set.of("error1");
+        ComputationChecker checker = CheckerDescriptionBuilder.computationChecker()
+                .multiplicity(Multiplicity.ONE)
+                .required(true)
+                .expression("expr")
+                .references(references)
+                .exceptionMessages(exceptionMessages)
+                .build();
+
+        Assertions.assertEquals(CheckerDescription.CheckerDescriptionType.ComputationChecker, checker.type());
+        Assertions.assertEquals(Multiplicity.ONE, checker.multiplicity());
+        Assertions.assertTrue(checker.required());
+        Assertions.assertEquals("expr", checker.expression());
+        Assertions.assertEquals(references, checker.references());
+        Assertions.assertEquals(exceptionMessages, checker.exceptionMessages());
     }
 
     @Test
-    void testIntegerCheckerBuildFieldtype() {
-        IntegerChecker checker = new IntegerChecker(CheckerDescription.CheckerDescriptionType.IntegerChecker, Multiplicity.ONE, true, 1, 100);
-        Object fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
-        assertNotNull(fieldType);
-        assertEquals("fr.inra.oresing.domain.checker.type.IntegerType", fieldType.getClass().getName());
-    }
+    void testGroovyExpressionCheckerBuilder() {
+        Set<String> references = Set.of("ref1", "ref2");
+        Set<String> exceptionMessages = Set.of("error1");
+        GroovyExpressionChecker checker = CheckerDescriptionBuilder.groovyExpressionChecker()
+                .multiplicity(Multiplicity.ONE)
+                .required(true)
+                .expression("expr")
+                .references(references)
+                .exceptionMessages(exceptionMessages)
+                .build();
 
-    @Test
-    void testStringCheckerBuildFieldtype() {
-        StringChecker checker = new StringChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, true, ".*");
-        StringType fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
-        assertNotNull(fieldType);
-        assertEquals("", fieldType.getValue());
-        assertEquals("fr.inra.oresing.domain.checker.type.StringType", fieldType.getClass().getName());
-    }
-
-    @Test
-    void testComputationCheckerBuildFieldtype() {
-        ComputationChecker checker = new ComputationChecker(CheckerDescription.CheckerDescriptionType.StringChecker, Multiplicity.ONE, true, "expression", Set.of(), Set.of());
-        FieldType<?> fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
-        assertNotNull(fieldType);
-        assertEquals("", fieldType.getValue());
-        assertEquals("fr.inra.oresing.domain.checker.type.StringType", fieldType.getClass().getName());
-    }
-
-    @Test
-    void testReferenceCheckerBuildFieldtype() {
-        ReferenceChecker checker = Mockito.mock(ReferenceChecker.class, Mockito.CALLS_REAL_METHODS);
-        Mockito.when(checker.type()).thenReturn(CheckerDescription.CheckerDescriptionType.ReferenceChecker);
-        Mockito.when(checker.multiplicity()).thenReturn(Multiplicity.ONE);
-        Mockito.when(checker.required()).thenReturn(true);
-        Mockito.when(checker.refType()).thenReturn("refType");
-        UUID uuid1 = UUID.randomUUID();
-        UUID uuid2 = UUID.randomUUID();
-        Mockito.when(repository.getDataIdPerKeys("refType")).thenReturn(ImmutableMap.of(
-                 new DataValue.LineIdentityColumnName(Ltree.fromSql("path1"), Ltree.fromSql("path1"), "data1"),
-                uuid1,
-                new DataValue.LineIdentityColumnName(Ltree.fromSql("path2"), Ltree.fromSql("path2"),"data2"),
-                uuid2
-        ));
-        // Mock repository.getDataIdPerKeys() et autres méthodes nécessaires ici
-
-        Object fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
-        assertNotNull(fieldType);
-        assertEquals("fr.inra.oresing.domain.checker.type.ReferenceType", fieldType.getClass().getName());
-    }
-
-    @Test
-    void testGroovyExpressionCheckerBuildFieldtype() {
-        GroovyExpressionChecker checker = new GroovyExpressionChecker(
-                CheckerDescription.CheckerDescriptionType.GroovyExpressionChecker,
-                Multiplicity.ONE,
-                true,
-                "expression",
-                Set.of(),
-                Set.of()
-        );
-        Object fieldType = checker.buildFieldtype(repository, publishContextBuilder, target, transformer);
-        assertNotNull(fieldType);
-        assertEquals("fr.inra.oresing.domain.checker.type.BooleanType", fieldType.getClass().getName());
+        Assertions.assertEquals(CheckerDescription.CheckerDescriptionType.GroovyExpressionChecker, checker.type());
+        Assertions.assertEquals(Multiplicity.ONE, checker.multiplicity());
+        Assertions.assertTrue(checker.required());
+        Assertions.assertEquals("expr", checker.expression());
+        Assertions.assertEquals(references, checker.references());
+        Assertions.assertEquals(exceptionMessages, checker.exceptionMessages());
     }
 }

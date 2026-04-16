@@ -1,6 +1,7 @@
 package fr.inra.oresing;
 
 import fr.inra.oresing.persistence.flyway.MigrateService;
+import fr.inra.oresing.rest.JsonRequestParamArgumentResolver;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
@@ -10,6 +11,7 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.servers.Server;
 import lombok.extern.slf4j.Slf4j;
 import org.mockito.Mockito;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.actuate.info.InfoContributor;
@@ -26,7 +28,10 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.support.HandlerMethodArgumentResolver;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -36,7 +41,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.Executor;
 
 @Slf4j
 @EnableWebMvc
@@ -50,15 +57,29 @@ public class OreSiNg implements WebMvcConfigurer {
     private final MigrateService migrate;
     @Value("${allowed.origin}")
     private String allowedOrigin;
+    private final JsonRequestParamArgumentResolver jsonRequestParamArgumentResolver;
+    private final Executor normalServiceExecutor;
 
-    public OreSiNg(MigrateService migrate) {
+    public OreSiNg(MigrateService migrate,
+                   JsonRequestParamArgumentResolver jsonRequestParamArgumentResolver,
+                   @Qualifier("normalServiceExecutor") Executor normalServiceExecutor) {
         this.migrate = migrate;
+        this.jsonRequestParamArgumentResolver = jsonRequestParamArgumentResolver;
+        this.normalServiceExecutor = normalServiceExecutor;
     }
 
     public static void main(final String[] args) {
         SpringApplication.run(OreSiNg.class, args);
     }
 
+
+    // ✅ Implémenter ici directement
+    @Override
+    public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+        log.info("=== Adding JsonRequestParamArgumentResolver ===");
+        resolvers.addFirst(jsonRequestParamArgumentResolver);
+        log.info("=== Total resolvers: " + resolvers.size() + " ===");
+    }
     @Override
     public void addResourceHandlers(final ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/webjars/**").addResourceLocations("classpath:/META-INF/resources/webjars/");
@@ -68,6 +89,11 @@ public class OreSiNg implements WebMvcConfigurer {
                 .setCachePeriod(0)
                 .resourceChain(false)
                 .addResolver(new PathResourceResolver());
+    }
+
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        configurer.setTaskExecutor(new ConcurrentTaskExecutor(normalServiceExecutor));
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -116,15 +142,15 @@ public class OreSiNg implements WebMvcConfigurer {
 
         private Object buildGitInfo() {
             return new org.springframework.boot.actuate.info.Info.Builder()
-                    .withDetail("branch", gitProperties.get("git.branch"))
-                    .withDetail("commit.id", gitProperties.get("git.commit.id"))
-                    .withDetail("commit.abbrev", gitProperties.get("git.commit.id.abbrev"))
-                    .withDetail("time", gitProperties.get("git.commit.time"))
-                    .withDetail("remote.origin.url", gitProperties.get("git.remote.origin.url"))
-                    .withDetail("commit.user.name", gitProperties.get("git.commit.user.name"))
-                    .withDetail("commit.user.email", gitProperties.get("git.commit.user.email"))
-                    .withDetail("commit.message.short", gitProperties.get("git.commit.message.short"))
-                    .withDetail("commit.message.full", gitProperties.get("git.commit.message.full"))
+                    .withDetail("branch", Optional.ofNullable(gitProperties.get("git.branch")).orElse(""))
+                    .withDetail("commit.id", Optional.ofNullable(gitProperties.get("git.commit.id")).orElse(""))
+                    .withDetail("commit.abbrev", Optional.ofNullable(gitProperties.get("git.commit.id.abbrev")).orElse(""))
+                    .withDetail("time", Optional.ofNullable(gitProperties.get("git.commit.time")).orElse(""))
+                    .withDetail("remote.origin.url", Optional.ofNullable(gitProperties.get("git.remote.origin.url")).orElse(""))
+                    .withDetail("commit.user.name", Optional.ofNullable(gitProperties.get("git.commit.user.name")).orElse(""))
+                    .withDetail("commit.user.email", Optional.ofNullable(gitProperties.get("git.commit.user.email")).orElse(""))
+                    .withDetail("commit.message.short", Optional.ofNullable(gitProperties.get("git.commit.message.short")).orElse(""))
+                    .withDetail("commit.message.full", Optional.ofNullable(gitProperties.get("git.commit.message.full")).orElse(""))
                     .build();
         }
     }
@@ -165,7 +191,7 @@ public class OreSiNg implements WebMvcConfigurer {
 
         @Bean
         public FileRepository fileRepository() {
-            return fileInfos -> "mockedWebAddress";
+            return _ -> "mockedWebAddress";
         }
     }
 }

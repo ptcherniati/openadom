@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
-import java.time.format.ResolverStyle;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -299,7 +298,7 @@ public class LocalDateTimeRange {
         return "\"" + SQL_TIMESTAMP_DATE_TIME_FORMATTER.format(bound) + "\"";
     }
 
-    public static LocalDateTimeRange of(DatePattern datePattern, TemporalAccessor from, TemporalAccessor to) {
+    public static LocalDateTimeRange of(DatePattern<?> datePattern, TemporalAccessor from, TemporalAccessor to) {
         return switch (datePattern.typeOfDate()) {
             case DATE -> LocalDateTimeRange.between(((LocalDate) from).atStartOfDay(), ((LocalDate) to).atStartOfDay());
             case DATETIME -> LocalDateTimeRange.between(((LocalDateTime) from), ((LocalDateTime) to));
@@ -308,20 +307,14 @@ public class LocalDateTimeRange {
         };
     }
 
-    public static LocalDateTimeRange of(DatePattern datePattern, String from, String to) {
-        TemporalAccessor fromTemporal = null;
-        TemporalAccessor totemporal = null;
+    public static LocalDateTimeRange of(DatePattern<?> datePattern, String from, String to) {
         if (from == null || to == null) {
             return LocalDateTimeRange.always();
         }
-        if (from != null) {
-            from= datePattern.dateFromStandardFormat(from);
-            fromTemporal = datePattern.format(from);
-        }
-        if (to != null) {
-            to= datePattern.dateFromStandardFormat(to);
-            totemporal = datePattern.format(to, true);
-        }
+        from = datePattern.dateFromStandardFormat(from);
+        TemporalAccessor fromTemporal = datePattern.format(from);
+        to = datePattern.dateFromStandardFormat(to);
+        TemporalAccessor totemporal = datePattern.format(to, true);
         if (fromTemporal == null) {
             return switch (datePattern.typeOfDate()) {
                 case DATETIME -> LocalDateTimeRange.until((LocalDateTime) totemporal);

@@ -3,6 +3,7 @@ package fr.inra.oresing.rest.security;
 import fr.inra.oresing.OpenAdomJwtValue;
 import fr.inra.oresing.OreSiUserRequestClient;
 import fr.inra.oresing.domain.repository.authorization.role.OreSiUserRole;
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -10,33 +11,34 @@ import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
-@Slf4j
+@Component
 public class JWTExtractor {
     public static final String AUTHORIZATION = "Authorization";
     public static final String BEARER_ = "Bearer ";
     public static final String JWT_COOKIE_NAME = "si-ore-jwt";
     public static SecretKey key;
     public static int jwtExpiration;
-    private final JsonRowMapper<OreSiUserRequestClient> mapper;
-    private Function<UUID, OreSiUserRole> getUserRole;
+    private final JsonRowMapper<?> mapper;
+    private final Function<UUID, OreSiUserRole> getUserRole;
 
     public JWTExtractor(
-            Function<UUID, OreSiUserRole> getUserRole,
-            JsonRowMapper<OreSiUserRequestClient> mapper,
-            int jwtExpiration,
-            String jwtSecret) {
-        this.getUserRole = getUserRole;
+            AuthenticationService authenticationService,
+            JsonRowMapper<?> mapper,
+            @Value("${jwt.expiration:3600}") int jwtExpiration,
+            @Value("${jwt.secret:1234567890AZERTYUIOP}") String jwtSecret) {
+        this.getUserRole = authenticationService::getUserRole;
         this.mapper = mapper;
         final String secureEnoughJwtSecret = StringUtils.rightPad(jwtSecret, 32, '0');
         final byte[] keyBytes = secureEnoughJwtSecret.getBytes();
@@ -45,7 +47,7 @@ public class JWTExtractor {
     }
 
     public static void addJwtHeader(HttpServletResponse response, String jwt) {
-        response.setHeader(AUTHORIZATION, BEARER_ + jwt);
+        response.setHeader(AUTHORIZATION, jwt);
     }
 
     public static String buildToken(String json) {
@@ -87,9 +89,7 @@ public class JWTExtractor {
                     .getSubject();
         } catch (ExpiredJwtException ex) {
             throw new BadCredentialsException("expired JWT", ex);
-        } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
-            throw new BadCredentialsException("Invalid JWT", ex);
-        } catch (SignatureException ex) {
+        } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException | SignatureException ex) {
             throw new BadCredentialsException("Invalid JWT", ex);
         } catch (JwtException ex) {
             throw new AuthenticationCredentialsNotFoundException("Invalid JWT", ex);
@@ -98,25 +98,17 @@ public class JWTExtractor {
         return mapper.readValue(json, OpenAdomJwtValue.class).requestClient();
     }
 
-    public String refreshJwtInResponse(HttpServletResponse response, UUID id, boolean isSecureEnvironnement) {
+    public String refreshJwtInResponse(HttpServletResponse response, UUID id) {
         OreSiUserRole userRole = getUserRole.apply(id);
         OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(id, userRole);
         String json = mapper.toJson(new OpenAdomJwtValue(requestClient));
         String jwt = buildToken(json);
-        try {
-            addJwtHeader(response, jwt);
-        } catch (Exception e) {
-            log.trace("pas grave");
-        }
+        addJwtHeader(response, jwt);
         return jwt;
     }
 
-    public void setSetGetUserRole(Function<UUID, OreSiUserRole> getUserRole) {
-        this.getUserRole = getUserRole;
-    }
 
-
-    protected void clearSession(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) {
+    protected void clearSession(HttpServletRequest request, HttpServletResponse response) {
 
         // Invalider la session côté serveur
         request.getSession().invalidate();
