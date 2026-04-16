@@ -964,6 +964,11 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <!--
+                              Exclure tous les groupes connus pour ne garder que les tests sans tag.
+                              docker-required est géré séparément via ${surefire.excludedGroups}
+                              (défaut: docker-required ; vide en CI Docker pour tout inclure).
+                            -->
                             <excludedGroups>
                                 SUITE,core.basic,core.config,core.auth,
                                 domain.model,domain.checker,domain.i18n,
@@ -971,7 +976,7 @@
                                 app.monsoere,app.haute_frequence,app.acbb,
                                 app.olac,app.foret,app.pattern,app.recursivity,app.teledetection,
                                 use-cases,
-                                docker-required
+                                ${surefire.excludedGroups}
                             </excludedGroups>
                         </configuration>
                     </plugin>

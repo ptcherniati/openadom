@@ -12,12 +12,12 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     hikari:
-      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT}
-      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE}
-      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE}
-      idle-timeout: ${SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT}
-      max-lifetime: ${SPRING_DATASOURCE_HIKARI_MAX-LIFETIME}
-      auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO-COMMIT}
+      connection-timeout: ${SPRING_DATASOURCE_HIKARI_CONNECTION-TIMEOUT:30000}
+      minimum-idle: ${SPRING_DATASOURCE_HIKARI_MINIMUM-IDLE:2}
+      maximum-pool-size: ${SPRING_DATASOURCE_HIKARI_MAXIMUM-POOL-SIZE:10}
+      idle-timeout: ${SPRING_DATASOURCE_HIKARI_IDLE-TIMEOUT:600000}
+      max-lifetime: ${SPRING_DATASOURCE_HIKARI_MAX-LIFETIME:1800000}
+      auto-commit: ${SPRING_DATASOURCE_HIKARI_AUTO-COMMIT:true}
 
   flyway:
     locations: classpath:migration/main

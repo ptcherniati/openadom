@@ -3,8 +3,10 @@ image: docker:stable
 
 # Pour l'utilisation de testcontainers
 # https://www.testcontainers.org/supported_docker_environment/continuous_integration/gitlab_ci/
+# docker:26-dind → API Docker 1.45, compatible avec le client Testcontainers (API 1.44+)
+# Ancienne version : docker:23.0.1-dind (API max 1.42 → incompatible)
 services: &dind_definition
-  - name: docker:23.0.1-dind
+  - name: docker:26-dind
     alias: docker
     command: [ '--tls=false' ]
 
@@ -21,11 +23,10 @@ variables:
   DOCKER_HOST: tcp://docker:2375
   # Improve performance with overlayfs.
   DOCKER_DRIVER: overlay2
-  # Depuis la version 18.09, l'image docker dind génère un certificat TLS, et pour le bon fonctionnement des services, ce certificat doit être partagé par l'ensemble de ces derniers !
-  # Le lien ci-dessous explique la procédure à suivre au niveau des runners afin de partager le certificat généré sous forme d'un volume :
-  # https://about.gitlab.com/releases/2019/07/31/docker-in-docker-with-docker-19-dot-03/
-  # comme on n'a pas accès à la configuration des runners, on désactive explicitement la génération d'un certificat TLS
+  # Désactiver TLS : pas de certificat partagé dans cette config runner
   DOCKER_TLS_CERTDIR: ""
+  # Désactiver Ryuk (resource reaper) : pas de socket unix /var/run/docker.sock en DinD
+  TESTCONTAINERS_RYUK_DISABLED: "true"
 
 stages:
   - build
