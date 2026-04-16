@@ -87,6 +87,7 @@ import fr.inra.oresing.rest.usecases.storage.additionalfile.GetAdditionalFilesZi
 import fr.inra.oresing.rest.usecases.storage.binaryfile.*;
 import fr.inra.oresing.rest.usecases.storage.versioning.UnPublishVersionBeforeDeleteUseCase;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -205,7 +206,6 @@ public class OreSiResources {
     private final GetDataCsvStreamUseCase getDataCsvStreamUseCase;
     private final GetDataColumnUseCase getDataColumnUseCase;
     private final FindDataUseCase findDataUseCase;
-    private final FilterListUseCase filterListUseCase;
     private final GetCheckedFormatComponentsUseCase getCheckedFormatComponentsUseCase;
     private final DeleteDataUseCase deleteDataUseCase;
     private final GetApplicationsUseCase getApplicationsUseCase;
@@ -269,7 +269,6 @@ public class OreSiResources {
             GetFilesOnRepositoryUseCase getFilesOnRepositoryUseCase,
             GetReferencedBinaryFilesUseCase getReferencedBinaryFilesUseCase,
             FindDataUseCase findDataUseCase,
-            FilterListUseCase filterListUseCase,
             GetCheckedFormatComponentsUseCase getCheckedFormatComponentsUseCase,
             DeleteDataUseCase deleteDataUseCase,
             GetApplicationsUseCase getApplicationsUseCase,
@@ -324,7 +323,6 @@ public class OreSiResources {
         this.getFilesOnRepositoryUseCase = getFilesOnRepositoryUseCase;
         this.getReferencedBinaryFilesUseCase = getReferencedBinaryFilesUseCase;
         this.findDataUseCase = findDataUseCase;
-        this.filterListUseCase = filterListUseCase;
         this.getCheckedFormatComponentsUseCase = getCheckedFormatComponentsUseCase;
         this.deleteDataUseCase = deleteDataUseCase;
         this.getApplicationsUseCase = getApplicationsUseCase;
