@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest.usecases.application;
 
 import fr.inra.oresing.domain.application.ApplicationInformation;
-import fr.inra.oresing.rest.services.ApplicationService;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
+import fr.inra.oresing.rest.services.ApplicationService;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

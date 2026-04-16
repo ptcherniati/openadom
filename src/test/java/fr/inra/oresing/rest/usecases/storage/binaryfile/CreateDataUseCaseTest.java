@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest.usecases.storage.binaryfile;
 
 import fr.inra.oresing.domain.data.DataFile;
-import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.data.VersioningService;
+import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
@@ -14,8 +14,8 @@ import java.io.IOException;
 import java.util.Locale;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("use-cases")

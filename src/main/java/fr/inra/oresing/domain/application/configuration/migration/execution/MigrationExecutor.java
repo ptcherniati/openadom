@@ -1,11 +1,10 @@
 package fr.inra.oresing.domain.application.configuration.migration.execution;
 
+import fr.inra.oresing.domain.application.configuration.migration.action.MigrationAction;
 import fr.inra.oresing.domain.application.configuration.migration.context.MigrationContext;
 import fr.inra.oresing.domain.application.configuration.migration.plan.ActionPhase;
-import fr.inra.oresing.domain.application.configuration.migration.action.MigrationAction;
 import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationPlan;
 import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

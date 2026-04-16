@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.usecases.messaging;
 
-import fr.inra.oresing.mail.EmailService;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.mail.EmailService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

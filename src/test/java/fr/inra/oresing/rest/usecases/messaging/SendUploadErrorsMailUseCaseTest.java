@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.usecases.messaging;
 
-import fr.inra.oresing.mail.EmailService;
 import fr.inra.oresing.domain.OreSiUser;
+import fr.inra.oresing.mail.EmailService;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

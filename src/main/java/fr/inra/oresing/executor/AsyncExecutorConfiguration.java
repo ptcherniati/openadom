@@ -2,15 +2,14 @@ package fr.inra.oresing.executor;
 
 
 import io.micrometer.core.instrument.Metrics;
+import jakarta.annotation.Nonnull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 import org.springframework.aop.interceptor.AsyncUncaughtExceptionHandler;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskDecorator;
-import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.AsyncConfigurer;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -28,16 +27,21 @@ import java.util.concurrent.*;
 @EnableAsync
 public class AsyncExecutorConfiguration implements AsyncConfigurer {
 
+    private static final String LOG_UNCAUGHT_VT = "Uncaught exception in virtual thread [{}]: {}";
+
     private static final Logger log = LoggerFactory.getLogger(AsyncExecutorConfiguration.class);
 
-    @Autowired
-    private ExecutorProperties properties;
+    private final ExecutorProperties properties;
+
+    public AsyncExecutorConfiguration(ExecutorProperties properties) {
+        this.properties = properties;
+    }
 
     public static class ContextPropagatingTaskDecorator implements TaskDecorator {
 
-        @NonNull
+        @Nonnull
         @Override
-        public Runnable decorate(@NonNull Runnable runnable) {
+        public Runnable decorate(@Nonnull Runnable runnable) {
             SecurityContext securityContext = SecurityContextHolder.getContext();
             RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
             Map<String, String> mdcContext = MDC.getCopyOfContextMap();
@@ -86,7 +90,7 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
             executor.setThreadFactory(Thread.ofVirtual()
                     .name(config.getThreadNamePrefix(), 0)
                     .uncaughtExceptionHandler((t, e) ->
-                            log.error("Uncaught exception in virtual thread [{}]: {}", t.getName(), e.getMessage(), e))
+                            log.error(LOG_UNCAUGHT_VT, t.getName(), e.getMessage(), e))
                     .factory());
         }
 
@@ -121,7 +125,7 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
             executor.setThreadFactory(Thread.ofVirtual()
                     .name(config.getThreadNamePrefix(), 0)
                     .uncaughtExceptionHandler((t, e) ->
-                            log.error("Uncaught exception in virtual thread [{}]: {}", t.getName(), e.getMessage(), e))
+                            log.error(LOG_UNCAUGHT_VT, t.getName(), e.getMessage(), e))
                     .factory());
         }
 
@@ -156,7 +160,7 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
             executor.setThreadFactory(Thread.ofVirtual()
                     .name(config.getThreadNamePrefix(), 0)
                     .uncaughtExceptionHandler((t, e) ->
-                            log.error("Uncaught exception in virtual thread [{}]: {}", t.getName(), e.getMessage(), e))
+                            log.error(LOG_UNCAUGHT_VT, t.getName(), e.getMessage(), e))
                     .factory());
         }
 
@@ -191,7 +195,7 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
             executor.setThreadFactory(Thread.ofVirtual()
                     .name(config.getThreadNamePrefix(), 0)
                     .uncaughtExceptionHandler((t, e) ->
-                            log.error("Uncaught exception in virtual thread [{}]: {}", t.getName(), e.getMessage(), e))
+                            log.error(LOG_UNCAUGHT_VT, t.getName(), e.getMessage(), e))
                     .factory());
         }
 

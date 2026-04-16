@@ -1,10 +1,6 @@
 package fr.inra.oresing.domain.application.configuration;
 
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 public class StandardDataDescriptionBuilder {
 

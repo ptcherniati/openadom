@@ -21,8 +21,8 @@ import java.util.concurrent.ExecutorService;
 import static fr.inra.oresing.rest.services.NormalizedService.CANT_CREATE_DENORMALIZED_TABLE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @Tag("use-cases")

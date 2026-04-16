@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import fr.inra.oresing.persistence.JsonRowMapper;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.examples.Example;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import jakarta.annotation.PostConstruct;
@@ -17,10 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Component

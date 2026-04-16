@@ -7,8 +7,6 @@ import fr.inra.oresing.rest.data.VersioningService;
 import fr.inra.oresing.rest.data.publication.StoreFile;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Component
 public class GetStoreFileUseCase {
 

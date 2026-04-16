@@ -101,13 +101,14 @@ else
   echo "  📋 Phase 1/2 — Compilation + Tests (génération rapport Jacoco)"
   if [ -n "${EXCLUDED_GROUPS}" ]; then
     echo "  ⚙️  Groupes exclus : ${EXCLUDED_GROUPS}"
+  else
+    echo "  ⚙️  Tous les tests inclus (Docker + non-Docker)"
   fi
   echo "══════════════════════════════════════════════════════════════════════"
 
-  SUREFIRE_OPTS=()
-  if [ -n "${EXCLUDED_GROUPS}" ]; then
-    SUREFIRE_OPTS+=("-DexcludedGroups=${EXCLUDED_GROUPS}")
-  fi
+  # Passer la propriété Maven pour que tous les profils respectent l'exclusion.
+  # Avec -Dsurefire.excludedGroups="" les tests Docker sont inclus dans Jacoco.
+  SUREFIRE_OPTS=("-Dsurefire.excludedGroups=${EXCLUDED_GROUPS}")
 
   # On capture le code de retour sans quitter (pour lancer Sonar quand même)
   set +e

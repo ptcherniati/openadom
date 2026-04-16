@@ -200,6 +200,7 @@ public class OaImportWorkerService extends WorkerService {
      * @see SharedContext
      * @see HeaderContext
      */
+    @Override
     public CompletableFuture<List<ChunkInfo>> processChunksAsync(
             List<ChunkInfo> chunks,
             HeaderContext headerContext,
@@ -249,8 +250,7 @@ public class OaImportWorkerService extends WorkerService {
                         // 2. Mark workflow as FAILED in monitoring
                         // Check if it's an ErrorThresholdExceededException to include all error messages
                         Throwable cause = throwable.getCause();
-                        if (cause instanceof ErrorThresholdExceededException) {
-                            ErrorThresholdExceededException errorEx = (ErrorThresholdExceededException) cause;
+                        if (cause instanceof ErrorThresholdExceededException errorEx) {
                             lifecycleManager.markWorkflowAsFailed(correlationId, errorEx.getErrorMessages());
                             log.warn("⚠️ Workflow failed due to error threshold: {} errors collected",
                                     errorEx.getErrorCount());

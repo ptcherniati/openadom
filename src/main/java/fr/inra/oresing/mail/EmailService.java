@@ -120,27 +120,6 @@ public class EmailService implements Email {
         mailSender.send(mailMessage);
     }
 
-   /* @Override
-    public void sendEmailWithAttachment(final String login, final String to, final String subject, final String message, File attachment) throws IOException, MessagingException {
-        MimeMessage mailMessage = mailSender.createMimeMessage();
-
-
-        mailMessage.setFrom(mailFrom);
-        mailMessage.setSubject(subject);
-        mailMessage.setText(message);
-        if (attachment != null && attachment.exists()) {
-            MimeMultipart multipart = new MimeMultipart();
-            MimeBodyPart messageBodyPart = new MimeBodyPart();
-            messageBodyPart.setText(message);
-            multipart.addBodyPart(messageBodyPart);
-
-            MimeBodyPart attachmentPart = new MimeBodyPart();
-            attachmentPart.attachFile(attachment);
-            multipart.addBodyPart(attachmentPart);
-            mailMessage.setContent(multipart);
-        }
-        mailSender.send(mailMessage);
-    }*/
 
     @Override
     public void sendEmailValidation(final String login, final String email, final String verificationKey, final MESSAGES messages) {
@@ -203,7 +182,7 @@ public class EmailService implements Email {
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
         mailMessage.setFrom(OPENADOM_INRAE_FR);
-        final String subjectTemplate = Locale.ENGLISH.getLanguage().equals(locale) ? MSG_ERROR_SUBJECT_EN : MSG_ERROR_SUBJECT_FR;
+        final String subjectTemplate = Locale.ENGLISH.getLanguage().equals(locale.getLanguage()) ? MSG_ERROR_SUBJECT_EN : MSG_ERROR_SUBJECT_FR;
         mailMessage.setSubject(subjectTemplate.formatted(dataName, application));
         mailMessage.setText(body);
 

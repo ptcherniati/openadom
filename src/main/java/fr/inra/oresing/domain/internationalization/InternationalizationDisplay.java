@@ -87,7 +87,6 @@ public class InternationalizationDisplay {
 
     public static DataDatum getDisplaysDescription(final AsynchroneFileImporterContext dataImporterContext, final DataDatum refValues) {
         Optional<InternationalizationTitle> displayPattern = dataImporterContext.getDisplayPattern();
-        final String refType = dataImporterContext.contextConstants().refType();
         final DataDatum displaysDescription = new DataDatum();
         Locale defaultLanguage = Optional.ofNullable(dataImporterContext.contextConstants().application())
                 .map(Application::getConfiguration)

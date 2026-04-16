@@ -1,8 +1,8 @@
 package fr.inra.oresing.rest.usecases.application;
 
-import fr.inra.oresing.rest.services.ApplicationService;
 import fr.inra.oresing.domain.data.DataFile;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
+import fr.inra.oresing.rest.services.ApplicationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

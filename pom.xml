@@ -117,6 +117,10 @@
 
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
 
+        <!-- Groupes de tests exclus par défaut. Surcharger avec -Dsurefire.excludedGroups=
+             pour inclure les tests Docker (ex: sonar-local.sh avec l'option with-docker-tests). -->
+        <surefire.excludedGroups>docker-required</surefire.excludedGroups>
+
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -495,6 +499,7 @@
                         -javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"
 
                     </argLine>
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                 </configuration>
             </plugin>
             <plugin>
@@ -597,10 +602,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -621,10 +624,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -645,10 +646,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -669,10 +668,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -693,10 +690,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -717,10 +712,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -741,10 +734,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -765,10 +756,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -789,10 +778,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -812,10 +799,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -835,10 +820,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -858,10 +841,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -881,10 +862,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -904,10 +883,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -927,10 +904,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -950,10 +925,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -973,10 +946,8 @@
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
                             <groups>${junit.jupiter.tags}</groups>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
-                            <excludedGroups>
-                                docker-required
-                            </excludedGroups>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                            <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                         </configuration>
                     </plugin>
                 </plugins>
@@ -992,7 +963,7 @@
                         <artifactId>maven-surefire-plugin</artifactId>
                         <version>${maven-surefire-plugin.version}</version>
                         <configuration>
-                            <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                            <argLine>@{argLine} -XX:+EnableDynamicAgentLoading</argLine>
                             <excludedGroups>
                                 SUITE,core.basic,core.config,core.auth,
                                 domain.model,domain.checker,domain.i18n,

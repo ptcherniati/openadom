@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.usecases.storage.versioning;
 
-import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.data.VersioningService;
+import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 

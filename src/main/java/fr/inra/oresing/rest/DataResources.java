@@ -1,14 +1,8 @@
 package fr.inra.oresing.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import fr.inra.oresing.domain.application.Application;
-import fr.inra.oresing.domain.data.DataFile;
-import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
-import fr.inra.oresing.rest.exceptions.OreSiIOException;
 import fr.inra.oresing.rest.model.data.GetDataResult;
 import fr.inra.oresing.rest.model.data.query.DownloadDatasetQuery;
-import fr.inra.oresing.rest.usecases.application.GetApplicationUseCase;
-import fr.inra.oresing.rest.usecases.data.FindDataUseCase;
 import io.micrometer.core.annotation.Timed;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -20,9 +14,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URI;
 import java.util.List;
 import java.util.Map;
 

@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.usecases.storage.versioning;
 
-import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import fr.inra.oresing.rest.data.VersioningService;
+import fr.inra.oresing.rest.data.publication.DataVersioningResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;

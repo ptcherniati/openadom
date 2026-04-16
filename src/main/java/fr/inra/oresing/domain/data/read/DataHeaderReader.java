@@ -66,7 +66,6 @@ public record DataHeaderReader(
     private void readPreHeaders(final Iterator<CSVRecord> linesIterator) {
         final Map<String, ConstantComponent> constantComponents = dataDescription().getComponentByType(ConstantComponent.class);
         final int headerLine = dataDescription().headerLine();
-        final Integer firstRowLine = dataDescription().firstRowLine();
         final ImmutableSetMultimap<Integer, ConstantComponent> perRowNumberConstants = constantComponents.values().stream()
                 .filter(constantComponent -> constantComponent.constantImportHeader() instanceof FileColumnConstantHeader)
                 .collect(ImmutableSetMultimap.toImmutableSetMultimap(ConstantComponent::rowNumber, Function.identity()));

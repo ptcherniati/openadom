@@ -3,7 +3,10 @@ package fr.inra.oresing.rest.services;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Configuration;
 import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.domain.application.configuration.migration.change.*;
+import fr.inra.oresing.domain.application.configuration.migration.change.ConfigurationChange;
+import fr.inra.oresing.domain.application.configuration.migration.change.DataAdded;
+import fr.inra.oresing.domain.application.configuration.migration.change.IgnorableChange;
+import fr.inra.oresing.domain.application.configuration.migration.change.UnresolvableChange;
 import fr.inra.oresing.domain.application.configuration.migration.context.DataInfo;
 import fr.inra.oresing.domain.application.configuration.migration.context.FactKeys;
 import fr.inra.oresing.domain.application.configuration.migration.context.MigrationContext;
@@ -27,7 +30,10 @@ import org.jeasy.rules.api.Rules;
 import org.jeasy.rules.api.RulesEngine;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 
 @Service
 public class MigrationService {

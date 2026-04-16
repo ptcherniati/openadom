@@ -1,7 +1,7 @@
 package fr.inra.oresing.rest.usecases.data;
 
-import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
 import fr.inra.oresing.rest.data.DataService;
+import fr.inra.oresing.rest.filesenderclient.BuildBundleReport;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

@@ -248,7 +248,6 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
             @Override
             public void serialize(BinaryFileDataset value, JsonGenerator gen, SerializerProvider serializerProvider) throws IOException {
                 BinaryFileDataset binaryFileDataset = value.copy();
-                final String applicationName = OreSiApiRequestContext.getAuthenticationToken().getApplicationName();
                 final String dataName = OreSiApiRequestContext.getAuthenticationToken().getDataName();
                 final Application application = OreSiApiRequestContext.getAuthenticationToken().getApplicationPersona().application();
                 final DatePattern submissionDatePattern = application.findSubmissionDatePattern(dataName);

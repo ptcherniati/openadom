@@ -4,13 +4,11 @@ import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.fileprocessor.workflow.config.WorkflowProperties;
 import fr.inra.oresing.fileprocessor.workflow.control.orchestration.WorkflowChunkCleanupService;
 import fr.inra.oresing.fileprocessor.workflow.control.processing.ChunkerService;
-import fr.inra.oresing.fileprocessor.workflow.control.processing.LoaderService;
 import fr.inra.oresing.fileprocessor.workflow.control.processing.MergerService;
 import fr.inra.oresing.fileprocessor.workflow.control.processing.WorkerService;
 import fr.inra.oresing.fileprocessor.workflow.entity.context.HeaderContext;
 import fr.inra.oresing.fileprocessor.workflow.entity.context.SharedContext;
 import fr.inra.oresing.fileprocessor.workflow.entity.monitoring.WorkflowMonitoring;
-import fr.inra.oresing.persistence.DataRepository;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedReader;
@@ -30,33 +28,22 @@ public class WorkflowOrchestratorImport {
     private final WorkflowProperties workflowProperties;
     private final WorkerService workerService;
     private final MergerService mergerService;
-    private final LoaderService loaderService;
     private final WorkflowChunkCleanupService cleanupService;
     private final DataImporter dataImporter;
-    private final DataRepository referenceValueRepository;
-    private final String userId;
-    private final Path path;
 
     public WorkflowOrchestratorImport(
             ChunkerService chunkerService,
             WorkflowProperties workflowProperties,
             MergerService mergerService,
-            LoaderService loaderService,
             WorkerService workerService,
             WorkflowChunkCleanupService cleanupService,
-            DataImporter dataImporter, DataRepository referenceValueRepository,
-            String userId,
-            Path path
+            DataImporter dataImporter
     ) {
         this.workflowProperties = workflowProperties;
         this.dataImporter = dataImporter;
         this.workerService = workerService;
-        this.referenceValueRepository = referenceValueRepository;
-        this.userId = userId;
-        this.path = path;
         this.chunkerService = chunkerService;
         this.mergerService = mergerService;
-        this.loaderService = loaderService;
         this.cleanupService = cleanupService;
     }
 

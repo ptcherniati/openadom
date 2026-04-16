@@ -3,7 +3,6 @@ package fr.inra.oresing.rest.data.migration;
 import fr.inra.oresing.domain.application.configuration.internationalization.InternationalizationData;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
 import fr.inra.oresing.domain.application.configuration.migration.execution.MigrationExecutor;
-import fr.inra.oresing.persistence.ApplicationRepository;
 import fr.inra.oresing.persistence.OreSiRepository;
 import org.javers.core.Javers;
 import org.javers.core.JaversBuilder;
