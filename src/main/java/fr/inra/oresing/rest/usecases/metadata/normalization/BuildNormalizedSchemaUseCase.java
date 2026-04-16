@@ -32,16 +32,23 @@ public class BuildNormalizedSchemaUseCase {
     public String execute(String nameOrId) throws ExecutionException, InterruptedException {
         Application application = applicationService.getApplication(nameOrId);
         SecurityContext context = SecurityContextHolder.getContext();
-        return executorService
-                .submit(() -> {
-                    SecurityContextHolder.setContext(context);
-                    try {
-                        return normalizedService.buildNormalizedSchema(application, true);
-                    } catch (Exception e) {
-                        log.error("Error building normalized schema for application {}", nameOrId, e);
-                        return CANT_CREATE_DENORMALIZED_TABLE;
-                    }
-                })
-                .get();
+        try {
+            return executorService
+                    .submit(() -> {
+                        SecurityContextHolder.setContext(context);
+                        try {
+                            return normalizedService.buildNormalizedSchema(application, true);
+                        } catch (Exception e) {
+                            log.error("Error building normalized schema for application {}", nameOrId, e);
+                            return CANT_CREATE_DENORMALIZED_TABLE;
+                        } finally {
+                            SecurityContextHolder.clearContext();
+                        }
+                    })
+                    .get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
+        }
     }
 }

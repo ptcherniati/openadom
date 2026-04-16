@@ -1,60 +1,37 @@
 package fr.inra.oresing;
 
+import fr.inra.oresing.rest.services.AbstractIntegrationTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.testcontainers.containers.GenericContainer;
-import org.testcontainers.utility.DockerImageName;
 
 import javax.sql.DataSource;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
 
+/**
+ * Configuration de DataSource pour les tests qui ont besoin d'importer
+ * explicitement un bean DataSource (via {@code @Import(TestDatabaseConfig.class)}).
+ *
+ * <p>Cette classe réutilise le conteneur singleton géré par
+ * {@link AbstractIntegrationTest} – il ne crée <strong>pas</strong> un nouveau
+ * conteneur, évitant ainsi la prolifération des conteneurs non fermés.
+ *
+ * <p><strong>Note :</strong> la plupart des tests d'intégration héritent de
+ * {@link AbstractIntegrationTest} et n'ont pas besoin d'importer cette classe.
+ */
 @TestConfiguration
 public class TestDatabaseConfig {
 
     @Bean
     @Primary
     public DataSource dataSource() {
-        GenericContainer<?> postgres = new GenericContainer<>(DockerImageName.parse("postgres:18.0"))
-                .withExposedPorts(5432)
-                .withEnv("POSTGRES_DB", "test")
-                .withEnv("POSTGRES_USER", "postgres")
-                .withEnv("POSTGRES_PASSWORD", "postgres");
-
-        postgres.start();
-
-        // Récupérer l'URL JDBC
+        // Réutilise le conteneur déjà démarré par AbstractIntegrationTest
         String jdbcUrl = String.format(
-                "jdbc:postgresql://%s:%d/test",
-                postgres.getHost(),
-                postgres.getMappedPort(5432)
+                "jdbc:postgresql://%s:%d/test?preparedStatementCacheQueries=0",
+                AbstractIntegrationTest.postgres.getHost(),
+                AbstractIntegrationTest.postgres.getMappedPort(5432)
         );
 
-        // Initialiser la base de données avec le user postgres
-        DriverManagerDataSource initDataSource = new DriverManagerDataSource();
-        initDataSource.setDriverClassName("org.postgresql.Driver");
-        initDataSource.setUrl(jdbcUrl);
-        initDataSource.setUsername("postgres");
-        initDataSource.setPassword("postgres");
-        
-        // Exécuter le script d'initialisation
-        try (Connection conn = initDataSource.getConnection();
-             Statement stmt = conn.createStatement()) {
-            
-            String scriptPath = "src/test/resources/migration/openadom_user.sql";
-            String scriptContent = Files.readString(Paths.get(scriptPath), StandardCharsets.UTF_8);
-            stmt.execute(scriptContent);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize database user", e);
-        }
-
-        // Retourner un DataSource avec l'utilisateur openAdomTechUser
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setDriverClassName("org.postgresql.Driver");
         dataSource.setUrl(jdbcUrl);

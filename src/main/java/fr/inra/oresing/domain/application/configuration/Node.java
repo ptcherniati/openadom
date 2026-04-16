@@ -176,6 +176,9 @@ public record Node(
         if (compareOrder != 0) {
             return compareOrder;
         }
+        if (thisName == null && oName == null) return 0;
+        if (thisName == null) return -1;
+        if (oName == null) return 1;
         return thisName.compareTo(oName);
     }
 

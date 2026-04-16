@@ -5,7 +5,6 @@ import fr.inra.oresing.persistence.JsonRowMapper;
 import fr.inra.oresing.rest.filesenderclient.MessageInformations;
 import fr.inra.oresing.rest.reactive.ReactiveResult;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -36,9 +35,10 @@ public record BundleReport(List<ReactiveResult> results, Locale locale, String o
         final String json = new JsonRowMapper<BundleReport>().toJson(this);
         String html = htmlTemplate.formatted(json, application().getName(), origin(), "bundleReport");
 
-        File tempFile = new File(System.getProperty("java.io.tmpdir"), attachmentName());
-        Files.writeString(tempFile.toPath(), html, StandardCharsets.UTF_8);
-        return tempFile.toPath();
+        // Utilisation de Files.createTempFile pour éviter les collisions de noms (S5443)
+        Path tempFile = Files.createTempFile(application().getName() + "_bundleReport", ".html");
+        Files.writeString(tempFile, html, StandardCharsets.UTF_8);
+        return tempFile;
     }
 
 

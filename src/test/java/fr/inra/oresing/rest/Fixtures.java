@@ -639,9 +639,11 @@ public class Fixtures {
         OreSiUser user;
         try {
             user = authenticationService.getByIdOrLogin(createUser.login());
-            userResult = Optional.ofNullable(user)
-                    .map(CreateUserResult::of)
-                    .orElseThrow();
+            if (user != null) {
+                userResult = CreateUserResult.of(user);
+            } else {
+                userResult = createUserIfNotExists(createUser);
+            }
         } catch (final Exception e) {
             userResult = createUserIfNotExists(createUser);
 
@@ -665,8 +667,8 @@ public class Fixtures {
         if (mockMvc.perform(post("/api/v1/login")
                         .param("login", createUser.login())
                         .param("password", createUser.password()))
-                    .andReturn()
-                    .getResponse().getStatus() > 300) {
+                .andReturn()
+                .getResponse().getStatus() > 300) {
             return authenticationService.createUser(createUser.login(), createUser.password(), createUser.email());
         } else {
             OreSiUser userByLogin = userRepository.findByLogin(createUser.login()).orElse(null);
@@ -750,7 +752,7 @@ public class Fixtures {
             final List<ReactiveTypeError> errors = getErrors(mvcResult);
 
             Assertions.assertTrue(errors.isEmpty(),
-                    "Le chargement de l'application ne devrait pas contenir d'erreurs %s".formatted( errors.toString()));
+                    "Le chargement de l'application ne devrait pas contenir d'erreurs %s".formatted(errors.toString()));
 
             return mvcResult;
 

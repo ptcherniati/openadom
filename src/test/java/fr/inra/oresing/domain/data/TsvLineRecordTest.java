@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.Map;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 class TsvLineRecordTest {
     public static final String[] ORDERED_COLUMNS = new String[]{
             "id",
@@ -64,7 +66,7 @@ class TsvLineRecordTest {
                 map, ORDERED_COLUMNS, mapper
         );
         final String line = tsvLineRecord.line();
-        System.out.println(line);
+        assertNotNull(line, "La ligne TSV générée ne doit pas être null");
     }
 
 }

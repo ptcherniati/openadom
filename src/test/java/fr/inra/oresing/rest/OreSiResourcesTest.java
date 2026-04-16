@@ -853,6 +853,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
 
     @TestFactory
     @Tag("core.config")
+    @SuppressWarnings("java:S2699") // assertions dans les DynamicNode — non détectées par SonarQube
     public Stream<DynamicNode> testProgressiveYamlWithoutAuthorization() {
         ProgressiveFixture progressiveFixture = new ProgressiveFixture(fixtures, mockMvc);
         return Stream.of(
@@ -864,6 +865,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
 
     @TestFactory
     @Tag("core.config")
+    @SuppressWarnings("java:S2699") // assertions dans les DynamicNode — non détectées par SonarQube
     public Stream<DynamicNode> testProgressiveYamlWithEmptyDatagroup() {
         ProgressiveFixture progressiveFixture = new ProgressiveFixture(fixtures, mockMvc);
         return Stream.of(
@@ -891,6 +893,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
 
     @TestFactory
     @Tag("core.config")
+    @SuppressWarnings("java:S2699") // assertions dans les DynamicNode — non détectées par SonarQube
     public Stream<DynamicNode> testProgressiveYamlWithoutAuthorizationScope() {
         ProgressiveFixture progressiveFixture = new ProgressiveFixture(fixtures, mockMvc);
         return Stream.of(
@@ -902,6 +905,7 @@ public class OreSiResourcesTest extends AbstractIntegrationTest {
 
     @TestFactory
     @Tag("core.config")
+    @SuppressWarnings("java:S2699") // assertions dans les DynamicNode — non détectées par SonarQube
     public Stream<DynamicNode> testProgressiveYamlWithoutTimescopeScope() {
         ProgressiveFixture progressiveFixture = new ProgressiveFixture(fixtures, mockMvc);
         return Stream.of(

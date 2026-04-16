@@ -1,6 +1,8 @@
 package fr.inra.oresing.persistence;
 
 import fr.inra.oresing.domain.application.Application;
+import fr.inra.oresing.domain.application.configuration.migration.context.DataInfo;
+import fr.inra.oresing.domain.application.configuration.migration.context.SchemaInfo;
 import org.springframework.beans.factory.BeanFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -64,6 +66,14 @@ public class OreSiRepository {
 
         public RightsRequestRepository rightsRequestRepository() {
             return beanFactory.getBean(RightsRequestRepository.class, application);
+        }
+
+        public SchemaInfo getSchemaInfo() {
+            return null;
+        }
+
+        public DataInfo getDataInfo() {
+            return null;
         }
     }
 }

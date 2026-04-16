@@ -19,13 +19,14 @@ import fr.inra.oresing.domain.transformer.transformer.TransformationConfiguratio
 import org.apache.commons.lang3.NotImplementedException;
 
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.ManyChecker, LineChecker.OneChecker {
 
 
+    @SuppressWarnings({"unchecked", "rawtypes", "java:S3740"})
     static <L extends FieldType<?>> Set<LineChecker<L>> toLineChecker(
             DataRepository referenceValueRepository,
             PublishContext.PublishContextBuilder publishContextBuilder,
@@ -66,10 +67,11 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
         };
     }
 
+    @SuppressWarnings({"unchecked", "java:S3740"})
     default F underlyingType() {
         return (F) switch (this) {
-            case final ManyChecker manyChecker -> manyChecker.fieldTypeForOne;
-            case final OneChecker oneChecker -> oneChecker.fieldTypeForOne;
+            case final ManyChecker<?, ?> manyChecker -> manyChecker.fieldTypeForOne;
+            case final OneChecker<?> oneChecker -> oneChecker.fieldTypeForOne;
         };
     }
 
@@ -77,17 +79,17 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
 
     LineTransformer transformer();
 
-    CheckerValidationCheckResult check(String value);
+    CheckerValidationCheckResult<?> check(String value);
 
     CheckerDescription checkerDescription();
 
     F fieldTypeForOne();
 
-    default CheckerValidationCheckResult checkRequiredThenCheck(final StringType value) {
+    default CheckerValidationCheckResult<?> checkRequiredThenCheck(final StringType value) {
         return checkRequiredThenCheck(value.toString());
     }
 
-    default CheckerValidationCheckResult checkReference(final DataDatum referenceDatum, Map<String, Object> context) {
+    default CheckerValidationCheckResult<?> checkReference(final DataDatum referenceDatum, Map<String, Object> context) {
         final DataDatum transformedReferenceDatum = transformer().transform(referenceDatum, context);
         DataColumn column = target();
         FieldType<?> valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
@@ -97,12 +99,12 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                 .orElse(DefaultCheckerValidationCheckResult.error("i don't know", ImmutableMap.of(), null));
     }
 
-    default CheckerValidationCheckResult checkRequiredThenCheck(final String value) {
-        final CheckerValidationCheckResult validationCheckResult;
+    default CheckerValidationCheckResult<?> checkRequiredThenCheck(final String value) {
+        final CheckerValidationCheckResult<?> validationCheckResult;
         if (Strings.isNullOrEmpty(value)) {
             if (checkerDescription().required()) {
-                final CheckerTarget target = target();
-                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("component", ((DataColumn) target).column()), target);
+                final DataColumn target = (DataColumn) target();
+                validationCheckResult = DefaultCheckerValidationCheckResult.error(target.getInternationalizedKey("requiredValue"), ImmutableMap.of("component", target.column()), target);
             } else {
                 validationCheckResult = DefaultCheckerValidationCheckResult.success(target(), new StringType(value));
             }
@@ -112,7 +114,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
         return validationCheckResult;
     }
 
-    LineChecker copy();
+    LineChecker<?> copy();
 
     interface Transformer {
         DataDatum transform(DataDatum referenceDatum, Map<String, Object> context);
@@ -124,6 +126,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
             LineTransformer.TransformOneLineElementTransformer {
         NullLinetransformer NULL_LINE_TRANSFORMER = new NullLinetransformer();
 
+        @SuppressWarnings({"java:S1172", "unused"})
         static LineTransformer newTransformer(final DataRepository referenceValueRepository,
                                               final TransformationConfiguration configuration,
                                               final DataColumn target,
@@ -133,7 +136,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
             if (!configuration.expression().isEmpty()) {
                 final String expression = configuration.expression();
                 final Set<String> exceptionMessages = configuration.exceptionMessages();
-                final Expression groovyExpression;
+                final Expression<?> groovyExpression;
 
 
                 if (configuration instanceof GroovyExpressionChecker) {
@@ -161,7 +164,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
 
             @Override
             default DataDatum transform(final DataDatum referenceDatum, Map<String, Object> context) {
-                final DataColumnValue referenceColumnValue;
+                final DataColumnValue<?, ?> referenceColumnValue;
                 if (referenceDatum.contains(target())) {
                     referenceColumnValue = referenceDatum.get(target());
                 } else {
@@ -175,25 +178,27 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                     groovyExpressionOnOneLineElementTransformer.context.putAll(context);
                 }
 
-                final Function<FieldType<?>, FieldType<?>> fn = value -> transform(referenceDatum);
-                final DataColumnValue transformedReferenceColumnValue = referenceColumnValue.transform(fn);
+                final UnaryOperator<FieldType<?>> fn = _ -> transform(referenceDatum);
+                final DataColumnValue<?, ?> transformedReferenceColumnValue = referenceColumnValue.transform(fn);
                 final DataDatum transformedDatum = DataDatum.copyOf(referenceDatum);
                 transformedDatum.put(target(), transformedReferenceColumnValue);
                 return (this instanceof GroovyExpressionOnOneLineElementTransformer groovyExpressionOnOneLineElementTransformer) &&
                         groovyExpressionOnOneLineElementTransformer.multiplicity().equals(Multiplicity.ONE) ? referenceDatum : transformedDatum;
             }
 
+            @SuppressWarnings("java:S1452")
             FieldType<?> transform(SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext);
 
             record GroovyExpressionOnOneLineElementTransformer(
                     DataColumn target,
-                    Expression groovyExpression,
+                    Expression<?> groovyExpression,
                     Map<String, Object> context,
                     Multiplicity multiplicity,
                     Set<String> references
             ) implements TransformOneLineElementTransformer {
 
                 @Override
+                @SuppressWarnings({"unchecked", "java:S3740"})
                 public FieldType<?> transform(final SomethingThatCanProvideEvaluationContext somethingThatCanProvideEvaluationContext) {
                     ImmutableMap<String, Object> result = ImmutableMap.<String, Object>builder()
                             .putAll(Stream.of(
@@ -204,7 +209,7 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                                     .collect(Collectors.toMap(
                                             Map.Entry::getKey,
                                             Map.Entry::getValue,
-                                            (v1, v2) -> v2  // En cas de conflit, garder v2 (dernière valeur)
+                                            (_, v2) -> v2  // En cas de conflit, garder v2 (dernière valeur)
                                     )))
                             .build();
 
@@ -276,24 +281,21 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
             CheckerDescription checkerDescription
     ) implements LineChecker<F> {
 
+        @SuppressWarnings("unchecked")
         public ManyChecker(final U value, final DataColumn target, final LineTransformer transformer, final CheckerDescription checkerDescription) {
             this(value, Optional.ofNullable(value).map(ListType::getFieldType).orElse((F) new StringType("")), target, transformer, checkerDescription);
         }
 
-        public CheckerValidationCheckResult check(final String value) {
-            FieldType copiedFieldType = fieldTypeForOne().copy();
-            LineChecker copiedChecker = new ManyChecker(
-                    value(),
-                    copiedFieldType,  // ✅ Utiliser la copie du FieldType
-                    target(),
-                    transformer(),
-                    checkerDescription()
-            );
+        @SuppressWarnings({"unchecked", "java:S3740"})
+        public CheckerValidationCheckResult<?> check(final String value) {
+            F copiedFieldType = (F) fieldTypeForOne().copy();
+            ManyChecker<F, U> copiedChecker = new ManyChecker<>(value(), copiedFieldType, target(), transformer(), checkerDescription());
             return copiedFieldType.check(value, copiedChecker);
         }
 
         @Override
-        public CheckerValidationCheckResult checkReference(final DataDatum referenceDatum, Map<String, Object> context) {
+        @SuppressWarnings({"unchecked", "java:S3740"})
+        public CheckerValidationCheckResult<?> checkReference(final DataDatum referenceDatum, Map<String, Object> context) {
             final DataDatum transformedReferenceDatum = transformer().transform(referenceDatum, context);
             DataColumn column = target();
             FieldType<?> valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
@@ -302,10 +304,10 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                     .map(ListType.class::cast)
                     .map(ListType::getValue)
                     .map(list -> {
-                                final List<CheckerValidationCheckResult> validationCheckResults = (List<CheckerValidationCheckResult>) list.stream()
+                                final List<CheckerValidationCheckResult<?>> validationCheckResults = list.stream()
                                         .map(o -> checkRequiredThenCheck((StringType) o))
-                                        .collect(Collectors.toList());
-                                return (CheckerValidationCheckResult) new DefaultManyValidationCheckResult(validationCheckResults, column);
+                                        .toList();
+                                return (CheckerValidationCheckResult<?>) new DefaultManyValidationCheckResult(validationCheckResults, column);
                             }
                     )
                     .orElseGet(() -> DefaultCheckerValidationCheckResult.error("noValueToCheck", ImmutableMap.of(
@@ -314,14 +316,9 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
         }
 
         @Override
-        public LineChecker copy() {
-            return new ManyChecker(
-                    value(),
-                    fieldTypeForOne().copy(),  // ✅ Copier le FieldType !
-                    target(),
-                    transformer(),
-                    checkerDescription()
-            );
+        @SuppressWarnings({"unchecked", "java:S3740"})
+        public LineChecker<F> copy() {
+            return new ManyChecker<>(value(), (F) fieldTypeForOne().copy(), target(), transformer(), checkerDescription());
         }
 
     }
@@ -333,14 +330,15 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
             CheckerDescription checkerDescription
     ) implements LineChecker<F> {
 
-        public CheckerValidationCheckResult checkReference(final DataDatum referenceDatum, Map<String, Object> context) {
+        @Override
+        public CheckerValidationCheckResult<?> checkReference(final DataDatum referenceDatum, Map<String, Object> context) {
 
             if (checkerDescription() instanceof GroovyExpressionChecker) {
                 try {
                     DataDatum transformedReferenceDatum = transformer().transform(referenceDatum, context);
                     DataColumn column = target();
                     FieldType<?> valuesToCheck = transformedReferenceDatum.getValuesToCheck(column);
-                    return valuesToCheck instanceof PatternType patternType ?
+                    return valuesToCheck instanceof PatternType<?, ?> patternType ?
                             PatternValidationCheckResult.of(GroovyValidationCheckResult.success(target(), valuesToCheck), patternType)
                             : GroovyValidationCheckResult.success(target(), valuesToCheck);
                 } catch (GroovyException groovyException) {
@@ -357,23 +355,15 @@ public sealed interface LineChecker<F extends FieldType<?>> permits LineChecker.
                     .orElseThrow(() -> new NotImplementedException("I don't know"));
         }
 
-        public LineChecker copy() {
-            return new OneChecker(
-                    fieldTypeForOne().copy(),  // ✅ Copier le FieldType !
-                    target(),
-                    transformer(),
-                    checkerDescription()
-            );
+        @SuppressWarnings({"unchecked", "java:S3740"})
+        public LineChecker<F> copy() {
+            return new OneChecker<>((F) fieldTypeForOne().copy(), target(), transformer(), checkerDescription());
         }
 
-        public CheckerValidationCheckResult check(final String value) {
-            FieldType copiedFieldType = fieldTypeForOne().copy();
-            LineChecker copiedChecker = new OneChecker(
-                    copiedFieldType,
-                    target(),
-                    transformer(),
-                    checkerDescription()
-            );
+        @SuppressWarnings({"unchecked", "java:S3740"})
+        public CheckerValidationCheckResult<?> check(final String value) {
+            F copiedFieldType = (F) fieldTypeForOne().copy();
+            OneChecker<F> copiedChecker = new OneChecker<>(copiedFieldType, target(), transformer(), checkerDescription());
             return copiedFieldType.check(value, copiedChecker);
         }
 

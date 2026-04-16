@@ -30,7 +30,7 @@ import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 public record AsynchroneFileImporterContext(
@@ -38,7 +38,7 @@ public record AsynchroneFileImporterContext(
         PublishContext.PublishContextBuilder publishContextBuilder,
         ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
         Set<LineChecker<? extends FieldType<?>>> transformedLineCheckers,
-        JsonRowMapper jsonRowMapper,
+        JsonRowMapper<Object> jsonRowMapper,
         ConcurrentHashMap<DataValue.LineIdentityColumnName, UUID> afterPreloadReferenceUuids,
         ConcurrentHashMap<Ltree, List<RowWithReferenceDatum>> missingParentLine,
         ImmutableMap<DataValue.LineIdentityColumnName, UUID> storedReferences,
@@ -63,7 +63,7 @@ public record AsynchroneFileImporterContext(
             PublishContext.PublishContextBuilder publishContextBuilder,
             ImmutableSet<LineChecker<? extends FieldType<?>>> lineCheckers,
             Map<String, Map<String, Map<String, String>>> displayNamesByReferenceAndNaturalKey,
-            JsonRowMapper jsonRowMapper,
+            JsonRowMapper<Object> jsonRowMapper,
             DataRepository referenceValueRepository) {
 
         final StandardDataDescription referenceDescription = constants.dataConfiguration();
@@ -104,16 +104,15 @@ public record AsynchroneFileImporterContext(
                 .filter(HierarchicalNode::isRecursive);
     }
 
-    public LinkedHashSet<String> getNaturalKeyColumns() {
+    public Set<String> getNaturalKeyColumns() {
         return contextConstants().dataConfiguration().naturalKey();
-
     }
 
     public List<String> getNaturalKeyColumnsImportHeaders() {
-        Function<String, String> getimportHeader = component -> contextConstants().dataConfiguration().componentDescriptions().get(component).importHeader();
+        UnaryOperator<String> getImportHeader = component -> contextConstants().dataConfiguration().componentDescriptions().get(component).importHeader();
         return getNaturalKeyColumns()
                 .stream()
-                .map(getimportHeader)
+                .map(getImportHeader)
                 .toList();
     }
 
@@ -126,7 +125,7 @@ public record AsynchroneFileImporterContext(
                 .findFirst();
     }
 
-    public <F extends FieldType<?>> void setTransformedLineCheckers(RecursionStrategy recursionStrategy, Set<? extends LineChecker<?>> transformedLineCheckers) {
+    public void setTransformedLineCheckers(RecursionStrategy recursionStrategy, Set<? extends LineChecker<?>> transformedLineCheckers) {
         ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = transformedLineCheckers.stream()
                 .map(LineChecker::fieldTypeForOne)
                 .filter(ReferenceType.class::isInstance)
@@ -135,8 +134,7 @@ public record AsynchroneFileImporterContext(
                 .findAny()
                 .map(ReferenceType::getReferenceValues)
                 .orElseGet(ImmutableMap::of);
-        referenceValues.entrySet()
-                .forEach(entry -> recursionStrategy.addReferenceValuesForSelfType(entry.getKey(), entry.getValue()));
+        referenceValues.forEach(recursionStrategy::addReferenceValuesForSelfType);
 
         transformedLineCheckers().addAll(lineCheckers);
     }
@@ -150,6 +148,7 @@ public record AsynchroneFileImporterContext(
         );
     }
 
+    @SuppressWarnings("java:S3740")
     public boolean existsColumn(final DataColumn column, Map<DataColumn, DataColumnValue> constantColumnsValues) {
         return columnsWithPatternColumns().stream()
                        .map(registeredColumn -> registeredColumn.as(column.column()))
@@ -193,11 +192,12 @@ public record AsynchroneFileImporterContext(
 
     public void registerMissingLine(Ltree hierarchicalParentKey, RowWithReferenceDatum rowWithReferenceDatum) {
         this.missingParentLine()
-                .computeIfAbsent(hierarchicalParentKey, k -> new LinkedList<>())
+                .computeIfAbsent(hierarchicalParentKey, _ -> new LinkedList<>())
                 .add(rowWithReferenceDatum);
     }
 
-    public DatePattern getDatepattern() {
+    @SuppressWarnings("java:S1452") // DatePattern peut être de différents types temporels selon la config
+    public DatePattern<?> getDatepattern() {
         return contextConstants().application().findSubmissionDatePattern(contextConstants().refType());
     }
 
@@ -205,7 +205,9 @@ public record AsynchroneFileImporterContext(
      * Les colonnes dont les valeurs composent la clé naturelle composite de chaque ligne pour ce référentiel
      */
     public ImmutableList<DataColumn> getKeyColumns() {
-        Preconditions.checkState(CollectionUtils.isNotEmpty(contextConstants().dataConfiguration().naturalKey()), ExceptionMessage.MISSING_PRIMARY_KEY_COMPONENT.toMessage(), contextConstants().refType());
+        @SuppressWarnings("java:S2629")
+        String missingPrimaryKeyMsg = ExceptionMessage.MISSING_PRIMARY_KEY_COMPONENT.toMessage();
+        Preconditions.checkState(CollectionUtils.isNotEmpty(contextConstants().dataConfiguration().naturalKey()), missingPrimaryKeyMsg, contextConstants().refType());
         return contextConstants().dataConfiguration().naturalKey().stream()
                 .map(DataColumn::new)
                 .collect(ImmutableList.toImmutableList());

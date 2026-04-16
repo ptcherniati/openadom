@@ -90,32 +90,16 @@ public record Component(
             return;
         }
         switch (type()) {
-            case DateChecker -> {
-                sqlForDateField(sqls);
-            }
-            case FloatChecker -> {
-                sqlForSimpleField(sqls, SqlTypes.FLOAT);
-            }
-            case IntegerChecker -> {
-                sqlForSimpleField(sqls, SqlTypes.INTEGER);
-
-            }
-            case BooleanChecker -> {
-                sqlForSimpleField(sqls, SqlTypes.BOOLEAN);
-
-            }
-            case ReferenceChecker -> {
-                sqlForReferenceField(sqls);
-            }
-            default -> {
-                sqlForSimpleField(sqls, SqlTypes.TEXT);
-            }
+            case DateChecker    -> sqlForDateField(sqls);
+            case FloatChecker   -> sqlForSimpleField(sqls, SqlTypes.FLOAT);
+            case IntegerChecker -> sqlForSimpleField(sqls, SqlTypes.INTEGER);
+            case BooleanChecker -> sqlForSimpleField(sqls, SqlTypes.BOOLEAN);
+            case ReferenceChecker -> sqlForReferenceField(sqls);
+            default             -> sqlForSimpleField(sqls, SqlTypes.TEXT);
         }
     }
 
     private void sqlForReferenceField(Sql sqls) {
-        String aggregate = "MAX";
-        String aggregateType = "";
         final String refslinkedToTable = """
                 NESTED PATH '$.%2$s.%3$s.*.uuids[*]' COLUMNS(
                 "%1$s_id" FOR ORDINALITY,
@@ -159,7 +143,7 @@ public record Component(
     private void sqlForManyReferenceField(Sql sqls) {
         sqls.select().add("ARRAY_AGG(refs.\"%1$s\" ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::uuid[]\t\t\"%1$s_id\"".formatted(fieldName()));
         if (isAuthorizationAuthorizationScopeField()) {
-            sqls.select().add("ARRAY_AGG(\"%1$s\".hierarchicalkey::TEXT ORDER BY \"%2$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::UUID[]\t\t\"%1$s_hk\"".formatted(fieldName()));
+            sqls.select().add("ARRAY_AGG(\"%1$s\".hierarchicalkey::TEXT ORDER BY \"%1$s_id\") FILTER (WHERE \"%1$s_id\" IS NOT NULL)::UUID[]\t\t\"%1$s_hk\"".formatted(fieldName()));
             addIndex(sqls, "%1$s_hk".formatted(fieldName()), sqls.schemaName(), sqls.tableName());
             sqls.authorizationScopes().put(refType(), "%1$s".formatted(escapedFieldName()));
         }
@@ -179,8 +163,8 @@ public record Component(
         }
         sqls.select().add(
                 """
-                        MAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::timestamp%2$s \"ts_%1$s\",
-                        \t\tMAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::text%2$s \"%1$s\" """
+                        MAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::timestamp%2$s "ts_%1$s",
+                        \t\tMAX(NULLIF(val."%1$s", %3$s))::composite_date%2$s::text%2$s "%1$s" """
                         .formatted(
                                 fieldName(),
                                 aggregateType,
@@ -246,6 +230,7 @@ public record Component(
     }
 
 
+    @SuppressWarnings("java:S1172") // type conservé pour lisibilité des appels (DateChecker→FLOAT, etc.)
     private void sqlForSimpleField(Sql sqls, SqlTypes type) {
         if (isDynamic()) {
             sqlForDynamicComponent(sqls);
@@ -261,7 +246,7 @@ public record Component(
         }
         sqls.select().add(
                 """
-                        MAX(val.\"%1$s\")::TEXT%2$s  \t\t\"%1$s\""""
+                        MAX(val."%1$s")::TEXT%2$s  \t\t"%1$s\""""
                         .formatted(fieldName(),
                                 aggregateType
                         )

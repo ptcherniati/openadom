@@ -37,6 +37,7 @@ class AuthorizationIndexTest {
                 Map.of(PEM, pem)
         );
         Mockito.when(application.findData(PEM)).thenReturn(Optional.of(pem));
+        Mockito.when(application.getAllDataNames()).thenReturn(List.of(PEM));
         authorizationIndex = new AuthorizationIndex(application);
     }
 
@@ -77,11 +78,17 @@ class AuthorizationIndexTest {
                         DO $$
                         DECLARE
                             idx record;
+                            ref_types TEXT[] := ARRAY['pem'];
+                            ref_type TEXT;
                         BEGIN
-                            FOR idx IN (SELECT indexname FROM pg_indexes WHERE schemaname = 'monsore' 
-                            AND indexname LIKE 'authorization_%_index')
+                            FOREACH ref_type IN ARRAY ref_types
                             LOOP
-                                EXECUTE 'DROP INDEX IF EXISTS ' || quote_ident(idx.indexname);
+                                FOR idx IN (SELECT indexname FROM pg_indexes
+                                            WHERE schemaname = 'monsore'
+                                            AND indexname LIKE 'authorization_' || ref_type || '_index%')
+                                LOOP
+                                    EXECUTE 'DROP INDEX IF EXISTS monsore.' || quote_ident(idx.indexname);
+                                END LOOP;
                             END LOOP;
                         END $$;
                         

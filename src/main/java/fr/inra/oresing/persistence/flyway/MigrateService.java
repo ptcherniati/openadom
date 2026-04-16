@@ -112,7 +112,7 @@ public class MigrateService {
 
     private void updateAuthorizationIndexes(Flyway flyway) {
         try (Connection connection = flyway.getConfiguration().getDataSource().getConnection()) {
-            AuthorizationIndex authorizationIndex = new AuthorizationIndex(application);
+            AuthorizationIndex authorizationIndex = new AuthorizationIndex(application, null);
             String createIndexesSql = authorizationIndex.createIndexes();
             try (Statement statement = connection.createStatement()) {
                 statement.execute(createIndexesSql);
@@ -366,27 +366,11 @@ public class MigrateService {
             ).policyToCreateSql());
 
             log.info("migration 1 --> ok");
-            String indexesSQL = new AuthorizationIndex(application)
+            String indexesSQL = new AuthorizationIndex(application, null)
                     .createIndexes();
             statement.execute(indexesSQL);
             statement.close();
 
         }
-    }
-
-    private class Migrate9 implements ActionToDoAfterMigration {
-
-        @Override
-        public void execute(final Connection connection) throws SQLException {
-            final SqlSchemaForApplication sqlSchemaForApplication = SqlSchema.forApplication(application);
-            final OreSiRightOnApplicationRole applicationManagerOnApplicationRole = OreSiRightOnApplicationRole.adminOn(application);
-            Statement statement = connection.createStatement();
-            log.info("--->migration 9");
-            statement.close();
-
-            log.info("migration 9 --> ok");
-
-        }
-
     }
 }

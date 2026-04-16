@@ -23,12 +23,17 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("java:S3740")
 public abstract class Column implements Comparable<Column> {
     public static final String COLUMN_IN_COLUMN_SEPARATOR = "::";
     public static final String COLUMN_IN_COLUMN_PATTERN = "%s::%s";
+    @SuppressWarnings("java:S115")
     public static final String __VALUE__ = "__VALUE__";
+    @SuppressWarnings("java:S115")
     public static final String __COLUMN_NAME__ = "__COLUMN_NAME__";
+    @SuppressWarnings("java:S115")
     public static final String __ORIGINAL_COLUMN_NAME__ = "__ORIGINAL_COLUMN_NAME__";
+    private static final String NO_DEFAULT_VALUE_MSG = "pas de valeur par défaut pour ";
 
     @Getter
     private final DataColumn referenceColumn;
@@ -36,20 +41,16 @@ public abstract class Column implements Comparable<Column> {
     private final ComponentPresenceConstraint presenceConstraint;
     @Getter
     private final ComputedValueUsage computedValueUsage;
+    @SuppressWarnings("java:S1068")
     private final TransformationConfiguration defaultValue;
     public static Column computedColumnDescriptionToColumn(final DataRepository referenceValueRepository,
                                                      final DataColumn referenceColumn,
                                                      final Multiplicity multiplicity,
                                                      final ReferenceStaticComputedColumnDescription referenceStaticComputedColumnDescription) {
-        Column column = null;
-        if (multiplicity == Multiplicity.ONE) {
-            column = newComputedColumn(referenceColumn, referenceStaticComputedColumnDescription, referenceValueRepository);
-        } else if (multiplicity == Multiplicity.MANY) {
-            column = newComputedManyColumn(referenceColumn, referenceStaticComputedColumnDescription, referenceValueRepository);
-        } else {
-            //TODO throw Multiplicity.getError(multiplicity);
-        }
-        return column;
+        return switch (multiplicity) {
+            case ONE -> newComputedColumn(referenceColumn, referenceStaticComputedColumnDescription, referenceValueRepository);
+            case MANY -> newComputedManyColumn(referenceColumn, referenceStaticComputedColumnDescription, referenceValueRepository);
+        };
     }
 
 
@@ -141,15 +142,14 @@ public abstract class Column implements Comparable<Column> {
     }
 
     private static Map<String, Object> computeGroovyContext(final DataRepository referenceValueRepository, final GroovyDataInjectionConfiguration groovyDataInjectionConfiguration) {
-        if (Optional.ofNullable(groovyDataInjectionConfiguration)
-                .map(GroovyDataInjectionConfiguration::getReferences).isEmpty()) {
+        if (groovyDataInjectionConfiguration == null || groovyDataInjectionConfiguration.getReferences() == null) {
             return Map.of();
         }
         final Set<String> configurationReferences = groovyDataInjectionConfiguration.getReferences();
         return GroovyContextHelper.getGroovyContextForReferences(referenceValueRepository, configurationReferences, null);
     }
 
-    public Column(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
+    protected Column(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
         super();
         this.referenceColumn = referenceColumn;
         this.presenceConstraint = presenceConstraint;
@@ -179,7 +179,7 @@ public abstract class Column implements Comparable<Column> {
                 @Override
                 public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
                     if (defaultValue == null) {
-                        throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
+                        throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
                     }
                     final Optional<DataColumnValue> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
                     if (dataColumnValue
@@ -187,7 +187,7 @@ public abstract class Column implements Comparable<Column> {
                             .map(FieldType::getValue)
                             .map(Object::toString)
                             .filter(Strings::isNullOrEmpty).isPresent()) {
-                        return Optional.ofNullable(defaultValue)
+                        return Optional.of(defaultValue)
                                 .map(dv -> StringGroovyExpression.forExpression(dv.expression(), dv.exceptionMessages()))
                                 .map(expression -> expression.evaluate(Map.of()))
                                 .map(StringType::getStringTypeFromStringValue)
@@ -212,7 +212,7 @@ public abstract class Column implements Comparable<Column> {
                 @Override
                 public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
                     if (defaultValue == null) {
-                        throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
+                        throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
                     }
                     final Optional<DataColumnValue> dataColumnValue = Optional.ofNullable(referenceColumn).map(referenceDatum.values()::get);
                     if (dataColumnValue
@@ -220,7 +220,7 @@ public abstract class Column implements Comparable<Column> {
                             .map(FieldType::getValue)
                             .map(Object::toString)
                             .filter(Strings::isNullOrEmpty).isPresent()) {
-                        return Optional.ofNullable(defaultValue)
+                        return Optional.of(defaultValue)
                                 .map(dv -> StringGroovyExpression.forExpression(dv.expression(), dv.exceptionMessages()))
                                 .map(expression -> expression.evaluate(Map.of()))
                                 .map(","::split)
@@ -265,7 +265,7 @@ public abstract class Column implements Comparable<Column> {
 
             @Override
             public Optional<DataColumnValue> computeValue(final DataDatum referenceDatum) {
-                throw new UnsupportedOperationException("pas de valeur par défaut pour " + referenceColumn);
+                throw new UnsupportedOperationException(NO_DEFAULT_VALUE_MSG + referenceColumn);
             }
         };
         return column;

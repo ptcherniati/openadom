@@ -3,8 +3,6 @@ package fr.inra.oresing.domain.authorization.privilegeassessor.role;
 import fr.inra.oresing.domain.BinaryFileDataset;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
-import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
-import fr.inra.oresing.domain.application.configuration.Submission;
 import fr.inra.oresing.domain.application.configuration.date.DatePattern;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.exceptions.OreSiTechnicalException;
@@ -68,13 +66,7 @@ public sealed interface ApplicationDataWriter extends ApplicationUser, DataWrite
             BinaryFileDataset binaryfiledataset,
             List<AuthorizationParsed> authorizationParseds
     ) {
-        String timescope  = application().findData(dataName())
-                .map(StandardDataDescription::submission)
-                .map(Submission::submissionScope)
-                .map(Submission.SubmissionScope::timescope)
-                .map(Submission.SubmissionScope.TimeScope::component)
-                .orElse("");
-        final DatePattern datePattern = application().findSubmissionDatePattern(dataName());
+        final DatePattern<?> datePattern = application().findSubmissionDatePattern(dataName());
         final LocalDateTimeRange submissionIntervalScope = LocalDateTimeRange.of(
                 datePattern,
                 binaryfiledataset.getFrom(),
@@ -118,7 +110,7 @@ public sealed interface ApplicationDataWriter extends ApplicationUser, DataWrite
             List<LocalDateTimeRange> authorizationMatchingIntervals
     ) {
         List<LocalDateTimeRange> sortedIntervals = authorizationMatchingIntervals.stream()
-                .sorted(Comparator.comparing(interval -> interval.getLowerPointOrMin()))
+                .sorted(Comparator.comparing(LocalDateTimeRange::getLowerPointOrMin))
                 .toList();
 
         LocalDateTime currentCoverageEnd = submissionIntervalScope.getLowerPointOrMin();

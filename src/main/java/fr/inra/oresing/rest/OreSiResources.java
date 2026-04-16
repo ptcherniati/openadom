@@ -381,14 +381,20 @@ public class OreSiResources {
     private Flux<ReactiveResult> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink) {
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
-            heavyExecutorService.submit(() -> {
-                try {
-                    SecurityContextHolder.setContext(context);
-                    fluxSink.accept(sink);
-                } finally {
-                    SecurityContextHolder.clearContext();
-                }
-            });
+            try {
+                heavyExecutorService.submit(() -> {
+                    try {
+                        SecurityContextHolder.setContext(context);
+                        fluxSink.accept(sink);
+                    } catch (Throwable e) {
+                        sink.error(e);
+                    } finally {
+                        SecurityContextHolder.clearContext();
+                    }
+                });
+            } catch (RuntimeException e) {
+                sink.error(e);
+            }
         });
     }
 
@@ -771,10 +777,7 @@ public class OreSiResources {
                 } catch (InvalidDatasetContentException invalidDatasetContentException) {
                     List<ValidationCheckResultRest> validations = invalidDatasetContentException.getErrors()
                             .stream()
-                            .map(row -> {
-                                long lineNumber = row.lineNumber();
-                                return row.validationCheckResult().validationCheckResultToRest(row.lineNumber());
-                            })
+                            .map(row -> row.validationCheckResult().validationCheckResultToRest(row.lineNumber()))
                             .toList();
                     Application application = getApplicationOrAccordingToRightsUseCase.execute(nameOrId);
                     String errorsToJson = new ObjectMapper()
@@ -809,8 +812,6 @@ public class OreSiResources {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new OreSiTechnicalException("Thread interrompu", e);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
     }
 
@@ -1037,14 +1038,14 @@ public class OreSiResources {
                     try {
                         zipFile.set(finalTempZipDirectory.resolveSibling(finalTempZipDirectory.getFileName() + ".zip"));
                         ZipUtils.zipDirectory(finalTempZipDirectory, zipFile.get()); //
-                    } catch (Exception e) {
+                    } catch (IOException | RuntimeException e) {
                         log.error(EMAIL_ERROR, e);
                     } finally {
                         removeRepository(finalTempZipDirectory);
                     }
 
-                } catch (Exception e) {
-                    if (zipFile != null) {
+                } catch (IOException | RuntimeException e) {
+                    if (zipFile.get() != null) {
                         try {
                             addErrorFileToZip(zipFile.get(), e);
                         } catch (IOException ioe) {
@@ -1058,19 +1059,29 @@ public class OreSiResources {
                 SecurityContextHolder.setContext(securityContext);
                 try {
                     sendZipLinkByMailUseCase.execute(zipFile.get(), downloadDatasetQuery, user.get());
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     log.error(EMAIL_ERROR, e);
                 }
             }).get();
         } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+            Thread.currentThread().interrupt();
+            throw new OreSiTechnicalException("Thread interrompu lors de l'export ZIP", e);
         } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+            Throwable cause = unwrapException(e.getCause());
+            throw switch (cause) {
+                case OreSiTechnicalException oreSiTechnicalException -> oreSiTechnicalException;
+                case RuntimeException runtimeEx -> runtimeEx;
+                default -> new IllegalStateException("Unexpected error during ZIP export", cause);
+            };
         }
         final Path source = zipFile.get();
         StreamingResponseBody body = outputStream -> {
             Files.copy(source, outputStream);
-            outputStream.flush(); // Important pour garantir le flush
+            // Pas de flush() explicite : Files.copy() a déjà écrit tous les octets dans le buffer.
+            // Spring MVC appelle outputStream.flush() lui-même dans StreamingResponseBodyTask après
+            // le retour de writeTo(). Un flush() explicite ici déclenche onResponseCommitted() de
+            // Spring Security depuis le thread de l'exécuteur, provoquant un ConcurrentModificationException
+            // sur MockHttpServletResponse.headers (LinkedCaseInsensitiveMap / HashMap.computeIfAbsent).
             Files.deleteIfExists(source); // Nettoyage juste après la copie
         };
         return header
@@ -1141,8 +1152,8 @@ public class OreSiResources {
                     .map(outPut -> new OutPut(locale, outPut.offset(), outPut.limit()))
                     .ifPresent(downloadDatasetQuery::setOutPut);
             return DownloadDatasetQuery.build(downloadDatasetQuery);
-        } catch (final Exception e) {
-            throw new BadDownloadDatasetQuery(e.getMessage());
+        } catch (final RuntimeException e) {
+            throw new BadDownloadDatasetQuery(e.getMessage(), e);
         }
     }
 
@@ -1229,7 +1240,7 @@ public class OreSiResources {
                 BuildBundleReport report = null;
                 try {
                     report = writeUploadBundleUseCase.execute(instanceUrl, nameOrId, withData, locale, tempZipDirectory);
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     log.error(IO_ERROR_WRITE, e);
                 }
 
@@ -1238,7 +1249,7 @@ public class OreSiResources {
                         Path zipFile = tempZipDirectory.resolveSibling(tempZipDirectory.getFileName() + ".zip");
                         ZipUtils.zipDirectory(tempZipDirectory, zipFile);
                         sendZipLinkByMailUseCase.execute(zipFile, report, user);
-                    } catch (Exception e) {
+                    } catch (IOException | RuntimeException e) {
                         log.error(EMAIL_ERROR, e);
                     }
                 } else {
@@ -1252,7 +1263,7 @@ public class OreSiResources {
                     log.error(IO_DELETE_ERROR, e);
                 }
 
-            } catch (Exception e) {
+            } catch (IOException | RuntimeException e) {
                 if (tempZipDirectory != null) {
                     try {
                         addErrorFileToZip(tempZipDirectory, e);
@@ -1279,19 +1290,21 @@ public class OreSiResources {
         final OreSiUser currentUser = getCurrentUserUseCase.execute();
         final SecurityContext context = SecurityContextHolder.getContext();
         return Flux.create(sink -> {
-            heavyExecutorService.submit(() -> {
+            normalExecutorService.submit(() -> {
                 SecurityContextHolder.setContext(context);
                 File zipFile = null;
                 try {
                     zipFile = getPhysicalFileOrCopy(zipBundle);
                 } catch (IOException e) {
                     sink.error(new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e));
+                    return;
                 }
                 sink.next(new ReactiveTypeProgress(0L));
                 final Application application = getApplicationUseCase.execute(nameOrId);
 
                 BundleReport rapport = new BundleReport(locale, origin, application);
 
+                boolean completedSuccessfully = false;
                 try {
                     ObjectMapper mapper = new ObjectMapper();
                     File finalZipFile = zipFile;
@@ -1329,7 +1342,8 @@ public class OreSiResources {
                                 }
                             }
                     );
-                    final RegisterReactiveResult registerReactiveResult = new RegisterReactiveResult(sink, countFiles, rapport);
+                    @SuppressWarnings("unchecked")
+                    final RegisterReactiveResult registerReactiveResult = new RegisterReactiveResult((FluxSink<ReactiveResult<?>>) (Object) sink, countFiles, rapport);
                     final ReactiveTypeInfo reactiveTypeInfo = new ReactiveTypeInfo("MANIFEST", Map.of("manifest", manifest));
                     registerReactiveResult.add(reactiveTypeInfo, false);
                     rapport.add(reactiveTypeInfo);
@@ -1345,17 +1359,19 @@ public class OreSiResources {
                             currentUser,
                             MAX_DB_CONCURRENCY
                     ).block();
+                    completedSuccessfully = true;
                 } catch (StreamReadException e) {
                     sink.error(e);
-                    throw new RuntimeException(e);
                 } catch (DatabindException e) {
                     sink.error(e);
-                    throw new RuntimeException(e);
                 } catch (IOException e) {
                     sink.error(e);
-                    throw new RuntimeException(e);
+                } catch (RuntimeException e) {
+                    sink.error(e);
                 }
-                sink.complete();
+                if (completedSuccessfully && !sink.isCancelled()) {
+                    sink.complete();
+                }
             });
         });
     }
@@ -1380,22 +1396,26 @@ public class OreSiResources {
                 Flux.fromIterable(manifest.getOrDefault(dataName, List.of()))
                         .flatMap(fileName ->
                                 Mono.create(sink -> {
-                                    heavyExecutorService.submit(() -> {
-                                        SecurityContextHolder.setContext(secCtx);
-                                        try {
-                                            readManifestEntryAndLoadData(
-                                                    Map.entry(dataName, List.of(fileName)),
-                                                    registerReactiveResult,
-                                                    finalZipFile,
-                                                    locale,
-                                                    application,
-                                                    rapport
-                                            );
-                                            sink.success();
-                                        } catch (Exception e) {
-                                            sink.error(e);
-                                        }
-                                    });
+                                    try {
+                                        heavyExecutorService.submit(() -> {
+                                            SecurityContextHolder.setContext(secCtx);
+                                            try {
+                                                readManifestEntryAndLoadData(
+                                                        Map.entry(dataName, List.of(fileName)),
+                                                        registerReactiveResult,
+                                                        finalZipFile,
+                                                        locale,
+                                                        application,
+                                                        rapport
+                                                );
+                                                sink.success();
+                                            } catch (Exception e) {
+                                                sink.error(e);
+                                            }
+                                        });
+                                    } catch (RuntimeException e) {
+                                        sink.error(e);
+                                    }
                                 }), MAX_DB_CONCURRENCY
                         )
                         .then()
@@ -1642,3 +1662,4 @@ public class OreSiResources {
     }
 
 }
+

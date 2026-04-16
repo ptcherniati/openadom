@@ -14,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Tag("integration.persistence")
 @Slf4j
+@SuppressWarnings("java:S2187") // testMigrate est volontairement désactivé (@Test commenté) — test d'intégration nécessitant un environnement complet
 public class MigrationTest extends AbstractIntegrationTest {
 
     private String authJwt;

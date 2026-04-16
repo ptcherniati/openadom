@@ -42,4 +42,8 @@ public class BadDownloadDatasetQuery extends OreSiTechnicalException {
         super(message);
         this.params = params;
     }
+
+    public BadDownloadDatasetQuery(final String message, final Throwable cause) {
+        super(message, cause);
+    }
 }

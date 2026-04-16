@@ -8,6 +8,7 @@ import org.springframework.context.annotation.Configuration;
 public class MapperConfig {
 
     @Bean
+    @SuppressWarnings("java:S1452")
     public JsonRowMapper<?> jsonRowMapper() {
         return new JsonRowMapper<>();
     }

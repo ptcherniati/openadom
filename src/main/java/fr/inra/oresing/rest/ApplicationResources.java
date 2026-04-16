@@ -192,14 +192,22 @@ public class ApplicationResources {
 
     private Flux<ReactiveResult> buildFluxRequestNDJson(Consumer<FluxSink<ReactiveResult>> fluxSink) {
         final SecurityContext context = SecurityContextHolder.getContext();
-        return Flux.create(sink -> heavyExecutorService.submit(() -> {
+        return Flux.create(sink -> {
             try {
-                SecurityContextHolder.setContext(context);
-                fluxSink.accept(sink);
-            } finally {
-                SecurityContextHolder.clearContext();
+                heavyExecutorService.submit(() -> {
+                    try {
+                        SecurityContextHolder.setContext(context);
+                        fluxSink.accept(sink);
+                    } catch (Throwable e) {
+                        sink.error(e);
+                    } finally {
+                        SecurityContextHolder.clearContext();
+                    }
+                });
+            } catch (RuntimeException e) {
+                sink.error(e);
             }
-        }));
+        });
     }
 
     @PreAuthorize("isAuthenticated()")

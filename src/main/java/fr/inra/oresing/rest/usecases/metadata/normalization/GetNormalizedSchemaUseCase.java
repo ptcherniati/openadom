@@ -28,11 +28,20 @@ public class GetNormalizedSchemaUseCase {
     public String execute(String nameOrId) throws ExecutionException, InterruptedException {
         Application application = applicationService.getApplication(nameOrId);
         SecurityContext context = SecurityContextHolder.getContext();
-        return executorService
-                .submit(() -> {
-                    SecurityContextHolder.setContext(context);
-                    return normalizedService.buildNormalizedSchema(application, false);
-                })
-                .get();
+        try {
+            return executorService
+                    .submit(() -> {
+                        SecurityContextHolder.setContext(context);
+                        try {
+                            return normalizedService.buildNormalizedSchema(application, false);
+                        } finally {
+                            SecurityContextHolder.clearContext();
+                        }
+                    })
+                    .get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw e;
+        }
     }
 }

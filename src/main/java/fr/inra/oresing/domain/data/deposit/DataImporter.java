@@ -44,8 +44,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -94,11 +92,11 @@ public class DataImporter {
         getDataImporterContext().setTransformedLineCheckers(getRecursionStrategy(), csvReader.buildLineCheckers(getDataImporterContext().dataHeaderReader().constantValues().values()));
         try (BufferedWriter writer = Files.newBufferedWriter(tempFile, StandardCharsets.UTF_8)) {
             while (linesIterator.hasNext()) {
-                CSVRecord record = linesIterator.next();
+                CSVRecord csvRecord = linesIterator.next();
                 // Reconstituer la ligne CSV
-                for (int i = 0; i < record.size(); i++) {
+                for (int i = 0; i < csvRecord.size(); i++) {
                     if (i > 0) writer.write(csvFormat.getDelimiterString());
-                    writer.write(record.get(i));
+                    writer.write(csvRecord.get(i));
                 }
                 writer.newLine();
             }
@@ -166,7 +164,7 @@ public class DataImporter {
                         return getDataImporterContext().encounteredHierarchicalKeysForConflictDetection().get(hierarchicalKey).size() == 1;
                     })
                     .map(keysAndReferenceDatumAfterChecking -> dataTransformer.toEntity(keysAndReferenceDatumAfterChecking, getDataImporterContext().publishContextBuilder().fileOrUUID.fileid(), getDataImporterContext().allErrors()))
-                    .map(dataValue -> convertToCSVLine(dataValue))
+                    .map(this::convertToCSVLine)
                     .forEach(csvLine -> {
                         try {
                             writer.write(csvLine);
@@ -217,31 +215,22 @@ public class DataImporter {
     }
 
     private String fixTimescopeFormat(String json) {
-        Pattern pattern = Pattern.compile(
-                "\"timescope\":\"([\\[\\(])(\\\\\"(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})\\\\\")?,(\\\\\"(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2})\\\\\")?([\\]\\)])\""
-        );
-
-        Matcher matcher = pattern.matcher(json);
-        StringBuffer result = new StringBuffer();
-
-        while (matcher.find()) {
-            String openBracket = matcher.group(1);   // [ ou (
-            String date1 = matcher.group(3);         // date1 (sans les \")
-            String date2 = matcher.group(5);         // date2 (sans les \")
-            String closeBracket = matcher.group(6);  // ] ou )
-
-            String cleanDate1 = (date1 != null) ? date1 : "";
-            String cleanDate2 = (date2 != null) ? date2 : "";
-
-            String replacement = "\"timescope\":\"" + openBracket +
-                                 cleanDate1 + "," + cleanDate2 +
-                                 closeBracket + "\"";
-
-            matcher.appendReplacement(result, Matcher.quoteReplacement(replacement));
+        final String marker = "\"timescope\":\"";
+        int pos = json.indexOf(marker);
+        if (pos < 0) return json;
+        int start = pos + marker.length();
+        // Trouver le " de fermeture (non précédé d'un \)
+        int end = start;
+        while (end < json.length()) {
+            char c = json.charAt(end);
+            boolean escaped = end > start && json.charAt(end - 1) == '\\';
+            if (c == '"' && !escaped) break;
+            end++;
         }
-        matcher.appendTail(result);
-
-        return result.toString();
+        if (end >= json.length()) return json;
+        // Supprimer les guillemets échappés dans la valeur timescope
+        String cleaned = json.substring(start, end).replace("\\\"", "");
+        return json.substring(0, start) + cleaned + json.substring(end);
     }
 
 }

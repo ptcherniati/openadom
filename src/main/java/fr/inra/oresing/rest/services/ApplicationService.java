@@ -8,6 +8,8 @@ import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.ApplicationInformation;
 import fr.inra.oresing.domain.application.configuration.*;
 import fr.inra.oresing.domain.application.configuration.internationalization.Internationalizations;
+import fr.inra.oresing.domain.application.configuration.migration.plan.MigrationMode;
+import fr.inra.oresing.domain.application.configuration.migration.report.MigrationResult;
 import fr.inra.oresing.domain.authorization.privilegeassessor.exception.NotApplicationCreatorRightsException;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationCreator;
 import fr.inra.oresing.domain.authorization.privilegeassessor.role.ApplicationManager;
@@ -30,7 +32,6 @@ import fr.inra.oresing.rest.model.authorization.CurrentApplicationUserRolesResul
 import fr.inra.oresing.rest.reactive.*;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,32 +42,33 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Slf4j
 @Component
 @Transactional(readOnly = true)
-public class ApplicationService{
+public class ApplicationService {
     public static final String APPLICATION_NAME = "applicationName";
+    public static final String MIGRATION_REPORT = "migrationreport";
     public static final String START = "start";
     public static final String END = "end";
     private final OreSiRepository repository;
-    private final BeanFactory beanFactory;
+    private final MigrationService migrationService;
+    private final MigrateService flywayMigrateService;
     @Setter
     private ServiceContainer serviceContainer;
 
     public ApplicationService(
             OreSiRepository repository,
-            BeanFactory beanFactory,
-            ServiceContainer serviceContainer) {
+            ServiceContainer serviceContainer,
+            MigrationService migrationService,
+            MigrateService flywayMigrateService) {
         this.repository = repository;
-        this.beanFactory = beanFactory;
-        this.serviceContainer= serviceContainer;
+        this.serviceContainer = serviceContainer;
+        this.migrationService = migrationService;
+        this.flywayMigrateService = flywayMigrateService;
     }
 
     public Application getApplication(final String nameOrId) {
@@ -115,8 +117,7 @@ public class ApplicationService{
                     comment,
                     eventHelper,
                     application,
-                    dataFile,
-                    this::initApplication);
+                    dataFile);
         } catch (final OreSiTechnicalException | IOException e) {
             if ("fr.inra.oresing.domain.authorization.privilegeassessor.exception"
                     .equals(e.getClass().getPackage().getName())) {
@@ -201,32 +202,6 @@ public class ApplicationService{
                 application.findDependantNodesByDataName());
     }
 
-    @Transactional
-    public Application initApplication(final Application application) {
-        MigrateService migrateService = beanFactory.getBean(MigrateService.class);
-        migrateService.setApplication(application);
-        serviceContainer.authenticationService().resetRole();
-        final OreSiUserRole creator = serviceContainer.authenticationService().getUserRole(OreSiApiRequestContext.getRequestUserId());
-
-        migrateService.runFlywayUpdate(creator);
-        serviceContainer.authenticationService().setRoleForClient();
-        repository.application().store(application);
-        return application;
-    }
-
-    public Application modifySchemaApplication(final Application application) {
-        MigrateService migrateService = beanFactory.getBean(MigrateService.class);
-        migrateService.setApplication(application);
-        serviceContainer.authenticationService().resetRole();
-        migrateService.updateSchema();
-        serviceContainer.authenticationService().setRoleForClient();
-        repository.application().store(application);
-        serviceContainer.authenticationService().setRoleAdmin();
-        repository.application().updateAuthorizationIndexes(application);
-        serviceContainer.authenticationService().setRoleForClient();
-        return application;
-    }
-
     @Transactional()
     public UUID changeApplicationConfiguration(
             Consumer<ReactiveResult> sink,
@@ -250,13 +225,11 @@ public class ApplicationService{
         final Configuration oldConfiguration = application.getConfiguration();
         final UUID oldConfigFileId = application.getConfigFile();
         try {
-            ReactiveEventHelper helperMigrate = changeApplicationConfiguration(comment,
+            changeApplicationConfiguration(comment,
                     eventHelper,
                     application,
-                    dataFile,
-                    this::modifySchemaApplication
+                    dataFile
             ).up().withSubLabel("migrate");
-            // Note: helperMigrate is not really used afterwards in the original code except for errors
         } catch (final IOException e) {
             eventHelper.pushError(e);
         }
@@ -286,58 +259,100 @@ public class ApplicationService{
             String comment,
             final ReactiveEventHelper eventHelper,
             Application application,
-            final DataFile configurationFile,
-            final UnaryOperator<Application> createOrModifySchema) throws IOException {
-        String applicationName = application.getName();
+            final DataFile configurationFile) throws IOException {
+            Application oldApplication = application;
+        String applicationName = oldApplication.getName();
         OreSiUser currentUser = serviceContainer.authenticationService().getCurrentUser();
-        UUID oldApplicationId = application.getId();
+        UUID oldApplicationId = oldApplication.getId();
         ReactiveEventHelper helperConfiguration = eventHelper.withSubLabel("configuration");
         helperConfiguration.pushMessage("rights.checking", Map.of(APPLICATION_NAME, applicationName));
         helperConfiguration.incrementAndPush(i -> i + .02);
         final ReactiveEventHelper helperParsingConfiguration = helperConfiguration.withSubLabel("parsingConfiguration");
+        Application newApplication;
         if (Objects.requireNonNull(configurationFile.fileName()).matches(".*\\.zip")) {
             InputStream multiYAmlInput = MultiYaml.parseConfigurationBytes(configurationFile);
             helperParsingConfiguration.pushMessage("forMulti", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(multiYAmlInput));
+            newApplication = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(multiYAmlInput));
         } else {
             helperParsingConfiguration.pushMessage("forSingle", Map.of(APPLICATION_NAME, applicationName));
-            application = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(configurationFile.inputStream()));
+            newApplication = ApplicationConfigurationService.parseConfigurationBytes(applicationName, comment, helperConfiguration, FileBomResolver.of(configurationFile.inputStream()));
         }
-        if (application == null) {
+        if (newApplication == null) {
             return eventHelper;
         }
         eventHelper.pushMessage("application.configuration.create.register.start", Map.of(APPLICATION_NAME, applicationName));
 
-        final Configuration configuration = application.getConfiguration();
-        application.setId(oldApplicationId);
-        assert configuration != null;
-        application.setData(new ArrayList<>(configuration.dataDescription().keySet()));
-        application.setConfiguration(configuration);
-        final Optional<Set<String>> additionalsFiles = Optional.ofNullable(configuration.additionalFiles())
-                .map(Map::keySet);
-        if (additionalsFiles.isPresent()) {
-            application.setAdditionalFiles(new LinkedList<>(additionalsFiles.get()));
-        } else {
-            application.setAdditionalFiles(List.of());
+        final Configuration configuration = oldApplication.getConfiguration();
+        // Pour la création, oldApplicationId est null → store() générera un UUID
+        // Pour la mise à jour, on préserve l'ID existant pour l'upsert
+        newApplication.setId(oldApplicationId);
+
+        if (configuration != null) {
+            // Cas mise à jour : on préserve la structure des données de l'ancienne configuration
+            newApplication.setData(new ArrayList<>(configuration.dataDescription().keySet()));
+            newApplication.setConfiguration(configuration);
+            final Optional<Set<String>> additionalsFiles = Optional.ofNullable(configuration.additionalFiles())
+                    .map(Map::keySet);
+            if (additionalsFiles.isPresent()) {
+                newApplication.setAdditionalFiles(new LinkedList<>(additionalsFiles.get()));
+            } else {
+                newApplication.setAdditionalFiles(List.of());
+            }
         }
+        // Cas création : newApplication conserve sa propre configuration issue du YAML
+
         helperParsingConfiguration.pushMessage("endparsing", Map.of(APPLICATION_NAME, applicationName));
-        String comment1 = configuration.applicationDescription().comment();
-        Optional.of(applicationName).ifPresent(application::setName);
+        // Pour la création, pas d'ancienne configuration → on utilise le commentaire passé en paramètre
+        String comment1 = Optional.ofNullable(configuration)
+                .map(Configuration::applicationDescription)
+                .map(ApplicationDescription::comment)
+                .orElse(comment);
+        Optional.of(applicationName).ifPresent(newApplication::setName);
         try {
-            application = createOrModifySchema.apply(application);
-            final UUID confId = serviceContainer.binaryFileService().storeFile(application, configurationFile, comment1, null);
-            application.setConfigFile(confId);
-            Timestamp charteLastTimestamp = Optional.ofNullable(serviceContainer.additionalFileService().findCharte(application))
+            if (configuration == null) {
+                // Création: initialiser le schéma applicatif via Flyway.
+                flywayMigrateService.setApplication(newApplication);
+                serviceContainer.authenticationService().resetRole();
+                final OreSiUserRole creator = serviceContainer.authenticationService().getUserRole(OreSiApiRequestContext.getRequestUserId());
+                flywayMigrateService.runFlywayUpdate(creator);
+                serviceContainer.authenticationService().setRoleForClient();
+                // L'application doit exister dans la table application AVANT d'insérer dans binaryfile
+                // (contrainte FK binaryfile_application_fkey). On la persiste ici sans configFile (null autorisé),
+                // puis on la met à jour après l'enregistrement du fichier de configuration.
+                repository.application().store(newApplication);
+            } else {
+                // Mise à jour: exécuter le pipeline de migration de configuration.
+                migrationService.executeMigration(oldApplication, newApplication, Set.of(), MigrationMode.EXECUTE);
+            }
+            final UUID confId = serviceContainer.binaryFileService().storeFile(newApplication, configurationFile, comment1, null);
+            newApplication.setConfigFile(confId);
+            Timestamp charteLastTimestamp = Optional.ofNullable(serviceContainer.additionalFileService().findCharte(newApplication))
                     .map(AdditionalBinaryFile::getUpdateDate)
                     .map(Timestamp::valueOf)
                     .orElse((new Timestamp(Long.MIN_VALUE)));
-            application.setLastChartes(charteLastTimestamp);
-            repository.application().store(application);
+            newApplication.setLastChartes(charteLastTimestamp);
+            repository.application().store(newApplication);
+            // Propager l'ID généré (création) ou existant (MAJ) vers oldApplication
+            // afin que createApplication puisse pousser application.getId() comme résultat
+            oldApplication.setId(newApplication.getId());
             final ReactiveEventHelper helperRegister = helperParsingConfiguration.up();
             helperRegister.pushMessage("register", Map.of(APPLICATION_NAME, applicationName));
 
             return helperRegister;
         } catch (final BadSqlGrammarException bsge) {
+            log.error("""
+                    ╔══════════════════════════════════════════════════════════════════╗
+                    ║  BadSqlGrammarException lors de la création de l'application    ║
+                    ╠══════════════════════════════════════════════════════════════════╣
+                    ║  Application  : {}
+                    ║  SQL échoué   : {}
+                    ║  Cause racine : {}
+                    ╚══════════════════════════════════════════════════════════════════╝
+                    """,
+                    applicationName,
+                    bsge.getSql(),
+                    bsge.getCause() != null ? bsge.getCause().getMessage() : bsge.getMessage(),
+                    bsge);
             throw new NotApplicationCreatorRightsException(applicationName, currentUser.getAuthorizations());
         }
     }
@@ -393,7 +408,20 @@ public class ApplicationService{
             if (Objects.requireNonNull(file.fileName()).matches(".*\\.zip")) {
                 application = ApplicationConfigurationService.unzipConfiguration(file, eventHelper);
             } else {
-                application = ApplicationConfigurationService.parseConfigurationBytes("","", eventHelper, FileBomResolver.of(file.inputStream()));
+                application = ApplicationConfigurationService.parseConfigurationBytes("", "", eventHelper, FileBomResolver.of(file.inputStream()));
+            }
+            Application oldApplication;
+            try {
+                oldApplication = serviceContainer.applicationService().getApplication(application.getName());
+                final MigrationResult migrationResult = migrationService.executeMigration(oldApplication, application, new HashSet<>(), MigrationMode.DRY_RUN);
+                eventHelper.pushMessage("migration",
+                        Map.of(
+                                APPLICATION_NAME, oldApplication.getName(),
+                                "migrationreport", new fr.inra.oresing.persistence.JsonRowMapper<>().toJson(migrationResult)
+                        )
+                );
+            } catch (Exception e) {
+                //nothing to do
             }
             return application;
         } catch (final IOException e) {

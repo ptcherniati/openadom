@@ -3,6 +3,8 @@ package fr.inra.oresing.domain.repository.data;
 import com.google.common.collect.ImmutableMap;
 import fr.inra.oresing.domain.application.Application;
 import fr.inra.oresing.domain.application.configuration.Ltree;
+import fr.inra.oresing.domain.application.configuration.migration.context.DataInfo;
+import fr.inra.oresing.domain.application.configuration.migration.context.SchemaInfo;
 import fr.inra.oresing.domain.data.DataValue;
 import fr.inra.oresing.domain.data.menu.MenuType;
 import fr.inra.oresing.domain.data.menu.ReferenceScope;
@@ -48,5 +50,4 @@ public interface DataRepository {
     void flush();
 
     Map<String, Map<String, String>> findDisplayByNaturalKey(String replace);
-
 }

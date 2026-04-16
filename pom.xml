@@ -101,14 +101,19 @@
         <groovy.version-jsr223>3.0.25</groovy.version-jsr223>
 
         <!--sonar-->
+        <sonar.host.url>https://sonarqube.dev.gissol.fr</sonar.host.url>
         <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
-        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco.exec
+        <sonar.coverage.jacoco.xmlReportPaths>${project.basedir}/target/site/jacoco/jacoco.xml
         </sonar.coverage.jacoco.xmlReportPaths>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.language>java</sonar.language>
         <sonar.projectKey>anaee-dev_openadom_backend_caf3d282-990e-4907-8f15-44424cf3c8b0</sonar.projectKey>
         <sonar.projectName>openADOM-backend</sonar.projectName>
-        <sonar.qualitygate.wait>true</sonar.qualitygate.wait>
+        <!-- false par défaut : l'analyse ne bloque pas le build localement.
+             Le CI override explicitement avec -Dsonar.qualitygate.wait=true -->
+        <sonar.qualitygate.wait>false</sonar.qualitygate.wait>
+        <sonar.java.source>${java.version}</sonar.java.source>
+        <sonar.java.enablePreview>true</sonar.java.enablePreview>
 
         <maven-surefire-plugin.version>3.5.3</maven-surefire-plugin.version>
 
@@ -164,6 +169,21 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.javers</groupId>
+            <artifactId>javers-core</artifactId>
+            <version>7.9.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jeasy</groupId>
+            <artifactId>easy-rules-core</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jeasy</groupId>
+            <artifactId>easy-rules-support</artifactId>
+            <version>4.1.0</version>
         </dependency>
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -473,6 +493,7 @@
                     <argLine>
                         @{argLine}
                         -javaagent:"${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar"
+
                     </argLine>
                 </configuration>
             </plugin>

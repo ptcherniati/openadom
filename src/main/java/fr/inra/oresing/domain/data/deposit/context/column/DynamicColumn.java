@@ -21,7 +21,7 @@ public abstract class DynamicColumn extends Column {
      */
     private final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd;
 
-    public DynamicColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final Ltree expectedHierarchicalKey, final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
+    protected DynamicColumn(final DataColumn referenceColumn, final ComponentPresenceConstraint presenceConstraint, final Ltree expectedHierarchicalKey, final Map.Entry<String, RefsLinkedToValue> refsLinkedToEntryToAdd, final ComputedValueUsage computedValueUsage, TransformationConfiguration defaultValue) {
         super(referenceColumn, presenceConstraint, computedValueUsage, defaultValue);
         this.expectedHierarchicalKey = expectedHierarchicalKey;
         this.refsLinkedToEntryToAdd = refsLinkedToEntryToAdd;

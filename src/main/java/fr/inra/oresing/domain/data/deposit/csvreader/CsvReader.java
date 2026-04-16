@@ -31,6 +31,7 @@ public class CsvReader {
         this.recursionStrategy = recursionStrategy;
     }
 
+    @SuppressWarnings("java:S3740")
     public  Set<LineChecker<? extends FieldType<?>>> buildLineCheckers(Map<DataColumn, DataColumnValue> constantColumnsValues) {
         final HashSet<LineChecker<? extends FieldType<?>>> linecheckersBuilder = new HashSet<>();
         for (final LineChecker<? extends FieldType<?>> lineChecker : dataImporterContext.lineCheckers()) {

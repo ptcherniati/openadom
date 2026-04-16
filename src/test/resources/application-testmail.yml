@@ -35,6 +35,10 @@ spring:
     baseline-on-migrate: true
     user: openAdomTechUser
     password: "z2I<i}qclq)D?xqT"
+    # UUID fixe du rôle public – identique à SqlSchemaForApplication.PUBLIC_UUID
+    # Fourni ici pour que les tests fonctionnent sans le fichier .env-default
+    placeholders:
+      publicRoleId: 9032ffe5-bfc1-453d-814e-287cd678484a
 
 
 
@@ -73,3 +77,16 @@ filesender:
   baseurl: https://filesender.renater.fr/rest.php
   username: mail@user.fr
   apikey: an_api_key
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,prometheus,metrics"
+  endpoint:
+    health:
+      show-details: always
+  prometheus:
+    metrics:
+      export:
+        enabled: true

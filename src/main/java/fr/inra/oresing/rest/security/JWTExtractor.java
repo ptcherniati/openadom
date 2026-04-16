@@ -11,7 +11,6 @@ import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +23,6 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
-@Slf4j
 @Component
 public class JWTExtractor {
     public static final String AUTHORIZATION = "Authorization";
@@ -33,7 +31,7 @@ public class JWTExtractor {
     public static SecretKey key;
     public static int jwtExpiration;
     private final JsonRowMapper<?> mapper;
-    private Function<UUID, OreSiUserRole> getUserRole;
+    private final Function<UUID, OreSiUserRole> getUserRole;
 
     public JWTExtractor(
             AuthenticationService authenticationService,
@@ -91,9 +89,7 @@ public class JWTExtractor {
                     .getSubject();
         } catch (ExpiredJwtException ex) {
             throw new BadCredentialsException("expired JWT", ex);
-        } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException ex) {
-            throw new BadCredentialsException("Invalid JWT", ex);
-        } catch (SignatureException ex) {
+        } catch (UnsupportedJwtException | MalformedJwtException | IllegalArgumentException | SignatureException ex) {
             throw new BadCredentialsException("Invalid JWT", ex);
         } catch (JwtException ex) {
             throw new AuthenticationCredentialsNotFoundException("Invalid JWT", ex);
@@ -102,25 +98,17 @@ public class JWTExtractor {
         return mapper.readValue(json, OpenAdomJwtValue.class).requestClient();
     }
 
-    public String refreshJwtInResponse(HttpServletResponse response, UUID id, boolean isSecureEnvironnement) {
+    public String refreshJwtInResponse(HttpServletResponse response, UUID id) {
         OreSiUserRole userRole = getUserRole.apply(id);
         OreSiUserRequestClient requestClient = OreSiUserRequestClient.of(id, userRole);
         String json = mapper.toJson(new OpenAdomJwtValue(requestClient));
         String jwt = buildToken(json);
-        try {
-            addJwtHeader(response, jwt);
-        } catch (Exception e) {
-            log.trace("pas grave");
-        }
+        addJwtHeader(response, jwt);
         return jwt;
     }
 
-    public void setSetGetUserRole(Function<UUID, OreSiUserRole> getUserRole) {
-        this.getUserRole = getUserRole;
-    }
 
-
-    protected void clearSession(HttpServletRequest request, HttpServletResponse response, boolean isSecureEnvironnement) {
+    protected void clearSession(HttpServletRequest request, HttpServletResponse response) {
 
         // Invalider la session côté serveur
         request.getSession().invalidate();

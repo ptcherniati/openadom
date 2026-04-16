@@ -70,7 +70,7 @@ public class BinaryFileDataset {
         return binaryFileDataset;
     }
 
-    public BinaryFileDataset withPattern(DatePattern datePattern) {
+    public BinaryFileDataset withPattern(DatePattern<?> datePattern) {
         final LocalDateTimeRange localDateTimeRange = LocalDateTimeRange.of(DatePattern.of(LocalDateTimeRange.YYYY_MM_DD_HH_MM_SS), getFrom(), getTo());
         try {
             BinaryFileDataset localBinaryFileDataset = copy();
@@ -91,9 +91,9 @@ public class BinaryFileDataset {
     }
 
     public void setIfNotPresentDatatype(String dataType) {
-        if(getDatatype()!=null){
+        if (getDatatype() != null) {
             return;
         }
-        setDatatype(datatype);
+        setDatatype(dataType);
     }
 }

@@ -30,7 +30,7 @@ public sealed interface CheckerDescription permits
                 referenceIdPerKeys.entrySet().stream()
                         .collect(
                                 Collectors.groupingBy(
-                                        e -> e.getKey(),
+                                        Map.Entry::getKey,
                                         Collectors.mapping(
                                                 Map.Entry::getValue,
                                                 ImmutableSet.toImmutableSet()
@@ -46,9 +46,9 @@ public sealed interface CheckerDescription permits
 
     boolean required();
 
+    @SuppressWarnings({"unchecked", "java:S1172"})
     default <F extends FieldType<?>> F buildFieldtype(final DataRepository repository, final PublishContext.PublishContextBuilder publishContextBuilder, final CheckerTarget target, final LineChecker.LineTransformer transformer) {
         return (F) switch (this) {
-            case null -> NullType.INSTANCE;
             case final ReferenceChecker referenceChecker -> {
                 final ImmutableMap<DataValue.LineIdentityColumnName, UUID> referenceIdPerKeys = repository.getDataIdPerKeys(referenceChecker.refType());
                 final ImmutableMap<DataValue.LineIdentityColumnName, ImmutableSet<UUID>> referenceValues = getUUidByNaturalKey(referenceIdPerKeys);
@@ -56,7 +56,7 @@ public sealed interface CheckerDescription permits
             }
             case final DateChecker dateChecker ->
                     new DateType(dateChecker.pattern(), dateChecker.duration(), dateChecker.min(), dateChecker.max());
-            case final BooleanChecker booleanChecker -> new BooleanType(false);
+            case BooleanChecker _ -> new BooleanType(false);
             case final FloatChecker floatChecker -> {
                 final Float minFloat = floatChecker.min();
                 final Float maxFloat = floatChecker.max();
@@ -84,6 +84,7 @@ public sealed interface CheckerDescription permits
         return "a string";
     }
 
+    @SuppressWarnings("java:S115")
     enum CheckerDescriptionType {
         BooleanChecker,
         ComputationChecker,

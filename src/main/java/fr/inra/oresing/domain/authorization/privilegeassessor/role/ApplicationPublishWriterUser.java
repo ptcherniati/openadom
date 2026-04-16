@@ -21,6 +21,7 @@ public record ApplicationPublishWriterUser(
     }
 
     @Override
+    @SuppressWarnings("java:S3516") // toujours true ou exception levée — comportement voulu
     public boolean hasRightForPublishOrUnPublish(FileOrUUID fileOrUUID) {
         if (isData()) {
             if (CollectionUtils.isEmpty(authorizations())) {

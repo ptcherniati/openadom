@@ -70,6 +70,7 @@ class NormalizedServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("java:S2699") // vérifie l'absence d'exception — pas de valeur à asserter
     public void normalizeMonsore() {
         try (final InputStream applicationStream = getClass().getResourceAsStream("/data/monsore/normalized/monsoereApplication.json")) {
             jsonRowMapper.getJsonMapper()
@@ -83,6 +84,7 @@ class NormalizedServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("java:S2699") // vérifie l'absence d'exception — pas de valeur à asserter
     public void normalizeMultiplicity() {
         try (final InputStream applicationStream = getClass().getResourceAsStream("/data/multiplicity/normalized/multiplicityApplication.json")) {
             jsonRowMapper.getJsonMapper()
@@ -96,6 +98,7 @@ class NormalizedServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("java:S2699") // vérifie l'absence d'exception — pas de valeur à asserter
     public void normalizePattern() {
         try (final InputStream applicationStream = getClass().getResourceAsStream("/data/pattern/normalized/patternApplication.json")) {
             jsonRowMapper.getJsonMapper()

@@ -85,6 +85,8 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
         if (properties.isUseVirtualThreads()) {
             executor.setThreadFactory(Thread.ofVirtual()
                     .name(config.getThreadNamePrefix(), 0)
+                    .uncaughtExceptionHandler((t, e) ->
+                            log.error("Uncaught exception in virtual thread [{}]: {}", t.getName(), e.getMessage(), e))
                     .factory());
         }
 
@@ -118,6 +120,8 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
         if (properties.isUseVirtualThreads()) {
             executor.setThreadFactory(Thread.ofVirtual()
                     .name(config.getThreadNamePrefix(), 0)
+                    .uncaughtExceptionHandler((t, e) ->
+                            log.error("Uncaught exception in virtual thread [{}]: {}", t.getName(), e.getMessage(), e))
                     .factory());
         }
 
@@ -151,6 +155,8 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
         if (properties.isUseVirtualThreads()) {
             executor.setThreadFactory(Thread.ofVirtual()
                     .name(config.getThreadNamePrefix(), 0)
+                    .uncaughtExceptionHandler((t, e) ->
+                            log.error("Uncaught exception in virtual thread [{}]: {}", t.getName(), e.getMessage(), e))
                     .factory());
         }
 
@@ -184,6 +190,8 @@ public class AsyncExecutorConfiguration implements AsyncConfigurer {
         if (properties.isUseVirtualThreads()) {
             executor.setThreadFactory(Thread.ofVirtual()
                     .name(config.getThreadNamePrefix(), 0)
+                    .uncaughtExceptionHandler((t, e) ->
+                            log.error("Uncaught exception in virtual thread [{}]: {}", t.getName(), e.getMessage(), e))
                     .factory());
         }
 

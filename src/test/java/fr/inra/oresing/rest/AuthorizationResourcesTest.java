@@ -401,6 +401,7 @@ public class AuthorizationResourcesTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @SuppressWarnings("java:S2699") // vérifie l'absence d'exception lors du chargement du fixture
     void testAddApplicationMonsoere() throws Exception {
         MonSoereFixture monSoereFixture = new MonSoereFixture(fixtures, mockMvc, userRepository, jsonRowMapper);
         monSoereFixture.addMonsoreApplication();

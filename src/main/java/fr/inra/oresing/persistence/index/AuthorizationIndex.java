@@ -9,11 +9,20 @@ import fr.inra.oresing.domain.application.configuration.StandardDataDescription;
 import fr.inra.oresing.domain.application.configuration.date.LocalDateTimeRange;
 import fr.inra.oresing.domain.authorization.request.*;
 import fr.inra.oresing.domain.repository.authorization.OperationType;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public record AuthorizationIndex(Application application) {
+public record AuthorizationIndex(Application application, Set<String> dataNames) {
+    public AuthorizationIndex {
+        dataNames = CollectionUtils.isEmpty(dataNames) ? Set.copyOf(application.getAllDataNames()) : dataNames;
+    }
+
+    public AuthorizationIndex(Application application) {
+        this(application,  Set.copyOf(application.getAllDataNames()));
+    }
+
     public String createIndexes() {
         StringBuilder sqlBuilder = new StringBuilder();
 
@@ -21,25 +30,44 @@ public record AuthorizationIndex(Application application) {
         sqlBuilder.append(dropIndexes()).append("\n");
 
         // Créer les nouveaux index pour chaque dataname
-        application().getConfiguration().dataDescription().keySet().forEach(dataname -> sqlBuilder.append(createIndex(dataname)).append("\n"));
+        final Set<String> dataNamesForindexes = dataNames().isEmpty() ?
+                application().getConfiguration().dataDescription().keySet()
+                : dataNames();
+
+        dataNamesForindexes.forEach(dataname -> sqlBuilder.append(createIndex(dataname)).append("\n"));
 
         return sqlBuilder.toString();
     }
 
     public String dropIndexes() {
+        if (dataNames() == null || dataNames().isEmpty()) {
+            // Aucun index à supprimer
+            return "";
+        }
+
+        String referencetypes = dataNames().stream()
+                .map(name -> "'" + name + "'")
+                .collect(Collectors.joining(", "));
+
         return """
                 DO $$
                 DECLARE
                     idx record;
+                    ref_types TEXT[] := ARRAY[%2$s];
+                    ref_type TEXT;
                 BEGIN
-                    FOR idx IN (SELECT indexname FROM pg_indexes WHERE schemaname = '%1$s'
-                    AND indexname LIKE 'authorization_%%_index')
+                    FOREACH ref_type IN ARRAY ref_types
                     LOOP
-                        EXECUTE 'DROP INDEX IF EXISTS ' || quote_ident(idx.indexname);
+                        FOR idx IN (SELECT indexname FROM pg_indexes 
+                                    WHERE schemaname = '%1$s'
+                                    AND indexname LIKE 'authorization_' || ref_type || '_index%%')
+                        LOOP
+                            EXECUTE 'DROP INDEX IF EXISTS %1$s.' || quote_ident(idx.indexname);
+                        END LOOP;
                     END LOOP;
                 END $$;
                 """
-                .formatted(application().getName());
+                .formatted(application().getName(), referencetypes);
     }
 
     public String createIndex(String dataname) {
@@ -144,7 +172,8 @@ public record AuthorizationIndex(Application application) {
         switch (authorization) {
             case AuthorizationForTimeScope(
                     Set<OperationType> _,
-                    LocalDateTimeRange timeScope ) -> {
+                    LocalDateTimeRange timeScope
+            ) -> {
                 if (hasRequiredAuthorizations[0]) {
                     addEmptyReferenceConditions(conditions, dataName);
                 }
