@@ -363,12 +363,19 @@ public class OreSiResources {
                         SecurityContextHolder.setContext(context);
                         fluxSink.accept(sink);
                     } catch (Throwable e) {
+                        // Without this log, any exception thrown inside the
+                        // NDJSON producer is converted to a Flux error signal
+                        // and the HTTP stream closes silently mid-way - the
+                        // client sees a clean disconnection with no diagnostic.
+                        // Logging here surfaces the root cause for ops.
+                        log.error("Error in NDJSON flux task", e);
                         sink.error(e);
                     } finally {
                         SecurityContextHolder.clearContext();
                     }
                 });
             } catch (RuntimeException e) {
+                log.error("Failed to submit NDJSON flux task", e);
                 sink.error(e);
             }
         });
@@ -549,6 +556,12 @@ public class OreSiResources {
         return buildFluxRequestNDJson(fluxSink -> {
             final Application application = validateConfigurationUseCase.execute(fluxSink::next, finalDataFile);
             fluxSink.next(new ReactiveTypeResult(application));
+            // Final progress=1.0 chunk is required for the frontend progress
+            // bar to disappear and reveal the next-step button. Pre-merge
+            // (e392636) the wrapper ReactiveProgression.complete() emitted
+            // this automatically; the modernization replaced it with a raw
+            // sink.complete() and forgot to keep the final progress signal.
+            fluxSink.next(new ReactiveTypeProgress(1D));
             fluxSink.complete();
         });
     }
