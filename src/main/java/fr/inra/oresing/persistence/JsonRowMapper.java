@@ -159,17 +159,48 @@ public class JsonRowMapper<T> implements RowMapper<T>, Mapper {
             @Override
             public Tag deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
                 JsonNode node = p.readValueAsTree();
-                Tag.TagDefinitions type = Optional.ofNullable(node.get("tagDefinition")).map(JsonNode::asText).map(Tag.TagDefinitions::valueOf).orElse(Tag.TagDefinitions.NO_TAG);
+                // Backwards compat: pre-modernization data was serialized with
+                // PropertyNamingStrategies.LOWER_CASE only (no @JsonProperty on
+                // Tag.tagDefinition()), so existing apps in DB store the key as
+                // "tagdefinition" (lowercase). The current code adds
+                // @JsonProperty("tagDefinition") which writes camelCase. We
+                // accept both spellings on read to keep historical apps working
+                // without any data migration. Same defensive lookup applied to
+                // tagname/tagorder for symmetry / future-proofing.
+                Tag.TagDefinitions type = getCaseInsensitive(node, "tagDefinition")
+                        .map(JsonNode::asText)
+                        .map(Tag.TagDefinitions::valueOf)
+                        .orElse(Tag.TagDefinitions.NO_TAG);
                 return switch (type) {
                     case NO_TAG -> node.isTextual() ? Tag.buildTag(node.asText()) : Tag.NoTag.instance();
                     case DATA_TAG -> Tag.DataTag.instance();
                     case REFFERENCE_TAG -> Tag.ReferenceTag.instance();
                     case HIDDEN_TAG -> Tag.HiddenTag.instance();
                     case ORDER_TAG ->
-                            Optional.ofNullable(node.get("tagorder")).map(JsonNode::asInt).map(Tag.OrderTag::new).orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
+                            getCaseInsensitive(node, "tagOrder")
+                                    .map(JsonNode::asInt)
+                                    .map(Tag.OrderTag::new)
+                                    .orElse(Tag.OrderTag.ORDER_TAG_NOUGHT);
                     case DOMAIN_TAG ->
-                            Optional.ofNullable(node.get("tagname")).map(JsonNode::asText).map(Tag.DomainTag::new).orElse(new Tag.DomainTag(""));
+                            getCaseInsensitive(node, "tagName")
+                                    .map(JsonNode::asText)
+                                    .map(Tag.DomainTag::new)
+                                    .orElse(new Tag.DomainTag(""));
                 };
+            }
+
+            /**
+             * Case-tolerant lookup: tries the camelCase spelling first
+             * (current serializer), falls back to all-lowercase (legacy
+             * serializer when PropertyNamingStrategies.LOWER_CASE applied
+             * without an explicit @JsonProperty).
+             */
+            private Optional<JsonNode> getCaseInsensitive(JsonNode node, String camelCaseKey) {
+                JsonNode found = node.get(camelCaseKey);
+                if (found == null) {
+                    found = node.get(camelCaseKey.toLowerCase());
+                }
+                return Optional.ofNullable(found);
             }
         };
     }

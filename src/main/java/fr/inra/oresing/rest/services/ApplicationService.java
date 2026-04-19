@@ -37,6 +37,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -404,6 +405,17 @@ public class ApplicationService {
 
 
 
+    /**
+     * Pure YAML validation, no DB writes. Runs OUTSIDE any transaction
+     * (NOT_SUPPORTED) so that the inner getApplication() call - which throws
+     * NoSuchApplicationException for new apps as part of the DRY_RUN migration
+     * preview - cannot poison an enclosing read-only transaction with a
+     * rollback-only marker. Without this, the silent catch (Exception) below
+     * suppresses the exception but Spring's TransactionInterceptor still
+     * marks the tx rollback-only -> UnexpectedRollbackException at commit ->
+     * NDJSON stream cut mid-way without REACTIVE_RESULT.
+     */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public Application validateConfiguration(final Consumer<ReactiveResult> sink, final DataFile file) {
         ReactiveEventHelper eventHelper = new ReactiveEventHelper(sink, "application.createConfiguration");
         try {
