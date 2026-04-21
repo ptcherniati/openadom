@@ -406,7 +406,16 @@ public class DataService {
                 });
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Construit l'export ZIP : un CSV principal + N CSVs de references.
+     *
+     * <p>Phase 1c-bis ( issue #62 ) : le {@code @Transactional(readOnly=true)}
+     * global a ete retire au profit d'une transaction par CSV ( cf. {@link
+     * #addDatacsv} ). Cela permet de fermer le curseur JDBC entre chaque
+     * fichier , ce qui evite de tenir une transaction longue ouverte sur le
+     * pool {@code workflowDataSource} pendant toute la generation des N+1
+     * CSVs ( risque OOM / saturation pool sur gros volumes ).
+     */
     public void buildDataZip(
             Path zipOutputStream,
             DownloadDatasetQuery downloadDatasetQuery) {
@@ -415,7 +424,13 @@ public class DataService {
 
         serviceContainer.authenticationService().setRoleForClient();
 
-        UUIDsfromData uuiDsfromData = addDatacsv(zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
+        // Passer par le proxy Spring ( serviceContainer.dataService() ) pour
+        // que le @Transactional(readOnly=true) declare sur addDatacsv soit
+        // effectivement applique - les appels intra-classe bypassent le proxy
+        // et n'ouvrent aucune transaction.
+        DataService self = serviceContainer.dataService();
+
+        UUIDsfromData uuiDsfromData = self.addDatacsv(zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
 
 
         getDownloadDatasetQueriesAsync(
@@ -428,7 +443,7 @@ public class DataService {
         )
                 .flatMap(downloadDatasetQueryByRowId -> Mono.fromCallable(() -> {
                     try {
-                        return addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
+                        return self.addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
                     } catch (Exception e) {
                         throw new SiOreIllegalArgumentException("IOException", Map.of("message", Optional.ofNullable(e).map(Exception::getLocalizedMessage).orElse(OreSiTechnicalException.NO_MESSAGE)));
                     }
@@ -489,6 +504,7 @@ public class DataService {
         }*/
     }
 
+    @Transactional(readOnly = true)
     public UUIDsfromData addDatacsv(
             final Path zipRepository,
             DataRepository dataRepository,

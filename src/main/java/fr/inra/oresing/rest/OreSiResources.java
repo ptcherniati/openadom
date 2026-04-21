@@ -86,6 +86,7 @@ import fr.inra.oresing.rest.usecases.storage.additionalfile.FindAdditionalFileUs
 import fr.inra.oresing.rest.usecases.storage.additionalfile.GetAdditionalFilesZipStreamUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.*;
 import fr.inra.oresing.rest.usecases.storage.versioning.UnPublishVersionBeforeDeleteUseCase;
+import fr.inra.oresing.workflow.cascade.ZipExportRateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -218,6 +219,7 @@ public class OreSiResources {
     private final ReadEntryUseCase readEntryUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase;
+    private final ZipExportRateLimiter zipExportRateLimiter;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -280,7 +282,8 @@ public class OreSiResources {
             WriteUploadBundleUseCase writeUploadBundleUseCase,
             ReadEntryUseCase readEntryUseCase,
             GetCurrentUserUseCase getCurrentUserUseCase,
-            SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase
+            SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase,
+            ZipExportRateLimiter zipExportRateLimiter
     ) {
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
@@ -335,6 +338,7 @@ public class OreSiResources {
         this.readEntryUseCase = readEntryUseCase;
         this.getCurrentUserUseCase = getCurrentUserUseCase;
         this.sendUploadErrorsMailUseCase = sendUploadErrorsMailUseCase;
+        this.zipExportRateLimiter = zipExportRateLimiter;
     }
 
 
@@ -1072,6 +1076,15 @@ public class OreSiResources {
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\".zip");
 
+        // Quota par utilisateur : on reserve un slot avant de lancer le travail
+        // lourd. Si le quota est depasse , 429 Too Many Requests est retourne
+        // immediatement par Spring MVC ( cf @ResponseStatus sur l'exception ).
+        // Le slot est libere dans le finally : couvre la generation ZIP et
+        // l'envoi mail , mais pas le streaming HTTP final ( volontaire :
+        // permet a une nouvelle requete de demarrer pendant qu'on streame ).
+        final String userIdForRateLimit = OreSiApiRequestContext.getRequestClient().id().toString();
+        zipExportRateLimiter.acquireOrThrow(userIdForRateLimit);
+
         AtomicReference<Path> tempDirectory = new AtomicReference<>();
         try {
             heavyExecutorService.submit(() -> {
@@ -1119,6 +1132,8 @@ public class OreSiResources {
                 case RuntimeException runtimeEx -> runtimeEx;
                 default -> new IllegalStateException("Unexpected error during ZIP export", cause);
             };
+        } finally {
+            zipExportRateLimiter.release(userIdForRateLimit);
         }
         final Path source = zipFile.get();
         StreamingResponseBody body = outputStream -> {
