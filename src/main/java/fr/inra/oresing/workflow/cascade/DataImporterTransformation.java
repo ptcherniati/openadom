@@ -1,10 +1,8 @@
 package fr.inra.oresing.workflow.cascade;
 
 import fr.inra.oresing.domain.data.deposit.DataImporter;
-import fr.inra.oresing.fileprocessor.workflow.config.WorkflowProperties;
-import fr.inra.oresing.fileprocessor.workflow.control.orchestration.WorkflowLifecycleManager;
-import fr.inra.oresing.fileprocessor.workflow.entity.ChunkInfo;
-import fr.inra.oresing.fileprocessor.workflow.entity.context.SharedContext;
+import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import fr.inrae.ore.cascade.model.chunk.Chunk;
 import fr.inrae.ore.cascade.model.core.Transformation;
 
@@ -16,46 +14,36 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Cascade {@link Transformation} qui délègue le traitement d'un chunk
- * physique (fichier CSV) au métier existant
+ * Cascade {@link Transformation} qui delegue le traitement d'un chunk
+ * physique (fichier CSV) au metier existant
  * {@link DataImporter#doDataTreatment}.
  *
- * <p>Le couplage aux types file-processor ({@link ChunkInfo},
- * {@link SharedContext}, {@link WorkflowProperties},
- * {@link WorkflowLifecycleManager}) est conservé dans cette classe pour
- * éviter toute modification de {@link DataImporter} : cette classe est le
- * SEUL pont entre cascade et l'API file-processor durant la phase 1a.
- *
- * <p>Un {@link SharedContext} est partagé entre tous les chunks d'un même
- * workflow : il porte le compteur d'erreurs et le plafond
- * {@code maxErrorsThreshold} qui permet à DataImporter d'arrêter l'import
- * lorsque trop d'erreurs s'accumulent (via {@code takeWhile}).
+ * <p>Phase 1e (#62) : ne depend plus que de types backend ou cascade.
+ * Tous les imports {@code fr.inra.oresing.fileprocessor.*} ont ete
+ * supprimes. Les anciens objets {@code SharedContext}, {@code ChunkInfo},
+ * {@code WorkflowProperties}, {@code WorkflowLifecycleManager} sont
+ * remplaces par {@link ImportProperties} + {@link ImportProgressReporter}
+ * + des primitives passees au DataImporter.
  */
 public final class DataImporterTransformation implements Transformation<Path, Path> {
 
-    private final DataImporter              dataImporter;
-    private final WorkflowProperties        workflowProperties;
-    private final WorkflowLifecycleManager  lifecycleManager;
-    private final SharedContext             sharedContext;
-    private final Path                      processedDir;
-    private final String                    correlationId;
-    private final String                    userId;
+    private final DataImporter             dataImporter;
+    private final ImportProperties         importProperties;
+    private final ImportProgressReporter   progressReporter;
+    private final Path                     processedDir;
+    private final String                   correlationId;
 
     public DataImporterTransformation(
-            DataImporter              dataImporter,
-            WorkflowProperties        workflowProperties,
-            WorkflowLifecycleManager  lifecycleManager,
-            SharedContext             sharedContext,
-            Path                      processedDir,
-            String                    correlationId,
-            String                    userId) {
-        this.dataImporter       = dataImporter;
-        this.workflowProperties = workflowProperties;
-        this.lifecycleManager   = lifecycleManager;
-        this.sharedContext      = sharedContext;
-        this.processedDir       = processedDir;
-        this.correlationId      = correlationId;
-        this.userId             = userId;
+            DataImporter             dataImporter,
+            ImportProperties         importProperties,
+            ImportProgressReporter   progressReporter,
+            Path                     processedDir,
+            String                   correlationId) {
+        this.dataImporter      = dataImporter;
+        this.importProperties  = importProperties;
+        this.progressReporter  = progressReporter;
+        this.processedDir      = processedDir;
+        this.correlationId     = correlationId;
     }
 
     @Override
@@ -69,29 +57,23 @@ public final class DataImporterTransformation implements Transformation<Path, Pa
             Path processedPath = processedDir.resolve(
                     String.format("processed_chunk_%s_%04d.csv", correlationId, chunk.chunkIndex()));
 
-            ChunkInfo chunkInfo = ChunkInfo.builder()
-                    .correlationId(correlationId)
-                    .userId        (userId)
-                    .chunkNumber   (chunk.chunkIndex())
-                    .chunkPath     (chunkFile)
-                    .build();
-
-            AtomicInteger dataLinesProcessed  = new AtomicInteger();
+            AtomicInteger dataLinesProcessed   = new AtomicInteger();
             AtomicInteger successfulLinesBatch = new AtomicInteger();
 
             dataImporter.doDataTreatment(
                     processedPath,
-                    sharedContext,
-                    chunkInfo,
+                    chunkFile,
+                    correlationId,
+                    chunk.chunkIndex(),
+                    importProperties.getChunkSizeLines(),
+                    importProperties.getProgressBatchSize(),
                     dataLinesProcessed,
                     successfulLinesBatch,
-                    workflowProperties,
-                    lifecycleManager);
+                    progressReporter);
 
             int remainingSuccess = successfulLinesBatch.get();
             if (remainingSuccess > 0) {
-                sharedContext.incrementProcessedLines(remainingSuccess);
-                lifecycleManager.incrementProcessedLines(correlationId, remainingSuccess);
+                progressReporter.onLinesProcessed(correlationId, remainingSuccess);
             }
 
             Files.deleteIfExists(chunkFile);

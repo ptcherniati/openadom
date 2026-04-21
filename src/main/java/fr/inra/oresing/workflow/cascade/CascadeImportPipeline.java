@@ -1,15 +1,10 @@
 package fr.inra.oresing.workflow.cascade;
 
 import fr.inra.oresing.domain.data.deposit.DataImporter;
-import fr.inra.oresing.fileprocessor.workflow.config.WorkflowProperties;
-import fr.inra.oresing.fileprocessor.workflow.control.monitoring.MonitoringService;
-import fr.inra.oresing.fileprocessor.workflow.control.orchestration.WorkflowChunkCleanupService;
-import fr.inra.oresing.fileprocessor.workflow.control.orchestration.WorkflowLifecycleManager;
-import fr.inra.oresing.fileprocessor.workflow.control.security.RateLimitingService;
-import fr.inra.oresing.fileprocessor.workflow.entity.WorkflowStatus;
-import fr.inra.oresing.fileprocessor.workflow.entity.context.SharedContext;
-import fr.inra.oresing.fileprocessor.workflow.entity.monitoring.WorkflowMonitoring;
 import fr.inra.oresing.persistence.DataRepository;
+import fr.inra.oresing.workflow.cascade.cleanup.WorkflowTempCleanup;
+import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import fr.inrae.ore.cascade.api.workflow.builder.WorkflowBuilder;
 import fr.inrae.ore.cascade.model.workflow.ProcessingStatus;
 import fr.inrae.ore.cascade.model.workflow.Workflow;
@@ -17,7 +12,6 @@ import fr.inrae.ore.cascade.model.workflow.WorkflowResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,49 +23,40 @@ import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 /**
  * Orchestration de l'import CSV → PostgreSQL via la bibliothèque cascade.
  *
- * <p>Remplace l'ancien pipeline file-processor
- * ({@code ChunkerService / WorkerService / MergerService / LoaderService})
- * par trois briques cascade :
+ * <p>Phase 1e (#62) : aucune dependance file-processor. Le pipeline est
+ * compose de trois briques cascade :
  * <ul>
- *   <li>{@link FileChunkSource} — découpe le fichier en chunks CSV sur disque</li>
- *   <li>{@link DataImporterTransformation} — délègue le traitement métier
- *       au {@link DataImporter} existant (intact)</li>
- *   <li>{@link MergingFileSink} — concatène les chunks traités en un seul CSV</li>
+ *   <li>{@link FileChunkSource} - decoupe le fichier en chunks CSV sur disque</li>
+ *   <li>{@link DataImporterTransformation} - delegue le traitement metier
+ *       au {@link DataImporter} existant</li>
+ *   <li>{@link MergingFileSink} - concatene les chunks traites en un seul CSV</li>
  * </ul>
  *
- * <p>Le chargement final en base ({@link DataRepository#storeAll}) reste
- * inchangé : il est appelé en aval une fois que cascade a produit le fichier
- * mergé. Le bean {@link WorkflowLifecycleManager} est toujours utilisé pour
- * le suivi de progression et le statut — il sera remplacé ultérieurement par
- * un interceptor cascade dédié.
- *
- * <p>Cette implémentation fait partie de la phase 1a de l'issue #62.
+ * <p>Le chargement final en base reste assure par
+ * {@link DataRepository#storeAll}. La progression est tracee via
+ * {@link ImportProgressReporter}, le cleanup via {@link WorkflowTempCleanup}.
+ * Le rate-limit n'est plus actif sur cet endpoint en phase 1e ; il sera
+ * reintroduit via cascade {@code UserRateLimiter} si necessaire.
  */
 @Slf4j
 @Service
 public class CascadeImportPipeline {
 
-    private final RateLimitingService         rateLimitingService;
-    private final MonitoringService           monitoringService;
-    private final WorkflowLifecycleManager    lifecycleManager;
-    private final WorkflowChunkCleanupService cleanupService;
-    private final WorkflowProperties          workflowProperties;
+    private final ImportProperties        importProperties;
+    private final ImportProgressReporter  progressReporter;
+    private final WorkflowTempCleanup     tempCleanup;
 
     public CascadeImportPipeline(
-            RateLimitingService         rateLimitingService,
-            MonitoringService           monitoringService,
-            WorkflowLifecycleManager    lifecycleManager,
-            WorkflowChunkCleanupService cleanupService,
-            WorkflowProperties          workflowProperties) {
-        this.rateLimitingService = rateLimitingService;
-        this.monitoringService   = monitoringService;
-        this.lifecycleManager    = lifecycleManager;
-        this.cleanupService      = cleanupService;
-        this.workflowProperties  = workflowProperties;
+            ImportProperties       importProperties,
+            ImportProgressReporter progressReporter,
+            WorkflowTempCleanup    tempCleanup) {
+        this.importProperties  = importProperties;
+        this.progressReporter  = progressReporter;
+        this.tempCleanup       = tempCleanup;
     }
 
     /**
-     * Lance un import pour un fichier CSV sans en-tête déjà préparé par
+     * Lance un import pour un fichier CSV sans en-tete deja prepare par
      * {@link DataImporter#prepareContextForDataTreatment}.
      */
     public void execute(
@@ -84,50 +69,38 @@ public class CascadeImportPipeline {
             throw new IllegalArgumentException("Input file does not exist: " + headerlessCsv);
         }
 
-        if (lifecycleManager.hasReachedMaxConcurrentWorkflows(userId)) {
-            log.warn("User {} has reached maximum concurrent workflows", userId);
-            throw new UnsupportedOperationException("Max concurrent workflows reached for user " + userId);
-        }
+        final String correlationId = UUID.randomUUID().toString();
 
-        final WorkflowMonitoring monitoring;
+        final Path uploadedPath;
         try {
-            monitoring = initiateWorkflow(userId, headerlessCsv);
+            uploadedPath = uploadFile(headerlessCsv, userId, correlationId);
         } catch (IOException e) {
-            log.error("Error preparing upload for user: {}", userId, e);
+            log.error("Erreur lors de la preparation de l'upload pour {} : {}", userId, e.getMessage(), e);
             throw new UnsupportedOperationException("Failed to prepare workflow", e);
-        } catch (WorkflowLifecycleManager.RateLimitExceededException e) {
-            log.warn("Rate limit exceeded for user: {}", userId);
-            throw new UnsupportedOperationException("Rate limit exceeded", e);
         }
 
-        final String correlationId = monitoring.getCorrelationId();
-        final Path   originalPath  = Paths.get(monitoring.getOriginalFilePath());
+        final int chunkSizeLines = importProperties.getChunkSizeLines();
+        final int parallelism    = importProperties.getParallelism();
+        final int maxErrors      = importProperties.getMaxErrorsThreshold();
 
-        final int chunkSizeLines = workflowProperties.getChunker().getChunkSizeLines();
-        final int workerThreads  = workflowProperties.getWorker().getThreads();
-        final int maxErrors      = workflowProperties.getErrorHandling().getMaxErrorsThreshold();
-
-        final Path chunksDir    = Paths.get(workflowProperties.getChunker().getTempDirectory(), userId, correlationId);
-        final Path processedDir = Paths.get(workflowProperties.getWorker().getTempDirectory(), correlationId);
+        final Path chunksDir    = Paths.get(importProperties.getChunksTempDir(), userId, correlationId);
+        final Path processedDir = Paths.get(importProperties.getProcessedTempDir(), correlationId);
         final Path mergedPath   = Paths.get(System.getProperty("java.io.tmpdir"),
-                                            "oresing-safe-" + correlationId + ".csv");
+                                            "openadom-import-" + correlationId + ".csv");
 
-        SharedContext sharedContext = new SharedContext(correlationId, maxErrors);
-
-        FileChunkSource source = new FileChunkSource(originalPath, chunkSizeLines, chunksDir);
+        FileChunkSource source = new FileChunkSource(uploadedPath, chunkSizeLines, chunksDir);
 
         DataImporterTransformation transformation = new DataImporterTransformation(
                 dataImporter,
-                workflowProperties,
-                lifecycleManager,
-                sharedContext,
+                importProperties,
+                progressReporter,
                 processedDir,
-                correlationId,
-                userId);
+                correlationId);
 
         MergingFileSink sink = new MergingFileSink(mergedPath);
 
-        lifecycleManager.updateWorkflowStatus(correlationId, WorkflowStatus.PROCESS, null);
+        log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, parallelism={}, maxErrors={}",
+                correlationId, userId, uploadedPath.getFileName(), chunkSizeLines, parallelism, maxErrors);
 
         Workflow workflow = WorkflowBuilder.create()
                 .forUser(userId)
@@ -135,7 +108,7 @@ public class CascadeImportPipeline {
                 .transform(transformation)
                 .to(sink)
                 .withCorrelationId(correlationId)
-                .withParallelism(workerThreads)
+                .withParallelism(parallelism)
                 .withMaxErrors(maxErrors)
                 .build();
 
@@ -145,61 +118,38 @@ public class CascadeImportPipeline {
                 String firstError = result.errors().isEmpty()
                         ? result.fatalError().map(Throwable::getMessage).orElse("unknown error")
                         : result.errors().get(0);
-                log.error("❌ Cascade workflow failed for {}: {}", correlationId, firstError);
-                lifecycleManager.markWorkflowAsFailed(correlationId, firstError);
-                cleanupService.cleanupWorkflow(correlationId, userId);
+                log.error("[{}] Workflow cascade en echec : {}", correlationId, firstError);
+                tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
                 throw new UnsupportedOperationException("Import workflow failed: " + firstError);
             }
 
-            log.info("✅ Cascade workflow completed for {}: processed={}, chunks={}, duration={}",
-                    correlationId,
-                    result.recordsProcessed(),
-                    result.chunksProcessed(),
-                    result.duration());
+            log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
+                    correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
 
             dataImporter.treatErrors();
             referenceValueRepository.storeAll(sink.getMergedPath());
 
-            lifecycleManager.updateWorkflowStatus(correlationId, WorkflowStatus.COMPLETED, null);
-
-            int deleted = cleanupService.cleanupWorkflow(correlationId, userId);
-            if (deleted > 0) {
-                log.info("🧹 Cleaned up {} remaining items for {}", deleted, correlationId);
-            }
+            tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
 
         } catch (RuntimeException e) {
-            lifecycleManager.markWorkflowAsFailed(correlationId,
-                    e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
-            cleanupService.cleanupWorkflow(correlationId, userId);
+            tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
             throw e;
         }
     }
 
-    private WorkflowMonitoring initiateWorkflow(String userId, Path path) throws IOException {
-        if (!rateLimitingService.tryConsume(userId)) {
-            throw new WorkflowLifecycleManager.RateLimitExceededException(
-                    "Rate limit exceeded. Please try again later.");
-        }
+    /**
+     * Deplace le fichier source dans un repertoire dedie au user et au
+     * correlationId, puis renvoie le chemin final.
+     */
+    private Path uploadFile(Path source, String userId, String correlationId) throws IOException {
+        Path uploadDir = Paths.get(importProperties.getChunksTempDir(), "uploads", userId);
+        Files.createDirectories(uploadDir);
 
-        String correlationId = UUID.randomUUID().toString();
+        String fileName = source.getFileName().toString();
+        Path target = uploadDir.resolve(correlationId + "_" + fileName);
+        Files.move(source, target, REPLACE_EXISTING);
 
-        Path uploadDirPath = Paths.get(
-                workflowProperties.getChunker().getTempDirectory(), "uploads", userId);
-        Files.createDirectories(uploadDirPath);
-
-        File   file     = path.toFile().getAbsoluteFile();
-        String fileName = file.getName();
-        Path   originalFilePath = uploadDirPath.resolve(correlationId + "_" + fileName);
-        Files.move(path, originalFilePath, REPLACE_EXISTING);
-
-        log.info("File uploaded: {} for user: {} with correlationId: {}",
-                fileName, userId, correlationId);
-
-        WorkflowMonitoring monitoring = monitoringService.registerWorkflow(
-                correlationId, userId, fileName, file.length());
-        monitoring.setOriginalFilePath(originalFilePath.toString());
-
-        log.info("Workflow monitoring registered for correlationId: {}", correlationId);
-        return monitoring;
+        log.debug("[{}] Fichier deplace : {} -> {}", correlationId, source, target);
+        return target;
     }
 }

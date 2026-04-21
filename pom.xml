@@ -57,14 +57,11 @@
         <url>https://forge.inrae.fr/anaee-dev/openadom/backend</url>
     </scm>
     <repositories>
-        <repository>
-            <id>gitlab-processor--maven</id>
-            <url>https://forge.inrae.fr/api/v4/projects/${env.CI_PROCESSOR_PROJECT_ID}/packages/maven</url>
-        </repository>
         <!--
              Registry public du projet cascade ( issue #62 ) sur la forge
              INRAE. Lecture anonyme autorisée car le projet est public ,
-             pas besoin de token dans ci-settings.xml.
+             pas besoin de token dans ci-settings.xml. Seul registry tiers
+             requis depuis la phase 1e ( retrait du JAR file-processor ).
         -->
         <repository>
             <id>gitlab-cascade--maven</id>
@@ -383,16 +380,11 @@
             <version>3.2.7</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>fr.inra.oresing</groupId>
-            <artifactId>file-processor</artifactId>
-            <version>1.0.0</version>
-        </dependency>
         <!--
              Cascade : pipeline de traitement de données générique ( type-safe ,
              chunking , parallélisme , interceptors , rate-limit ). Remplace
-             progressivement le JAR file-processor ci-dessus dans le cadre de
-             l'issue #62.
+             totalement l'ancien JAR fr.inra.oresing:file-processor depuis la
+             phase 1e de l'issue #62.
 
              Publiée sur le Package Registry de la forge INRAE :
              https://forge.inrae.fr/anaee-dev/openadom/cascade

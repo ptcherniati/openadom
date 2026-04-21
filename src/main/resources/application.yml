@@ -35,7 +35,7 @@ spring:
       max-file-size: ${SPRING_SERVLET_MULTIPART_MAXFILESIZE:1MB}
       file-size-threshold: 10MB
       max-request-size: ${SPRING_SERVLET_MULTIPART_MAXREQUESTSIZE:1MB}
-      location: ${TEMP_DIR:/tmp/file-processor}/uploads
+      location: ${TEMP_DIR:/tmp/openadom-import}/uploads
     encoding:
       charset: UTF-8
       force: ${SPRING_SERVLET_ENCODING_FORCE}
@@ -116,79 +116,18 @@ filesender:
   baseurl: ${FILE_SENDER_BASE_URL}
   username: ${FILE_SENDER_USER_NAME}
   apikey: ${FILE_SENDER_API_KEY}
-workflow:
-
-  # Global Settings ( max-requests-per-user / mn )
-  max-requests-per-user: ${MAX_REQUESTS_PER_USER:60}
-
-  # Chunker Pool Configuration
-  chunker:
-    threads: ${CHUNKER_THREADS:2}
-    thread-name-prefix: file-chunker-
-    queue-size: ${CHUNKER_QUEUE_SIZE:50}
-    chunk-size-lines: ${CHUNK_SIZE_LINES:1000}
-    temp-directory: ${TEMP_DIR:/tmp/file-processor}/chunks
-    rejection-policy: CALLER_RUNS
-
-  # Worker Pool Configuration
-  worker:
-    threads: ${WORKER_THREADS:2}
-    queue-size: ${WORKER_QUEUE_SIZE:100}
-    thread-name-prefix: chunk-worker-
-    completion-timeout-ms: ${WORKER_COMPLETION_TIMEOUT_MS:1800000}
-    temp-directory: ${TEMP_DIR:/tmp/file-processor}/processed
-    rejection-policy: CALLER_RUNS
-    # Progress update batch size: update line counter every N processed lines
-    # Lower value = more frequent updates (more overhead), Higher value = less frequent updates
-    progress-batch-size: ${WORKER_PROGRESS_BATCH_SIZE:100}
-
-  # Merger Pool Configuration
-  merger:
-    threads: ${MERGER_THREADS:2}
-    thread-name-prefix: chunk-merger-
-    queue-size: ${MERGER_QUEUE_SIZE:50}
-    temp-directory: ${TEMP_DIR:/tmp/file-processor}/merged
-    merge-timeout-ms: ${MERGER_TIMEOUT_MS:300000}
-    rejection-policy: CALLER_RUNS
-
-  # Loader Pool Configuration
-  loader:
-    threads: ${LOADER_THREADS:2}
-    thread-name-prefix: chunk-loader-
-    queue-size: ${LOADER_QUEUE_SIZE:50}
-    # If <= 0 -> COPY FROM STDIN; otherwise batch insert
-    batch-size: ${LOADER_BATCH_SIZE:0}
-    # Target table for loading data
-    target-table: ${LOADER_TARGET_TABLE:processed_data}
-    rejection-policy: CALLER_RUNS
-
-  # =========================
-  # HEADER Configuration
-  # =========================
-  header:
-    enabled: ${HEADER_ENABLED:true}
-    lines-count: ${HEADER_LINES_COUNT:1}
-
-  # =========================
-  # Error Handling Configuration
-  # =========================
-  error-handling:
-    # Maximum number of errors allowed before stopping all workers
-    # When this threshold is reached, all workers are cancelled and workflow fails
-    # Default: 100 (stop after 100 errors)
-    max-errors-threshold: ${MAX_ERRORS_THRESHOLD:100}
-
-  # =========================
-  # Maintenance & Cleanup
-  # =========================
-  maintenance:
-    enabled: ${MAINTENANCE_ENABLED:true}
-    # Cleanup interval in ms (default: every 1 hour * 24 )
-    cleanup-interval-ms: ${CLEANUP_INTERVAL_MS:86400000}
-    # Delete temp files older than N hours
-    temp-file-retention-hours: ${TEMP_FILE_RETENTION_HOURS:48}
-    # Delete completed workflow records older than N days
-    completed-workflow-retention-days: ${COMPLETED_WORKFLOW_RETENTION_DAYS:7}
+# =========================
+# Configuration de l'import CSV via cascade ( phase 1e , #62 ).
+# Remplace l'ancienne section workflow.* du JAR file-processor.
+# =========================
+app:
+  import:
+    chunk-size-lines: ${APP_IMPORT_CHUNK_SIZE_LINES:1000}
+    parallelism: ${APP_IMPORT_PARALLELISM:2}
+    progress-batch-size: ${APP_IMPORT_PROGRESS_BATCH_SIZE:100}
+    max-errors-threshold: ${APP_IMPORT_MAX_ERRORS_THRESHOLD:100}
+    chunks-temp-dir: ${APP_IMPORT_CHUNKS_TEMP_DIR:/tmp/openadom-import/chunks}
+    processed-temp-dir: ${APP_IMPORT_PROCESSED_TEMP_DIR:/tmp/openadom-import/processed}
 
 management:
   endpoints:
