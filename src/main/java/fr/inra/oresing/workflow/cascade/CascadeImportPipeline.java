@@ -45,14 +45,17 @@ public class CascadeImportPipeline {
     private final ImportProperties        importProperties;
     private final ImportProgressReporter  progressReporter;
     private final WorkflowTempCleanup     tempCleanup;
+    private final ImportRateLimiter       importRateLimiter;
 
     public CascadeImportPipeline(
             ImportProperties       importProperties,
             ImportProgressReporter progressReporter,
-            WorkflowTempCleanup    tempCleanup) {
+            WorkflowTempCleanup    tempCleanup,
+            ImportRateLimiter      importRateLimiter) {
         this.importProperties  = importProperties;
         this.progressReporter  = progressReporter;
         this.tempCleanup       = tempCleanup;
+        this.importRateLimiter = importRateLimiter;
     }
 
     /**
@@ -69,71 +72,79 @@ public class CascadeImportPipeline {
             throw new IllegalArgumentException("Input file does not exist: " + headerlessCsv);
         }
 
-        final String correlationId = UUID.randomUUID().toString();
-
-        final Path uploadedPath;
-        try {
-            uploadedPath = uploadFile(headerlessCsv, userId, correlationId);
-        } catch (IOException e) {
-            log.error("Erreur lors de la preparation de l'upload pour {} : {}", userId, e.getMessage(), e);
-            throw new UnsupportedOperationException("Failed to prepare workflow", e);
-        }
-
-        final int chunkSizeLines = importProperties.getChunkSizeLines();
-        final int parallelism    = importProperties.getParallelism();
-        final int maxErrors      = importProperties.getMaxErrorsThreshold();
-
-        final Path chunksDir    = Paths.get(importProperties.getChunksTempDir(), userId, correlationId);
-        final Path processedDir = Paths.get(importProperties.getProcessedTempDir(), correlationId);
-        final Path mergedPath   = Paths.get(System.getProperty("java.io.tmpdir"),
-                                            "openadom-import-" + correlationId + ".csv");
-
-        FileChunkSource source = new FileChunkSource(uploadedPath, chunkSizeLines, chunksDir);
-
-        DataImporterTransformation transformation = new DataImporterTransformation(
-                dataImporter,
-                importProperties,
-                progressReporter,
-                processedDir,
-                correlationId);
-
-        MergingFileSink sink = new MergingFileSink(mergedPath);
-
-        log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, parallelism={}, maxErrors={}",
-                correlationId, userId, uploadedPath.getFileName(), chunkSizeLines, parallelism, maxErrors);
-
-        Workflow workflow = WorkflowBuilder.create()
-                .forUser(userId)
-                .from(source)
-                .transform(transformation)
-                .to(sink)
-                .withCorrelationId(correlationId)
-                .withParallelism(parallelism)
-                .withMaxErrors(maxErrors)
-                .build();
+        // Quota par utilisateur : 429 Too Many Requests immediat si trop
+        // d'imports simultanes. Le slot est libere dans le finally.
+        importRateLimiter.acquireOrThrow(userId);
 
         try {
-            WorkflowResult result = workflow.execute();
-            if (result.status() == ProcessingStatus.FAILED) {
-                String firstError = result.errors().isEmpty()
-                        ? result.fatalError().map(Throwable::getMessage).orElse("unknown error")
-                        : result.errors().get(0);
-                log.error("[{}] Workflow cascade en echec : {}", correlationId, firstError);
-                tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
-                throw new UnsupportedOperationException("Import workflow failed: " + firstError);
+            final String correlationId = UUID.randomUUID().toString();
+
+            final Path uploadedPath;
+            try {
+                uploadedPath = uploadFile(headerlessCsv, userId, correlationId);
+            } catch (IOException e) {
+                log.error("Erreur lors de la preparation de l'upload pour {} : {}", userId, e.getMessage(), e);
+                throw new UnsupportedOperationException("Failed to prepare workflow", e);
             }
 
-            log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
-                    correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
+            final int chunkSizeLines = importProperties.getChunkSizeLines();
+            final int parallelism    = importProperties.getParallelism();
+            final int maxErrors      = importProperties.getMaxErrorsThreshold();
 
-            dataImporter.treatErrors();
-            referenceValueRepository.storeAll(sink.getMergedPath());
+            final Path chunksDir    = Paths.get(importProperties.getChunksTempDir(), userId, correlationId);
+            final Path processedDir = Paths.get(importProperties.getProcessedTempDir(), correlationId);
+            final Path mergedPath   = Paths.get(System.getProperty("java.io.tmpdir"),
+                                                "openadom-import-" + correlationId + ".csv");
 
-            tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
+            FileChunkSource source = new FileChunkSource(uploadedPath, chunkSizeLines, chunksDir);
 
-        } catch (RuntimeException e) {
-            tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
-            throw e;
+            DataImporterTransformation transformation = new DataImporterTransformation(
+                    dataImporter,
+                    importProperties,
+                    progressReporter,
+                    processedDir,
+                    correlationId);
+
+            MergingFileSink sink = new MergingFileSink(mergedPath);
+
+            log.info("[{}] Demarrage import : user={}, file={}, chunkSize={}, parallelism={}, maxErrors={}",
+                    correlationId, userId, uploadedPath.getFileName(), chunkSizeLines, parallelism, maxErrors);
+
+            Workflow workflow = WorkflowBuilder.create()
+                    .forUser(userId)
+                    .from(source)
+                    .transform(transformation)
+                    .to(sink)
+                    .withCorrelationId(correlationId)
+                    .withParallelism(parallelism)
+                    .withMaxErrors(maxErrors)
+                    .build();
+
+            try {
+                WorkflowResult result = workflow.execute();
+                if (result.status() == ProcessingStatus.FAILED) {
+                    String firstError = result.errors().isEmpty()
+                            ? result.fatalError().map(Throwable::getMessage).orElse("unknown error")
+                            : result.errors().get(0);
+                    log.error("[{}] Workflow cascade en echec : {}", correlationId, firstError);
+                    tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
+                    throw new UnsupportedOperationException("Import workflow failed: " + firstError);
+                }
+
+                log.info("[{}] Workflow cascade termine : processed={}, chunks={}, duration={}",
+                        correlationId, result.recordsProcessed(), result.chunksProcessed(), result.duration());
+
+                dataImporter.treatErrors();
+                referenceValueRepository.storeAll(sink.getMergedPath());
+
+                tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
+
+            } catch (RuntimeException e) {
+                tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
+                throw e;
+            }
+        } finally {
+            importRateLimiter.release(userId);
         }
     }
 
