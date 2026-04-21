@@ -87,6 +87,7 @@ import fr.inra.oresing.rest.usecases.storage.additionalfile.GetAdditionalFilesZi
 import fr.inra.oresing.rest.usecases.storage.binaryfile.*;
 import fr.inra.oresing.rest.usecases.storage.versioning.UnPublishVersionBeforeDeleteUseCase;
 import fr.inra.oresing.workflow.cascade.ExtractionRateLimiter;
+import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -122,6 +123,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -222,6 +225,7 @@ public class OreSiResources {
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase;
     private final ExtractionRateLimiter extractionRateLimiter;
+    private final OpenadomMetrics metrics;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -285,7 +289,8 @@ public class OreSiResources {
             ReadEntryUseCase readEntryUseCase,
             GetCurrentUserUseCase getCurrentUserUseCase,
             SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase,
-            ExtractionRateLimiter extractionRateLimiter
+            ExtractionRateLimiter extractionRateLimiter,
+            OpenadomMetrics metrics
     ) {
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
@@ -341,6 +346,7 @@ public class OreSiResources {
         this.getCurrentUserUseCase = getCurrentUserUseCase;
         this.sendUploadErrorsMailUseCase = sendUploadErrorsMailUseCase;
         this.extractionRateLimiter = extractionRateLimiter;
+        this.metrics = metrics;
     }
 
 
@@ -735,12 +741,22 @@ public class OreSiResources {
 
         // Rate-limit partage avec l'endpoint ZIP ( meme quota par utilisateur ).
         final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
-        extractionRateLimiter.acquireOrThrow(userId);
+        extractionRateLimiter.acquireOrThrow(userId, "csv");
 
         final StreamingResponseBody streamResponseBody = out -> {
+            final Instant startedAt = Instant.now();
+            final org.apache.commons.io.output.CountingOutputStream counting =
+                    new org.apache.commons.io.output.CountingOutputStream(out);
+            String finalStatus = "FAILED";
+            metrics.markExtractionStart("csv");
             try {
-                getDataCsvStreamUseCase.execute(out, nameOrId, refType, language, false);
+                getDataCsvStreamUseCase.execute(counting, nameOrId, refType, language, false);
+                finalStatus = "COMPLETED";
             } finally {
+                metrics.recordExtractionCompleted("csv", nameOrId, refType, finalStatus,
+                        Duration.between(startedAt, Instant.now()),
+                        counting.getByteCount());
+                metrics.markExtractionEnd("csv");
                 extractionRateLimiter.release(userId);
             }
         };
@@ -878,23 +894,41 @@ public class OreSiResources {
 
         // Rate-limit partage avec les autres extractions ( meme quota par utilisateur ).
         final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
-        extractionRateLimiter.acquireOrThrow(userId);
+        final String extractionType = AdditionalFileService.CHARTE.equals(
+                Objects.requireNonNull(additionalFilesInfos).getFiletype()) ? "charte" : "additional_files";
+        extractionRateLimiter.acquireOrThrow(userId, extractionType);
 
+        final String dataType = additionalFilesInfos.getFiletype();
         final StreamingResponseBody streamResponseBody;
-        if (AdditionalFileService.CHARTE.equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
+        if (AdditionalFileService.CHARTE.equals(additionalFilesInfos.getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
             response.setHeader("Content-Security-Policy", "frame-ancestors %s".formatted(frontendOrigin));
             streamResponseBody = out -> {
+                final Instant startedAt = Instant.now();
+                final org.apache.commons.io.output.CountingOutputStream counting =
+                        new org.apache.commons.io.output.CountingOutputStream(out);
+                String finalStatus = "FAILED";
+                metrics.markExtractionStart(extractionType);
                 try {
-                    getCharteUseCase.execute(out, response, nameOrId, additionalFilesInfos);
+                    getCharteUseCase.execute(counting, response, nameOrId, additionalFilesInfos);
+                    finalStatus = "COMPLETED";
                 } finally {
+                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus,
+                            Duration.between(startedAt, Instant.now()), counting.getByteCount());
+                    metrics.markExtractionEnd(extractionType);
                     extractionRateLimiter.release(userId);
                 }
             };
         } else {
             streamResponseBody = out -> {
-                try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(out)) {
+                final Instant startedAt = Instant.now();
+                final org.apache.commons.io.output.CountingOutputStream counting =
+                        new org.apache.commons.io.output.CountingOutputStream(out);
+                String finalStatus = "FAILED";
+                metrics.markExtractionStart(extractionType);
+                try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(counting)) {
                     getAdditionalFilesZipStreamUseCase.execute(zipOutputStream, nameOrId, additionalFilesInfos);
+                    finalStatus = "COMPLETED";
                 } catch (final IOException ioe) {
                     switch (OreSiResources.getDefaultLocale().getLanguage()) {
                         case FR -> log.error(IO_ERROR_FR, ioe);
@@ -902,6 +936,9 @@ public class OreSiResources {
                         default -> log.error(IO_ERROR_EN, ioe);
                     }
                 } finally {
+                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus,
+                            Duration.between(startedAt, Instant.now()), counting.getByteCount());
+                    metrics.markExtractionEnd(extractionType);
                     extractionRateLimiter.release(userId);
                 }
             };
@@ -1109,12 +1146,15 @@ public class OreSiResources {
         final String fileName = DATA_ZIP.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
 
         // Rate-limit : 429 Too Many Requests immediat si quota utilisateur atteint
-        extractionRateLimiter.acquireOrThrow(userId);
+        extractionRateLimiter.acquireOrThrow(userId, "zip");
 
         StreamingResponseBody body = outputStream -> {
             SecurityContextHolder.setContext(securityContext);
             Path diskCopy = null;
             boolean streamedOk = false;
+            final Instant startedAt = Instant.now();
+            long bytesStreamed = 0L;
+            metrics.markExtractionStart("zip");
 
             try {
                 diskCopy = Files.createTempFile(Paths.get(TMP), fileName + "-", ".zip");
@@ -1131,6 +1171,15 @@ public class OreSiResources {
                     } catch (Exception buildEx) {
                         log.error(IO_WRITING_CSV_ERROR, buildEx);
                         writeErrorEntryToZip(zip, buildEx);
+                    }
+                }
+
+                // Taille finale du ZIP produit ( identique cote client et cote disque )
+                if (diskCopy != null) {
+                    try {
+                        bytesStreamed = Files.size(diskCopy);
+                    } catch (IOException ignored) {
+                        // metrics best-effort
                     }
                 }
 
@@ -1168,6 +1217,10 @@ public class OreSiResources {
                         log.warn(IO_DELETE_ERROR, ex);
                     }
                 }
+                metrics.recordExtractionCompleted("zip", nameOrId, dataType,
+                        streamedOk ? "COMPLETED" : "FAILED",
+                        Duration.between(startedAt, Instant.now()), bytesStreamed);
+                metrics.markExtractionEnd("zip");
                 SecurityContextHolder.clearContext();
                 extractionRateLimiter.release(userId);
             }

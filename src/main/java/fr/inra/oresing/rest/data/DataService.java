@@ -141,7 +141,9 @@ public class DataService {
                 referenceImporter,
                 referenceValueRepository,
                 path,
-                userId
+                userId,
+                application.getName(),
+                refType
         );
         //final Path toMerge = referenceImporter.doDataTreatment(path, sharedContext, chunkInfo, workflowProperties, lifecycleManager);
         /*referenceImporter.treatErrors();

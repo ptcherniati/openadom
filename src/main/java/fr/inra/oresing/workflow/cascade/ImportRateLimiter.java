@@ -1,5 +1,6 @@
 package fr.inra.oresing.workflow.cascade;
 
+import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,11 +30,14 @@ import java.util.concurrent.Semaphore;
 public class ImportRateLimiter {
 
     private final Map<String, Semaphore> userSlots = new ConcurrentHashMap<>();
-    private final int maxConcurrentPerUser;
+    private final int              maxConcurrentPerUser;
+    private final OpenadomMetrics  metrics;
 
     public ImportRateLimiter(
-            @Value("${app.import.max-concurrent-per-user:3}") final int maxConcurrentPerUser) {
+            @Value("${app.import.max-concurrent-per-user:3}") final int maxConcurrentPerUser,
+            OpenadomMetrics metrics) {
         this.maxConcurrentPerUser = maxConcurrentPerUser;
+        this.metrics              = metrics;
         log.info("ImportRateLimiter ready : max {} imports concurrents par utilisateur",
                 maxConcurrentPerUser);
     }
@@ -49,6 +53,7 @@ public class ImportRateLimiter {
             int active = maxConcurrentPerUser - sem.availablePermits();
             log.warn("Quota d'imports atteint pour {} : {}/{}",
                     userId, active, maxConcurrentPerUser);
+            metrics.recordImportRateLimited();
             throw new ImportRateLimitExceededException(userId, active, maxConcurrentPerUser);
         }
     }

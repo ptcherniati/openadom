@@ -4,6 +4,7 @@ import fr.inra.oresing.domain.data.deposit.DataImporter;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.workflow.cascade.cleanup.WorkflowTempCleanup;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
+import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
 import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import fr.inrae.ore.cascade.api.workflow.builder.WorkflowBuilder;
 import fr.inrae.ore.cascade.model.workflow.ProcessingStatus;
@@ -16,6 +17,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.UUID;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
@@ -46,27 +49,35 @@ public class CascadeImportPipeline {
     private final ImportProgressReporter  progressReporter;
     private final WorkflowTempCleanup     tempCleanup;
     private final ImportRateLimiter       importRateLimiter;
+    private final OpenadomMetrics         metrics;
 
     public CascadeImportPipeline(
             ImportProperties       importProperties,
             ImportProgressReporter progressReporter,
             WorkflowTempCleanup    tempCleanup,
-            ImportRateLimiter      importRateLimiter) {
+            ImportRateLimiter      importRateLimiter,
+            OpenadomMetrics        metrics) {
         this.importProperties  = importProperties;
         this.progressReporter  = progressReporter;
         this.tempCleanup       = tempCleanup;
         this.importRateLimiter = importRateLimiter;
+        this.metrics           = metrics;
     }
 
     /**
      * Lance un import pour un fichier CSV sans en-tete deja prepare par
      * {@link DataImporter#prepareContextForDataTreatment}.
+     *
+     * @param applicationName nom de l'application ( tag metrics )
+     * @param dataType        type de reference/data ( tag metrics )
      */
     public void execute(
             DataImporter   dataImporter,
             DataRepository referenceValueRepository,
             Path           headerlessCsv,
-            String         userId) {
+            String         userId,
+            String         applicationName,
+            String         dataType) {
 
         if (!Files.exists(headerlessCsv)) {
             throw new IllegalArgumentException("Input file does not exist: " + headerlessCsv);
@@ -76,6 +87,14 @@ public class CascadeImportPipeline {
         // d'imports simultanes. Le slot est libere dans le finally.
         importRateLimiter.acquireOrThrow(userId);
 
+        final Instant startedAt = Instant.now();
+        long fileSizeBytes = 0L;
+        try {
+            fileSizeBytes = Files.size(headerlessCsv);
+        } catch (IOException ignored) {
+            // metrics best-effort uniquement
+        }
+
         try {
             final String correlationId = UUID.randomUUID().toString();
 
@@ -84,6 +103,9 @@ public class CascadeImportPipeline {
                 uploadedPath = uploadFile(headerlessCsv, userId, correlationId);
             } catch (IOException e) {
                 log.error("Erreur lors de la preparation de l'upload pour {} : {}", userId, e.getMessage(), e);
+                metrics.recordImportCompleted(applicationName, dataType, "FAILED",
+                        Duration.between(startedAt, Instant.now()),
+                        0L, 0L, 0, fileSizeBytes);
                 throw new UnsupportedOperationException("Failed to prepare workflow", e);
             }
 
@@ -127,6 +149,10 @@ public class CascadeImportPipeline {
                             ? result.fatalError().map(Throwable::getMessage).orElse("unknown error")
                             : result.errors().get(0);
                     log.error("[{}] Workflow cascade en echec : {}", correlationId, firstError);
+                    metrics.recordImportCompleted(applicationName, dataType, "FAILED",
+                            Duration.between(startedAt, Instant.now()),
+                            result.recordsProcessed(), result.recordsFailed(),
+                            result.chunksProcessed(), fileSizeBytes);
                     tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
                     throw new UnsupportedOperationException("Import workflow failed: " + firstError);
                 }
@@ -137,9 +163,23 @@ public class CascadeImportPipeline {
                 dataImporter.treatErrors();
                 referenceValueRepository.storeAll(sink.getMergedPath());
 
+                metrics.recordImportCompleted(applicationName, dataType, "COMPLETED",
+                        Duration.between(startedAt, Instant.now()),
+                        result.recordsProcessed(), result.recordsFailed(),
+                        result.chunksProcessed(), fileSizeBytes);
+
                 tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
 
             } catch (RuntimeException e) {
+                // Evite un double-enregistrement quand l'exception vient du
+                // bloc FAILED deja metric au-dessus.
+                if (!(e instanceof UnsupportedOperationException
+                        && e.getMessage() != null
+                        && e.getMessage().startsWith("Import workflow failed"))) {
+                    metrics.recordImportCompleted(applicationName, dataType, "FAILED",
+                            Duration.between(startedAt, Instant.now()),
+                            0L, 0L, 0, fileSizeBytes);
+                }
                 tempCleanup.cleanup(chunksDir, processedDir, mergedPath, uploadedPath);
                 throw e;
             }
