@@ -49,6 +49,7 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -368,13 +369,15 @@ public class ApplicationService {
                     final List<Application> applicationForUser = repository.application().findAll();
 
                     serviceContainer.authenticationService().setRoleAdmin();
-                    return repository.application().findAllStream()
-                            .map(application -> applicationForUser.stream()
-                                    .filter(app -> app.getId().equals(application.getId()))
-                                    .findAny()
-                                    .orElse(application.applicationAccordingToRights())
-                            )
-                            .toList();
+                    try (Stream<Application> stream = repository.application().findAllStream()) {
+                        return stream
+                                .map(application -> applicationForUser.stream()
+                                        .filter(app -> app.getId().equals(application.getId()))
+                                        .findAny()
+                                        .orElse(application.applicationAccordingToRights())
+                                )
+                                .toList();
+                    }
                 })
                 .flatMapMany(allApplications -> {
                     CurrentUserRoles currentUserRoles = serviceContainer.authenticationService().getCurrentUserRoles();
