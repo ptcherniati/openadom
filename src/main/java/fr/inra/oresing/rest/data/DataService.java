@@ -23,7 +23,7 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.fileprocessor.WorkflowOrchestratorImportBuilder;
+import fr.inra.oresing.workflow.cascade.CascadeImportPipeline;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
@@ -83,7 +83,7 @@ public class DataService {
     private final OreSiRepository repository;
     private final FileRepository fileRepository;
     private final PlatformTransactionManager transactionManager;
-    private final WorkflowOrchestratorImportBuilder orchestratorImportBuilder;
+    private final CascadeImportPipeline cascadeImportPipeline;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -95,7 +95,7 @@ public class DataService {
             OreSiRepository repository,
             FileRepository fileRepository,
             ServiceContainer serviceContainer,
-            PlatformTransactionManager transactionManager, WorkflowOrchestratorImportBuilder orchestratorImportBuilder,
+            PlatformTransactionManager transactionManager, CascadeImportPipeline cascadeImportPipeline,
             @Qualifier("fastServiceExecutor") Executor fastExecutor,      // ✅ Fast executor
             @Qualifier("normalServiceExecutor") Executor normalExecutor,  // ✅ Normal executor
             @Qualifier("heavyServiceExecutor") Executor heavyExecutor,    // ✅ Heavy executor
@@ -107,7 +107,7 @@ public class DataService {
         this.fileRepository = fileRepository;
         this.serviceContainer = serviceContainer;
         this.transactionManager = transactionManager;
-        this.orchestratorImportBuilder = orchestratorImportBuilder;
+        this.cascadeImportPipeline = cascadeImportPipeline;
         this.fastExecutor = fastExecutor;
         this.normalExecutor = normalExecutor;
         this.heavyExecutor = heavyExecutor;
@@ -137,7 +137,7 @@ public class DataService {
         final DataImporter referenceImporter = new DataImporter(referenceImporterContext);
         Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file));
         final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
-        orchestratorImportBuilder.execute(
+        cascadeImportPipeline.execute(
                 referenceImporter,
                 referenceValueRepository,
                 path,
