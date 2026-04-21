@@ -733,7 +733,17 @@ public class OreSiResources {
             @PathVariable("refType") final String refType) {
         Locale language = OreSiResources.getDefaultLocale();
 
-        final StreamingResponseBody streamResponseBody = out -> getDataCsvStreamUseCase.execute(out, nameOrId, refType, language, false);
+        // Rate-limit partage avec l'endpoint ZIP ( meme quota par utilisateur ).
+        final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
+        zipExportRateLimiter.acquireOrThrow(userId);
+
+        final StreamingResponseBody streamResponseBody = out -> {
+            try {
+                getDataCsvStreamUseCase.execute(out, nameOrId, refType, language, false);
+            } finally {
+                zipExportRateLimiter.release(userId);
+            }
+        };
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
         response.setHeader(HEADER_CONTENT_DISPOSITION, String.format(HEADER_ATTACHMENT_FILENAME_S_CSV, refType));
         response.addHeader(HEADER_PRAGMA, HEADER_NO_CACHE);
@@ -865,11 +875,22 @@ public class OreSiResources {
             //@ApiParam(required = false, value = "The parameters for filter the search")
             @JsonParam(value = "params", required = false) final AdditionalFilesInfos additionalFilesInfos) throws
             BadAdditionalFileParamsSearchException {
+
+        // Rate-limit partage avec les autres extractions ( meme quota par utilisateur ).
+        final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
+        zipExportRateLimiter.acquireOrThrow(userId);
+
         final StreamingResponseBody streamResponseBody;
         if (AdditionalFileService.CHARTE.equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
             response.setHeader("Content-Security-Policy", "frame-ancestors %s".formatted(frontendOrigin));
-            streamResponseBody = out -> getCharteUseCase.execute(out, response, nameOrId, additionalFilesInfos);
+            streamResponseBody = out -> {
+                try {
+                    getCharteUseCase.execute(out, response, nameOrId, additionalFilesInfos);
+                } finally {
+                    zipExportRateLimiter.release(userId);
+                }
+            };
         } else {
             streamResponseBody = out -> {
                 try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(out)) {
@@ -880,6 +901,8 @@ public class OreSiResources {
                         case EN -> log.error(IO_ERROR_EN, ioe);
                         default -> log.error(IO_ERROR_EN, ioe);
                     }
+                } finally {
+                    zipExportRateLimiter.release(userId);
                 }
             };
             response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ZIP);
