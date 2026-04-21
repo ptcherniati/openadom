@@ -87,6 +87,8 @@ import fr.inra.oresing.rest.usecases.storage.additionalfile.GetAdditionalFilesZi
 import fr.inra.oresing.rest.usecases.storage.binaryfile.*;
 import fr.inra.oresing.rest.usecases.storage.versioning.UnPublishVersionBeforeDeleteUseCase;
 import fr.inra.oresing.workflow.cascade.ExtractionRateLimiter;
+import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
+import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
 import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -226,6 +228,7 @@ public class OreSiResources {
     private final SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase;
     private final ExtractionRateLimiter extractionRateLimiter;
     private final OpenadomMetrics metrics;
+    private final WorkflowLogWriter workflowLogWriter;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -290,7 +293,8 @@ public class OreSiResources {
             GetCurrentUserUseCase getCurrentUserUseCase,
             SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase,
             ExtractionRateLimiter extractionRateLimiter,
-            OpenadomMetrics metrics
+            OpenadomMetrics metrics,
+            WorkflowLogWriter workflowLogWriter
     ) {
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
@@ -347,6 +351,39 @@ public class OreSiResources {
         this.sendUploadErrorsMailUseCase = sendUploadErrorsMailUseCase;
         this.extractionRateLimiter = extractionRateLimiter;
         this.metrics = metrics;
+        this.workflowLogWriter = workflowLogWriter;
+    }
+
+    /**
+     * Helper : construit et soumet async un {@link WorkflowLogEntry}
+     * pour une extraction. Best-effort : erreurs UUID loguees puis
+     * swallowed , ne casse pas le streaming.
+     */
+    private void logExtractionEvent(
+            String workflowType, String userId,
+            String applicationName, String dataType, String resourceName,
+            Instant startedAt, Duration duration, String status, long bytesTotal,
+            String fatalError) {
+        try {
+            workflowLogWriter.logAsync(new WorkflowLogEntry(
+                    java.util.UUID.randomUUID(),
+                    workflowType,
+                    java.util.UUID.fromString(userId),
+                    null,
+                    applicationName,
+                    dataType,
+                    resourceName,
+                    startedAt,
+                    startedAt.plus(duration),
+                    duration,
+                    status,
+                    0L, 0L, 0,
+                    bytesTotal,
+                    java.util.List.of(),
+                    fatalError));
+        } catch (IllegalArgumentException e) {
+            log.warn("Format UUID utilisateur invalide , skip log extraction [userId={}]", userId);
+        }
     }
 
 
@@ -747,16 +784,23 @@ public class OreSiResources {
             final Instant startedAt = Instant.now();
             final org.apache.commons.io.output.CountingOutputStream counting =
                     new org.apache.commons.io.output.CountingOutputStream(out);
-            String finalStatus = "FAILED";
+            String finalStatus = WorkflowLogEntry.STATUS_FAILED;
+            String fatalError = null;
             metrics.markExtractionStart("csv");
             try {
                 getDataCsvStreamUseCase.execute(counting, nameOrId, refType, language, false);
-                finalStatus = "COMPLETED";
+                finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
+            } catch (RuntimeException ex) {
+                fatalError = ex.getMessage();
+                throw ex;
             } finally {
-                metrics.recordExtractionCompleted("csv", nameOrId, refType, finalStatus,
-                        Duration.between(startedAt, Instant.now()),
-                        counting.getByteCount());
+                Duration duration = Duration.between(startedAt, Instant.now());
+                long bytes = counting.getByteCount();
+                metrics.recordExtractionCompleted("csv", nameOrId, refType, finalStatus, duration, bytes);
                 metrics.markExtractionEnd("csv");
+                logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_CSV,
+                        userId, nameOrId, refType, refType + ".csv",
+                        startedAt, duration, finalStatus, bytes, fatalError);
                 extractionRateLimiter.release(userId);
             }
         };
@@ -907,15 +951,23 @@ public class OreSiResources {
                 final Instant startedAt = Instant.now();
                 final org.apache.commons.io.output.CountingOutputStream counting =
                         new org.apache.commons.io.output.CountingOutputStream(out);
-                String finalStatus = "FAILED";
+                String finalStatus = WorkflowLogEntry.STATUS_FAILED;
+                String fatalError = null;
                 metrics.markExtractionStart(extractionType);
                 try {
                     getCharteUseCase.execute(counting, response, nameOrId, additionalFilesInfos);
-                    finalStatus = "COMPLETED";
+                    finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
+                } catch (RuntimeException ex) {
+                    fatalError = ex.getMessage();
+                    throw ex;
                 } finally {
-                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus,
-                            Duration.between(startedAt, Instant.now()), counting.getByteCount());
+                    Duration duration = Duration.between(startedAt, Instant.now());
+                    long bytes = counting.getByteCount();
+                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus, duration, bytes);
                     metrics.markExtractionEnd(extractionType);
+                    logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_CHARTE,
+                            userId, nameOrId, dataType, "charte.pdf",
+                            startedAt, duration, finalStatus, bytes, fatalError);
                     extractionRateLimiter.release(userId);
                 }
             };
@@ -924,21 +976,27 @@ public class OreSiResources {
                 final Instant startedAt = Instant.now();
                 final org.apache.commons.io.output.CountingOutputStream counting =
                         new org.apache.commons.io.output.CountingOutputStream(out);
-                String finalStatus = "FAILED";
+                String finalStatus = WorkflowLogEntry.STATUS_FAILED;
+                String fatalError = null;
                 metrics.markExtractionStart(extractionType);
                 try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(counting)) {
                     getAdditionalFilesZipStreamUseCase.execute(zipOutputStream, nameOrId, additionalFilesInfos);
-                    finalStatus = "COMPLETED";
+                    finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
                 } catch (final IOException ioe) {
+                    fatalError = ioe.getMessage();
                     switch (OreSiResources.getDefaultLocale().getLanguage()) {
                         case FR -> log.error(IO_ERROR_FR, ioe);
                         case EN -> log.error(IO_ERROR_EN, ioe);
                         default -> log.error(IO_ERROR_EN, ioe);
                     }
                 } finally {
-                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus,
-                            Duration.between(startedAt, Instant.now()), counting.getByteCount());
+                    Duration duration = Duration.between(startedAt, Instant.now());
+                    long bytes = counting.getByteCount();
+                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus, duration, bytes);
                     metrics.markExtractionEnd(extractionType);
+                    logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_ADDITIONAL_FILES,
+                            userId, nameOrId, dataType, "additionalFiles.zip",
+                            startedAt, duration, finalStatus, bytes, fatalError);
                     extractionRateLimiter.release(userId);
                 }
             };
@@ -1154,6 +1212,7 @@ public class OreSiResources {
             boolean streamedOk = false;
             final Instant startedAt = Instant.now();
             long bytesStreamed = 0L;
+            String fatalError = null;
             metrics.markExtractionStart("zip");
 
             try {
@@ -1170,6 +1229,7 @@ public class OreSiResources {
                         streamedOk = true;
                     } catch (Exception buildEx) {
                         log.error(IO_WRITING_CSV_ERROR, buildEx);
+                        fatalError = buildEx.getMessage();
                         writeErrorEntryToZip(zip, buildEx);
                     }
                 }
@@ -1217,10 +1277,16 @@ public class OreSiResources {
                         log.warn(IO_DELETE_ERROR, ex);
                     }
                 }
+                Duration duration = Duration.between(startedAt, Instant.now());
+                String finalStatus = streamedOk
+                        ? WorkflowLogEntry.STATUS_COMPLETED
+                        : WorkflowLogEntry.STATUS_FAILED;
                 metrics.recordExtractionCompleted("zip", nameOrId, dataType,
-                        streamedOk ? "COMPLETED" : "FAILED",
-                        Duration.between(startedAt, Instant.now()), bytesStreamed);
+                        finalStatus, duration, bytesStreamed);
                 metrics.markExtractionEnd("zip");
+                logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_ZIP,
+                        userId, nameOrId, dataType, fileName + ".zip",
+                        startedAt, duration, finalStatus, bytesStreamed, fatalError);
                 SecurityContextHolder.clearContext();
                 extractionRateLimiter.release(userId);
             }

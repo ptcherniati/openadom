@@ -28,6 +28,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -52,6 +53,7 @@ import java.util.concurrent.Executor;
 )
 
 @SpringBootApplication(scanBasePackages = "fr.inra.oresing")
+@EnableScheduling
 public class OreSiNg implements WebMvcConfigurer {
 
     private final MigrateService migrate;
