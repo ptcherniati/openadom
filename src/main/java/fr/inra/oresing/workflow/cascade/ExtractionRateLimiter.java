@@ -9,26 +9,28 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
- * Limiteur de taux appliqué aux exports ZIP (et autres extractions longues).
+ * Limiteur de taux partagé par tous les endpoints d'extraction de données
+ * (ZIP, CSV streaming, additionalFiles).
  *
  * <p>Encapsule le {@link UserRateLimiter} cascade en tant que primitive
  * standalone : pas de workflow cascade ni de Source/Sink, juste un
  * mécanisme d'acquisition/libération de slots par utilisateur pour
  * protéger le serveur contre la saturation sur les endpoints coûteux.
  *
- * <p>Cette implémentation fait partie de la phase 1c-bis de l'issue #62.
+ * <p>Introduit en phase 1c-bis, renommé en phase 1c-full de l'issue #62
+ * pour refléter son usage étendu au-delà du seul endpoint ZIP.
  */
 @Slf4j
 @Service
-public class ZipExportRateLimiter {
+public class ExtractionRateLimiter {
 
     private final int maxConcurrentPerUser;
     private final long acquireTimeoutSeconds;
     private UserRateLimiter limiter;
 
-    public ZipExportRateLimiter(
-            @Value("${app.zip-export.max-workflows-per-user:5}") final int maxConcurrentPerUser,
-            @Value("${app.zip-export.acquire-timeout-seconds:0}") final long acquireTimeoutSeconds) {
+    public ExtractionRateLimiter(
+            @Value("${app.extraction.max-concurrent-per-user:5}") final int maxConcurrentPerUser,
+            @Value("${app.extraction.acquire-timeout-seconds:0}") final long acquireTimeoutSeconds) {
         this.maxConcurrentPerUser  = maxConcurrentPerUser;
         this.acquireTimeoutSeconds = acquireTimeoutSeconds;
     }
@@ -46,20 +48,20 @@ public class ZipExportRateLimiter {
                 policy);
 
         this.limiter = UserRateLimiter.initialize(config);
-        log.info("ZipExportRateLimiter ready : max {} extractions concurrentes par utilisateur, policy {}",
+        log.info("ExtractionRateLimiter ready : max {} extractions concurrentes par utilisateur, policy {}",
                 maxConcurrentPerUser, policy);
     }
 
     /**
      * Tente de réserver un slot pour l'utilisateur. Lève
-     * {@link ZipExportRateLimitExceededException} si le quota est atteint.
+     * {@link ExtractionRateLimitExceededException} si le quota est atteint.
      */
     public void acquireOrThrow(String userId) {
         if (!limiter.tryAcquire(userId)) {
             int active = limiter.getActiveCount(userId);
             log.warn("Quota d'extractions atteint pour {} : {}/{}",
                     userId, active, maxConcurrentPerUser);
-            throw new ZipExportRateLimitExceededException(userId, active, maxConcurrentPerUser);
+            throw new ExtractionRateLimitExceededException(userId, active, maxConcurrentPerUser);
         }
     }
 

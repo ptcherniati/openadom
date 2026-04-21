@@ -86,7 +86,7 @@ import fr.inra.oresing.rest.usecases.storage.additionalfile.FindAdditionalFileUs
 import fr.inra.oresing.rest.usecases.storage.additionalfile.GetAdditionalFilesZipStreamUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.*;
 import fr.inra.oresing.rest.usecases.storage.versioning.UnPublishVersionBeforeDeleteUseCase;
-import fr.inra.oresing.workflow.cascade.ZipExportRateLimiter;
+import fr.inra.oresing.workflow.cascade.ExtractionRateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -221,7 +221,7 @@ public class OreSiResources {
     private final ReadEntryUseCase readEntryUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase;
-    private final ZipExportRateLimiter zipExportRateLimiter;
+    private final ExtractionRateLimiter extractionRateLimiter;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -285,7 +285,7 @@ public class OreSiResources {
             ReadEntryUseCase readEntryUseCase,
             GetCurrentUserUseCase getCurrentUserUseCase,
             SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase,
-            ZipExportRateLimiter zipExportRateLimiter
+            ExtractionRateLimiter extractionRateLimiter
     ) {
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
@@ -340,7 +340,7 @@ public class OreSiResources {
         this.readEntryUseCase = readEntryUseCase;
         this.getCurrentUserUseCase = getCurrentUserUseCase;
         this.sendUploadErrorsMailUseCase = sendUploadErrorsMailUseCase;
-        this.zipExportRateLimiter = zipExportRateLimiter;
+        this.extractionRateLimiter = extractionRateLimiter;
     }
 
 
@@ -735,13 +735,13 @@ public class OreSiResources {
 
         // Rate-limit partage avec l'endpoint ZIP ( meme quota par utilisateur ).
         final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
-        zipExportRateLimiter.acquireOrThrow(userId);
+        extractionRateLimiter.acquireOrThrow(userId);
 
         final StreamingResponseBody streamResponseBody = out -> {
             try {
                 getDataCsvStreamUseCase.execute(out, nameOrId, refType, language, false);
             } finally {
-                zipExportRateLimiter.release(userId);
+                extractionRateLimiter.release(userId);
             }
         };
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
@@ -878,7 +878,7 @@ public class OreSiResources {
 
         // Rate-limit partage avec les autres extractions ( meme quota par utilisateur ).
         final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
-        zipExportRateLimiter.acquireOrThrow(userId);
+        extractionRateLimiter.acquireOrThrow(userId);
 
         final StreamingResponseBody streamResponseBody;
         if (AdditionalFileService.CHARTE.equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
@@ -888,7 +888,7 @@ public class OreSiResources {
                 try {
                     getCharteUseCase.execute(out, response, nameOrId, additionalFilesInfos);
                 } finally {
-                    zipExportRateLimiter.release(userId);
+                    extractionRateLimiter.release(userId);
                 }
             };
         } else {
@@ -902,7 +902,7 @@ public class OreSiResources {
                         default -> log.error(IO_ERROR_EN, ioe);
                     }
                 } finally {
-                    zipExportRateLimiter.release(userId);
+                    extractionRateLimiter.release(userId);
                 }
             };
             response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ZIP);
@@ -1088,7 +1088,7 @@ public class OreSiResources {
      * Le fichier temporaire sert ensuite a l'upload FileSender + mail , en
      * tache asynchrone une fois le streaming termine.
      *
-     * <p>Rate-limit per-user via {@link ZipExportRateLimiter} (acquis sur le
+     * <p>Rate-limit per-user via {@link ExtractionRateLimiter} (acquis sur le
      * thread Tomcat , libere a la fin du streaming dans le thread async).
      */
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
@@ -1109,7 +1109,7 @@ public class OreSiResources {
         final String fileName = DATA_ZIP.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
 
         // Rate-limit : 429 Too Many Requests immediat si quota utilisateur atteint
-        zipExportRateLimiter.acquireOrThrow(userId);
+        extractionRateLimiter.acquireOrThrow(userId);
 
         StreamingResponseBody body = outputStream -> {
             SecurityContextHolder.setContext(securityContext);
@@ -1169,7 +1169,7 @@ public class OreSiResources {
                     }
                 }
                 SecurityContextHolder.clearContext();
-                zipExportRateLimiter.release(userId);
+                extractionRateLimiter.release(userId);
             }
         };
 
