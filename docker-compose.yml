@@ -1,6 +1,6 @@
 services:
   postgresql:
-    image: postgres:18.0
+    image: postgres:18.3
     ports:
       - "5432:5432"
     environment:
@@ -44,7 +44,7 @@ services:
       - default
 
   postgresql_graphana:
-    image: postgres:18.0
+    image: postgres:18.3
     labels:
       org.springframework.boot.ignore: true
     ports:

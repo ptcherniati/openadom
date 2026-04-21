@@ -4,7 +4,7 @@
 # or, si on réutilise un preparedStatement créé sur le schéma du test précédent, ça échoue
 spring:
   datasource:
-    url: jdbc:tc:postgresql:18:///test?TC_INITSCRIPT=migration/openadom_user.sql&loggerLevel=INFO
+    url: jdbc:tc:postgresql:18.3:///test?TC_INITSCRIPT=migration/openadom_user.sql&loggerLevel=INFO
     username: openAdomTechUser
     password: "z2I<i}qclq)D?xqT"
 
