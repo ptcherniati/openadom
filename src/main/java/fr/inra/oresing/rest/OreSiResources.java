@@ -132,7 +132,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.io.output.TeeOutputStream;
 
 @Slf4j
 @RestController
@@ -1055,7 +1057,16 @@ public class OreSiResources {
     }
 
     /**
-     * export as CSV
+     * Export CSV zippe en streaming direct vers le client.
+     *
+     * <p>Phase 1c-full ( issue #62 ) : le ZIP est ecrit simultanement dans
+     * la reponse HTTP ( streaming direct , pas de materialisation disque
+     * prealable ) ET dans un fichier temporaire via {@link TeeOutputStream}.
+     * Le fichier temporaire sert ensuite a l'upload FileSender + mail , en
+     * tache asynchrone une fois le streaming termine.
+     *
+     * <p>Rate-limit per-user via {@link ZipExportRateLimiter} (acquis sur le
+     * thread Tomcat , libere a la fin du streaming dans le thread async).
      */
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -1064,91 +1075,119 @@ public class OreSiResources {
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataType,
             @JsonParam(value = "downloadDatasetQuery", required = false) final DownloadDatasetQuery params) {
-        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = buildDownloadDatasetQuery(params, nameOrId, dataType, false);
 
-        AtomicReference<OreSiUser> user = new AtomicReference<>();
-        AtomicReference<Path> zipFile = new AtomicReference<>();
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        SecurityContextHolder.setContext(securityContext);
-        String fileName = DATA_ZIP.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
+        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
+                buildDownloadDatasetQuery(params, nameOrId, dataType, false);
 
-        final ResponseEntity.BodyBuilder header = ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\".zip");
+        // Capture etat Tomcat-thread avant de passer en async
+        final SecurityContext securityContext = SecurityContextHolder.getContext();
+        final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
+        final OreSiUser currentUser = userRepository.findById(OreSiApiRequestContext.getRequestClient().id());
+        final String fileName = DATA_ZIP.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
 
-        // Quota par utilisateur : on reserve un slot avant de lancer le travail
-        // lourd. Si le quota est depasse , 429 Too Many Requests est retourne
-        // immediatement par Spring MVC ( cf @ResponseStatus sur l'exception ).
-        // Le slot est libere dans le finally : couvre la generation ZIP et
-        // l'envoi mail , mais pas le streaming HTTP final ( volontaire :
-        // permet a une nouvelle requete de demarrer pendant qu'on streame ).
-        final String userIdForRateLimit = OreSiApiRequestContext.getRequestClient().id().toString();
-        zipExportRateLimiter.acquireOrThrow(userIdForRateLimit);
+        // Rate-limit : 429 Too Many Requests immediat si quota utilisateur atteint
+        zipExportRateLimiter.acquireOrThrow(userId);
 
-        AtomicReference<Path> tempDirectory = new AtomicReference<>();
-        try {
-            heavyExecutorService.submit(() -> {
-                try {
-                    SecurityContextHolder.setContext(securityContext);
-                    user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
-                    tempDirectory.set(Files.createTempDirectory(Paths.get(TMP), fileName));
-                    buildDataZipUseCase.execute(tempDirectory.get(), downloadDatasetQuery);
-                    Path finalTempZipDirectory = tempDirectory.get();
-                    try {
-                        zipFile.set(finalTempZipDirectory.resolveSibling(finalTempZipDirectory.getFileName() + ".zip"));
-                        ZipUtils.zipDirectory(finalTempZipDirectory, zipFile.get()); //
-                    } catch (IOException | RuntimeException e) {
-                        log.error(EMAIL_ERROR, e);
-                    } finally {
-                        removeRepository(finalTempZipDirectory);
-                    }
-
-                } catch (IOException | RuntimeException e) {
-                    if (zipFile.get() != null) {
-                        try {
-                            addErrorFileToZip(zipFile.get(), e);
-                        } catch (IOException ioe) {
-                            log.error(IO_ADDING_ERROR, ioe);
-                        }
-                    }
-                    throw new OreSiTechnicalException(IO_WRITING_CSV_ERROR, e);
-                }
-            }).get();
-            heavyExecutorService.submit(() -> {
-                SecurityContextHolder.setContext(securityContext);
-                try {
-                    sendZipLinkByMailUseCase.execute(zipFile.get(), downloadDatasetQuery, user.get());
-                } catch (RuntimeException e) {
-                    log.error(EMAIL_ERROR, e);
-                }
-            }).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new OreSiTechnicalException("Thread interrompu lors de l'export ZIP", e);
-        } catch (ExecutionException e) {
-            Throwable cause = unwrapException(e.getCause());
-            throw switch (cause) {
-                case OreSiTechnicalException oreSiTechnicalException -> oreSiTechnicalException;
-                case RuntimeException runtimeEx -> runtimeEx;
-                default -> new IllegalStateException("Unexpected error during ZIP export", cause);
-            };
-        } finally {
-            zipExportRateLimiter.release(userIdForRateLimit);
-        }
-        final Path source = zipFile.get();
         StreamingResponseBody body = outputStream -> {
-            Files.copy(source, outputStream);
-            // Pas de flush() explicite : Files.copy() a déjà écrit tous les octets dans le buffer.
-            // Spring MVC appelle outputStream.flush() lui-même dans StreamingResponseBodyTask après
-            // le retour de writeTo(). Un flush() explicite ici déclenche onResponseCommitted() de
-            // Spring Security depuis le thread de l'exécuteur, provoquant un ConcurrentModificationException
-            // sur MockHttpServletResponse.headers (LinkedCaseInsensitiveMap / HashMap.computeIfAbsent).
-            Files.deleteIfExists(source); // Nettoyage juste après la copie
+            SecurityContextHolder.setContext(securityContext);
+            Path diskCopy = null;
+            boolean streamedOk = false;
+
+            try {
+                diskCopy = Files.createTempFile(Paths.get(TMP), fileName + "-", ".zip");
+
+                try (OutputStream diskOut  = new BufferedOutputStream(Files.newOutputStream(diskCopy));
+                     TeeOutputStream tee   = new TeeOutputStream(
+                             org.apache.commons.io.output.CloseShieldOutputStream.wrap(outputStream),
+                             diskOut);
+                     ZipOutputStream zip   = new ZipOutputStream(tee)) {
+
+                    try {
+                        serviceContainer.dataService().streamDataZipTo(zip, downloadDatasetQuery);
+                        streamedOk = true;
+                    } catch (Exception buildEx) {
+                        log.error(IO_WRITING_CSV_ERROR, buildEx);
+                        writeErrorEntryToZip(zip, buildEx);
+                    }
+                }
+
+                if (streamedOk) {
+                    // Streaming OK : le fichier disque est complet , on lance
+                    // l'upload FileSender + mail en async. Le client a deja
+                    // recu tous les bytes , cette tache n'influe plus sur la
+                    // reponse HTTP.
+                    final Path finalDiskCopy = diskCopy;
+                    final OreSiUser finalUser = currentUser;
+                    heavyExecutorService.submit(() -> {
+                        SecurityContextHolder.setContext(securityContext);
+                        try {
+                            sendZipLinkByMailUseCase.execute(finalDiskCopy, downloadDatasetQuery, finalUser);
+                        } catch (RuntimeException ex) {
+                            log.error(EMAIL_ERROR, ex);
+                        } finally {
+                            try {
+                                Files.deleteIfExists(finalDiskCopy);
+                            } catch (IOException ex) {
+                                log.warn(IO_DELETE_ERROR, ex);
+                            }
+                        }
+                    });
+                    diskCopy = null; // ownership transferee au submit async
+                }
+            } finally {
+                // Nettoyage du fichier disque si le streaming a echoue ou si
+                // on n'a pas pu atteindre le submit async ( ex : RuntimeException
+                // pendant createTempFile ).
+                if (diskCopy != null) {
+                    try {
+                        Files.deleteIfExists(diskCopy);
+                    } catch (IOException ex) {
+                        log.warn(IO_DELETE_ERROR, ex);
+                    }
+                }
+                SecurityContextHolder.clearContext();
+                zipExportRateLimiter.release(userId);
+            }
         };
-        return header
 
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\".zip")
                 .body(body);
+    }
 
+    /**
+     * Ajoute une entree {@code error.txt} au ZIP avec le message d'erreur +
+     * la stack. Remplace l'ancien {@link #addErrorFileToZip} qui operait sur
+     * un repertoire. Ecrit best-effort : les erreurs IO sur l'ecriture de
+     * l'entree sont loguees mais pas propagees.
+     */
+    private void writeErrorEntryToZip(ZipOutputStream zip, Exception cause) {
+        try {
+            zip.putNextEntry(new ZipEntry(FILE_ERROR));
+            try (OutputStreamWriter writer = new OutputStreamWriter(
+                    org.apache.commons.io.output.CloseShieldOutputStream.wrap(zip),
+                    StandardCharsets.UTF_8)) {
+                String lang = OreSiResources.getDefaultLocale().getLanguage();
+                String errorMessage = switch (lang) {
+                    case FR -> IO_UPOAD_ERROR_FR;
+                    case EN -> IO_UPOAD_ERROR_EN;
+                    default -> IO_UPOAD_ERROR_EN;
+                };
+                writer.write(errorMessage);
+                writer.write("\n\n");
+                if (cause.getMessage() != null) {
+                    writer.write(cause.getMessage());
+                    writer.write("\n\n");
+                }
+                StringWriter sw = new StringWriter();
+                cause.printStackTrace(new PrintWriter(sw));
+                writer.write(sw.toString());
+            }
+            zip.closeEntry();
+        } catch (IOException ioe) {
+            log.error(IO_ADDING_ERROR, ioe);
+        }
     }
 
     private static void removeRepository(Path finalTempZipDirectory) {

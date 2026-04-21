@@ -504,6 +504,80 @@ public class DataService {
         }*/
     }
 
+    /**
+     * Variante streaming de {@link #buildDataZip} : ecrit toutes les entrees
+     * CSV ( principal + references ) directement dans le {@link ZipOutputStream}
+     * fourni. Aucun fichier intermediaire sur disque. Phase 1c-full ( issue #62 ).
+     *
+     * <p>Le {@code zipOutputStream} n'est pas ferme par cette methode :
+     * l'appelant garde le controle ( typiquement via try-with-resources ).
+     *
+     * <p>L'ordre d'ecriture est sequentiel ( {@code concatMap} au lieu de
+     * {@code flatMap} ) car {@link ZipOutputStream} n'est pas thread-safe.
+     */
+    public void streamDataZipTo(
+            java.util.zip.ZipOutputStream zipOutputStream,
+            DownloadDatasetQuery          downloadDatasetQuery) {
+        Application application = downloadDatasetQuery.application();
+        DataRepository dataRepository = repository.getRepository(application).data();
+
+        serviceContainer.authenticationService().setRoleForClient();
+
+        DataService self = serviceContainer.dataService();
+
+        UUIDsfromData uuiDsfromData = self.addDatacsvEntry(
+                zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
+
+        getDownloadDatasetQueriesAsync(
+                downloadDatasetQuery.patternDefinitionCount(),
+                application,
+                downloadDatasetQuery.outPut().locale(),
+                dataRepository,
+                uuiDsfromData.uuidsfromData(),
+                downloadDatasetQuery.horizontalDisplay()
+        )
+                .concatMap(subQuery -> Mono.fromCallable(() -> {
+                    try {
+                        return self.addDatacsvEntry(
+                                zipOutputStream, dataRepository, subQuery, "references/%s.csv");
+                    } catch (Exception e) {
+                        throw new SiOreIllegalArgumentException("IOException",
+                                Map.of("message", Optional.ofNullable(e)
+                                        .map(Exception::getLocalizedMessage)
+                                        .orElse(OreSiTechnicalException.NO_MESSAGE)));
+                    }
+                }))
+                .blockLast();
+    }
+
+    /**
+     * Variante streaming de {@link #addDatacsv} : ecrit le CSV dans une entree
+     * du zip fourni au lieu d'un fichier dans un repertoire temporaire.
+     */
+    @Transactional(readOnly = true)
+    public UUIDsfromData addDatacsvEntry(
+            final java.util.zip.ZipOutputStream zipOutputStream,
+            DataRepository                      dataRepository,
+            final DownloadDatasetQuery          downloadDatasetQuery,
+            String                              fileNamePattern) {
+        final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
+        try {
+            AdditionalFileRepository additionalFileRepository = repository
+                    .getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
+            return DataCsvBuilder.getDataCsvBuilder(
+                            (appOrName, refType) -> serviceContainer.dataService()
+                                    .getAsynchroneImporterContext(
+                                            downloadDatasetQuery.application(), refType, null))
+                    .withDownloadDatasetQuery(downloadDatasetQuery)
+                    .withReferenceService(serviceContainer.dataService())
+                    .onRepositories(dataRepository, additionalFileRepository)
+                    .addDatas(datas)
+                    .buildToZipEntry(zipOutputStream, fileNamePattern);
+        } catch (IOException e) {
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+        }
+    }
+
     @Transactional(readOnly = true)
     public UUIDsfromData addDatacsv(
             final Path zipRepository,
