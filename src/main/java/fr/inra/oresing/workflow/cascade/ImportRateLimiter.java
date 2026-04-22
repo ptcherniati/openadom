@@ -1,5 +1,6 @@
 package fr.inra.oresing.workflow.cascade;
 
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
 import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
@@ -36,17 +37,20 @@ import java.util.concurrent.Semaphore;
 public class ImportRateLimiter {
 
     private final Map<String, Semaphore> userSlots = new ConcurrentHashMap<>();
-    private final int                 maxConcurrentPerUser;
-    private final OpenadomMetrics     metrics;
-    private final WorkflowLogWriter   logWriter;
+    private final int                   maxConcurrentPerUser;
+    private final OpenadomMetrics       metrics;
+    private final WorkflowLogWriter     logWriter;
+    private final AuthenticationService authenticationService;
 
     public ImportRateLimiter(
             @Value("${app.import.max-concurrent-per-user:3}") final int maxConcurrentPerUser,
             OpenadomMetrics metrics,
-            WorkflowLogWriter logWriter) {
-        this.maxConcurrentPerUser = maxConcurrentPerUser;
-        this.metrics              = metrics;
-        this.logWriter            = logWriter;
+            WorkflowLogWriter logWriter,
+            AuthenticationService authenticationService) {
+        this.maxConcurrentPerUser  = maxConcurrentPerUser;
+        this.metrics               = metrics;
+        this.logWriter             = logWriter;
+        this.authenticationService = authenticationService;
         log.info("ImportRateLimiter ready : max {} imports concurrents par utilisateur",
                 maxConcurrentPerUser);
     }
@@ -75,7 +79,7 @@ public class ImportRateLimiter {
                     UUID.randomUUID(),
                     WorkflowLogEntry.TYPE_IMPORT,
                     UUID.fromString(userId),
-                    null,
+                    resolveCurrentLogin(),
                     null,     // application et data_type inconnus au niveau du rate-limiter
                     null,
                     null,
@@ -86,6 +90,20 @@ public class ImportRateLimiter {
                     null));
         } catch (IllegalArgumentException e) {
             log.warn("Format UUID invalide , skip log RATE_LIMITED [userId={}]", userId);
+        }
+    }
+
+    /**
+     * Best-effort resolution of the caller login from the current request
+     * context. Returns null if no user is bound to the thread ( e.g. call
+     * originating from a background task ) : in that case the dashboard
+     * will degrade to showing only the UUID.
+     */
+    private String resolveCurrentLogin() {
+        try {
+            return authenticationService.getCurrentUserRoles().userLogin();
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 
