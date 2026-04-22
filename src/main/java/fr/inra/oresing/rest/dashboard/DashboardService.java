@@ -3,7 +3,7 @@ package fr.inra.oresing.rest.dashboard;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import fr.inra.oresing.domain.repository.authorization.role.CurrentUserRoles;
-import fr.inra.oresing.rest.services.AuthenticationService;
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.workflow.cascade.history.WorkflowActiveRegistry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowSnapshot;
 import lombok.RequiredArgsConstructor;
