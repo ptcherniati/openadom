@@ -1,6 +1,5 @@
 package fr.inra.oresing;
 
-import fr.inra.oresing.fileprocessor.workflow.control.processing.LoaderService;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.JsonRequestParamArgumentResolver;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
