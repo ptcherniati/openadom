@@ -33,6 +33,9 @@ import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+import org.apache.commons.io.output.CloseShieldOutputStream;
 
 public class DataCsvBuilder {
     private static final Logger log = LoggerFactory.getLogger(DataCsvBuilder.class);
@@ -76,6 +79,43 @@ public class DataCsvBuilder {
     public DataCsvBuilder addDatas(final Flux<DataRow> datas) {
         this.datas = datas;
         return this;
+    }
+
+    /**
+     * Variante streaming de {@link #build(String)} : ecrit le CSV directement
+     * dans une entree d'un {@link ZipOutputStream} deja ouvert, sans passer
+     * par un fichier intermediaire sur disque.
+     *
+     * <p>Le {@code zipOutputStream} n'est pas ferme : il reste disponible pour
+     * ajouter d'autres entrees. Une {@link CloseShieldOutputStream} protege
+     * contre tout close accidentel effectue par les writers internes.
+     *
+     * @param zipOutputStream zip deja ouvert, auquel on ajoute une entree
+     * @param fileNamePattern patron au format {@code "%s.csv"} ou
+     *                        {@code "references/%s.csv"}
+     * @return {@link UUIDsfromData} collecte pendant la serialization
+     * @throws IOException si l'entree zip ne peut pas etre creee
+     */
+    public UUIDsfromData buildToZipEntry(ZipOutputStream zipOutputStream, String fileNamePattern) throws IOException {
+        Optional<StandardDataDescription> data = downloadDatasetQuery.application()
+                .findData(downloadDatasetQuery.dataName());
+        final StandardDataDescription dataDescription = data
+                .orElseThrow(() -> new IllegalStateException("can't find application %s".formatted(downloadDatasetQuery.dataName())));
+        final String entryName = String.format(fileNamePattern, downloadDatasetQuery.dataName());
+
+        zipOutputStream.putNextEntry(new ZipEntry(entryName));
+        try {
+            // CloseShieldOutputStream : les BufferedWriter/CSVWriter internes ne
+            // doivent pas propager un close sur le zip ; on les laisse flush
+            // puis on ferme l'entree via closeEntry().
+            return buildDataCsv(
+                    CloseShieldOutputStream.wrap(zipOutputStream),
+                    downloadDatasetQuery.getLanguage(),
+                    dataDescription,
+                    downloadDatasetQuery.horizontalDisplay());
+        } finally {
+            zipOutputStream.closeEntry();
+        }
     }
 
     public UUIDsfromData build(String fileNamePattern) throws IOException {

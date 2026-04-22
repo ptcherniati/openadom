@@ -31,6 +31,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ConcurrentTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
@@ -55,16 +56,7 @@ import java.util.concurrent.Executor;
 )
 
 @SpringBootApplication(scanBasePackages = "fr.inra.oresing")
-@ComponentScan(
-        basePackages = "fr.inra.oresing",
-        // LoaderService est @Service dans le JAR file-processor. On l'exclut du
-        // scan pour le redéclarer manuellement dans DataSourceConfiguration avec
-        // le workflowJdbcTemplate (pool DB dédié).
-        excludeFilters = @ComponentScan.Filter(
-                type = FilterType.ASSIGNABLE_TYPE,
-                classes = LoaderService.class
-        )
-)
+@EnableScheduling
 public class OreSiNg implements WebMvcConfigurer {
 
     private final MigrateService migrate;

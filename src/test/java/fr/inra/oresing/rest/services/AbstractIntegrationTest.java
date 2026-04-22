@@ -47,7 +47,7 @@ public abstract class AbstractIntegrationTest {
     private static final String PG_SUPER_PASSWORD = "test";
     private static final String PG_DATABASE       = "test";
 
-    public static GenericContainer<?> postgres = new GenericContainer<>("postgres:18")
+    public static GenericContainer<?> postgres = new GenericContainer<>("postgres:18.3")
             .withEnv("POSTGRES_DB",       PG_DATABASE)
             .withEnv("POSTGRES_USER",     PG_SUPER_USER)
             .withEnv("POSTGRES_PASSWORD", PG_SUPER_PASSWORD)

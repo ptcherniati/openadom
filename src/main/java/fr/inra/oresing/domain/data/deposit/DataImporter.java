@@ -21,11 +21,8 @@ import fr.inra.oresing.domain.data.deposit.validation.transformer.data.RowWithRe
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.ReferenceValidationCheckResult;
 import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.FileBomResolver;
-import fr.inra.oresing.fileprocessor.workflow.config.WorkflowProperties;
-import fr.inra.oresing.fileprocessor.workflow.control.orchestration.WorkflowLifecycleManager;
-import fr.inra.oresing.fileprocessor.workflow.entity.ChunkInfo;
-import fr.inra.oresing.fileprocessor.workflow.entity.context.SharedContext;
 import fr.inra.oresing.persistence.JsonRowMapper;
+import fr.inra.oresing.workflow.cascade.progress.ImportProgressReporter;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
@@ -105,28 +102,31 @@ public class DataImporter {
     }
 
     /**
+     * Traite un chunk CSV : valide chaque ligne, applique les transformations
+     * metier et ecrit le CSV processé sur disque.
      *
+     * <p>Phase 1e (#62) : signature affranchie des types file-processor.
+     * Les anciennes dependances (SharedContext, ChunkInfo, WorkflowProperties,
+     * WorkflowLifecycleManager) sont remplacees par des primitives + un
+     * callback {@link ImportProgressReporter}. La logique metier interne
+     * (validation, computeKeys, dedup, toEntity) est strictement inchangee.
      */
     public void doDataTreatment(
-            final Path processedPath,
-            SharedContext sharedContext,
-            ChunkInfo chunkInfo,
-            AtomicInteger dataLinesProcessed,
-            AtomicInteger successfulLinesBatch,
-            WorkflowProperties workflowProperties,
-            WorkflowLifecycleManager lifecycleManager) throws IOException {
+            final Path                    processedPath,
+            final Path                    inputChunkPath,
+            final String                  correlationId,
+            final int                     chunkNumber,
+            final int                     chunkSizeLines,
+            final int                     progressBatchSize,
+            final AtomicInteger           dataLinesProcessed,
+            final AtomicInteger           successfulLinesBatch,
+            final ImportProgressReporter  progressReporter) throws IOException {
 
-
-        // Batch size for incremental progress updates (configurable via application.yml)
-        final int progressBatchSize = workflowProperties.getWorker().getProgressBatchSize();
-        final Path pathToTreat = chunkInfo.getChunkPath();
-        try (InputStream csv = Files.newInputStream(pathToTreat);
+        try (InputStream csv = Files.newInputStream(inputChunkPath);
              BufferedWriter writer = Files.newBufferedWriter(processedPath, StandardCharsets.UTF_8)) {
             final CSVFormat csvFormat = CSVFormat.Builder.create(CSVFormat.DEFAULT).setDelimiter(getDataImporterContext().contextConstants().dataConfiguration().separator()).setSkipHeaderRecord(true).get();
             final CSVParser csvParser = CSVParser.parse(csv, StandardCharsets.UTF_8, csvFormat);
             final Stream<CSVRecord> csvRecordStream = Streams.stream(csvParser);
-            final int chunkSizeLines = workflowProperties.getChunker().getChunkSizeLines();
-            final int chunkNumber = chunkInfo.getChunkNumber();
             final Integer firstRowLine = getDataImporterContext().contextConstants().dataConfiguration().firstRowLine();
             final Function<CSVRecord, Stream<RowWithReferenceDatum>> csvRecordToReferenceDatumFn = csvRecord -> csvReader.csvRecordToRowWithReferenceDatum((ImmutableList<String>) getDataImporterContext().publishContextBuilder().headerRow, csvRecord, firstRowLine, chunkNumber, chunkSizeLines);
             csvRecordStream
@@ -135,8 +135,7 @@ public class DataImporter {
                         successfulLinesBatch.getAndIncrement();
                         final int delta = successfulLinesBatch.get();
                         if (delta >= progressBatchSize) {
-                            sharedContext.incrementProcessedLines(delta);
-                            lifecycleManager.incrementProcessedLines(chunkInfo.getCorrelationId(), delta);
+                            progressReporter.onLinesProcessed(correlationId, delta);
                             successfulLinesBatch.set(0);
                         }
                         return csvRecord;

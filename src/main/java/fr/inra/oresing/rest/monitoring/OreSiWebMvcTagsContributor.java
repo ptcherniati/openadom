@@ -1,6 +1,5 @@
 package fr.inra.oresing.rest.monitoring;
 
-/*
 import io.micrometer.common.KeyValue;
 import io.micrometer.observation.Observation;
 import io.micrometer.observation.ObservationFilter;
@@ -11,6 +10,28 @@ import org.springframework.web.servlet.HandlerMapping;
 
 import java.util.Map;
 
+/**
+ * Enrichit automatiquement les observations HTTP ( metric
+ * {@code http.server.requests} ) avec deux tags metier de cardinalite
+ * basse :
+ *
+ * <ul>
+ *   <li>{@code app_name} : nom ou UUID de l'application ( path variable
+ *       {@code {nameOrId}} )</li>
+ *   <li>{@code data_type} : type de donnee ou reference ( path variable
+ *       {@code {dataType}} ou {@code {dataName}} )</li>
+ * </ul>
+ *
+ * <p>Ces tags permettent de decouper les dashboards Grafana par
+ * application et par type de donnees sans ajouter de metric custom
+ * ( reutilisation de la metric HTTP standard Spring Boot ).
+ *
+ * <p>Filter passif : lit uniquement les path variables deja parsees par
+ * Spring MVC. Aucun cout CPU significatif , aucune interference avec
+ * le traitement de la requete.
+ *
+ * <p>Phase 1 observabilite (issue #62).
+ */
 @Component
 public class OreSiWebMvcTagsContributor implements ObservationFilter {
 
@@ -19,7 +40,8 @@ public class OreSiWebMvcTagsContributor implements ObservationFilter {
         if (context instanceof ServerRequestObservationContext serverContext) {
             HttpServletRequest request = serverContext.getCarrier();
             @SuppressWarnings("unchecked")
-            Map<String, String> pathVariables = (Map<String, String>) request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+            Map<String, String> pathVariables = (Map<String, String>)
+                    request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
 
             if (pathVariables != null) {
                 String appName = pathVariables.get("nameOrId");
@@ -39,4 +61,3 @@ public class OreSiWebMvcTagsContributor implements ObservationFilter {
         return context;
     }
 }
-*/

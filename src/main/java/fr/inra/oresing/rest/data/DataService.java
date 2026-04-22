@@ -23,7 +23,7 @@ import fr.inra.oresing.domain.exceptions.SiOreIllegalArgumentException;
 import fr.inra.oresing.domain.file.DataFile;
 import fr.inra.oresing.domain.file.FileBomResolver;
 import fr.inra.oresing.domain.file.FileOrUUID;
-import fr.inra.oresing.domain.fileprocessor.WorkflowOrchestratorImportBuilder;
+import fr.inra.oresing.workflow.cascade.CascadeImportPipeline;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisation;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForBuildBundleReport;
 import fr.inra.oresing.domain.filesenderclient.FileSenderInternationalisationForDownloadDatasetQuery;
@@ -83,7 +83,7 @@ public class DataService {
     private final OreSiRepository repository;
     private final FileRepository fileRepository;
     private final PlatformTransactionManager transactionManager;
-    private final WorkflowOrchestratorImportBuilder orchestratorImportBuilder;
+    private final CascadeImportPipeline cascadeImportPipeline;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -95,7 +95,7 @@ public class DataService {
             OreSiRepository repository,
             FileRepository fileRepository,
             ServiceContainer serviceContainer,
-            PlatformTransactionManager transactionManager, WorkflowOrchestratorImportBuilder orchestratorImportBuilder,
+            PlatformTransactionManager transactionManager, CascadeImportPipeline cascadeImportPipeline,
             @Qualifier("fastServiceExecutor") Executor fastExecutor,      // ✅ Fast executor
             @Qualifier("normalServiceExecutor") Executor normalExecutor,  // ✅ Normal executor
             @Qualifier("heavyServiceExecutor") Executor heavyExecutor,    // ✅ Heavy executor
@@ -107,7 +107,7 @@ public class DataService {
         this.fileRepository = fileRepository;
         this.serviceContainer = serviceContainer;
         this.transactionManager = transactionManager;
-        this.orchestratorImportBuilder = orchestratorImportBuilder;
+        this.cascadeImportPipeline = cascadeImportPipeline;
         this.fastExecutor = fastExecutor;
         this.normalExecutor = normalExecutor;
         this.heavyExecutor = heavyExecutor;
@@ -137,11 +137,13 @@ public class DataService {
         final DataImporter referenceImporter = new DataImporter(referenceImporterContext);
         Path path = referenceImporter.prepareContextForDataTreatment(FileBomResolver.of(file));
         final String userId = serviceContainer.authenticationService().getCurrentUser().getId().toString();
-        orchestratorImportBuilder.execute(
+        cascadeImportPipeline.execute(
                 referenceImporter,
                 referenceValueRepository,
                 path,
-                userId
+                userId,
+                application.getName(),
+                refType
         );
         //final Path toMerge = referenceImporter.doDataTreatment(path, sharedContext, chunkInfo, workflowProperties, lifecycleManager);
         /*referenceImporter.treatErrors();
@@ -406,7 +408,16 @@ public class DataService {
                 });
     }
 
-    @Transactional(readOnly = true)
+    /**
+     * Construit l'export ZIP : un CSV principal + N CSVs de references.
+     *
+     * <p>Phase 1c-bis ( issue #62 ) : le {@code @Transactional(readOnly=true)}
+     * global a ete retire au profit d'une transaction par CSV ( cf. {@link
+     * #addDatacsv} ). Cela permet de fermer le curseur JDBC entre chaque
+     * fichier , ce qui evite de tenir une transaction longue ouverte sur le
+     * pool {@code workflowDataSource} pendant toute la generation des N+1
+     * CSVs ( risque OOM / saturation pool sur gros volumes ).
+     */
     public void buildDataZip(
             Path zipOutputStream,
             DownloadDatasetQuery downloadDatasetQuery) {
@@ -415,7 +426,13 @@ public class DataService {
 
         serviceContainer.authenticationService().setRoleForClient();
 
-        UUIDsfromData uuiDsfromData = addDatacsv(zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
+        // Passer par le proxy Spring ( serviceContainer.dataService() ) pour
+        // que le @Transactional(readOnly=true) declare sur addDatacsv soit
+        // effectivement applique - les appels intra-classe bypassent le proxy
+        // et n'ouvrent aucune transaction.
+        DataService self = serviceContainer.dataService();
+
+        UUIDsfromData uuiDsfromData = self.addDatacsv(zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
 
 
         getDownloadDatasetQueriesAsync(
@@ -428,7 +445,7 @@ public class DataService {
         )
                 .flatMap(downloadDatasetQueryByRowId -> Mono.fromCallable(() -> {
                     try {
-                        return addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
+                        return self.addDatacsv(zipOutputStream, dataRepository, downloadDatasetQueryByRowId, "references/%s.csv");
                     } catch (Exception e) {
                         throw new SiOreIllegalArgumentException("IOException", Map.of("message", Optional.ofNullable(e).map(Exception::getLocalizedMessage).orElse(OreSiTechnicalException.NO_MESSAGE)));
                     }
@@ -489,6 +506,81 @@ public class DataService {
         }*/
     }
 
+    /**
+     * Variante streaming de {@link #buildDataZip} : ecrit toutes les entrees
+     * CSV ( principal + references ) directement dans le {@link ZipOutputStream}
+     * fourni. Aucun fichier intermediaire sur disque. Phase 1c-full ( issue #62 ).
+     *
+     * <p>Le {@code zipOutputStream} n'est pas ferme par cette methode :
+     * l'appelant garde le controle ( typiquement via try-with-resources ).
+     *
+     * <p>L'ordre d'ecriture est sequentiel ( {@code concatMap} au lieu de
+     * {@code flatMap} ) car {@link ZipOutputStream} n'est pas thread-safe.
+     */
+    public void streamDataZipTo(
+            java.util.zip.ZipOutputStream zipOutputStream,
+            DownloadDatasetQuery          downloadDatasetQuery) {
+        Application application = downloadDatasetQuery.application();
+        DataRepository dataRepository = repository.getRepository(application).data();
+
+        serviceContainer.authenticationService().setRoleForClient();
+
+        DataService self = serviceContainer.dataService();
+
+        UUIDsfromData uuiDsfromData = self.addDatacsvEntry(
+                zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
+
+        getDownloadDatasetQueriesAsync(
+                downloadDatasetQuery.patternDefinitionCount(),
+                application,
+                downloadDatasetQuery.outPut().locale(),
+                dataRepository,
+                uuiDsfromData.uuidsfromData(),
+                downloadDatasetQuery.horizontalDisplay()
+        )
+                .concatMap(subQuery -> Mono.fromCallable(() -> {
+                    try {
+                        return self.addDatacsvEntry(
+                                zipOutputStream, dataRepository, subQuery, "references/%s.csv");
+                    } catch (Exception e) {
+                        throw new SiOreIllegalArgumentException("IOException",
+                                Map.of("message", Optional.ofNullable(e)
+                                        .map(Exception::getLocalizedMessage)
+                                        .orElse(OreSiTechnicalException.NO_MESSAGE)));
+                    }
+                }))
+                .blockLast();
+    }
+
+    /**
+     * Variante streaming de {@link #addDatacsv} : ecrit le CSV dans une entree
+     * du zip fourni au lieu d'un fichier dans un repertoire temporaire.
+     */
+    @Transactional(readOnly = true)
+    public UUIDsfromData addDatacsvEntry(
+            final java.util.zip.ZipOutputStream zipOutputStream,
+            DataRepository                      dataRepository,
+            final DownloadDatasetQuery          downloadDatasetQuery,
+            String                              fileNamePattern) {
+        final Flux<DataRow> datas = serviceContainer.dataService().findDataFlux(downloadDatasetQuery);
+        try {
+            AdditionalFileRepository additionalFileRepository = repository
+                    .getRepository(downloadDatasetQuery.application()).additionalBinaryFile();
+            return DataCsvBuilder.getDataCsvBuilder(
+                            (appOrName, refType) -> serviceContainer.dataService()
+                                    .getAsynchroneImporterContext(
+                                            downloadDatasetQuery.application(), refType, null))
+                    .withDownloadDatasetQuery(downloadDatasetQuery)
+                    .withReferenceService(serviceContainer.dataService())
+                    .onRepositories(dataRepository, additionalFileRepository)
+                    .addDatas(datas)
+                    .buildToZipEntry(zipOutputStream, fileNamePattern);
+        } catch (IOException e) {
+            throw new OreSiTechnicalException(ExceptionMessage.IO_EXCEPTION.toMessage(), e);
+        }
+    }
+
+    @Transactional(readOnly = true)
     public UUIDsfromData addDatacsv(
             final Path zipRepository,
             DataRepository dataRepository,

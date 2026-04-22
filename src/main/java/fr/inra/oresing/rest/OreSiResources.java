@@ -86,6 +86,10 @@ import fr.inra.oresing.rest.usecases.storage.additionalfile.FindAdditionalFileUs
 import fr.inra.oresing.rest.usecases.storage.additionalfile.GetAdditionalFilesZipStreamUseCase;
 import fr.inra.oresing.rest.usecases.storage.binaryfile.*;
 import fr.inra.oresing.rest.usecases.storage.versioning.UnPublishVersionBeforeDeleteUseCase;
+import fr.inra.oresing.workflow.cascade.ExtractionRateLimiter;
+import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
+import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
+import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -121,6 +125,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -131,7 +137,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import org.apache.commons.io.output.TeeOutputStream;
 
 @Slf4j
 @RestController
@@ -218,6 +226,9 @@ public class OreSiResources {
     private final ReadEntryUseCase readEntryUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase;
+    private final ExtractionRateLimiter extractionRateLimiter;
+    private final OpenadomMetrics metrics;
+    private final WorkflowLogWriter workflowLogWriter;
     Executor fastExecutor;
     Executor normalExecutor;
     Executor heavyExecutor;
@@ -280,7 +291,10 @@ public class OreSiResources {
             WriteUploadBundleUseCase writeUploadBundleUseCase,
             ReadEntryUseCase readEntryUseCase,
             GetCurrentUserUseCase getCurrentUserUseCase,
-            SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase
+            SendUploadErrorsMailUseCase sendUploadErrorsMailUseCase,
+            ExtractionRateLimiter extractionRateLimiter,
+            OpenadomMetrics metrics,
+            WorkflowLogWriter workflowLogWriter
     ) {
         this.userRepository = userRepository;
         this.serviceContainer = serviceContainer;
@@ -335,6 +349,41 @@ public class OreSiResources {
         this.readEntryUseCase = readEntryUseCase;
         this.getCurrentUserUseCase = getCurrentUserUseCase;
         this.sendUploadErrorsMailUseCase = sendUploadErrorsMailUseCase;
+        this.extractionRateLimiter = extractionRateLimiter;
+        this.metrics = metrics;
+        this.workflowLogWriter = workflowLogWriter;
+    }
+
+    /**
+     * Helper : construit et soumet async un {@link WorkflowLogEntry}
+     * pour une extraction. Best-effort : erreurs UUID loguees puis
+     * swallowed , ne casse pas le streaming.
+     */
+    private void logExtractionEvent(
+            String workflowType, String userId,
+            String applicationName, String dataType, String resourceName,
+            Instant startedAt, Duration duration, String status, long bytesTotal,
+            String fatalError) {
+        try {
+            workflowLogWriter.logAsync(new WorkflowLogEntry(
+                    java.util.UUID.randomUUID(),
+                    workflowType,
+                    java.util.UUID.fromString(userId),
+                    null,
+                    applicationName,
+                    dataType,
+                    resourceName,
+                    startedAt,
+                    startedAt.plus(duration),
+                    duration,
+                    status,
+                    0L, 0L, 0,
+                    bytesTotal,
+                    java.util.List.of(),
+                    fatalError));
+        } catch (IllegalArgumentException e) {
+            log.warn("Format UUID utilisateur invalide , skip log extraction [userId={}]", userId);
+        }
     }
 
 
@@ -727,7 +776,34 @@ public class OreSiResources {
             @PathVariable("refType") final String refType) {
         Locale language = OreSiResources.getDefaultLocale();
 
-        final StreamingResponseBody streamResponseBody = out -> getDataCsvStreamUseCase.execute(out, nameOrId, refType, language, false);
+        // Rate-limit partage avec l'endpoint ZIP ( meme quota par utilisateur ).
+        final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
+        extractionRateLimiter.acquireOrThrow(userId, "csv");
+
+        final StreamingResponseBody streamResponseBody = out -> {
+            final Instant startedAt = Instant.now();
+            final org.apache.commons.io.output.CountingOutputStream counting =
+                    new org.apache.commons.io.output.CountingOutputStream(out);
+            String finalStatus = WorkflowLogEntry.STATUS_FAILED;
+            String fatalError = null;
+            metrics.markExtractionStart("csv");
+            try {
+                getDataCsvStreamUseCase.execute(counting, nameOrId, refType, language, false);
+                finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
+            } catch (RuntimeException ex) {
+                fatalError = ex.getMessage();
+                throw ex;
+            } finally {
+                Duration duration = Duration.between(startedAt, Instant.now());
+                long bytes = counting.getByteCount();
+                metrics.recordExtractionCompleted("csv", nameOrId, refType, finalStatus, duration, bytes);
+                metrics.markExtractionEnd("csv");
+                logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_CSV,
+                        userId, nameOrId, refType, refType + ".csv",
+                        startedAt, duration, finalStatus, bytes, fatalError);
+                extractionRateLimiter.release(userId);
+            }
+        };
         response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
         response.setHeader(HEADER_CONTENT_DISPOSITION, String.format(HEADER_ATTACHMENT_FILENAME_S_CSV, refType));
         response.addHeader(HEADER_PRAGMA, HEADER_NO_CACHE);
@@ -859,21 +935,69 @@ public class OreSiResources {
             //@ApiParam(required = false, value = "The parameters for filter the search")
             @JsonParam(value = "params", required = false) final AdditionalFilesInfos additionalFilesInfos) throws
             BadAdditionalFileParamsSearchException {
+
+        // Rate-limit partage avec les autres extractions ( meme quota par utilisateur ).
+        final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
+        final String extractionType = AdditionalFileService.CHARTE.equals(
+                Objects.requireNonNull(additionalFilesInfos).getFiletype()) ? "charte" : "additional_files";
+        extractionRateLimiter.acquireOrThrow(userId, extractionType);
+
+        final String dataType = additionalFilesInfos.getFiletype();
         final StreamingResponseBody streamResponseBody;
-        if (AdditionalFileService.CHARTE.equals(Objects.requireNonNull(additionalFilesInfos).getFiletype())) {
+        if (AdditionalFileService.CHARTE.equals(additionalFilesInfos.getFiletype())) {
             response.setHeader("Content-type", "application/pdf");
             response.setHeader("Content-Security-Policy", "frame-ancestors %s".formatted(frontendOrigin));
-            streamResponseBody = out -> getCharteUseCase.execute(out, response, nameOrId, additionalFilesInfos);
+            streamResponseBody = out -> {
+                final Instant startedAt = Instant.now();
+                final org.apache.commons.io.output.CountingOutputStream counting =
+                        new org.apache.commons.io.output.CountingOutputStream(out);
+                String finalStatus = WorkflowLogEntry.STATUS_FAILED;
+                String fatalError = null;
+                metrics.markExtractionStart(extractionType);
+                try {
+                    getCharteUseCase.execute(counting, response, nameOrId, additionalFilesInfos);
+                    finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
+                } catch (RuntimeException ex) {
+                    fatalError = ex.getMessage();
+                    throw ex;
+                } finally {
+                    Duration duration = Duration.between(startedAt, Instant.now());
+                    long bytes = counting.getByteCount();
+                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus, duration, bytes);
+                    metrics.markExtractionEnd(extractionType);
+                    logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_CHARTE,
+                            userId, nameOrId, dataType, "charte.pdf",
+                            startedAt, duration, finalStatus, bytes, fatalError);
+                    extractionRateLimiter.release(userId);
+                }
+            };
         } else {
             streamResponseBody = out -> {
-                try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(out)) {
+                final Instant startedAt = Instant.now();
+                final org.apache.commons.io.output.CountingOutputStream counting =
+                        new org.apache.commons.io.output.CountingOutputStream(out);
+                String finalStatus = WorkflowLogEntry.STATUS_FAILED;
+                String fatalError = null;
+                metrics.markExtractionStart(extractionType);
+                try (final ZipOutputStream zipOutputStream = new KeepAliveZipOutputStream(counting)) {
                     getAdditionalFilesZipStreamUseCase.execute(zipOutputStream, nameOrId, additionalFilesInfos);
+                    finalStatus = WorkflowLogEntry.STATUS_COMPLETED;
                 } catch (final IOException ioe) {
+                    fatalError = ioe.getMessage();
                     switch (OreSiResources.getDefaultLocale().getLanguage()) {
                         case FR -> log.error(IO_ERROR_FR, ioe);
                         case EN -> log.error(IO_ERROR_EN, ioe);
                         default -> log.error(IO_ERROR_EN, ioe);
                     }
+                } finally {
+                    Duration duration = Duration.between(startedAt, Instant.now());
+                    long bytes = counting.getByteCount();
+                    metrics.recordExtractionCompleted(extractionType, nameOrId, dataType, finalStatus, duration, bytes);
+                    metrics.markExtractionEnd(extractionType);
+                    logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_ADDITIONAL_FILES,
+                            userId, nameOrId, dataType, "additionalFiles.zip",
+                            startedAt, duration, finalStatus, bytes, fatalError);
+                    extractionRateLimiter.release(userId);
                 }
             };
             response.setHeader(HEADER_CONTENT_DISPOSITION, HEADER_ZIP);
@@ -1051,7 +1175,16 @@ public class OreSiResources {
     }
 
     /**
-     * export as CSV
+     * Export CSV zippe en streaming direct vers le client.
+     *
+     * <p>Phase 1c-full ( issue #62 ) : le ZIP est ecrit simultanement dans
+     * la reponse HTTP ( streaming direct , pas de materialisation disque
+     * prealable ) ET dans un fichier temporaire via {@link TeeOutputStream}.
+     * Le fichier temporaire sert ensuite a l'upload FileSender + mail , en
+     * tache asynchrone une fois le streaming termine.
+     *
+     * <p>Rate-limit per-user via {@link ExtractionRateLimiter} (acquis sur le
+     * thread Tomcat , libere a la fin du streaming dans le thread async).
      */
     @PreAuthorize("hasPermission('APPLICATION', 'APPLICATION_DATA_READ')")
     @GetMapping(value = "/applications/{nameOrId}/data/{dataType}/zip", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
@@ -1060,80 +1193,143 @@ public class OreSiResources {
             @PathVariable("nameOrId") final String nameOrId,
             @PathVariable("dataType") final String dataType,
             @JsonParam(value = "downloadDatasetQuery", required = false) final DownloadDatasetQuery params) {
-        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery = buildDownloadDatasetQuery(params, nameOrId, dataType, false);
 
-        AtomicReference<OreSiUser> user = new AtomicReference<>();
-        AtomicReference<Path> zipFile = new AtomicReference<>();
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        SecurityContextHolder.setContext(securityContext);
-        String fileName = DATA_ZIP.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
+        final fr.inra.oresing.domain.data.read.query.DownloadDatasetQuery downloadDatasetQuery =
+                buildDownloadDatasetQuery(params, nameOrId, dataType, false);
 
-        final ResponseEntity.BodyBuilder header = ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\".zip");
+        // Capture etat Tomcat-thread avant de passer en async
+        final SecurityContext securityContext = SecurityContextHolder.getContext();
+        final String userId = OreSiApiRequestContext.getRequestClient().id().toString();
+        final OreSiUser currentUser = userRepository.findById(OreSiApiRequestContext.getRequestClient().id());
+        final String fileName = DATA_ZIP.formatted(nameOrId, LocalDateTime.now().format(TIMESTAMP_FORMATER));
 
-        AtomicReference<Path> tempDirectory = new AtomicReference<>();
-        try {
-            heavyExecutorService.submit(() -> {
-                try {
-                    SecurityContextHolder.setContext(securityContext);
-                    user.set(userRepository.findById(OreSiApiRequestContext.getRequestClient().id()));
-                    tempDirectory.set(Files.createTempDirectory(Paths.get(TMP), fileName));
-                    buildDataZipUseCase.execute(tempDirectory.get(), downloadDatasetQuery);
-                    Path finalTempZipDirectory = tempDirectory.get();
-                    try {
-                        zipFile.set(finalTempZipDirectory.resolveSibling(finalTempZipDirectory.getFileName() + ".zip"));
-                        ZipUtils.zipDirectory(finalTempZipDirectory, zipFile.get()); //
-                    } catch (IOException | RuntimeException e) {
-                        log.error(EMAIL_ERROR, e);
-                    } finally {
-                        removeRepository(finalTempZipDirectory);
-                    }
+        // Rate-limit : 429 Too Many Requests immediat si quota utilisateur atteint
+        extractionRateLimiter.acquireOrThrow(userId, "zip");
 
-                } catch (IOException | RuntimeException e) {
-                    if (zipFile.get() != null) {
-                        try {
-                            addErrorFileToZip(zipFile.get(), e);
-                        } catch (IOException ioe) {
-                            log.error(IO_ADDING_ERROR, ioe);
-                        }
-                    }
-                    throw new OreSiTechnicalException(IO_WRITING_CSV_ERROR, e);
-                }
-            }).get();
-            heavyExecutorService.submit(() -> {
-                SecurityContextHolder.setContext(securityContext);
-                try {
-                    sendZipLinkByMailUseCase.execute(zipFile.get(), downloadDatasetQuery, user.get());
-                } catch (RuntimeException e) {
-                    log.error(EMAIL_ERROR, e);
-                }
-            }).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new OreSiTechnicalException("Thread interrompu lors de l'export ZIP", e);
-        } catch (ExecutionException e) {
-            Throwable cause = unwrapException(e.getCause());
-            throw switch (cause) {
-                case OreSiTechnicalException oreSiTechnicalException -> oreSiTechnicalException;
-                case RuntimeException runtimeEx -> runtimeEx;
-                default -> new IllegalStateException("Unexpected error during ZIP export", cause);
-            };
-        }
-        final Path source = zipFile.get();
         StreamingResponseBody body = outputStream -> {
-            Files.copy(source, outputStream);
-            // Pas de flush() explicite : Files.copy() a déjà écrit tous les octets dans le buffer.
-            // Spring MVC appelle outputStream.flush() lui-même dans StreamingResponseBodyTask après
-            // le retour de writeTo(). Un flush() explicite ici déclenche onResponseCommitted() de
-            // Spring Security depuis le thread de l'exécuteur, provoquant un ConcurrentModificationException
-            // sur MockHttpServletResponse.headers (LinkedCaseInsensitiveMap / HashMap.computeIfAbsent).
-            Files.deleteIfExists(source); // Nettoyage juste après la copie
+            SecurityContextHolder.setContext(securityContext);
+            Path diskCopy = null;
+            boolean streamedOk = false;
+            final Instant startedAt = Instant.now();
+            long bytesStreamed = 0L;
+            String fatalError = null;
+            metrics.markExtractionStart("zip");
+
+            try {
+                diskCopy = Files.createTempFile(Paths.get(TMP), fileName + "-", ".zip");
+
+                try (OutputStream diskOut  = new BufferedOutputStream(Files.newOutputStream(diskCopy));
+                     TeeOutputStream tee   = new TeeOutputStream(
+                             org.apache.commons.io.output.CloseShieldOutputStream.wrap(outputStream),
+                             diskOut);
+                     ZipOutputStream zip   = new ZipOutputStream(tee)) {
+
+                    try {
+                        serviceContainer.dataService().streamDataZipTo(zip, downloadDatasetQuery);
+                        streamedOk = true;
+                    } catch (Exception buildEx) {
+                        log.error(IO_WRITING_CSV_ERROR, buildEx);
+                        fatalError = buildEx.getMessage();
+                        writeErrorEntryToZip(zip, buildEx);
+                    }
+                }
+
+                // Taille finale du ZIP produit ( identique cote client et cote disque )
+                if (diskCopy != null) {
+                    try {
+                        bytesStreamed = Files.size(diskCopy);
+                    } catch (IOException ignored) {
+                        // metrics best-effort
+                    }
+                }
+
+                if (streamedOk) {
+                    // Streaming OK : le fichier disque est complet , on lance
+                    // l'upload FileSender + mail en async. Le client a deja
+                    // recu tous les bytes , cette tache n'influe plus sur la
+                    // reponse HTTP.
+                    final Path finalDiskCopy = diskCopy;
+                    final OreSiUser finalUser = currentUser;
+                    heavyExecutorService.submit(() -> {
+                        SecurityContextHolder.setContext(securityContext);
+                        try {
+                            sendZipLinkByMailUseCase.execute(finalDiskCopy, downloadDatasetQuery, finalUser);
+                        } catch (RuntimeException ex) {
+                            log.error(EMAIL_ERROR, ex);
+                        } finally {
+                            try {
+                                Files.deleteIfExists(finalDiskCopy);
+                            } catch (IOException ex) {
+                                log.warn(IO_DELETE_ERROR, ex);
+                            }
+                        }
+                    });
+                    diskCopy = null; // ownership transferee au submit async
+                }
+            } finally {
+                // Nettoyage du fichier disque si le streaming a echoue ou si
+                // on n'a pas pu atteindre le submit async ( ex : RuntimeException
+                // pendant createTempFile ).
+                if (diskCopy != null) {
+                    try {
+                        Files.deleteIfExists(diskCopy);
+                    } catch (IOException ex) {
+                        log.warn(IO_DELETE_ERROR, ex);
+                    }
+                }
+                Duration duration = Duration.between(startedAt, Instant.now());
+                String finalStatus = streamedOk
+                        ? WorkflowLogEntry.STATUS_COMPLETED
+                        : WorkflowLogEntry.STATUS_FAILED;
+                metrics.recordExtractionCompleted("zip", nameOrId, dataType,
+                        finalStatus, duration, bytesStreamed);
+                metrics.markExtractionEnd("zip");
+                logExtractionEvent(WorkflowLogEntry.TYPE_EXTRACT_ZIP,
+                        userId, nameOrId, dataType, fileName + ".zip",
+                        startedAt, duration, finalStatus, bytesStreamed, fatalError);
+                SecurityContextHolder.clearContext();
+                extractionRateLimiter.release(userId);
+            }
         };
-        return header
 
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + fileName + "\".zip")
                 .body(body);
+    }
 
+    /**
+     * Ajoute une entree {@code error.txt} au ZIP avec le message d'erreur +
+     * la stack. Remplace l'ancien {@link #addErrorFileToZip} qui operait sur
+     * un repertoire. Ecrit best-effort : les erreurs IO sur l'ecriture de
+     * l'entree sont loguees mais pas propagees.
+     */
+    private void writeErrorEntryToZip(ZipOutputStream zip, Exception cause) {
+        try {
+            zip.putNextEntry(new ZipEntry(FILE_ERROR));
+            try (OutputStreamWriter writer = new OutputStreamWriter(
+                    org.apache.commons.io.output.CloseShieldOutputStream.wrap(zip),
+                    StandardCharsets.UTF_8)) {
+                String lang = OreSiResources.getDefaultLocale().getLanguage();
+                String errorMessage = switch (lang) {
+                    case FR -> IO_UPOAD_ERROR_FR;
+                    case EN -> IO_UPOAD_ERROR_EN;
+                    default -> IO_UPOAD_ERROR_EN;
+                };
+                writer.write(errorMessage);
+                writer.write("\n\n");
+                if (cause.getMessage() != null) {
+                    writer.write(cause.getMessage());
+                    writer.write("\n\n");
+                }
+                StringWriter sw = new StringWriter();
+                cause.printStackTrace(new PrintWriter(sw));
+                writer.write(sw.toString());
+            }
+            zip.closeEntry();
+        } catch (IOException ioe) {
+            log.error(IO_ADDING_ERROR, ioe);
+        }
     }
 
     private static void removeRepository(Path finalTempZipDirectory) {
