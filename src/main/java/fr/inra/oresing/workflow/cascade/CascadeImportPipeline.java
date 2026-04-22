@@ -1,6 +1,7 @@
 package fr.inra.oresing.workflow.cascade;
 
 import fr.inra.oresing.domain.data.deposit.DataImporter;
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.persistence.DataRepository;
 import fr.inra.oresing.workflow.cascade.cleanup.WorkflowTempCleanup;
 import fr.inra.oresing.workflow.cascade.config.ImportProperties;
@@ -54,6 +55,7 @@ public class CascadeImportPipeline {
     private final ImportRateLimiter       importRateLimiter;
     private final OpenadomMetrics         metrics;
     private final WorkflowLogWriter       logWriter;
+    private final AuthenticationService   authenticationService;
 
     public CascadeImportPipeline(
             ImportProperties       importProperties,
@@ -61,13 +63,15 @@ public class CascadeImportPipeline {
             WorkflowTempCleanup    tempCleanup,
             ImportRateLimiter      importRateLimiter,
             OpenadomMetrics        metrics,
-            WorkflowLogWriter      logWriter) {
-        this.importProperties  = importProperties;
-        this.progressReporter  = progressReporter;
-        this.tempCleanup       = tempCleanup;
-        this.importRateLimiter = importRateLimiter;
-        this.metrics           = metrics;
-        this.logWriter         = logWriter;
+            WorkflowLogWriter      logWriter,
+            AuthenticationService  authenticationService) {
+        this.importProperties      = importProperties;
+        this.progressReporter      = progressReporter;
+        this.tempCleanup           = tempCleanup;
+        this.importRateLimiter     = importRateLimiter;
+        this.metrics               = metrics;
+        this.logWriter             = logWriter;
+        this.authenticationService = authenticationService;
     }
 
     /**
@@ -93,6 +97,11 @@ public class CascadeImportPipeline {
         // d'imports simultanes. Le slot est libere dans le finally.
         importRateLimiter.acquireOrThrow(userId);
 
+        // Resolu une seule fois ici ( thread HTTP ) pour etre disponible dans
+        // tous les chemins de logImportEvent , y compris ceux rattrapant
+        // une exception apres un basculement de contexte.
+        final String userLogin = resolveCurrentLogin();
+
         final Instant startedAt = Instant.now();
         final String correlationId = UUID.randomUUID().toString();
         final String resourceName = headerlessCsv.getFileName().toString();
@@ -112,7 +121,7 @@ public class CascadeImportPipeline {
                 Duration failDuration = Duration.between(startedAt, Instant.now());
                 metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
                         failDuration, 0L, 0L, 0, fileSizeBytes);
-                logImportEvent(correlationId, userId, applicationName, dataType, resourceName,
+                logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                         startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
                         0L, 0L, 0, fileSizeBytes, List.of(), e.getMessage());
                 throw new UnsupportedOperationException("Failed to prepare workflow", e);
@@ -162,7 +171,7 @@ public class CascadeImportPipeline {
                     metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
                             failDuration, result.recordsProcessed(), result.recordsFailed(),
                             result.chunksProcessed(), fileSizeBytes);
-                    logImportEvent(correlationId, userId, applicationName, dataType, resourceName,
+                    logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                             startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
                             result.recordsProcessed(), result.recordsFailed(),
                             result.chunksProcessed(), fileSizeBytes,
@@ -181,7 +190,7 @@ public class CascadeImportPipeline {
                 metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_COMPLETED,
                         okDuration, result.recordsProcessed(), result.recordsFailed(),
                         result.chunksProcessed(), fileSizeBytes);
-                logImportEvent(correlationId, userId, applicationName, dataType, resourceName,
+                logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                         startedAt, okDuration, WorkflowLogEntry.STATUS_COMPLETED,
                         result.recordsProcessed(), result.recordsFailed(),
                         result.chunksProcessed(), fileSizeBytes,
@@ -198,7 +207,7 @@ public class CascadeImportPipeline {
                     Duration failDuration = Duration.between(startedAt, Instant.now());
                     metrics.recordImportCompleted(applicationName, dataType, WorkflowLogEntry.STATUS_FAILED,
                             failDuration, 0L, 0L, 0, fileSizeBytes);
-                    logImportEvent(correlationId, userId, applicationName, dataType, resourceName,
+                    logImportEvent(correlationId, userId, userLogin, applicationName, dataType, resourceName,
                             startedAt, failDuration, WorkflowLogEntry.STATUS_FAILED,
                             0L, 0L, 0, fileSizeBytes, List.of(), e.getMessage());
                 }
@@ -220,7 +229,7 @@ public class CascadeImportPipeline {
      * d'erreur de parsing des IDs , on log un warning et on continue.
      */
     private void logImportEvent(
-            String correlationId, String userId,
+            String correlationId, String userId, String userLogin,
             String applicationName, String dataType, String resourceName,
             Instant startedAt, Duration duration, String status,
             long recordsProcessed, long recordsFailed,
@@ -233,7 +242,7 @@ public class CascadeImportPipeline {
                     corrUuid,
                     WorkflowLogEntry.TYPE_IMPORT,
                     userUuid,
-                    null,                    // userLogin : a enrichir en phase ulterieure
+                    userLogin,
                     applicationName,
                     dataType,
                     resourceName,
@@ -250,6 +259,19 @@ public class CascadeImportPipeline {
         } catch (IllegalArgumentException e) {
             log.warn("Format UUID invalide , skip log entry [correlationId={} , userId={}]",
                     correlationId, userId);
+        }
+    }
+
+    /**
+     * Best-effort resolution of the caller login from the current request
+     * context. Returns null if no user is bound to the thread , in which
+     * case the dashboard will fall back to displaying only the UUID.
+     */
+    private String resolveCurrentLogin() {
+        try {
+            return authenticationService.getCurrentUserRoles().userLogin();
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 

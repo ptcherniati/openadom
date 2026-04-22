@@ -369,7 +369,7 @@ public class OreSiResources {
                     java.util.UUID.randomUUID(),
                     workflowType,
                     java.util.UUID.fromString(userId),
-                    null,
+                    resolveCurrentLogin(),
                     applicationName,
                     dataType,
                     resourceName,
@@ -383,6 +383,19 @@ public class OreSiResources {
                     fatalError));
         } catch (IllegalArgumentException e) {
             log.warn("Format UUID utilisateur invalide , skip log extraction [userId={}]", userId);
+        }
+    }
+
+    /**
+     * Best-effort resolution of the caller login from the current request
+     * context. Returns null if no user is bound to the thread , in which
+     * case the dashboard falls back to showing the UUID alone.
+     */
+    private String resolveCurrentLogin() {
+        try {
+            return serviceContainer.authenticationService().getCurrentUserRoles().userLogin();
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 

@@ -1,5 +1,6 @@
 package fr.inra.oresing.workflow.cascade;
 
+import fr.inra.oresing.persistence.AuthenticationService;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogEntry;
 import fr.inra.oresing.workflow.cascade.history.WorkflowLogWriter;
 import fr.inra.oresing.workflow.cascade.metrics.OpenadomMetrics;
@@ -32,21 +33,24 @@ import java.util.UUID;
 @Service
 public class ExtractionRateLimiter {
 
-    private final int               maxConcurrentPerUser;
-    private final long              acquireTimeoutSeconds;
-    private final OpenadomMetrics   metrics;
-    private final WorkflowLogWriter logWriter;
-    private UserRateLimiter         limiter;
+    private final int                   maxConcurrentPerUser;
+    private final long                  acquireTimeoutSeconds;
+    private final OpenadomMetrics       metrics;
+    private final WorkflowLogWriter     logWriter;
+    private final AuthenticationService authenticationService;
+    private UserRateLimiter             limiter;
 
     public ExtractionRateLimiter(
             @Value("${app.extraction.max-concurrent-per-user:5}") final int maxConcurrentPerUser,
             @Value("${app.extraction.acquire-timeout-seconds:0}") final long acquireTimeoutSeconds,
             OpenadomMetrics metrics,
-            WorkflowLogWriter logWriter) {
+            WorkflowLogWriter logWriter,
+            AuthenticationService authenticationService) {
         this.maxConcurrentPerUser  = maxConcurrentPerUser;
         this.acquireTimeoutSeconds = acquireTimeoutSeconds;
         this.metrics               = metrics;
         this.logWriter             = logWriter;
+        this.authenticationService = authenticationService;
     }
 
     @PostConstruct
@@ -98,7 +102,7 @@ public class ExtractionRateLimiter {
                     UUID.randomUUID(),
                     workflowType,
                     UUID.fromString(userId),
-                    null,
+                    resolveCurrentLogin(),
                     null, null, null,
                     now, now, Duration.ZERO,
                     WorkflowLogEntry.STATUS_RATE_LIMITED,
@@ -107,6 +111,19 @@ public class ExtractionRateLimiter {
                     null));
         } catch (IllegalArgumentException e) {
             log.warn("Format UUID invalide , skip log RATE_LIMITED [userId={} type={}]", userId, type);
+        }
+    }
+
+    /**
+     * Best-effort resolution of the caller login from the current request
+     * context. Returns null if no user is bound to the thread : the
+     * dashboard will then fall back to showing the UUID.
+     */
+    private String resolveCurrentLogin() {
+        try {
+            return authenticationService.getCurrentUserRoles().userLogin();
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 
