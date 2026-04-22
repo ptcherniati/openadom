@@ -1,5 +1,6 @@
 package fr.inra.oresing;
 
+import fr.inra.oresing.fileprocessor.workflow.control.processing.LoaderService;
 import fr.inra.oresing.persistence.flyway.MigrateService;
 import fr.inra.oresing.rest.JsonRequestParamArgumentResolver;
 import fr.inra.oresing.rest.filesenderclient.FileRepository;
@@ -21,7 +22,9 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.info.GitProperties;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Profile;
 import org.springframework.context.event.EventListener;
 import org.springframework.context.support.ResourceBundleMessageSource;
@@ -52,6 +55,16 @@ import java.util.concurrent.Executor;
 )
 
 @SpringBootApplication(scanBasePackages = "fr.inra.oresing")
+@ComponentScan(
+        basePackages = "fr.inra.oresing",
+        // LoaderService est @Service dans le JAR file-processor. On l'exclut du
+        // scan pour le redéclarer manuellement dans DataSourceConfiguration avec
+        // le workflowJdbcTemplate (pool DB dédié).
+        excludeFilters = @ComponentScan.Filter(
+                type = FilterType.ASSIGNABLE_TYPE,
+                classes = LoaderService.class
+        )
+)
 public class OreSiNg implements WebMvcConfigurer {
 
     private final MigrateService migrate;
