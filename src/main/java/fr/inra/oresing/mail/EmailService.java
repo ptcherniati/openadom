@@ -24,8 +24,6 @@ import static fr.inra.oresing.mail.EmailService.UPLOAD_STATE.UNPUBLISHED;
 @RequiredArgsConstructor
 public class EmailService implements Email {
     public static final String OPENADOM_INRAE_FR = "openadom@inrae.fr";
-    public static final String MSG_ERROR_SUBJECT_FR = "Une erreur s'est produite lors de  l'opération sur le type de données %s de l'application %s";
-    public static final String MSG_ERROR_SUBJECT_EN = "An error occurred while operating on data type %s of application %s";
     private static final String NEW_ACCOUNT_SUBJECT = "Création de compte / Account creation";
     private static final String NEW_ACCOUNT_FR = "Vous venez de créer un compte sur l'application OPENAdom. %n" +
                                                  "Pour valider votre e-mail, renseignez la clé de validation lors de la connexion.%n\n";
@@ -48,7 +46,7 @@ public class EmailService implements Email {
             ),
             UPLOAD_STATE.UPLOADED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été enregistré",
-                    Locale.ENGLISH, "Your file has been register"
+                    Locale.ENGLISH, "Your file has been registered"
             ),
             UPLOAD_STATE.DELETED, Map.of(
                     Locale.FRENCH, "Votre fichier a bien été supprimé",
@@ -58,37 +56,141 @@ public class EmailService implements Email {
     private static final Map<UPLOAD_STATE, Map<Locale, String>> SUCCESS_UPLOAD_TEXTS = Map.of(
             UNPUBLISHED, Map.of(
                     Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été dépublié pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
+                            Le fichier de données "%1$s" a bien été dépublié pour l'application %2$s.
+                            %1$s contient %3$s enregistrement(s)""",
                     Locale.ENGLISH, """
-                            The data file %1$s has been successfully unpublished for the application %2$s.
-                            %1$s continent %3$s record(s)"""
+                            The data file "%1$s" has been successfully unpublished for the application %2$s.
+                            %1$s contains %3$s record(s)"""
             ),
             UPLOAD_STATE.PUBLISHED, Map.of(
                     Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été publié pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
+                            Le fichier de données "%1$s" a bien été publié pour l'application %2$s.
+                            %1$s contient %3$s enregistrement(s)""",
                     Locale.ENGLISH, """
-                            The data file %1$s has been successfully published for the application %2$s.
-                            %1$s continent %3$s record(s)"""
+                            The data file "%1$s" has been successfully published for the application %2$s.
+                            %1$s contains %3$s record(s)"""
             ),
             UPLOAD_STATE.UPLOADED, Map.of(
                     Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été enregistré pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
+                            Le fichier de données "%1$s" a bien été enregistré pour l'application %2$s.
+                            %1$s contient %3$s enregistrement(s)""",
                     Locale.ENGLISH, """
-                            The data file %1$s has been successfully register for the application %2$s.
-                            %1$s continent %3$s record(s)"""
+                            The data file "%1$s" has been successfully registered for the application %2$s.
+                            %1$s contains %3$s record(s)"""
             ),
             UPLOAD_STATE.DELETED, Map.of(
                     Locale.FRENCH, """
-                            Le fichier de données %1$s a bien été supprimé pour l'application %2$s.
-                            %1$s continent %3$s enregistrement(s)""",
+                            Le fichier de données "%1$s" a bien été supprimé pour l'application %2$s.
+                            %1$s contient %3$s enregistrement(s)""",
                     Locale.ENGLISH, """
-                            The data file %1$s has been successfully deleted for the application %2$s.
-                            %1$s continent %3$s record(s)"""
+                            The data file "%1$s" has been successfully deleted for the application %2$s.
+                            %1$s contains %3$s record(s)"""
             )
     );
+
+    /**
+     * #477 - Corps des emails de succès pour l'état UPLOADED ( insertion ) ,
+     * différencié selon qu'il s'agit d'un référentiel ( TRUE ) ou d'un type
+     * de données ( FALSE ). Ajout du nom du fichier CSV soumis en plus du
+     * titre localisé , conformément aux propositions d'évolution du document
+     * ODT joint à l'issue. Placeholders :
+     *   %1$s = titre ( référentiel ou type de données , localisé )
+     *   %2$s = titre de l'application ( localisé )
+     *   %3$s = nombre d'enregistrements
+     *   %4$s = nom du fichier CSV soumis
+     */
+    private static final Map<Boolean, Map<Locale, String>> INSERT_SUCCESS_BODIES = Map.of(
+            Boolean.TRUE, Map.of(
+                    Locale.FRENCH, """
+                            Votre fichier de données "%4$s" du référentiel "%1$s" a bien été enregistré dans l'application %2$s.
+                            Le référentiel "%1$s" contient %3$s enregistrement(s).""",
+                    Locale.ENGLISH, """
+                            Your data file "%4$s" from the reference "%1$s" has been successfully registered in the application %2$s.
+                            The reference "%1$s" contains %3$s record(s)"""
+            ),
+            Boolean.FALSE, Map.of(
+                    Locale.FRENCH, """
+                            Votre fichier de données "%4$s" du type de données "%1$s" a bien été enregistré dans l'application %2$s.
+                            Le type de données "%1$s" contient %3$s enregistrement(s).""",
+                    Locale.ENGLISH, """
+                            Your data file "%4$s" from the data type "%1$s" has been successfully registered in the application %2$s.
+                            The data type "%1$s" contains %3$s record(s)"""
+            )
+    );
+
+    /**
+     * #477 - Sujets des emails d'erreur d'insertion , différenciés selon
+     * qu'il s'agit d'un référentiel ( TRUE ) ou d'un type de données ( FALSE ).
+     * Placeholders :
+     *   %1$s = titre ( localisé )
+     *   %2$s = titre de l'application ( localisé )
+     */
+    private static final Map<Boolean, Map<Locale, String>> ERROR_SUBJECTS = Map.of(
+            Boolean.TRUE, Map.of(
+                    Locale.FRENCH, "Erreur lors de l'opération sur le référentiel %1$s de l'application %2$s",
+                    Locale.ENGLISH, "Error during the operation on the reference dataset %1$s of the application %2$s"
+            ),
+            Boolean.FALSE, Map.of(
+                    Locale.FRENCH, "Erreur lors de l'opération sur le type de données %1$s de l'application %2$s",
+                    // #477 - "reference dataset" conservé tel quel , conformément au document ODT
+                    // ( remonté dans le commentaire de l'issue pour clarification ultérieure ).
+                    Locale.ENGLISH, "Error during the operation on the reference dataset %1$s of the application %2$s"
+            )
+    );
+
+    /**
+     * #477 - Corps des emails d'erreur d'insertion , différenciés selon
+     * qu'il s'agit d'un référentiel ( TRUE ) ou d'un type de données ( FALSE ).
+     * Le texte d'accompagnement encadre le message technique brut pour
+     * guider l'utilisateur vers une reprise ou un contact administrateur.
+     * Le nom du fichier CSV en erreur est désormais inclus , en cohérence
+     * avec l'email de succès ( harmonisation proposée en complément du
+     * document ODT ).
+     * Placeholders :
+     *   %1$s = titre ( localisé )
+     *   %2$s = titre de l'application ( localisé )
+     *   %3$s = message d'erreur technique brut ( JSON , tel que renvoyé par le backend )
+     *   %4$s = nom du fichier CSV soumis
+     */
+    private static final Map<Boolean, Map<Locale, String>> ERROR_BODIES = Map.of(
+            Boolean.TRUE, Map.of(
+                    Locale.FRENCH, """
+                            Une erreur est survenue lors du traitement du fichier de données "%4$s" du référentiel "%1$s" de l'application %2$s.
+                            Vous trouverez ci-dessous le message d'erreur technique associé :
+
+                            %3$s
+
+                            Vous pouvez vérifier vos données et réessayer.
+                            Si le problème persiste, nous vous invitons à contacter le(s) administrateur(s) du système d'information.""",
+                    Locale.ENGLISH, """
+                            An error occurred while processing the data file "%4$s" from the reference "%1$s" in the application %2$s.
+                            The technical error message is provided below:
+
+                            %3$s
+
+                            You may review your data and try again.
+                            If the issue persists, please contact the information system administrator(s)."""
+            ),
+            Boolean.FALSE, Map.of(
+                    Locale.FRENCH, """
+                            Une erreur est survenue lors du traitement du fichier de données "%4$s" du type de données "%1$s" de l'application %2$s.
+                            Vous trouverez ci-dessous le message d'erreur technique associé :
+
+                            %3$s
+
+                            Vous pouvez vérifier vos données et réessayer.
+                            Si le problème persiste, nous vous invitons à contacter le(s) administrateur(s) du système d'information.""",
+                    Locale.ENGLISH, """
+                            An error occurred while processing the data file "%4$s" from the data type "%1$s" in the application %2$s.
+                            The technical error message is provided below:
+
+                            %3$s
+
+                            You may review your data and try again.
+                            If the issue persists, please contact the information system administrator(s)."""
+            )
+    );
+
     private static final String MAIL_VERIFICATION_TEMPLATE = """
             %2$s%n%nVotre clé de connexion est : %n%1$s
             %3$sYour connection key is: %n%1$s
@@ -149,7 +251,7 @@ public class EmailService implements Email {
     }
 
     @Override
-    public void sendUpoadSuccessMail(Application application, String dataName, UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser) {
+    public void sendUpoadSuccessMail(Application application, String dataName, String fileName, UPLOAD_STATE uploadState, Locale locale, DataVersioningResult dataVersioningResult, OreSiUser currentUser) {
         long count = dataVersioningResult.dataSynthesis().stream()
                 .filter(dataSynthesis -> dataSynthesis.getReferenceType().equals(dataName))
                 .findFirst()
@@ -159,15 +261,25 @@ public class EmailService implements Email {
         String localizedApplicationName = application.getLocalizedLocalName(locale);
         String localizedDataName = application.getLocalizedDataName(locale, dataName);
         localizedDataName = localizedDataName == null ? dataName : localizedDataName;
-        String subject = SUCCESS_UPLOAD_SUBJECTS.get(uploadState)
-                .get(locale.equals(Locale.ENGLISH) ? Locale.ENGLISH : Locale.FRENCH);
-        String text = SUCCESS_UPLOAD_TEXTS.get(uploadState)
-                .get(locale.equals(Locale.ENGLISH) ? Locale.ENGLISH : Locale.FRENCH)
-                .formatted(
-                        localizedDataName,
-                        localizedApplicationName,
-                        count
-                );
+        Locale effectiveLocale = locale.equals(Locale.ENGLISH) ? Locale.ENGLISH : Locale.FRENCH;
+        String subject = SUCCESS_UPLOAD_SUBJECTS.get(uploadState).get(effectiveLocale);
+
+        // #477 - Pour l'insertion ( UPLOADED ) , le template évolue : il
+        // distingue référentiel / type de données et inclut le nom du fichier
+        // CSV soumis ( document ODT joint à l'issue ). Les autres états
+        // ( publication , dépublication , suppression ) restent sur le
+        // template existant car hors scope explicite du document.
+        final String text;
+        if (uploadState == UPLOAD_STATE.UPLOADED) {
+            boolean isReference = !application.isData(dataName);
+            String safeFileName = fileName == null ? "" : fileName;
+            text = INSERT_SUCCESS_BODIES.get(isReference).get(effectiveLocale)
+                    .formatted(localizedDataName, localizedApplicationName, count, safeFileName);
+        } else {
+            text = SUCCESS_UPLOAD_TEXTS.get(uploadState).get(effectiveLocale)
+                    .formatted(localizedDataName, localizedApplicationName, count);
+        }
+
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
         mailMessage.setFrom(OPENADOM_INRAE_FR);
@@ -178,13 +290,25 @@ public class EmailService implements Email {
     }
 
     @Override
-    public void sendUpoadErrorsMail(Locale locale, String application, String dataName, OreSiUser currentUser, String body) {
+    public void sendUpoadErrorsMail(Locale locale, String application, String dataName, String fileName, boolean isReference, OreSiUser currentUser, String body) {
+        // #477 - Le sujet et le corps sont désormais différenciés selon
+        // qu'il s'agit d'un référentiel ou d'un type de données , et le
+        // corps encadre le message technique brut par un texte
+        // d'accompagnement ( document ODT joint à l'issue ). Le nom du
+        // fichier CSV en erreur est inclus par harmonisation avec l'email
+        // de succès.
+        Locale effectiveLocale = Locale.ENGLISH.getLanguage().equals(locale.getLanguage()) ? Locale.ENGLISH : Locale.FRENCH;
+        String safeFileName = fileName == null ? "" : fileName;
+        String subject = ERROR_SUBJECTS.get(isReference).get(effectiveLocale)
+                .formatted(dataName, application);
+        String text = ERROR_BODIES.get(isReference).get(effectiveLocale)
+                .formatted(dataName, application, body, safeFileName);
+
         final SimpleMailMessage mailMessage = new SimpleMailMessage();
         mailMessage.setTo(currentUser.getEmail());
         mailMessage.setFrom(OPENADOM_INRAE_FR);
-        final String subjectTemplate = Locale.ENGLISH.getLanguage().equals(locale.getLanguage()) ? MSG_ERROR_SUBJECT_EN : MSG_ERROR_SUBJECT_FR;
-        mailMessage.setSubject(subjectTemplate.formatted(dataName, application));
-        mailMessage.setText(body);
+        mailMessage.setSubject(subject);
+        mailMessage.setText(text);
 
         mailSender.send(mailMessage);
     }

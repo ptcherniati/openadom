@@ -13,7 +13,7 @@ public class SendUploadErrorsMailUseCase {
 
     private final EmailService emailService;
 
-    public void execute(Locale locale, String application, String dataName, OreSiUser currentUser, String body) {
-        emailService.sendUpoadErrorsMail(locale, application, dataName, currentUser, body);
+    public void execute(Locale locale, String application, String dataName, String fileName, boolean isReference, OreSiUser currentUser, String body) {
+        emailService.sendUpoadErrorsMail(locale, application, dataName, fileName, isReference, currentUser, body);
     }
 }
