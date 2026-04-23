@@ -73,6 +73,8 @@ public class DataService {
     public static final String MANIFEST_JSON = "manifest.json";
     public static final String REFERENCES_JSON = "references.json";
     public static final String CONFIGURATION_FILE = "configuration.yaml";
+    private static final String CSV_FILENAME_PATTERN = "%s.csv";
+    private static final String REFERENCES_CSV_FILENAME_PATTERN = "references/%s.csv";
 
 
     public static final int MAX_CONCURRENCY = 6; // Ou ta limite pour contrôler la charge
@@ -528,7 +530,7 @@ public class DataService {
         DataService self = serviceContainer.dataService();
 
         UUIDsfromData uuiDsfromData = self.addDatacsvEntry(
-                zipOutputStream, dataRepository, downloadDatasetQuery, "%s.csv");
+                zipOutputStream, dataRepository, downloadDatasetQuery, CSV_FILENAME_PATTERN);
 
         getDownloadDatasetQueriesAsync(
                 downloadDatasetQuery.patternDefinitionCount(),
@@ -541,7 +543,7 @@ public class DataService {
                 .concatMap(subQuery -> Mono.fromCallable(() -> {
                     try {
                         return self.addDatacsvEntry(
-                                zipOutputStream, dataRepository, subQuery, "references/%s.csv");
+                                zipOutputStream, dataRepository, subQuery, REFERENCES_CSV_FILENAME_PATTERN);
                     } catch (Exception e) {
                         throw new SiOreIllegalArgumentException("IOException",
                                 Map.of("message", Optional.ofNullable(e)
@@ -761,7 +763,7 @@ private PlatformTransactionManager transactionManager;
                                                             .map(StandardDataDescription::submission)
                                                             .map(Submission::fileNameParsing)
                                                             .map(Submission.SubmissionFileNameParsing::createExampleSubmissionFileName)
-                                                            .orElse("%s.csv".formatted(reference));
+                                                            .orElse(CSV_FILENAME_PATTERN.formatted(reference));
                                                     String dataCsvFilePath = "%1$s/%2$s".formatted(reference, fileName);
                                                     Path filePath = tempZipDirectory.resolve(dataCsvFilePath);
                                                     Files.createDirectories(filePath.getParent());

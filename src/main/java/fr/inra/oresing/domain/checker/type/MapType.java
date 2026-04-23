@@ -1,36 +1,20 @@
-
 package fr.inra.oresing.domain.checker.type;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.fasterxml.jackson.databind.node.TextNode;
 import fr.inra.oresing.domain.checker.LineChecker;
-import fr.inra.oresing.domain.data.SomethingToBeSentToFrontend;
 import fr.inra.oresing.domain.data.deposit.validation.validationcheckresults.CheckerValidationCheckResult;
 import fr.inra.oresing.persistence.SqlPrimitiveType;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
 
 public non-sealed class MapType<K, V> extends AbstractMapType<K, V> implements FieldType<Map<K, V>> {
-    final Supplier<MapType> clone;
-    Map<K, V> value;
+    final Supplier<MapType<K, V>> clone;
 
     public MapType(final Map<K, V> map) {
         super(map);
-        clone = () -> new MapType(map);
-        value = map;
-    }
-
-    @Override
-    public Map<K, V> getValue() {
-        return value;
+        clone = () -> new MapType<>(map);
     }
 
     @Override
@@ -43,28 +27,15 @@ public non-sealed class MapType<K, V> extends AbstractMapType<K, V> implements F
         return null;
     }
 
-  /*  @Override
-    public ValidationCheckResult check(String value, LineChecker lineChecker) {
-        throw new NotImplementedException("No check for map");
-    }
-
-    @Override
-    public ValidationCheckResult check(String value, LineCheckerWarper lineCheckerWarper) {
-        throw new NotImplementedException("No check for map");
-    }*/
-
     @Override
     public FieldType<?> toJsonForDatabase() {
         return this;
     }
 
     @Override
-    public FieldType copy() {
-        final MapType mapType = clone.get();
-        if (value != null) {
-            mapType.value = new HashMap<>(value);  // Nouvelle Map
-        }
-        return mapType;
+    public FieldType<Map<K, V>> copy() {
+        Map<K, V> current = getValue();
+        return new MapType<>(current != null ? new HashMap<>(current) : new HashMap<>());
     }
 
     @Override

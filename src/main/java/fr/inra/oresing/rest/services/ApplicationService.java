@@ -435,7 +435,7 @@ public class ApplicationService {
                 eventHelper.pushMessage("migration",
                         Map.of(
                                 APPLICATION_NAME, oldApplication.getName(),
-                                "migrationreport", new fr.inra.oresing.persistence.JsonRowMapper<>().toJson(migrationResult)
+                                MIGRATION_REPORT, new fr.inra.oresing.persistence.JsonRowMapper<>().toJson(migrationResult)
                         )
                 );
             } catch (Exception e) {

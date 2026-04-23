@@ -77,8 +77,8 @@ public class JWTExtractor {
 
     public OreSiUserRequestClient getRequestClientFromJwt(String token) throws IOException {
         String json;
-        if (token.startsWith("Bearer ")) {
-            token = token.substring(7); // on enlève 'Bearer '
+        if (token.startsWith(BEARER_)) {
+            token = token.substring(BEARER_.length());
         }
         try {
             json = Jwts.parser()
